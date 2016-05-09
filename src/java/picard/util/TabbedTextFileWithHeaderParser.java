@@ -27,9 +27,11 @@ import htsjdk.samtools.util.CloseableIterator;
 import picard.PicardException;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -144,6 +146,13 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
      */
     public Set<String> columnLabels() {
         return columnLabelIndices.keySet();
+    }
+
+    /**
+     * @return The column labels for this file as a List, in no particular order.
+     */
+    public List<String> columnLabelsList() { 
+        return Collections.unmodifiableList(new ArrayList<String>(columnLabelIndices.keySet()));
     }
 
     /**

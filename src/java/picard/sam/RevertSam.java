@@ -36,6 +36,7 @@ import htsjdk.samtools.SAMRecordUtil;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.filter.FilteringIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.util.CloserUtil;
@@ -53,13 +54,16 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
+import picard.util.TabbedTextFileWithHeaderParser;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -78,18 +82,44 @@ public class RevertSam extends CommandLineProgram {
             "information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of " +
             "restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if the" +
             "original qualities were retained." +
-            "<h4>Usage example:</h4>" +
+            "<h4>Example with single output:</h4>" +
             "<pre>" +
             "java -jar picard.jar RevertSam \\<br />" +
             "     I=input.bam \\<br />" +
             "     O=reverted.bam" +
             "</pre>" +
+            "Output format is BAM by default, or SAM or CRAM if the input path ends with '.sam' or '.cram', respectively." +
+            "<h4>Example outputting by read group with output map:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar RevertSam \\<br />" +
+            "     I=input.bam \\<br />" +
+            "     OUTPUT_BY_READGROUP=true \\<br />" +
+            "     OUTPUT_MAP=reverted_bam_paths.tsv" +
+            "</pre>" +
+            "Will output a BAM/SAM file per read group. By default, all outputs will be in BAM format. " +
+            "However, a SAM file will be produced instead for any read group mapped in OUTPUT_MAP to a path ending with '.sam'. " +
+            "A CRAM file will be produced for any read group mapped to a path ending with '.cram'. " +
+            "<h4>Example outputting by read group without output map:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar RevertSam \\<br />" +
+            "     I=input.bam \\<br />" +
+            "     OUTPUT_BY_READGROUP=true \\<br />" +
+            "     O=/write/reverted/read/group/bams/in/this/dir" +
+            "</pre>" +
+            "Will output a BAM/SAM file per read group. By default, all outputs will be in BAM format. " +
+            "However, outputs will be in SAM format if the input path ends with '.sam', or CRAM format if it ends with '.cram'." +
             "<hr />";
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM file to create.")
+    @Option(mutex = {"OUTPUT_MAP"}, shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.")
     public File OUTPUT;
+    
+    @Option(mutex = {"OUTPUT"}, shortName = "OM", doc = "Tab separated file with two columns, READ_GROUP_ID and OUTPUT, providing file mapping only used if OUTPUT_BY_READGROUP is true.")
+    public File OUTPUT_MAP;
+
+    @Option(shortName = "OBR", doc = "When true, outputs each read group in a separate file.")
+    public boolean OUTPUT_BY_READGROUP = false;
 
     @Option(shortName = "SO", doc = "The sort order to create the reverted output file with.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
@@ -115,7 +145,7 @@ public class RevertSam extends CommandLineProgram {
         add(SAMTag.MC.name());      // Mate Cigar
         add(SAMTag.AS.name());
     }};
-    
+
     @Option(doc = "WARNING: This option is potentially destructive. If enabled will discard reads in order to produce " +
             "a consistent output BAM. Reads discarded include (but are not limited to) paired reads with missing " +
             "mates, duplicated records, records with mismatches in length of bases and qualities. This option can " +
@@ -133,7 +163,7 @@ public class RevertSam extends CommandLineProgram {
 
     @Option(doc = "The library name to use in the reverted output file.  This will override the existing " +
             "sample alias in the file and is used only if all the read groups in the input file have the " +
-            "same sample alias ", shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional = true)
+            "same library name ", shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional = true)
     public String LIBRARY_NAME;
 
     private final static Log log = Log.getInstance(RevertSam.class);
@@ -148,76 +178,55 @@ public class RevertSam extends CommandLineProgram {
      */
     @Override
     protected String[] customCommandLineValidation() {
-        if (SANITIZE && SORT_ORDER != SortOrder.queryname) {
-            return new String[]{"SORT_ORDER must be queryname when sanitization is enabled with SANITIZE=true."};
-        }
+        final List<String> errors = new ArrayList<String>();
+        ValidationUtil.validateSanitizeSortOrder(SANITIZE, SORT_ORDER, errors);
+        ValidationUtil.validateOutputParams(OUTPUT_BY_READGROUP, OUTPUT, OUTPUT_MAP, errors);
 
+        if (!errors.isEmpty()) {
+            return errors.toArray(new String[errors.size()]);
+        }
         return null;
     }
 
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
+        ValidationUtil.assertWritable(OUTPUT, OUTPUT_BY_READGROUP);
 
         final boolean sanitizing = SANITIZE;
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).validationStringency(VALIDATION_STRINGENCY).open(INPUT);
         final SAMFileHeader inHeader = in.getFileHeader();
-
-        // If we are going to override SAMPLE_ALIAS or LIBRARY_NAME, make sure all the read
-        // groups have the same values.
-        final List<SAMReadGroupRecord> rgs = inHeader.getReadGroups();
-        if (SAMPLE_ALIAS != null || LIBRARY_NAME != null) {
-            boolean allSampleAliasesIdentical = true;
-            boolean allLibraryNamesIdentical = true;
-            for (int i = 1; i < rgs.size(); i++) {
-                if (!rgs.get(0).getSample().equals(rgs.get(i).getSample())) {
-                    allSampleAliasesIdentical = false;
-                }
-                if (!rgs.get(0).getLibrary().equals(rgs.get(i).getLibrary())) {
-                    allLibraryNamesIdentical = false;
-                }
-            }
-            if (SAMPLE_ALIAS != null && !allSampleAliasesIdentical) {
-                throw new PicardException("Read groups have multiple values for sample.  " +
-                        "A value for SAMPLE_ALIAS cannot be supplied.");
-            }
-            if (LIBRARY_NAME != null && !allLibraryNamesIdentical) {
-                throw new PicardException("Read groups have multiple values for library name.  " +
-                        "A value for library name cannot be supplied.");
-            }
-        }
+        ValidationUtil.validateHeaderOverrides(inHeader, SAMPLE_ALIAS, LIBRARY_NAME);
 
         ////////////////////////////////////////////////////////////////////////////
         // Build the output writer with an appropriate header based on the options
         ////////////////////////////////////////////////////////////////////////////
-        final boolean presorted = (inHeader.getSortOrder() == SORT_ORDER) || (SORT_ORDER == SortOrder.queryname && SANITIZE);
-        final SAMFileHeader outHeader = new SAMFileHeader();
-        for (final SAMReadGroupRecord rg : inHeader.getReadGroups()) {
-            if (SAMPLE_ALIAS != null) {
-                rg.setSample(SAMPLE_ALIAS);
-            }
-            if (LIBRARY_NAME != null) {
-                rg.setLibrary(LIBRARY_NAME);
-            }
-            outHeader.addReadGroup(rg);
-        }
-        outHeader.setSortOrder(SORT_ORDER);
-        if (!REMOVE_ALIGNMENT_INFORMATION) {
-            outHeader.setSequenceDictionary(inHeader.getSequenceDictionary());
-            outHeader.setProgramRecords(inHeader.getProgramRecords());
+        final boolean presorted = isPresorted(inHeader, SORT_ORDER, sanitizing);
+        if (SAMPLE_ALIAS != null) overwriteSample(inHeader.getReadGroups(), SAMPLE_ALIAS);
+        if (LIBRARY_NAME != null) overwriteLibrary(inHeader.getReadGroups(), LIBRARY_NAME);
+        final SAMFileHeader singleOutHeader = createOutHeader(inHeader, SORT_ORDER, REMOVE_ALIGNMENT_INFORMATION);
+        inHeader.getReadGroups().forEach(readGroup -> singleOutHeader.addReadGroup(readGroup));
+
+        final Map<String, File> outputMap;
+        final Map<String, SAMFileHeader> headerMap;
+        if (OUTPUT_BY_READGROUP) {
+            final String defaultExtension = getDefaultExtension(INPUT.toString());
+            outputMap = createOutputMap(OUTPUT_MAP, OUTPUT, defaultExtension, inHeader.getReadGroups());
+            ValidationUtil.assertAllReadGroupsMapped(outputMap, inHeader.getReadGroups());
+            headerMap = createHeaderMap(inHeader, SORT_ORDER, REMOVE_ALIGNMENT_INFORMATION);
+        } else {
+            outputMap = null;
+            headerMap = null;
         }
 
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, presorted, OUTPUT);
-
+        final SAMFileWriterFactory factory = new SAMFileWriterFactory();
+        final RevertSamWriter out = new RevertSamWriter(OUTPUT_BY_READGROUP, headerMap, outputMap, singleOutHeader, OUTPUT, presorted, factory, REFERENCE_SEQUENCE);
+        
         ////////////////////////////////////////////////////////////////////////////
         // Build a sorting collection to use if we are sanitizing
         ////////////////////////////////////////////////////////////////////////////
-        final SortingCollection<SAMRecord> sorter;
-        if (sanitizing) {
-            sorter = SortingCollection.newInstance(SAMRecord.class, new BAMRecordCodec(outHeader), new SAMRecordQueryNameComparator(), MAX_RECORDS_IN_RAM);
-        } else {
-            sorter = null;
-        }
+        final RevertSamSorter sorter;
+        if (sanitizing) sorter = new RevertSamSorter(OUTPUT_BY_READGROUP, headerMap, singleOutHeader, MAX_RECORDS_IN_RAM);
+        else sorter = null;
 
         final ProgressLogger progress = new ProgressLogger(log, 1000000, "Reverted");
         for (final SAMRecord rec : in) {
@@ -240,37 +249,99 @@ public class RevertSam extends CommandLineProgram {
         if (!sanitizing) {
             out.close();
         } else {
-
-            long total = 0, discarded = 0;
-            final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(sorter.iterator());
-            final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<SAMReadGroupRecord, FastqQualityFormat>();
-
-            // Figure out the quality score encoding scheme for each read group.
-            for (final SAMReadGroupRecord rg : inHeader.getReadGroups()) {
-                final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).validationStringency(VALIDATION_STRINGENCY).open(INPUT);
-                final SamRecordFilter filter = new SamRecordFilter() {
-                    public boolean filterOut(final SAMRecord rec) {
-                        return !rec.getReadGroup().getId().equals(rg.getId());
-                    }
-
-                    public boolean filterOut(final SAMRecord first, final SAMRecord second) {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-                readGroupToFormat.put(rg, QualityEncodingDetector.detect(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, new FilteringIterator(reader.iterator(), filter), RESTORE_ORIGINAL_QUALITIES));
-                CloserUtil.close(reader);
-            }
-            for (final SAMReadGroupRecord r : readGroupToFormat.keySet()) {
-                log.info("Detected quality format for " + r.getReadGroupId() + ": " + readGroupToFormat.get(r));
-            }
-            if (readGroupToFormat.values().contains(FastqQualityFormat.Solexa)) {
-                log.error("No quality score encoding conversion implemented for " + FastqQualityFormat.Solexa);
+            final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat;
+            try {
+                readGroupToFormat = createReadGroupFormatMap(inHeader, REFERENCE_SEQUENCE, VALIDATION_STRINGENCY, INPUT, RESTORE_ORIGINAL_QUALITIES);
+            } catch (final PicardException e) {
+                log.error(e.getMessage());
                 return -1;
             }
 
+            final long[] sanitizeResults = sanitize(readGroupToFormat, sorter, out);
+            final long discarded = sanitizeResults[0];
+            final long total = sanitizeResults[1];
+            out.close();
 
-            final ProgressLogger sanitizerProgress = new ProgressLogger(log, 1000000, "Sanitized");
+            final double discardRate = discarded / (double) total;
+            final NumberFormat fmt = new DecimalFormat("0.000%");
+            log.info("Discarded " + discarded + " out of " + total + " (" + fmt.format(discardRate) + ") reads in order to sanitize output.");
 
+            if (discardRate > MAX_DISCARD_FRACTION) {
+                throw new PicardException("Discarded " + fmt.format(discardRate) + " which is above MAX_DISCARD_FRACTION of " + fmt.format(MAX_DISCARD_FRACTION));
+            }
+        }
+
+        CloserUtil.close(in);
+        return 0;
+    }
+
+    static String getDefaultExtension(final String input) {
+        if (input.endsWith(".sam")) {
+            return ".sam";
+        }
+        if (input.endsWith(".cram")) {
+            return ".cram";
+        }
+        return ".bam";
+    }
+
+    private boolean isPresorted(final SAMFileHeader inHeader, final SortOrder sortOrder, final boolean sanitizing) {
+        return (inHeader.getSortOrder() == sortOrder) || (sortOrder == SortOrder.queryname && sanitizing);
+    }
+
+    /**
+     * Takes an individual SAMRecord and applies the set of changes/reversions to it that
+     * have been requested by program level options.
+     */
+    public void revertSamRecord(final SAMRecord rec) {
+        if (RESTORE_ORIGINAL_QUALITIES) {
+            final byte[] oq = rec.getOriginalBaseQualities();
+            if (oq != null) {
+                rec.setBaseQualities(oq);
+                rec.setOriginalBaseQualities(null);
+            }
+        }
+
+        if (REMOVE_DUPLICATE_INFORMATION) {
+            rec.setDuplicateReadFlag(false);
+        }
+
+        if (REMOVE_ALIGNMENT_INFORMATION) {
+            if (rec.getReadNegativeStrandFlag()) {
+                SAMRecordUtil.reverseComplement(rec);
+                rec.setReadNegativeStrandFlag(false);
+            }
+
+            // Remove all alignment based information about the read itself
+            rec.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
+            rec.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
+            rec.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+            rec.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
+
+            rec.setInferredInsertSize(0);
+            rec.setNotPrimaryAlignmentFlag(false);
+            rec.setProperPairFlag(false);
+            rec.setReadUnmappedFlag(true);
+
+            // Then remove any mate flags and info related to alignment
+            rec.setMateAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
+            rec.setMateNegativeStrandFlag(false);
+            rec.setMateReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
+            rec.setMateUnmappedFlag(true);
+
+            // And then remove any tags that are calculated from the alignment
+            ATTRIBUTE_TO_CLEAR.forEach(tag -> rec.setAttribute(tag, null));
+        }
+    }
+
+    private long[] sanitize(final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat, final RevertSamSorter sorter, final RevertSamWriter out) {
+
+        long total = 0, discarded = 0;
+        final ProgressLogger sanitizerProgress = new ProgressLogger(log, 1000000, "Sanitized");
+
+        final List<PeekableIterator<SAMRecord>> iterators = sorter.iterators();
+
+        for (final PeekableIterator<SAMRecord> iterator : iterators) {
             readNameLoop:
             while (iterator.hasNext()) {
                 final List<SAMRecord> recs = fetchByReadName(iterator);
@@ -323,29 +394,17 @@ public class RevertSam extends CommandLineProgram {
                     sanitizerProgress.record(rec);
                 }
             }
-
-            out.close();
-
-            final double discardRate = discarded / (double) total;
-            final NumberFormat fmt = new DecimalFormat("0.000%");
-            log.info("Discarded " + discarded + " out of " + total + " (" + fmt.format(discardRate) + ") reads in order to sanitize output.");
-
-            if (discarded / (double) total > MAX_DISCARD_FRACTION) {
-                throw new PicardException("Discarded " + fmt.format(discardRate) + " which is above MAX_DISCARD_FRACTION of " + fmt.format(MAX_DISCARD_FRACTION));
-            }
         }
-
-        CloserUtil.close(in);
-        return 0;
+        return new long[]{discarded, total};
     }
-
+    
     /**
      * Generates a list by consuming from the iterator in order starting with the first available
      * read and continuing while subsequent reads share the same read name. If there are no reads
      * remaining returns an empty list.
      */
     private List<SAMRecord> fetchByReadName(final PeekableIterator<SAMRecord> iterator) {
-        final List<SAMRecord> out = new LinkedList<SAMRecord>();
+        final List<SAMRecord> out = new ArrayList<SAMRecord>();
 
         if (iterator.hasNext()) {
             final SAMRecord first = iterator.next();
@@ -359,56 +418,341 @@ public class RevertSam extends CommandLineProgram {
         return out;
     }
 
+    private void overwriteSample(final List<SAMReadGroupRecord> readGroups, final String sampleAlias) {
+        readGroups.forEach(rg -> rg.setSample(sampleAlias));
+    }
+
+    private void overwriteLibrary(final List<SAMReadGroupRecord> readGroups, final String libraryName) {
+        readGroups.forEach(rg -> rg.setLibrary(libraryName));
+    }
+
+    static Map<String, File> createOutputMap(
+            final File outputMapFile,
+            final File outputDir,
+            final String defaultExtension,
+            final List<SAMReadGroupRecord> readGroups) {
+
+        final Map<String, File> outputMap;
+        if (outputMapFile != null) {
+            outputMap = createOutputMapFromFile(outputMapFile);
+        } else {
+            outputMap = createOutputMap(readGroups, outputDir, defaultExtension);
+        }
+        return outputMap;
+    }
+
+    private static Map<String, File> createOutputMapFromFile(final File outputMapFile) {
+        final Map<String, File> outputMap = new HashMap<String, File>();
+        final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(outputMapFile);
+        for (final TabbedTextFileWithHeaderParser.Row row : parser) {
+            final String id = row.getField("READ_GROUP_ID");
+            final String output = row.getField("OUTPUT");
+            final File outputPath = new File(output);
+            outputMap.put(id, outputPath);
+        }
+        CloserUtil.close(parser);
+        return outputMap;
+    }
+
+    private static Map<String, File> createOutputMap(final List<SAMReadGroupRecord> readGroups, final File outputDir, final String extension) {
+        final Map<String, File> outputMap = new HashMap<String, File>();
+        for (final SAMReadGroupRecord readGroup : readGroups) {
+            final String id = readGroup.getId();
+            final String fileName = id + extension;
+            final Path outputPath = Paths.get(outputDir.toString(), fileName);
+            outputMap.put(id, outputPath.toFile());
+        }
+        return outputMap;
+    }
+
+    private Map<String, SAMFileHeader> createHeaderMap(
+            final SAMFileHeader inHeader,
+            final SortOrder sortOrder,
+            final boolean removeAlignmentInformation) {
+        
+        final Map<String, SAMFileHeader> headerMap = new HashMap<String, SAMFileHeader>();
+        for (final SAMReadGroupRecord readGroup : inHeader.getReadGroups()) {
+            final SAMFileHeader header = createOutHeader(inHeader, sortOrder, removeAlignmentInformation);
+            header.addReadGroup(readGroup);
+            headerMap.put(readGroup.getId(), header);
+        }
+        return headerMap;
+    }
+
+    private SAMFileHeader createOutHeader(
+            final SAMFileHeader inHeader,
+            final SAMFileHeader.SortOrder sortOrder,
+            final boolean removeAlignmentInformation) {
+
+        final SAMFileHeader outHeader = new SAMFileHeader();
+        outHeader.setSortOrder(sortOrder);
+        if (!removeAlignmentInformation) {
+            outHeader.setSequenceDictionary(inHeader.getSequenceDictionary());
+            outHeader.setProgramRecords(inHeader.getProgramRecords());
+        }
+        return outHeader;
+    }
+
+    private Map<SAMReadGroupRecord, FastqQualityFormat> createReadGroupFormatMap(
+            final SAMFileHeader inHeader,
+            final File referenceSequence,
+            final ValidationStringency validationStringency,
+            final File input,
+            final boolean restoreOriginalQualities) {
+
+        final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<SAMReadGroupRecord, FastqQualityFormat>();
+
+        // Figure out the quality score encoding scheme for each read group.
+        for (final SAMReadGroupRecord rg : inHeader.getReadGroups()) {
+            final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceSequence).validationStringency(validationStringency).open(input);
+            final SamRecordFilter filter = new SamRecordFilter() {
+                public boolean filterOut(final SAMRecord rec) {
+                    return !rec.getReadGroup().getId().equals(rg.getId());
+                }
+
+                public boolean filterOut(final SAMRecord first, final SAMRecord second) {
+                    throw new UnsupportedOperationException();
+                }
+            };
+            readGroupToFormat.put(rg, QualityEncodingDetector.detect(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, new FilteringIterator(reader.iterator(), filter), restoreOriginalQualities));
+            CloserUtil.close(reader);
+        }
+        for (final SAMReadGroupRecord r : readGroupToFormat.keySet()) {
+            log.info("Detected quality format for " + r.getReadGroupId() + ": " + readGroupToFormat.get(r));
+        }
+        if (readGroupToFormat.values().contains(FastqQualityFormat.Solexa)) {
+            throw new PicardException("No quality score encoding conversion implemented for " + FastqQualityFormat.Solexa);
+        }
+
+        return readGroupToFormat;
+    }
+
     /**
-     * Takes an individual SAMRecord and applies the set of changes/reversions to it that
-     * have been requested by program level options.
+     * Contains a map of writers used when OUTPUT_BY_READGROUP=true
+     * and a single writer used when OUTPUT_BY_READGROUP=false.
      */
-    public void revertSamRecord(final SAMRecord rec) {
-        if (RESTORE_ORIGINAL_QUALITIES) {
-            final byte[] oq = rec.getOriginalBaseQualities();
-            if (oq != null) {
-                rec.setBaseQualities(oq);
-                rec.setOriginalBaseQualities(null);
+    private static class RevertSamWriter {
+        private final Map<String, SAMFileWriter> writerMap = new HashMap<String, SAMFileWriter>();
+        private final SAMFileWriter singleWriter;
+        private final boolean outputByReadGroup;
+
+        RevertSamWriter(
+                final boolean outputByReadGroup,
+                final Map<String, SAMFileHeader> headerMap,
+                final Map<String, File> outputMap,
+                final SAMFileHeader singleOutHeader,
+                final File singleOutput,
+                final boolean presorted,
+                final SAMFileWriterFactory factory,
+                final File referenceFasta) {
+
+            this.outputByReadGroup = outputByReadGroup;
+            if (outputByReadGroup) {
+                singleWriter = null;
+                for (final Map.Entry<String, File> outputMapEntry : outputMap.entrySet()) {
+                    final String readGroupId = outputMapEntry.getKey();
+                    final File output = outputMapEntry.getValue();
+                    final SAMFileHeader header = headerMap.get(readGroupId);
+                    final SAMFileWriter writer = factory.makeWriter(header, presorted, output, referenceFasta);
+                    writerMap.put(readGroupId, writer);
+                }
+            } else {
+                singleWriter = factory.makeWriter(singleOutHeader, presorted, singleOutput, referenceFasta);
             }
         }
 
-        if (REMOVE_DUPLICATE_INFORMATION) {
-            rec.setDuplicateReadFlag(false);
+        void addAlignment(final SAMRecord rec) {
+            final SAMFileWriter writer;
+            if (outputByReadGroup) {
+                writer = writerMap.get(rec.getReadGroup().getId());
+            } else {
+                writer = singleWriter;
+            }
+            writer.addAlignment(rec);
         }
 
-        if (REMOVE_ALIGNMENT_INFORMATION) {
-            if (rec.getReadNegativeStrandFlag()) {
-                SAMRecordUtil.reverseComplement(rec);
-                rec.setReadNegativeStrandFlag(false);
-            }
-
-            // Remove all alignment based information about the read itself
-            rec.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
-            rec.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
-            rec.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
-            rec.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
-
-            if (!rec.getReadUnmappedFlag()) {
-                rec.setInferredInsertSize(0);
-                rec.setNotPrimaryAlignmentFlag(false);
-                rec.setProperPairFlag(false);
-                rec.setReadUnmappedFlag(true);
-
-            }
-
-            // Then remove any mate flags and info related to alignment
-            if (rec.getReadPairedFlag()) {
-                rec.setMateAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
-                rec.setMateNegativeStrandFlag(false);
-                rec.setMateReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
-                rec.setMateUnmappedFlag(true);
-            }
-
-            // And then remove any tags that are calculated from the alignment
-            for (final String tag : ATTRIBUTE_TO_CLEAR) {
-                rec.setAttribute(tag, null);
+        void close() {
+            if (outputByReadGroup) {
+                for (final SAMFileWriter writer : writerMap.values()) {
+                    writer.close();
+                }
+            } else {
+                singleWriter.close();
             }
         }
     }
 
+    /**
+     * Contains a map of sorters used when OUTPUT_BY_READGROUP=true
+     * and a single sorter used when OUTPUT_BY_READGROUP=false.
+     */
+    private static class RevertSamSorter {
+        private final Map<String, SortingCollection<SAMRecord>> sorterMap = new HashMap<String, SortingCollection<SAMRecord>>();
+        private final SortingCollection<SAMRecord> singleSorter;
+        private final boolean outputByReadGroup;
+
+        RevertSamSorter(
+                final boolean outputByReadGroup,
+                final Map<String, SAMFileHeader> headerMap,
+                final SAMFileHeader singleOutHeader,
+                final int maxRecordsInRam) {
+
+            this.outputByReadGroup = outputByReadGroup;
+            if (outputByReadGroup) {
+                for (final Map.Entry<String, SAMFileHeader> entry : headerMap.entrySet()) {
+                    final String readGroupId = entry.getKey();
+                    final SAMFileHeader outHeader = entry.getValue();
+                    final SortingCollection<SAMRecord> sorter = SortingCollection.newInstance(SAMRecord.class, new BAMRecordCodec(outHeader), new SAMRecordQueryNameComparator(), maxRecordsInRam);
+                    sorterMap.put(readGroupId, sorter);
+                }
+                singleSorter = null;
+            } else {
+                singleSorter = SortingCollection.newInstance(SAMRecord.class, new BAMRecordCodec(singleOutHeader), new SAMRecordQueryNameComparator(), maxRecordsInRam);
+            }
+        }
+
+        void add(final SAMRecord rec) {
+            final SortingCollection<SAMRecord> sorter;
+            if (outputByReadGroup) {
+                sorter = sorterMap.get(rec.getReadGroup().getId());
+            } else {
+                sorter = singleSorter;
+            }
+            sorter.add(rec);
+        }
+
+        List<PeekableIterator<SAMRecord>> iterators() {
+            final List<PeekableIterator<SAMRecord>> iterators = new ArrayList<PeekableIterator<SAMRecord>>();
+            if (outputByReadGroup) {
+                for (final SortingCollection<SAMRecord> sorter : sorterMap.values()) {
+                    final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(sorter.iterator());
+                    iterators.add(iterator);
+                }
+            } else {
+                final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(singleSorter.iterator());
+                iterators.add(iterator);
+            }
+            return iterators;
+        }
+    }
+
+    /**
+     * Methods used for validating parameters to RevertSam.
+     */
+    static class ValidationUtil {
+
+        static void validateSanitizeSortOrder(final boolean sanitize, final SAMFileHeader.SortOrder sortOrder, final List<String> errors) {
+            if (sanitize && sortOrder != SAMFileHeader.SortOrder.queryname) {
+                errors.add("SORT_ORDER must be queryname when sanitization is enabled with SANITIZE=true.");
+            }
+        }
+
+        static void validateOutputParams(final boolean outputByReadGroup, final File output, final File outputMap, final List<String> errors) {
+            if (outputByReadGroup) {
+                validateOutputParamsByReadGroup(output, outputMap, errors);
+            } else {
+                validateOutputParamsNotByReadGroup(output, outputMap, errors);
+            }
+        }
+
+        static void validateOutputParamsByReadGroup(final File output, final File outputMap, final List<String> errors) {
+            if (output != null) {
+                if (!Files.isDirectory(output.toPath())) {
+                    errors.add("When OUTPUT_BY_READGROUP=true and OUTPUT is provided, it must be a directory: " + output);
+                }
+                return;
+            }
+            // output is null if we reached here
+            if (outputMap == null) {
+                errors.add("Must provide either OUTPUT or OUTPUT_MAP when OUTPUT_BY_READGROUP=true.");
+                return;
+            }
+            if (!Files.isReadable(outputMap.toPath())) {
+                errors.add("Cannot read OUTPUT_MAP " + outputMap);
+                return;
+            }
+            final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(outputMap);
+            if (!ValidationUtil.isOutputMapHeaderValid(parser.columnLabelsList())) {
+                errors.add("Invalid header: " + outputMap + ". Must be a tab-separated file with READ_GROUP_ID as first column and OUTPUT as second column.");
+            }
+        }
+
+        static void validateOutputParamsNotByReadGroup(final File output, final File outputMap, final List<String> errors) {
+            if (outputMap != null) {
+                errors.add("Cannot provide OUTPUT_MAP when OUTPUT_BY_READGROUP=false. Provide OUTPUT instead.");
+            }
+            if (output == null) {
+                errors.add("OUTPUT is required when OUTPUT_BY_READGROUP=false");
+                return;
+            }
+            if (Files.isDirectory(output.toPath())) {
+                errors.add("OUTPUT " + output + " should not be a directory when OUTPUT_BY_READGROUP=false");
+            }
+        }
+
+        /**
+         * If we are going to override SAMPLE_ALIAS or LIBRARY_NAME, make sure all the read
+         * groups have the same values.
+         */
+        static void validateHeaderOverrides(
+                final SAMFileHeader inHeader,
+                final String sampleAlias,
+                final String libraryName) {
+
+            final List<SAMReadGroupRecord> rgs = inHeader.getReadGroups();
+            if (sampleAlias != null || libraryName != null) {
+                boolean allSampleAliasesIdentical = true;
+                boolean allLibraryNamesIdentical = true;
+                for (int i = 1; i < rgs.size(); i++) {
+                    if (!rgs.get(0).getSample().equals(rgs.get(i).getSample())) {
+                        allSampleAliasesIdentical = false;
+                    }
+                    if (!rgs.get(0).getLibrary().equals(rgs.get(i).getLibrary())) {
+                        allLibraryNamesIdentical = false;
+                    }
+                }
+                if (sampleAlias != null && !allSampleAliasesIdentical) {
+                    throw new PicardException("Read groups have multiple values for sample.  " +
+                            "A value for SAMPLE_ALIAS cannot be supplied.");
+                }
+                if (libraryName != null && !allLibraryNamesIdentical) {
+                    throw new PicardException("Read groups have multiple values for library name.  " +
+                            "A value for library name cannot be supplied.");
+                }
+            }
+        }
+
+        static void assertWritable(final File output, final boolean outputByReadGroup) {
+            if (outputByReadGroup) {
+                if (output != null) {
+                    IOUtil.assertDirectoryIsWritable(output);
+                }
+            } else {
+                IOUtil.assertFileIsWritable(output);
+            }
+        }
+
+        static void assertAllReadGroupsMapped(final Map<String, File> outputMap, final List<SAMReadGroupRecord> readGroups) {
+            for (final SAMReadGroupRecord readGroup : readGroups) {
+                final String id = readGroup.getId();
+                final File output = outputMap.get(id);
+                if (output == null) {
+                    throw new PicardException("Read group id " + id + " not found in OUTPUT_MAP " + outputMap);
+                }
+            }
+        }
+
+        static boolean isOutputMapHeaderValid(final List<String> columnLabels) {
+            if (columnLabels.size() < 2) {
+                return false;
+            }
+            if (!"READ_GROUP_ID".equals(columnLabels.get(0))) {
+                return false;
+            }
+            if (!"OUTPUT".equals(columnLabels.get(1))) {
+                return false;
+            }
+            return true;
+        }
+    }
 }
