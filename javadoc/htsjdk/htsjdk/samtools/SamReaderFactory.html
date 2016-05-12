@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":9,"i4":9,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6,"i12":9,"i13":6,"i14":6,"i15":6};
+var methods = {"i0":6,"i1":6,"i2":6,"i3":9,"i4":9,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6,"i12":9,"i13":6,"i14":6,"i15":6,"i16":6};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -251,12 +251,12 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i9" class="rowColor">
-<td class="colFirst"><code>abstract <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a></code></td>
+<td class="colFirst"><code>abstract <a href="../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamReaderFactory.html#referenceSource--">referenceSource</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i10" class="altColor">
 <td class="colFirst"><code>abstract <a href="../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamReaderFactory.html#referenceSource-htsjdk.samtools.cram.ref.ReferenceSource-">referenceSource</a></span>(<a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSequence)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamReaderFactory.html#referenceSource-htsjdk.samtools.cram.ref.CRAMReferenceSource-">referenceSource</a></span>(<a href="../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSequence)</code>
 <div class="block">Sets the specified reference sequence *</div>
 </td>
 </tr>
@@ -278,10 +278,16 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i14" class="altColor">
+<td class="colFirst"><code>abstract <a href="../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamReaderFactory.html#setUseAsyncIo-boolean-">setUseAsyncIo</a></span>(boolean&nbsp;asynchronousIO)</code>
+<div class="block">Set whether readers created by this factory will use asynchronous IO.</div>
+</td>
+</tr>
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>abstract <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamReaderFactory.html#validationStringency--">validationStringency</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>abstract <a href="../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamReaderFactory.html#validationStringency-htsjdk.samtools.ValidationStringency-">validationStringency</a></span>(<a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
 <div class="block">Set this factory's <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools"><code>ValidationStringency</code></a> to the provided one, then returns itself.</div>
@@ -359,7 +365,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>referenceSource</h4>
-<pre>public abstract&nbsp;<a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource()</pre>
+<pre>public abstract&nbsp;<a href="../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource()</pre>
 </li>
 </ul>
 <a name="samRecordFactory-htsjdk.samtools.SAMRecordFactory-">
@@ -413,13 +419,13 @@ extends java.lang.Object</pre>
 <div class="block">Sets the specified reference sequence *</div>
 </li>
 </ul>
-<a name="referenceSource-htsjdk.samtools.cram.ref.ReferenceSource-">
+<a name="referenceSource-htsjdk.samtools.cram.ref.CRAMReferenceSource-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>referenceSource</h4>
-<pre>public abstract&nbsp;<a href="../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a>&nbsp;referenceSource(<a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSequence)</pre>
+<pre>public abstract&nbsp;<a href="../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a>&nbsp;referenceSource(<a href="../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSequence)</pre>
 <div class="block">Sets the specified reference sequence *</div>
 </li>
 </ul>
@@ -451,6 +457,19 @@ extends java.lang.Object</pre>
 <h4>validationStringency</h4>
 <pre>public abstract&nbsp;<a href="../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a>&nbsp;validationStringency(<a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</pre>
 <div class="block">Set this factory's <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools"><code>ValidationStringency</code></a> to the provided one, then returns itself.</div>
+</li>
+</ul>
+<a name="setUseAsyncIo-boolean-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setUseAsyncIo</h4>
+<pre>public abstract&nbsp;<a href="../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a>&nbsp;setUseAsyncIo(boolean&nbsp;asynchronousIO)</pre>
+<div class="block">Set whether readers created by this factory will use asynchronous IO.
+ If this methods is not called, this flag will default to the value of <a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO_FOR_SAMTOOLS"><code>Defaults.USE_ASYNC_IO_FOR_SAMTOOLS</code></a>.
+ Note that this option may not be applicable to all readers returned from this factory.
+ Returns the factory itself.</div>
 </li>
 </ul>
 <a name="setDefaultValidationStringency-htsjdk.samtools.ValidationStringency-">

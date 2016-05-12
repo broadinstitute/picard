@@ -833,6 +833,26 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedFilePointerUtil.html#asString-long-">asString(long)</a></span> - Static method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedFilePointerUtil.html" title="class in htsjdk.samtools.util">BlockCompressedFilePointerUtil</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="htsjdk/samtools/util/AsyncBufferedIterator.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">AsyncBufferedIterator</span></a>&lt;<a href="htsjdk/samtools/util/AsyncBufferedIterator.html" title="type parameter in AsyncBufferedIterator">T</a>&gt; - Class in <a href="htsjdk/samtools/util/package-summary.html">htsjdk.samtools.util</a></dt>
+<dd>
+<div class="block">Iterator that uses a dedicated background thread to perform read-ahead to improve
+ throughput at the expense of increased latency.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AsyncBufferedIterator.html#AsyncBufferedIterator-java.util.Iterator-int-">AsyncBufferedIterator(Iterator&lt;T&gt;, int)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AsyncBufferedIterator.html" title="class in htsjdk.samtools.util">AsyncBufferedIterator</a></dt>
+<dd>
+<div class="block">Creates a new iterator that traverses the given iterator on a background
+ thread</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AsyncBufferedIterator.html#AsyncBufferedIterator-java.util.Iterator-int-int-">AsyncBufferedIterator(Iterator&lt;T&gt;, int, int)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AsyncBufferedIterator.html" title="class in htsjdk.samtools.util">AsyncBufferedIterator</a></dt>
+<dd>
+<div class="block">Creates a new iterator that traverses the given iterator on a background
+ thread</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AsyncBufferedIterator.html#AsyncBufferedIterator-java.util.Iterator-int-int-java.lang.String-">AsyncBufferedIterator(Iterator&lt;T&gt;, int, int, String)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AsyncBufferedIterator.html" title="class in htsjdk.samtools.util">AsyncBufferedIterator</a></dt>
+<dd>
+<div class="block">Creates a new iterator that traverses the given iterator on a background
+ thread</div>
+</dd>
 <dt><a href="htsjdk/samtools/fastq/AsyncFastqWriter.html" title="class in htsjdk.samtools.fastq"><span class="typeNameLink">AsyncFastqWriter</span></a> - Class in <a href="htsjdk/samtools/fastq/package-summary.html">htsjdk.samtools.fastq</a></dt>
 <dd>
 <div class="block">Implementation of a FastqWriter that provides asynchronous output.</div>
@@ -2002,6 +2022,8 @@
 <dd>
 <div class="block">flushes and closes underlying OutputStream.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AsyncBufferedIterator.html#close--">close()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AsyncBufferedIterator.html" title="class in htsjdk.samtools.util">AsyncBufferedIterator</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BinaryCodec.html#close--">close()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BinaryCodec.html" title="class in htsjdk.samtools.util">BinaryCodec</a></dt>
 <dd>
 <div class="block">Close the appropriate stream</div>
@@ -2739,7 +2761,7 @@
 <dd>
 <div class="block">Class for writing SAMRecords into a series of CRAM containers on an output stream.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMContainerStreamWriter.html#CRAMContainerStreamWriter-java.io.OutputStream-java.io.OutputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMContainerStreamWriter(OutputStream, OutputStream, ReferenceSource, SAMFileHeader, String)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMContainerStreamWriter.html" title="class in htsjdk.samtools">CRAMContainerStreamWriter</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMContainerStreamWriter.html#CRAMContainerStreamWriter-java.io.OutputStream-java.io.OutputStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMContainerStreamWriter(OutputStream, OutputStream, CRAMReferenceSource, SAMFileHeader, String)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMContainerStreamWriter.html" title="class in htsjdk.samtools">CRAMContainerStreamWriter</a></dt>
 <dd>
 <div class="block">Create a CRAMContainerStreamWriter for writing SAM records into a series of CRAM
  containers on output stream, with an optional index.</div>
@@ -2765,29 +2787,29 @@
 <div class="block">Create a CRAMFileReader from either a file or input stream using the reference source returned by
  <a href="htsjdk/samtools/cram/ref/ReferenceSource.html#getDefaultCRAMReferenceSource--"><code>getDefaultCRAMReferenceSource</code></a>.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.InputStream-htsjdk.samtools.cram.ref.ReferenceSource-">CRAMFileReader(File, InputStream, ReferenceSource)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.InputStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-">CRAMFileReader(File, InputStream, CRAMReferenceSource)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
 <dd>
 <div class="block">Create a CRAMFileReader from either a file or input stream using the supplied reference source.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-">CRAMFileReader(File, File, ReferenceSource)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.File-htsjdk.samtools.cram.ref.CRAMReferenceSource-">CRAMFileReader(File, File, CRAMReferenceSource)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
 <dd>
 <div class="block">Create a CRAMFileReader from a file and optional index file using the supplied reference source.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-">CRAMFileReader(File, ReferenceSource)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-htsjdk.samtools.cram.ref.CRAMReferenceSource-">CRAMFileReader(File, CRAMReferenceSource)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
 <dd>
 <div class="block">Create a CRAMFileReader from a file using the supplied reference source.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader(InputStream, SeekableStream, ReferenceSource, ValidationStringency)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader(InputStream, SeekableStream, CRAMReferenceSource, ValidationStringency)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
 <dd>
 <div class="block">Create a CRAMFileReader from an input stream and optional index stream using the supplied reference
  source and validation stringency.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader(InputStream, File, ReferenceSource, ValidationStringency)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-java.io.File-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader(InputStream, File, CRAMReferenceSource, ValidationStringency)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
 <dd>
 <div class="block">Create a CRAMFileReader from an input stream and optional index file using the supplied reference
  source and validation stringency.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader(File, File, ReferenceSource, ValidationStringency)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.File-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader(File, File, CRAMReferenceSource, ValidationStringency)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
 <dd>
 <div class="block">Create a CRAMFileReader from a CRAM file and optional index file using the supplied reference
  source and validation stringency.</div>
@@ -2796,15 +2818,15 @@
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMFileWriter</span></a> - Class in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter(OutputStream, ReferenceSource, SAMFileHeader, String)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools">CRAMFileWriter</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter(OutputStream, CRAMReferenceSource, SAMFileHeader, String)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools">CRAMFileWriter</a></dt>
 <dd>
 <div class="block">Create a CRAMFileWriter on an output stream.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter(OutputStream, OutputStream, ReferenceSource, SAMFileHeader, String)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools">CRAMFileWriter</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter(OutputStream, OutputStream, CRAMReferenceSource, SAMFileHeader, String)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools">CRAMFileWriter</a></dt>
 <dd>
 <div class="block">Create a CRAMFileWriter and optional index on output streams.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-boolean-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter(OutputStream, OutputStream, boolean, ReferenceSource, SAMFileHeader, String)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools">CRAMFileWriter</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-boolean-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter(OutputStream, OutputStream, boolean, CRAMReferenceSource, SAMFileHeader, String)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools">CRAMFileWriter</a></dt>
 <dd>
 <div class="block">Create a CRAMFileWriter and optional index on output streams.</div>
 </dd>
@@ -2830,22 +2852,26 @@
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMIterator</span></a> - Class in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#CRAMIterator-java.io.InputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMIterator(InputStream, ReferenceSource, ValidationStringency)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#CRAMIterator-java.io.InputStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMIterator(InputStream, CRAMReferenceSource, ValidationStringency)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-long:A-htsjdk.samtools.ValidationStringency-">CRAMIterator(SeekableStream, ReferenceSource, long[], ValidationStringency)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-long:A-htsjdk.samtools.ValidationStringency-">CRAMIterator(SeekableStream, CRAMReferenceSource, long[], ValidationStringency)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-long:A-">CRAMIterator(SeekableStream, ReferenceSource, long[])</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-long:A-">CRAMIterator(SeekableStream, CRAMReferenceSource, long[])</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
 <dd>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 </dd>
 <dt><a href="htsjdk/samtools/cram/build/CramNormalizer.html" title="class in htsjdk.samtools.cram.build"><span class="typeNameLink">CramNormalizer</span></a> - Class in <a href="htsjdk/samtools/cram/build/package-summary.html">htsjdk.samtools.cram.build</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/build/CramNormalizer.html#CramNormalizer-htsjdk.samtools.SAMFileHeader-htsjdk.samtools.cram.ref.ReferenceSource-">CramNormalizer(SAMFileHeader, ReferenceSource)</a></span> - Constructor for class htsjdk.samtools.cram.build.<a href="htsjdk/samtools/cram/build/CramNormalizer.html" title="class in htsjdk.samtools.cram.build">CramNormalizer</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/build/CramNormalizer.html#CramNormalizer-htsjdk.samtools.SAMFileHeader-htsjdk.samtools.cram.ref.CRAMReferenceSource-">CramNormalizer(SAMFileHeader, CRAMReferenceSource)</a></span> - Constructor for class htsjdk.samtools.cram.build.<a href="htsjdk/samtools/cram/build/CramNormalizer.html" title="class in htsjdk.samtools.cram.build">CramNormalizer</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/cram/encoding/reader/CramRecordReader.html" title="class in htsjdk.samtools.cram.encoding.reader"><span class="typeNameLink">CramRecordReader</span></a> - Class in <a href="htsjdk/samtools/cram/encoding/reader/package-summary.html">htsjdk.samtools.cram.encoding.reader</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/encoding/reader/CramRecordReader.html#CramRecordReader-htsjdk.samtools.ValidationStringency-">CramRecordReader(ValidationStringency)</a></span> - Constructor for class htsjdk.samtools.cram.encoding.reader.<a href="htsjdk/samtools/cram/encoding/reader/CramRecordReader.html" title="class in htsjdk.samtools.cram.encoding.reader">CramRecordReader</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref"><span class="typeNameLink">CRAMReferenceSource</span></a> - Interface in <a href="htsjdk/samtools/cram/ref/package-summary.html">htsjdk.samtools.cram.ref</a></dt>
+<dd>
+<div class="block">Interface used to supply a reference source when reading CRAM files.</div>
+</dd>
 <dt><a href="htsjdk/samtools/cram/build/CramSpanContainerIterator.html" title="class in htsjdk.samtools.cram.build"><span class="typeNameLink">CramSpanContainerIterator</span></a> - Class in <a href="htsjdk/samtools/cram/build/package-summary.html">htsjdk.samtools.cram.build</a></dt>
 <dd>
 <div class="block">An iterator of CRAM containers read from locations in <a href="htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream"><code>SeekableStream</code></a>.</div>
@@ -5884,7 +5910,7 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/ref/ReferenceSource.html#getDefaultCRAMReferenceSource--">getDefaultCRAMReferenceSource()</a></span> - Static method in class htsjdk.samtools.cram.ref.<a href="htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a></dt>
 <dd>
-<div class="block">Attempts to construct a default ReferenceSource for use with CRAM files when
+<div class="block">Attempts to construct a default CRAMReferenceSource for use with CRAM files when
  one has not been explicitly provided.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMFileWriterImpl.html#getDefaultMaxRecordsInRam--">getDefaultMaxRecordsInRam()</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMFileWriterImpl.html" title="class in htsjdk.samtools">SAMFileWriterImpl</a></dt>
@@ -7350,6 +7376,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/encoding/readfeatures/Substitution.html#getReferenceBase--">getReferenceBase()</a></span> - Method in class htsjdk.samtools.cram.encoding.readfeatures.<a href="htsjdk/samtools/cram/encoding/readfeatures/Substitution.html" title="class in htsjdk.samtools.cram.encoding.readfeatures">Substitution</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/ref/CRAMReferenceSource.html#getReferenceBases-htsjdk.samtools.SAMSequenceRecord-boolean-">getReferenceBases(SAMSequenceRecord, boolean)</a></span> - Method in interface htsjdk.samtools.cram.ref.<a href="htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a></dt>
+<dd>
+<div class="block">getReferenceBases</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/ref/ReferenceSource.html#getReferenceBases-htsjdk.samtools.SAMSequenceRecord-boolean-">getReferenceBases(SAMSequenceRecord, boolean)</a></span> - Method in class htsjdk.samtools.cram.ref.<a href="htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMRecord.html#getReferenceIndex--">getReferenceIndex()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></dt>
@@ -7838,6 +7868,8 @@
 <dd>
 <div class="block">Returns the prefix to use when naming threads.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AsyncBufferedIterator.html#getThreadNamePrefix--">getThreadNamePrefix()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AsyncBufferedIterator.html" title="class in htsjdk.samtools.util">AsyncBufferedIterator</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/writer/AsyncVariantContextWriter.html#getThreadNamePrefix--">getThreadNamePrefix()</a></span> - Method in class htsjdk.variant.variantcontext.writer.<a href="htsjdk/variant/variantcontext/writer/AsyncVariantContextWriter.html" title="class in htsjdk.variant.variantcontext.writer">AsyncVariantContextWriter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/RelativeIso8601Date.html#getTime--">getTime()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/RelativeIso8601Date.html" title="class in htsjdk.samtools.util">RelativeIso8601Date</a></dt>
@@ -8177,6 +8209,10 @@
 <dd>
 <div class="block">Whether the name of a file ends in one of the BLOCK_COMPRESSED_EXTENSIONS</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/tribble/AbstractFeatureReader.html#hasBlockCompressedExtension-java.net.URI-">hasBlockCompressedExtension(URI)</a></span> - Static method in class htsjdk.tribble.<a href="htsjdk/tribble/AbstractFeatureReader.html" title="class in htsjdk.tribble">AbstractFeatureReader</a></dt>
+<dd>
+<div class="block">Whether the path of a URI resource ends in one of the BLOCK_COMPRESSED_EXTENSIONS</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#hasBrowseableIndex--">hasBrowseableIndex()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMFileReader.html#hasBrowseableIndex--">hasBrowseableIndex()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMFileReader.html" title="class in htsjdk.samtools">SAMFileReader</a></dt>
@@ -8410,6 +8446,8 @@
  false if there are no more objects available.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AbstractIterator.html#hasNext--">hasNext()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AbstractIterator.html" title="class in htsjdk.samtools.util">AbstractIterator</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AsyncBufferedIterator.html#hasNext--">hasNext()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AsyncBufferedIterator.html" title="class in htsjdk.samtools.util">AsyncBufferedIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/DelegatingIterator.html#hasNext--">hasNext()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/DelegatingIterator.html" title="class in htsjdk.samtools.util">DelegatingIterator</a></dt>
 <dd>&nbsp;</dd>
@@ -10983,6 +11021,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AbstractIterator.html#next--">next()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AbstractIterator.html" title="class in htsjdk.samtools.util">AbstractIterator</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AsyncBufferedIterator.html#next--">next()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AsyncBufferedIterator.html" title="class in htsjdk.samtools.util">AsyncBufferedIterator</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/DelegatingIterator.html#next--">next()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/DelegatingIterator.html" title="class in htsjdk.samtools.util">DelegatingIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/IntervalTree.FwdIterator.html#next--">next()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/IntervalTree.FwdIterator.html" title="class in htsjdk.samtools.util">IntervalTree.FwdIterator</a></dt>
@@ -12864,9 +12904,10 @@
 <div class="block">Interface for specifying loci of interest for genotype calling and other operations.</div>
 </dd>
 <dt><a href="htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref"><span class="typeNameLink">ReferenceSource</span></a> - Class in <a href="htsjdk/samtools/cram/ref/package-summary.html">htsjdk.samtools.cram.ref</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/ref/ReferenceSource.html#ReferenceSource--">ReferenceSource()</a></span> - Constructor for class htsjdk.samtools.cram.ref.<a href="htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Used to represent a CRAM reference, the backing source for which can either be
+ a file or the EBI ENA reference service.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/ref/ReferenceSource.html#ReferenceSource-java.io.File-">ReferenceSource(File)</a></span> - Constructor for class htsjdk.samtools.cram.ref.<a href="htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/ref/ReferenceSource.html#ReferenceSource-java.nio.file.Path-">ReferenceSource(Path)</a></span> - Constructor for class htsjdk.samtools.cram.ref.<a href="htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a></dt>
@@ -12875,7 +12916,7 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamReaderFactory.html#referenceSource--">referenceSource()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamReaderFactory.html#referenceSource-htsjdk.samtools.cram.ref.ReferenceSource-">referenceSource(ReferenceSource)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamReaderFactory.html#referenceSource-htsjdk.samtools.cram.ref.CRAMReferenceSource-">referenceSource(CRAMReferenceSource)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></dt>
 <dd>
 <div class="block">Sets the specified reference sequence *</div>
 </dd>
@@ -12911,6 +12952,11 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/encoding/writer/Writer.html#refSkipCodec">refSkipCodec</a></span> - Variable in class htsjdk.samtools.cram.encoding.writer.<a href="htsjdk/samtools/cram/encoding/writer/Writer.html" title="class in htsjdk.samtools.cram.encoding.writer">Writer</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/GenomicIndexUtil.html#regionToBin-int-int-">regionToBin(int, int)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/GenomicIndexUtil.html" title="class in htsjdk.samtools">GenomicIndexUtil</a></dt>
+<dd>
+<div class="block">calculate the bin given an alignment in [beg,end)
+ Described in "The Human Genome Browser at UCSC.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/AbstractBAMFileIndex.html#regionToBins-int-int-">regionToBins(int, int)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/AbstractBAMFileIndex.html" title="class in htsjdk.samtools">AbstractBAMFileIndex</a></dt>
 <dd>
 <div class="block">Get candidate bins for the specified region</div>
@@ -14988,9 +15034,18 @@
 <dd>
 <div class="block">Sets whether or not to use async io (i.e.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMFileReader.html#setUseAsyncIO-boolean-">setUseAsyncIO(boolean)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMFileReader.html" title="class in htsjdk.samtools">SAMFileReader</a></dt>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+<div class="block">If true, this reader will use asynchronous IO.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMFileWriterFactory.html#setUseAsyncIo-boolean-">setUseAsyncIo(boolean)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></dt>
 <dd>
 <div class="block">Turn on or off the use of asynchronous IO for writing output SAM and BAM files.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamReaderFactory.html#setUseAsyncIo-boolean-">setUseAsyncIo(boolean)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></dt>
+<dd>
+<div class="block">Set whether readers created by this factory will use asynchronous IO.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMRecordSetBuilder.html#setUseNmFlag-boolean-">setUseNmFlag(boolean)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordSetBuilder.html" title="class in htsjdk.samtools">SAMRecordSetBuilder</a></dt>
 <dd>&nbsp;</dd>

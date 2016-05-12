@@ -134,7 +134,7 @@
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>abstract <a href="../../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></code></td>
-<td class="colLast"><span class="typeNameLabel">SamReaderFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReaderFactory.html#referenceSource-htsjdk.samtools.cram.ref.ReferenceSource-">referenceSource</a></span>(<a href="../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSequence)</code>
+<td class="colLast"><span class="typeNameLabel">SamReaderFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReaderFactory.html#referenceSource-htsjdk.samtools.cram.ref.CRAMReferenceSource-">referenceSource</a></span>(<a href="../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSequence)</code>
 <div class="block">Sets the specified reference sequence *</div>
 </td>
 </tr>
@@ -152,6 +152,12 @@
 </td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>abstract <a href="../../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></code></td>
+<td class="colLast"><span class="typeNameLabel">SamReaderFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReaderFactory.html#setUseAsyncIo-boolean-">setUseAsyncIo</a></span>(boolean&nbsp;asynchronousIO)</code>
+<div class="block">Set whether readers created by this factory will use asynchronous IO.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>abstract <a href="../../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SamReaderFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReaderFactory.html#validationStringency-htsjdk.samtools.ValidationStringency-">validationStringency</a></span>(<a href="../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
 <div class="block">Set this factory's <a href="../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools"><code>ValidationStringency</code></a> to the provided one, then returns itself.</div>

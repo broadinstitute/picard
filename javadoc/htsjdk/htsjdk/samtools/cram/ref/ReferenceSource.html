@@ -106,10 +106,22 @@ var activeTableTab = "activeTableTab";
 <div class="description">
 <ul class="blockList">
 <li class="blockList">
+<dl>
+<dt>All Implemented Interfaces:</dt>
+<dd><a href="../../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a></dd>
+</dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">ReferenceSource</span>
-extends java.lang.Object</pre>
+extends java.lang.Object
+implements <a href="../../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a></pre>
+<div class="block">Used to represent a CRAM reference, the backing source for which can either be
+ a file or the EBI ENA reference service.
+
+ NOTE: In a future release, this class will be renamed and the functionality it
+ contains will be refactored and distributed into one or more separate reference
+ source implementations, each corresponding to the type of resource backing the
+ reference.</div>
 </li>
 </ul>
 </div>
@@ -128,15 +140,12 @@ extends java.lang.Object</pre>
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/ref/ReferenceSource.html#ReferenceSource--">ReferenceSource</a></span>()</code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/ref/ReferenceSource.html#ReferenceSource-java.io.File-">ReferenceSource</a></span>(java.io.File&nbsp;file)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/ref/ReferenceSource.html#ReferenceSource-java.nio.file.Path-">ReferenceSource</a></span>(java.nio.file.Path&nbsp;path)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/ref/ReferenceSource.html#ReferenceSource-htsjdk.samtools.reference.ReferenceSequenceFile-">ReferenceSource</a></span>(<a href="../../../../htsjdk/samtools/reference/ReferenceSequenceFile.html" title="interface in htsjdk.samtools.reference">ReferenceSequenceFile</a>&nbsp;rsFile)</code>&nbsp;</td>
 </tr>
 </table>
@@ -159,9 +168,9 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/ref/ReferenceSource.html#clearCache--">clearCache</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code>static <a href="../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a></code></td>
+<td class="colFirst"><code>static <a href="../../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/ref/ReferenceSource.html#getDefaultCRAMReferenceSource--">getDefaultCRAMReferenceSource</a></span>()</code>
-<div class="block">Attempts to construct a default ReferenceSource for use with CRAM files when
+<div class="block">Attempts to construct a default CRAMReferenceSource for use with CRAM files when
  one has not been explicitly provided.</div>
 </td>
 </tr>
@@ -172,7 +181,9 @@ extends java.lang.Object</pre>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>byte[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/ref/ReferenceSource.html#getReferenceBases-htsjdk.samtools.SAMSequenceRecord-boolean-">getReferenceBases</a></span>(<a href="../../../../htsjdk/samtools/SAMSequenceRecord.html" title="class in htsjdk.samtools">SAMSequenceRecord</a>&nbsp;record,
-                 boolean&nbsp;tryNameVariants)</code>&nbsp;</td>
+                 boolean&nbsp;tryNameVariants)</code>
+<div class="block">getReferenceBases</div>
+</td>
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
@@ -200,15 +211,6 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="ReferenceSource--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>ReferenceSource</h4>
-<pre>public&nbsp;ReferenceSource()</pre>
-</li>
-</ul>
 <a name="ReferenceSource-java.io.File-">
 <!--   -->
 </a>
@@ -250,12 +252,12 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>getDefaultCRAMReferenceSource</h4>
-<pre>public static&nbsp;<a href="../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;getDefaultCRAMReferenceSource()</pre>
-<div class="block">Attempts to construct a default ReferenceSource for use with CRAM files when
+<pre>public static&nbsp;<a href="../../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;getDefaultCRAMReferenceSource()</pre>
+<div class="block">Attempts to construct a default CRAMReferenceSource for use with CRAM files when
  one has not been explicitly provided.</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
-<dd>ReferenceSource if one can be acquired. Guaranteed to no be null if none
+<dd>CRAMReferenceSource if one can be acquired. Guaranteed to not be null if none
  of the listed exceptions is thrown.</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code>java.lang.IllegalStateException</code> - if no default reference source can be acquired</dd>
@@ -289,6 +291,22 @@ extends java.lang.Object</pre>
 <h4>getReferenceBases</h4>
 <pre>public&nbsp;byte[]&nbsp;getReferenceBases(<a href="../../../../htsjdk/samtools/SAMSequenceRecord.html" title="class in htsjdk.samtools">SAMSequenceRecord</a>&nbsp;record,
                                 boolean&nbsp;tryNameVariants)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html#getReferenceBases-htsjdk.samtools.SAMSequenceRecord-boolean-">CRAMReferenceSource</a></code></span></div>
+<div class="block">getReferenceBases</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html#getReferenceBases-htsjdk.samtools.SAMSequenceRecord-boolean-">getReferenceBases</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a></code></dd>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>record</code> - the SAMSequenceRecord identifying the reference
+                       being requested</dd>
+<dd><code>tryNameVariants</code> - if true, attempt to match the requested sequence name
+                        against the reference by using common name variations,
+                        such as adding or removing a leading "chr" prefix
+                        from the requested name. if false, use exact match</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>the bases representing the requested sequence. or null if the sequence
+          cannot be found</dd>
+</dl>
 </li>
 </ul>
 <a name="getDownloadTriesBeforeFailing--">

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -192,18 +192,22 @@ implements java.lang.Iterable&lt;<a href="../../picard/util/TabbedTextFileWithHe
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/util/TabbedTextFileWithHeaderParser.html#columnLabels--">columnLabels</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
+<td class="colFirst"><code>java.util.List&lt;java.lang.String&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/util/TabbedTextFileWithHeaderParser.html#columnLabelsList--">columnLabelsList</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>java.util.Set&lt;java.lang.String&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/util/TabbedTextFileWithHeaderParser.html#getColumnNames--">getColumnNames</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/util/TabbedTextFileWithHeaderParser.html#getCurrentLineNumber--">getCurrentLineNumber</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/util/TabbedTextFileWithHeaderParser.html#hasColumn-java.lang.String-">hasColumn</a></span>(java.lang.String&nbsp;columnLabel)</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>htsjdk.samtools.util.CloseableIterator&lt;<a href="../../picard/util/TabbedTextFileWithHeaderParser.Row.html" title="class in picard.util">TabbedTextFileWithHeaderParser.Row</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/util/TabbedTextFileWithHeaderParser.html#iterator--">iterator</a></span>()</code>
 <div class="block">Creates the iterator object.</div>
@@ -299,6 +303,19 @@ implements java.lang.Iterable&lt;<a href="../../picard/util/TabbedTextFileWithHe
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>The set of column labels for this file in no particular order.</dd>
+</dl>
+</li>
+</ul>
+<a name="columnLabelsList--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>columnLabelsList</h4>
+<pre>public&nbsp;java.util.List&lt;java.lang.String&gt;&nbsp;columnLabelsList()</pre>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The column labels for this file as a List, in no particular order.</dd>
 </dl>
 </li>
 </ul>

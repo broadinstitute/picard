@@ -140,68 +140,72 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <th class="colLast" scope="col">Field and Description</th>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#ALLOW_MISSING_FIELDS_IN_HEADER">ALLOW_MISSING_FIELDS_IN_HEADER</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#CHAIN">CHAIN</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>protected static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE">EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#FILTER_CANNOT_LIFTOVER_INDEL">FILTER_CANNOT_LIFTOVER_INDEL</a></span></code>
 <div class="block">Filter name to use when a target cannot be lifted over.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#FILTER_MISMATCHING_REF_ALLELE">FILTER_MISMATCHING_REF_ALLELE</a></span></code>
 <div class="block">Filter name to use when a target is lifted over, but the reference allele doens't match the new reference.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#FILTER_NO_TARGET">FILTER_NO_TARGET</a></span></code>
 <div class="block">Filter name to use when a target cannot be lifted over.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#INPUT">INPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#LIFTOVER_MIN_MATCH">LIFTOVER_MIN_MATCH</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#ORIGINAL_CONTIG">ORIGINAL_CONTIG</a></span></code>
 <div class="block">Attribute used to store the name of the source contig/chromosome prior to liftover.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#ORIGINAL_START">ORIGINAL_START</a></span></code>
 <div class="block">Attribute used to store the position of the variant on the source contig prior to liftover.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#REFERENCE_SEQUENCE">REFERENCE_SEQUENCE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#REJECT">REJECT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#WARN_ON_MISSING_CONTIG">WARN_ON_MISSING_CONTIG</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#WRITE_ORIGINAL_POSITION">WRITE_ORIGINAL_POSITION</a></span></code>&nbsp;</td>
 </tr>
@@ -375,6 +379,17 @@ public&nbsp;boolean WRITE_ORIGINAL_POSITION</pre>
 <pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="The minimum percent match required for a variant to be lifted.",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
 public&nbsp;double LIFTOVER_MIN_MATCH</pre>
+</li>
+</ul>
+<a name="ALLOW_MISSING_FIELDS_IN_HEADER">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>ALLOW_MISSING_FIELDS_IN_HEADER</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="Allow INFO and FORMAT in the records that are not found in the header",
+        <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;boolean ALLOW_MISSING_FIELDS_IN_HEADER</pre>
 </li>
 </ul>
 <a name="EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE">

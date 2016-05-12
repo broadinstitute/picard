@@ -157,6 +157,14 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/RevertSam.html#OUTPUT_BY_READGROUP">OUTPUT_BY_READGROUP</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>java.io.File</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/RevertSam.html#OUTPUT_MAP">OUTPUT_MAP</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/RevertSam.html#REMOVE_ALIGNMENT_INFORMATION">REMOVE_ALIGNMENT_INFORMATION</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
@@ -289,9 +297,33 @@ public&nbsp;java.io.File INPUT</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>OUTPUT</h4>
-<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="O",
-        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="The output SAM/BAM file to create.")
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#mutex--">mutex</a>="OUTPUT_MAP",
+        <a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="O",
+        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="The output SAM/BAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.")
 public&nbsp;java.io.File OUTPUT</pre>
+</li>
+</ul>
+<a name="OUTPUT_MAP">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>OUTPUT_MAP</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#mutex--">mutex</a>="OUTPUT",
+        <a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="OM",
+        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="Tab separated file with two columns, READ_GROUP_ID and OUTPUT, providing file mapping only used if OUTPUT_BY_READGROUP is true.")
+public&nbsp;java.io.File OUTPUT_MAP</pre>
+</li>
+</ul>
+<a name="OUTPUT_BY_READGROUP">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>OUTPUT_BY_READGROUP</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="OBR",
+        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="When true, outputs each read group in a separate file.")
+public&nbsp;boolean OUTPUT_BY_READGROUP</pre>
 </li>
 </ul>
 <a name="SORT_ORDER">
@@ -384,7 +416,7 @@ public&nbsp;java.lang.String SAMPLE_ALIAS</pre>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>LIBRARY_NAME</h4>
-<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="The library name to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same sample alias ",
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="The library name to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same library name ",
         <a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="LIB",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
 public&nbsp;java.lang.String LIBRARY_NAME</pre>

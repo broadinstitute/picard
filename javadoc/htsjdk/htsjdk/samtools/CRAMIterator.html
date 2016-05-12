@@ -152,20 +152,20 @@ implements <a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interfa
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-java.io.InputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMIterator</a></span>(java.io.InputStream&nbsp;inputStream,
-            <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-java.io.InputStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMIterator</a></span>(java.io.InputStream&nbsp;inputStream,
+            <a href="../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
             <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-long:A-">CRAMIterator</a></span>(<a href="../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;seekableStream,
-            <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-long:A-">CRAMIterator</a></span>(<a href="../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;seekableStream,
+            <a href="../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
             long[]&nbsp;coordinates)</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </td>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-long:A-htsjdk.samtools.ValidationStringency-">CRAMIterator</a></span>(<a href="../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;seekableStream,
-            <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-long:A-htsjdk.samtools.ValidationStringency-">CRAMIterator</a></span>(<a href="../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;seekableStream,
+            <a href="../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
             long[]&nbsp;coordinates,
             <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
 </tr>
@@ -293,14 +293,14 @@ implements <a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interfa
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="CRAMIterator-java.io.InputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">
+<a name="CRAMIterator-java.io.InputStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.ValidationStringency-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>CRAMIterator</h4>
 <pre>public&nbsp;CRAMIterator(java.io.InputStream&nbsp;inputStream,
-                    <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+                    <a href="../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
                     <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)
              throws java.io.IOException</pre>
 <dl>
@@ -309,14 +309,14 @@ implements <a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interfa
 </dl>
 </li>
 </ul>
-<a name="CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-long:A-htsjdk.samtools.ValidationStringency-">
+<a name="CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-long:A-htsjdk.samtools.ValidationStringency-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>CRAMIterator</h4>
 <pre>public&nbsp;CRAMIterator(<a href="../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;seekableStream,
-                    <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+                    <a href="../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
                     long[]&nbsp;coordinates,
                     <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)
              throws java.io.IOException</pre>
@@ -326,7 +326,7 @@ implements <a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interfa
 </dl>
 </li>
 </ul>
-<a name="CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-long:A-">
+<a name="CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-long:A-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -334,7 +334,7 @@ implements <a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interfa
 <h4>CRAMIterator</h4>
 <pre>@Deprecated
 public&nbsp;CRAMIterator(<a href="../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;seekableStream,
-                                <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+                                <a href="../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
                                 long[]&nbsp;coordinates)
                          throws java.io.IOException</pre>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>

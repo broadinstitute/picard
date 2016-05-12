@@ -277,40 +277,40 @@ the order they are declared.</div>
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.File-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
               java.io.File&nbsp;indexFile,
-              <a href="../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+              <a href="../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
               <a href="../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
 <div class="block">Create a CRAMFileReader from a CRAM file and optional index file using the supplied reference
  source and validation stringency.</div>
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.InputStream&nbsp;stream,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-java.io.File-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.InputStream&nbsp;stream,
               java.io.File&nbsp;indexFile,
-              <a href="../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+              <a href="../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
               <a href="../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
 <div class="block">Create a CRAMFileReader from an input stream and optional index file using the supplied reference
  source and validation stringency.</div>
 </td>
 </tr>
 <tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.InputStream&nbsp;inputStream,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.InputStream&nbsp;inputStream,
               <a href="../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;indexInputStream,
-              <a href="../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+              <a href="../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
               <a href="../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
 <div class="block">Create a CRAMFileReader from an input stream and optional index stream using the supplied reference
  source and validation stringency.</div>
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-java.io.InputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMIterator</a></span>(java.io.InputStream&nbsp;inputStream,
-            <a href="../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-java.io.InputStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMIterator</a></span>(java.io.InputStream&nbsp;inputStream,
+            <a href="../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
             <a href="../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
 </tr>
 <tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-long:A-htsjdk.samtools.ValidationStringency-">CRAMIterator</a></span>(<a href="../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;seekableStream,
-            <a href="../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-long:A-htsjdk.samtools.ValidationStringency-">CRAMIterator</a></span>(<a href="../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;seekableStream,
+            <a href="../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
             long[]&nbsp;coordinates,
             <a href="../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
 </tr>

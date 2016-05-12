@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":42,"i1":42,"i2":42,"i3":42,"i4":42,"i5":42,"i6":41,"i7":42,"i8":42,"i9":42,"i10":42,"i11":41,"i12":42,"i13":42,"i14":42,"i15":42,"i16":42,"i17":42,"i18":42,"i19":42,"i20":42,"i21":42,"i22":42,"i23":42,"i24":42,"i25":42,"i26":42,"i27":42,"i28":42,"i29":41,"i30":42,"i31":42,"i32":42,"i33":42};
+var methods = {"i0":42,"i1":42,"i2":42,"i3":42,"i4":42,"i5":42,"i6":41,"i7":42,"i8":42,"i9":42,"i10":42,"i11":41,"i12":42,"i13":42,"i14":42,"i15":42,"i16":42,"i17":42,"i18":42,"i19":42,"i20":42,"i21":42,"i22":42,"i23":42,"i24":42,"i25":42,"i26":42,"i27":42,"i28":42,"i29":41,"i30":42,"i31":42,"i32":42,"i33":42,"i34":42};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -464,18 +464,25 @@ implements <a href="../../htsjdk/samtools/SamReader.html" title="interface in ht
 </tr>
 <tr id="i31" class="rowColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMFileReader.html#setUseAsyncIO-boolean-">setUseAsyncIO</a></span>(boolean&nbsp;useAsyncIO)</code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+<div class="block">If true, this reader will use asynchronous IO.</div>
+</td>
+</tr>
+<tr id="i32" class="altColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMFileReader.html#setValidationStringency-htsjdk.samtools.ValidationStringency-">setValidationStringency</a></span>(<a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 <div class="block">Control validation of SAMRecords as they are read from file.</div>
 </td>
 </tr>
-<tr id="i32" class="altColor">
+<tr id="i33" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMFileReader.html#toString--">toString</a></span>()</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 &nbsp;</td>
 </tr>
-<tr id="i33" class="rowColor">
+<tr id="i34" class="altColor">
 <td class="colFirst"><code><a href="../../htsjdk/samtools/SamReader.Type.html" title="class in htsjdk.samtools">SamReader.Type</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMFileReader.html#type--">type</a></span>()</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
@@ -724,6 +731,17 @@ implements <a href="../../htsjdk/samtools/SamReader.html" title="interface in ht
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code>close</code>&nbsp;in interface&nbsp;<code>java.lang.AutoCloseable</code></dd>
 </dl>
+</li>
+</ul>
+<a name="setUseAsyncIO-boolean-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setUseAsyncIO</h4>
+<pre>public&nbsp;void&nbsp;setUseAsyncIO(boolean&nbsp;useAsyncIO)</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+<div class="block">If true, this reader will use asynchronous IO.</div>
 </li>
 </ul>
 <a name="enableFileSource-boolean-">
