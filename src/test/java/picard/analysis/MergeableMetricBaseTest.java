@@ -121,6 +121,23 @@ public class MergeableMetricBaseTest {
         metric1.merge(metric2);
     }
 
+    @Test
+    public void testMergingANull() {
+
+        final TestMergeableMetric metric1 = new TestMergeableMetric(), metric2 = new TestMergeableMetric();
+        metric1.mustBeEqualString = "goodbye";
+        metric2.mustBeEqualString = null;
+
+        Assert.assertTrue(metric1.canMerge(metric2));
+        metric1.merge(metric2);
+        Assert.assertEquals(metric1.mustBeEqualString, "goodbye");
+
+        Assert.assertTrue(metric2.canMerge(metric1));
+        metric2.merge(metric1);
+        Assert.assertEquals(metric2.mustBeEqualString, "goodbye");
+    }
+
+
     @Test(expectedExceptions = IllegalStateException.class)
     public void testMergingUnequalDouble() {
 
