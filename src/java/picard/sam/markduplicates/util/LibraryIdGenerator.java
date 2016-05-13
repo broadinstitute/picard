@@ -46,6 +46,9 @@ public class LibraryIdGenerator {
     private final Map<String, DuplicationMetrics> metricsByLibrary = new HashMap<String, DuplicationMetrics>();
     private final Histogram<Short> opticalDuplicatesByLibraryId = new Histogram<Short>();
 
+    public final Histogram<Integer> duplicatesCountHist = new Histogram<Integer>("duplicate_set_size", "all_duplicates");
+    public final Histogram<Integer> nonOpticalDuplicatesCountHist = new Histogram<Integer>("duplicate_set_size", "non_optical_duplicates");
+    public final Histogram<Integer> opticalDuplicatesCountHist = new Histogram<Integer>("duplicate_set_size", "optical_duplicates");
 
     public LibraryIdGenerator(final SAMFileHeader header) {
         this.header = header;
@@ -66,6 +69,12 @@ public class LibraryIdGenerator {
     public Map<String, DuplicationMetrics> getMetricsByLibraryMap() { return this.metricsByLibrary; }
 
     public Histogram<Short> getOpticalDuplicatesByLibraryIdMap() { return this.opticalDuplicatesByLibraryId; }
+
+    public Histogram<Integer> getDuplicateSetSizeHist() {return this.duplicatesCountHist;} //this.dupSetHist
+
+    public Histogram<Integer> getNonOpticalDuplicateSetSizeHist() {return this.nonOpticalDuplicatesCountHist;}
+
+    public Histogram<Integer> getOpticalDuplicateSetSizeHist() {return this.opticalDuplicatesCountHist;} //this.optDupSetHist
 
     /**
      * Gets the library name from the header for the record. If the RG tag is not present on

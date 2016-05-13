@@ -24,12 +24,7 @@
 
 package picard.sam.markduplicates;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMTag;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -65,7 +60,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         return new MarkDuplicatesTester();
     }
 
-    // NB: this test should return different results than MarkDuplicatesWithMateCigar
+/*    // NB: this test should return different results than MarkDuplicatesWithMateCigar
     @Test
     public void testTwoMappedPairsWithSoftClippingFirstOfPairOnly() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -78,12 +73,12 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.runTest();
     }
 
-    /**
+    *//**
      * Test that PG header records are created & chained appropriately (or not created), and that the PG record chains
      * are as expected.  MarkDuplicates is used both to merge and to mark dupes in this case.
      * @param suppressPg If true, do not create PG header record.
      * @param expectedPnVnByReadName For each read, info about the expect chain of PG records.
-     */
+     *//*
     @Test(dataProvider = "pgRecordChainingTest")
     public void pgRecordChainingTest(final boolean suppressPg,
                                      final Map<String, List<ExpectedPnAndVn>> expectedPnVnByReadName) {
@@ -145,10 +140,10 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         }
     }
 
-    /**
+    *//**
      * Represents an expected PN value and VN value for a PG record.  If one of thexe is null, any value is allowed
      * in the PG record being tested.
-     */
+     *//*
     private static class ExpectedPnAndVn {
         final String expectedPn;
         final String expectedVn;
@@ -306,5 +301,75 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addArg("READ_TWO_BARCODE_TAG=" + readTwoBarcodeTag);
 
         tester.runTest();
+    }*/
+
+    @Test
+    public void basic() throws Exception {
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
+        builder.setRandomSeed(0);
+        //final String sequence = "chr1";
+        //final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
+        final int sequenceIndex = 0;
+        builder.addPair("H23L5CCXX150130:1:2219:1001:18001", sequenceIndex, 1, 165); // O.D. pair 1
+        builder.addPair("H23L5CCXX150131:1:2219:1002:18002", sequenceIndex, 1, 165); // O.D. pair 1
+        builder.addPair("H23L5CCXX150132:1:2219:1003:18003", sequenceIndex, 1, 165); // O.D. pair 1
+        builder.addPair("H23L5CCXX150133:1:2219:1004:18004", sequenceIndex, 1, 165); // O.D. pair 1
+        builder.addPair("H23L5CCXX150103:1:2211:2001:19001", sequenceIndex+10, 1, 365); // O.D. pair 2 - different tile
+        builder.addPair("H23L5CCXX150104:1:2211:2002:19002", sequenceIndex+10, 1, 365); // O.D. pair 2 - different tile
+        builder.addPair("H23L5CCXX150105:1:2211:2003:19003", sequenceIndex+10, 1, 365); // O.D. pair 2 - different tile
+        builder.addPair("H23L5CCXX150111:1:2212:3001:20001", sequenceIndex+15, 1, 365); // O.D. pair 3 - different tile
+        builder.addPair("H23L5CCXX150112:1:2212:3002:20002", sequenceIndex+15, 1, 365); // O.D. pair 3 - different tile
+        builder.addPair("H23L5CCXX150113:1:2212:3003:20003", sequenceIndex+15, 1, 365); // O.D. pair 3 - different tile
+        builder.addPair("H23L5CCXX150121:1:2212:3001:18001", sequenceIndex+20, 1, 265); // non-O.D. pair 3 - different tile
+        builder.addPair("H23L5CCXX150122:1:2213:4002:19002", sequenceIndex+20, 1, 265); // non-O.D. pair 3 - different tile
+        builder.addPair("H23L5CCXX150123:1:2214:5003:20003", sequenceIndex+20, 1, 265); // non-O.D. pair 3 - different tile
+
+        // create input/output files
+        final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".", ".tmp");
+        final File samFile = File.createTempFile("tmp.MarkDupesTester.", ".sam");
+        samFile.deleteOnExit();
+        System.out.println("in sam file = " + samFile.getAbsolutePath());
+        final File outputSam = File.createTempFile("tmp.DupsMarked.", ".sam");
+        //outputSam.deleteOnExit();
+        System.out.println("out sam file = " + outputSam.getAbsolutePath());
+        final File dsFile = File.createTempFile("tmp.duplicate_set_size",".metrics");
+        System.out.println("duplicate set histogram = " + dsFile.getAbsolutePath());
+        // dsFile.deleteOnExit();
+        final File metricsFile = new File(outputDir, TEST_BASE_NAME + ".duplicate_metrics");
+        System.out.println("metrics file = " + metricsFile.getAbsolutePath());
+        //metricsFile.deleteOnExit();
+
+        // create sam file for testing
+        final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
+        for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
+        samWriter.close();
+
+        // Run MarkDuplicates
+        final MarkDuplicates.DuplicateTaggingPolicy TAGGING_POLICY = MarkDuplicates.DuplicateTaggingPolicy.All;
+        final MarkDuplicates markDuplicates = new MarkDuplicates();
+        markDuplicates.setupOpticalDuplicateFinder();
+        markDuplicates.INPUT = CollectionUtil.makeList(samFile.getAbsolutePath());
+        markDuplicates.OUTPUT = outputSam;
+        markDuplicates.METRICS_FILE = metricsFile;
+        markDuplicates.DUP_SET_HIST = dsFile;
+        markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
+        markDuplicates.TAGGING_POLICY=TAGGING_POLICY;
+        // Needed to suppress calling CommandLineProgram.getVersion(), which doesn't work for code not in a jar
+        markDuplicates.PROGRAM_RECORD_ID = null;
+
+        // load output metrics file
+        // final MetricsFile<DuplicationMetrics, Comparable<?>> metricsOutput = new MetricsFile<DuplicationMetrics, Comparable<?>>();
+        // try{
+        //     metricsOutput.read(new FileReader(metricsFile));
+        // }
+        // catch (final FileNotFoundException ex) {
+        //     System.err.println("Metrics file not found: " + ex);
+        // }
+        // final DuplicationMetrics observedMetrics = metricsOutput.getMetrics().get(metricsOutput.getMetrics().size() - 1);
+        // Assert.assertEquals(observedMetrics.READ_PAIR_DUPLICATES, 7L);
+
+        Assert.assertEquals(markDuplicates.doWork(), 0);
+        //TestUtil.recursiveDelete(outputDir);
     }
+
 }
