@@ -32,6 +32,7 @@ import picard.sam.DuplicationMetrics;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * A class to generate library Ids and keep duplication metrics by library IDs.
@@ -40,6 +41,8 @@ import java.util.Map;
  */
 public class LibraryIdGenerator {
 
+    private static final String UNKNOWN_LIBRARY = "Unknown Library";
+   
     private final SAMFileHeader header;
     private final Map<String, Short> libraryIds = new HashMap<String, Short>(); // from library string to library id
     private short nextLibraryId = 1;
@@ -51,7 +54,7 @@ public class LibraryIdGenerator {
         this.header = header;
 
         for (final SAMReadGroupRecord readGroup : header.getReadGroups()) {
-            final String library = readGroup.getLibrary();
+            final String library = LibraryIdGenerator.getReadGroupLibraryName(readGroup);
             DuplicationMetrics metrics = metricsByLibrary.get(library);
             if (metrics == null) {
                 metrics = new DuplicationMetrics();
@@ -67,6 +70,11 @@ public class LibraryIdGenerator {
 
     public Histogram<Short> getOpticalDuplicatesByLibraryIdMap() { return this.opticalDuplicatesByLibraryId; }
 
+	public static String getReadGroupLibraryName(SAMReadGroupRecord readGroup) {
+		return Optional.ofNullable(readGroup.getLibrary())
+				.orElse(UNKNOWN_LIBRARY);
+	}
+   
     /**
      * Gets the library name from the header for the record. If the RG tag is not present on
      * the record, or the library isn't denoted on the read group, a constant string is
@@ -83,7 +91,7 @@ public class LibraryIdGenerator {
             }
         }
 
-        return "Unknown Library";
+        return UNKNOWN_LIBRARY;
     }
 
     /** Get the library ID for the given SAM record. */

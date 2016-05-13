@@ -154,8 +154,8 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
             catch (final FileNotFoundException ex) {
                 System.err.println("Metrics file not found: " + ex);
             }
-            // NB: Test writes an initial metrics line with a null entry for LIBRARY and 0 values for all metrics. Why?
-            final DuplicationMetrics observedMetrics = metricsOutput.getMetrics().get(metricsOutput.getMetrics().size() - 1);
+            Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
+            final DuplicationMetrics observedMetrics = metricsOutput.getMetrics().get(0);
             Assert.assertEquals(observedMetrics.UNPAIRED_READS_EXAMINED, expectedMetrics.UNPAIRED_READS_EXAMINED, "UNPAIRED_READS_EXAMINED does not match expected");
             Assert.assertEquals(observedMetrics.READ_PAIRS_EXAMINED, expectedMetrics.READ_PAIRS_EXAMINED, "READ_PAIRS_EXAMINED does not match expected");
             Assert.assertEquals(observedMetrics.UNMAPPED_READS, expectedMetrics.UNMAPPED_READS, "UNMAPPED_READS does not match expected");
