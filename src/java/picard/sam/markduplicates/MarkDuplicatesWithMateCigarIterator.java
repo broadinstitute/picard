@@ -143,7 +143,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
 
         // set up metrics
         for (final SAMReadGroupRecord readGroup : header.getReadGroups()) {
-            final String library = readGroup.getLibrary();
+            final String library = LibraryIdGenerator.getReadGroupLibraryName(readGroup);
             DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
             if (metrics == null) {
                 metrics = new DuplicationMetrics();
