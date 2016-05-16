@@ -47,7 +47,7 @@ public class HaplotypeProbabilityOfNormalGivenTumor extends HaplotypeProbabiliti
                 //This is P(g_t|g_n)
                 //tumor genotype are the columns.
                 {1,               0,        0},  //normal is hom_ref => tumor must be the same
-                {pLoH / 2, 1 - pLoH, pLoH / 2},  //normal is het     => tumor may have transited
+                {pLoH / 2, 1 - pLoH, pLoH / 2},  //normal is het     => tumor may have transitioned
                 {0,               0,        1}}; //normal is hom_var => tumor must be the same
     }
 

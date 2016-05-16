@@ -264,7 +264,7 @@ public class FingerprintChecker {
             }
         }
 
-        return intervals.sorted().uniqued();
+        return intervals.uniqued();
     }
 
     /**
