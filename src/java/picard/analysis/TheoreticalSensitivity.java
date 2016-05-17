@@ -32,6 +32,7 @@ import picard.util.MathUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by David Benjamin on 5/13/15.
@@ -139,8 +140,10 @@ public class TheoreticalSensitivity {
         final private List<Double> probabilities;
         final private int N;
         private int count = 0;
+        private Random rng;
 
         RouletteWheel(final double[] weights) {
+            rng = new Random(51);
             N = weights.length;
 
             probabilities = new ArrayList<>();
@@ -157,9 +160,9 @@ public class TheoreticalSensitivity {
 
         public int draw() {
             while (true) {
-                final int n = (int) (N * Math.random());
+                final int n = (int) (N * rng.nextDouble());
                 count++;
-                if (Math.random() < probabilities.get(n)) {
+                if (rng.nextDouble() < probabilities.get(n)) {
                     count = 0;
                     return n;
                 } else if (count >= SAMPLING_MAX) {
