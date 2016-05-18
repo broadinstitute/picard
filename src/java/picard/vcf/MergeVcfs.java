@@ -138,8 +138,7 @@ public class MergeVcfs extends CommandLineProgram {
 
         final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
                 .setOutputFile(OUTPUT)
-                .setReferenceDictionary(sequenceDictionary)
-                .clearOptions();
+                .setReferenceDictionary(sequenceDictionary);
         if (CREATE_INDEX) {
             builder.setOption(Options.INDEX_ON_THE_FLY);
         }
