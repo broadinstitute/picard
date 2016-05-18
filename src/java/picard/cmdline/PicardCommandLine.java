@@ -228,7 +228,7 @@ public class PicardCommandLine {
 
             if (!commandListOnly) {
                 builder.append(KWHT + "--------------------------------------------------------------------------------------\n" + KNRM);
-                builder.append(String.format("%s%-48s %-45s%s\n", KRED, programGroup.getName() + ":", programGroup.getDescription(), KNRM));
+                builder.append(String.format("%s%-48s %-45s%s%n", KRED, programGroup.getName() + ":", programGroup.getDescription(), KNRM));
             }
 
             final List<Class> sortedClasses = new ArrayList<Class>();
@@ -242,16 +242,16 @@ public class PicardCommandLine {
                 }
                 if (!commandListOnly) {
                     if (clazz.getSimpleName().length() >= 45) {
-                        builder.append(String.format("%s    %s    %s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
+                        builder.append(String.format("%s    %s    %s%s%s%n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
                     } else {
-                        builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
+                        builder.append(String.format("%s    %-45s%s%s%s%n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
                     }
                 }
                 else {
                     builder.append(clazz.getSimpleName() + "\n");
                 }
             }
-            if (!commandListOnly) builder.append(String.format("\n"));
+            if (!commandListOnly) builder.append(String.format("%n"));
         }
         if (!commandListOnly) builder.append(KWHT + "--------------------------------------------------------------------------------------\n\n" + KNRM);
         if (toStdout) {
