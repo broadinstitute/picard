@@ -264,8 +264,10 @@ public class ClippingUtility {
             int mismatches = 0;
 
             for (int i = 0; i < length; ++i) {
-                if (!SequenceUtil.isNoCall(adapterSequence[i]) && !SequenceUtil.basesEqual(adapterSequence[i], read[start + i])) {
-                    if (++mismatches > mismatchesAllowed) continue READ_LOOP;
+                if (!SequenceUtil.isNoCall(adapterSequence[i]) && 
+                        !SequenceUtil.basesEqual(adapterSequence[i], read[start + i]) &&
+                        ++mismatches > mismatchesAllowed) {
+                    continue READ_LOOP;
                 }
             }
 

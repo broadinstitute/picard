@@ -620,14 +620,14 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         // The loop can start from MIN_IDENTICAL_BASES because we've already confirmed that
         // at least those first few bases are identical when sorting.
         for (int i = MIN_IDENTICAL_BASES; i < read1Length; ++i) {
-            if (lhs.read1[i] != rhs.read1[i]) {
-                if (++errors > maxErrors) return false;
+            if (lhs.read1[i] != rhs.read1[i] && ++errors > maxErrors) {
+                return false;
             }
         }
 
         for (int i = MIN_IDENTICAL_BASES; i < read2Length; ++i) {
-            if (lhs.read2[i] != rhs.read2[i]) {
-                if (++errors > maxErrors) return false;
+            if (lhs.read2[i] != rhs.read2[i] && ++errors > maxErrors) {
+                return false;
             }
         }
 

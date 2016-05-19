@@ -124,11 +124,9 @@ public class GatherVcfs extends CommandLineProgram {
             final CloseableIterator<VariantContext> variantIterator = in.iterator();
             if (variantIterator.hasNext()) {
                 final VariantContext currentContext = variantIterator.next();
-                if (lastContext != null) {
-                    if (comparator.compare(lastContext, currentContext) >= 0) {
-                        throw new IllegalArgumentException("First record in file " + f.getAbsolutePath() + " is not after first record in " +
-                                "previous file " + lastFile.getAbsolutePath());
-                    }
+                if (lastContext != null && comparator.compare(lastContext, currentContext) >= 0) {
+                    throw new IllegalArgumentException("First record in file " + f.getAbsolutePath() + " is not after first record in " +
+                            "previous file " + lastFile.getAbsolutePath());
                 }
 
                 lastContext = currentContext;

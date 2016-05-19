@@ -247,19 +247,15 @@ public class CollectJumpingLibraryMetrics extends CommandLineProgram {
                     break;
                 } else if (sam.getReadUnmappedFlag() || sam.getMateUnmappedFlag()) {
                     continue;
-                } else {
-                    if ((sam.getAttribute(SAMTag.MQ.name()) == null ||
-                            sam.getIntegerAttribute(SAMTag.MQ.name()) >= MINIMUM_MAPPING_QUALITY) &&
-                            sam.getMappingQuality() >= MINIMUM_MAPPING_QUALITY &&
-                            sam.getMateNegativeStrandFlag() != sam.getReadNegativeStrandFlag() &&
-                            sam.getMateReferenceIndex().equals(sam.getReferenceIndex())) {
-                        if (SamPairUtil.getPairOrientation(sam) == PairOrientation.RF) {
-                            histo.increment(Math.abs(sam.getInferredInsertSize()));
-                            sampled++;
-                        }
-                    }
+                } else if ((sam.getAttribute(SAMTag.MQ.name()) == null ||
+                        sam.getIntegerAttribute(SAMTag.MQ.name()) >= MINIMUM_MAPPING_QUALITY) &&
+                        sam.getMappingQuality() >= MINIMUM_MAPPING_QUALITY &&
+                        sam.getMateNegativeStrandFlag() != sam.getReadNegativeStrandFlag() &&
+                        sam.getMateReferenceIndex().equals(sam.getReferenceIndex()) &&
+                        SamPairUtil.getPairOrientation(sam) == PairOrientation.RF) {
+                    histo.increment(Math.abs(sam.getInferredInsertSize()));
+                    sampled++;
                 }
-
             }
             CloserUtil.close(reader);
         }

@@ -476,10 +476,8 @@ public abstract class AbstractAlignmentMerger {
             final ProgressLogger finalProgress = new ProgressLogger(log, 10000000, "Written in coordinate order to output", "records");
 
             for (final SAMRecord rec : sink.sorter) {
-                if (!rec.getReadUnmappedFlag()) {
-                    if (refSeq != null) {
-                        fixNMandUQ(rec, refSeq, bisulfiteSequence);
-                    }
+                if (!rec.getReadUnmappedFlag() && refSeq != null) {
+                    fixNMandUQ(rec, refSeq, bisulfiteSequence);
                 }
                 writer.addAlignment(rec);
                 finalProgress.record(rec);

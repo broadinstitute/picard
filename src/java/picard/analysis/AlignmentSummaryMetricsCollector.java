@@ -306,17 +306,16 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                             final int readBaseIndex = readIndex + i;
                             boolean mismatch = !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex+i]);
                             boolean bisulfiteBase = false;
-                            if (mismatch && isBisulfiteSequenced) {
-                                if ( (record.getReadNegativeStrandFlag() &&
-                                        (refBases[refIndex+i] == 'G' || refBases[refIndex+i] =='g') &&
-                                        (readBases[readBaseIndex] == 'A' || readBases[readBaseIndex] == 'a'))
-                                        || ((!record.getReadNegativeStrandFlag()) &&
-                                        (refBases[refIndex+i] == 'C' || refBases[refIndex+i] == 'c') &&
-                                        (readBases[readBaseIndex] == 'T') || readBases[readBaseIndex] == 't') ) {
+                            if (mismatch && isBisulfiteSequenced &&
+                                    record.getReadNegativeStrandFlag() &&
+                                    (refBases[refIndex + i] == 'G' || refBases[refIndex + i] == 'g') &&
+                                    (readBases[readBaseIndex] == 'A' || readBases[readBaseIndex] == 'a')
+                                    || ((!record.getReadNegativeStrandFlag()) &&
+                                    (refBases[refIndex + i] == 'C' || refBases[refIndex + i] == 'c') &&
+                                    (readBases[readBaseIndex] == 'T') || readBases[readBaseIndex] == 't')) {
 
-                                    bisulfiteBase = true;
-                                    mismatch = false;
-                                }
+                                bisulfiteBase = true;
+                                mismatch = false;
                             }
 
                             if(mismatch) mismatchCount++;

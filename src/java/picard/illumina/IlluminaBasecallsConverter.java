@@ -107,10 +107,8 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                 if (s2.startsWith(s1)) {
                     return 1;
                 }
-            } else if (s2.length() < s1.length()) {
-                if (s1.startsWith(s2)) {
-                    return -1;
-                }
+            } else if (s2.length() < s1.length() && s1.startsWith(s2)) {
+                return -1;
             }
             return s1.compareTo(s2);
         }
