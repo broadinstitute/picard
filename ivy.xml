@@ -1,0 +1,6 @@
+<ivy-module version="2.0">
+    <info organisation="org.github.broadinstitute" module="picard"/>
+    <dependencies>
+        <dependency org="com.github.samtools" name="htsjdk" rev="2.3.0" />
+    </dependencies>
+</ivy-module>
