@@ -24,8 +24,17 @@
 
 package picard.sam;
 
+import org.apache.commons.math3.special.Beta;
+import org.apache.commons.math3.util.CombinatoricsUtils;
+import org.apache.commons.math3.distribution.BinomialDistribution;
+import org.apache.commons.math3.util.FastMath;
+import static picard.util.MathUtil.pNormalizeVector;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.util.Histogram;
+
+import java.util.Collection;
+import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Metrics that are calculated during the process of marking duplicates
@@ -163,6 +172,150 @@ public class DuplicationMetrics extends MetricBase {
         }
 
         return histo;
+    }
+
+    public Histogram<Integer> getNonOptDupHistogram(Histogram<Integer> histo) {
+        final double histoCount = histo.getCount();
+        Collection<Histogram.Bin> vals = histo.values();
+        int[] countArray = new int[vals.size()];
+        int[] sizeArray = new int[vals.size()];
+        int count = 0;
+        HashMap<Integer, Integer> hm = new HashMap();
+        for (final Histogram<Integer>.Bin bin : histo.values()) {
+            countArray[count] = (int) bin.getValue();
+            sizeArray[count] = (int) bin.getId();
+            hm.put(sizeArray[count], countArray[count]);
+            count += 1;
+        }
+        int maxSize = Arrays.stream(sizeArray).max().getAsInt();
+        // extend the array to contain 0 counts for entries with zero occupancy
+        double[] observedOccupancy = new double[maxSize];
+        for (int i=0; i<maxSize; i++) {
+            if (hm.containsKey(i+1)) {
+                observedOccupancy[i] = (double) hm.get(i + 1);
+            } else {
+                observedOccupancy[i] = 0;
+            }
+        }
+        int m = 0;
+        for (int k=0; k<maxSize; k++){
+            m += (int) (k+1)*observedOccupancy[k];
+        }
+        double[] normCntVec = pNormalizeVector(observedOccupancy);
+        double[] sampledOccupancyEstimate = estimateSampledLibraryOccupancy(1000,10000,1000);
+        double[] seqMultipleRange1 = makeInterval(1,6,.2,true);
+        double[] drawRange1 = makeInterval(3,20,1,true);
+        double[][] paramMtrx = performGridSearchforKLMin(normCntVec,m,seqMultipleRange1,drawRange1);
+        return histo;
+    }
+
+    public double[] estimateLibraryOccupancy(int N, int n, int m){
+        /**
+         * This function estimates the theoretical library occupancy before sampling under a set of Polya paramaters
+         * returns a vector of probabilities for k=1...40
+         * @param N Library size estimate
+         * @param n number of polya draws
+         * @param m number of observed samples
+         */
+        double[] libEstimate = new double[40];
+        double betaDen = Beta.logBeta(1, (double) N-1);
+        for (int k=0; k<40; k++ ) {
+            double nCk = CombinatoricsUtils.binomialCoefficientLog(n,k);
+            double betaNum = Beta.logBeta(k+1, (n-k)+N-1);
+            double lgProb = nCk+betaNum-betaDen; // log sum of probabilities
+            libEstimate[k] = Math.exp(lgProb);
+            int g=1;
+        }
+        double libSum = 0;
+        for (double x : libEstimate)libSum += x;
+        return libEstimate;
+    }
+
+    public double[] estimateSampledLibraryOccupancy(int N, int n, int m){
+        /**
+         * This function estimates the library occupancy after sampling under a set of Polya paramaters. The
+         * model assumes sampling with replacement under binomial sampling.
+         * returns a vector of probabilities for k=1...40
+         */
+        double[] libOccupancyEstimate = estimateLibraryOccupancy(N,n,m);
+        double[] sampledOccupancyEstimate = new double[libOccupancyEstimate.length];
+        double M = 0;
+        for (int k=0; k<(libOccupancyEstimate.length); k++){
+            M += N*(k+1)*libOccupancyEstimate[k];
+        }
+        for (int k=0; k<(libOccupancyEstimate.length); k++ ) {
+            double[] t = new double[libOccupancyEstimate.length];
+            double tSum = 0;
+            for (int j=0; j<(libOccupancyEstimate.length); j++ ) {
+                double p = ((double) j / M);
+                if (p>1){
+                    p = 1;
+                }
+                BinomialDistribution binom = new BinomialDistribution(m,p);
+                t[j] = libOccupancyEstimate[j]*binom.probability(k);
+                tSum += t[j];
+            }
+            sampledOccupancyEstimate[k] = tSum;
+        }
+        double sampSum = 0;
+        for (double x : sampledOccupancyEstimate)sampSum += x;
+        return sampledOccupancyEstimate;
+    }
+
+    public double[] makeInterval(double start, double stop, double step, boolean makeExponential) {
+        double k = start;
+        int nIter = (int) ((int) (stop-start)/step);
+        double[] intval = new double[nIter];
+        for(int i = 0; i < nIter; i++){
+            k += step;
+            if (makeExponential) {
+                intval[i] = Math.exp(k);
+            }
+            else {
+                intval[i] = k;
+            }
+
+        }
+        return intval;
+    }
+
+    public double[][] performGridSearchforKLMin(double [] observedOccupancy, int m,
+                                          double[] seqMultipleRange, double[] drawRange){
+        /**
+         * Perform grid search to find minimum of KL divergence
+         */
+        double[][] paramMtrx = new double[seqMultipleRange.length][drawRange.length];
+        for (int i = 0; i<seqMultipleRange.length; i++){
+            for (int j = 0; j<drawRange.length; j++){
+                paramMtrx[i][j] = occupancyKLDivergence(observedOccupancy, (int) drawRange[j],
+                        (int) (m*seqMultipleRange[i]), m, observedOccupancy.length);
+            }
+        }
+        return paramMtrx;
+    }
+
+    public double occupancyKLDivergence(double [] observedOccupancy,int n, int N, int m, int maxK){
+        /**
+         * calculate KL divergence between observed occupancy and expected occupancy
+         * @param observedOccupancy vector of observed occupancy
+         * @param N Library size estimate
+         * @param n number of polya draws
+         * @param m number of observed samples
+         * @param maxK maximum value of k to which KL will be calculated
+         */
+        double[] sampledOccupancyEstimate = estimateSampledLibraryOccupancy(N,n,m);
+        int ix; // max index for evaluation
+        if (sampledOccupancyEstimate.length < maxK) {
+            ix = sampledOccupancyEstimate.length;
+        }
+        else {
+            ix = maxK;
+        }
+        double klDiverge = 0;
+        for (int i=0; i<ix; i++){
+            klDiverge += observedOccupancy[i] * FastMath.log(observedOccupancy[i]/sampledOccupancyEstimate[i]);
+        }
+        return klDiverge;
     }
 
     // Main method used for debugging the derived metrics

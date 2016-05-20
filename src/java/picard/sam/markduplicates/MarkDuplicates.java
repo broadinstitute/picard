@@ -580,6 +580,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             } else {
                 if (nextChunk.size() > 1) {
                     markDuplicatePairs(nextChunk);
+                } else {
+                    AbstractMarkDuplicatesCommandLineProgram.addSingletonToCount(libraryIdGenerator);
                 }
                 nextChunk.clear();
                 nextChunk.add(next);

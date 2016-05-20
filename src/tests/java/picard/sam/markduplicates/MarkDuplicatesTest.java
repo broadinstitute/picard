@@ -310,19 +310,23 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         //final String sequence = "chr1";
         //final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
         final int sequenceIndex = 0;
-        builder.addPair("H23L5CCXX150130:1:2219:1001:18001", sequenceIndex, 1, 165); // O.D. pair 1
-        builder.addPair("H23L5CCXX150131:1:2219:1002:18002", sequenceIndex, 1, 165); // O.D. pair 1
-        builder.addPair("H23L5CCXX150132:1:2219:1003:18003", sequenceIndex, 1, 165); // O.D. pair 1
-        builder.addPair("H23L5CCXX150133:1:2219:1004:18004", sequenceIndex, 1, 165); // O.D. pair 1
-        builder.addPair("H23L5CCXX150103:1:2211:2001:19001", sequenceIndex+10, 1, 365); // O.D. pair 2 - different tile
-        builder.addPair("H23L5CCXX150104:1:2211:2002:19002", sequenceIndex+10, 1, 365); // O.D. pair 2 - different tile
-        builder.addPair("H23L5CCXX150105:1:2211:2003:19003", sequenceIndex+10, 1, 365); // O.D. pair 2 - different tile
-        builder.addPair("H23L5CCXX150111:1:2212:3001:20001", sequenceIndex+15, 1, 365); // O.D. pair 3 - different tile
-        builder.addPair("H23L5CCXX150112:1:2212:3002:20002", sequenceIndex+15, 1, 365); // O.D. pair 3 - different tile
-        builder.addPair("H23L5CCXX150113:1:2212:3003:20003", sequenceIndex+15, 1, 365); // O.D. pair 3 - different tile
-        builder.addPair("H23L5CCXX150121:1:2212:3001:18001", sequenceIndex+20, 1, 265); // non-O.D. pair 3 - different tile
-        builder.addPair("H23L5CCXX150122:1:2213:4002:19002", sequenceIndex+20, 1, 265); // non-O.D. pair 3 - different tile
-        builder.addPair("H23L5CCXX150123:1:2214:5003:20003", sequenceIndex+20, 1, 265); // non-O.D. pair 3 - different tile
+        builder.addPair("H23L5CCXX150130:1:2219:1001:18001", sequenceIndex, 1, 165); // O.D. set 1
+        builder.addPair("H23L5CCXX150131:1:2219:1002:18002", sequenceIndex, 1, 165); // O.D. set 1
+        builder.addPair("H23L5CCXX150132:1:2219:1003:18003", sequenceIndex, 1, 165); // O.D. set 1
+        builder.addPair("H23L5CCXX150133:1:2219:1004:18004", sequenceIndex, 1, 165); // O.D. set 1
+        builder.addPair("H23L5CCXX150103:1:2211:2001:19001", sequenceIndex+10, 1, 365); // O.D. set 2 - same tile
+        builder.addPair("H23L5CCXX150104:1:2211:2002:19002", sequenceIndex+10, 1, 365); // O.D. set 2 - same tile
+        builder.addPair("H23L5CCXX150105:1:2211:2003:19003", sequenceIndex+10, 1, 365); // O.D. set 2 - same tile
+        builder.addPair("H23L5CCXX150111:1:2212:3001:20001", sequenceIndex+15, 1, 365); // O.D. set 3 - same tile
+        builder.addPair("H23L5CCXX150112:1:2212:3002:20002", sequenceIndex+15, 1, 365); // O.D. set 3 - same tile
+        builder.addPair("H23L5CCXX150113:1:2212:3003:20003", sequenceIndex+15, 1, 365); // O.D. set 3 - same tile
+        builder.addPair("H23L5CCXX150121:1:2212:3001:18001", sequenceIndex+20, 1, 265); // non-O.D. set 4 - different tile
+        builder.addPair("H23L5CCXX150122:1:2213:4002:19002", sequenceIndex+20, 1, 265); // non-O.D. set 4 - different tile
+        builder.addPair("H23L5CCXX150123:1:2214:5003:20003", sequenceIndex+20, 1, 265); // non-O.D. set 4 - different tile
+        builder.addPair("H23L5CCXX150130:1:2219:1001:11001", sequenceIndex+11, 1, 165); // Singleton
+        builder.addPair("H23L5CCXX150130:1:2219:1001:11002", sequenceIndex+12, 1, 166); // Singleton
+        builder.addPair("H23L5CCXX150130:1:2219:1001:11003", sequenceIndex+13, 1, 167); // Singleton
+
 
         // create input/output files
         final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".", ".tmp");
@@ -330,14 +334,14 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         samFile.deleteOnExit();
         System.out.println("in sam file = " + samFile.getAbsolutePath());
         final File outputSam = File.createTempFile("tmp.DupsMarked.", ".sam");
-        //outputSam.deleteOnExit();
+        outputSam.deleteOnExit();
         System.out.println("out sam file = " + outputSam.getAbsolutePath());
         final File dsFile = File.createTempFile("tmp.duplicate_set_size",".metrics");
         System.out.println("duplicate set histogram = " + dsFile.getAbsolutePath());
-        // dsFile.deleteOnExit();
+        dsFile.deleteOnExit();
         final File metricsFile = new File(outputDir, TEST_BASE_NAME + ".duplicate_metrics");
         System.out.println("metrics file = " + metricsFile.getAbsolutePath());
-        //metricsFile.deleteOnExit();
+        metricsFile.deleteOnExit();
 
         // create sam file for testing
         final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
