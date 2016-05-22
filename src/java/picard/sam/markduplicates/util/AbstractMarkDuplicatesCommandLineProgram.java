@@ -199,12 +199,13 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
 
         file.write(METRICS_FILE);
 
-        //final MetricsFile<?,Integer> dsFile = getMetricsFile();
-        //dsFile.addHistogram(duplicatesCountHist);
-        //dsFile.addHistogram(nonOpticalDuplicatesCountHist);
-        //dsFile.addHistogram(opticalDuplicatesCountHist);
-        //dsFile.write(DUP_SET_HIST);
-
+        final MetricsFile<?,Integer> dsFile = getMetricsFile();
+        dsFile.addHistogram(duplicatesCountHist);
+        dsFile.addHistogram(nonOpticalDuplicatesCountHist);
+        dsFile.addHistogram(opticalDuplicatesCountHist);
+        dsFile.write(DUP_SET_HIST);
+        // write paramater matrix to file
+        metricsByLibrary.values().iterator().next().writeMatricesToFile(DUP_SET_HIST.getAbsolutePath());
     }
 
     /** Little class used to package up a header and an iterable/iterator. */

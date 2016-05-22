@@ -338,10 +338,10 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         System.out.println("out sam file = " + outputSam.getAbsolutePath());
         final File dsFile = File.createTempFile("tmp.duplicate_set_size",".metrics");
         System.out.println("duplicate set histogram = " + dsFile.getAbsolutePath());
-        dsFile.deleteOnExit();
+        //dsFile.deleteOnExit();
         final File metricsFile = new File(outputDir, TEST_BASE_NAME + ".duplicate_metrics");
         System.out.println("metrics file = " + metricsFile.getAbsolutePath());
-        metricsFile.deleteOnExit();
+        //metricsFile.deleteOnExit();
 
         // create sam file for testing
         final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
@@ -375,5 +375,6 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         Assert.assertEquals(markDuplicates.doWork(), 0);
         //TestUtil.recursiveDelete(outputDir);
     }
+
 
 }

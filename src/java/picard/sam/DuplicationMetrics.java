@@ -32,6 +32,9 @@ import static picard.util.MathUtil.pNormalizeVector;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.util.Histogram;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -76,6 +79,24 @@ public class DuplicationMetrics extends MetricBase {
 
     /** The estimated number of unique molecules in the library based on PE duplication. */
     public Long ESTIMATED_LIBRARY_SIZE;
+
+    /** Grid search matrix for parameter optimization */
+    public double[][] GRID_SEARCH_MTRX;
+
+    /** Polya draw search interval */
+    public double[] POLYA_DRAW_SEARCH_INT;
+
+    /** Library size multiple search interval */
+    public double[] LIBRARY_SIZE_MULTIPLE_SEARCH_INT;
+
+    /** Interval of additional read pairs multiples for ROI projections */
+    public double[] SEQUENCING_MULTIPLE_INTERVAL;
+
+    /** Matrix of projected occupancies based on sequencing multiple */
+    public double[][] PROJECTED_OCCUPANCY_MATRIX;
+
+    /** projection of unique molecules based on sequencing multiple */
+    public double[] UNIQUE_MOLECULE_COUNT_PROJECTION;
 
     /**
      * Fills in the ESTIMATED_LIBRARY_SIZE based on the paired read data examined where
@@ -177,7 +198,7 @@ public class DuplicationMetrics extends MetricBase {
     public Histogram<Integer> getNonOptDupHistogram(Histogram<Integer> histo) {
         final double histoCount = histo.getCount();
         Collection<Histogram.Bin> vals = histo.values();
-        int[] countArray = new int[vals.size()];
+        /*int[] countArray = new int[vals.size()];
         int[] sizeArray = new int[vals.size()];
         int count = 0;
         HashMap<Integer, Integer> hm = new HashMap();
@@ -186,7 +207,14 @@ public class DuplicationMetrics extends MetricBase {
             sizeArray[count] = (int) bin.getId();
             hm.put(sizeArray[count], countArray[count]);
             count += 1;
+        }*/
+        int[] countArray = {1990,75,3,1,1,0,0};
+        int[] sizeArray = {1,2,3,4,5,6,7};
+        HashMap<Integer, Integer> hm = new HashMap();
+        for (int i=0; i<countArray.length; i++){
+            hm.put(sizeArray[i], countArray[i]);
         }
+        // values for test array
         int maxSize = Arrays.stream(sizeArray).max().getAsInt();
         // extend the array to contain 0 counts for entries with zero occupancy
         double[] observedOccupancy = new double[maxSize];
@@ -197,17 +225,72 @@ public class DuplicationMetrics extends MetricBase {
                 observedOccupancy[i] = 0;
             }
         }
-        int m = 0;
+        int m = 0; // non-optical pairs observed
+        int u = 0;
         for (int k=0; k<maxSize; k++){
             m += (int) (k+1)*observedOccupancy[k];
+            u += observedOccupancy[k];
         }
         double[] normCntVec = pNormalizeVector(observedOccupancy);
-        double[] sampledOccupancyEstimate = estimateSampledLibraryOccupancy(1000,10000,1000);
+        //double[] sampledOccupancyEstimate = estimateSampledLibraryOccupancy(1000,10000,1000);
+        // coarse grid search
         double[] seqMultipleRange1 = makeInterval(1,6,.2,true);
         double[] drawRange1 = makeInterval(3,20,1,true);
+        System.out.println("seqMult:"+ seqMultipleRange1.length + ":" +drawRange1.length);
         double[][] paramMtrx = performGridSearchforKLMin(normCntVec,m,seqMultipleRange1,drawRange1);
+        int[] coordMinCoarse = getMatrixMin(paramMtrx);
+        //refined grid search
+        double cgLibMin = seqMultipleRange1[coordMinCoarse[0]];
+        double cgDrawMin = seqMultipleRange1[coordMinCoarse[1]];
+        this.LIBRARY_SIZE_MULTIPLE_SEARCH_INT = makeInterval(.5*cgLibMin,2*cgLibMin,cgLibMin/20,true);
+        this.POLYA_DRAW_SEARCH_INT = makeInterval(cgDrawMin-2,cgDrawMin+1.2,.1,true);
+        this.GRID_SEARCH_MTRX = performGridSearchforKLMin(normCntVec,
+                m,
+                this.LIBRARY_SIZE_MULTIPLE_SEARCH_INT,
+                this.POLYA_DRAW_SEARCH_INT);
+        int[] coordMin = getMatrixMin(this.GRID_SEARCH_MTRX);
+        int librarySizeEstimate = (int) (m*this.LIBRARY_SIZE_MULTIPLE_SEARCH_INT[coordMin[0]]);
+        int urnDrawEstimate = (int) this.POLYA_DRAW_SEARCH_INT[coordMin[1]];
+        System.out.println("indices:"+ coordMin[0] + ":" +coordMin[1] +
+                ", librarySizeEstimate = " + librarySizeEstimate +
+                ", urnDrawEstimate = " + urnDrawEstimate);
+        double[] sampledOccupancyEstimate = estimateSampledLibraryOccupancy(librarySizeEstimate,
+                                            urnDrawEstimate,m);
+        System.out.println(Arrays.toString(sampledOccupancyEstimate));
+        System.out.println(Arrays.toString(normCntVec));
+        // make projections
+        this.SEQUENCING_MULTIPLE_INTERVAL = makeInterval(0,10,1,false);
+        double[] estimatedFractUnique = makeOccupancyProjections(m,librarySizeEstimate,urnDrawEstimate,this.SEQUENCING_MULTIPLE_INTERVAL);
+        this.UNIQUE_MOLECULE_COUNT_PROJECTION = new double[estimatedFractUnique.length];
+        for (int i=0; i<estimatedFractUnique.length; i++){
+            this.UNIQUE_MOLECULE_COUNT_PROJECTION[i] = m*this.SEQUENCING_MULTIPLE_INTERVAL[i]*estimatedFractUnique[i];
+        }
         return histo;
     }
+
+    public double[] makeOccupancyProjections(int m, int librarySizeEstimate,
+                                               int urnDrawEstimate,
+                                               double[] seqMultipleInterval) {
+        double[] sampledOccupancyEstimate = estimateSampledLibraryOccupancy(librarySizeEstimate,
+                urnDrawEstimate,m);
+        double[][] probProjMtrx = new double[seqMultipleInterval.length][sampledOccupancyEstimate.length]; // matrix representing occupancy probabilities
+        this.PROJECTED_OCCUPANCY_MATRIX = new double[seqMultipleInterval.length][sampledOccupancyEstimate.length];
+        double[] estimatedFractUnique = new double[seqMultipleInterval.length];
+        for (int i=0; i<seqMultipleInterval.length; i++){
+            probProjMtrx[i] = estimateSampledLibraryOccupancy(librarySizeEstimate,
+                    urnDrawEstimate, (int) (m*seqMultipleInterval[i]));
+            double fracDup=0;
+            for (int j=1; j<sampledOccupancyEstimate.length; j++){
+                fracDup += seqMultipleInterval[i]*probProjMtrx[i][j]*(j);
+            }
+            estimatedFractUnique[i] = 1-fracDup; // fraction unique
+            for (int j=0; j<probProjMtrx[i].length; j++) {
+                this.PROJECTED_OCCUPANCY_MATRIX[i][j] = seqMultipleInterval[i]*m*(1-fracDup)*probProjMtrx[i][j];
+            }
+        }
+        return estimatedFractUnique;
+    }
+
 
     public double[] estimateLibraryOccupancy(int N, int n, int m){
         /**
@@ -316,6 +399,75 @@ public class DuplicationMetrics extends MetricBase {
             klDiverge += observedOccupancy[i] * FastMath.log(observedOccupancy[i]/sampledOccupancyEstimate[i]);
         }
         return klDiverge;
+    }
+
+    public int[] getMatrixMin (double[][] A) {
+        double minVal = A[0][0];
+        int[] minCoord = {0,0};
+        for ( int i = 0; i < A.length; i++ ){
+            for ( int j = 0; j < A[i].length; j++ ) {
+                if (A[i][j] < minVal) {
+                    minVal = A[i][j];
+                    minCoord[0] = i;
+                    minCoord[1] = j;
+                }
+            }
+        }
+        return minCoord;
+    }
+
+    public void writeMatricesToFile (String filename) {
+        try {
+            BufferedWriter outputWriter = null;
+            outputWriter = new BufferedWriter(new FileWriter(filename,true));
+            // write unique reads result matrix
+            /*int nLines = 30;  // arbitrary lines to write
+            for (int i = 0; i < nLines; ++i) {
+                outputWriter.newLine();
+            }*/
+            outputWriter.write("Polya Urn Model - KL divergence grid search (Library size multiple x number of urn draws)");
+            outputWriter.newLine();
+            outputWriter.write("-,");
+            outputWriter.write(Arrays.toString(this.POLYA_DRAW_SEARCH_INT)
+                    .replace("[","")
+                    .replace("]",""));
+            outputWriter.newLine();
+            for (int i = 0; i < this.GRID_SEARCH_MTRX.length; i++) {
+                outputWriter.write(this.LIBRARY_SIZE_MULTIPLE_SEARCH_INT[i] + ", ");
+                outputWriter.write(Arrays.toString(this.GRID_SEARCH_MTRX[i])
+                        .replace("[","")
+                        .replace("]",""));
+                outputWriter.newLine();
+            }
+            // write projection matrix
+            outputWriter.newLine();
+            outputWriter.write("Count projections (sequencing multiple x occupancy)");
+            outputWriter.newLine();
+            outputWriter.write("-,");
+            outputWriter.write(Arrays.toString(makeInterval(0,this.PROJECTED_OCCUPANCY_MATRIX[0].length,1,false))
+                    .replace("[","")
+                    .replace("]",""));
+            outputWriter.newLine();
+            for (int i = 0; i < this.PROJECTED_OCCUPANCY_MATRIX.length; i++) {
+                outputWriter.write(this.SEQUENCING_MULTIPLE_INTERVAL[i] + ", ");
+                outputWriter.write(Arrays.toString(this.PROJECTED_OCCUPANCY_MATRIX[i])
+                        .replace("[","")
+                        .replace("]",""));
+                outputWriter.newLine();
+            }
+            // write projection of unique molecules
+            outputWriter.newLine();
+            outputWriter.write("unique molecule projections");
+            outputWriter.newLine();
+            outputWriter.write("-,");
+            outputWriter.write(Arrays.toString(this.UNIQUE_MOLECULE_COUNT_PROJECTION)
+                    .replace("[","")
+                    .replace("]",""));
+            outputWriter.flush();
+            outputWriter.close();
+        } catch (final IOException e) {
+            System.out.println("problem writing result matrix");
+        }
     }
 
     // Main method used for debugging the derived metrics
