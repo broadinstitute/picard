@@ -96,6 +96,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     public static final String DUPLICATE_TYPE_LIBRARY = "LB";
     /** The duplicate type tag value for duplicate type: sequencing (optical & pad-hopping, or "co-localized"). */
     public static final String DUPLICATE_TYPE_SEQUENCING = "SQ";
+    /** The attribute in the SAM/BAM file used to store which read was selected as representative in a duplicate set */
+    public static final String REPRESENTATIVE_READ_TAG = "RR";
 
     /** Enum for the possible values that a duplicate read can be tagged with in the DT attribute. */
     public enum DuplicateType {
@@ -148,6 +150,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     private SortingCollection<ReadEndsForMarkDuplicates> fragSort;
     private SortingLongCollection duplicateIndexes;
     private SortingLongCollection opticalDuplicateIndexes;
+    private SortingCollection representativeReadsForDuplicates;
 
     private int numDuplicateIndices = 0;
     static private final long NO_SUCH_INDEX = Long.MAX_VALUE; // needs to be large so that that >= test fails for query-sorted traversal
@@ -229,6 +232,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         long recordInFileIndex = 0;
         long nextOpticalDuplicateIndex = this.opticalDuplicateIndexes != null && this.opticalDuplicateIndexes.hasNext() ? this.opticalDuplicateIndexes.next() : NO_SUCH_INDEX;
         long nextDuplicateIndex = (this.duplicateIndexes.hasNext() ? this.duplicateIndexes.next() : NO_SUCH_INDEX);
+        Iterator<String> representativeReadIterator = this.representativeReadsForDuplicates.iterator();
+        String representativeReadName = representativeReadIterator.hasNext() ? representativeReadIterator.next() : "Null";
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Written");
         final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
@@ -286,6 +291,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     }
                 } else {
                     rec.setDuplicateReadFlag(false);
+                    representativeReadName = rec.getReadName();
                 }
 
             // Manage the flagging of optical/sequencing duplicates
@@ -312,7 +318,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 } else if (this.TAGGING_POLICY == DuplicateTaggingPolicy.All) {
                     rec.setAttribute(DUPLICATE_TYPE_TAG, DuplicateType.LIBRARY.code());
                 }
+                rec.setAttribute(this.REPRESENTATIVE_READ_TAG, representativeReadName);
             }
+
 
             // Output the record if desired and bump the record index
             recordInFileIndex++;
@@ -512,6 +520,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
         ends.read1ReferenceIndex = rec.getReferenceIndex();
         ends.read1Coordinate = rec.getReadNegativeStrandFlag() ? rec.getUnclippedEnd() : rec.getUnclippedStart();
+        ends.read1ReadName = rec.getReadName();
         ends.orientation = rec.getReadNegativeStrandFlag() ? ReadEnds.R : ReadEnds.F;
         ends.read1IndexInFile = index;
         ends.score = DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY);
@@ -649,6 +658,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         return areComparable;
     }
 
+    private void addRepresentativeReadForDuplicate(final String recID) {
+        this.representativeReadsForDuplicates.add(recID);
+    }
+
     private void addIndexAsDuplicate(final long bamIndex) {
         this.duplicateIndexes.add(bamIndex);
         ++this.numDuplicateIndices;
@@ -679,6 +692,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         for (final ReadEndsForMarkDuplicates end : list) {
             if (end != best) {
                 addIndexAsDuplicate(end.read1IndexInFile);
+                addRepresentativeReadForDuplicate(best.read1ReadName);
 
                 // in query-sorted case, these will be the same.
                 // TODO: also in coordinate sorted, when one read is unmapped

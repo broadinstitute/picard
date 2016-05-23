@@ -24,6 +24,7 @@
 
 package picard.sam;
 
+import org.apache.commons.jexl2.internal.ArrayListWrapper;
 import org.apache.commons.math3.special.Beta;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.apache.commons.math3.distribution.BinomialDistribution;
@@ -38,6 +39,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Metrics that are calculated during the process of marking duplicates
@@ -97,6 +99,9 @@ public class DuplicationMetrics extends MetricBase {
 
     /** projection of unique molecules based on sequencing multiple */
     public double[] UNIQUE_MOLECULE_COUNT_PROJECTION;
+
+    /** optimization results */
+    public double[] OPTIMIZATION_RESULTS;
 
     /**
      * Fills in the ESTIMATED_LIBRARY_SIZE based on the paired read data examined where
@@ -195,25 +200,32 @@ public class DuplicationMetrics extends MetricBase {
         return histo;
     }
 
+    public void setSequencingMultipleInterval(List<String> passedInterval) {
+        this.SEQUENCING_MULTIPLE_INTERVAL = new double[passedInterval.size()];
+        for (int i=0; i<passedInterval.size(); i++){
+            this.SEQUENCING_MULTIPLE_INTERVAL[i] = Double.parseDouble(passedInterval.get(i));
+        }
+    }
+
     public Histogram<Integer> getNonOptDupHistogram(Histogram<Integer> histo) {
         final double histoCount = histo.getCount();
         Collection<Histogram.Bin> vals = histo.values();
-        /*int[] countArray = new int[vals.size()];
+        int[] countArray = new int[vals.size()];
         int[] sizeArray = new int[vals.size()];
         int count = 0;
         HashMap<Integer, Integer> hm = new HashMap();
         for (final Histogram<Integer>.Bin bin : histo.values()) {
             countArray[count] = (int) bin.getValue();
-            sizeArray[count] = (int) bin.getId();
+            sizeArray[count] = bin.getId();
             hm.put(sizeArray[count], countArray[count]);
             count += 1;
-        }*/
-        int[] countArray = {1990,75,3,1,1,0,0};
+        }
+        /*int[] countArray = {1990,75,3,1,1,0,0};
         int[] sizeArray = {1,2,3,4,5,6,7};
         HashMap<Integer, Integer> hm = new HashMap();
         for (int i=0; i<countArray.length; i++){
             hm.put(sizeArray[i], countArray[i]);
-        }
+        }*/
         // values for test array
         int maxSize = Arrays.stream(sizeArray).max().getAsInt();
         // extend the array to contain 0 counts for entries with zero occupancy
@@ -228,11 +240,10 @@ public class DuplicationMetrics extends MetricBase {
         int m = 0; // non-optical pairs observed
         int u = 0;
         for (int k=0; k<maxSize; k++){
-            m += (int) (k+1)*observedOccupancy[k];
+            m += (k+1)*observedOccupancy[k];
             u += observedOccupancy[k];
         }
         double[] normCntVec = pNormalizeVector(observedOccupancy);
-        //double[] sampledOccupancyEstimate = estimateSampledLibraryOccupancy(1000,10000,1000);
         // coarse grid search
         double[] seqMultipleRange1 = makeInterval(1,6,.2,true);
         double[] drawRange1 = makeInterval(3,20,1,true);
@@ -241,9 +252,9 @@ public class DuplicationMetrics extends MetricBase {
         int[] coordMinCoarse = getMatrixMin(paramMtrx);
         //refined grid search
         double cgLibMin = seqMultipleRange1[coordMinCoarse[0]];
-        double cgDrawMin = seqMultipleRange1[coordMinCoarse[1]];
-        this.LIBRARY_SIZE_MULTIPLE_SEARCH_INT = makeInterval(.5*cgLibMin,2*cgLibMin,cgLibMin/20,true);
-        this.POLYA_DRAW_SEARCH_INT = makeInterval(cgDrawMin-2,cgDrawMin+1.2,.1,true);
+        double cgDrawMin = drawRange1[coordMinCoarse[1]];
+        this.LIBRARY_SIZE_MULTIPLE_SEARCH_INT = makeInterval(.5*cgLibMin,2*cgLibMin,cgLibMin/20,false);
+        this.POLYA_DRAW_SEARCH_INT = makeInterval(FastMath.log(cgDrawMin)-2,FastMath.log(cgDrawMin)+1.2,.1,true);
         this.GRID_SEARCH_MTRX = performGridSearchforKLMin(normCntVec,
                 m,
                 this.LIBRARY_SIZE_MULTIPLE_SEARCH_INT,
@@ -256,6 +267,12 @@ public class DuplicationMetrics extends MetricBase {
                 ", urnDrawEstimate = " + urnDrawEstimate);
         double[] sampledOccupancyEstimate = estimateSampledLibraryOccupancy(librarySizeEstimate,
                                             urnDrawEstimate,m);
+        this.OPTIMIZATION_RESULTS = new double[5];
+        this.OPTIMIZATION_RESULTS[0]=coordMin[0];
+        this.OPTIMIZATION_RESULTS[1]=coordMin[1];
+        this.OPTIMIZATION_RESULTS[2]=librarySizeEstimate;
+        this.OPTIMIZATION_RESULTS[3]=urnDrawEstimate;
+        this.OPTIMIZATION_RESULTS[4]=m;
         System.out.println(Arrays.toString(sampledOccupancyEstimate));
         System.out.println(Arrays.toString(normCntVec));
         // make projections
@@ -279,13 +296,15 @@ public class DuplicationMetrics extends MetricBase {
         for (int i=0; i<seqMultipleInterval.length; i++){
             probProjMtrx[i] = estimateSampledLibraryOccupancy(librarySizeEstimate,
                     urnDrawEstimate, (int) (m*seqMultipleInterval[i]));
-            double fracDup=0;
-            for (int j=1; j<sampledOccupancyEstimate.length; j++){
-                fracDup += seqMultipleInterval[i]*probProjMtrx[i][j]*(j);
+            double tDup = 0;
+            double tTot = 0;
+            for (int j=0; j<sampledOccupancyEstimate.length; j++){
+                tDup += probProjMtrx[i][j]*(j);
+                tTot += probProjMtrx[i][j]*(j+1);
             }
-            estimatedFractUnique[i] = 1-fracDup; // fraction unique
+            estimatedFractUnique[i] = 1-(tDup/tTot); // fraction unique
             for (int j=0; j<probProjMtrx[i].length; j++) {
-                this.PROJECTED_OCCUPANCY_MATRIX[i][j] = seqMultipleInterval[i]*m*(1-fracDup)*probProjMtrx[i][j];
+                this.PROJECTED_OCCUPANCY_MATRIX[i][j] = seqMultipleInterval[i]*m*(1-(tDup/tTot))*probProjMtrx[i][j];
             }
         }
         return estimatedFractUnique;
@@ -427,7 +446,7 @@ public class DuplicationMetrics extends MetricBase {
             }*/
             outputWriter.write("Polya Urn Model - KL divergence grid search (Library size multiple x number of urn draws)");
             outputWriter.newLine();
-            outputWriter.write("-,");
+            outputWriter.write("-, ");
             outputWriter.write(Arrays.toString(this.POLYA_DRAW_SEARCH_INT)
                     .replace("[","")
                     .replace("]",""));
@@ -439,11 +458,19 @@ public class DuplicationMetrics extends MetricBase {
                         .replace("]",""));
                 outputWriter.newLine();
             }
+            // write projection of unique molecules
+            outputWriter.newLine();
+            outputWriter.write("Optimization results");
+            outputWriter.newLine();
+            outputWriter.write("-, ");
+            outputWriter.write(Arrays.toString(this.OPTIMIZATION_RESULTS)
+                    .replace("[","")
+                    .replace("]",""));
             // write projection matrix
             outputWriter.newLine();
             outputWriter.write("Count projections (sequencing multiple x occupancy)");
             outputWriter.newLine();
-            outputWriter.write("-,");
+            outputWriter.write("-, ");
             outputWriter.write(Arrays.toString(makeInterval(0,this.PROJECTED_OCCUPANCY_MATRIX[0].length,1,false))
                     .replace("[","")
                     .replace("]",""));
@@ -459,7 +486,7 @@ public class DuplicationMetrics extends MetricBase {
             outputWriter.newLine();
             outputWriter.write("unique molecule projections");
             outputWriter.newLine();
-            outputWriter.write("-,");
+            outputWriter.write("-, ");
             outputWriter.write(Arrays.toString(this.UNIQUE_MOLECULE_COUNT_PROJECTION)
                     .replace("[","")
                     .replace("]",""));

@@ -48,6 +48,7 @@ public class ReadEndsForMarkDuplicates extends ReadEnds {
     public short score = 0;
     public long read1IndexInFile = -1;
     public long read2IndexInFile = -1;
+    public String read1ReadName = null;
 
     public ReadEndsForMarkDuplicates() {}
 
@@ -58,6 +59,7 @@ public class ReadEndsForMarkDuplicates extends ReadEnds {
         this.read1Coordinate = read.read1Coordinate;
         this.read2ReferenceIndex = read.read2ReferenceIndex;
         this.read2Coordinate = read.read2Coordinate;
+        this.read1ReadName = read.read1ReadName;
 
         this.readGroup = read.getReadGroup();
         this.tile = read.getTile();

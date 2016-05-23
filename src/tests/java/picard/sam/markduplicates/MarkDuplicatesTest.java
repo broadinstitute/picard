@@ -303,7 +303,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.runTest();
     }*/
 
-    @Test
+    /*@Test
     public void basic() throws Exception {
         final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
         builder.setRandomSeed(0);
@@ -374,7 +374,44 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
 
         Assert.assertEquals(markDuplicates.doWork(), 0);
         //TestUtil.recursiveDelete(outputDir);
-    }
+    }*/
 
+    @Test
+    public void localBam() throws Exception {
+        //final File TEST_DATA_DIR = new File("testdata/picard/sam/");
+        //final File testbam = new File("testdata/picard/sam/NexPond-359781_chrm21_rg1.bam");
+
+        // create input/output files
+        final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".", ".tmp");
+        /*final File samFile = File.createTempFile("tmp.MarkDupesTester.", ".sam");
+        samFile.deleteOnExit();
+        System.out.println("in sam file = " + samFile.getAbsolutePath());*/
+        final File outputSam = File.createTempFile("tmp.DupsMarked.", ".sam");
+        outputSam.deleteOnExit();
+        System.out.println("out sam file = " + outputSam.getAbsolutePath());
+        final File dsFile = File.createTempFile("tmp.duplicate_set_size",".metrics");
+        System.out.println("duplicate set histogram = " + dsFile.getAbsolutePath());
+        //dsFile.deleteOnExit();
+        final File metricsFile = new File(outputDir, TEST_BASE_NAME + ".duplicate_metrics");
+        System.out.println("metrics file = " + metricsFile.getAbsolutePath());
+        //metricsFile.deleteOnExit();
+
+        // Run MarkDuplicates
+        final MarkDuplicates.DuplicateTaggingPolicy TAGGING_POLICY = MarkDuplicates.DuplicateTaggingPolicy.All;
+        final MarkDuplicates markDuplicates = new MarkDuplicates();
+        markDuplicates.setupOpticalDuplicateFinder();
+        markDuplicates.INPUT = CollectionUtil.makeList("/Users/hogstrom/Documents/code/picard-private/Picard-public/testdata/picard/sam/NexPond-359781_chrm21_rg1.bam");
+        markDuplicates.OUTPUT = outputSam;
+        markDuplicates.METRICS_FILE = metricsFile;
+        markDuplicates.DUP_SET_HIST = dsFile;
+        markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
+        markDuplicates.TAGGING_POLICY=TAGGING_POLICY;
+        markDuplicates.SEQUENCING_MULTIPLE_INTVAL=CollectionUtil.makeList("1.0","2.0","3.0","4.0","5.0","6.0","7.0","8.0","9.0","10.0");
+        // Needed to suppress calling CommandLineProgram.getVersion(), which doesn't work for code not in a jar
+        markDuplicates.PROGRAM_RECORD_ID = null;
+
+        Assert.assertEquals(markDuplicates.doWork(), 0);
+        //TestUtil.recursiveDelete(outputDir);
+    }
 
 }

@@ -74,6 +74,12 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             doc = "File to write duplication set size histogram to. Count the size of duplicate sets for library-based duplicates," +
                     " sequencer-based duplicates, and cumulative duplicates. The histogram reports on read pairs only")
     public File DUP_SET_HIST;
+
+    @Option(shortName = "P",
+            doc = "Pass a space separated interval to evaluate projections",
+            optional = true)
+    public List<String> SEQUENCING_MULTIPLE_INTVAL;
+
     @Option(doc = "If true do not write duplicates to the output file instead of writing them with appropriate flags set.")
     public boolean REMOVE_DUPLICATES = false;
 
@@ -192,7 +198,9 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         }
 
         //final Histogram<Double> duplicatesCountHist = metricsByLibrary.values().iterator().next().calculateRoiHistogram();
-        final Histogram<Integer> duplicatesCountHist2 =metricsByLibrary.values().iterator().next().getNonOptDupHistogram(duplicatesCountHist);
+        //pass SEQUENCING_MULTIPLE_INTVAL
+        metricsByLibrary.values().iterator().next().setSequencingMultipleInterval(SEQUENCING_MULTIPLE_INTVAL);
+        final Histogram<Integer> duplicatesCountHist2 =metricsByLibrary.values().iterator().next().getNonOptDupHistogram(nonOpticalDuplicatesCountHist);
         //file.setHistogram(duplicatesCountHist);
         //file.addHistogramInt(nonOpticalDuplicatesCountHist);
         //file.addHistogramInt(opticalDuplicatesCountHist);
