@@ -328,8 +328,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 } else if (this.TAGGING_POLICY == DuplicateTaggingPolicy.All) {
                     rec.setAttribute(DUPLICATE_TYPE_TAG, DuplicateType.LIBRARY.code());
                 }
-                rec.setAttribute(this.REPRESENTATIVE_READ_TAG, representativeReadName);
-                rec.setAttribute(this.DUPLICATE_SET_SIZE_TAG,duplicateSetSize);
+                rec.setAttribute(REPRESENTATIVE_READ_TAG, representativeReadName);
+                rec.setAttribute(DUPLICATE_SET_SIZE_TAG, duplicateSetSize);
             }
 
 
@@ -588,9 +588,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
         log.info("Will retain up to " + maxInMemory + " duplicate indices before spilling to disk.");
         this.duplicateIndexes = new SortingLongCollection(maxInMemory, TMP_DIR.toArray(new File[TMP_DIR.size()]));
-        String testStr = "teststr";
-        Class<? extends String> gg = testStr.getClass();
-        /*this.representativeReadsForDuplicates = SortingCollection(testStr.getClass(), //Class<? extends String>
+        //Class<? extends String> gg = testStr.getClass();
+        /*this.representativeReadsForDuplicates = SortingCollection(Class<? extends String>,
                 new ReadEndsForMarkDuplicatesWithBarcodesCodec(),
                 new ReadEndsMDComparator(useBarcodes),
                 maxInMemory,
