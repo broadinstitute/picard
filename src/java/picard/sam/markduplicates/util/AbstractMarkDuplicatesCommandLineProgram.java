@@ -198,9 +198,10 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         }
 
         //final Histogram<Double> duplicatesCountHist = metricsByLibrary.values().iterator().next().calculateRoiHistogram();
-        //pass SEQUENCING_MULTIPLE_INTVAL
-        metricsByLibrary.values().iterator().next().setSequencingMultipleInterval(SEQUENCING_MULTIPLE_INTVAL);
-        final Histogram<Integer> duplicatesCountHist2 =metricsByLibrary.values().iterator().next().getNonOptDupHistogram(nonOpticalDuplicatesCountHist);
+
+        // new ROI methods
+        //metricsByLibrary.values().iterator().next().setSequencingMultipleInterval(SEQUENCING_MULTIPLE_INTVAL);
+        //final Histogram<Integer> duplicatesCountHist2 =metricsByLibrary.values().iterator().next().getNonOptDupHistogram(nonOpticalDuplicatesCountHist);
         //file.setHistogram(duplicatesCountHist);
         //file.addHistogramInt(nonOpticalDuplicatesCountHist);
         //file.addHistogramInt(opticalDuplicatesCountHist);
@@ -213,7 +214,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         dsFile.addHistogram(opticalDuplicatesCountHist);
         dsFile.write(DUP_SET_HIST);
         // write paramater matrix to file
-        metricsByLibrary.values().iterator().next().writeMatricesToFile(DUP_SET_HIST.getAbsolutePath());
+        //metricsByLibrary.values().iterator().next().writeMatricesToFile(DUP_SET_HIST.getAbsolutePath());
     }
 
     /** Little class used to package up a header and an iterable/iterator. */

@@ -387,7 +387,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         samFile.deleteOnExit();
         System.out.println("in sam file = " + samFile.getAbsolutePath());*/
         final File outputSam = File.createTempFile("tmp.DupsMarked.", ".sam");
-        outputSam.deleteOnExit();
+        //outputSam.deleteOnExit();
         System.out.println("out sam file = " + outputSam.getAbsolutePath());
         final File dsFile = File.createTempFile("tmp.duplicate_set_size",".metrics");
         System.out.println("duplicate set histogram = " + dsFile.getAbsolutePath());
