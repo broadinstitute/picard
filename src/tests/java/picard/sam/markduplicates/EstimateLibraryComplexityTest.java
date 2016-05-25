@@ -58,7 +58,23 @@ public class EstimateLibraryComplexityTest extends CommandLineProgramTest {
         final File output = File.createTempFile("estimateLibraryComplexity",".els_metrics");
         output.deleteOnExit();
 
-        final List<String> args =new ArrayList<String>();
+        final List<String> args = new ArrayList<>();
+        args.add("INPUT=" + input.getAbsolutePath());
+        args.add("OUTPUT=" + output.getAbsolutePath());
+        args.add("MIN_GROUP_COUNT=1");
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        examineMetricsFile(output, 2, 2);
+    }
+
+    /** Finds duplicates as expected ignoring secondary and supplementary records. */
+    @Test
+    public void testSimpleDuplicatesWithSecondaryAndSupplementaryRecords() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "dupes_with_sos.sam");
+        final File output = File.createTempFile("estimateLibraryComplexity",".els_metrics");
+        output.deleteOnExit();
+
+        final List<String> args = new ArrayList<>();
         args.add("INPUT=" + input.getAbsolutePath());
         args.add("OUTPUT=" + output.getAbsolutePath());
         args.add("MIN_GROUP_COUNT=1");
@@ -74,7 +90,7 @@ public class EstimateLibraryComplexityTest extends CommandLineProgramTest {
         final File output = File.createTempFile("estimateLibraryComplexity",".els_metrics");
         output.deleteOnExit();
 
-        final List<String> args =new ArrayList<String>();
+        final List<String> args = new ArrayList<>();
         args.add("INPUT=" + input.getAbsolutePath());
         args.add("OUTPUT=" + output.getAbsolutePath());
         args.add("MAX_DIFF_RATE=0.0");
@@ -91,7 +107,7 @@ public class EstimateLibraryComplexityTest extends CommandLineProgramTest {
         final File output = File.createTempFile("estimateLibraryComplexity",".els_metrics");
         output.deleteOnExit();
 
-        final List<String> args =new ArrayList<String>();
+        final List<String> args = new ArrayList<>();
         args.add("INPUT=" + input.getAbsolutePath());
         args.add("OUTPUT=" + output.getAbsolutePath());
         args.add("MAX_DIFF_RATE=0.0");
@@ -111,7 +127,7 @@ public class EstimateLibraryComplexityTest extends CommandLineProgramTest {
         final File output = File.createTempFile("estimateLibraryComplexity",".els_metrics");
         output.deleteOnExit();
 
-        final List<String> args =new ArrayList<String>();
+        final List<String> args = new ArrayList<>();
         args.add("INPUT=" + input.getAbsolutePath());
         args.add("OUTPUT=" + output.getAbsolutePath());
 
