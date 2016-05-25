@@ -443,11 +443,13 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                     // See if we've already seen the first end or not
                     if (pairedEnds == null) {
-                        pairedEnds = buildReadEnds(header, indexForRead, rec, useBarcodes);
+                        // at this point pairedEnds and fragmentEnd are the same, but we need to make
+                        // a copy since pairedEnds will be modified when the mate comes along.
+                        pairedEnds = fragmentEnd.clone();
                         tmp.put(pairedEnds.read2ReferenceIndex, key, pairedEnds);
                     } else {
-                        final int sequence = fragmentEnd.read1ReferenceIndex;
-                        final int coordinate = fragmentEnd.read1Coordinate;
+                        final int matesRefIndex = fragmentEnd.read1ReferenceIndex;
+                        final int matesCoordinate = fragmentEnd.read1Coordinate;
 
                         // Set orientationForOpticalDuplicates, which always goes by the first then the second end for the strands.  NB: must do this
                         // before updating the orientation later.
@@ -461,20 +463,30 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                                 ((ReadEndsForMarkDuplicatesWithBarcodes) pairedEnds).readTwoBarcode = getReadTwoBarcodeValue(rec);
                         }
 
-                        // If the second read is actually later, just add the second read data, else flip the reads
-                        if (sequence > pairedEnds.read1ReferenceIndex ||
-                                (sequence == pairedEnds.read1ReferenceIndex && coordinate >= pairedEnds.read1Coordinate)) {
-                            pairedEnds.read2ReferenceIndex = sequence;
-                            pairedEnds.read2Coordinate = coordinate;
+                        // If the other read is actually later, simply add the other read's data as read2, else flip the reads
+                        if (matesRefIndex > pairedEnds.read1ReferenceIndex ||
+                                (matesRefIndex == pairedEnds.read1ReferenceIndex && matesCoordinate >= pairedEnds.read1Coordinate)) {
+                            pairedEnds.read2ReferenceIndex = matesRefIndex;
+                            pairedEnds.read2Coordinate = matesCoordinate;
                             pairedEnds.read2IndexInFile = indexForRead;
                             pairedEnds.orientation = ReadEnds.getOrientationByte(pairedEnds.orientation == ReadEnds.R,
                                     rec.getReadNegativeStrandFlag());
+
+                            // if the two read ends are in the same position, pointing in opposite directions,
+                            // the orientation is undefined and the procedure above
+                            // will depend on the order of the reads in the file.
+                            // To avoid this, we set it explicitly (to FR):
+                            if (pairedEnds.read2ReferenceIndex == pairedEnds.read1ReferenceIndex &&
+                                    pairedEnds.read2Coordinate == pairedEnds.read1Coordinate &&
+                                    pairedEnds.orientation == ReadEnds.RF) {
+                                pairedEnds.orientation = ReadEnds.FR;
+                            }
                         } else {
                             pairedEnds.read2ReferenceIndex = pairedEnds.read1ReferenceIndex;
                             pairedEnds.read2Coordinate = pairedEnds.read1Coordinate;
                             pairedEnds.read2IndexInFile = pairedEnds.read1IndexInFile;
-                            pairedEnds.read1ReferenceIndex = sequence;
-                            pairedEnds.read1Coordinate = coordinate;
+                            pairedEnds.read1ReferenceIndex = matesRefIndex;
+                            pairedEnds.read1Coordinate = matesCoordinate;
                             pairedEnds.read1IndexInFile = indexForRead;
                             pairedEnds.orientation = ReadEnds.getOrientationByte(rec.getReadNegativeStrandFlag(),
                                     pairedEnds.orientation == ReadEnds.R);

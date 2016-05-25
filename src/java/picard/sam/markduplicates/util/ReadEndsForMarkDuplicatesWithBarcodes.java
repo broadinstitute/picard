@@ -35,6 +35,18 @@ public class ReadEndsForMarkDuplicatesWithBarcodes extends ReadEndsForMarkDuplic
         super(read);
     }
 
+    public ReadEndsForMarkDuplicatesWithBarcodes(final ReadEndsForMarkDuplicatesWithBarcodes read) {
+        super(read);
+        barcode = read.barcode;
+        readOneBarcode = read.readOneBarcode;
+        readTwoBarcode = read.readTwoBarcode;
+    }
+
+    @Override
+    public ReadEndsForMarkDuplicatesWithBarcodes clone() {
+        return new ReadEndsForMarkDuplicatesWithBarcodes(this);
+    }
+
     public static int getSizeOf() {
         return ReadEndsForMarkDuplicates.getSizeOf() + (3 * 4);
     }
