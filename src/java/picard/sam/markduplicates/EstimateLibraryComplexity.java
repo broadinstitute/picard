@@ -108,8 +108,8 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
             " (0.03 is the default value), and the cluster proximity is less than the defined value (default is set at 100 pixels)." +
             "" +
             "<br /><br />Finally, the algorithm filters out poor quality reads defined as those with ambiguous base calls \"N\"s in the first 5 (default value) bases, " +
-            "reads with a mean base quality score lower than MIN_MEAN_QUALITY (20 is the default value), or any unpaired reads.   " +
-
+            "reads with a mean base quality score lower than MIN_MEAN_QUALITY (20 is the default value), any unpaired reads, and any " +
+            "secondary or supplementary reads.<br /> <br />" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar EstimateLibraryComplexity \\<br />" +
@@ -436,6 +436,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                 if (!rec.getFirstOfPairFlag() && !rec.getSecondOfPairFlag()) {
                     continue;
                 }
+                if (rec.isSecondaryOrSupplementary()) continue;
 
                 PairedReadSequence prs = pendingByName.remove(rec.getReadName());
                 if (prs == null) {
