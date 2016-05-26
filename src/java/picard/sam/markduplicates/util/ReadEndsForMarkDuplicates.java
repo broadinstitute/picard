@@ -29,7 +29,7 @@ package picard.sam.markduplicates.util;
  *
  * @author Nils Homer
  */
-public class ReadEndsForMarkDuplicates extends ReadEnds {
+public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
     /*
     What do we need to store you ask?  Well, we need to store:
        - byte: orientation
@@ -70,5 +70,10 @@ public class ReadEndsForMarkDuplicates extends ReadEnds {
 
         this.read1IndexInFile = read.read1IndexInFile;
         this.read2IndexInFile = read.read2IndexInFile;
+    }
+
+    @Override
+    public ReadEndsForMarkDuplicates clone() {
+        return new ReadEndsForMarkDuplicates(this);
     }
 }

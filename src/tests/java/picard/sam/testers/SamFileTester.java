@@ -32,13 +32,16 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     private boolean deleteOnExit = true;
     private final ArrayList<String> args = new ArrayList<>();
 
-    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy, final SAMFileHeader.SortOrder sortOrder) {
+    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy, final SAMFileHeader.SortOrder sortOrder, boolean recordsNeedSorting) {
         this.deleteOnExit = deleteOnExit;
-        this.samRecordSetBuilder = new SAMRecordSetBuilder(true, sortOrder, true, defaultChromosomeLength, duplicateScoringStrategy);
+        this.samRecordSetBuilder = new SAMRecordSetBuilder(recordsNeedSorting, sortOrder, true, defaultChromosomeLength, duplicateScoringStrategy);
         samRecordSetBuilder.setReadLength(readLength);
         setOutputDir();
     }
 
+    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy, final SAMFileHeader.SortOrder sortOrder) {
+        this(readLength, deleteOnExit, defaultChromosomeLength, duplicateScoringStrategy, SAMFileHeader.SortOrder.coordinate, true);
+    }
 
     public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy) {
         this(readLength, deleteOnExit, defaultChromosomeLength, duplicateScoringStrategy, SAMFileHeader.SortOrder.coordinate);
@@ -340,4 +343,5 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     public SamReader getInput() {
         return samRecordSetBuilder.getSamReader();
     }
+
 }

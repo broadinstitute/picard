@@ -54,7 +54,11 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     final DuplicationMetrics expectedMetrics;
 
     public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder) {
-        super(50, true, SAMRecordSetBuilder.DEFAULT_CHROMOSOME_LENGTH, duplicateScoringStrategy, sortOrder);
+        this(duplicateScoringStrategy, sortOrder, true);
+    }
+
+    public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder, boolean recordNeedSorting) {
+        super(50, true, SAMRecordSetBuilder.DEFAULT_CHROMOSOME_LENGTH, duplicateScoringStrategy, sortOrder, recordNeedSorting);
 
         expectedMetrics = new DuplicationMetrics();
         expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES = 0;

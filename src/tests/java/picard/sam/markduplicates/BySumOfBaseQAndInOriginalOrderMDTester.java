@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 The Broad Institute
+ * Copyright (c) 2014 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,22 +24,21 @@
 
 package picard.sam.markduplicates;
 
-/**
- * This is the testing class for the QuerySortedMarkDuplicates (it's the same CLP, only it
- * takes a query-sorted bam as input.) The difference in the tests themselves is that
- * supplementary and secondary reads will be marked the same as their primary alignments,
- * and that unmapped reads with mapped mates will be marked according to their mapped mate.
- */
-public class QuerySortedMarkDuplicatesTest extends MarkDuplicatesTest {
+import htsjdk.samtools.DuplicateScoringStrategy;
+import htsjdk.samtools.SAMFileHeader;
+import picard.cmdline.CommandLineProgram;
 
-    @Override
-    protected boolean markUnmappedRecordsLikeTheirMates() {
-        return true;
+/**
+ * Created by farjoun on 5/25/16.
+ */
+public class BySumOfBaseQAndInOriginalOrderMDTester extends AbstractMarkDuplicatesCommandLineProgramTester {
+
+    public BySumOfBaseQAndInOriginalOrderMDTester() {
+        super(DuplicateScoringStrategy.ScoringStrategy.SUM_OF_BASE_QUALITIES, SAMFileHeader.SortOrder.unsorted, false);
     }
 
     @Override
-    protected boolean markSecondaryAndSupplementaryRecordsLikeTheCanonical() { return true; }
-
-    @Override
-    protected AbstractMarkDuplicatesCommandLineProgramTester getTester() { return new QuerySortedMarkDuplicatesTester(); }
+    protected CommandLineProgram getProgram() {
+        return new MarkDuplicates();
+    }
 }
