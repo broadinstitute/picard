@@ -33,25 +33,25 @@ import java.io.IOException;
 /**
  * Created by nhomer on 9/13/15.
  */
-public class ReadEndsForMarkDuplicatesWithBarcodesCodec extends ReadEndsForMarkDuplicatesCodec {
+public class ReadEndsForMarkDuplicatesSetSizeTagsCodec extends ReadEndsForMarkDuplicatesCodec {
 
     @Override
     public SortingCollection.Codec<ReadEndsForMarkDuplicates> clone() {
-        return new ReadEndsForMarkDuplicatesWithBarcodesCodec();
+        return new ReadEndsForMarkDuplicatesSetSizeTagsCodec();
     }
 
     @Override
     public void encode(final ReadEndsForMarkDuplicates read) {
-        if (!(read instanceof ReadEndsForMarkDuplicatesWithBarcodes)) {
-            throw new PicardException("Read was not a ReadEndsForMarkDuplicatesWithBarcodes");
+        if (!(read instanceof ReadEndsForMarkDuplicatesSetSizeTags)) {
+            throw new PicardException("Read was not a ReadEndsForMarkDuplicatesSetSizeTagscodes");
         }
         super.encode(read);
 
         try {
-            final ReadEndsForMarkDuplicatesWithBarcodes val = (ReadEndsForMarkDuplicatesWithBarcodes)read;
-            out.writeInt(val.barcode);
-            out.writeInt(val.readOneBarcode);
-            out.writeInt(val.readTwoBarcode);
+            final ReadEndsForMarkDuplicatesSetSizeTags val = (ReadEndsForMarkDuplicatesSetSizeTags)read;
+            out.writeBytes(val.firstEncounteredReadName);
+            out.writeBytes(val.representativeReadName);
+            out.writeInt(val.duplicateSetSize);
         } catch (final IOException ioe) {
             throw new PicardException("Exception writing ReadEnds to file.", ioe);
         }
@@ -61,11 +61,11 @@ public class ReadEndsForMarkDuplicatesWithBarcodesCodec extends ReadEndsForMarkD
     public ReadEndsForMarkDuplicates decode() {
         final ReadEndsForMarkDuplicates parentRead = super.decode();
         if (null == parentRead) return null; // EOF
-        final ReadEndsForMarkDuplicatesWithBarcodes read = new ReadEndsForMarkDuplicatesWithBarcodes(parentRead);
+        final ReadEndsForMarkDuplicatesSetSizeTags read = new ReadEndsForMarkDuplicatesSetSizeTags(parentRead);
         try {
-            read.barcode = in.readInt();
-            read.readOneBarcode = in.readInt();
-            read.readTwoBarcode = in.readInt();
+            read.firstEncounteredReadName = in.readUTF();
+            read.representativeReadName = in.readUTF();
+            read.duplicateSetSize = in.readInt();
             return read;
         } catch (final IOException ioe) {
             throw new PicardException("Exception writing ReadEnds to file.", ioe);

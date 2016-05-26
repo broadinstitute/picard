@@ -37,16 +37,8 @@ import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.SortingLongCollection;
-import picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram;
-import picard.sam.markduplicates.util.DiskBasedReadEndsForMarkDuplicatesMap;
-import picard.sam.markduplicates.util.LibraryIdGenerator;
-import picard.sam.markduplicates.util.ReadEnds;
-import picard.sam.markduplicates.util.ReadEndsForMarkDuplicates;
-import picard.sam.markduplicates.util.ReadEndsForMarkDuplicatesCodec;
-import picard.sam.markduplicates.util.ReadEndsForMarkDuplicatesMap;
+import picard.sam.markduplicates.util.*;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
-import picard.sam.markduplicates.util.ReadEndsForMarkDuplicatesWithBarcodes;
-import picard.sam.markduplicates.util.ReadEndsForMarkDuplicatesWithBarcodesCodec;
 
 import java.io.*;
 import java.util.*;
@@ -135,6 +127,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
     @Option(doc = "Read two barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
     public String READ_TWO_BARCODE_TAG = null;
+
+    @Option(doc = "If a read is marked as duplicate, tag the read with representative read that was " +
+            "selected out of the duplicate set.", optional = true)
+    public boolean TAG_REPRESENTATIVE_READ = false;
 
     @Option(doc = "If true remove 'optical' duplicates and other duplicates that appear to have arisen from the " +
             "sequencing process instead of the library preparation process, even if REMOVE_DUPLICATES is false. " +
@@ -361,6 +357,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         final int sizeInBytes;
         if (useBarcodes) {
             sizeInBytes = ReadEndsForMarkDuplicatesWithBarcodes.getSizeOf();
+        } else if (TAG_REPRESENTATIVE_READ) {
+            sizeInBytes = ReadEndsForMarkDuplicatesSetSizeTags.getSizeOf();
         } else {
             sizeInBytes = ReadEndsForMarkDuplicates.getSizeOf();
         }
@@ -373,6 +371,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             fragCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
             pairCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
             diskCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
+        } else if (TAG_REPRESENTATIVE_READ) {
+            fragCodec = new ReadEndsForMarkDuplicatesSetSizeTagsCodec();
+            pairCodec = new ReadEndsForMarkDuplicatesSetSizeTagsCodec();
+            diskCodec = new ReadEndsForMarkDuplicatesSetSizeTagsCodec();
         } else {
             fragCodec = new ReadEndsForMarkDuplicatesCodec();
             pairCodec = new ReadEndsForMarkDuplicatesCodec();
@@ -445,6 +447,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     if (pairedEnds == null) {
                         pairedEnds = buildReadEnds(header, indexForRead, rec, useBarcodes);
                         tmp.put(pairedEnds.read2ReferenceIndex, key, pairedEnds);
+                        // for read name (for representative read name), add the last of the pair that was examined
+                        if (TAG_REPRESENTATIVE_READ)
+                            ((ReadEndsForMarkDuplicatesSetSizeTags) pairedEnds).firstEncounteredReadName = rec.getReadName();
                     } else {
                         final int sequence = fragmentEnd.read1ReferenceIndex;
                         final int coordinate = fragmentEnd.read1Coordinate;
@@ -479,7 +484,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                             pairedEnds.orientation = ReadEnds.getOrientationByte(rec.getReadNegativeStrandFlag(),
                                     pairedEnds.orientation == ReadEnds.R);
                         }
-
                         pairedEnds.score += DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY);
                         this.pairSort.add(pairedEnds);
                     }
@@ -667,6 +671,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             if (end.score > maxScore || best == null) {
                 maxScore = end.score;
                 best = end;
+                // for read name (for representative read name), add the last of the pair that was examined
+                if (TAG_REPRESENTATIVE_READ)
+                    ((ReadEndsForMarkDuplicatesSetSizeTags) best).representativeReadName = best.firstEncounteredReadName;
             }
         }
 
