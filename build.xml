@@ -41,7 +41,7 @@
     <property name="htsjdk_lib_dir" value="${dist}/htsjdk_lib_dir"/>
     <property name="htsjdk_git_url" value="git@github.com:samtools/htsjdk.git"/>
     <!-- TODO: get this from the build.xml in htsjdk -->
-    <property name="htsjdk-classes" value="htsjdk/classes"/>
+    <property name="htsjdk-classes" value="htsjdk/build/classes/main"/>
 
     <property name="javac.target" value="1.8"/>
     <property name="javac.debug" value="true"/>
@@ -61,15 +61,20 @@
 
     <property environment="env"/>
     <property name="htsjdk" value="htsjdk"/>
-    <property name="htsjdk_src" value="${htsjdk}/src/java"/>
+    <property name="htsjdk_src" value="${htsjdk}/src/main/java"/>
     <property name="jar_opt" value=".jar_opt"/>
+
+    <property name="gradle.executable" location="${htsjdk}/gradlew"/>
+
+    <property name="htsjdk-version-file" value="${htsjdk}/htsjdk.version.properties"/>
+
     <condition property="isUnix">
         <os family="unix"/>
     </condition>
 
     <!-- Import JaCoCo Ant tasks -->
     <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
-        <classpath path="lib/ant/jacocoant.jar" />
+        <classpath path="lib/ant/jacocoant.jar"/>
     </taskdef>
 
     <target name="set_excluded_test_groups_unix" if="isUnix">
@@ -87,11 +92,6 @@
                 <include name="*.jar"/>
                 <include name="**/*.jar"/>
             </fileset>
-            <!-- for the specific HTSJDK library JARs -->
-            <fileset dir="${htsjdk}/lib">
-                <include name="*.jar"/>
-                <include name="**/*.jar"/>
-            </fileset>
             <fileset dir="${lib}">
                 <include name="**/*.jar"/>
             </fileset>
@@ -99,7 +99,7 @@
         <path id="metrics.classpath">
             <pathelement path="${classpath}"/>
             <pathelement location="${classes}"/>
-            <pathelement location="${htsjdk}/classes"/>
+            <pathelement location="${htsjdk}/build/classes/main"/>
         </path>
 
     </target>
@@ -116,10 +116,9 @@
     <target name="clean" description="Clean local build products and also nested project" depends="clean-local, clean-htsjdk"/>
 
     <!-- HTS-JDK -->
-    <target name="set-htsjdk-version">
+    <target name="set-htsjdk-version" depends="write-version-property">
         <!-- set the htsjdk version -->
-        <ant antfile="build.xml" dir="${htsjdk}" target="write-version-property" inheritall="false"/>
-        <loadfile property="htsjdk-version" srcFile="${htsjdk}/htsjdk.version.properties">
+        <loadfile property="htsjdk-version" srcFile="${htsjdk-version-file}">
             <filterchain>
                 <linecontains>
                     <contains value="htsjdk-version="/>
@@ -132,8 +131,20 @@
         </loadfile>
     </target>
 
+    <target name="write-version-property">
+        <exec outputproperty="htsjdk-version" executable="${gradle.executable}" dir="${htsjdk}">
+            <arg value="-q"/>
+            <arg value="printVersion"/>
+        </exec>
+        <propertyfile
+                file="${htsjdk-version-file}"
+                comment="htsjdk version">
+            <entry key="htsjdk-version" value="${htsjdk-version}"/>
+        </propertyfile>
+    </target>
+
     <target name="clone-htsjdk" description="Clone HTS-JDK sources from Github">
-       <exec executable="git" failonerror="true">
+        <exec executable="git" failonerror="true">
             <arg value="clone"/>
             <arg value="${htsjdk_git_url}"/>
             <arg value="${htsjdk}"/>
@@ -152,33 +163,39 @@
         <exec dir="${htsjdk}" executable="git" failonerror="true">
             <arg value="checkout"/>
             <arg value="${htsjdk_latest_tag}"/>
-        </exec>      
+        </exec>
     </target>
 
     <target name="compile-htsjdk" depends="set-htsjdk-version" description="Build HTS-JDK, and grab build jars">
-        <ant antfile="build.xml" dir="${htsjdk}" target="clean" inheritall="false"/>
-        <ant antfile="build.xml" dir="${htsjdk}" target="all" inheritall="false"/>
+        <exec executable="${gradle.executable}" dir="${htsjdk}">
+            <arg value="shadowJar"/>
+        </exec>
+
         <copy todir="${htsjdk_lib_dir}">
-            <fileset dir="${htsjdk}/dist" includes="**/*-*.jar"/>
-            <fileset dir="${htsjdk}/lib" includes="*.jar"/>
+            <fileset dir="${htsjdk}/build/libs" includes="**/*-all.jar"/>
         </copy>
+
         <copy todir="${dist}">
-            <fileset dir="${htsjdk}/dist" includes="**/*.jar" excludes="**/*-*.jar"/>
+            <fileset dir="${htsjdk}/build/libs" includes="**/*.jar" excludes="**/*-*.jar"/>
         </copy>
-        <!-- set the htsjdk version -->
-        <ant antfile="build.xml" dir="${htsjdk}" target="write-version-property" inheritall="false"/>
     </target>
 
     <target name="clean-htsjdk" description="Clean HTS-JDK">
-        <ant antfile="build.xml" dir="${htsjdk}" target="clean" inheritall="false"/>
+        <exec executable="${gradle.executable}" dir="${htsjdk}">
+            <arg value="clean"/>
+        </exec>
     </target>
 
     <target name="test-htsjdk" description="Test HTS-JDK">
-        <ant antfile="build.xml" dir="${htsjdk}" target="test" inheritall="false"/>
+        <exec executable="${gradle.executable}" dir="${htsjdk}">
+            <arg value="test"/>
+        </exec>
     </target>
 
     <target name="compile-htsjdk-tests" description="Compile HTS-JDK Tests">
-        <ant antfile="build.xml" dir="${htsjdk}" target="compile-tests" inheritall="false"/>
+        <exec executable="${gradle.executable}" dir="${htsjdk}">
+            <arg value="testClasses"/>
+        </exec>
     </target>
 
     <!-- COMPILE -->
@@ -189,7 +206,7 @@
     <target name="compile-src" depends="compile-htsjdk, compile-picard" description="Compile files without cleaning"/>
 
     <target name="compile-picard" depends="init" description="Compile picard files without cleaning">
-        <compile-src includes="picard/**/*.*" />
+        <compile-src includes="picard/**/*.*"/>
     </target>
 
     <target name="compile-tests" depends="compile-htsjdk-tests, compile-picard-tests" description="Compile test files without cleaning"/>
@@ -315,7 +332,7 @@
         <jar destfile="${dist}/picard.jar" compress="no">
             <fileset dir="${classes}" includes="picard/**/*.*, META-INF/**/*"/>
             <fileset dir="${src.scripts}" includes="**/*.R"/>
-            <fileset dir="${htsjdk-classes}" includes ="${htsjdk}/*/**/*.*"/>
+            <fileset dir="${htsjdk-classes}" includes="${htsjdk}/*/**/*.*"/>
             <fileset dir="${dist.tmp}" includes="**/*"/>
             <fileset dir="${jar_opt}" includes="**/*"/>
 
@@ -345,7 +362,7 @@
         </jar>
     </target>
 
-    <target name="javadoc" depends="init" description="Generates the project javadoc.">
+    <target name="javadoc" depends="init, compile, compile-htsjdk" description="Generates the project javadoc.">
         <javadoc
                 destdir="javadoc/picard"
                 packagenames="picard*"
@@ -363,11 +380,10 @@
                 <fileset dir="${lib}">
                     <include name="**/*.jar"/>
                 </fileset>
-                <fileset dir="${htsjdk}/dist">
-                    <include name="**/*.jar"/>
-                </fileset>
-                <fileset dir="${htsjdk}/lib">
-                    <include name="**/*.jar"/>
+                <fileset dir="${htsjdk}/build/libs">
+                    <include name="**/*-all.jar"/>
+                    <exclude name="**/*-sources.jar"/>
+                    <exclude name="**/*-javadoc.jar"/>
                 </fileset>
             </classpath>
             <link href="http://java.sun.com/j2se/1.6.0/docs/api/"/>
@@ -392,8 +408,10 @@
                 <fileset dir="${lib}">
                     <include name="**/*.jar"/>
                 </fileset>
-                <fileset dir="${htsjdk}/lib">
+                <fileset dir="${htsjdk}/build/libs">
                     <include name="**/*.jar"/>
+                    <exclude name="**/*-sources.jar"/>
+                    <exclude name="**/*-javadoc.jar"/>
                 </fileset>
             </classpath>
             <link href="http://java.sun.com/j2se/1.6.0/docs/api/"/>
@@ -411,8 +429,10 @@
                 <fileset dir="${lib}">
                     <include name="**/*.jar"/>
                 </fileset>
-                <fileset dir="${htsjdk}/dist">
+                <fileset dir="${htsjdk}/build/libs">
                     <include name="**/*.jar"/>
+                    <exclude name="**/*-sources.jar"/>
+                    <exclude name="**/*-javadoc.jar"/>
                 </fileset>
             </classpath>
             <fileset dir=".">
@@ -427,7 +447,7 @@
         <property name="addGATKToolsJava" value="1"/>
     </target>
 
-    <target name="package-commands-ga4gh" depends="add-ga4gh-support, compile, picard-jar" />
+    <target name="package-commands-ga4gh" depends="add-ga4gh-support, compile, picard-jar"/>
 
     <target name="package-commands" depends="compile, picard-jar">
         <delete dir="${command-line-html-dir}"/>
@@ -545,10 +565,10 @@
             <java classname="picard.cmdline.CreateHtmlDocForStandardOptions"
                   output="${command-line-html-dir}/program_usage/standard-options.html"
                   failonerror="true">
-                  <classpath>
-                      <path refid="classpath"/>
-                      <pathelement location="${classes}"/>
-                  </classpath>
+                <classpath>
+                    <path refid="classpath"/>
+                    <pathelement location="${classes}"/>
+                </classpath>
             </java>
         </sequential>
     </target>
@@ -567,10 +587,10 @@
             <java classname="picard.cmdline.CreateHtmlDocForProgram"
                   output="${command-line-html-dir}/program_usage/@{title}.html"
                   failonerror="true">
-                  <classpath>
-                      <path refid="classpath"/>
-                      <pathelement location="${classes}"/>
-                  </classpath>
+                <classpath>
+                    <path refid="classpath"/>
+                    <pathelement location="${classes}"/>
+                </classpath>
                 <arg value="@{main-class}"/>
             </java>
 
