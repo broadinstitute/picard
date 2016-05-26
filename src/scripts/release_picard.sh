@@ -184,12 +184,12 @@ cd $TMPDIR
 # clone
 git clone $PICARDGITROOT picard
 cd picard
-ant clone-htsjdk
+ant -buildfile build-from-src.xml clone-htsjdk
 #by default clone will grab the latest release we need master
 cd htsjdk
 git checkout master
 cd ..
-ant clean # clean shouldn't be necessary, but no harm
+ant -buildfile build-from-src.xml clean # clean shouldn't be necessary, but no harm
 
 # Since releases are lexically sorted, need to filter in order to have 1.1xx be at the bottom.
 PICARD_PREV_RELEASE_ID=`git ls-remote --tags | grep -v "{}$" | awk '{print $2}' | sed -e "s_.*/__g" | egrep '[.]\d\d\d' | tail -1`
@@ -202,9 +202,9 @@ do pushd $sandbox
 	popd
 done
 
-ant -lib lib/ant test-htsjdk test
+ant -buildfile build-from-src-xml -lib lib/ant test-htsjdk test
 
-ant -lib lib/ant clean all javadoc
+ant -buildfile build-from-src.xml -lib lib/ant clean all javadoc
 
 mkdir -p deploy/picard-tools/$RELEASE_ID
 

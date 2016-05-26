@@ -6,6 +6,5 @@ before_install:
   - sudo apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
   - sed -i -e 's_git@github.com:_https://github.com/_' build.xml
 script:
-  - ant -lib lib/ant clone-htsjdk 
   - ant
   - ant test

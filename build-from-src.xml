@@ -2,7 +2,7 @@
 <!--
   ~ The MIT License
   ~
-  ~ Copyright (c) 2009 The Broad Institute
+  ~ Copyright (c) 2016 The Broad Institute
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,8 @@
   ~ THE SOFTWARE.
   -->
 
-<project name="picard-public" basedir="." default="all" xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="picard-public" basedir="." default="all">
+
     <property name="src" value="src/java"/>
     <property name="src.scripts" value="src/scripts"/>
     <property name="src.test" value="src/tests"/>
@@ -37,6 +38,10 @@
     <property name="scripts" value="src/scripts"/>
     <property name="reports" value="dist/test"/>
     <property name="test.output" value="dist/test"/>
+    <property name="htsjdk_lib_dir" value="${dist}/htsjdk_lib_dir"/>
+    <property name="htsjdk_git_url" value="git@github.com:samtools/htsjdk.git"/>
+    <!-- TODO: get this from the build.xml in htsjdk -->
+    <property name="htsjdk-classes" value="htsjdk/classes"/>
 
     <property name="javac.target" value="1.8"/>
     <property name="javac.debug" value="true"/>
@@ -55,37 +60,9 @@
     <!-- override on the command line if desired -->
 
     <property environment="env"/>
+    <property name="htsjdk" value="htsjdk"/>
+    <property name="htsjdk_src" value="${htsjdk}/src/java"/>
     <property name="jar_opt" value=".jar_opt"/>
-
-    <property name="ivy.install.version" value="2.1.0-rc2" />
-    <condition property="ivy.home" value="${env.IVY_HOME}">
-      <isset property="env.IVY_HOME" />
-    </condition>
-    <property name="ivy.home" value="${user.home}/.ant" />
-    <property name="ivy.jar.dir" value="${ivy.home}/lib" />
-    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
-
-    <target name="download-ivy" unless="offline">
-
-        <mkdir dir="${ivy.jar.dir}"/>
-        <!-- download Ivy from web site so that it can be used even without any special installation -->
-        <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" 
-             dest="${ivy.jar.file}" usetimestamp="true"/>
-    </target>
-
-    <target name="init-ivy" depends="download-ivy">
-      <!-- try to load ivy here from ivy home, in case the user has not already dropped
-              it into ant's lib dir (note that the latter copy will always take precedence).
-              We will not fail as long as local lib dir exists (it may be empty) and
-              ivy is in at least one of ant's lib dir or the local lib dir. -->
-        <path id="ivy.lib.path">
-            <fileset dir="${ivy.jar.dir}" includes="*.jar"/>
-
-        </path>
-        <taskdef resource="org/apache/ivy/ant/antlib.xml"
-                 uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
-    </target>
-
     <condition property="isUnix">
         <os family="unix"/>
     </condition>
@@ -103,13 +80,18 @@
     </target>
     <target name="set_excluded_test_groups" depends="set_excluded_test_groups_unix,set_excluded_test_groups_non_unix"/>
 
-	<target name="resolve" description="--> retrieve dependencies with ivy" depends="init-ivy">
-        <ivy:retrieve />
-    </target>
-
     <!-- INIT -->
-    <target name="init" depends="resolve">
+    <target name="init">
         <path id="classpath">
+            <fileset dir="${htsjdk_lib_dir}">
+                <include name="*.jar"/>
+                <include name="**/*.jar"/>
+            </fileset>
+            <!-- for the specific HTSJDK library JARs -->
+            <fileset dir="${htsjdk}/lib">
+                <include name="*.jar"/>
+                <include name="**/*.jar"/>
+            </fileset>
             <fileset dir="${lib}">
                 <include name="**/*.jar"/>
             </fileset>
@@ -117,7 +99,9 @@
         <path id="metrics.classpath">
             <pathelement path="${classpath}"/>
             <pathelement location="${classes}"/>
-       </path>
+            <pathelement location="${htsjdk}/classes"/>
+        </path>
+
     </target>
 
     <!-- CLEAN -->
@@ -129,20 +113,86 @@
         <delete dir="javadoc"/>
     </target>
 
-    <target name="clean" description="Clean local build products and also nested project" depends="clean-local"/>
+    <target name="clean" description="Clean local build products and also nested project" depends="clean-local, clean-htsjdk"/>
+
+    <!-- HTS-JDK -->
+    <target name="set-htsjdk-version">
+        <!-- set the htsjdk version -->
+        <ant antfile="build.xml" dir="${htsjdk}" target="write-version-property" inheritall="false"/>
+        <loadfile property="htsjdk-version" srcFile="${htsjdk}/htsjdk.version.properties">
+            <filterchain>
+                <linecontains>
+                    <contains value="htsjdk-version="/>
+                </linecontains>
+                <tokenfilter>
+                    <replacestring from="htsjdk-version=" to=""/>
+                </tokenfilter>
+                <striplinebreaks/>
+            </filterchain>
+        </loadfile>
+    </target>
+
+    <target name="clone-htsjdk" description="Clone HTS-JDK sources from Github">
+       <exec executable="git" failonerror="true">
+            <arg value="clone"/>
+            <arg value="${htsjdk_git_url}"/>
+            <arg value="${htsjdk}"/>
+        </exec>
+        <exec dir="${htsjdk}" executable="git" outputproperty="htsjdk_latest_raw_tag">
+            <arg value="rev-list"/>
+            <arg value="--tags"/>
+            <arg value="--max-count=1"/>
+        </exec>
+        <exec dir="${htsjdk}" executable="git" outputproperty="htsjdk_latest_tag">
+            <arg value="describe"/>
+            <arg value="--tags"/>
+            <arg value="${htsjdk_latest_raw_tag}"/>
+        </exec>
+        <echo message="Checking out HTSJDK tagged version [${htsjdk_latest_tag}]"/>
+        <exec dir="${htsjdk}" executable="git" failonerror="true">
+            <arg value="checkout"/>
+            <arg value="${htsjdk_latest_tag}"/>
+        </exec>      
+    </target>
+
+    <target name="compile-htsjdk" depends="set-htsjdk-version" description="Build HTS-JDK, and grab build jars">
+        <ant antfile="build.xml" dir="${htsjdk}" target="clean" inheritall="false"/>
+        <ant antfile="build.xml" dir="${htsjdk}" target="all" inheritall="false"/>
+        <copy todir="${htsjdk_lib_dir}">
+            <fileset dir="${htsjdk}/dist" includes="**/*-*.jar"/>
+            <fileset dir="${htsjdk}/lib" includes="*.jar"/>
+        </copy>
+        <copy todir="${dist}">
+            <fileset dir="${htsjdk}/dist" includes="**/*.jar" excludes="**/*-*.jar"/>
+        </copy>
+        <!-- set the htsjdk version -->
+        <ant antfile="build.xml" dir="${htsjdk}" target="write-version-property" inheritall="false"/>
+    </target>
+
+    <target name="clean-htsjdk" description="Clean HTS-JDK">
+        <ant antfile="build.xml" dir="${htsjdk}" target="clean" inheritall="false"/>
+    </target>
+
+    <target name="test-htsjdk" description="Test HTS-JDK">
+        <ant antfile="build.xml" dir="${htsjdk}" target="test" inheritall="false"/>
+    </target>
+
+    <target name="compile-htsjdk-tests" description="Compile HTS-JDK Tests">
+        <ant antfile="build.xml" dir="${htsjdk}" target="compile-tests" inheritall="false"/>
+    </target>
 
     <!-- COMPILE -->
     <target name="compile" depends="compile-src, compile-tests"
             description="Compile files without cleaning">
     </target>
 
-    <target name="compile-src" depends="compile-picard" description="Compile files without cleaning"/>
+    <target name="compile-src" depends="compile-htsjdk, compile-picard" description="Compile files without cleaning"/>
 
     <target name="compile-picard" depends="init" description="Compile picard files without cleaning">
         <compile-src includes="picard/**/*.*" />
     </target>
 
-    <target name="compile-tests" depends="compile-picard-tests" description="Compile test files without cleaning"/>
+    <target name="compile-tests" depends="compile-htsjdk-tests, compile-picard-tests" description="Compile test files without cleaning"/>
 
     <target name="compile-picard-tests" depends="init" description="Compile picard test files without cleaning">
         <compile-tests includes="picard/**/*.*"/>
@@ -257,12 +307,16 @@
             <fileset dir="${lib}">
                 <exclude name="**/jacocoant.jar"/> <!-- must exclude this jar from packing into picard - this is only used for testing -->
             </fileset>
+            <fileset dir="${htsjdk_lib_dir}">
+                <include name="*.jar"/>
+            </fileset>
         </unjar>
 
         <jar destfile="${dist}/picard.jar" compress="no">
             <fileset dir="${classes}" includes="picard/**/*.*, META-INF/**/*"/>
             <fileset dir="${src.scripts}" includes="**/*.R"/>
-			<fileset dir="${dist.tmp}" includes="**/*"/>
+            <fileset dir="${htsjdk-classes}" includes ="${htsjdk}/*/**/*.*"/>
+            <fileset dir="${dist.tmp}" includes="**/*"/>
             <fileset dir="${jar_opt}" includes="**/*"/>
 
             <manifest>
@@ -270,6 +324,7 @@
                 <attribute name="Implementation-Vendor" value="Broad Institute"/>
                 <attribute name="Main-Class" value="picard.cmdline.PicardCommandLine"/>
                 <attribute name="Implementation-Title" value="PICARD Tools"/>
+                <attribute name="HTSJDK-Version" value="${htsjdk-version}"/>
             </manifest>
         </jar>
 
@@ -301,15 +356,48 @@
                 use="true"
                 version="true"
                 additionalparam="-Xdoclint:none -notimestamp"
-                failonerror="true">
+                failonerror="true"
+                excludepackagenames="htsjdk*">
             <classpath>
                 <pathelement location="${java.home}/../lib/tools.jar"/>
                 <fileset dir="${lib}">
                     <include name="**/*.jar"/>
                 </fileset>
+                <fileset dir="${htsjdk}/dist">
+                    <include name="**/*.jar"/>
+                </fileset>
+                <fileset dir="${htsjdk}/lib">
+                    <include name="**/*.jar"/>
+                </fileset>
             </classpath>
             <link href="http://java.sun.com/j2se/1.6.0/docs/api/"/>
             <fileset dir="${src}" defaultexcludes="yes">
+                <include name="**/*.java"/>
+            </fileset>
+        </javadoc>
+        <javadoc
+                destdir="javadoc/htsjdk"
+                packagenames="htsjdk*"
+                windowtitle="HTSJDK API Documentation"
+                doctitle="&lt;h1&gt;HTSJDK API Documentation&lt;/h1&gt;"
+                author="true"
+                protected="true"
+                use="true"
+                version="true"
+                additionalparam="-Xdoclint:none -notimestamp"
+                failonerror="true"
+                excludepackagenames="picard*">
+            <classpath>
+                <pathelement location="${java.home}/../lib/tools.jar"/>
+                <fileset dir="${lib}">
+                    <include name="**/*.jar"/>
+                </fileset>
+                <fileset dir="${htsjdk}/lib">
+                    <include name="**/*.jar"/>
+                </fileset>
+            </classpath>
+            <link href="http://java.sun.com/j2se/1.6.0/docs/api/"/>
+            <fileset dir="${htsjdk_src}" defaultexcludes="yes">
                 <include name="**/*.java"/>
             </fileset>
         </javadoc>
@@ -323,9 +411,13 @@
                 <fileset dir="${lib}">
                     <include name="**/*.jar"/>
                 </fileset>
+                <fileset dir="${htsjdk}/dist">
+                    <include name="**/*.jar"/>
+                </fileset>
             </classpath>
             <fileset dir=".">
                 <include name="${src}/**/*.java"/>
+                <include name="${htsjdk_src}/**/*.java"/>
             </fileset>
             <arg line="-f ${command-line-html-dir}/picard-metric-definitions.html"/>
         </javadoc>
@@ -431,7 +523,10 @@
             description="Default build target">
         <zip zipfile="${dist}/picard-tools-${picard-version}.zip">
             <zipfileset dir="${dist}" includes="*.jar" prefix="picard-tools-${picard-version}"/>
+            <zipfileset dir="${htsjdk_lib_dir}" includes="htsjdk-*.jar" prefix="picard-tools-${picard-version}"/>
             <zipfileset dir="${lib}" includes="snappy*.jar"/>
+            <!-- distribute libJniDeflater.so in same directory as jarfiles-->
+            <zipfileset dir="${htsjdk}/lib/jni" includes="*" prefix="picard-tools-${picard-version}"/>
         </zip>
     </target>
 
