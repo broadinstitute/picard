@@ -859,14 +859,6 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/fastq/AsyncFastqWriter.html#AsyncFastqWriter-htsjdk.samtools.fastq.FastqWriter-int-">AsyncFastqWriter(FastqWriter, int)</a></span> - Constructor for class htsjdk.samtools.fastq.<a href="htsjdk/samtools/fastq/AsyncFastqWriter.html" title="class in htsjdk.samtools.fastq">AsyncFastqWriter</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="htsjdk/tribble/readers/AsynchronousLineReader.html" title="class in htsjdk.tribble.readers"><span class="typeNameLink">AsynchronousLineReader</span></a> - Class in <a href="htsjdk/tribble/readers/package-summary.html">htsjdk.tribble.readers</a></dt>
-<dd>
-<div class="block">A LineReader implementation that delegates the work of reading and fetching lines to another thread.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/AsynchronousLineReader.html#AsynchronousLineReader-java.io.Reader-int-">AsynchronousLineReader(Reader, int)</a></span> - Constructor for class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/AsynchronousLineReader.html" title="class in htsjdk.tribble.readers">AsynchronousLineReader</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/AsynchronousLineReader.html#AsynchronousLineReader-java.io.Reader-">AsynchronousLineReader(Reader)</a></span> - Constructor for class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/AsynchronousLineReader.html" title="class in htsjdk.tribble.readers">AsynchronousLineReader</a></dt>
-<dd>&nbsp;</dd>
 <dt><a href="htsjdk/variant/variantcontext/writer/AsyncVariantContextWriter.html" title="class in htsjdk.variant.variantcontext.writer"><span class="typeNameLink">AsyncVariantContextWriter</span></a> - Class in <a href="htsjdk/variant/variantcontext/writer/package-summary.html">htsjdk.variant.variantcontext.writer</a></dt>
 <dd>
 <div class="block">AsyncVariantContextWriter that can be wrapped around an underlying AsyncVariantContextWriter to provide asynchronous output.</div>
@@ -896,11 +888,9 @@
 <dd>
 <div class="block">This genotype has these attributes.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/VariantContextBuilder.html#attributes-java.util.Map-">attributes(Map&lt;String, Object&gt;)</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/VariantContextBuilder.html" title="class in htsjdk.variant.variantcontext">VariantContextBuilder</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/VariantContextBuilder.html#attributes-java.util.Map-">attributes(Map&lt;String, ?&gt;)</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/VariantContextBuilder.html" title="class in htsjdk.variant.variantcontext">VariantContextBuilder</a></dt>
 <dd>
-<div class="block">Tells this builder to use this map of attributes alleles for the resulting <code>VariantContext</code>
-
- Attributes can be <code>null</code> -&gt; meaning there are no attributes.</div>
+<div class="block">Tells this builder to use this map of attributes for the resulting <code>VariantContext</code>.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/AbstractSAMHeaderRecord.html#attributesEqual-htsjdk.samtools.AbstractSAMHeaderRecord-">attributesEqual(AbstractSAMHeaderRecord)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/AbstractSAMHeaderRecord.html" title="class in htsjdk.samtools">AbstractSAMHeaderRecord</a></dt>
 <dd>
@@ -2098,8 +2088,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/AsciiLineReaderIterator.html#close--">close()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/AsciiLineReaderIterator.html" title="class in htsjdk.tribble.readers">AsciiLineReaderIterator</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/AsynchronousLineReader.html#close--">close()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/AsynchronousLineReader.html" title="class in htsjdk.tribble.readers">AsynchronousLineReader</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineIteratorImpl.html#close--">close()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineIteratorImpl.html" title="class in htsjdk.tribble.readers">LineIteratorImpl</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineReader.html#close--">close()</a></span> - Method in interface htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReader.html" title="interface in htsjdk.tribble.readers">LineReader</a></dt>
@@ -2107,6 +2095,8 @@
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LongLineBufferedReader.html#close--">close()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LongLineBufferedReader.html" title="class in htsjdk.tribble.readers">LongLineBufferedReader</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/PositionalBufferedStream.html#close--">close()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/PositionalBufferedStream.html" title="class in htsjdk.tribble.readers">PositionalBufferedStream</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/SynchronousLineReader.html#close--">close()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/SynchronousLineReader.html" title="class in htsjdk.tribble.readers">SynchronousLineReader</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/TabixIteratorLineReader.html#close--">close()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/TabixIteratorLineReader.html" title="class in htsjdk.tribble.readers">TabixIteratorLineReader</a></dt>
 <dd>&nbsp;</dd>
@@ -3348,8 +3338,6 @@
 <dd>
 <div class="block">The maximum number of records over which the detector will iterate before making a determination, by default.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/AsynchronousLineReader.html#DEFAULT_NUMBER_LINES_BUFFER">DEFAULT_NUMBER_LINES_BUFFER</a></span> - Static variable in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/AsynchronousLineReader.html" title="class in htsjdk.tribble.readers">AsynchronousLineReader</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/writer/VariantContextWriterBuilder.html#DEFAULT_OPTIONS">DEFAULT_OPTIONS</a></span> - Static variable in class htsjdk.variant.variantcontext.writer.<a href="htsjdk/variant/variantcontext/writer/VariantContextWriterBuilder.html" title="class in htsjdk.variant.variantcontext.writer">VariantContextWriterBuilder</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/writer/VariantContextWriterFactory.html#DEFAULT_OPTIONS">DEFAULT_OPTIONS</a></span> - Static variable in class htsjdk.variant.variantcontext.writer.<a href="htsjdk/variant/variantcontext/writer/VariantContextWriterFactory.html" title="class in htsjdk.variant.variantcontext.writer">VariantContextWriterFactory</a></dt>
@@ -3400,25 +3388,10 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/DefaultSAMRecordFactory.html#DefaultSAMRecordFactory--">DefaultSAMRecordFactory()</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/DefaultSAMRecordFactory.html" title="class in htsjdk.samtools">DefaultSAMRecordFactory</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#deflate-byte:A-int-int-">deflate(byte[], int, int)</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Compresses the input data and fills specified buffer with compressed
- data.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#deflate-byte:A-">deflate(byte[])</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Compresses the input data and fills specified buffer with compressed
- data.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#deflate-byte:A-int-int-int-">deflate(byte[], int, int, int)</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Compresses the input data and fills the specified buffer with compressed
- data.</div>
-</dd>
 <dt><a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><span class="typeNameLink">DeflaterFactory</span></a> - Class in <a href="htsjdk/samtools/util/zip/package-summary.html">htsjdk.samtools.util.zip</a></dt>
 <dd>
-<div class="block">Create zlib-based Deflater if JNI library and other require libraries are available, otherwise create standard
- JDK Deflater.</div>
+<div class="block">Create a hardware-accelerated Intel deflater if the required library is available on the classpath and
+ <a href="htsjdk/samtools/Defaults.html#TRY_USE_INTEL_DEFLATER"><code>Defaults.TRY_USE_INTEL_DEFLATER</code></a> is true, otherwise create a standard JDK deflater.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/DeflaterFactory.html#DeflaterFactory--">DeflaterFactory()</a></span> - Constructor for class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a></dt>
 <dd>&nbsp;</dd>
@@ -3863,10 +3836,6 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/QueryInterval.html#end">end</a></span> - Variable in class htsjdk.samtools.<a href="htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a></dt>
 <dd>
 <div class="block">1-based, inclusive.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#end--">end()</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Closes the compressor and discards any unprocessed input.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/bed/SimpleBEDFeature.html#end">end</a></span> - Variable in class htsjdk.tribble.bed.<a href="htsjdk/tribble/bed/SimpleBEDFeature.html" title="class in htsjdk.tribble.bed">SimpleBEDFeature</a></dt>
 <dd>&nbsp;</dd>
@@ -4624,10 +4593,6 @@
 <div class="block">Clean up disk resources in case clear() has not been explicitly called (as would be preferable)
  Closes the input and output streams associated with this DiskBackedQueue and deletes the temporary file</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#finalize--">finalize()</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Closes the compressor when garbage is collected.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/ResourceLimitedMap.html#finalizeAll--">finalizeAll()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/ResourceLimitedMap.html" title="class in htsjdk.samtools.util">ResourceLimitedMap</a></dt>
 <dd>
 <div class="block">Remove all the values from the map, and call functory.finalizeValue() on each of them.</div>
@@ -4709,16 +4674,6 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMTextWriter.html#finish--">finish()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMTextWriter.html" title="class in htsjdk.samtools">SAMTextWriter</a></dt>
 <dd>
 <div class="block">Do any required flushing here.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#finish--">finish()</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">When called, indicates that compression should end with the current
- contents of the input buffer.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#finished--">finished()</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Returns true if the end of the compressed data output stream has
- been reached.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/CramCompressionRecord.BAM_FLAGS.html#FIRST_OF_PAIR_FLAG">FIRST_OF_PAIR_FLAG</a></span> - Static variable in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/CramCompressionRecord.BAM_FLAGS.html" title="class in htsjdk.samtools.cram.structure">CramCompressionRecord.BAM_FLAGS</a></dt>
 <dd>&nbsp;</dd>
@@ -4840,13 +4795,11 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineReaderUtil.html#fromBufferedStream-java.io.InputStream-">fromBufferedStream(InputStream)</a></span> - Static method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReaderUtil.html" title="class in htsjdk.tribble.readers">LineReaderUtil</a></dt>
 <dd>
-<div class="block">Like <a href="htsjdk/tribble/readers/LineReaderUtil.html#fromBufferedStream-java.io.InputStream-htsjdk.tribble.readers.LineReaderUtil.LineReaderOption-"><code>LineReaderUtil.fromBufferedStream(java.io.InputStream, LineReaderUtil.LineReaderOption)</code></a>, but the synchronicity
- option is determined by <a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools"><code>Defaults</code></a>: if asynchronous I/O is enabled, an asynchronous line reader will be
- returned.</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineReaderUtil.html#fromBufferedStream-java.io.InputStream-htsjdk.tribble.readers.LineReaderUtil.LineReaderOption-">fromBufferedStream(InputStream, LineReaderUtil.LineReaderOption)</a></span> - Static method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReaderUtil.html" title="class in htsjdk.tribble.readers">LineReaderUtil</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineReaderUtil.html#fromBufferedStream-java.io.InputStream-java.lang.Object-">fromBufferedStream(InputStream, Object)</a></span> - Static method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReaderUtil.html" title="class in htsjdk.tribble.readers">LineReaderUtil</a></dt>
 <dd>
-<div class="block">Convenience factory for composing a LineReader from an InputStream.</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/encoding/BetaIntegerEncoding.html#fromByteArray-byte:A-">fromByteArray(byte[])</a></span> - Method in class htsjdk.samtools.cram.encoding.<a href="htsjdk/samtools/cram/encoding/BetaIntegerEncoding.html" title="class in htsjdk.samtools.cram.encoding">BetaIntegerEncoding</a></dt>
 <dd>&nbsp;</dd>
@@ -4919,9 +4872,13 @@
 <div class="block">Parses an interval list from a reader in a stream based fashion.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineReaderUtil.html#fromStringReader-java.io.StringReader-">fromStringReader(StringReader)</a></span> - Static method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReaderUtil.html" title="class in htsjdk.tribble.readers">LineReaderUtil</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineReaderUtil.html#fromStringReader-java.io.StringReader-htsjdk.tribble.readers.LineReaderUtil.LineReaderOption-">fromStringReader(StringReader, LineReaderUtil.LineReaderOption)</a></span> - Static method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReaderUtil.html" title="class in htsjdk.tribble.readers">LineReaderUtil</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineReaderUtil.html#fromStringReader-java.io.StringReader-java.lang.Object-">fromStringReader(StringReader, Object)</a></span> - Static method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReaderUtil.html" title="class in htsjdk.tribble.readers">LineReaderUtil</a></dt>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFFileReader.html#fromVcf-java.io.File-">fromVcf(File)</a></span> - Static method in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFFileReader.html" title="class in htsjdk.variant.vcf">VCFFileReader</a></dt>
 <dd>
 <div class="block">Parse a VCF file and convert to an IntervalList The name field of the IntervalList is taken from the ID field of the variant, if it exists.</div>
@@ -4958,11 +4915,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/ftp/FTPUtils.html#FTPUtils--">FTPUtils()</a></span> - Constructor for class htsjdk.samtools.util.ftp.<a href="htsjdk/samtools/util/ftp/FTPUtils.html" title="class in htsjdk.samtools.util.ftp">FTPUtils</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#FULL_FLUSH">FULL_FLUSH</a></span> - Static variable in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Compression flush mode used to flush out all pending output and
- reset the deflater.</div>
-</dd>
 <dt><a href="htsjdk/tribble/bed/FullBEDFeature.html" title="class in htsjdk.tribble.bed"><span class="typeNameLink">FullBEDFeature</span></a> - Class in <a href="htsjdk/tribble/bed/package-summary.html">htsjdk.tribble.bed</a></dt>
 <dd>
 <div class="block">Object for full BED file.</div>
@@ -5277,10 +5229,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/Genotype.html#getAD--">getAD()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/Genotype.html" title="class in htsjdk.variant.variantcontext">Genotype</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#getAdler--">getAdler()</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Returns the ADLER-32 value of the uncompressed data.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/BAMIndexMetaData.html#getAlignedRecordCount--">getAlignedRecordCount()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/BAMIndexMetaData.html" title="class in htsjdk.samtools">BAMIndexMetaData</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMRecord.html#getAlignmentBlocks--">getAlignmentBlocks()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></dt>
@@ -5622,14 +5570,6 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/ContainerIO.html#getByteSize-htsjdk.samtools.cram.common.Version-htsjdk.samtools.cram.structure.Container-">getByteSize(Version, Container)</a></span> - Static method in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/ContainerIO.html" title="class in htsjdk.samtools.cram.structure">ContainerIO</a></dt>
 <dd>
 <div class="block">Calculates the byte size of a container based on the CRAM version.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#getBytesRead--">getBytesRead()</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Returns the total number of uncompressed bytes input so far.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#getBytesWritten--">getBytesWritten()</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Returns the total number of compressed bytes output so far.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/AbstractVCFCodec.html#getCachedString-java.lang.String-">getCachedString(String)</a></span> - Method in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/AbstractVCFCodec.html" title="class in htsjdk.variant.vcf">AbstractVCFCodec</a></dt>
 <dd>
@@ -7882,14 +7822,6 @@
 <dd>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#getTotalIn--">getTotalIn()</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Returns the total number of uncompressed bytes input so far.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#getTotalOut--">getTotalOut()</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Returns the total number of compressed bytes output so far.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SRAIterator.RecordRangeInfo.html#getTotalRecordRangeLength--">getTotalRecordRangeLength()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SRAIterator.RecordRangeInfo.html" title="class in htsjdk.samtools">SRAIterator.RecordRangeInfo</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SRAIterator.RecordRangeInfo.html#getTotalReferencesLength--">getTotalReferencesLength()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SRAIterator.RecordRangeInfo.html" title="class in htsjdk.samtools">SRAIterator.RecordRangeInfo</a></dt>
@@ -9013,29 +8945,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/writer/BCF2FieldWriter.IntegerTypeGenotypesWriter.html#IntegerTypeGenotypesWriter-htsjdk.variant.vcf.VCFHeader-htsjdk.variant.variantcontext.writer.BCF2FieldEncoder-">IntegerTypeGenotypesWriter(VCFHeader, BCF2FieldEncoder)</a></span> - Constructor for class htsjdk.variant.variantcontext.writer.<a href="htsjdk/variant/variantcontext/writer/BCF2FieldWriter.IntegerTypeGenotypesWriter.html" title="class in htsjdk.variant.variantcontext.writer">BCF2FieldWriter.IntegerTypeGenotypesWriter</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#INTEL_DEFLATER_SHARED_LIBRARY_PATH">INTEL_DEFLATER_SHARED_LIBRARY_PATH</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
-<dd>
-<div class="block">Path to libIntelDeflater.so.</div>
-</dd>
-<dt><a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip"><span class="typeNameLink">IntelDeflater</span></a> - Class in <a href="htsjdk/samtools/util/zip/package-summary.html">htsjdk.samtools.util.zip</a></dt>
-<dd>
-<div class="block">This is a copy of java.util.zip.Deflater from OpenJDK 7, with the following changes:
- - package and class name changed
- - static block to load libIntelDeflater library
- - extends java.util.zip.Deflater so that IntelDeflater object can be used as regular Deflater object.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#IntelDeflater-int-boolean-">IntelDeflater(int, boolean)</a></span> - Constructor for class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Creates a new compressor using the specified compression level.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#IntelDeflater-int-">IntelDeflater(int)</a></span> - Constructor for class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Creates a new compressor using the specified compression level.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#IntelDeflater--">IntelDeflater()</a></span> - Constructor for class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Creates a new compressor with the default compression level.</div>
-</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/DeflaterFactory.html#INTEL_DEFLATER_CLASS_NAME">INTEL_DEFLATER_CLASS_NAME</a></span> - Static variable in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/TribbleException.InternalCodecException.html#InternalCodecException-java.lang.String-">InternalCodecException(String)</a></span> - Constructor for exception htsjdk.tribble.<a href="htsjdk/tribble/TribbleException.InternalCodecException.html" title="class in htsjdk.tribble">TribbleException.InternalCodecException</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIEntry.html#intersect-htsjdk.samtools.cram.CRAIEntry-htsjdk.samtools.cram.CRAIEntry-">intersect(CRAIEntry, CRAIEntry)</a></span> - Static method in class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a></dt>
@@ -10201,12 +10112,16 @@
 </dd>
 <dt><a href="htsjdk/tribble/readers/LineReaderUtil.html" title="class in htsjdk.tribble.readers"><span class="typeNameLink">LineReaderUtil</span></a> - Class in <a href="htsjdk/tribble/readers/package-summary.html">htsjdk.tribble.readers</a></dt>
 <dd>
-<div class="block">A collection of factories for generating <a href="htsjdk/tribble/readers/LineReader.html" title="interface in htsjdk.tribble.readers"><code>LineReader</code></a>s.</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineReaderUtil.html#LineReaderUtil--">LineReaderUtil()</a></span> - Constructor for class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReaderUtil.html" title="class in htsjdk.tribble.readers">LineReaderUtil</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><a href="htsjdk/tribble/readers/LineReaderUtil.LineReaderOption.html" title="enum in htsjdk.tribble.readers"><span class="typeNameLink">LineReaderUtil.LineReaderOption</span></a> - Enum in <a href="htsjdk/tribble/readers/package-summary.html">htsjdk.tribble.readers</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypesContext.html#listIterator--">listIterator()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypesContext.html" title="class in htsjdk.variant.variantcontext">GenotypesContext</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypesContext.html#listIterator-int-">listIterator(int)</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypesContext.html" title="class in htsjdk.variant.variantcontext">GenotypesContext</a></dt>
@@ -10948,11 +10863,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/encoding/reader/DataReaderFactory.DataReaderWithStats.html#nanos">nanos</a></span> - Variable in class htsjdk.samtools.cram.encoding.reader.<a href="htsjdk/samtools/cram/encoding/reader/DataReaderFactory.DataReaderWithStats.html" title="class in htsjdk.samtools.cram.encoding.reader">DataReaderFactory.DataReaderWithStats</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#needsInput--">needsInput()</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Returns true if the input data buffer is empty and setInput()
- should be called in order to provide more input.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/DiskBackedQueue.html#newInstance-htsjdk.samtools.util.SortingCollection.Codec-int-java.util.List-">newInstance(SortingCollection.Codec&lt;T&gt;, int, List&lt;File&gt;)</a></span> - Static method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/DiskBackedQueue.html" title="class in htsjdk.samtools.util">DiskBackedQueue</a></dt>
 <dd>
 <div class="block">Syntactic sugar around the ctor, to save some typing of type parameters</div>
@@ -11133,10 +11043,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedStreamConstants.html#NO_COMPRESSION_OVERHEAD">NO_COMPRESSION_OVERHEAD</a></span> - Static variable in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedStreamConstants.html" title="class in htsjdk.samtools.util">BlockCompressedStreamConstants</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#NO_FLUSH">NO_FLUSH</a></span> - Static variable in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Compression flush mode used to achieve best compression result.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypesContext.html#NO_GENOTYPES">NO_GENOTYPES</a></span> - Static variable in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypesContext.html" title="class in htsjdk.variant.variantcontext">GenotypesContext</a></dt>
 <dd>
 <div class="block">static constant value for an empty GenotypesContext.</div>
@@ -12666,14 +12572,14 @@
 <dd>
 <div class="block">Same as <a href="htsjdk/tribble/readers/AsciiLineReader.html#readLine-htsjdk.tribble.readers.PositionalBufferedStream-"><code>AsciiLineReader.readLine(PositionalBufferedStream)</code></a> but uses the stream provided in the constructor</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/AsynchronousLineReader.html#readLine--">readLine()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/AsynchronousLineReader.html" title="class in htsjdk.tribble.readers">AsynchronousLineReader</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineReader.html#readLine--">readLine()</a></span> - Method in interface htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReader.html" title="interface in htsjdk.tribble.readers">LineReader</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LongLineBufferedReader.html#readLine--">readLine()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LongLineBufferedReader.html" title="class in htsjdk.tribble.readers">LongLineBufferedReader</a></dt>
 <dd>
 <div class="block">Reads a line of text.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/SynchronousLineReader.html#readLine--">readLine()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/SynchronousLineReader.html" title="class in htsjdk.tribble.readers">SynchronousLineReader</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/TabixIteratorLineReader.html#readLine--">readLine()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/TabixIteratorLineReader.html" title="class in htsjdk.tribble.readers">TabixIteratorLineReader</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/TabixReader.html#readLine-java.io.InputStream-">readLine(InputStream)</a></span> - Static method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/TabixReader.html" title="class in htsjdk.tribble.readers">TabixReader</a></dt>
@@ -13181,10 +13087,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/StopWatch.html#reset--">reset()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/StopWatch.html" title="class in htsjdk.samtools.util">StopWatch</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#reset--">reset()</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Resets deflater so that a new set of input data can be processed.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LongLineBufferedReader.html#reset--">reset()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LongLineBufferedReader.html" title="class in htsjdk.tribble.readers">LongLineBufferedReader</a></dt>
 <dd>
 <div class="block">Resets the stream to the most recent mark.</div>
@@ -14333,14 +14235,6 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/CramCompressionRecord.html#setDetached-boolean-">setDetached(boolean)</a></span> - Method in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/CramCompressionRecord.html" title="class in htsjdk.samtools.cram.structure">CramCompressionRecord</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#setDictionary-byte:A-int-int-">setDictionary(byte[], int, int)</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Sets preset dictionary for compression.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#setDictionary-byte:A-">setDictionary(byte[])</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Sets preset dictionary for compression.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/ref/ReferenceSource.html#setDownloadTriesBeforeFailing-int-">setDownloadTriesBeforeFailing(int)</a></span> - Method in class htsjdk.samtools.cram.ref.<a href="htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/CramCompressionRecord.html#setDuplicate-boolean-">setDuplicate(boolean)</a></span> - Method in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/CramCompressionRecord.html" title="class in htsjdk.samtools.cram.structure">CramCompressionRecord</a></dt>
@@ -14444,14 +14338,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/sra/SRALazyRecord.html#setInferredInsertSize-int-">setInferredInsertSize(int)</a></span> - Method in class htsjdk.samtools.sra.<a href="htsjdk/samtools/sra/SRALazyRecord.html" title="class in htsjdk.samtools.sra">SRALazyRecord</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#setInput-byte:A-int-int-">setInput(byte[], int, int)</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Sets input data for compression.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#setInput-byte:A-">setInput(byte[])</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Sets input data for compression.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BinaryCodec.html#setInputFileName-java.lang.String-">setInputFileName(String)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BinaryCodec.html" title="class in htsjdk.samtools.util">BinaryCodec</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/BAMRecordCodec.html#setInputStream-java.io.InputStream-">setInputStream(InputStream)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/BAMRecordCodec.html" title="class in htsjdk.samtools">BAMRecordCodec</a></dt>
@@ -14494,10 +14380,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/encoding/readfeatures/RefSkip.html#setLength-int-">setLength(int)</a></span> - Method in class htsjdk.samtools.cram.encoding.readfeatures.<a href="htsjdk/samtools/cram/encoding/readfeatures/RefSkip.html" title="class in htsjdk.samtools.cram.encoding.readfeatures">RefSkip</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#setLevel-int-">setLevel(int)</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Sets the current compression level to the specified value.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMReadGroupRecord.html#setLibrary-java.lang.String-">setLibrary(String)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMReadGroupRecord.html" title="class in htsjdk.samtools">SAMReadGroupRecord</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/liftover/LiftOver.html#setLiftOverMinMatch-double-">setLiftOverMinMatch(double)</a></span> - Method in class htsjdk.samtools.liftover.<a href="htsjdk/samtools/liftover/LiftOver.html" title="class in htsjdk.samtools.liftover">LiftOver</a></dt>
@@ -14985,10 +14867,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/bed/SimpleBEDFeature.html#setStrand-htsjdk.tribble.annotation.Strand-">setStrand(Strand)</a></span> - Method in class htsjdk.tribble.bed.<a href="htsjdk/tribble/bed/SimpleBEDFeature.html" title="class in htsjdk.tribble.bed">SimpleBEDFeature</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#setStrategy-int-">setStrategy(int)</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
-<dd>
-<div class="block">Sets the compression strategy to the specified value.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/CramCompressionRecord.html#setSupplementary-boolean-">setSupplementary(boolean)</a></span> - Method in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/CramCompressionRecord.html" title="class in htsjdk.samtools.cram.structure">CramCompressionRecord</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMRecord.html#setSupplementaryAlignmentFlag-boolean-">setSupplementaryAlignmentFlag(boolean)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></dt>
@@ -15786,11 +15664,14 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/CramCompressionRecord.BAM_FLAGS.html#SUPPLEMENTARY_FLAG">SUPPLEMENTARY_FLAG</a></span> - Static variable in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/CramCompressionRecord.BAM_FLAGS.html" title="class in htsjdk.samtools.cram.structure">CramCompressionRecord.BAM_FLAGS</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/IntelDeflater.html#SYNC_FLUSH">SYNC_FLUSH</a></span> - Static variable in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/IntelDeflater.html" title="class in htsjdk.samtools.util.zip">IntelDeflater</a></dt>
+<dt><a href="htsjdk/tribble/readers/SynchronousLineReader.html" title="class in htsjdk.tribble.readers"><span class="typeNameLink">SynchronousLineReader</span></a> - Class in <a href="htsjdk/tribble/readers/package-summary.html">htsjdk.tribble.readers</a></dt>
 <dd>
-<div class="block">Compression flush mode used to flush out all pending output; may
- degrade compression for some compression algorithms.</div>
+<div class="block">Implementation of <a href="htsjdk/tribble/readers/LineReader.html" title="interface in htsjdk.tribble.readers"><code>LineReader</code></a> that reads lines directly from the underlying stream or reader.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/SynchronousLineReader.html#SynchronousLineReader-java.io.InputStream-">SynchronousLineReader(InputStream)</a></span> - Constructor for class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/SynchronousLineReader.html" title="class in htsjdk.tribble.readers">SynchronousLineReader</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/SynchronousLineReader.html#SynchronousLineReader-java.io.Reader-">SynchronousLineReader(Reader)</a></span> - Constructor for class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/SynchronousLineReader.html" title="class in htsjdk.tribble.readers">SynchronousLineReader</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/fastq/AsyncFastqWriter.html#synchronouslyClose--">synchronouslyClose()</a></span> - Method in class htsjdk.samtools.fastq.<a href="htsjdk/samtools/fastq/AsyncFastqWriter.html" title="class in htsjdk.samtools.fastq">AsyncFastqWriter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AbstractAsyncWriter.html#synchronouslyClose--">synchronouslyClose()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AbstractAsyncWriter.html" title="class in htsjdk.samtools.util">AbstractAsyncWriter</a></dt>
@@ -16848,6 +16729,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineReaderUtil.LineReaderOption.html#valueOf-java.lang.String-">valueOf(String)</a></span> - Static method in enum htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReaderUtil.LineReaderOption.html" title="enum in htsjdk.tribble.readers">LineReaderUtil.LineReaderOption</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">Returns the enum constant of this type with the specified name.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/bcf2/BCF2Type.html#valueOf-java.lang.String-">valueOf(String)</a></span> - Static method in enum htsjdk.variant.bcf2.<a href="htsjdk/variant/bcf2/BCF2Type.html" title="enum in htsjdk.variant.bcf2">BCF2Type</a></dt>
@@ -17082,6 +16964,7 @@ the order they are declared.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineReaderUtil.LineReaderOption.html#values--">values()</a></span> - Static method in enum htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReaderUtil.LineReaderOption.html" title="enum in htsjdk.tribble.readers">LineReaderUtil.LineReaderOption</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">Returns an array containing the constants of this enum type, in
 the order they are declared.</div>
 </dd>

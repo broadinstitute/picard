@@ -172,48 +172,42 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#INTEL_DEFLATER_SHARED_LIBRARY_PATH">INTEL_DEFLATER_SHARED_LIBRARY_PATH</a></span></code>
-<div class="block">Path to libIntelDeflater.so.</div>
-</td>
-</tr>
-<tr class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#NON_ZERO_BUFFER_SIZE">NON_ZERO_BUFFER_SIZE</a></span></code>
 <div class="block">Even if BUFFER_SIZE is 0, this is guaranteed to be non-zero.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#REFERENCE_FASTA">REFERENCE_FASTA</a></span></code>
 <div class="block">The reference FASTA file.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#TRY_USE_INTEL_DEFLATER">TRY_USE_INTEL_DEFLATER</a></span></code>
 <div class="block">Should BlockCompressedOutputStream attempt to load libIntelDeflater?</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO">USE_ASYNC_IO</a></span></code>
 <div class="block">Should asynchronous I/O be used where supported throughout all of htsjdk (one thread per file).</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO_FOR_SAMTOOLS">USE_ASYNC_IO_FOR_SAMTOOLS</a></span></code>
 <div class="block">Should asynchronous I/O be used where supported by the samtools package (one thread per file).</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO_FOR_TRIBBLE">USE_ASYNC_IO_FOR_TRIBBLE</a></span></code>
 <div class="block">Should asynchronous I/O be used where supported by the tribble package (one thread per file).</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#USE_CRAM_REF_DOWNLOAD">USE_CRAM_REF_DOWNLOAD</a></span></code>
 <div class="block">Boolean describing whether downloading a reference file is allowed (for CRAM files),
@@ -378,17 +372,6 @@ extends java.lang.Object</pre>
 <h4>TRY_USE_INTEL_DEFLATER</h4>
 <pre>public static final&nbsp;boolean TRY_USE_INTEL_DEFLATER</pre>
 <div class="block">Should BlockCompressedOutputStream attempt to load libIntelDeflater?</div>
-</li>
-</ul>
-<a name="INTEL_DEFLATER_SHARED_LIBRARY_PATH">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>INTEL_DEFLATER_SHARED_LIBRARY_PATH</h4>
-<pre>public static final&nbsp;java.lang.String INTEL_DEFLATER_SHARED_LIBRARY_PATH</pre>
-<div class="block">Path to libIntelDeflater.so.  If this is not set, the library is looked for in the directory
- where the executable jar lives.</div>
 </li>
 </ul>
 <a name="REFERENCE_FASTA">
