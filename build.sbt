@@ -2,6 +2,8 @@ import com.typesafe.sbt.SbtGit._
 import de.johoop.testngplugin.TestNGPlugin._
 import sbt.Package.ManifestAttributes
 
+resolvers += Resolver.sbtPluginRepo("releases")
+
 name := "picard"
 
 version := "2.4.1"
