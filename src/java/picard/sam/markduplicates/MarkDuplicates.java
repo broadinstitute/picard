@@ -422,10 +422,27 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             this.libraryIdGenerator = new LibraryIdGenerator(header);
         }
 
+        int trackPairedUnmapped = 0;
+        int nUnmapped = 0;
+        int nSecSup = 0;
+        int nUnpaired = 0;
+        int nReadPairs = 0;
         String duplicateQueryName = null;
         long duplicateIndex = NO_SUCH_INDEX;
         while (iterator.hasNext()) {
             final SAMRecord rec = iterator.next();
+
+            // First bring the simple metrics up to date
+            if (rec.getReadUnmappedFlag()) {
+                ++nUnmapped;
+            } else if(rec.isSecondaryOrSupplementary()) {
+                ++nSecSup;
+            } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+                ++nUnpaired;
+            } /*else {
+                ++nReadPairs;
+            }*/
+
 
             // This doesn't have anything to do with building sorted ReadEnd lists, but it can be done in the same pass
             // over the input
@@ -464,10 +481,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     if (pairedEnds == null) {
                         pairedEnds = buildReadEnds(header, indexForRead, rec, useBarcodes);
                         tmp.put(pairedEnds.read2ReferenceIndex, key, pairedEnds);
+                        ++nReadPairs;
                     } else {
                         final int sequence = fragmentEnd.read1ReferenceIndex;
                         final int coordinate = fragmentEnd.read1Coordinate;
-
                         // Set orientationForOpticalDuplicates, which always goes by the first then the second end for the strands.  NB: must do this
                         // before updating the orientation later.
                         if (rec.getFirstOfPairFlag()) {
@@ -501,7 +518,11 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                         pairedEnds.score += DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY);
                         this.pairSort.add(pairedEnds);
+                        //++nReadPairs;
                     }
+                }
+                if (rec.getReadPairedFlag() && rec.getMateUnmappedFlag()){
+                   trackPairedUnmapped += 1;
                 }
             }
 
@@ -511,6 +532,22 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 log.info("Tracking " + tmp.size() + " as yet unmatched pairs. " + tmp.sizeInRam() + " records in RAM.");
             }
         }
+        System.out.println("paired, unmapped: " + trackPairedUnmapped);
+        System.out.println("number of read pairs: " + nReadPairs);
+        System.out.println("final tmp size " + tmp.size());
+        // loop through all records again - print the contets left in tmp
+        /*final SamHeaderAndIterator headerAndIterator2 = openInputs();
+        //final SAMFileHeader header2 = headerAndIterator2.header;
+        final CloseableIterator<SAMRecord> iterator2 = headerAndIterator2.iterator;
+        while (iterator2.hasNext()) {
+            final SAMRecord rec = iterator2.next();
+            final String key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + ":" + rec.getReadName();
+            //ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key);
+            ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getMateReferenceIndex(), key);
+            if (pairedEnds != null) {
+                System.out.println(rec.getAlignmentStart() + ":" + rec.getReadName());
+            }
+        }*/
 
         log.info("Read " + index + " records. " + tmp.size() + " pairs never matched.");
         iterator.close();
@@ -603,26 +640,37 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         this.DuplicateSetSizes = new ArrayList<Integer>();
         ReadEndsForMarkDuplicates firstOfNextChunk = null;
         final List<ReadEndsForMarkDuplicates> nextChunk = new ArrayList<ReadEndsForMarkDuplicates>(200);
+        int pairTracker = 0;
 
         // First just do the pairs
         log.info("Traversing read pair information and detecting duplicates.");
         for (final ReadEndsForMarkDuplicates next : this.pairSort) {
+            pairTracker += 1;
             if (firstOfNextChunk != null && areComparableForDuplicates(firstOfNextChunk, next, true, useBarcodes)) {
                 nextChunk.add(next);
             } else {
                 if (nextChunk.size() > 1) {
                     markDuplicatePairs(nextChunk);
+                    //pairTracker += nextChunk.size();
                 } else {
                     AbstractMarkDuplicatesCommandLineProgram.addSingletonToCount(libraryIdGenerator);
+                    //pairTracker += nextChunk.size();
                 }
                 nextChunk.clear();
                 nextChunk.add(next);
                 firstOfNextChunk = next;
             }
         }
-        if (nextChunk.size() > 1) markDuplicatePairs(nextChunk);
+        if (nextChunk.size() > 1) {
+            markDuplicatePairs(nextChunk);
+            //pairTracker += nextChunk.size();
+        } else {
+            AbstractMarkDuplicatesCommandLineProgram.addSingletonToCount(libraryIdGenerator);
+            //pairTracker += nextChunk.size();
+        }
         this.pairSort.cleanup();
         this.pairSort = null;
+        System.out.println("pairs recorded: " + pairTracker);
 
         // Now deal with the fragments
         log.info("Traversing fragment information and detecting duplicates.");

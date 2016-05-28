@@ -247,7 +247,7 @@ public class DuplicationMetrics extends MetricBase {
         // coarse grid search
         double[] seqMultipleRange1 = makeInterval(1,6,.2,true);
         double[] drawRange1 = makeInterval(3,20,1,true);
-        System.out.println("seqMult:"+ seqMultipleRange1.length + ":" +drawRange1.length);
+        System.out.println("completing coarse grid search:"+ seqMultipleRange1.length + "x" +drawRange1.length);
         double[][] paramMtrx = performGridSearchforKLMin(normCntVec,m,seqMultipleRange1,drawRange1);
         int[] coordMinCoarse = getMatrixMin(paramMtrx);
         //refined grid search
@@ -255,6 +255,7 @@ public class DuplicationMetrics extends MetricBase {
         double cgDrawMin = drawRange1[coordMinCoarse[1]];
         this.LIBRARY_SIZE_MULTIPLE_SEARCH_INT = makeInterval(.5*cgLibMin,2*cgLibMin,cgLibMin/20,false);
         this.POLYA_DRAW_SEARCH_INT = makeInterval(FastMath.log(cgDrawMin)-2,FastMath.log(cgDrawMin)+1.2,.1,true);
+        System.out.println("completing refined grid search:"+ this.LIBRARY_SIZE_MULTIPLE_SEARCH_INT.length + "x" + this.POLYA_DRAW_SEARCH_INT.length);
         this.GRID_SEARCH_MTRX = performGridSearchforKLMin(normCntVec,
                 m,
                 this.LIBRARY_SIZE_MULTIPLE_SEARCH_INT,
@@ -276,7 +277,7 @@ public class DuplicationMetrics extends MetricBase {
         System.out.println(Arrays.toString(sampledOccupancyEstimate));
         System.out.println(Arrays.toString(normCntVec));
         // make projections
-        this.SEQUENCING_MULTIPLE_INTERVAL = makeInterval(0,10,1,false);
+        //this.SEQUENCING_MULTIPLE_INTERVAL = makeInterval(0,10,1,false);
         double[] estimatedFractUnique = makeOccupancyProjections(m,librarySizeEstimate,urnDrawEstimate,this.SEQUENCING_MULTIPLE_INTERVAL);
         this.UNIQUE_MOLECULE_COUNT_PROJECTION = new double[estimatedFractUnique.length];
         for (int i=0; i<estimatedFractUnique.length; i++){
@@ -486,7 +487,12 @@ public class DuplicationMetrics extends MetricBase {
             outputWriter.newLine();
             outputWriter.write("unique molecule projections");
             outputWriter.newLine();
-            outputWriter.write("-, ");
+            outputWriter.write("sequencing-multiples, ");
+            outputWriter.write(Arrays.toString(this.SEQUENCING_MULTIPLE_INTERVAL)
+                    .replace("[","")
+                    .replace("]",""));
+            outputWriter.newLine();
+            outputWriter.write("unique-molecule-projections, ");
             outputWriter.write(Arrays.toString(this.UNIQUE_MOLECULE_COUNT_PROJECTION)
                     .replace("[","")
                     .replace("]",""));

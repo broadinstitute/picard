@@ -383,9 +383,6 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
 
         // create input/output files
         final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".", ".tmp");
-        /*final File samFile = File.createTempFile("tmp.MarkDupesTester.", ".sam");
-        samFile.deleteOnExit();
-        System.out.println("in sam file = " + samFile.getAbsolutePath());*/
         final File outputSam = File.createTempFile("tmp.DupsMarked.", ".sam");
         //outputSam.deleteOnExit();
         System.out.println("out sam file = " + outputSam.getAbsolutePath());
@@ -399,7 +396,8 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         // Run MarkDuplicates
         final MarkDuplicates.DuplicateTaggingPolicy TAGGING_POLICY = MarkDuplicates.DuplicateTaggingPolicy.All;
         final MarkDuplicates markDuplicates = new MarkDuplicates();
-        markDuplicates.setupOpticalDuplicateFinder();
+        markDuplicates.OPTICAL_DUPLICATE_PIXEL_DISTANCE=2500;
+        markDuplicates.setupOpticalDuplicateFinder(); // OPTICAL_DUPLICATE_PIXEL_DISTANCE=2500
         markDuplicates.INPUT = CollectionUtil.makeList("/Users/hogstrom/Documents/code/picard-private/Picard-public/testdata/picard/sam/NexPond-359781_chrm21_rg1.bam");
         markDuplicates.OUTPUT = outputSam;
         markDuplicates.METRICS_FILE = metricsFile;
@@ -407,6 +405,8 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
         markDuplicates.TAGGING_POLICY=TAGGING_POLICY;
         markDuplicates.SEQUENCING_MULTIPLE_INTVAL=CollectionUtil.makeList("1.0","2.0","3.0","4.0","5.0","6.0","7.0","8.0","9.0","10.0");
+        //markDuplicates.OPTICAL_DUPLICATE_PIXEL_DISTANCE=CollectionUtil.makeList(new int[]{2500});
+        //markDuplicates.opticalDuplicateFinder.OPTICAL_DUPLICATE_PIXEL_DISTANCE=2500;
         // Needed to suppress calling CommandLineProgram.getVersion(), which doesn't work for code not in a jar
         markDuplicates.PROGRAM_RECORD_ID = null;
 

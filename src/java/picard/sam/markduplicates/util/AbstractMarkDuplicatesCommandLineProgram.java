@@ -213,7 +213,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         dsFile.addHistogram(nonOpticalDuplicatesCountHist);
         dsFile.addHistogram(opticalDuplicatesCountHist);
         dsFile.write(DUP_SET_HIST);
-        // write paramater matrix to file
+        // write parameter matrix to file
         //metricsByLibrary.values().iterator().next().writeMatricesToFile(DUP_SET_HIST.getAbsolutePath());
     }
 
