@@ -115,7 +115,6 @@ public class CollectVariantCallingMetricsTest {
         Assert.assertEquals(detailMetrics.size(), 50, "Did not parse the desired number of detail metrics.");
     }
 
-
     @Test
     public void testMetricsTinyGVCF() throws IOException {
         final File dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf");

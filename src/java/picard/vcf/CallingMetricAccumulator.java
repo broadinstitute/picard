@@ -157,9 +157,9 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
 
     public Result result() {
         final Collection<VariantCallingDetailMetrics> values = sampleMetricsMap.values();
-        values.forEach(CollectVariantCallingMetrics.VariantCallingDetailMetrics::updateDerivedValuesInPlace);
+        values.forEach(CollectVariantCallingMetrics.VariantCallingDetailMetrics::calculateDerivedFields);
 
-        summaryMetric.updateDerivedValuesInPlace();
+        summaryMetric.calculateDerivedFields();
         return new Result(summaryMetric, values);
     }
 

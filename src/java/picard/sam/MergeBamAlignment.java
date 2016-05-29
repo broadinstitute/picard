@@ -132,7 +132,7 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Option(doc = "Whether to clip adapters where identified.")
     public boolean CLIP_ADAPTERS = true;
 
-    @Option(doc = "Whether the lane is bisulfite sequence (used when caculating the NM tag).")
+    @Option(doc = "Whether the lane is bisulfite sequence (used when calculating the NM tag).")
     public boolean IS_BISULFITE_SEQUENCE = false;
 
     @Option(doc = "Whether to output only aligned reads.  ")
@@ -146,11 +146,11 @@ public class MergeBamAlignment extends CommandLineProgram {
 
     @Option(doc = "Reserved alignment attributes (tags starting with X, Y, or Z) that should be " +
             "brought over from the alignment data when merging.")
-    public List<String> ATTRIBUTES_TO_RETAIN = new ArrayList<String>();
+    public List<String> ATTRIBUTES_TO_RETAIN = new ArrayList<>();
 
     @Option(doc = "Attributes from the alignment record that should be removed when merging." +
             "  This overrides ATTRIBUTES_TO_RETAIN if they share common tags.")
-    public List<String> ATTRIBUTES_TO_REMOVE = new ArrayList<String>();
+    public List<String> ATTRIBUTES_TO_REMOVE = new ArrayList<>();
 
     @Option(shortName = "R1_TRIM",
             doc = "The number of bases trimmed from the beginning of read 1 prior to alignment")
