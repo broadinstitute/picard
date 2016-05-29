@@ -24,7 +24,6 @@
 package picard.vcf;
 
 import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -33,6 +32,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import picard.analysis.MergeableMetricBase;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -43,9 +43,7 @@ import picard.vcf.processor.VariantProcessor;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 /** Collects summary and per-sample metrics about variant calls in a VCF file. */
 @CommandLineProgramProperties(
@@ -137,71 +135,92 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
     }
 
     /** A collection of metrics relating to snps and indels within a variant-calling file (VCF). */
-    public static class VariantCallingSummaryMetrics extends MetricBase {
+    public static class VariantCallingSummaryMetrics extends MergeableMetricBase {
         /** The number of high confidence SNPs calls (i.e. non-reference genotypes) that were examined */
+        @MergeByAdding
         public long TOTAL_SNPS;
 
         /** The number of high confidence SNPs found in dbSNP */
+        @MergeByAdding
         public long NUM_IN_DB_SNP;
 
         /** The number of high confidence SNPS called that were not found in dbSNP */
+        @MergeByAdding
         public long NOVEL_SNPS;
 
         /** The number of SNPs that are also filtered */
+        @MergeByAdding
         public long FILTERED_SNPS;
 
         /** The fraction of high confidence SNPs in dbSNP */
+        @NoMergingIsDerived
         public float PCT_DBSNP;
 
         /** The Transition/Transversion ratio of the SNP calls made at dbSNP sites */
+        @NoMergingIsDerived
         public double DBSNP_TITV;
 
         /** The Transition/Transversion ratio of the SNP calls made at non-dbSNP sites */
+        @NoMergingIsDerived
         public double NOVEL_TITV;
 
         /** The number of high confidence Indel calls that were examined */
+        @MergeByAdding
         public long TOTAL_INDELS;
 
         /** The number of high confidence Indels called that were not found in dbSNP */
+        @MergeByAdding
         public long NOVEL_INDELS;
 
         /** The number of indels that are also filtered */
+        @MergeByAdding
         public long FILTERED_INDELS;
 
         /** The fraction of high confidence Indels in dbSNP */
+        @NoMergingIsDerived
         public float PCT_DBSNP_INDELS;
 
         /** The number of high confidence Indels found in dbSNP */
+        @MergeByAdding
         public long NUM_IN_DB_SNP_INDELS;
 
         /** The Insertion/Deletion ratio of the Indel calls made at dbSNP sites */
+        @NoMergingIsDerived
         public double DBSNP_INS_DEL_RATIO;
 
         /** The Insertion/Deletion ratio of the Indel calls made at non-dbSNP sites */
+        @NoMergingIsDerived
         public double NOVEL_INS_DEL_RATIO;
 
         /** The number of high confidence multiallelic SNP calls that were examined */
+        @MergeByAdding
         public double TOTAL_MULTIALLELIC_SNPS;
 
         /** The number of high confidence multiallelic SNPs found in dbSNP */
+        @MergeByAdding
         public double NUM_IN_DB_SNP_MULTIALLELIC;
 
         /** The number of high confidence complex Indel calls that were examined */
+        @MergeByAdding
         public double TOTAL_COMPLEX_INDELS;
 
         /** The number of high confidence complex Indels found in dbSNP */
+        @MergeByAdding
         public double NUM_IN_DB_SNP_COMPLEX_INDELS;
 
         /** The rate at which reference bases are observed at ref/alt heterozygous SNP sites. */
+        @NoMergingIsDerived
         public double SNP_REFERENCE_BIAS;
 
         /**
          * For summary metrics, the number of variants that appear in only one sample.
          * For detail metrics, the number of variants that appear only in the current sample.
          */
+        @MergeByAdding
         public long NUM_SINGLETONS;
 
         /** Hidden fields that are not propagated to the metrics file, but are used to house temporary values. */
+        @MergeByAdding
         long refAlleleObs, altAlleleObs, novelDeletions, novelInsertions, novelTransitions, novelTransversions, dbSnpDeletions,
                 dbSnpInsertions, dbSnpTransitions, dbSnpTransversions;
 
@@ -209,7 +228,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
             return "variant_calling_summary_metrics";
         }
 
-        public void updateDerivedValuesInPlace() {
+        public void calculateDerivedFields() {
             this.PCT_DBSNP = this.NUM_IN_DB_SNP / (float) this.TOTAL_SNPS;
             this.NOVEL_SNPS = this.TOTAL_SNPS - this.NUM_IN_DB_SNP;
             this.SNP_REFERENCE_BIAS = (this.refAlleleObs) / (double) (this.refAlleleObs + this.altAlleleObs);
@@ -231,72 +250,37 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         }
 
         public static <T extends VariantCallingSummaryMetrics> void foldInto(final T target, final Collection<T> metrics) {
-            for (final T metric : metrics) {
-                target.TOTAL_SNPS += metric.TOTAL_SNPS;
-                target.NUM_IN_DB_SNP += metric.NUM_IN_DB_SNP;
-                target.FILTERED_SNPS += metric.FILTERED_SNPS;
-                target.TOTAL_INDELS += metric.TOTAL_INDELS;
-                target.FILTERED_INDELS += metric.FILTERED_INDELS;
-                target.NUM_IN_DB_SNP_INDELS += metric.NUM_IN_DB_SNP_INDELS;
-                target.TOTAL_MULTIALLELIC_SNPS += metric.TOTAL_MULTIALLELIC_SNPS;
-                target.NUM_IN_DB_SNP_MULTIALLELIC += metric.NUM_IN_DB_SNP_MULTIALLELIC;
-                target.TOTAL_COMPLEX_INDELS += metric.TOTAL_COMPLEX_INDELS;
-                target.NUM_IN_DB_SNP_COMPLEX_INDELS += metric.NUM_IN_DB_SNP_COMPLEX_INDELS;
-                target.NUM_SINGLETONS += metric.NUM_SINGLETONS;
-                target.refAlleleObs += metric.refAlleleObs;
-                target.altAlleleObs += metric.altAlleleObs;
-                target.novelDeletions += metric.novelDeletions;
-                target.novelInsertions += metric.novelInsertions;
-                target.novelTransitions += metric.novelTransitions;
-                target.novelTransversions += metric.novelTransversions;
-                target.dbSnpDeletions += metric.dbSnpDeletions;
-                target.dbSnpInsertions += metric.dbSnpInsertions;
-                target.dbSnpTransitions += metric.dbSnpTransitions;
-                target.dbSnpTransversions += metric.dbSnpTransversions;
-            }
-            target.updateDerivedValuesInPlace();
+            metrics.forEach(target::merge);
+            target.calculateDerivedFields();
         }
     }
 
     /** A collection of metrics relating to snps and indels within a variant-calling file (VCF) for a given sample. */
     public static class VariantCallingDetailMetrics extends CollectVariantCallingMetrics.VariantCallingSummaryMetrics {
         /** The name of the sample being assayed */
+        @MergeByAssertEquals
         public String SAMPLE_ALIAS;
 
         /**
          * (count of hets)/(count of homozygous non-ref) for this sample
          */
+        @NoMergingIsDerived
         public double HET_HOMVAR_RATIO;
 
         /**
          * Hidden fields not propagated to the metrics file.
          */
+        @MergeByAdding
         long numHets, numHomVar;
 
         public static String getFileExtension() {
             return "variant_calling_detail_metrics";
         }
 
-        public static void foldInto(final VariantCallingDetailMetrics target,
-                                    final Collection<VariantCallingDetailMetrics> metrics) {
-            VariantCallingSummaryMetrics.foldInto(target, metrics);
-            final Set<String> sampleAliases = new HashSet<>();
-            for (final VariantCallingDetailMetrics metric : metrics) {
-                target.numHets += metric.numHets;
-                target.numHomVar += metric.numHomVar;
-                sampleAliases.add(metric.SAMPLE_ALIAS);
-            }
-            target.updateDerivedValuesInPlace();
-            if (sampleAliases.size() != 1) {
-                throw new IllegalArgumentException("Provided metrics do not have the same sample name.");
-            }
-            target.SAMPLE_ALIAS = sampleAliases.iterator().next();
-        }
-
         @Override
-        public void updateDerivedValuesInPlace() {
-            super.updateDerivedValuesInPlace();
-            // Divide by zero should be OK -- NaN should get propagated to metrics file and to DB.
+        public void calculateDerivedFields() {
+            super.calculateDerivedFields();
+            // Divide by zero should be OK -- NaN should get propagated to metrics file.
             HET_HOMVAR_RATIO = numHets / (double) numHomVar;
         }
     }

@@ -32,7 +32,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * An extension of MetricBase that knows how to merge-by-adding fields that are appropriately annotated. It also provides an interface
@@ -44,7 +47,7 @@ import java.util.Collection;
  *
  * @author Yossi Farjoun
  */
-public class MergeableMetricBase extends MetricBase {
+abstract public class MergeableMetricBase extends MetricBase {
 
     /** Metrics whose values can be merged by adding. */
     @Retention(RetentionPolicy.RUNTIME)
@@ -137,7 +140,7 @@ public class MergeableMetricBase extends MetricBase {
      */
     public MergeableMetricBase merge(final MergeableMetricBase other) {
 
-        for (final Field field : this.getClass().getDeclaredFields()) {
+        for (final Field field : getAllFields(this.getClass())) {
             if (field.isSynthetic()) continue;
 
             if (field.getAnnotationsByType(MergeByAdding.class).length +
@@ -150,6 +153,8 @@ public class MergeableMetricBase extends MetricBase {
             }
 
             final Annotation[] summableAnnotations = field.getAnnotationsByType(MergeByAdding.class);
+            field.setAccessible(true);
+
             if (summableAnnotations.length != 0) {
                 try {
                     if (field.getType() == Integer.class) {
@@ -211,6 +216,16 @@ public class MergeableMetricBase extends MetricBase {
             }
         }
         return this;
+    }
+
+    private static List<Field> getAllFields(Class clazz){
+        List<Field> fields = new ArrayList<>();
+        fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+        Class superClass = clazz.getSuperclass();
+
+        if (superClass != null) fields.addAll(getAllFields(superClass));
+
+        return fields;
     }
 
     /**
