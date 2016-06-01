@@ -1,11 +1,15 @@
 language: java
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.m2
 jdk:
   - oraclejdk8
 before_install:
+  - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
   - sudo apt-get -qq update
   - sudo apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
-  - sed -i -e 's_git@github.com:_https://github.com/_' build.xml
-script:
-  - ant -lib lib/ant clone-htsjdk 
-  - ant
-  - ant test
+script: ./gradlew jacocoTestReport

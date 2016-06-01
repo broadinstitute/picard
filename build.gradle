@@ -1,0 +1,326 @@
+import javax.tools.ToolProvider
+import org.ajoberstar.grgit.*
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id "java"
+    id 'maven'
+    id 'signing'
+    id 'jacoco'
+    id 'application'
+    id 'com.palantir.git-version' version '0.5.1'
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id "com.github.kt3k.coveralls" version '2.6.3'
+    id 'org.ajoberstar.grgit' version '1.4.2'
+    id 'org.ajoberstar.github-pages' version '1.4.2'
+}
+
+mainClassName = "picard.cmdline.PicardCommandLine"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+jacocoTestReport {
+    dependsOn test
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports after running tests."
+    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
+
+    reports {
+        xml.enabled = true // coveralls plugin depends on xml format report
+        html.enabled = true
+    }
+}
+
+jacoco {
+    toolVersion = "0.7.5.201505241946"
+}
+
+dependencies {
+    compile 'com.google.guava:guava:15.0'
+    compile ('com.github.samtools:htsjdk:2.5.0')
+    //tools dependency for doclet requires sdk devel
+    compile(files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs()))
+    testCompile 'org.testng:testng:6.9.10'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+final isRelease = Boolean.getBoolean("release")
+final gitVersion = gitVersion().replaceAll(".dirty", "")
+version = isRelease ? gitVersion : gitVersion + "-SNAPSHOT"
+
+logger.info("build for version:" + version)
+group = 'com.github.broadinstitute'
+
+defaultTasks 'all'
+
+task all(dependsOn: ['jar', 'distZip', 'documentAll'])
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'picard.cmdline.PicardCommandLine',
+                'Implementation-Title': 'Picard',
+                'Implementation-Vendor': 'Broad Institute',
+                'Implementation-Version': version
+    }
+}
+
+import org.gradle.internal.os.OperatingSystem;
+
+// This is a hack to disable the java 8 default javadoc lint until we fix the html formatting
+if (JavaVersion.current().isJava8Compatible()) {
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+}
+
+tasks.withType(Test) {
+    outputs.upToDateWhen { false } // tests will always rerun
+    description = "Runs the unit tests"
+
+    useTestNG {
+        if (OperatingSystem.current().isUnix()) {
+            excludeGroups "slow", "broken"
+        } else {
+            excludeGroups "slow", "broken", "unix"
+        }
+    }
+
+    // set heap size for the test JVM(s)
+    minHeapSize = "1G"
+    maxHeapSize = "2G"
+    if (System.env.CI == "true") {  //if running under a CI output less into the logs
+        int count = 0
+
+        beforeTest { descriptor ->
+            count++
+            if( count % 100 == 0) {
+                logger.lifecycle("Finished "+ Integer.toString(count++) + " tests")
+            }
+        }
+    } else {
+        // show standard out and standard error of the test JVM(s) on the console
+        testLogging.showStandardStreams = true
+        beforeTest { descriptor ->
+            logger.lifecycle("Running Test: " + descriptor)
+        }
+
+        // listen to standard out and standard error of the test JVM(s)
+        onOutput { descriptor, event ->
+            logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
+        }
+    }
+
+    testLogging {
+        testLogging {
+            events "skipped", "failed"
+            exceptionFormat = "full"
+        }
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                println "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+            }
+        }
+    }
+}
+
+ext.htmlDir = new File("build/docs/html")
+ext.htmlDirInc = new File(htmlDir, "_includes")
+ext.commandClasses = ["picard.sam.AddCommentsToBam", "picard.sam.AddOrReplaceReadGroups", "picard.util.BaitDesigner", "picard.fastq.BamToBfq",
+                          "picard.sam.BamIndexStats", "picard.util.BedToIntervalList", "picard.sam.BuildBamIndex", "picard.analysis.directed.CalculateHsMetrics",
+                          "picard.sam.CalculateReadGroupChecksum", "picard.sam.CleanSam", "picard.analysis.CollectAlignmentSummaryMetrics",
+                          "picard.analysis.CollectBaseDistributionByCycle", "picard.analysis.CollectGcBiasMetrics", "picard.illumina.quality.CollectHiSeqXPfFailMetrics",
+                          "picard.analysis.directed.CollectHsMetrics", "picard.illumina.CollectIlluminaBasecallingMetrics", "picard.illumina.CollectIlluminaLaneMetrics",
+                          "picard.analysis.CollectInsertSizeMetrics", "picard.analysis.CollectJumpingLibraryMetrics", "picard.analysis.CollectMultipleMetrics",
+                          "picard.analysis.CollectOxoGMetrics", "picard.analysis.CollectQualityYieldMetrics", "picard.analysis.CollectRawWgsMetrics",
+                          "picard.analysis.directed.CollectTargetedPcrMetrics", "picard.analysis.CollectRnaSeqMetrics", "picard.analysis.CollectRrbsMetrics",
+                          "picard.analysis.artifacts.CollectSequencingArtifactMetrics", "picard.vcf.CollectVariantCallingMetrics", "picard.analysis.CollectWgsMetrics",
+                          "picard.analysis.CollectWgsMetricsFromQuerySorted", "picard.analysis.CollectWgsMetricsFromSampledSites",
+                          "picard.analysis.CollectWgsMetricsWithNonZeroCoverage", "picard.analysis.CompareMetrics", "picard.sam.CompareSAMs",
+                          "picard.analysis.artifacts.ConvertSequencingArtifactToOxoG", "picard.sam.CreateSequenceDictionary", "picard.sam.DownsampleSam",
+                          "picard.illumina.ExtractIlluminaBarcodes", "picard.sam.markduplicates.EstimateLibraryComplexity", "picard.sam.FastqToSam", "picard.util.FifoBuffer",
+                          "picard.sam.FilterSamReads", "picard.vcf.filter.FilterVcf", "picard.sam.FixMateInformation", "picard.sam.GatherBamFiles", "picard.vcf.GatherVcfs",
+                          "picard.vcf.GenotypeConcordance", "picard.illumina.IlluminaBasecallsToFastq", "picard.illumina.IlluminaBasecallsToSam", "picard.illumina.CheckIlluminaDirectory",
+                          "picard.sam.CheckTerminatorBlock", "picard.util.IntervalListTools", "picard.util.LiftOverIntervalList", "picard.vcf.LiftoverVcf", "picard.vcf.MakeSitesOnlyVcf",
+                          "picard.sam.markduplicates.MarkDuplicates", "picard.sam.markduplicates.MarkDuplicatesWithMateCigar", "picard.analysis.MeanQualityByCycle",
+                          "picard.sam.MergeBamAlignment", "picard.sam.MergeSamFiles", "picard.vcf.MergeVcfs", "picard.reference.NormalizeFasta", "picard.sam.PositionBasedDownsampleSam",
+                          "picard.reference.ExtractSequences", "picard.analysis.QualityScoreDistribution", "picard.vcf.RenameSampleInVcf", "picard.sam.ReorderSam",
+                          "picard.sam.ReplaceSamHeader", "picard.sam.RevertSam", "picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar", "picard.sam.SamFormatConverter",
+                          "picard.sam.SamToFastq", "picard.util.ScatterIntervalsByNs", "picard.sam.SortSam", "picard.vcf.SortVcf", "picard.sam.SplitSamByLibrary",
+                          "picard.vcf.UpdateVcfSequenceDictionary", "picard.vcf.VcfFormatConverter", "picard.illumina.MarkIlluminaAdapters", "picard.vcf.SplitVcfs",
+                          "picard.sam.ValidateSamFile", "picard.sam.ViewSam", "picard.vcf.VcfToIntervalList"]
+
+//generate documentation
+
+task documentAll(dependsOn: ['documentCommands', 'createMetricsDoc', 'documentStandardOptions']){
+  doFirst{
+    htmlDirInc.mkdirs()
+  }
+}
+
+task documentCommands  {
+    def previousDocTask = null
+    def usageFile = new File(htmlDirInc, "command-line-usage.html")
+    def sidebarFile = new File(htmlDirInc, "command-line-sidebar.html")
+
+    commandClasses.each { mainClass ->
+       task "document_${mainClass}"(type: JavaExec) {
+           main ='picard.cmdline.CreateHtmlDocForProgram'
+           classpath = sourceSets.main.runtimeClasspath
+           args mainClass
+           def outputFile = new File(htmlDirInc, mainClass.substring(mainClass.lastIndexOf(".") + 1) + ".html")
+           doFirst {
+                htmlDirInc.mkdirs()
+                standardOutput = new FileOutputStream(outputFile)
+            }
+           outputs.file outputFile
+
+           if (previousDocTask != null) delegate.dependsOn previousDocTask
+           previousDocTask = delegate
+           documentCommands.dependsOn(delegate)
+           doLast {
+             usageFile.append("{% include ${mainClass.substring(mainClass.lastIndexOf(".") + 1) + ".html"} %}")
+             usageFile.append(System.getProperty("line.separator"))
+             sidebarFile.append("<li><a href=\"command-line-overview.html#${mainClass.substring(mainClass.lastIndexOf(".") + 1)}\">${mainClass.substring(mainClass.lastIndexOf(".") + 1)}</a>")
+             sidebarFile.append(System.getProperty("line.separator"))
+           }
+        }
+    }
+    outputs.dir htmlDirInc
+}
+
+task documentStandardOptions(type: JavaExec) {
+    main = 'picard.cmdline.CreateHtmlDocForStandardOptions'
+    classpath = sourceSets.main.runtimeClasspath
+    def standardOptionsFile = new File(htmlDirInc, "standard-options.html")
+    doFirst{
+      htmlDirInc.mkdirs()
+      standardOutput = new FileOutputStream(standardOptionsFile)
+    }
+    outputs.file standardOptionsFile
+ }
+
+task createMetricsDoc(dependsOn: classes, type: Javadoc) << {
+    source = sourceSets.main.allJava
+    classpath = sourceSets.main.runtimeClasspath
+    destinationDir = htmlDirInc
+    options.doclet = 'picard.util.MetricsDoclet'
+    options.docletpath = sourceSets.main.runtimeClasspath.asType(List)
+}
+//end generate documentation
+
+task wrapper(type: Wrapper) {
+    description = "Regenerate the gradle wrapper"
+    gradleVersion = '2.13'
+}
+
+task javadocJar(type: Jar, dependsOn: documentAll) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+/**
+ * This specifies what artifacts will be built and uploaded when performing a maven upload.
+ */
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourcesJar
+}
+
+/**
+ * Sign non-snapshot releases with our secret key.  This should never need to be invoked directly.
+ */
+signing {
+    required { isRelease && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+/**
+ * Upload a release to sonatype.  You must be an authorized uploader and have your sonatype
+ * username and password information in your gradle properties file.  See the readme for more info.
+ *
+ * For releasing to your local maven repo, use gradle install
+ */
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: project.findProperty("sonatypeUsername"), password: project.findProperty("sonatypePassword"))
+            }
+
+            snapshotRepository(url: "https://artifactory.broadinstitute.org/artifactory/libs-snapshot-local/") {
+                authentication(userName: System.env.ARTIFACTORY_USERNAME, password: System.env.ARTIFACTORY_PASSWORD)
+            }
+
+            pom.project {
+                name 'Picard'
+                packaging 'jar'
+                description 'A set of command line tools (in Java) for manipulating high-throughput sequencing (HTS) data and formats such as SAM/BAM/CRAM and VCF.'
+                url 'http://broadinstitute.github.io/picard/'
+
+                developers {
+                    developer {
+                        id 'picard'
+                        name 'Picard Team'
+                        url 'http://broadinstitute.github.io/picard'
+                    }
+                }
+
+                scm {
+                    url 'git@github.com:broadinstitute/picard.git'
+                    connection 'scm:git:git@github.com:broadinstitute/picard.git'
+                }
+
+                licenses {
+                    license {
+                        name 'MIT License'
+                        url 'http://opensource.org/licenses/MIT'
+                        distribution 'repo'
+                    }
+                }
+            }
+        }
+    }
+    doFirst {
+        System.out.println("Uploading version $version")
+    }
+}
+
+//update static web docs
+task copyJavadoc(dependsOn: 'javadoc', type: Copy) {
+    from 'build/docs/javadoc'
+    into "$htmlDir/javadoc"
+}
+
+task updateGhPages(dependsOn: ['copyJavadoc', 'documentAll']){
+  outputs.dir htmlDir
+}
+
+updateGhPages.finalizedBy publishGhPages
+
+githubPages {
+  repoUri = 'git@github.com:broadinstitute/picard.git'
+  targetBranch = 'gh-pages'
+  deleteExistingFiles = false
+  pages {
+    from htmlDir
+    into '.'
+  }
+}

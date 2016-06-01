@@ -24,11 +24,8 @@
 
 package picard.util;
 
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.Doc;
-import com.sun.javadoc.FieldDoc;
-import com.sun.javadoc.RootDoc;
-import com.sun.javadoc.Tag;
+import com.sun.javadoc.*;
+import com.sun.tools.doclets.standard.Standard;
 import htsjdk.samtools.metrics.MetricBase;
 
 import java.io.File;
@@ -40,13 +37,13 @@ import java.util.TreeMap;
 /**
  * Doclet for use with JavaDoc that will find all classes extending MetricBase and
  * output information about the metrics definitions that go along with the classes.
- *
+ * <p>
  * Takes a single parameter (-f file) to tell it where to output the resulting
  * documentation file in HTML format.
  *
  * @author Tim Fennell
  */
-public class MetricsDoclet {
+public class MetricsDoclet extends Standard {
     /**
      * Entry point called by the javadoc command line tool. Loops over all the
      * classes identifying metrics classes and then produces some basic information
@@ -57,7 +54,7 @@ public class MetricsDoclet {
      */
     public static boolean start(final RootDoc root) {
         // Build a set of metrics classes sorted by name
-        final SortedMap<String,ClassDoc> metricsClasses = new TreeMap<String,ClassDoc>();
+        final SortedMap<String, ClassDoc> metricsClasses = new TreeMap<String, ClassDoc>();
         for (final ClassDoc doc : root.classes()) {
             if (isMetricsClass(doc)) {
                 System.out.println("Processing " + doc.qualifiedTypeName());
@@ -76,7 +73,7 @@ public class MetricsDoclet {
         out.println("<ol>");
         for (final ClassDoc doc : metricsClasses.values()) {
             out.println("<li><a href=\"#" + doc.name() + "\">" + doc.name() + "</a>: " +
-                        firstSentence(doc) + "</li>");
+                    firstSentence(doc) + "</li>");
         }
         out.println("</ol>");
         out.println("<p>Note: Metrics labeled as percentages (with 'percent' in the full metric name or 'PCT' " +
@@ -138,11 +135,10 @@ public class MetricsDoclet {
      */
     protected static PrintStream getOutput(final RootDoc root) {
         for (final String[] arg : root.options()) {
-            if (arg[0].equals("-f") && arg.length == 2) {
+            if (arg[0].equals("-d") && arg.length == 2) {
                 try {
-                    return new PrintStream(new File(arg[1]));
-                }
-                catch (FileNotFoundException fnfe) {
+                    return new PrintStream(new File(arg[1], "picard-metric-definitions.html"));
+                } catch (FileNotFoundException fnfe) {
                     root.printError("Could not open destination file: " + arg[1]);
                     fnfe.printStackTrace();
                     return null;
@@ -150,19 +146,8 @@ public class MetricsDoclet {
             }
         }
 
-        root.printError("Destination file parameter -f not supplied.");
+        root.printError("Destination file parameter -d not supplied.");
         return null;
-    }
-
-    /**
-     * Required method by the javadoc caller that returns the expected number of elements
-     * for doclet specific command line arguments.
-     */
-    public static int optionLength(final String option) {
-        if(option.equals("-f")) {
-	        return 2;
-        }
-        return 0;
     }
 
     /**
