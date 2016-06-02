@@ -427,6 +427,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         int nSecSup = 0;
         int nUnpaired = 0;
         int nReadPairs = 0;
+        int nPairSort = 0;
         String duplicateQueryName = null;
         long duplicateIndex = NO_SUCH_INDEX;
         while (iterator.hasNext()) {
@@ -476,12 +477,13 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
                     final String key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + ":" + rec.getReadName();
                     ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key);
+                    ++nReadPairs;
 
                     // See if we've already seen the first end or not
                     if (pairedEnds == null) {
                         pairedEnds = buildReadEnds(header, indexForRead, rec, useBarcodes);
                         tmp.put(pairedEnds.read2ReferenceIndex, key, pairedEnds);
-                        ++nReadPairs;
+
                     } else {
                         final int sequence = fragmentEnd.read1ReferenceIndex;
                         final int coordinate = fragmentEnd.read1Coordinate;
@@ -518,7 +520,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                         pairedEnds.score += DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY);
                         this.pairSort.add(pairedEnds);
-                        //++nReadPairs;
+                        ++nPairSort;
                     }
                 }
                 if (rec.getReadPairedFlag() && rec.getMateUnmappedFlag()){
@@ -532,22 +534,21 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 log.info("Tracking " + tmp.size() + " as yet unmatched pairs. " + tmp.sizeInRam() + " records in RAM.");
             }
         }
-        System.out.println("paired, unmapped: " + trackPairedUnmapped);
-        System.out.println("number of read pairs: " + nReadPairs);
+        //System.out.println("paired, unmapped: " + trackPairedUnmapped);
+        System.out.println("number of read pairs: " + nReadPairs/2);
+        System.out.println("pairs into this.PairSort: " + nPairSort);
         System.out.println("final tmp size " + tmp.size());
         // loop through all records again - print the contets left in tmp
-        /*final SamHeaderAndIterator headerAndIterator2 = openInputs();
-        //final SAMFileHeader header2 = headerAndIterator2.header;
+        final SamHeaderAndIterator headerAndIterator2 = openInputs();
         final CloseableIterator<SAMRecord> iterator2 = headerAndIterator2.iterator;
         while (iterator2.hasNext()) {
             final SAMRecord rec = iterator2.next();
             final String key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + ":" + rec.getReadName();
-            //ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key);
             ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getMateReferenceIndex(), key);
             if (pairedEnds != null) {
                 System.out.println(rec.getAlignmentStart() + ":" + rec.getReadName());
             }
-        }*/
+        }
 
         log.info("Read " + index + " records. " + tmp.size() + " pairs never matched.");
         iterator.close();
