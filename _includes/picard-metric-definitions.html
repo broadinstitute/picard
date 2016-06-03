@@ -49,7 +49,6 @@
  program and usually stored in a file with the extension ".rna_metrics".</li>
 <li><a href="#RrbsCpgDetailMetrics">RrbsCpgDetailMetrics</a>: Holds information about CpG sites encountered for RRBS processing QC</li>
 <li><a href="#RrbsSummaryMetrics">RrbsSummaryMetrics</a>: Holds summary statistics from RRBS processing QC</li>
-<li><a href="#SamFileValidator.ValidationMetrics">SamFileValidator.ValidationMetrics</a>: </li>
 <li><a href="#SequencingArtifactMetrics.BaitBiasDetailMetrics">SequencingArtifactMetrics.BaitBiasDetailMetrics</a>: Bait bias artifacts broken down by context.</li>
 <li><a href="#SequencingArtifactMetrics.BaitBiasSummaryMetrics">SequencingArtifactMetrics.BaitBiasSummaryMetrics</a>: Summary analysis of a single bait bias artifact, also known as a reference bias artifact.</li>
 <li><a href="#SequencingArtifactMetrics.PreAdapterDetailMetrics">SequencingArtifactMetrics.PreAdapterDetailMetrics</a>: Pre-adapter artifacts broken down by context.</li>
@@ -484,14 +483,6 @@
 <table>
 <tr><th>Field</th><th>Description</th></tr>
 <tr><td>READS_ALIGNED</td><td>Number of mapped reads processed</td></tr><tr><td>NON_CPG_BASES</td><td>Number of times a non-CpG cytosine was encountered</td></tr><tr><td>NON_CPG_CONVERTED_BASES</td><td>Number of times a non-CpG cytosine was converted (C->T for +, G->A for -)</td></tr><tr><td>PCT_NON_CPG_BASES_CONVERTED</td><td>NON_CPG_CONVERTED_BASES / NON_CPG_BASES (fraction)</td></tr><tr><td>CPG_BASES_SEEN</td><td>Number of CpG sites encountered</td></tr><tr><td>CPG_BASES_CONVERTED</td><td>Number of CpG sites that were converted (TG for +, CA for -)</td></tr><tr><td>PCT_CPG_BASES_CONVERTED</td><td>CPG_BASES_CONVERTED / CPG_BASES_SEEN (fraction)</td></tr><tr><td>MEAN_CPG_COVERAGE</td><td>Mean coverage of CpG sites</td></tr><tr><td>MEDIAN_CPG_COVERAGE</td><td>Median coverage of CpG sites</td></tr><tr><td>READS_WITH_NO_CPG</td><td>Number of reads discarded for having no CpG sites</td></tr><tr><td>READS_IGNORED_SHORT</td><td>Number of reads discarded due to being too short</td></tr><tr><td>READS_IGNORED_MISMATCHES</td><td>Number of reads discarded for exceeding the mismatch threshold</td></tr></table>
-</section>
-<a id="SamFileValidator.ValidationMetrics"></a>
-<h2>SamFileValidator.ValidationMetrics</h2>
-<section>
-<p></p>
-<table>
-<tr><th>Field</th><th>Description</th></tr>
-</table>
 </section>
 <a id="SequencingArtifactMetrics.BaitBiasDetailMetrics"></a>
 <h2>SequencingArtifactMetrics.BaitBiasDetailMetrics</h2>
