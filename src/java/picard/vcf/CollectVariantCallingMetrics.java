@@ -266,6 +266,14 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         @NoMergingIsDerived
         public double HET_HOMVAR_RATIO;
 
+        /** The number of variants for which this sample had an upstream deletion as the other allele */
+        @MergeByAdding
+        public double NUM_UPSTREAM_DEL_POLY;
+
+        /** The number of compound heterozygous calls for this sample*/
+        @MergeByAdding
+        public double NUM_COMPOUND_HETS;
+
         /**
          * Hidden fields not propagated to the metrics file.
          */

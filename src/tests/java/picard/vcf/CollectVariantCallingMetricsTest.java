@@ -27,6 +27,8 @@ package picard.vcf;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.vcf.CollectVariantCallingMetrics.VariantCallingDetailMetrics;
+import picard.vcf.CollectVariantCallingMetrics.VariantCallingSummaryMetrics;
 
 import java.io.File;
 import java.io.FileReader;
@@ -60,11 +62,11 @@ public class CollectVariantCallingMetricsTest {
 
         Assert.assertEquals(program.doWork(), 0);
 
-        final MetricsFile<CollectVariantCallingMetrics.VariantCallingSummaryMetrics, Comparable<?>> summary = new MetricsFile<>();
+        final MetricsFile<VariantCallingSummaryMetrics, Comparable<?>> summary = new MetricsFile<>();
         summary.read(new FileReader(summaryFile));
 
         boolean parsedSummary = false;
-        for (final CollectVariantCallingMetrics.VariantCallingSummaryMetrics metrics : summary.getMetrics()) {
+        for (final VariantCallingSummaryMetrics metrics : summary.getMetrics()) {
             Assert.assertEquals(metrics.TOTAL_SNPS, 597);
             Assert.assertEquals(metrics.NOVEL_SNPS, 265);
             Assert.assertEquals(metrics.NUM_IN_DB_SNP, 332);
@@ -87,9 +89,9 @@ public class CollectVariantCallingMetricsTest {
 
         Assert.assertTrue(parsedSummary, "Did not parse summary metrics.");
 
-        final MetricsFile<CollectVariantCallingMetrics.VariantCallingDetailMetrics, Comparable<?>> detail = new MetricsFile<>();
+        final MetricsFile<VariantCallingDetailMetrics, Comparable<?>> detail = new MetricsFile<>();
         detail.read(new FileReader(detailFile));
-        final List<CollectVariantCallingMetrics.VariantCallingDetailMetrics> detailMetrics = detail.getMetrics();
+        final List<VariantCallingDetailMetrics> detailMetrics = detail.getMetrics();
         detail.getMetrics().stream().filter(metrics -> metrics.SAMPLE_ALIAS.equals("HG00160")).forEach(metrics -> {
             Assert.assertEquals(metrics.HET_HOMVAR_RATIO, 0.72549, 0.0001);
             Assert.assertEquals(metrics.TOTAL_SNPS, 81);
@@ -134,11 +136,11 @@ public class CollectVariantCallingMetricsTest {
         program.GVCF_INPUT = true;
         Assert.assertEquals(program.doWork(), 0);
 
-        final MetricsFile<CollectVariantCallingMetrics.VariantCallingSummaryMetrics, Comparable<?>> summary = new MetricsFile<>();
+        final MetricsFile<VariantCallingSummaryMetrics, Comparable<?>> summary = new MetricsFile<>();
         summary.read(new FileReader(summaryFile));
 
         boolean parsedSummary = false;
-        for (final CollectVariantCallingMetrics.VariantCallingSummaryMetrics metrics : summary.getMetrics()) {
+        for (final VariantCallingSummaryMetrics metrics : summary.getMetrics()) {
             Assert.assertEquals(metrics.TOTAL_SNPS, 20);
             Assert.assertEquals(metrics.NOVEL_SNPS, 19);
             Assert.assertEquals(metrics.NUM_IN_DB_SNP, 1);
@@ -161,9 +163,9 @@ public class CollectVariantCallingMetricsTest {
 
         Assert.assertTrue(parsedSummary, "Did not parse summary metrics.");
 
-        final MetricsFile<CollectVariantCallingMetrics.VariantCallingDetailMetrics, Comparable<?>> detail = new MetricsFile<>();
+        final MetricsFile<VariantCallingDetailMetrics, Comparable<?>> detail = new MetricsFile<>();
         detail.read(new FileReader(detailFile));
-        final List<CollectVariantCallingMetrics.VariantCallingDetailMetrics> detailMetrics = detail.getMetrics();
+        final List<VariantCallingDetailMetrics> detailMetrics = detail.getMetrics();
         detail.getMetrics().stream().filter(metrics -> metrics.SAMPLE_ALIAS.equals("HG00160")).forEach(metrics -> {
             Assert.assertEquals(metrics.HET_HOMVAR_RATIO, .6, 0.0001);
             Assert.assertEquals(metrics.TOTAL_SNPS, 20);
@@ -187,4 +189,31 @@ public class CollectVariantCallingMetricsTest {
 
         Assert.assertEquals(detailMetrics.size(), 1, "Did not parse the expected number of detail metrics.");
     }
+
+
+
+    @Test
+    public void testMetricsTinyVCFWithUpstreamDeletions() throws IOException {
+        final File dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf");
+        final File vcfFile = new File(TEST_DATA_DIR, "mini.spanning.deletion.vcf");
+
+        final File outFile = new File(TEST_DATA_DIR, "mini.spanning.deletion");
+        final File summaryFile = new File(outFile+".variant_calling_summary_metrics");
+        final File detailFile = new File(outFile+".variant_calling_detail_metrics");
+
+        final File expectedSummaryFile = new File(outFile+".expected.variant_calling_summary_metrics");
+        final File expectedDetailFile = new File(outFile+".expected.variant_calling_detail_metrics");
+
+        summaryFile.deleteOnExit();
+        detailFile.deleteOnExit();
+
+        final CollectVariantCallingMetrics program = new CollectVariantCallingMetrics();
+        program.INPUT = vcfFile;
+        program.DBSNP = dbSnpFile;
+        program.OUTPUT = outFile;
+        Assert.assertEquals(program.doWork(), 0);
+
+        Assert.assertTrue(MetricsFile.areMetricsAndHistogramsEqual(summaryFile, expectedSummaryFile));
+        Assert.assertTrue(MetricsFile.areMetricsAndHistogramsEqual(detailFile, expectedDetailFile));
+   }
 }
