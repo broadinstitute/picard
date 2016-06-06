@@ -31,14 +31,13 @@ public class ReadEndsForMarkDuplicatesSetSizeTags extends ReadEndsForMarkDuplica
 
     public ReadEndsForMarkDuplicatesSetSizeTags() { }
 
-    public ReadEndsForMarkDuplicatesSetSizeTags(final ReadEndsForMarkDuplicates parentRead) { super(parentRead); }
-
-    /*public ReadEndsForMarkDuplicatesSetSizeTags(final ReadEndsForMarkDuplicatesSetSizeTags read) {
+    public ReadEndsForMarkDuplicatesSetSizeTags(final ReadEndsForMarkDuplicates read) {
         super(read);
-        this.firstEncounteredReadName = read.firstEncounteredReadName;
-        this.representativeReadName = read.representativeReadName;
-        this.duplicateSetSize = read.duplicateSetSize;
-    }*/
+    }
 
-
+    // one int: 4
+    // 2 read names, UTF-8: (2 x ~34 char x 4) + 4
+    public static int getSizeOf() {
+        return ReadEndsForMarkDuplicates.getSizeOf() + 4 + (2 * 4 * 34)+4;
+    }
 }

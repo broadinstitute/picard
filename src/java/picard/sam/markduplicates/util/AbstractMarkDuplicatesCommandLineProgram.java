@@ -157,6 +157,10 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     protected void finalizeAndWriteMetrics(final LibraryIdGenerator libraryIdGenerator) {
         final Map<String, DuplicationMetrics> metricsByLibrary = libraryIdGenerator.getMetricsByLibraryMap();
         final Histogram<Short> opticalDuplicatesByLibraryId = libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap();
+        final Histogram<Integer> duplicateCountHist = libraryIdGenerator.getDuplicateCountHist();
+        final Histogram<Integer> opticalDuplicateCountHist = libraryIdGenerator.getOpticalDuplicateCountHist();
+        final Histogram<Integer> nonOpticalDuplicateCountHist = libraryIdGenerator.getNonOpticalDuplicateCountHist();
+
         final Map<String, Short> libraryIds = libraryIdGenerator.getLibraryIdsMap();
 
         // Write out the metrics
@@ -245,6 +249,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
                                               final OpticalDuplicateFinder opticalDuplicateFinder,
                                               final LibraryIdGenerator libraryIdGenerator) {
         boolean hasFR = false, hasRF = false;
+        ArrayList<Integer> frIndices = new ArrayList<>();
 
         // Check to see if we have a mixture of FR/RF
         for (final ReadEnds end : ends) {
@@ -262,9 +267,12 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             final List<ReadEnds> trackOpticalDuplicatesR = new ArrayList<>();
 
             // Split into two lists: first of pairs and second of pairs, since they must have orientation and same starting end
-            for (final ReadEnds end : ends) {
+            //for (final ReadEnds end : ends) {
+            for (int i = 0; i< ends.size(); ++i) {
+                final ReadEnds end = ends.get(i);
                 if (ReadEnds.FR == end.orientationForOpticalDuplicates) {
                     trackOpticalDuplicatesF.add(end);
+                    frIndices.add(i);
                 } else if (ReadEnds.RF == end.orientationForOpticalDuplicates) {
                     trackOpticalDuplicatesR.add(end);
                 } else {
