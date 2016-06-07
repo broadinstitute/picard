@@ -49,8 +49,8 @@ public class ReadEndsForMarkDuplicatesSetSizeTagsCodec extends ReadEndsForMarkDu
 
         try {
             final ReadEndsForMarkDuplicatesSetSizeTags val = (ReadEndsForMarkDuplicatesSetSizeTags)read;
-            out.writeBytes(val.firstEncounteredReadName);
-            out.writeBytes(val.representativeReadName);
+            out.writeUTF(val.firstEncounteredReadName);
+            out.writeUTF(val.representativeReadName);
             out.writeInt(val.duplicateSetSize);
         } catch (final IOException ioe) {
             throw new PicardException("Exception writing ReadEnds to file.", ioe);

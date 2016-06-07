@@ -29,7 +29,7 @@ import picard.sam.util.ReadNameInterface;
 
 import java.io.*;
 
-/** Codec for a string. */
+/** Codec for read names and integers that outputs the primitive fields and reads them back. */
 public class RepresentativeReadCodec implements SortingCollection.Codec<ReadNameInterface> {
     protected DataInputStream in;
     protected DataOutputStream out;
@@ -55,7 +55,7 @@ public class RepresentativeReadCodec implements SortingCollection.Codec<ReadName
         try {
             this.out.writeInt(rni.read1IndexInFile);
             this.out.writeInt(rni.setSize);
-            this.out.writeBytes(rni.readname);
+            this.out.writeUTF(rni.readname);
         } catch (final IOException ioe) {
             throw new PicardException("Exception writing ReadEnds to file.", ioe);
         }
@@ -64,7 +64,12 @@ public class RepresentativeReadCodec implements SortingCollection.Codec<ReadName
     public ReadNameInterface decode() {
         final ReadNameInterface rni = new ReadNameInterface();
         try {
-            rni.read1IndexInFile = this.in.readInt();
+            // If the first read results in an EOF we've exhausted the stream
+            try {
+                rni.read1IndexInFile = this.in.readInt();
+            } catch (final EOFException eof) {
+                return null;
+            }
             rni.setSize = this.in.readInt();
             rni.readname = this.in.readUTF();
             return rni;

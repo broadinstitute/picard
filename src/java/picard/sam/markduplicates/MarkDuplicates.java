@@ -90,7 +90,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     public static final String DUPLICATE_TYPE_LIBRARY = "LB";
     /** The duplicate type tag value for duplicate type: sequencing (optical & pad-hopping, or "co-localized"). */
     public static final String DUPLICATE_TYPE_SEQUENCING = "SQ";
-    /** The attribute in the SAM/BAM file used to store which read was selected as representative in a duplicate set */
+    /** The attribute in the SAM/BAM file used to store which read was selected as representative out of a duplicate set */
     public static final String REPRESENTATIVE_READ_TAG = "RR";
     /** The attribute in the SAM/BAM file used to store the size of a duplicate set */
     public static final String DUPLICATE_SET_SIZE_TAG = "DS";
@@ -134,8 +134,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     @Option(doc = "Read two barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
     public String READ_TWO_BARCODE_TAG = null;
 
-    @Option(doc = "If a read is marked as duplicate, tag the read with representative read that was " +
-            "selected out of the duplicate set.", optional = true)
+    @Option(doc = "If a read appears in a duplicate set, add two tags.The first tag, DUPLICATE_SET_SIZE_TAG, " +
+            "indicates the size of the duplicate set. The second tag, REPRESENTATIVE_READ_TAG, indicates the read name " +
+            "of the representative read that was selected out of the duplicate set.", optional = true)
     public boolean TAG_REPRESENTATIVE_READ = false;
 
     @Option(doc = "If true remove 'optical' duplicates and other duplicates that appear to have arisen from the " +
@@ -192,7 +193,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         final boolean useBarcodes = (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG);
 
-                reportMemoryStats("Start of doWork");
+        reportMemoryStats("Start of doWork");
         log.info("Reading input file and constructing read end information.");
         buildSortedReadEndLists(useBarcodes);
         reportMemoryStats("After buildSortedReadEndLists");
@@ -332,10 +333,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 }
             }
 
-            // identify any read pair that was in a duplicate set
+            // Tag any read pair that was in a duplicate set with the duplicate set size and a representative read name
             if (TAG_REPRESENTATIVE_READ) {
-                final boolean needNextRepresentativeIndex = recordInFileIndex > nextRepresentativeIndex &&
-                        (sortOrder == SAMFileHeader.SortOrder.coordinate);
+                final boolean needNextRepresentativeIndex = recordInFileIndex > nextRepresentativeIndex;
                 if (needNextRepresentativeIndex && representativeReadInterator.hasNext()) {
                     rni = representativeReadInterator.next();
                     nextRepresentativeIndex = rni.read1IndexInFile;
@@ -633,7 +633,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             final RepresentativeReadCodec representativeReadCodec = new RepresentativeReadCodec();
             this.representativeReadsForDuplicates = SortingCollection.newInstance(ReadNameInterface.class,
                     representativeReadCodec,
-                    new RepresentativeREadComparator(),
+                    new RepresentativeReadComparator(),
                     maxInMemory,
                     TMP_DIR);
             this.duplicateSetSizes = new ArrayList<>();
@@ -774,7 +774,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      *
      * @param list
      */
-     //private void markDuplicatePairs(final List<? extends ReadEnds> list) {
     private void markDuplicatePairs(final List<ReadEndsForMarkDuplicates> list) {
         short maxScore = 0;
         ReadEndsForMarkDuplicates best = null;
@@ -873,9 +872,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     // order representative read entries based on the record index
-    static class RepresentativeREadComparator implements Comparator<ReadNameInterface> {
+    static class RepresentativeReadComparator implements Comparator<ReadNameInterface> {
 
-        public RepresentativeREadComparator() {}
+        public RepresentativeReadComparator() {}
 
         public int compare(final ReadNameInterface lhs, final ReadNameInterface rhs) {
             int compareDifference = lhs.read1IndexInFile - rhs.read1IndexInFile;
