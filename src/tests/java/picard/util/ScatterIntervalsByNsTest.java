@@ -98,8 +98,6 @@ public class ScatterIntervalsByNsTest {
                         new Interval("fake1", 18, 18),
                         new Interval("fake1", 19, 19)
                 )}
-
-
         };
     }
 
