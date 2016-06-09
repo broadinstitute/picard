@@ -26,7 +26,7 @@ public class PedFile extends TreeMap<String, PedFile.PedTrio> {
     private final String delimiterString; // A textual representation of the delimiter, for output purposes
 
     // These two are really for PedTrio, but they can't be static in there and need to be accessed outside of PedFile
-    public static final Number NO_PHENO = new Integer(-9);
+    public static final Number NO_PHENO = Integer.valueOf(-9);
     public static final Sex UNKNOWN_SEX = Sex.Unknown;
 
     public PedFile(final boolean isTabMode) {
