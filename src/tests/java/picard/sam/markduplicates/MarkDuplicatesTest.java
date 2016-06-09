@@ -322,10 +322,14 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addArg("TAGGING_POLICY=All");
         tester.addArg("TAG_REPRESENTATIVE_READ=true");
         tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.readToRepReadMap.put("RUNID:1:1:15993:13361", null);
+
         tester.addMatePair("RUNID:1:1:16020:13352", 2, 41212324, 41212319, false, false, true, true, "33S35M", "28S40M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.readToRepReadMap.put("RUNID:1:1:16020:13352","RUNID:1:1:15993:13361");
+
         tester.runTest();
-        File output = tester.getOutput();
-        tester.getRecordIterator();
+        //File output = tester.getOutput();
+        //tester.getRecordIterator();
         //final SamReader reader = SamReaderFactory.makeDefault().open(output.getAbsoluteFile());
     }
 

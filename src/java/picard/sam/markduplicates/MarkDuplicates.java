@@ -764,7 +764,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         for (final ReadEndsForMarkDuplicatesSetSizeTags end : list) {
             addRepresentativeReadOfDuplicateSet(best.firstEncounteredReadName, list.size(), end.read1IndexInFile);
         }
-
     }
 
 
