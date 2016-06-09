@@ -27,28 +27,27 @@ package picard.sam.markduplicates.util;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 
-import java.io.EOFException;
 import java.io.IOException;
 
 /**
- * Created by nhomer on 9/13/15.
+ * Created by hogstrom on 06/07/15.
  */
-public class ReadEndsForMarkDuplicatesSetSizeTagsCodec extends ReadEndsForMarkDuplicatesCodec {
+public class ReadEndsForMarkDuplicatesTagRepresentativeReadCodec extends ReadEndsForMarkDuplicatesCodec {
 
     @Override
     public SortingCollection.Codec<ReadEndsForMarkDuplicates> clone() {
-        return new ReadEndsForMarkDuplicatesSetSizeTagsCodec();
+        return new ReadEndsForMarkDuplicatesTagRepresentativeReadCodec();
     }
 
     @Override
     public void encode(final ReadEndsForMarkDuplicates read) {
-        if (!(read instanceof ReadEndsForMarkDuplicatesSetSizeTags)) {
+        if (!(read instanceof ReadEndsForMarkDuplicatesTagRepresentativeRead)) {
             throw new PicardException("Read was not a ReadEndsForMarkDuplicatesSetSizeTagscodes");
         }
         super.encode(read);
 
         try {
-            final ReadEndsForMarkDuplicatesSetSizeTags val = (ReadEndsForMarkDuplicatesSetSizeTags)read;
+            final ReadEndsForMarkDuplicatesTagRepresentativeRead val = (ReadEndsForMarkDuplicatesTagRepresentativeRead)read;
             out.writeUTF(val.firstEncounteredReadName);
             out.writeUTF(val.representativeReadName);
             out.writeInt(val.duplicateSetSize);
@@ -61,7 +60,7 @@ public class ReadEndsForMarkDuplicatesSetSizeTagsCodec extends ReadEndsForMarkDu
     public ReadEndsForMarkDuplicates decode() {
         final ReadEndsForMarkDuplicates parentRead = super.decode();
         if (null == parentRead) return null; // EOF
-        final ReadEndsForMarkDuplicatesSetSizeTags read = new ReadEndsForMarkDuplicatesSetSizeTags(parentRead);
+        final ReadEndsForMarkDuplicatesTagRepresentativeRead read = new ReadEndsForMarkDuplicatesTagRepresentativeRead(parentRead);
         try {
             read.firstEncounteredReadName = in.readUTF();
             read.representativeReadName = in.readUTF();

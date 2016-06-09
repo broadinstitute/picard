@@ -24,14 +24,14 @@
 
 package picard.sam.markduplicates.util;
 
-public class ReadEndsForMarkDuplicatesSetSizeTags extends ReadEndsForMarkDuplicates {
+public class ReadEndsForMarkDuplicatesTagRepresentativeRead extends ReadEndsForMarkDuplicates {
     public String firstEncounteredReadName = "Null";
     public String representativeReadName = "Null";
     public int duplicateSetSize = 0;
 
-    public ReadEndsForMarkDuplicatesSetSizeTags() { }
+    public ReadEndsForMarkDuplicatesTagRepresentativeRead() { }
 
-    public ReadEndsForMarkDuplicatesSetSizeTags(final ReadEndsForMarkDuplicates read) {
+    public ReadEndsForMarkDuplicatesTagRepresentativeRead(final ReadEndsForMarkDuplicates read) {
         super(read);
     }
 

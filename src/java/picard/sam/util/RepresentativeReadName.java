@@ -4,7 +4,7 @@ package picard.sam.util;
  * Little struct-like class to hold read name information, record index, and duplicate set size information.
  */
 
-public class ReadNameInterface {
+public class RepresentativeReadName {
 
     public int read1IndexInFile = -1;
 

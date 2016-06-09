@@ -25,17 +25,17 @@ package picard.sam.markduplicates.util;
 
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
-import picard.sam.util.ReadNameInterface;
+import picard.sam.util.RepresentativeReadName;
 
 import java.io.*;
 
 /** Codec for read names and integers that outputs the primitive fields and reads them back. */
-public class RepresentativeReadCodec implements SortingCollection.Codec<ReadNameInterface> {
+public class RepresentativeReadCodec implements SortingCollection.Codec<RepresentativeReadName> {
     protected DataInputStream in;
     protected DataOutputStream out;
 
 
-    public SortingCollection.Codec<ReadNameInterface> clone() {
+    public SortingCollection.Codec<RepresentativeReadName> clone() {
         return new RepresentativeReadCodec();
     }
 
@@ -51,7 +51,7 @@ public class RepresentativeReadCodec implements SortingCollection.Codec<ReadName
         return out;
     }
 
-    public void encode(final ReadNameInterface rni) {
+    public void encode(final RepresentativeReadName rni) {
         try {
             this.out.writeInt(rni.read1IndexInFile);
             this.out.writeInt(rni.setSize);
@@ -61,8 +61,8 @@ public class RepresentativeReadCodec implements SortingCollection.Codec<ReadName
         }
     }
 
-    public ReadNameInterface decode() {
-        final ReadNameInterface rni = new ReadNameInterface();
+    public RepresentativeReadName decode() {
+        final RepresentativeReadName rni = new RepresentativeReadName();
         try {
             // If the first read results in an EOF we've exhausted the stream
             try {
