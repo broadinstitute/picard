@@ -52,7 +52,7 @@ public class MarkDuplicatesTagRepresentativeReadTester extends AbstractMarkDupli
     public boolean testRepresentativeReads = false;
 
     public MarkDuplicatesTagRepresentativeReadTester() {
-        super(DuplicateScoringStrategy.ScoringStrategy.SUM_OF_BASE_QUALITIES);
+        //super(DuplicateScoringStrategy.ScoringStrategy.SUM_OF_BASE_QUALITIES);
         //super(DuplicateScoringStrategy.ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH);
 
         addArg("TAGGING_POLICY=All");
@@ -70,6 +70,7 @@ public class MarkDuplicatesTagRepresentativeReadTester extends AbstractMarkDupli
             // Read the output and check the duplicate flag
             int outputRecords = 0;
             final SamReader reader = SamReaderFactory.makeDefault().open(getOutput());
+            System.out.println(getOutput().getAbsolutePath());
             for (final SAMRecord record : reader) {
                 outputRecords++;
                 final String key = samRecordToDuplicatesFlagsKey(record);
@@ -114,7 +115,7 @@ public class MarkDuplicatesTagRepresentativeReadTester extends AbstractMarkDupli
             Assert.assertEquals(observedMetrics.ESTIMATED_LIBRARY_SIZE, expectedMetrics.ESTIMATED_LIBRARY_SIZE, "ESTIMATED_LIBRARY_SIZE does not match expected");
             Assert.assertEquals(observedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, expectedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, "SECONDARY_OR_SUPPLEMENTARY_RDS does not match expected");
         } finally {
-            TestUtil.recursiveDelete(getOutputDir());
+            //TestUtil.recursiveDelete(getOutputDir());
         }
     }
 
