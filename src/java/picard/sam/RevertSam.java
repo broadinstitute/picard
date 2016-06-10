@@ -327,7 +327,7 @@ public class RevertSam extends CommandLineProgram {
             rec.setMateAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
             rec.setMateNegativeStrandFlag(false);
             rec.setMateReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
-            rec.setMateUnmappedFlag(true);
+            rec.setMateUnmappedFlag(rec.getReadPairedFlag());
 
             // And then remove any tags that are calculated from the alignment
             ATTRIBUTE_TO_CLEAR.forEach(tag -> rec.setAttribute(tag, null));
