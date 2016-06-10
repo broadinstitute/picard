@@ -138,10 +138,10 @@ public class FingerprintChecker {
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
                                                      iterator.getSequenceDictionary());
 
-        final Map<String, Fingerprint> fingerprints = new HashMap<String, Fingerprint>();
+        final Map<String, Fingerprint> fingerprints = new HashMap<>();
         Set<String> samples = null;
         if (specificSample != null) {
-            samples = new HashSet<String>();
+            samples = new HashSet<>();
             samples.add(specificSample);
         }
 
@@ -264,9 +264,7 @@ public class FingerprintChecker {
             }
         }
 
-        intervals.sort();
-        intervals.unique();
-        return intervals;
+        return intervals.uniqued();
     }
 
     /**
@@ -288,12 +286,12 @@ public class FingerprintChecker {
         // sequence data where the duplicate marking may have been overly aggressive, and there is useful
         // non-redundant data in the reads marked as "duplicates'.
         if (this.allowDuplicateReads) {
-            final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>(1);
+            final List<SamRecordFilter> filters = new ArrayList<>(1);
             filters.add(new NotPrimaryAlignmentFilter());
             iterator.setSamFilters(filters);
         }
 
-        final Map<SAMReadGroupRecord, Fingerprint> fingerprintsByReadGroup = new HashMap<SAMReadGroupRecord, Fingerprint>();
+        final Map<SAMReadGroupRecord, Fingerprint> fingerprintsByReadGroup = new HashMap<>();
         final List<SAMReadGroupRecord> rgs = in.getFileHeader().getReadGroups();
 
         for (final SAMReadGroupRecord rg : rgs) {
@@ -364,7 +362,7 @@ public class FingerprintChecker {
         // sequence data where the duplicate marking may have been overly aggressive, and there is useful
         // non-redundant data in the reads marked as "duplicates'.
         if (this.allowDuplicateReads) {
-            final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>(1);
+            final List<SamRecordFilter> filters = new ArrayList<>(1);
             filters.add(new NotPrimaryAlignmentFilter());
             iterator.setSamFilters(filters);
         }
@@ -460,23 +458,21 @@ public class FingerprintChecker {
         final AtomicInteger filesRead = new AtomicInteger(0);
         final ExecutorService executor = Executors.newFixedThreadPool(threads);
         final IntervalList intervals = this.haplotypes.getIntervalList();
-        final Map<SAMReadGroupRecord, Fingerprint> retval = new ConcurrentHashMap<SAMReadGroupRecord, Fingerprint>();
+        final Map<SAMReadGroupRecord, Fingerprint> retval = new ConcurrentHashMap<>();
 
         for (final File f : files) {
-            executor.submit(new Runnable() {
-                @Override public void run() {
-                    retval.putAll(fingerprintSamFile(f, intervals));
+            executor.submit(() -> {
+                retval.putAll(fingerprintSamFile(f, intervals));
 
-                    if (filesRead.incrementAndGet() % 100 == 0) {
-                        log.info("Processed " + filesRead.get() + " out of " + files.size());
-                    }
+                if (filesRead.incrementAndGet() % 100 == 0) {
+                    log.info("Processed " + filesRead.get() + " out of " + files.size());
                 }
             });
         }
 
         executor.shutdown();
         try { executor.awaitTermination(waitTime, waitTimeUnit); }
-        catch (InterruptedException ie) { log.warn(ie, "Interrupted while waiting for executor to terminate."); }
+        catch (final InterruptedException ie) { log.warn(ie, "Interrupted while waiting for executor to terminate."); }
 
         return retval;
     }
@@ -486,7 +482,7 @@ public class FingerprintChecker {
      * by samples and totals up the probabilities.
      */
     static public SortedMap<String, Fingerprint> mergeFingerprintsBySample(final Collection<Fingerprint> inputs) {
-        final SortedMap<String, Fingerprint> sampleFps = new TreeMap<String, Fingerprint>();
+        final SortedMap<String, Fingerprint> sampleFps = new TreeMap<>();
         for (final Fingerprint fp : inputs) {
             Fingerprint sampleFp = sampleFps.get(fp.getSample());
             if (sampleFp == null) {
@@ -515,7 +511,7 @@ public class FingerprintChecker {
                                                       final String specificSample,
                                                       final boolean ignoreReadGroups) {
         // Load the fingerprint genotypes
-        final List<Fingerprint> expectedFingerprints = new LinkedList<Fingerprint>();
+        final List<Fingerprint> expectedFingerprints = new LinkedList<>();
         for (final File f : genotypeFiles) {
             expectedFingerprints.addAll(loadFingerprints(f, specificSample).values());
         }
@@ -524,7 +520,7 @@ public class FingerprintChecker {
             throw new IllegalStateException("Could not find any fingerprints in: " + genotypeFiles);
         }
 
-        final List<FingerprintResults> resultsList = new ArrayList<FingerprintResults>();
+        final List<FingerprintResults> resultsList = new ArrayList<>();
         final IntervalList intervals = getLociToGenotype(expectedFingerprints);
 
         // Fingerprint the SAM files and calculate the results
@@ -533,7 +529,7 @@ public class FingerprintChecker {
 
             if (ignoreReadGroups) {
                 final Fingerprint combinedFp = new Fingerprint(specificSample, f, null);
-                for (final Fingerprint observedFp : fingerprintsByReadGroup.values()) combinedFp.merge(observedFp);
+                fingerprintsByReadGroup.values().forEach(combinedFp::merge);
 
                 final FingerprintResults results = new FingerprintResults(f, specificSample);
                 for (final Fingerprint expectedFp : expectedFingerprints) {
@@ -571,7 +567,7 @@ public class FingerprintChecker {
      * lExpectedSample is Max(actualpExpectedSample, minPExpected).
      */
     public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp, final double minPExpected, final double pLoH) {
-        final List<LocusResult> locusResults = new ArrayList<LocusResult>();
+        final List<LocusResult> locusResults = new ArrayList<>();
 
         double llThisSample  = 0;
         double llOtherSample = 0;
@@ -586,23 +582,32 @@ public class FingerprintChecker {
             final HaplotypeProbabilities probs1 = observedFp.get(haplotypeBlock);
             if (probs1 == null) continue;
 
-            final HaplotypeProbabilityOfNormalGivenTumor normalizedProbs1 = new HaplotypeProbabilityOfNormalGivenTumor(probs1, pLoH);
-            final HaplotypeProbabilityOfNormalGivenTumor normalizedProbs2 = new HaplotypeProbabilityOfNormalGivenTumor(probs2, pLoH);
+            final HaplotypeProbabilityOfNormalGivenTumor prob1AssumingDataFromTumor = new HaplotypeProbabilityOfNormalGivenTumor(probs1, pLoH);
+            final HaplotypeProbabilityOfNormalGivenTumor prob2AssumingDataFromTumor = new HaplotypeProbabilityOfNormalGivenTumor(probs2, pLoH);
 
             // If one is from genotype data we'd like to report the output relative
             // to the genotyped SNP instead of against a random SNP from the haplotype
             final Snp snp = probs2.getRepresentativeSnp();
             final DiploidGenotype externalGenotype = probs2.getMostLikelyGenotype(snp);
             final LocusResult lr = new LocusResult(snp,
-                                                   externalGenotype,
-                                                   probs1.getMostLikelyGenotype(snp),
-                                                   probs1.getObsAllele1(),
-                                                   probs1.getObsAllele2(),
-                                                   probs1.getLodMostProbableGenotype(),
-                                                   probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2),
+                    externalGenotype,
+                    probs1.getMostLikelyGenotype(snp),
+                    probs1.getObsAllele1(),
+                    probs1.getObsAllele2(),
+                    probs1.getLodMostProbableGenotype(),
+                    // expected sample log-likelihood
+                    probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2),
+                    // random sample log-likelihood
                     probs1.shiftedLogEvidenceProbability(),
-                    probs2.shiftedLogEvidenceProbabilityGivenOtherEvidence(normalizedProbs1)-probs2.shiftedLogEvidenceProbability(),
-                    probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(normalizedProbs2)-probs1.shiftedLogEvidenceProbability());
+
+            // probs1 is tumor probs2 is normal, correct sample lod
+            prob1AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2) -
+                    prob1AssumingDataFromTumor.shiftedLogEvidenceProbability(),
+                    // probs1 is normal probs2 is tumor, correct sample lod
+                    probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(prob2AssumingDataFromTumor) -
+                            probs1.shiftedLogEvidenceProbability());
+
+
             locusResults.add(lr);
 
             if (probs1.hasEvidence() && probs2.hasEvidence()) {
