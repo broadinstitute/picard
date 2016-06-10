@@ -29,6 +29,7 @@ import htsjdk.samtools.util.CollectionUtil;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,8 +59,8 @@ public class Tile {
 
         final Collection<TilePhasingValue> phasingValues = ensureSoleTilePhasingValuesPerRead(Arrays.asList(tilePhasingValues));
 
-        final Map<TileTemplateRead, Float> phasingMap = new HashMap<TileTemplateRead, Float>();
-        final Map<TileTemplateRead, Float> prePhasingMap = new HashMap<TileTemplateRead, Float>();
+        final Map<TileTemplateRead, Float> phasingMap = new EnumMap<TileTemplateRead, Float>(TileTemplateRead.class);
+        final Map<TileTemplateRead, Float> prePhasingMap = new EnumMap<TileTemplateRead, Float>(TileTemplateRead.class);
 
         /** For each of the TileReads, assign their phasing & prephasing values to the respective maps, which we will
          * use later to calculate the medians
