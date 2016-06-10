@@ -24,7 +24,6 @@
 
 package picard.sam.markduplicates;
 
-import picard.PicardException;
 import org.testng.annotations.Test;
 
 /**

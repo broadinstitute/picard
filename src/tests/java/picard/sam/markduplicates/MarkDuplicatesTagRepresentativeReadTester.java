@@ -52,8 +52,6 @@ public class MarkDuplicatesTagRepresentativeReadTester extends AbstractMarkDupli
     public boolean testRepresentativeReads = false;
 
     public MarkDuplicatesTagRepresentativeReadTester() {
-        //super(DuplicateScoringStrategy.ScoringStrategy.SUM_OF_BASE_QUALITIES);
-        //super(DuplicateScoringStrategy.ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH);
 
         addArg("TAGGING_POLICY=All");
         addArg("TAG_REPRESENTATIVE_READ=true");
