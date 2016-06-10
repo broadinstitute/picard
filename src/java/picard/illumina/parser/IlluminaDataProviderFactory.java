@@ -34,6 +34,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -67,7 +68,7 @@ public class IlluminaDataProviderFactory {
      * We try to prefer data types that will be the fastest to parse/smallest in memory
      * NOTE: In the code below, if Qseq is chosen to provide for ANY data type then it is used for ALL its data types (since we'll have to parse the entire line for each Qseq anyways)
      */
-    private static final Map<IlluminaDataType, List<SupportedIlluminaFormat>> DATA_TYPE_TO_PREFERRED_FORMATS = new HashMap<IlluminaDataType, List<SupportedIlluminaFormat>>();
+    private static final Map<IlluminaDataType, List<SupportedIlluminaFormat>> DATA_TYPE_TO_PREFERRED_FORMATS = new EnumMap<IlluminaDataType, List<SupportedIlluminaFormat>>(IlluminaDataType.class);
 
     static {
         /** For types found in Qseq, we prefer the NON-Qseq file formats first.  However, if we end up using Qseqs then we use Qseqs for EVERY type it provides,
@@ -266,8 +267,8 @@ public class IlluminaDataProviderFactory {
     public static Map<SupportedIlluminaFormat, Set<IlluminaDataType>> determineFormats(final Set<IlluminaDataType> requestedDataTypes, final IlluminaFileUtil fileUtil) {
         //For predictable ordering and uniqueness only, put the requestedDataTypes into a treeSet
         final SortedSet<IlluminaDataType> toSupport = new TreeSet<IlluminaDataType>(requestedDataTypes);
-        final Map<SupportedIlluminaFormat, Set<IlluminaDataType>> fileTypeToDataTypes = new HashMap<SupportedIlluminaFormat, Set<IlluminaDataType>>();
-        final Map<IlluminaDataType, SupportedIlluminaFormat> dataTypeToFormat = new HashMap<IlluminaDataType, SupportedIlluminaFormat>();
+        final Map<SupportedIlluminaFormat, Set<IlluminaDataType>> fileTypeToDataTypes = new EnumMap<SupportedIlluminaFormat, Set<IlluminaDataType>>(SupportedIlluminaFormat.class);
+        final Map<IlluminaDataType, SupportedIlluminaFormat> dataTypeToFormat = new EnumMap<IlluminaDataType, SupportedIlluminaFormat>(IlluminaDataType.class);
 
         for (final IlluminaDataType ts : toSupport) {
             final SupportedIlluminaFormat preferredFormat = findPreferredAvailableFormat(ts, fileUtil);

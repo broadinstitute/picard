@@ -8,6 +8,7 @@ import picard.PicardException;
 import picard.analysis.artifacts.SequencingArtifactMetrics.*;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -135,7 +136,7 @@ class ArtifactCounter {
      *
      */
     private Map<Transition, SummaryPair> getSummaryMetrics() {
-        final Map<Transition, SummaryPair> summaryMetricsMap = new HashMap<Transition, SummaryPair>();
+        final Map<Transition, SummaryPair> summaryMetricsMap = new EnumMap<Transition, SummaryPair>(Transition.class);
 
         // extract the detail metrics from each accumulator
         final ListMap<Transition, DetailPair> fullMetrics = this.fullContextAccumulator.calculateMetrics(sampleAlias, library);

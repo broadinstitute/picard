@@ -36,6 +36,7 @@ import picard.illumina.parser.readers.TileMetricsOutReader;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -76,7 +77,7 @@ public class IlluminaFileUtil {
     private final int lane;
 
     private final File tileMetricsOut;
-    private final Map<SupportedIlluminaFormat, ParameterizedFileUtil> utils = new HashMap<SupportedIlluminaFormat, ParameterizedFileUtil>();
+    private final Map<SupportedIlluminaFormat, ParameterizedFileUtil> utils = new EnumMap<SupportedIlluminaFormat, ParameterizedFileUtil>(SupportedIlluminaFormat.class);
 
     public IlluminaFileUtil(final File basecallDir, final int lane) {
 		this(basecallDir, null, lane);

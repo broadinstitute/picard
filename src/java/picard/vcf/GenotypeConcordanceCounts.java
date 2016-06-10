@@ -2,6 +2,7 @@ package picard.vcf;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -282,7 +283,7 @@ public class GenotypeConcordanceCounts {
     public Map<ContingencyState, Long> getContingencyStateCounts(final GenotypeConcordanceScheme scheme) {
         scheme.validateScheme();
 
-        final Map<ContingencyState, Long> counts = new HashMap<ContingencyState, Long>();
+        final Map<ContingencyState, Long> counts = new EnumMap<ContingencyState, Long>(ContingencyState.class);
         for (final ContingencyState contingencyState : ContingencyState.values()) {
             counts.put(contingencyState, 0L);
         }
