@@ -242,10 +242,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         int nextRepresentativeIndex = -1;
         if (TAG_REPRESENTATIVE_READ) {
             representativeReadInterator = this.representativeReadsForDuplicates.iterator();
-            rni = representativeReadInterator.next();
-            nextRepresentativeIndex = rni.read1IndexInFile;
-            representativeReadName = rni.readname;
-            duplicateSetSize = rni.setSize;
+            if (representativeReadInterator.hasNext()) {
+                rni = representativeReadInterator.next();
+                nextRepresentativeIndex = rni.readIndexInFile;
+                representativeReadName = rni.readname;
+                duplicateSetSize = rni.setSize;
+            }
         }
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Written");
@@ -337,7 +339,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 final boolean needNextRepresentativeIndex = recordInFileIndex > nextRepresentativeIndex;
                 if (needNextRepresentativeIndex && representativeReadInterator.hasNext()) {
                     rni = representativeReadInterator.next();
-                    nextRepresentativeIndex = rni.read1IndexInFile;
+                    nextRepresentativeIndex = rni.readIndexInFile;
                     representativeReadName = rni.readname;
                     duplicateSetSize = rni.setSize;
                 }
@@ -737,7 +739,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         final RepresentativeReadName rni = new RepresentativeReadName();
         rni.readname = recID;
         rni.setSize = setSize;
-        rni.read1IndexInFile = (int) read1IndexInFile;
+        rni.readIndexInFile = (int) read1IndexInFile;
         this.representativeReadsForDuplicates.add(rni);
     }
 
@@ -762,6 +764,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         // for read name (for representative read name), add the last of the pair that was examined
         for (final ReadEndsForMarkDuplicatesTagRepresentativeRead end : list) {
             addRepresentativeReadOfDuplicateSet(best.firstEncounteredReadName, list.size(), end.read1IndexInFile);
+            addRepresentativeReadOfDuplicateSet(best.firstEncounteredReadName, list.size(), end.read2IndexInFile);
         }
     }
 
@@ -875,7 +878,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         public RepresentativeReadComparator() {}
 
         public int compare(final RepresentativeReadName lhs, final RepresentativeReadName rhs) {
-            int compareDifference = lhs.read1IndexInFile - rhs.read1IndexInFile;
+            int compareDifference = lhs.readIndexInFile - rhs.readIndexInFile;
             return compareDifference;
         }
     }

@@ -53,7 +53,7 @@ public class RepresentativeReadCodec implements SortingCollection.Codec<Represen
 
     public void encode(final RepresentativeReadName rni) {
         try {
-            this.out.writeInt(rni.read1IndexInFile);
+            this.out.writeInt(rni.readIndexInFile);
             this.out.writeInt(rni.setSize);
             this.out.writeUTF(rni.readname);
         } catch (final IOException ioe) {
@@ -66,7 +66,7 @@ public class RepresentativeReadCodec implements SortingCollection.Codec<Represen
         try {
             // If the first read results in an EOF we've exhausted the stream
             try {
-                rni.read1IndexInFile = this.in.readInt();
+                rni.readIndexInFile = this.in.readInt();
             } catch (final EOFException eof) {
                 return null;
             }

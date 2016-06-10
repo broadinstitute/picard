@@ -6,7 +6,7 @@ package picard.sam.util;
 
 public class RepresentativeReadName {
 
-    public int read1IndexInFile = -1;
+    public int readIndexInFile = -1;
 
     public int setSize = -1;
 
