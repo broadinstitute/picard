@@ -73,19 +73,52 @@ import java.util.concurrent.TimeUnit;
  * @author jburke@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "Determine the sample barcode for each read in an Illumina lane.\n" +
-                "For each tile, a file is written to the basecalls directory of the form s_<lane>_<tile>_barcode.txt. " +
-                "An output file contains a line for each read in the tile, aligned with the regular basecall output. \n" +
-                "The output file contains the following tab-separated columns: \n" +
-                "    * read subsequence at barcode position\n" +
-                "    * Y or N indicating if there was a barcode match\n" +
-                "    * matched barcode sequence\n" +
-                "Note 1: that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.\n" +
-                "Note 2: molecular barcodes (M in the read structure) are not the barcode being extracted here and will be ignored here.\n\n",
-        usageShort = "Tool to determine the barcode for each read in an Illumina lane",
+
+        usage = ExtractIlluminaBarcodes.USAGE_SUMMARY + ExtractIlluminaBarcodes.USAGE_DETAILS,
+        usageShort = ExtractIlluminaBarcodes.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
 public class ExtractIlluminaBarcodes extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Tool to determine the barcode for each read in an Illumina lane.  ";
+    static final String USAGE_DETAILS = "<p> This tool will identify reads containing barcodes and output statistics indicating the numbers " +
+            "of reads containing barcode-matching sequences.</p> " +
+            "<p>Illumina sequences can contain at least two types of barcodes, sample and molecular (index).  Sample barcodes are used to " +
+            "demultiplex pooled samples while index barcodes are used to differentiate multiple reads of a template when carrying out paired-end sequencing. </p>" +
+            "<p>Barcodes can be provided in the form of a list (BARCODE_FILE) or a string representing the barcode.  " +
+            "The BARCODE_FILE contains multiple fields including 'barcode_sequence_1', 'barcode_sequence_2' (optional), " +
+            "'barcode_name', and 'library_name'.  In contrast, the BARCODE argument is used for runs with reads containing a single barcode (nonmultiplexed) and can be added directly " +
+            "as a string of text e.g. BARCODE=CAATAGCG.</p>" +
+            "" +
+            "<p>Data is output per lane/tile within the BaseCalls directory with the file name format of 's_{lane}_{tile}_barcode.txt'.  " +
+            "These files contain the following tab-separated columns:" +
+            "<ul> " +
+            "<li>Read subsequence at barcode position</li>" +
+            "<li>Y or N indicating if there was a barcode match</li>" +
+            "<li>Matched barcode sequence (empty if read did not match one of the barcodes)</li>  " +
+            "</ul>" +
+            "If there is no match but we're close to the threshold of calling it a match, we output the barcode that would have been " +
+            "matched but in lower case.  Threshold values can be adjusted to accommodate barcode sequence mismatches from the reads." +
+            "<ul>" +
+            "<li>Note 1: The order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes</li>" +
+            "<li>Note 2: Molecular barcodes (M in the read structure) are not the barcode being extracted here and will be ignored</li> " +
+            "</ul>" +
+            "The ExtractIlluminaBarcodes program also produces a metrics file and indicates the number of matches (and mismatches)" +
+            " between the barcode reads and the actual barcodes.  These metrics are provided both per-barcode and per lane and can be found in the BaseCalls directory.</p>" +
+            "" +
+            "<h4>Usage example:</h4> " +
+                "<pre>" +
+                "java -jar picard.jar ExtractIlluminaBarcodes -h \\<br />" +
+        "              BASECALLS_DIR=s_1_1101.bcl \\<br />" +
+        "              READ_STRUCTURE=25T6B8B25T \\<br />" +
+        "              BARCODE_FILE=barcodes.txt or BARCODE=CAATAGCG \\<br />" +
+        "              METRICS_FILE=metrics_output.txt " +
+            "</pre>" +
+            "" +
+            "Please see the ExtractIlluminaBarcodes.BarcodeMetric " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#ExtractIlluminaBarcodes.BarcodeMetric'>definitions</a> " +
+            "for a complete description of the metrics produced by this tool.</p>" +
+            "<hr />"
+    ;
 
     // The following attributes define the command-line arguments
 
@@ -418,7 +451,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * do not match a barcode.
          */
         public String BARCODE;
+        /** The barcode name. */
         public String BARCODE_NAME = "";
+        /** The name of the library */
         public String LIBRARY_NAME = "";
         /** The total number of reads matching the barcode. */
         public int READS = 0;
@@ -432,7 +467,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         public int ONE_MISMATCH_MATCHES = 0;
         /** The number of PF reads matching this barcode that matched with 1 error or no-call. */
         public int PF_ONE_MISMATCH_MATCHES = 0;
-        /** The percentage of all reads in the lane that matched to this barcode. */
+        /** The fraction of all reads in the lane that matched to this barcode. */
         public double PCT_MATCHES = 0d;
         /**
          * The rate of all reads matching this barcode to all reads matching the most prevelant barcode. For the
@@ -442,7 +477,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * in representation between barcodes.
          */
         public double RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT = 0d;
-        /** The percentage of PF reads in the lane that matched to this barcode. */
+        /** The fraction of PF reads in the lane that matched to this barcode. */
         public double PF_PCT_MATCHES = 0d;
 
         /**

@@ -77,9 +77,13 @@ public class CollectOxoGMetrics extends CommandLineProgram {
             "the GATK Dictionary</a>." +
             "<br /><br />" +
             "This tool calculates the Phred-scaled probability that an alternate base call results from an oxidation artifact. This " +
-            "probability score is based on base context, sequencing read orientation, and the characteristic low allelic frequency " +
-            "(doi:10.1093/nar/gks1443). Lower probability values implicate artifacts resulting from 8-oxoguanine, while higher " +
-            "probability values suggest that an alternate base call is due to either some other type of artifact or is a real variant." +
+            "probability score is based on base context, sequencing read orientation, and the characteristic low allelic frequency.  " +
+            "Please see the following reference for an in-depth " +
+            "<a href='http://nar.oxfordjournals.org/content/early/2013/01/08/nar.gks1443'>discussion</a>" +
+            " of the OxoG error rate.  " +
+            "<p>Lower probability values implicate artifacts resulting from 8-oxoguanine, while higher " +
+            "probability values suggest that an alternate base call is due to either some other type of artifact or is a " +
+            "real variant.</p>" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar CollectOxoGMetrics \\<br />" +

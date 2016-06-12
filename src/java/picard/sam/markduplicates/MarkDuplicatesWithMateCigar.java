@@ -76,7 +76,8 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
             "Note also that this tool will not work with alignments that have large gaps or deletions, such as those from RNA-seq data.  " +
             "This is due to the need to buffer small genomic windows to ensure integrity of the duplicate marking, while large skips " +
             "(ex. skipping introns) in the alignment records would force making that window very large, thus exhausting memory. <br />" +
-
+            "" +
+            "<p>Note: For all Picard tools, headers that refer to PCT in the output metrics files are referring to a fraction, not percentage.</p>" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar MarkDuplicatesWithMateCigar \\<br />" +

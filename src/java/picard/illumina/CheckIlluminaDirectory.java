@@ -30,13 +30,25 @@ import java.util.TreeSet;
  * specified data type.  If NO data type is specified then the default data types used by IlluminaBasecallsToSam are used.
  */
 @CommandLineProgramProperties(
-        usage = "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  " +
-                "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. " +
-                "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.",
-        usageShort = "Asserts the validity of the data in the specified Illumina basecalling data",
+        usage = CheckIlluminaDirectory.USAGE_SUMMARY + CheckIlluminaDirectory.USAGE_DETAILS,
+        usageShort = CheckIlluminaDirectory.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
 public class CheckIlluminaDirectory extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Asserts the validity of the data in the specified Illumina basecalling (.bcl) data.  ";
+    static final String USAGE_DETAILS = "<p>Checks that the basecall directory and the internal files are available, exist, and are reasonably sized " +
+            "for every tile and cycle.  Reasonably sized means non-zero sized for files that exist per tile and equal size for " +
+            "binary files that exist per cycle or per tile. If DATA_TYPES {Position [*.loc or *.cloc], BaseCalls [*.bcl], QualityScores, Pf, or Barcodes} are not specified, then the default data types used by IlluminaBasecallsToSam are used.  " +
+            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.</p>"     +
+            "" +
+            "<h4>Usage example:</h4> " +
+            "<pre>" +
+            "java -jar picard.jar CheckIlluminaDirectory \\<br />" +
+            "      BASECALLS_DIR=s_1_1101.bcl \\<br />" +
+            "      READ_STRUCTURE=25T6B8B25T " +
+            "</pre>" +
+            "<hr />"
+    ;
     private static final Log log = Log.getInstance(CheckIlluminaDirectory.class);
 
     // The following attributes define the command-line arguments

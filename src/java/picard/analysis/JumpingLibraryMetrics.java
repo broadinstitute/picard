@@ -46,7 +46,7 @@ public class JumpingLibraryMetrics extends MetricBase {
     public long JUMP_DUPLICATE_PAIRS;
 
     /**
-     * The percentage of outward-facing pairs that are marked as duplicates
+     * The fraction of outward-facing pairs that are marked as duplicates
      */
     public double JUMP_DUPLICATE_PCT;
 
@@ -76,7 +76,7 @@ public class JumpingLibraryMetrics extends MetricBase {
     public long NONJUMP_DUPLICATE_PAIRS;
 
     /**
-     * The percentage of inward-facing pairs that are marked as duplicates
+     * The fraction of inward-facing pairs that are marked as duplicates
      */
     public double NONJUMP_DUPLICATE_PCT;
 
@@ -107,19 +107,19 @@ public class JumpingLibraryMetrics extends MetricBase {
     public long FRAGMENTS;
 
     /**
-     * The number of outward-facing pairs expressed as a percentage of the total of all outward facing pairs,
+     * The number of outward-facing pairs expressed as a fraction of the total of all outward facing pairs,
      * inward-facing pairs, and chimeric pairs.
      */
     public double PCT_JUMPS; 
 
     /**
-     * The number of inward-facing pairs expressed as a percentage of the total of all outward facing pairs,
+     * The number of inward-facing pairs expressed as a fraction of the total of all outward facing pairs,
      * inward-facing pairs, and chimeric pairs.
      */
     public double PCT_NONJUMPS;
 
     /**
-     * The number of chimeric pairs expressed as a percentage of the total of all outward facing pairs,
+     * The number of chimeric pairs expressed as a fraction of the total of all outward facing pairs,
      * inward-facing pairs, and chimeric pairs.
      */
     public double PCT_CHIMERAS;

@@ -95,11 +95,35 @@ import java.util.Set;
  * @author mccowan@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = IlluminaBasecallsToSam.USAGE,
-        usageShort = IlluminaBasecallsToSam.USAGE,
+        usage = IlluminaBasecallsToSam.USAGE_SUMMARY + IlluminaBasecallsToSam.USAGE_DETAILS,
+        usageShort = IlluminaBasecallsToSam.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
 public class IlluminaBasecallsToSam extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Transforms a lane of Illumina data file formats (*.bcl, *.locs, *.clocs, *.qseqs, etc.) into the" +
+            "SAM or BAM file format."  ;
+    static final String USAGE_DETAILS = "<p>The IlluminaBasecallsToSam tool enables the transformation of Illumina binary call (*.bcl) data to unmapped SAM/BAM files.  " +
+            "The unmapped BAM file is often referred to as a uBAM. </p>" +
+            "" +
+            "<p>For each lane of a flowcell, the BARCODES_DIR file is produced by the <a href='http://broadinstitute.github.io/picard/command-line-overview.html#ExtractIlluminaBarcodes'>ExtractIlluminaBarcodes</a> tool.  " +
+            "IlluminaBaseCallsToSam collects, demultiplexes, and sorts reads across all of the tiles of a lane via barcode.  All barcode, sample, and library data is provided in the LIBRARY_PARAMS file." +
+            "Within each barcode-specific directory, subdirectories are created which contain all of the first reads, second reads, and index reads from a run.</p> " +
+
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "" +
+            "java -jar picard.jar IlluminaBasecallsToSam \\<br />" +
+            "      BASECALLS_DIR=s_1_1101.bcl \\<br />" +
+            "      LANE=001 \\<br />" +
+            "      READ_STRUCTURE=25T8B25T \\<br />" +
+            "      RUN_BARCODE=run15 \\<br />" +
+            "      BARCODES_DIR=s_1_1101_barcode.txt \\<br />" +
+            "      LIBRARY_PARAMS=library.params.txt " +
+            "</pre>" +
+            "<hr />"
+    ;
+
+
     // The following attributes define the command-line arguments
 
     public static final String USAGE = "Generate a SAM or BAM file from data in an Illumina basecalls output directory";

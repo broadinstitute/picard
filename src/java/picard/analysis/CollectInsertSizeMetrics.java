@@ -58,12 +58,14 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             "the insert size distribution and read orientation of paired-end libraries. <br /><br />" +
             "" +
             "The expected proportions of these metrics vary depending on the type of library preparation used, resulting from " +
-            "technical differences between pair-end libraries and mate-pair libraries. For a brief primer on paired-end sequencing and mate-pair reads, see <a href='http://gatkforums.broadinstitute.org/discussion/6327/paired-end-mate-pair'>the GATK Dictionary</a>" +
+            "technical differences between pair-end libraries and mate-pair libraries. For a brief primer on paired-end sequencing " +
+            "and mate-pair reads, see the " +
+            "<a href='http://gatkforums.broadinstitute.org/discussion/6327/paired-end-mate-pair'>GATK Dictionary</a>" +
             "" +
             "<br /><br />The CollectInsertSizeMetrics tool outputs the percentages of read pairs in each of the three orientations " +
             "(FR, RF, and TANDEM) as a histogram. In addition, the insert size distribution is output as both a histogram " +
             "(.insert_size_Histogram.pdf) and as a data table (.insert_size_metrics.txt)." +
-            ""+
+            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>"+
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar CollectInsertSizeMetrics \\<br />" +

@@ -61,13 +61,13 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "Collect metrics regarding GC bias. ";
     static final String USAGE_DETAILS = "This tool collects information about the relative proportions of guanine (G) and cytosine (C)" +
             " nucleotides in a sample.  Regions of high and low G + C content have been shown to interfere with mapping/aligning," +
-            " ultimately leading to fragmented genome assemblies and poor coverage in a phenomenon known as \"GC bias\".  " +
+            " ultimately leading to fragmented genome assemblies and poor coverage in a phenomenon known as 'GC bias'.  " +
             "Detailed information on the effects of GC bias on the collection and analysis of sequencing data can be found at " +
             "DOI: 10.1371/journal.pone.0062856/.<br /><br />" +
             "" +
-            "The GC bias statistics are always output in a detailed long-form version, but a summary can also be produced. Both the " +
-            "detailed metrics and the summary metrics are output as tables (\".txt\" files) and an accompanying chart that plots the " +
-            "data (\".pdf\" file). <br /><br /> " +
+            "<p>The GC bias statistics are always output in a detailed long-form version, but a summary can also be produced. Both the " +
+            "detailed metrics and the summary metrics are output as tables '.txt' files) and an accompanying chart that plots the " +
+            "data ('.pdf' file). </p> " +
             "" +
             "<h4>Detailed metrics</h4>" +
             "The table of detailed metrics includes GC percentages for each bin (GC), the percentage of WINDOWS corresponding to each " +
@@ -87,7 +87,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
             "produced in a run. In addition, the tool produces both AT_DROPOUT and GC_DROPOUT metrics, which indicate the percentage of " +
             "misaligned reads that correlate with low (%-GC is &lt; 50%) or high (%-GC is &gt; 50%) GC content respectively.  <br /><br />" +
             "" +
-            "The percentage of \"coverage\" or depth in a GC bin is calculated by dividing the number of reads of a particular GC content " +
+            "The percentage of 'coverage' or depth in a GC bin is calculated by dividing the number of reads of a particular GC content " +
             "by the mean number of reads of all GC bins.  A number of 1 represents mean coverage, a number less than 1 represents lower " +
             "than mean coverage (e.g. 0.5 means half as much coverage as average) while a number greater than 1 represents higher than " +
             "mean coverage (e.g. 3.1 means this GC bin has 3.1 times more reads per window than average).  " +
@@ -97,7 +97,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
             "" +
             "The chart output associated with this data table plots the NORMALIZED_COVERAGE, the distribution of WINDOWs corresponding " +
             "to GC percentages, and base qualities corresponding to each %GC bin."+
-            "" +
+            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
             "<h4>Usage Example:</h4>"+
             "<pre>" +
             "java -jar picard.jar CollectGcBiasMetrics \\<br />"+

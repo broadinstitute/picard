@@ -26,13 +26,13 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Both CollectTargetedPCRMetrics and CalculateHybridSelection metrics share virtually identical program structures except
+ * <p>Both CollectTargetedPCRMetrics and CollectHsSelection share virtually identical program structures except
  * for the name of their targeting mechanisms (e.g. bait set or amplicon set).  The shared behavior of these programs
- * is encapsulated in CollectTargetedMetrics which is then subclassed by CalculateHsMetrics and CollectTargetedPcrMetrics.
+ * is encapsulated in CollectTargetedMetrics which is then subclassed by CollectHsMetrics and CollectTargetedPcrMetrics.
  * <p/>
- * This program verifies the input parameters to TargetMetricsCollector and converts all files to
+ * <p>This program verifies the input parameters to TargetMetricsCollector and converts all files to
  * the format desired by TargetMetricsCollector.  Then it instantiates a TargetMetricsCollector and
- * collects metric information for all reads in the INPUT sam file.
+ * collects metric information for all reads in the INPUT sam file.</p>
  */
 public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, COLLECTOR extends TargetMetricsCollector<METRIC>> extends CommandLineProgram {
 

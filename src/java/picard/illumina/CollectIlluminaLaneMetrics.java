@@ -49,13 +49,29 @@ import java.util.stream.Collectors;
  */
 
 @CommandLineProgramProperties(
-        usage = CollectIlluminaLaneMetrics.USAGE,
-        usageShort = CollectIlluminaLaneMetrics.USAGE,
+        usage = CollectIlluminaLaneMetrics.USAGE_SUMMARY + CollectIlluminaLaneMetrics.USAGE_DETAILS,
+        usageShort = CollectIlluminaLaneMetrics.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
 public class CollectIlluminaLaneMetrics extends CommandLineProgram {
-    static final String USAGE = "Collects Illumina lane metrics for the given basecalling analysis directory";
-
+    static final String USAGE_SUMMARY = "Collects Illumina lane metrics for the given BaseCalling analysis directory.  ";
+    static final String USAGE_DETAILS = "This tool produces quality control metrics on cluster density for each lane of an Illumina flowcell." +
+            "  This tool works via distributing Illumina TileMetrics data into directories containing lane- and phasing-level metrics.  " +
+            "In this context, phasing refers to the fraction of molecules that fall behind or jump ahead (prephasing) during a read cycle." +
+            "" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CollectIlluminaLaneMetrics \\<br />" +
+            "      RUN_DIR=130318_SL-HBB_0226_BFCC1WYMACXX \\<br />" +
+            "      OUTPUT_DIRECTORY=Lane_metrics.txt \\<br />" +
+            "      OUTPUT_PREFIX=CollectIlluminaLaneMetrics.txt \\<br />" +
+            "      READ_STRUCTURE=25T8B25T " +
+            "</pre>" +
+            "<p>Please see the CollectIlluminaLaneMetrics " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectIlluminaLaneMetrics'>definitions</a> " +
+            "for a complete description of the metrics produced by this tool.</p>" +
+            "<hr />"
+    ;
     @Option(doc = "The Illumina run directory of the run for which the lane metrics are to be generated")
     public File RUN_DIRECTORY;
 
