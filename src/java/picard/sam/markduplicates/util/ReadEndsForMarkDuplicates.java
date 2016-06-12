@@ -76,5 +76,4 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
     public ReadEndsForMarkDuplicates clone() {
         return new ReadEndsForMarkDuplicates(this);
     }
-
 }

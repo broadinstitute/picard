@@ -50,7 +50,7 @@ import java.io.FileReader;
  */
 abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends SamFileTester {
 
-    final File metricsFile;
+    final private File metricsFile;
     final DuplicationMetrics expectedMetrics;
 
     public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder) {
@@ -82,7 +82,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     /**
      * Fill in expected duplication metrics directly from the input records given to this tester
      */
-    public void updateExpectedDuplicationMetrics() {
+    private void updateExpectedDuplicationMetrics() {
 
         final FormatUtil formatter = new FormatUtil();
 
