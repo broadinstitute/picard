@@ -29,6 +29,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -64,6 +65,7 @@ public class RevertSamTest extends CommandLineProgramTest {
     private static final File samTestData = new File("testdata/picard/sam");
     private static final File writablePath = new File("testdata/picard/sam/revert_sam_writable.bam");
     private static final File referenceFasta = new File("testdata/picard/reference/test.fasta");
+    private static final String singleEndSamToRevert = "testdata/picard/sam/revert_sam_single_end.sam";
 
     private static final String revertedQualities  =
         "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
@@ -175,6 +177,20 @@ public class RevertSamTest extends CommandLineProgramTest {
         verifyPositiveResults(output0, reverter, true, true, true, true, "0", 2, "test_sample_1", "test_library_1");
         verifyPositiveResults(output1, reverter, true, true, true, true, "1", 4, "test_sample_1", "test_library_1");
         verifyPositiveResults(output2, reverter, true, true, true, true, "2", 2, "test_sample_1", "test_library_1");
+    }
+
+    @Test
+    public void testSingleEnd() throws Exception {
+        final File output = File.createTempFile("single_end_reverted", ".sam");
+        output.deleteOnExit();
+        final String args[] = { "INPUT=" + singleEndSamToRevert, "OUTPUT=" + output.getAbsolutePath() };
+        runPicardCommandLine(args);
+        final ValidateSamFile validator = new ValidateSamFile();
+        validator.INPUT = output;
+        validator.VALIDATION_STRINGENCY = ValidationStringency.STRICT;
+        validator.MODE = ValidateSamFile.Mode.VERBOSE;
+        final int result = validator.doWork();
+        Assert.assertEquals(result, 0, "Validation of reverted single-end sample failed.");
     }
 
     private void verifyPositiveResults(
