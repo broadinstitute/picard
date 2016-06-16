@@ -171,7 +171,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             // Add the optical dupes to the metrics
             final Short libraryId = libraryIds.get(libraryName);
             if (libraryId != null) {
-                final Histogram<Short>.Bin bin = opticalDuplicatesByLibraryId.get(libraryId);
+                final Histogram.Bin<Short> bin = opticalDuplicatesByLibraryId.get(libraryId);
                 if (bin != null) {
                     metrics.READ_PAIR_OPTICAL_DUPLICATES = (long) bin.getValue();
                 }

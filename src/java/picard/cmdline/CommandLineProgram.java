@@ -198,8 +198,7 @@ public abstract class CommandLineProgram {
                                        " on " + System.getProperty("os.name") + " " + System.getProperty("os.version") +
                                        " " + System.getProperty("os.arch") + "; " + System.getProperty("java.vm.name") +
                                        " " + System.getProperty("java.runtime.version") +
-                                       "; Picard version: " + commandLineParser.getVersion() +
-            " " + (DeflaterFactory.usingIntelDeflater()? "IntelDeflater": "JdkDeflater"));
+                                       "; Picard version: " + commandLineParser.getVersion());
             }
             catch (Exception e) { /* Unpossible! */ }
         }
