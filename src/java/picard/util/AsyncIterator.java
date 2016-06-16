@@ -76,7 +76,10 @@ public class AsyncIterator<T> implements CloseableIterator<T> {
                 checkAndRethrow();
                 if (theNext != null) break;
             }
-        } catch (InterruptedException ie) { throw new RuntimeException("Interrupted queueing item for writing.", ie); }
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted queueing item for writing.", ie);
+        }
         checkAndRethrow();
     }
 
@@ -107,7 +110,10 @@ public class AsyncIterator<T> implements CloseableIterator<T> {
         this.isClosed.set(true);
 
         try { this.reader.join(); }
-        catch (InterruptedException ie) { throw new RuntimeException("Interrupted waiting on reader thread.", ie); }
+        catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted waiting on reader thread.", ie);
+        }
 
         underlyingIterator.close();
         checkAndRethrow();
@@ -156,7 +162,7 @@ public class AsyncIterator<T> implements CloseableIterator<T> {
                         }
                     }
                     catch (InterruptedException ie) {
-                        /* Do Nothing */
+                        Thread.currentThread().interrupt();
                     }
                 }
             }

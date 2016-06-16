@@ -26,6 +26,8 @@ package picard.illumina.parser;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 
+import java.util.Objects;
+
 /**
  * In multiple locations we need to know what cycles are output, as of now we output all non-skip cycles, but rather than sprinkle
  * this knowledge throughout the parser code, instead OutputMapping provides all the data a client might want about the

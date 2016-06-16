@@ -36,7 +36,10 @@ public class CircularByteBuffer {
         if (closed) throw new IllegalStateException("Cannot write to closed buffer.");
 
         try { if (this.bytesAvailableToWrite == 0) wait(); }
-        catch (final InterruptedException ie) {throw new PicardException("Interrupted while waiting to write to fifo.", ie); }
+        catch (final InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new PicardException("Interrupted while waiting to write to fifo.", ie);
+        }
 
         final int writePos      = this.nextWritePos;
         final int distanceToEnd = this.capacity - writePos;
@@ -60,7 +63,10 @@ public class CircularByteBuffer {
      */
     synchronized public int read(final byte[] bytes, final int start, final int size) {
         try { if (this.bytesAvailableToRead == 0 && !closed) wait(); }
-        catch (final InterruptedException ie) {throw new PicardException("Interrupted while waiting to read from fifo.", ie); }
+        catch (final InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new PicardException("Interrupted while waiting to read from fifo.", ie);
+        }
 
         final int readPos       = this.nextReadPos;
         final int distanceToEnd = this.capacity - readPos;

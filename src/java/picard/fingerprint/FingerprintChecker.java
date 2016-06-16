@@ -472,7 +472,10 @@ public class FingerprintChecker {
 
         executor.shutdown();
         try { executor.awaitTermination(waitTime, waitTimeUnit); }
-        catch (final InterruptedException ie) { log.warn(ie, "Interrupted while waiting for executor to terminate."); }
+        catch (final InterruptedException ie) {
+            log.warn(ie, "Interrupted while waiting for executor to terminate.");
+            Thread.currentThread().interrupt();
+        }
 
         return retval;
     }
