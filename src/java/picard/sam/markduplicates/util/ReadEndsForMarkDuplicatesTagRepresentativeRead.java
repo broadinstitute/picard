@@ -35,9 +35,7 @@ public class ReadEndsForMarkDuplicatesTagRepresentativeRead extends ReadEndsForM
         super(read);
     }
 
-    // one int: 32
-    // 2 read names, UTF-8: (2 x ~34 char x 8) + 4
     public static int getSizeOf() {
-        return ReadEndsForMarkDuplicates.getSizeOf() + 32 + (2 * 8 * 34)+4;
+        return ReadEndsForMarkDuplicates.getSizeOf() + (3*4);
     }
 }

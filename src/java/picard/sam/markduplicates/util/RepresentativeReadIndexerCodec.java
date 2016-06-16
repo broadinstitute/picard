@@ -25,18 +25,18 @@ package picard.sam.markduplicates.util;
 
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
-import picard.sam.util.RepresentativeReadName;
+import picard.sam.util.RepresentativeReadIndexer;
 
 import java.io.*;
 
 /** Codec for read names and integers that outputs the primitive fields and reads them back. */
-public class RepresentativeReadCodec implements SortingCollection.Codec<RepresentativeReadName> {
+public class RepresentativeReadIndexerCodec implements SortingCollection.Codec<RepresentativeReadIndexer> {
     protected DataInputStream in;
     protected DataOutputStream out;
 
 
-    public SortingCollection.Codec<RepresentativeReadName> clone() {
-        return new RepresentativeReadCodec();
+    public SortingCollection.Codec<RepresentativeReadIndexer> clone() {
+        return new RepresentativeReadIndexerCodec();
     }
 
     public void setOutputStream(final OutputStream os) { this.out = new DataOutputStream(os); }
@@ -51,18 +51,18 @@ public class RepresentativeReadCodec implements SortingCollection.Codec<Represen
         return out;
     }
 
-    public void encode(final RepresentativeReadName rni) {
+    public void encode(final RepresentativeReadIndexer rni) {
         try {
             this.out.writeInt(rni.readIndexInFile);
             this.out.writeInt(rni.setSize);
-            this.out.writeUTF(rni.readname);
+            this.out.writeInt(rni.representativeReadIndexInFile);
         } catch (final IOException ioe) {
             throw new PicardException("Exception writing ReadEnds to file.", ioe);
         }
     }
 
-    public RepresentativeReadName decode() {
-        final RepresentativeReadName rni = new RepresentativeReadName();
+    public RepresentativeReadIndexer decode() {
+        final RepresentativeReadIndexer rni = new RepresentativeReadIndexer();
         try {
             // If the first read results in an EOF we've exhausted the stream
             try {
@@ -71,7 +71,7 @@ public class RepresentativeReadCodec implements SortingCollection.Codec<Represen
                 return null;
             }
             rni.setSize = this.in.readInt();
-            rni.readname = this.in.readUTF();
+            rni.representativeReadIndexInFile = this.in.readInt();
             return rni;
         } catch (final IOException ioe) {
             throw new PicardException("Exception writing ReadEnds to file.", ioe);
