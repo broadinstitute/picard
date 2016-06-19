@@ -43,12 +43,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.sam.DuplicationMetrics;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Abstract class that holds parameters and methods common to classes that perform duplicate
@@ -69,6 +64,20 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     @Option(shortName = "M",
             doc = "File to write duplication metrics to")
     public File METRICS_FILE;
+
+    @Option(shortName = "P",
+            doc = "Pass a space separated interval to evaluate projections",
+            optional = true)
+    public List<String> SEQUENCING_MULTIPLE_INTVAL;
+
+    @Option(shortName = "S",
+            doc = "File to write duplication set size histogram to. Count the size of duplicate sets for library-based duplicates," +
+                    " sequencer-based duplicates, and cumulative duplicates. The histogram reports on read pairs only")
+    public File DUP_SET_HIST;
+
+    @Option(shortName = "X",
+            doc = "input metrics file")
+    public File INPUT_METRICS_FILE;
 
     @Option(doc = "If true do not write duplicates to the output file instead of writing them with appropriate flags set.")
     public boolean REMOVE_DUPLICATES = false;
@@ -161,7 +170,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
 
         // Write out the metrics
         final MetricsFile<DuplicationMetrics, Double> file = getMetricsFile();
-        for (final Map.Entry<String, DuplicationMetrics> entry : metricsByLibrary.entrySet()) {
+        /*for (final Map.Entry<String, DuplicationMetrics> entry : metricsByLibrary.entrySet()) {
             final String libraryName = entry.getKey();
             final DuplicationMetrics metrics = entry.getValue();
 
@@ -182,7 +191,14 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
 
         if (metricsByLibrary.size() == 1) {
             file.setHistogram(metricsByLibrary.values().iterator().next().calculateRoiHistogram());
-        }
+        }*/
+
+
+
+        metricsByLibrary.values().iterator().next().setSequencingMultipleInterval(SEQUENCING_MULTIPLE_INTVAL);
+        metricsByLibrary.values().iterator().next().getInputHistFromMetricsFile(INPUT_METRICS_FILE);
+        metricsByLibrary.values().iterator().next().writeMatricesToFile(DUP_SET_HIST.getAbsolutePath());
+
 
         file.write(METRICS_FILE);
     }

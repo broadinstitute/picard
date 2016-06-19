@@ -58,34 +58,14 @@ import java.util.*;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = MarkDuplicates.USAGE_SUMMARY + MarkDuplicates.USAGE_DETAILS,
-        usageShort = MarkDuplicates.USAGE_SUMMARY,
+        usage = RunROIEval.USAGE_SUMMARY + RunROIEval.USAGE_DETAILS,
+        usageShort = RunROIEval.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
-public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
+public class RunROIEval extends AbstractMarkDuplicatesCommandLineProgram {
     static final String USAGE_SUMMARY = "Identifies duplicate reads.  ";
     static final String USAGE_DETAILS =
-            "This tool locates and tags duplicate reads (both PCR and optical/sequencing-driven) in a BAM or SAM file, where\n" +
-                    "duplicate reads are defined as originating from the same original fragment of DNA. Duplicates are identified as read\n" +
-                    "pairs having identical 5' positions (coordinate and strand) for both reads in a mate pair (and optionally, matching\n" +
-                    "unique molecular identifier reads; see BARCODE_TAG option). Optical, or more broadly Sequencing, duplicates are\n" +
-                    "duplicates that appear clustered together spatially during sequencing and can arise from optical/image-processing\n" +
-                    "artifacts or from bio-chemical processes during clonal amplification and sequencing; they are identified using the\n" +
-                    "READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options.\n" +
-                    "\n" +
-                    "The tool's main output is a new SAM or BAM file in which duplicates have been identified in the SAM flags field, or\n" +
-                    "optionally removed (see REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES), and optionally marked with a duplicate type\n" +
-                    "in the 'DT' optional attribute. In addition, it also outputs a metrics file containing the numbers of\n" +
-                    "READ_PAIRS_EXAMINED, UNMAPPED_READS, UNPAIRED_READS, UNPAIRED_READ DUPLICATES, READ_PAIR_DUPLICATES, and\n" +
-                    "READ_PAIR_OPTICAL_DUPLICATES.\n" +
-                    "\n" +
-                    "Usage example: java -jar picard.jar MarkDuplicates I=input.bam \\\n" +
-                    "                 O=marked_duplicates.bam M=marked_dup_metrics.txt\n" +
-                    "\n" +
-                    "The program can take either coordinate-sorted or query-sorted input, however the behavior is slightly different.\n" +
-                    "When the input is coordinate-sorted, unmapped mates of mapped records, and supplementary and secondary alignments are not\n" +
-                    "marked as duplicates. When the input is query-sorted (actually query-grouped) then unmapped mates get marked as their mapped\n" +
-                    "counter-parts, and secondary and supplementary reads get marked as the primary records with the same query-name.\n";
+            "details\n";
 
     /** Enum used to control how duplicates are flagged in the DT optional tag on each read. */
     public enum DuplicateTaggingPolicy { DontTag, OpticalOnly, All }
@@ -166,7 +146,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         return EstimateLibraryComplexity.getReadBarcodeValue(record, READ_TWO_BARCODE_TAG);
     }
 
-    public MarkDuplicates() {
+    public RunROIEval() {
         DUPLICATE_SCORING_STRATEGY = ScoringStrategy.SUM_OF_BASE_QUALITIES;
     }
 
@@ -184,9 +164,11 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     protected int doWork() {
         /*IOUtil.assertInputsAreValid(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
-        IOUtil.assertFileIsWritable(METRICS_FILE);
+        IOUtil.assertFileIsWritable(METRICS_FILE);*/
 
-        final boolean useBarcodes = (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG);
+        finalizeAndWriteMetrics(libraryIdGenerator);
+
+        /*final boolean useBarcodes = (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG);
 
         reportMemoryStats("Start of doWork");
         log.info("Reading input file and constructing read end information.");
@@ -331,23 +313,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         reportMemoryStats("Before output close");
         out.close();
-        reportMemoryStats("After output close");*/
+        reportMemoryStats("After output close");
 
         // Write out the metrics
-        String testlib = "testlib";
-        //DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(testlib);
-        final SamHeaderAndIterator headerAndIterator = openInputs();
-        final SAMFileHeader.SortOrder assumedSortOrder = headerAndIterator.header.getSortOrder();
-        final SAMFileHeader header = headerAndIterator.header;
-        this.libraryIdGenerator = new LibraryIdGenerator(header);
-        DuplicationMetrics metrics = null;
-        if (metrics == null) {
-            metrics = new DuplicationMetrics();
-            metrics.LIBRARY = testlib;
-            libraryIdGenerator.addMetricsByLibrary(testlib, metrics);
-        }
-
-        finalizeAndWriteMetrics(libraryIdGenerator);
+        finalizeAndWriteMetrics(libraryIdGenerator);*/
 
         return 0;
     }
