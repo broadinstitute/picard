@@ -228,22 +228,6 @@ public class DuplicationMetrics extends MetricBase {
 
     }
 
-    public void histToArray(Histogram<Double> histo) {
-        final double histoCount = histo.getCount();
-        Collection<Histogram.Bin> vals = histo.values();
-        int[] countArray = new int[vals.size()];
-        int[] sizeArray = new int[vals.size()];
-        int count = 0;
-        HashMap<Integer, Integer> hm = new HashMap();
-        for (final Histogram<Double>.Bin bin : histo.values()) {
-            countArray[count] = (int) bin.getValue();
-            sizeArray[count] = (int) bin.getIdValue();
-            hm.put(sizeArray[count], countArray[count]);
-            count += 1;
-        }
-        int g=1;
-    }
-
     public Histogram<Double> getNonOptDupHistogram(Histogram<Double> histo) {
         final double histoCount = histo.getCount();
         Collection<Histogram.Bin> vals = histo.values();
