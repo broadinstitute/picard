@@ -210,7 +210,7 @@ public class GatherVcfs extends CommandLineProgram {
                     final BlockCompressedInputStream blockIn = new BlockCompressedInputStream(in, false);
                     boolean lastByteNewline = true;
 
-                    while (in.available() > 0) {
+                    while (blockIn.available() > 0) {
                         // Read a block - blockIn.available() is guaranteed to return the bytes remaining in the block that has been
                         // read, and since we haven't consumed any yet, that is the block size.
                         final int blockLength = blockIn.available();
