@@ -47,6 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Timer;
@@ -318,6 +319,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                 tileReadAggregator.awaitWorkComplete();
             } catch (final InterruptedException e) {
                 log.error(e, "Failure encountered in worker thread; attempting to shut down remaining worker threads and terminate ...");
+                Thread.currentThread().interrupt();
                 throw new PicardException("Failure encountered in worker thread; see log for details.");
             } finally {
                 tileReadAggregator.shutdown();

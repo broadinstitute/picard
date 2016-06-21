@@ -93,6 +93,7 @@ public class VariantProcessor<RESULT, ACCUMULATOR extends VariantProcessor.Accum
         try {
             executor.awaitCompletion();
         } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         }
 

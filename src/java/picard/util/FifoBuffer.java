@@ -139,7 +139,10 @@ public class FifoBuffer extends CommandLineProgram {
                             final double pct   = used / (double) capacity;
                             final String name = NAME == null ? "" : NAME + " ";
                             log.info("Fifo buffer ", name, "used ", iFmt.format(used), " / ", iFmt.format(capacity), " (", pFmt.format(pct), ").");
-                            try { Thread.sleep(DEBUG_FREQUENCY * 1000); } catch (final InterruptedException ie) { /* do nothing */ }
+                            try { Thread.sleep(DEBUG_FREQUENCY * 1000); }
+                            catch (final InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                            }
                         }
                     }
                 });
@@ -169,6 +172,7 @@ public class FifoBuffer extends CommandLineProgram {
             if (outputExceptionHandler.throwable != null) throw new PicardException("Exception on output thread.", outputExceptionHandler.throwable);
         }
         catch (final InterruptedException ie) {
+            Thread.currentThread().interrupt();
             throw new PicardException("Interrupted!", ie);
         }
 
