@@ -220,8 +220,7 @@ public class DuplicationMetrics extends MetricBase {
         
         for (final Histogram<Double> histo : metricsOutput.getAllHistograms()) {
             String label = histo.getValueLabel();
-            if (label.equals("non_optical_pairs")) {
-                //histToArray(histo);
+            if (label.equals("non_optical_sets")) {
                 getNonOptDupHistogram(histo);
             }
         }
@@ -326,7 +325,7 @@ public class DuplicationMetrics extends MetricBase {
             }
             estimatedFractUnique[i] = 1-(tDup/tTot); // fraction unique
             for (int j=0; j<probProjMtrx[i].length; j++) {
-                this.PROJECTED_OCCUPANCY_MATRIX[i][j] = seqMultipleInterval[i]*m*(1-(tDup/tTot))*probProjMtrx[i][j];
+                this.PROJECTED_OCCUPANCY_MATRIX[i][j] = seqMultipleInterval[i]*m*probProjMtrx[i][j]; //*(1-(tDup/tTot))
             }
         }
         return estimatedFractUnique;
@@ -348,7 +347,6 @@ public class DuplicationMetrics extends MetricBase {
             double betaNum = Beta.logBeta(k+1, (n-k)+N-1);
             double lgProb = nCk+betaNum-betaDen; // log sum of probabilities
             libEstimate[k] = Math.exp(lgProb);
-            int g=1;
         }
         double libSum = 0;
         for (double x : libEstimate)libSum += x;
@@ -370,7 +368,8 @@ public class DuplicationMetrics extends MetricBase {
         for (int k=0; k<(libOccupancyEstimate.length); k++ ) {
             double[] t = new double[libOccupancyEstimate.length];
             double tSum = 0;
-            for (int j=0; j<(libOccupancyEstimate.length); j++ ) {
+            //for (int j=0; j<(libOccupancyEstimate.length); j++ ) {
+            for (int j=k; j<(libOccupancyEstimate.length); j++ ) {
                 double p = ((double) j / M);
                 if (p>1){
                     p = 1;
@@ -381,8 +380,9 @@ public class DuplicationMetrics extends MetricBase {
             }
             sampledOccupancyEstimate[k] = tSum;
         }
-        double sampSum = 0;
-        for (double x : sampledOccupancyEstimate)sampSum += x;
+        // check that the p-vec sums to one
+        /*double sampSum = 0;
+        for (double x : sampledOccupancyEstimate)sampSum += x;*/
         return sampledOccupancyEstimate;
     }
 
@@ -412,7 +412,7 @@ public class DuplicationMetrics extends MetricBase {
         for (int i = 0; i<seqMultipleRange.length; i++){
             for (int j = 0; j<drawRange.length; j++){
                 paramMtrx[i][j] = occupancyKLDivergence(observedOccupancy, (int) drawRange[j],
-                        (int) (m*seqMultipleRange[i]), m, observedOccupancy.length);
+                        (int) (m*seqMultipleRange[i]), m, 5); //
             }
         }
         return paramMtrx;

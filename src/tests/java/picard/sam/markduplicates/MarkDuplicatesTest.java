@@ -364,7 +364,13 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         markDuplicates.DUP_SET_HIST = dsFile;
         markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
         markDuplicates.TAGGING_POLICY=TAGGING_POLICY;
-        markDuplicates.SEQUENCING_MULTIPLE_INTVAL=CollectionUtil.makeList("1.0","2.0","3.0","4.0","5.0","6.0","7.0","8.0","9.0","10.0");
+        //markDuplicates.SEQUENCING_MULTIPLE_INTVAL=CollectionUtil.makeList("1.0","2.0","3.0","4.0","5.0","6.0","7.0","8.0","9.0","10.0");
+        markDuplicates.SEQUENCING_MULTIPLE_INTVAL=CollectionUtil.makeList( "1.0" ,   "2.03422344",   "3.08338635",   "4.12942509",
+        "5.16726168",   "6.21664582",   "7.25478476",   "8.20940203",
+                "9.24829251",  "10.28935956",  "11.34785231",  "12.39134505",
+                "13.4432379" ,  "14.49941415",  "15.55489613",  "16.60042513");
+
+
         //final File inTest = new File(TEST_DATA_DIR, "NexPond-359781_rgSet1.duplication_metrics2");
         final File inTest = new File("/Users/hogstrom/Documents/code/picard-private/Picard-public/testdata/picard/sam/MarkDuplicates/NexPond-359781_rgSet1.duplication_metrics");
         markDuplicates.INPUT_METRICS_FILE = inTest;
