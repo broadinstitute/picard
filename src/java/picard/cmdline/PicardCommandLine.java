@@ -88,7 +88,7 @@ public class PicardCommandLine {
      * **/
     protected int instanceMain(final String[] args, final List<String> packageList, final String commandLineName) {
         final CommandLineProgram program = extractCommandLineProgram(args, packageList, commandLineName);
-        if (null == program) return 1; // no program found!
+        if (null == program) return 0; // no program found, not an error so exit with 0!
         // we can lop off the first two arguments but it requires an array copy or alternatively we could update CLP to remove them
         // in the constructor do the former in this implementation.
         final String[] mainArgs = Arrays.copyOfRange(args, 1, args.length);
