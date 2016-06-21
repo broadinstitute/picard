@@ -73,15 +73,4 @@ public class IlluminaUtilTest {
             }
         };
     }
-
-    /*
-    @Test(dataProvider = "solexaQualStrToPhreds")
-    public void makePhredBinaryFromSolexaQualityAscii_1_3_toArrays(final String solexaQualities, final int offset, final byte [][] expectedBuffers) {
-        byte [][] actualBuffers = byteBuffersSizeCopy(expectedBuffers);
-        IlluminaUtil.makePhredBinaryFromSolexaQualityAscii_1_3(solexaQualities, offset, actualBuffers);
-
-        for(int i = 0; i < expectedBuffers.length; i++) {
-            Assert.assertEquals(expectedBuffers[i], actualBuffers[i]);
-        }
-    }*/
 }

@@ -112,7 +112,7 @@ public class ClassFinder {
                     continue;
                 }
 
-                //Log.info("Looking for classes in location: " + urlPath);
+                log.debug("Looking for classes in location: " + urlPath);
                 final File file = new File(urlPath);
                 if ( file.isDirectory() ) {
                     scanDir(file, packageName);
