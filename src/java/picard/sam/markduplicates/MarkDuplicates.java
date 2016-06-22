@@ -138,7 +138,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             "indicates the size of the duplicate set. The second tag, DUPLICATE_SET_INDEX_TAG, represents a unique " +
             "identifier for the duplicate set to which the record belongs. This identifier is the index-in-file of " +
             "the representative read that was selected out of the duplicate set.", optional = true)
-    public boolean TAG_DUPLICATE_SET_INDEX = false;
+    public boolean TAG_DUPLICATE_SET_MEMBERS = false;
 
     @Option(doc = "If true remove 'optical' duplicates and other duplicates that appear to have arisen from the " +
             "sequencing process instead of the library preparation process, even if REMOVE_DUPLICATES is false. " +
@@ -241,7 +241,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         int representativeReadIndexInFile = -1;
         int duplicateSetSize = -1;
         int nextRepresentativeIndex = -1;
-        if (TAG_DUPLICATE_SET_INDEX) {
+        if (TAG_DUPLICATE_SET_MEMBERS) {
             representativeReadInterator = this.representativeReadIndicesForDuplicates.iterator();
             if (representativeReadInterator.hasNext()) {
                 rni = representativeReadInterator.next();
@@ -336,7 +336,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             }
 
             // Tag any read pair that was in a duplicate set with the duplicate set size and a representative read name
-            if (TAG_DUPLICATE_SET_INDEX) {
+            if (TAG_DUPLICATE_SET_MEMBERS) {
                 final boolean needNextRepresentativeIndex = recordInFileIndex > nextRepresentativeIndex;
                 if (needNextRepresentativeIndex && representativeReadInterator.hasNext()) {
                     rni = representativeReadInterator.next();
@@ -349,7 +349,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                                 recordInFileIndex > nextDuplicateIndex);
                 if (isInDuplicateSet) {
                     if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
-                        if (TAG_DUPLICATE_SET_INDEX) {
+                        if (TAG_DUPLICATE_SET_MEMBERS) {
                             rec.setAttribute(DUPLICATE_SET_INDEX_TAG, representativeReadIndexInFile);
                             rec.setAttribute(DUPLICATE_SET_SIZE_TAG, duplicateSetSize);
                         }
@@ -371,7 +371,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         iterator.close();
 
         this.duplicateIndexes.cleanup();
-        if (TAG_DUPLICATE_SET_INDEX){
+        if (TAG_DUPLICATE_SET_MEMBERS){
             this.representativeReadIndicesForDuplicates.cleanup();
         }
 
@@ -627,14 +627,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             this.opticalDuplicateIndexes = new SortingLongCollection(maxInMemory, TMP_DIR.toArray(new File[TMP_DIR.size()]));
         }
         // If we're are tracking representative reads, adjust maInMemory
-        if (TAG_DUPLICATE_SET_INDEX) {
+        if (TAG_DUPLICATE_SET_MEMBERS) {
             // Memory requirements for RepresentativeReadIndexer:
             // three int entries + overhead: (3 * 4) + 4
             maxInMemory = (int) (Runtime.getRuntime().maxMemory() * 0.25) / 16;
         }
         log.info("Will retain up to " + maxInMemory + " duplicate indices before spilling to disk.");
         this.duplicateIndexes = new SortingLongCollection(maxInMemory, TMP_DIR.toArray(new File[TMP_DIR.size()]));
-        if (TAG_DUPLICATE_SET_INDEX){
+        if (TAG_DUPLICATE_SET_MEMBERS){
             final RepresentativeReadIndexerCodec representativeIndexCodec = new RepresentativeReadIndexerCodec();
             this.representativeReadIndicesForDuplicates = SortingCollection.newInstance(RepresentativeReadIndexer.class,
                     representativeIndexCodec,
@@ -655,7 +655,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             } else {
                 if (nextChunk.size() > 1) {
                     markDuplicatePairs(nextChunk);
-                    if (TAG_DUPLICATE_SET_INDEX) markRepresentativeRead(nextChunk);
+                    if (TAG_DUPLICATE_SET_MEMBERS) addRepresentativeReadIndex(nextChunk);
                 }
                 nextChunk.clear();
                 nextChunk.add(next);
@@ -664,7 +664,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
         if (nextChunk.size() > 1) {
             markDuplicatePairs(nextChunk);
-            if (TAG_DUPLICATE_SET_INDEX) markRepresentativeRead(nextChunk);
+            if (TAG_DUPLICATE_SET_MEMBERS) addRepresentativeReadIndex(nextChunk);
         }
         this.pairSort.cleanup();
         this.pairSort = null;
@@ -699,7 +699,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         log.info("Sorting list of duplicate records.");
         this.duplicateIndexes.doneAddingStartIteration();
         if (this.opticalDuplicateIndexes != null) this.opticalDuplicateIndexes.doneAddingStartIteration();
-        if (TAG_DUPLICATE_SET_INDEX) this.representativeReadIndicesForDuplicates.doneAdding();
+        if (TAG_DUPLICATE_SET_MEMBERS) this.representativeReadIndicesForDuplicates.doneAdding();
     }
 
     private boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs, final boolean compareRead2, final boolean useBarcodes) {
@@ -741,12 +741,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     /**
-     * Takes a list of ReadEndsForMarkDuplicatesTagRepresentativeRead objects and marks the representative read name
-     * for the set
+     * Takes a list of ReadEndsForMarkDuplicates objects and adds the representative read index
+     * for the first and second in a pair
      *
      * @param list
      */
-    private void markRepresentativeRead(final List<ReadEndsForMarkDuplicates> list) {
+    private void addRepresentativeReadIndex(final List<ReadEndsForMarkDuplicates> list) {
         short maxScore = 0;
         ReadEndsForMarkDuplicates best = null;
 
