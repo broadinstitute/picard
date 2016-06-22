@@ -524,6 +524,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             } else rec = record;
 
             // Find the target overlaps
+            final Set<Interval> coveredTargets = new HashSet<>();
             for (final AlignmentBlock block : rec.getAlignmentBlocks()) {
                 final int length = block.getLength(), refStart = block.getReferenceStart(), readStart = block.getReadStart();
 
@@ -538,7 +539,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                         boolean isOnTarget = false;
                         for (final Interval target : targets) {
                             if (refPos >= target.getStart() && refPos <= target.getEnd()) {
-                                isOnTarget = true;
                                 ++this.metrics.ON_TARGET_BASES;
                                 if (mappedInPair) ++this.metrics.ON_TARGET_FROM_PAIR_BASES;
 
@@ -546,6 +546,11 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                 final Coverage coverage = this.coverageByTarget.get(target);
                                 coverage.addBase(targetOffset);
                                 baseQHistogramArray[baseQualities[offset]]++;
+                                if (!coveredTargets.contains(target)) {
+                                    coverage.incrementReadCount();
+                                    coveredTargets.add(target);
+                                }
+                                isOnTarget = true;
                             }
                         }
 
@@ -702,7 +707,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 try {
                     if (perTargetOutput != null) {
                         out = new PrintWriter(perTargetOutput);
-                        out.println("chrom\tstart\tend\tlength\tname\t%gc\tmean_coverage\tnormalized_coverage\tmin_normalized_coverage\tmax_normalized_coverage\tmin_coverage\tmax_coverage\tpct_0x");
+                        out.println("chrom\tstart\tend\tlength\tname\t%gc\tmean_coverage\tnormalized_coverage\tmin_normalized_coverage\tmax_normalized_coverage\tmin_coverage\tmax_coverage\tpct_0x\tread_count");
                     }
                     else {
                         out = null;
@@ -752,7 +757,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                     fmt.format(max / this.metrics.MEAN_TARGET_COVERAGE) + "\t" +
                                     fmt.format(min) + "\t" +
                                     fmt.format(max) + "\t" +
-                                    fmt.format(targetBasesAt0x / interval.length())
+                                    fmt.format(targetBasesAt0x / interval.length()) + "\t" +
+                                    fmt.format(cov.readCount)
                         );
                     }
                 }
@@ -800,6 +806,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     public static class Coverage {
         private final Interval interval;
         private final int[] depths;
+        public long readCount = 0;
 
         /** Constructs a new coverage object for the provided mapping with the desired padding either side. */
         public Coverage(final Interval i, final int padding) {
@@ -812,6 +819,11 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             if (offset >= 0 && offset < this.depths.length && this.depths[offset] < Integer.MAX_VALUE) {
                 this.depths[offset] += 1;
             }
+        }
+
+        /** Increments the # of reads mapping to this target. */
+        public void incrementReadCount() {
+            this.readCount++;
         }
 
         /** Returns true if any base in the range has coverage of > 0 */
