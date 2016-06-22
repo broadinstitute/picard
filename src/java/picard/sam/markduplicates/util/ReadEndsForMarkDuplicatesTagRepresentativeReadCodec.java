@@ -32,7 +32,8 @@ import java.io.IOException;
 /**
  * Created by hogstrom on 06/07/15.
  */
-public class ReadEndsForMarkDuplicatesTagRepresentativeReadCodec extends ReadEndsForMarkDuplicatesCodec {
+public class
+ReadEndsForMarkDuplicatesTagRepresentativeReadCodec extends ReadEndsForMarkDuplicatesCodec {
 
     @Override
     public SortingCollection.Codec<ReadEndsForMarkDuplicates> clone() {

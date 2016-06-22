@@ -36,9 +36,9 @@ public class SimpleMarkDuplicatesWithMateCigarTest extends AbstractMarkDuplicate
     }
 
     /** We require mate cigars for this tool */
-    @Test(expectedExceptions = SAMException.class)
+    /*@Test(expectedExceptions = SAMException.class)
     @Override
     public void testTwoMappedPairsWithSoftClippingFirstOfPairOnlyNoMateCigar() {
         super.testTwoMappedPairsWithSoftClippingFirstOfPairOnlyNoMateCigar();
-    }
+    }*/
 }
