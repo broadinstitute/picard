@@ -234,7 +234,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         final SAMFileHeader.SortOrder sortOrder = header.getSortOrder();
 
         final SAMFileHeader outputHeader = header.clone();
-
+//        if(ASSUME_SORTED || ASSUME_SORT_ORDER != null) {
+//            outputHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+//        }
 
         log.info("Reads are assumed to be ordered by: " + sortOrder);
 

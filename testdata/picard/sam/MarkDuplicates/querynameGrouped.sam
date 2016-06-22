@@ -1,0 +1,27 @@
+@HD	VN:1.5	SO:unsorted
+@SQ	SN:chr1	LN:197195432	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:f05d753079c455c0e57af88eeda24493	SP:Mus musculus
+@SQ	SN:chr2	LN:181748087	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:9b9d64dc89ecc73d3288eb38af3f94bd	SP:Mus musculus
+@SQ	SN:chr3	LN:159599783	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:0a692666a1b8526e1d1e799beb71b6d0	SP:Mus musculus
+@SQ	SN:chr4	LN:155630120	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:f5993a04396a06ed6b28fa42b2429be0	SP:Mus musculus
+@SQ	SN:chr5	LN:152537259	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:f90804fb8fe9cb06076d51a710fb4563	SP:Mus musculus
+@SQ	SN:chr6	LN:149517037	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:258a37e20815bb7e3f2e974b9d4dd295	SP:Mus musculus
+@SQ	SN:chr7	LN:152524553	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:e0d6cea6f72cb4d9f8d0efc1d29dd180	SP:Mus musculus
+@SQ	SN:chr8	LN:131738871	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:5f217cb8a9685b9879add3ae110cabd7	SP:Mus musculus
+@SQ	SN:chr9	LN:124076172	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:dde08574942fc18050195618cc3f35af	SP:Mus musculus
+@SQ	SN:chr10	LN:129993255	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:be7e6a13cc6b9da7c1da7b7fc32c5506	SP:Mus musculus
+@SQ	SN:chr11	LN:121843856	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:e0099550b3d3943fb9bb7af6fa6952c1	SP:Mus musculus
+@SQ	SN:chr12	LN:121257530	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:1f9c11dc6f288f93e9fab56772a36e85	SP:Mus musculus
+@SQ	SN:chr13	LN:120284312	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:a7b4bb418aa21e0ec59d9e2a1fe1810b	SP:Mus musculus
+@SQ	SN:chr14	LN:125194864	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:09d1c8449706a17d40934302a0a3b671	SP:Mus musculus
+@SQ	SN:chr15	LN:103494974	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:e41c8b42b0921378b1fdd5172f6be067	SP:Mus musculus
+@SQ	SN:chr16	LN:98319150	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:e051b3930c2557ade21d67db41f3a518	SP:Mus musculus
+@SQ	SN:chr17	LN:95272651	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:47eede15e5761fb9c2267627f18211e7	SP:Mus musculus
+@SQ	SN:chr18	LN:90772031	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:9f9d41cfdb9d91b62b928a3eb4eb6928	SP:Mus musculus
+@SQ	SN:chr19	LN:61342430	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:591f8486f82c22442bb8463595a18e0a	SP:Mus musculus
+@SQ	SN:chrX	LN:166650296	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:3d0d9df898d2c830b858f91255d8a1eb	SP:Mus musculus
+@SQ	SN:chrY	LN:15902555	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:5ff564f9fbc8cb87bcad6cfa6874902b	SP:Mus musculus
+@RG	ID:00001.3	PL:illumina	PU:00001ABXX101026.3.TTGAGCCT	LB:Solexa-45924	DT:2010-10-26T00:00:00-0400	SM:stat2_120	CN:BI
+ERR091571.45748702	99	chr19	43591873	60	101M	=	43591968	196	GAAAATAAATAAATTAATTTAAAAAGTTTGGGACTCAGCAGGAGCTTACAGGTAGATAAAATATATTAGAACTCAGAATAAGAGCGATTTATATATAGGGA	CCCFFFFFHHHHHJJJJJJJJJJJJJHHIJJJJJJJJJJIJJJJJJJJJJJJFGIIJJJJJJJJJJIJJJJJJJIJHHHHHGFFFFDDDDDFEEEEEDDD>	NM:i:0	MD:Z:101	AS:i:101	XS:i:20	MC:Z:101M	RG:Z:00001.3
+ERR091571.45748702	147	chr19	43591968	60	101M	=	43591873	-196	TAGGGATTTATTATATAGGCGAGGTGGTACTGTATTTCAAATCAGCATTGAAGAGATGAATTGGGGTCAGGCAGCTTTTTTAGCAATTTAGAAAATAATTA	>CDDDDDDEFEFEDDDDDDFFFFHHHHHEIJJJIJJJJJJJJJJJJJJIIHJJJJJJIJJJJJJJJJJJJJIJIHIJJJJIJJJJJJJHHHHHFFFFFCCC	NM:i:0	MD:Z:101	AS:i:101	XS:i:19	MC:Z:101M	RG:Z:00001.3
+ERR091571.143176384	99	chr19	43591966	60	101M	=	43591975	110	TATAGGGATTTATTATATAGGCGAGGTGGTACTGTATTTCAAATCAGCATTGAAGAGATGAATTGGGGTCAGGCAGCTTTTTTAGCAATTTAGAAAATAAT	CCCFFFFDHHHGHJJJJJJIIFHGII:?G:DHIJIJIIJIIIIJJJJIHIIIGJIIICHIIIJGHIJE:BBFEFDABEDDDDD?CCCDDDDDDDCDDCDCC	NM:i:0	MD:Z:101	AS:i:101	XS:i:19	MC:Z:101M	RG:Z:00001.3
+ERR091571.143176384	147	chr19	43591975	60	101M	=	43591966	-110	TTATTATATAGGCGAGGTGGTACTGTATTTCAAATCAGCATTGAAGAGATGAATTGGGGTCAGGCAGCTTTTTTAGCAATTTAGAAAATAATTAAACCAGT	CCADFEDDDDDD@EEDFFFFFDFHHHHHHHGJJJJJJJIJIJJJIIGGHEHJJJJJJJJJGIIJJJIHIJJJJIJJJIIJJJJJJJJJHHHGHFFFFFCCC	NM:i:0	MD:Z:101	AS:i:101	XS:i:0	MC:Z:101M	RG:Z:00001.3
