@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -198,32 +198,36 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/liftover/LiftOver.html#diagnosticLiftover-htsjdk.samtools.util.Interval-">diagnosticLiftover</a></span>(<a href="../../../htsjdk/samtools/util/Interval.html" title="class in htsjdk.samtools.util">Interval</a>&nbsp;interval)</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>java.util.Map&lt;java.lang.String,java.util.Set&lt;java.lang.String&gt;&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/liftover/LiftOver.html#getContigMap--">getContigMap</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/liftover/LiftOver.html#getLiftOverMinMatch--">getLiftOverMinMatch</a></span>()</code>
 <div class="block">Get minimum fraction of bases that must remap.</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/util/Interval.html" title="class in htsjdk.samtools.util">Interval</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/liftover/LiftOver.html#liftOver-htsjdk.samtools.util.Interval-">liftOver</a></span>(<a href="../../../htsjdk/samtools/util/Interval.html" title="class in htsjdk.samtools.util">Interval</a>&nbsp;interval)</code>
 <div class="block">Lift over the given interval to the new genome build using the liftOverMinMatch set for this
  LiftOver object.</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/util/Interval.html" title="class in htsjdk.samtools.util">Interval</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/liftover/LiftOver.html#liftOver-htsjdk.samtools.util.Interval-double-">liftOver</a></span>(<a href="../../../htsjdk/samtools/util/Interval.html" title="class in htsjdk.samtools.util">Interval</a>&nbsp;interval,
         double&nbsp;liftOverMinMatch)</code>
 <div class="block">Lift over the given interval to the new genome build.</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/liftover/LiftOver.html#setLiftOverMinMatch-double-">setLiftOverMinMatch</a></span>(double&nbsp;liftOverMinMatch)</code>
 <div class="block">Set minimum fraction of bases that must remap.</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/liftover/LiftOver.html#validateToSequences-htsjdk.samtools.SAMSequenceDictionary-">validateToSequences</a></span>(<a href="../../../htsjdk/samtools/SAMSequenceDictionary.html" title="class in htsjdk.samtools">SAMSequenceDictionary</a>&nbsp;sequenceDictionary)</code>
 <div class="block">Throw an exception if all the "to" sequence names in the chains are not found in the given sequence dictionary.</div>
@@ -342,6 +346,19 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>diagnosticLiftover</h4>
 <pre>public&nbsp;java.util.List&lt;<a href="../../../htsjdk/samtools/liftover/LiftOver.PartialLiftover.html" title="class in htsjdk.samtools.liftover">LiftOver.PartialLiftover</a>&gt;&nbsp;diagnosticLiftover(<a href="../../../htsjdk/samtools/util/Interval.html" title="class in htsjdk.samtools.util">Interval</a>&nbsp;interval)</pre>
+</li>
+</ul>
+<a name="getContigMap--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getContigMap</h4>
+<pre>public&nbsp;java.util.Map&lt;java.lang.String,java.util.Set&lt;java.lang.String&gt;&gt;&nbsp;getContigMap()</pre>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>the set of destination contigs for each source contig in the chains file.</dd>
+</dl>
 </li>
 </ul>
 <a name="getLiftOverMinMatch--">

@@ -99,6 +99,7 @@
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/BAMIndexer.html" title="class in htsjdk.samtools"><span class="typeNameLink">BAMIndexer</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/BAMIndexMetaData.html" title="class in htsjdk.samtools"><span class="typeNameLink">BAMIndexMetaData</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/BamIndexValidator.html" title="class in htsjdk.samtools"><span class="typeNameLink">BamIndexValidator</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/BAMQueryMultipleIntervalsIteratorFilter.html" title="class in htsjdk.samtools"><span class="typeNameLink">BAMQueryMultipleIntervalsIteratorFilter</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/BAMRecordCodec.html" title="class in htsjdk.samtools"><span class="typeNameLink">BAMRecordCodec</span></a> (implements htsjdk.samtools.util.<a href="../../htsjdk/samtools/util/SortingCollection.Codec.html" title="interface in htsjdk.samtools.util">SortingCollection.Codec</a>&lt;T&gt;)</li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/Bin.html" title="class in htsjdk.samtools"><span class="typeNameLink">Bin</span></a> (implements java.lang.Comparable&lt;T&gt;)</li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/BinaryTagCodec.html" title="class in htsjdk.samtools"><span class="typeNameLink">BinaryTagCodec</span></a></li>
@@ -112,7 +113,7 @@
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/CoordinateSortedPairInfoMap.html" title="class in htsjdk.samtools"><span class="typeNameLink">CoordinateSortedPairInfoMap</span></a>&lt;KEY,REC&gt; (implements java.lang.Iterable&lt;T&gt;)</li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/CRAMBAIIndexer.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMBAIIndexer</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/CRAMContainerStreamWriter.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMContainerStreamWriter</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMFileReader.IntervalIterator</span></a> (implements htsjdk.samtools.<a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a>)</li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/CRAMCRAIIndexer.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMCRAIIndexer</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMIterator</span></a> (implements htsjdk.samtools.<a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a>)</li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/CustomReaderFactory.html" title="class in htsjdk.samtools"><span class="typeNameLink">CustomReaderFactory</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools"><span class="typeNameLink">Defaults</span></a></li>
@@ -288,22 +289,23 @@
 <ul>
 <li type="circle">java.lang.Enum&lt;E&gt; (implements java.lang.Comparable&lt;T&gt;, java.io.Serializable)
 <ul>
-<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools"><span class="typeNameLink">ValidationStringency</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/DuplicateScoringStrategy.ScoringStrategy.html" title="enum in htsjdk.samtools"><span class="typeNameLink">DuplicateScoringStrategy.ScoringStrategy</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SAMFileHeader.SortOrder.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SAMFileHeader.SortOrder</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SAMFlag.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SAMFlag</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SamReaderFactory.Option.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SamReaderFactory.Option</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SAMFileHeader.GroupOrder.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SAMFileHeader.GroupOrder</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SAMFileHeader.SortOrder.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SAMFileHeader.SortOrder</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/DownsamplingIteratorFactory.Strategy.html" title="enum in htsjdk.samtools"><span class="typeNameLink">DownsamplingIteratorFactory.Strategy</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SQTagUtil.SQBase.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SQTagUtil.SQBase</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/CigarOperator.html" title="enum in htsjdk.samtools"><span class="typeNameLink">CigarOperator</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SAMTag.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SAMTag</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SamReaderFactory.Option.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SamReaderFactory.Option</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools"><span class="typeNameLink">ValidationStringency</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/CigarOperator.html" title="enum in htsjdk.samtools"><span class="typeNameLink">CigarOperator</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SamPairUtil.PairOrientation.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SamPairUtil.PairOrientation</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SAMReadGroupRecord.PlatformValue.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SAMReadGroupRecord.PlatformValue</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/BamIndexValidator.IndexValidationStringency.html" title="enum in htsjdk.samtools"><span class="typeNameLink">BamIndexValidator.IndexValidationStringency</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SAMValidationError.Severity.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SAMValidationError.Severity</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SAMValidationError.Type.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SAMValidationError.Type</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SamFlagField</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SQTagUtil.SQBase.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SQTagUtil.SQBase</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SAMFlag.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SAMFlag</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/BamIndexValidator.IndexValidationStringency.html" title="enum in htsjdk.samtools"><span class="typeNameLink">BamIndexValidator.IndexValidationStringency</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/DuplicateScoringStrategy.ScoringStrategy.html" title="enum in htsjdk.samtools"><span class="typeNameLink">DuplicateScoringStrategy.ScoringStrategy</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SamIndexes.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SamIndexes</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SAMValidationError.Type.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SAMValidationError.Type</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="../../htsjdk/samtools/SAMReadGroupRecord.PlatformValue.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SAMReadGroupRecord.PlatformValue</span></a></li>
 </ul>
 </li>
 </ul>

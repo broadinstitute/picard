@@ -185,44 +185,44 @@ implements <a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interfa
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#advanceToAlignmentInContainer-int-int-">advanceToAlignmentInContainer</a></span>(int&nbsp;refIndex,
+                             int&nbsp;pos)</code>
+<div class="block">Skip cached records until given alignment start position.</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#assertSorted-htsjdk.samtools.SAMFileHeader.SortOrder-">assertSorted</a></span>(<a href="../../htsjdk/samtools/SAMFileHeader.SortOrder.html" title="enum in htsjdk.samtools">SAMFileHeader.SortOrder</a>&nbsp;sortOrder)</code>
 <div class="block">Establishes that records returned by this iterator are expected to
  be in the specified sort order.</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#close--">close</a></span>()</code>
 <div class="block">Should be implemented to close/release any underlying resources.</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../htsjdk/samtools/cram/structure/CramHeader.html" title="class in htsjdk.samtools.cram.structure">CramHeader</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#getCramHeader--">getCramHeader</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#getFileSource--">getFileSource</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#getSAMFileHeader--">getSAMFileHeader</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#getValidationStringency--">getValidationStringency</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#hasNext--">hasNext</a></span>()</code>&nbsp;</td>
-</tr>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#jumpWithinContainerToPos-int-int-">jumpWithinContainerToPos</a></span>(int&nbsp;refIndex,
-                        int&nbsp;pos)</code>
-<div class="block">Skip cached records until given alignment start position.</div>
-</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#hasNext--">hasNext</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i8" class="altColor">
 <td class="colFirst"><code><a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></code></td>
@@ -379,14 +379,14 @@ public&nbsp;CRAMIterator(<a href="../../htsjdk/samtools/seekablestream/SeekableS
 <pre>public&nbsp;<a href="../../htsjdk/samtools/cram/structure/CramHeader.html" title="class in htsjdk.samtools.cram.structure">CramHeader</a>&nbsp;getCramHeader()</pre>
 </li>
 </ul>
-<a name="jumpWithinContainerToPos-int-int-">
+<a name="advanceToAlignmentInContainer-int-int-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>jumpWithinContainerToPos</h4>
-<pre>public&nbsp;boolean&nbsp;jumpWithinContainerToPos(int&nbsp;refIndex,
-                                        int&nbsp;pos)</pre>
+<h4>advanceToAlignmentInContainer</h4>
+<pre>public&nbsp;boolean&nbsp;advanceToAlignmentInContainer(int&nbsp;refIndex,
+                                             int&nbsp;pos)</pre>
 <div class="block">Skip cached records until given alignment start position.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>

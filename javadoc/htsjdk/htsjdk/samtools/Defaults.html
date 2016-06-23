@@ -166,7 +166,7 @@ extends java.lang.Object</pre>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#EBI_REFERENCE_SEVICE_URL_MASK">EBI_REFERENCE_SEVICE_URL_MASK</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#EBI_REFERENCE_SERVICE_URL_MASK">EBI_REFERENCE_SERVICE_URL_MASK</a></span></code>
 <div class="block">A mask (pattern) to use when building EBI reference service URL for a
  given MD5 checksum.</div>
 </td>
@@ -184,30 +184,37 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#TRY_USE_INTEL_DEFLATER">TRY_USE_INTEL_DEFLATER</a></span></code>
-<div class="block">Should BlockCompressedOutputStream attempt to load libIntelDeflater?</div>
+<td class="colFirst"><code>static <a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#SAM_FLAG_FIELD_FORMAT">SAM_FLAG_FIELD_FORMAT</a></span></code>
+<div class="block">The output format of the flag field when writing SAM text.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO">USE_ASYNC_IO</a></span></code>
-<div class="block">Should asynchronous I/O be used where supported throughout all of htsjdk (one thread per file).</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#SRA_LIBRARIES_DOWNLOAD">SRA_LIBRARIES_DOWNLOAD</a></span></code>
+<div class="block">Boolean describing whether downloading of SRA native libraries is allowed,
+ in case such native libraries are not found locally</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO_FOR_SAMTOOLS">USE_ASYNC_IO_FOR_SAMTOOLS</a></span></code>
-<div class="block">Should asynchronous I/O be used where supported by the samtools package (one thread per file).</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO_READ_FOR_SAMTOOLS">USE_ASYNC_IO_READ_FOR_SAMTOOLS</a></span></code>
+<div class="block">Should asynchronous read I/O be used where supported by the samtools package (one thread per file).</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO_FOR_TRIBBLE">USE_ASYNC_IO_FOR_TRIBBLE</a></span></code>
-<div class="block">Should asynchronous I/O be used where supported by the tribble package (one thread per file).</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO_WRITE_FOR_SAMTOOLS">USE_ASYNC_IO_WRITE_FOR_SAMTOOLS</a></span></code>
+<div class="block">Should asynchronous write I/O be used where supported by the samtools package (one thread per file).</div>
 </td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO_WRITE_FOR_TRIBBLE">USE_ASYNC_IO_WRITE_FOR_TRIBBLE</a></span></code>
+<div class="block">Should asynchronous write I/O be used where supported by the tribble package (one thread per file).</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/Defaults.html#USE_CRAM_REF_DOWNLOAD">USE_CRAM_REF_DOWNLOAD</a></span></code>
 <div class="block">Boolean describing whether downloading a reference file is allowed (for CRAM files),
@@ -295,41 +302,36 @@ extends java.lang.Object</pre>
 <div class="block">Should MD5 files be created when writing out SAM and BAM files?  Default = false.</div>
 </li>
 </ul>
-<a name="USE_ASYNC_IO">
+<a name="USE_ASYNC_IO_READ_FOR_SAMTOOLS">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>USE_ASYNC_IO</h4>
-<pre>public static final&nbsp;boolean USE_ASYNC_IO</pre>
-<div class="block">Should asynchronous I/O be used where supported throughout all of htsjdk (one thread per file).
-  Note: this option takes precedence over <a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO_FOR_SAMTOOLS"><code>USE_ASYNC_IO_FOR_SAMTOOLS</code></a> and <a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO_FOR_TRIBBLE"><code>USE_ASYNC_IO_FOR_TRIBBLE</code></a>.
+<h4>USE_ASYNC_IO_READ_FOR_SAMTOOLS</h4>
+<pre>public static final&nbsp;boolean USE_ASYNC_IO_READ_FOR_SAMTOOLS</pre>
+<div class="block">Should asynchronous read I/O be used where supported by the samtools package (one thread per file).
   Default = false.</div>
 </li>
 </ul>
-<a name="USE_ASYNC_IO_FOR_SAMTOOLS">
+<a name="USE_ASYNC_IO_WRITE_FOR_SAMTOOLS">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>USE_ASYNC_IO_FOR_SAMTOOLS</h4>
-<pre>public static final&nbsp;boolean USE_ASYNC_IO_FOR_SAMTOOLS</pre>
-<div class="block">Should asynchronous I/O be used where supported by the samtools package (one thread per file).
-  Note: The <a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO"><code>USE_ASYNC_IO</code></a> option takes precedence over this option.
+<h4>USE_ASYNC_IO_WRITE_FOR_SAMTOOLS</h4>
+<pre>public static final&nbsp;boolean USE_ASYNC_IO_WRITE_FOR_SAMTOOLS</pre>
+<div class="block">Should asynchronous write I/O be used where supported by the samtools package (one thread per file).
   Default = false.</div>
 </li>
 </ul>
-<a name="USE_ASYNC_IO_FOR_TRIBBLE">
+<a name="USE_ASYNC_IO_WRITE_FOR_TRIBBLE">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>USE_ASYNC_IO_FOR_TRIBBLE</h4>
-<pre>public static final&nbsp;boolean USE_ASYNC_IO_FOR_TRIBBLE</pre>
-<div class="block">Should asynchronous I/O be used where supported by the tribble package (one thread per file).
-  Note: performance may depend on the characteristics of the input file (eg number of samples in the VCF) and should be tested on a case-by-case basis.
-  In particular, asynchronous reading of VCF files with few samples is known to perform worse than synchronous reading.
-  Note: The <a href="../../htsjdk/samtools/Defaults.html#USE_ASYNC_IO"><code>USE_ASYNC_IO</code></a> option takes precedence over this option.
+<h4>USE_ASYNC_IO_WRITE_FOR_TRIBBLE</h4>
+<pre>public static final&nbsp;boolean USE_ASYNC_IO_WRITE_FOR_TRIBBLE</pre>
+<div class="block">Should asynchronous write I/O be used where supported by the tribble package (one thread per file).
   Default = false.</div>
 </li>
 </ul>
@@ -353,6 +355,16 @@ extends java.lang.Object</pre>
 <div class="block">Buffer size, in bytes, used whenever reading/writing files or streams.  Default = 128k.</div>
 </li>
 </ul>
+<a name="SAM_FLAG_FIELD_FORMAT">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>SAM_FLAG_FIELD_FORMAT</h4>
+<pre>public static final&nbsp;<a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a> SAM_FLAG_FIELD_FORMAT</pre>
+<div class="block">The output format of the flag field when writing SAM text.  Ignored for reading SAM text.</div>
+</li>
+</ul>
 <a name="NON_ZERO_BUFFER_SIZE">
 <!--   -->
 </a>
@@ -362,16 +374,6 @@ extends java.lang.Object</pre>
 <pre>public static final&nbsp;int NON_ZERO_BUFFER_SIZE</pre>
 <div class="block">Even if BUFFER_SIZE is 0, this is guaranteed to be non-zero.  If BUFFER_SIZE is non-zero,
  this == BUFFER_SIZE</div>
-</li>
-</ul>
-<a name="TRY_USE_INTEL_DEFLATER">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>TRY_USE_INTEL_DEFLATER</h4>
-<pre>public static final&nbsp;boolean TRY_USE_INTEL_DEFLATER</pre>
-<div class="block">Should BlockCompressedOutputStream attempt to load libIntelDeflater?</div>
 </li>
 </ul>
 <a name="REFERENCE_FASTA">
@@ -410,15 +412,26 @@ extends java.lang.Object</pre>
  Enabling this is not necessarily a good idea, since this process often fails</div>
 </li>
 </ul>
-<a name="EBI_REFERENCE_SEVICE_URL_MASK">
+<a name="EBI_REFERENCE_SERVICE_URL_MASK">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>EBI_REFERENCE_SERVICE_URL_MASK</h4>
+<pre>public static final&nbsp;java.lang.String EBI_REFERENCE_SERVICE_URL_MASK</pre>
+<div class="block">A mask (pattern) to use when building EBI reference service URL for a
+ given MD5 checksum. Must contain one and only one string placeholder.</div>
+</li>
+</ul>
+<a name="SRA_LIBRARIES_DOWNLOAD">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>EBI_REFERENCE_SEVICE_URL_MASK</h4>
-<pre>public static final&nbsp;java.lang.String EBI_REFERENCE_SEVICE_URL_MASK</pre>
-<div class="block">A mask (pattern) to use when building EBI reference service URL for a
- given MD5 checksum. Must contain one and only one string placeholder.</div>
+<h4>SRA_LIBRARIES_DOWNLOAD</h4>
+<pre>public static final&nbsp;boolean SRA_LIBRARIES_DOWNLOAD</pre>
+<div class="block">Boolean describing whether downloading of SRA native libraries is allowed,
+ in case such native libraries are not found locally</div>
 </li>
 </ul>
 </li>

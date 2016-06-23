@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -120,7 +120,9 @@ var activeTableTab = "activeTableTab";
 extends java.lang.Object
 implements <a href="../../../htsjdk/samtools/util/Locus.html" title="interface in htsjdk.samtools.util">Locus</a></pre>
 <div class="block">The unit of iteration.  Holds information about the locus (the SAMSequenceRecord and 1-based position
- on the reference), plus List of ReadAndOffset objects, one for each read that overlaps the locus</div>
+ on the reference), plus List of ReadAndOffset objects, one for each read that overlaps the locus;
+ two more List_s_ of ReadAndOffset objects include reads that overlap the locus with insertions and deletions
+ respectively</div>
 </li>
 </ul>
 </div>
@@ -147,26 +149,52 @@ implements <a href="../../../htsjdk/samtools/util/Locus.html" title="interface i
 </td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#addDeleted-htsjdk.samtools.SAMRecord-int-">addDeleted</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
+          int&nbsp;previousPosition)</code>
+<div class="block">Accumulate info for one read with a deletion</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#addInserted-htsjdk.samtools.SAMRecord-int-">addInserted</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
+           int&nbsp;firstPosition)</code>
+<div class="block">Accumulate info for one read with an insertion.</div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>java.util.List&lt;<a href="../../../htsjdk/samtools/util/SamLocusIterator.RecordAndOffset.html" title="class in htsjdk.samtools.util">SamLocusIterator.RecordAndOffset</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#getDeletedInRecord--">getDeletedInRecord</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code>java.util.List&lt;<a href="../../../htsjdk/samtools/util/SamLocusIterator.RecordAndOffset.html" title="class in htsjdk.samtools.util">SamLocusIterator.RecordAndOffset</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#getInsertedInRecord--">getInsertedInRecord</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#getPosition--">getPosition</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>java.util.List&lt;<a href="../../../htsjdk/samtools/util/SamLocusIterator.RecordAndOffset.html" title="class in htsjdk.samtools.util">SamLocusIterator.RecordAndOffset</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#getRecordAndPositions--">getRecordAndPositions</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#getSequenceIndex--">getSequenceIndex</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#getSequenceLength--">getSequenceLength</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#getSequenceName--">getSequenceName</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i10" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#isEmpty--">isEmpty</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#toString--">toString</a></span>()</code>&nbsp;</td>
 </tr>
@@ -201,6 +229,29 @@ implements <a href="../../../htsjdk/samtools/util/Locus.html" title="interface i
 <pre>public&nbsp;void&nbsp;add(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                 int&nbsp;position)</pre>
 <div class="block">Accumulate info for one read at the locus.</div>
+</li>
+</ul>
+<a name="addDeleted-htsjdk.samtools.SAMRecord-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>addDeleted</h4>
+<pre>public&nbsp;void&nbsp;addDeleted(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
+                       int&nbsp;previousPosition)</pre>
+<div class="block">Accumulate info for one read with a deletion</div>
+</li>
+</ul>
+<a name="addInserted-htsjdk.samtools.SAMRecord-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>addInserted</h4>
+<pre>public&nbsp;void&nbsp;addInserted(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
+                        int&nbsp;firstPosition)</pre>
+<div class="block">Accumulate info for one read with an insertion.
+ For this locus, the reads in the insertion are included also in recordAndOffsets</div>
 </li>
 </ul>
 <a name="getSequenceIndex--">
@@ -265,10 +316,42 @@ implements <a href="../../../htsjdk/samtools/util/Locus.html" title="interface i
 <a name="getSequenceLength--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getSequenceLength</h4>
 <pre>public&nbsp;int&nbsp;getSequenceLength()</pre>
+</li>
+</ul>
+<a name="getDeletedInRecord--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getDeletedInRecord</h4>
+<pre>public&nbsp;java.util.List&lt;<a href="../../../htsjdk/samtools/util/SamLocusIterator.RecordAndOffset.html" title="class in htsjdk.samtools.util">SamLocusIterator.RecordAndOffset</a>&gt;&nbsp;getDeletedInRecord()</pre>
+</li>
+</ul>
+<a name="getInsertedInRecord--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getInsertedInRecord</h4>
+<pre>public&nbsp;java.util.List&lt;<a href="../../../htsjdk/samtools/util/SamLocusIterator.RecordAndOffset.html" title="class in htsjdk.samtools.util">SamLocusIterator.RecordAndOffset</a>&gt;&nbsp;getInsertedInRecord()</pre>
+</li>
+</ul>
+<a name="isEmpty--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>isEmpty</h4>
+<pre>public&nbsp;boolean&nbsp;isEmpty()</pre>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd><code>true</code> if all the RecordAndOffset lists are empty;
+ <code>false</code> if at least one have records</dd>
+</dl>
 </li>
 </ul>
 </li>

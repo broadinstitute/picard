@@ -90,18 +90,22 @@
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><a href="#htsjdk.samtools.sra">htsjdk.samtools.sra</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><a href="#htsjdk.samtools.util">htsjdk.samtools.util</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="#htsjdk.tribble">htsjdk.tribble</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="#htsjdk.variant.variantcontext.filter">htsjdk.variant.variantcontext.filter</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="#htsjdk.variant.vcf">htsjdk.variant.vcf</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -138,45 +142,41 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><code>static class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools">CRAMFileReader.IntervalIterator</a></span></code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/DownsamplingIterator.html" title="class in htsjdk.samtools">DownsamplingIterator</a></span></code>
 <div class="block">Abstract base class for all DownsamplingIterators that provides a uniform interface for recording
  and reporting statistics bout how many records have been kept and discarded.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/DuplicateSetIterator.html" title="class in htsjdk.samtools">DuplicateSetIterator</a></span></code>
 <div class="block">An iterator of sets of duplicates.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/MergingSamRecordIterator.html" title="class in htsjdk.samtools">MergingSamRecordIterator</a></span></code>
 <div class="block">Provides an iterator interface for merging multiple underlying iterators into a single
  iterable stream.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/SamPairUtil.SetMateInfoIterator.html" title="class in htsjdk.samtools">SamPairUtil.SetMateInfoIterator</a></span></code>
 <div class="block">A class to iterate through SAMRecords and set mate information on the given records, and optionally
  set the mate cigar tag (true by default).</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/SamReader.AssertingIterator.html" title="class in htsjdk.samtools">SamReader.AssertingIterator</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/SRAIterator.html" title="class in htsjdk.samtools">SRAIterator</a></span></code>
 <div class="block">SRA iterator which returns SAMRecords for requested list of chunks</div>
@@ -301,15 +301,6 @@
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-">IntervalIterator</a></span>(<a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;delegate,
-                <a href="../../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;interval)</code>&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-boolean-">IntervalIterator</a></span>(<a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;delegate,
-                <a href="../../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;interval,
-                boolean&nbsp;overlap)</code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/NotPrimarySkippingIterator.html#NotPrimarySkippingIterator-htsjdk.samtools.util.CloseableIterator-">NotPrimarySkippingIterator</a></span>(<a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;underlyingIt)</code>&nbsp;</td>
 </tr>
 <tr class="altColor">
@@ -355,6 +346,26 @@
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/FilteringSamIterator.html" title="class in htsjdk.samtools.filter">FilteringSamIterator</a></span></code>
 <div class="block">Filtering Iterator which takes a filter and an iterator and iterates through only those records
  which are not rejected by the filter.</div>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList"><a name="htsjdk.samtools.sra">
+<!--   -->
+</a>
+<h3>Uses of <a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a> in <a href="../../../../htsjdk/samtools/sra/package-summary.html">htsjdk.samtools.sra</a></h3>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing classes, and an explanation">
+<caption><span>Classes in <a href="../../../../htsjdk/samtools/sra/package-summary.html">htsjdk.samtools.sra</a> that implement <a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Class and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/sra/SRAAlignmentIterator.html" title="class in htsjdk.samtools.sra">SRAAlignmentIterator</a></span></code>
+<div class="block">Iterator for aligned reads.</div>
 </td>
 </tr>
 </tbody>

@@ -155,10 +155,7 @@ extends java.lang.Object</pre>
 <td class="colFirst"><code>ngs.Reference</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/sra/ReferenceCache.html#get-int-">get</a></span>(int&nbsp;referenceIndex)</code>
 <div class="block">This method returns Reference objects by reference indexes in SAM header
- Those obejcts can be used from different threads
-
- This method maintains thread safety, so that if Reference object is set already, it can be easily returned
- without locks.</div>
+ Those objects do not maintain thread safety</div>
 </td>
 </tr>
 </table>
@@ -209,11 +206,7 @@ extends java.lang.Object</pre>
 <h4>get</h4>
 <pre>public&nbsp;ngs.Reference&nbsp;get(int&nbsp;referenceIndex)</pre>
 <div class="block">This method returns Reference objects by reference indexes in SAM header
- Those obejcts can be used from different threads
-
- This method maintains thread safety, so that if Reference object is set already, it can be easily returned
- without locks. However, if Reference object is null, we need to acquire a lock, load the object and save it in
- array.</div>
+ Those objects do not maintain thread safety</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>referenceIndex</code> - reference index in</dd>

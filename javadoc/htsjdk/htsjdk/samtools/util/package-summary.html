@@ -336,6 +336,12 @@
 <div class="block">Class for computing and accessing histogram type data.</div>
 </td>
 </tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../htsjdk/samtools/util/Histogram.Bin.html" title="class in htsjdk.samtools.util">Histogram.Bin</a>&lt;K extends java.lang.Comparable&gt;</td>
+<td class="colLast">
+<div class="block">Represents a bin in the Histogram.</div>
+</td>
+</tr>
 <tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/HttpUtils.html" title="class in htsjdk.samtools.util">HttpUtils</a></td>
 <td class="colLast">
@@ -474,181 +480,175 @@
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><a href="../../../htsjdk/samtools/util/Objects.html" title="class in htsjdk.samtools.util">Objects</a></td>
-<td class="colLast">
-<div class="block">Subset of JDK7's <code>Objects</code> for non-JDK7 support.</div>
-</td>
-</tr>
-<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/OverlapDetector.html" title="class in htsjdk.samtools.util">OverlapDetector</a>&lt;T&gt;</td>
 <td class="colLast">
 <div class="block">Utility class to efficiently do in memory overlap detection between a large
  set of mapping like objects, and one or more candidate mappings.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/PeekableIterator.html" title="class in htsjdk.samtools.util">PeekableIterator</a>&lt;Object&gt;</td>
 <td class="colLast">
 <div class="block">Generic Closable Iterator that allows you to peek at the next value before calling next</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/PeekIterator.html" title="class in htsjdk.samtools.util">PeekIterator</a>&lt;T&gt;</td>
 <td class="colLast">
 <div class="block">Wrapper around an iterator that enables non-destructive peeking at the next element that would
  be returned by next()</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/ProcessExecutor.html" title="class in htsjdk.samtools.util">ProcessExecutor</a></td>
 <td class="colLast">
 <div class="block">Utility class that will execute sub processes via Runtime.getRuntime().exec(...) and read
  off the output from stderr and stdout of the sub process.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/ProcessExecutor.ExitStatusAndOutput.html" title="class in htsjdk.samtools.util">ProcessExecutor.ExitStatusAndOutput</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/ProgressLogger.html" title="class in htsjdk.samtools.util">ProgressLogger</a></td>
 <td class="colLast">
 <div class="block">Little progress logging class to facilitate consistent output of useful information when progressing
  through a stream of SAM records.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/QualityEncodingDetector.html" title="class in htsjdk.samtools.util">QualityEncodingDetector</a></td>
 <td class="colLast">
 <div class="block">Utility for determining the type of quality encoding/format (see FastqQualityFormat) used in a SAM/BAM or Fastq.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/QualityUtil.html" title="class in htsjdk.samtools.util">QualityUtil</a></td>
 <td class="colLast">
 <div class="block">Utility class for working with quality scores and error probabilities.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/RelativeIso8601Date.html" title="class in htsjdk.samtools.util">RelativeIso8601Date</a></td>
 <td class="colLast">
 <div class="block">Like <a href="../../../htsjdk/samtools/util/Iso8601Date.html" title="class in htsjdk.samtools.util"><code>Iso8601Date</code></a>, but also comes in a "lazy now" flavor.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/ResourceLimitedMap.html" title="class in htsjdk.samtools.util">ResourceLimitedMap</a>&lt;Key,Value&gt;</td>
 <td class="colLast">
 <div class="block">LRU collection class for managing objects that place some resource burden such that not too many of them
  can existing in the VM at one time, but they can be reconstructed ias necessary.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html" title="class in htsjdk.samtools.util">SamLocusIterator</a></td>
 <td class="colLast">
 <div class="block">Iterator that traverses a SAM File, accumulating information on a per-locus basis.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html" title="class in htsjdk.samtools.util">SamLocusIterator.LocusInfo</a></td>
 <td class="colLast">
 <div class="block">The unit of iteration.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/SamLocusIterator.RecordAndOffset.html" title="class in htsjdk.samtools.util">SamLocusIterator.RecordAndOffset</a></td>
 <td class="colLast">
 <div class="block">Holds a SAMRecord plus the zero-based offset into that SAMRecord's bases and quality scores that corresponds
  to the base and quality at the genomic position described the containing LocusInfo.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/SamRecordIntervalIteratorFactory.html" title="class in htsjdk.samtools.util">SamRecordIntervalIteratorFactory</a></td>
 <td class="colLast">
 <div class="block">Create an iterator over a SAMFileReader that only returns reads that overlap one of the intervals
  in an interval list.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/SamRecordTrackingBuffer.html" title="class in htsjdk.samtools.util">SamRecordTrackingBuffer</a>&lt;T extends <a href="../../../htsjdk/samtools/util/SamRecordWithOrdinal.html" title="class in htsjdk.samtools.util">SamRecordWithOrdinal</a>&gt;</td>
 <td class="colLast">
 <div class="block">This class stores SAMRecords for return.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/SamRecordWithOrdinal.html" title="class in htsjdk.samtools.util">SamRecordWithOrdinal</a></td>
 <td class="colLast">
 <div class="block">A little class to store the unique index associated with this record.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/SequenceUtil.html" title="class in htsjdk.samtools.util">SequenceUtil</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/SnappyLoader.html" title="class in htsjdk.samtools.util">SnappyLoader</a></td>
 <td class="colLast">
 <div class="block">If Snappy is available, obtain single-arg ctors for SnappyInputStream and SnappyOutputStream.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/SolexaQualityConverter.html" title="class in htsjdk.samtools.util">SolexaQualityConverter</a></td>
 <td class="colLast">
 <div class="block">Optimized method for converting Solexa ASCII qualities into Phred scores.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/SortingCollection.html" title="class in htsjdk.samtools.util">SortingCollection</a>&lt;T&gt;</td>
 <td class="colLast">
 <div class="block">Collection to which many records can be added.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/SortingLongCollection.html" title="class in htsjdk.samtools.util">SortingLongCollection</a></td>
 <td class="colLast">
 <div class="block">Accumulate a list of longs that can then be sorted in natural order and iterated over.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/StopWatch.html" title="class in htsjdk.samtools.util">StopWatch</a></td>
 <td class="colLast">
 <div class="block">Utility to help in performance testing.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/StringLineReader.html" title="class in htsjdk.samtools.util">StringLineReader</a></td>
 <td class="colLast">
 <div class="block">Implementation of LineReader that gets its input from a String.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/StringUtil.html" title="class in htsjdk.samtools.util">StringUtil</a></td>
 <td class="colLast">
 <div class="block">Grab-bag of stateless String-oriented utilities.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/TempStreamFactory.html" title="class in htsjdk.samtools.util">TempStreamFactory</a></td>
 <td class="colLast">
 <div class="block">Factory class for wrapping input and output streams for temporary files.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/TestUtil.html" title="class in htsjdk.samtools.util">TestUtil</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/TrimmingUtil.html" title="class in htsjdk.samtools.util">TrimmingUtil</a></td>
 <td class="colLast">
 <div class="block">Utility code for performing quality trimming.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/Tuple.html" title="class in htsjdk.samtools.util">Tuple</a>&lt;A,B&gt;</td>
 <td class="colLast">
 <div class="block">A simple tuple class.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/util/WholeGenomeReferenceSequenceMask.html" title="class in htsjdk.samtools.util">WholeGenomeReferenceSequenceMask</a></td>
 <td class="colLast">
 <div class="block">Implementation of ReferenceSequenceMask that indicates that all the loci in the sequence dictionary are of interest.</div>

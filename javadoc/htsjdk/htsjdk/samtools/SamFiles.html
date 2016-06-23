@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9};
+var methods = {"i0":9,"i1":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -155,6 +155,12 @@ extends java.lang.Object</pre>
 <div class="block">Finds the index file associated with the provided SAM file.</div>
 </td>
 </tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>static java.nio.file.Path</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamFiles.html#findIndex-java.nio.file.Path-">findIndex</a></span>(java.nio.file.Path&nbsp;samPath)</code>
+<div class="block">Finds the index file associated with the provided SAM file.</div>
+</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -197,10 +203,26 @@ extends java.lang.Object</pre>
 <a name="findIndex-java.io.File-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>findIndex</h4>
 <pre>public static&nbsp;java.io.File&nbsp;findIndex(java.io.File&nbsp;samFile)</pre>
+<div class="block">Finds the index file associated with the provided SAM file.  The index file must exist and be reachable to be found.
+
+ If the file is a symlink and the index cannot be found, try to unsymlink the file and look for the bai in the actual file path.</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The index for the provided SAM, or null if one was not found.</dd>
+</dl>
+</li>
+</ul>
+<a name="findIndex-java.nio.file.Path-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>findIndex</h4>
+<pre>public static&nbsp;java.nio.file.Path&nbsp;findIndex(java.nio.file.Path&nbsp;samPath)</pre>
 <div class="block">Finds the index file associated with the provided SAM file.  The index file must exist and be reachable to be found.
 
  If the file is a symlink and the index cannot be found, try to unsymlink the file and look for the bai in the actual file path.</div>

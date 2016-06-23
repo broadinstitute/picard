@@ -558,6 +558,12 @@
 </td>
 </tr>
 <tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMCRAIIndexer.html#CRAMCRAIIndexer-java.io.OutputStream-htsjdk.samtools.SAMFileHeader-">CRAMCRAIIndexer</a></span>(java.io.OutputStream&nbsp;os,
+               <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samHeader)</code>
+<div class="block">Create a CRAMCRAIIndexer that writes to the given output stream.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
               <a href="../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
               <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
@@ -565,7 +571,7 @@
 <div class="block">Create a CRAMFileWriter on an output stream.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-boolean-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
               java.io.OutputStream&nbsp;indexOS,
               boolean&nbsp;presorted,
@@ -575,7 +581,7 @@
 <div class="block">Create a CRAMFileWriter and optional index on output streams.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
               java.io.OutputStream&nbsp;indexOS,
               <a href="../../../htsjdk/samtools/cram/ref/CRAMReferenceSource.html" title="interface in htsjdk.samtools.cram.ref">CRAMReferenceSource</a>&nbsp;referenceSource,
@@ -584,22 +590,22 @@
 <div class="block">Create a CRAMFileWriter and optional index on output streams.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-">DuplicateSetIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                     <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-">DuplicateSetIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                     <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
                     boolean&nbsp;preSorted)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-htsjdk.samtools.SAMRecordDuplicateComparator-">DuplicateSetIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                     <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
                     boolean&nbsp;preSorted,
                     <a href="../../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a>&nbsp;comparator)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-htsjdk.samtools.SAMRecordDuplicateComparator-htsjdk.samtools.util.Log-">DuplicateSetIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                     <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
                     boolean&nbsp;preSorted,
@@ -608,22 +614,22 @@
 <div class="block">Allows the user of this iterator to skip the sorting of the input if the input is already sorted.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileHeader.PgIdGenerator.html#PgIdGenerator-htsjdk.samtools.SAMFileHeader-">PgIdGenerator</a></span>(<a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMLineParser.html#SAMLineParser-htsjdk.samtools.SAMFileHeader-">SAMLineParser</a></span>(<a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader)</code>
 <div class="block">Public constructor.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMLineParser.html#SAMLineParser-htsjdk.samtools.SAMFileHeader-htsjdk.samtools.SamReader-java.io.File-">SAMLineParser</a></span>(<a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
              <a href="../../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;samFileReader,
              java.io.File&nbsp;samFile)</code>
 <div class="block">Public constructor.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMLineParser.html#SAMLineParser-htsjdk.samtools.SAMRecordFactory-htsjdk.samtools.ValidationStringency-htsjdk.samtools.SAMFileHeader-htsjdk.samtools.SamReader-java.io.File-">SAMLineParser</a></span>(<a href="../../../htsjdk/samtools/SAMRecordFactory.html" title="interface in htsjdk.samtools">SAMRecordFactory</a>&nbsp;samRecordFactory,
              <a href="../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency,
              <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
@@ -632,14 +638,14 @@
 <div class="block">Public constructor.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMRecord.html#SAMRecord-htsjdk.samtools.SAMFileHeader-">SAMRecord</a></span>(<a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SRAIndex.html#SRAIndex-htsjdk.samtools.SAMFileHeader-htsjdk.samtools.SRAIterator.RecordRangeInfo-">SRAIndex</a></span>(<a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
         <a href="../../../htsjdk/samtools/SRAIterator.RecordRangeInfo.html" title="class in htsjdk.samtools">SRAIterator.RecordRangeInfo</a>&nbsp;recordRangeInfo)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SRAIterator.html#SRAIterator-htsjdk.samtools.sra.SRAAccession-ngs.ReadCollection-htsjdk.samtools.SAMFileHeader-htsjdk.samtools.sra.ReferenceCache-htsjdk.samtools.SRAIterator.RecordRangeInfo-java.util.List-">SRAIterator</a></span>(<a href="../../../htsjdk/samtools/sra/SRAAccession.html" title="class in htsjdk.samtools.sra">SRAAccession</a>&nbsp;accession,
            ngs.ReadCollection&nbsp;run,
            <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,

@@ -136,23 +136,28 @@
 <td class="colLast"><span class="typeNameLabel">QueryInterval.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/QueryInterval.html#abuts-htsjdk.samtools.QueryInterval-">abuts</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;other)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>static htsjdk.samtools.BAMIteratorFilter.IntervalComparison</code></td>
+<td class="colLast"><span class="typeNameLabel">BAMQueryMultipleIntervalsIteratorFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/BAMQueryMultipleIntervalsIteratorFilter.html#compareIntervalToRecord-htsjdk.samtools.QueryInterval-htsjdk.samtools.SAMRecord-">compareIntervalToRecord</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;interval,
+                       <a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><span class="typeNameLabel">QueryInterval.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/QueryInterval.html#compareTo-htsjdk.samtools.QueryInterval-">compareTo</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;other)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]</code></td>
 <td class="colLast"><span class="typeNameLabel">QueryInterval.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/QueryInterval.html#optimizeIntervals-htsjdk.samtools.QueryInterval:A-">optimizeIntervals</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;inputIntervals)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">QueryInterval.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/QueryInterval.html#overlaps-htsjdk.samtools.QueryInterval-">overlaps</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;other)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">CRAMFileReader.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.html#query-htsjdk.samtools.QueryInterval:A-boolean-">query</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals,
      boolean&nbsp;contained)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SAMFileReader.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileReader.html#query-htsjdk.samtools.QueryInterval:A-boolean-">query</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals,
      boolean&nbsp;contained)</code>
@@ -160,59 +165,59 @@
 <div class="block">Iterate over records that match one of the given intervals.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">SRAFileReader.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SRAFileReader.html#query-htsjdk.samtools.QueryInterval:A-boolean-">query</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals,
      boolean&nbsp;contained)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SamReader.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReader.html#query-htsjdk.samtools.QueryInterval:A-boolean-">query</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals,
      boolean&nbsp;contained)</code>
 <div class="block">Iterate over records that match one of the given intervals.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">SamReader.PrimitiveSamReader.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReader.PrimitiveSamReader.html#query-htsjdk.samtools.QueryInterval:A-boolean-">query</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals,
      boolean&nbsp;contained)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SamReader.PrimitiveSamReaderToSamReaderAdapter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReader.PrimitiveSamReaderToSamReaderAdapter.html#query-htsjdk.samtools.QueryInterval:A-boolean-">query</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals,
      boolean&nbsp;contained)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SAMFileReader.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileReader.html#queryContained-htsjdk.samtools.QueryInterval:A-">queryContained</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals)</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 <div class="block">Iterate over records that are contained in the given interval.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SamReader.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReader.html#queryContained-htsjdk.samtools.QueryInterval:A-">queryContained</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals)</code>
 <div class="block">Iterate over records that are contained in the given interval.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SamReader.PrimitiveSamReaderToSamReaderAdapter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReader.PrimitiveSamReaderToSamReaderAdapter.html#queryContained-htsjdk.samtools.QueryInterval:A-">queryContained</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SAMFileReader.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileReader.html#queryOverlapping-htsjdk.samtools.QueryInterval:A-">queryOverlapping</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals)</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 <div class="block">Iterate over records that overlap any of the given intervals.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SamReader.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReader.html#queryOverlapping-htsjdk.samtools.QueryInterval:A-">queryOverlapping</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals)</code>
 <div class="block">Iterate over records that overlap any of the given intervals.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SamReader.PrimitiveSamReaderToSamReaderAdapter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReader.PrimitiveSamReaderToSamReaderAdapter.html#queryOverlapping-htsjdk.samtools.QueryInterval:A-">queryOverlapping</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals)</code>&nbsp;</td>
 </tr>
@@ -225,13 +230,8 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-">IntervalIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;delegate,
-                <a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;interval)</code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-boolean-">IntervalIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;delegate,
-                <a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;interval,
-                boolean&nbsp;overlap)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/BAMQueryMultipleIntervalsIteratorFilter.html#BAMQueryMultipleIntervalsIteratorFilter-htsjdk.samtools.QueryInterval:A-boolean-">BAMQueryMultipleIntervalsIteratorFilter</a></span>(<a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>[]&nbsp;intervals,
+                                       boolean&nbsp;contained)</code>&nbsp;</td>
 </tr>
 </tbody>
 </table>

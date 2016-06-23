@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":9,"i2":9};
+var methods = {"i0":10,"i1":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -204,15 +204,6 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/util/ScatterIntervalsByNs.html#main-java.lang.String:A-">main</a></span>(java.lang.String[]&nbsp;args)</code>&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code>static htsjdk.samtools.util.IntervalList</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/util/ScatterIntervalsByNs.html#segregateReference-htsjdk.samtools.reference.ReferenceSequenceFile-int-">segregateReference</a></span>(htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
-                  int&nbsp;maxNmerToMerge)</code>
-<div class="block">****************************************************************
- Generate an interval list that alternates between Ns and ACGTs *
- ****************************************************************</div>
-</td>
-</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.picard.cmdline.CommandLineProgram">
@@ -325,7 +316,7 @@ public&nbsp;int MAX_TO_MERGE</pre>
 <a name="doWork--">
 <!--   -->
 </a>
-<ul class="blockList">
+<ul class="blockListLast">
 <li class="blockList">
 <h4>doWork</h4>
 <pre>protected&nbsp;int&nbsp;doWork()</pre>
@@ -338,19 +329,6 @@ public&nbsp;int MAX_TO_MERGE</pre>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>program exit status.</dd>
 </dl>
-</li>
-</ul>
-<a name="segregateReference-htsjdk.samtools.reference.ReferenceSequenceFile-int-">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>segregateReference</h4>
-<pre>public static&nbsp;htsjdk.samtools.util.IntervalList&nbsp;segregateReference(htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
-                                                                   int&nbsp;maxNmerToMerge)</pre>
-<div class="block">****************************************************************
- Generate an interval list that alternates between Ns and ACGTs *
- ****************************************************************</div>
 </li>
 </ul>
 </li>

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -110,7 +110,8 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public class <span class="typeNameLabel">SAMLineParser</span>
 extends java.lang.Object</pre>
-<div class="block">this class enables creation of a SAMRecord object from a String in SAM text format.</div>
+<div class="block">This class enables creation of a SAMRecord object from a String in SAM text format.  The SAM flag field will be inferred
+ for each record separately, unless the expected format is set using `withSamFlagField`.</div>
 </li>
 </ul>
 </div>
@@ -187,6 +188,12 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMLineParser.html#parseLine-java.lang.String-int-">parseLine</a></span>(java.lang.String&nbsp;line,
          int&nbsp;lineNumber)</code>
 <div class="block">Parse a SAM line.</div>
+</td>
+</tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="../../htsjdk/samtools/SAMLineParser.html" title="class in htsjdk.samtools">SAMLineParser</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMLineParser.html#withSamFlagField-htsjdk.samtools.SamFlagField-">withSamFlagField</a></span>(<a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a>&nbsp;samFlagField)</code>
+<div class="block">Sets the expected SAM flag type expected for all records.</div>
 </td>
 </tr>
 </table>
@@ -299,6 +306,16 @@ extends java.lang.Object</pre>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>validation stringency</dd>
 </dl>
+</li>
+</ul>
+<a name="withSamFlagField-htsjdk.samtools.SamFlagField-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>withSamFlagField</h4>
+<pre>public&nbsp;<a href="../../htsjdk/samtools/SAMLineParser.html" title="class in htsjdk.samtools">SAMLineParser</a>&nbsp;withSamFlagField(<a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a>&nbsp;samFlagField)</pre>
+<div class="block">Sets the expected SAM flag type expected for all records.</div>
 </li>
 </ul>
 <a name="parseLine-java.lang.String-">

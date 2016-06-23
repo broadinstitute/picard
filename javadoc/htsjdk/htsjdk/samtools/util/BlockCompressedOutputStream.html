@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":9,"i3":10,"i4":10,"i5":9,"i6":9,"i7":10,"i8":10,"i9":10};
+var methods = {"i0":10,"i1":10,"i2":9,"i3":9,"i4":10,"i5":10,"i6":9,"i7":9,"i8":9,"i9":10,"i10":10,"i11":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -152,7 +152,8 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 </tr>
 <tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.File-">BlockCompressedOutputStream</a></span>(java.io.File&nbsp;file)</code>
-<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel</div>
+<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel
+ Note: this constructor uses the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>getDefaultDeflaterFactory()</code></a>.</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -162,26 +163,45 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 </td>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.OutputStream-java.io.File-">BlockCompressedOutputStream</a></span>(java.io.OutputStream&nbsp;os,
-                           java.io.File&nbsp;file)</code>
-<div class="block">Constructors that take output streams
- file may be null</div>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.File-int-htsjdk.samtools.util.zip.DeflaterFactory-">BlockCompressedOutputStream</a></span>(java.io.File&nbsp;file,
+                           int&nbsp;compressionLevel,
+                           <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a>&nbsp;deflaterFactory)</code>
+<div class="block">Prepare to compress at the given compression level</div>
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.OutputStream-java.io.File-">BlockCompressedOutputStream</a></span>(java.io.OutputStream&nbsp;os,
+                           java.io.File&nbsp;file)</code>
+<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel
+ Note: this constructor uses the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>getDefaultDeflaterFactory()</code></a>.</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.OutputStream-java.io.File-int-">BlockCompressedOutputStream</a></span>(java.io.OutputStream&nbsp;os,
                            java.io.File&nbsp;file,
-                           int&nbsp;compressionLevel)</code>&nbsp;</td>
+                           int&nbsp;compressionLevel)</code>
+<div class="block">Note: this constructor uses the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>getDefaultDeflaterFactory()</code></a>.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.OutputStream-java.io.File-int-htsjdk.samtools.util.zip.DeflaterFactory-">BlockCompressedOutputStream</a></span>(java.io.OutputStream&nbsp;os,
+                           java.io.File&nbsp;file,
+                           int&nbsp;compressionLevel,
+                           <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a>&nbsp;deflaterFactory)</code>
+<div class="block">Creates the output stream.</div>
+</td>
 </tr>
 <tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.lang.String-">BlockCompressedOutputStream</a></span>(java.lang.String&nbsp;filename)</code>
-<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel</div>
+<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel
+ Note: this constructor uses the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>getDefaultDeflaterFactory()</code></a>.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.lang.String-int-">BlockCompressedOutputStream</a></span>(java.lang.String&nbsp;filename,
                            int&nbsp;compressionLevel)</code>
-<div class="block">Prepare to compress at the given compression level</div>
+<div class="block">Prepare to compress at the given compression level
+ Note: this constructor uses the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>getDefaultDeflaterFactory()</code></a>.</div>
 </td>
 </tr>
 </table>
@@ -217,37 +237,47 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultCompressionLevel--">getDefaultCompressionLevel</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
+<td class="colFirst"><code>static <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--">getDefaultDeflaterFactory</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getFilePointer--">getFilePointer</a></span>()</code>
 <div class="block">Encode virtual file pointer
  Upper 48 bits is the byte offset into the compressed stream of a block.</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getPosition--">getPosition</a></span>()</code>
 <div class="block">The current offset, in bytes, of this stream/writer/file.</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util">BlockCompressedOutputStream</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#maybeBgzfWrapOutputStream-java.io.File-java.io.OutputStream-">maybeBgzfWrapOutputStream</a></span>(java.io.File&nbsp;location,
                          java.io.OutputStream&nbsp;output)</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#setDefaultCompressionLevel-int-">setDefaultCompressionLevel</a></span>(int&nbsp;compressionLevel)</code>
 <div class="block">Sets the GZip compression level for subsequent BlockCompressedOutputStream object creation
  that do not specify the compression level.</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#setDefaultDeflaterFactory-htsjdk.samtools.util.zip.DeflaterFactory-">setDefaultDeflaterFactory</a></span>(<a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a>&nbsp;deflaterFactory)</code>
+<div class="block">Sets the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a> that will be used for all instances unless specified otherwise in the constructor.</div>
+</td>
+</tr>
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#write-byte:A-">write</a></span>(byte[]&nbsp;bytes)</code>
 <div class="block">Writes b.length bytes from the specified byte array to this output stream.</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#write-byte:A-int-int-">write</a></span>(byte[]&nbsp;bytes,
      int&nbsp;startIndex,
@@ -255,7 +285,7 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 <div class="block">Writes len bytes from the specified byte array starting at offset off to this output stream.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#write-int-">write</a></span>(int&nbsp;bite)</code>
 <div class="block">Writes the specified byte to this output stream.</div>
@@ -290,7 +320,9 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 <li class="blockList">
 <h4>BlockCompressedOutputStream</h4>
 <pre>public&nbsp;BlockCompressedOutputStream(java.lang.String&nbsp;filename)</pre>
-<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel</div>
+<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel
+ Note: this constructor uses the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>getDefaultDeflaterFactory()</code></a>.
+ Use <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.File-int-htsjdk.samtools.util.zip.DeflaterFactory-"><code>BlockCompressedOutputStream(File, int, DeflaterFactory)</code></a> to specify a custom factory.</div>
 </li>
 </ul>
 <a name="BlockCompressedOutputStream-java.io.File-">
@@ -300,7 +332,9 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 <li class="blockList">
 <h4>BlockCompressedOutputStream</h4>
 <pre>public&nbsp;BlockCompressedOutputStream(java.io.File&nbsp;file)</pre>
-<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel</div>
+<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel
+ Note: this constructor uses the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>getDefaultDeflaterFactory()</code></a>.
+ Use <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.File-int-htsjdk.samtools.util.zip.DeflaterFactory-"><code>BlockCompressedOutputStream(File, int, DeflaterFactory)</code></a> to specify a custom factory.</div>
 </li>
 </ul>
 <a name="BlockCompressedOutputStream-java.lang.String-int-">
@@ -311,7 +345,8 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 <h4>BlockCompressedOutputStream</h4>
 <pre>public&nbsp;BlockCompressedOutputStream(java.lang.String&nbsp;filename,
                                    int&nbsp;compressionLevel)</pre>
-<div class="block">Prepare to compress at the given compression level</div>
+<div class="block">Prepare to compress at the given compression level
+ Note: this constructor uses the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>getDefaultDeflaterFactory()</code></a>.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>compressionLevel</code> - 1 <= compressionLevel <= 9</dd>
@@ -329,7 +364,26 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 <div class="block">Prepare to compress at the given compression level</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>compressionLevel</code> - 1 <= compressionLevel <= 9
+ Note: this constructor uses the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>getDefaultDeflaterFactory()</code></a>.
+ Use <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.File-int-htsjdk.samtools.util.zip.DeflaterFactory-"><code>BlockCompressedOutputStream(File, int, DeflaterFactory)</code></a> to specify a custom factory.</dd>
+</dl>
+</li>
+</ul>
+<a name="BlockCompressedOutputStream-java.io.File-int-htsjdk.samtools.util.zip.DeflaterFactory-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>BlockCompressedOutputStream</h4>
+<pre>public&nbsp;BlockCompressedOutputStream(java.io.File&nbsp;file,
+                                   int&nbsp;compressionLevel,
+                                   <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a>&nbsp;deflaterFactory)</pre>
+<div class="block">Prepare to compress at the given compression level</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>compressionLevel</code> - 1 <= compressionLevel <= 9</dd>
+<dd><code>deflaterFactory</code> - custom factory to create deflaters (overrides the default)</dd>
 </dl>
 </li>
 </ul>
@@ -341,11 +395,29 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 <h4>BlockCompressedOutputStream</h4>
 <pre>public&nbsp;BlockCompressedOutputStream(java.io.OutputStream&nbsp;os,
                                    java.io.File&nbsp;file)</pre>
-<div class="block">Constructors that take output streams
- file may be null</div>
+<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel
+ Note: this constructor uses the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>getDefaultDeflaterFactory()</code></a>.
+ Use <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.OutputStream-java.io.File-int-htsjdk.samtools.util.zip.DeflaterFactory-"><code>BlockCompressedOutputStream(OutputStream, File, int, DeflaterFactory)</code></a> to specify a custom factory.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>file</code> - may be null</dd>
+</dl>
 </li>
 </ul>
 <a name="BlockCompressedOutputStream-java.io.OutputStream-java.io.File-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>BlockCompressedOutputStream</h4>
+<pre>public&nbsp;BlockCompressedOutputStream(java.io.OutputStream&nbsp;os,
+                                   java.io.File&nbsp;file,
+                                   int&nbsp;compressionLevel)</pre>
+<div class="block">Note: this constructor uses the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>getDefaultDeflaterFactory()</code></a>.
+ Use <a href="../../../htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.OutputStream-java.io.File-int-htsjdk.samtools.util.zip.DeflaterFactory-"><code>BlockCompressedOutputStream(OutputStream, File, int, DeflaterFactory)</code></a> to specify a custom factory.</div>
+</li>
+</ul>
+<a name="BlockCompressedOutputStream-java.io.OutputStream-java.io.File-int-htsjdk.samtools.util.zip.DeflaterFactory-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -353,7 +425,16 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 <h4>BlockCompressedOutputStream</h4>
 <pre>public&nbsp;BlockCompressedOutputStream(java.io.OutputStream&nbsp;os,
                                    java.io.File&nbsp;file,
-                                   int&nbsp;compressionLevel)</pre>
+                                   int&nbsp;compressionLevel,
+                                   <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a>&nbsp;deflaterFactory)</pre>
+<div class="block">Creates the output stream.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>os</code> - output stream to create a BlockCompressedOutputStream from</dd>
+<dd><code>file</code> - file to which to write the output or null if not available</dd>
+<dd><code>compressionLevel</code> - the compression level (0-9)</dd>
+<dd><code>deflaterFactory</code> - custom factory to create deflaters (overrides the default)</dd>
+</dl>
 </li>
 </ul>
 </li>
@@ -386,6 +467,30 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 <li class="blockList">
 <h4>getDefaultCompressionLevel</h4>
 <pre>public static&nbsp;int&nbsp;getDefaultCompressionLevel()</pre>
+</li>
+</ul>
+<a name="setDefaultDeflaterFactory-htsjdk.samtools.util.zip.DeflaterFactory-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setDefaultDeflaterFactory</h4>
+<pre>public static&nbsp;void&nbsp;setDefaultDeflaterFactory(<a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a>&nbsp;deflaterFactory)</pre>
+<div class="block">Sets the default <a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a> that will be used for all instances unless specified otherwise in the constructor.
+ If this method is not called the default is a factory that will create the JDK <code>Deflater</code>.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>deflaterFactory</code> - non-null default factory.</dd>
+</dl>
+</li>
+</ul>
+<a name="getDefaultDeflaterFactory--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getDefaultDeflaterFactory</h4>
+<pre>public static&nbsp;<a href="../../../htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a>&nbsp;getDefaultDeflaterFactory()</pre>
 </li>
 </ul>
 <a name="maybeBgzfWrapOutputStream-java.io.File-java.io.OutputStream-">

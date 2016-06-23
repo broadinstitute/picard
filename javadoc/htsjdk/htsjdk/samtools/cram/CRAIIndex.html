@@ -17,8 +17,8 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9};
-var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
+var methods = {"i0":10,"i1":9,"i2":9,"i3":10,"i4":9,"i5":9,"i6":9,"i7":10,"i8":10};
+var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -110,7 +110,7 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public class <span class="typeNameLabel">CRAIIndex</span>
 extends java.lang.Object</pre>
-<div class="block">A collection of static methods to read, write and convert CRAI index.</div>
+<div class="block">CRAI index used for CRAM files.</div>
 </li>
 </ul>
 </div>
@@ -179,46 +179,59 @@ extends java.lang.Object</pre>
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t1" class="tableTab"><span><a href="javascript:show(1);">Static Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t1" class="tableTab"><span><a href="javascript:show(1);">Static Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIIndex.html#addEntry-htsjdk.samtools.cram.CRAIEntry-">addEntry</a></span>(<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&nbsp;entry)</code>
+<div class="block">Add a single entry to the CRAI index.</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code>static java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIIndex.html#find-java.util.List-int-int-int-">find</a></span>(java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;list,
     int&nbsp;seqId,
     int&nbsp;start,
     int&nbsp;span)</code>&nbsp;</td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIIndex.html#findLastAlignedEntry-java.util.List-">findLastAlignedEntry</a></span>(java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;list)</code>
 <div class="block">Find index of the last aligned entry in the list.</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIIndex.html#getCRAIEntries--">getCRAIEntries</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIIndex.html#getLeftmost-java.util.List-">getLeftmost</a></span>(java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;list)</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIIndex.html#openCraiFileAsBaiStream-java.io.File-htsjdk.samtools.SAMSequenceDictionary-">openCraiFileAsBaiStream</a></span>(java.io.File&nbsp;cramIndexFile,
                        <a href="../../../htsjdk/samtools/SAMSequenceDictionary.html" title="class in htsjdk.samtools">SAMSequenceDictionary</a>&nbsp;dictionary)</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIIndex.html#openCraiFileAsBaiStream-java.io.InputStream-htsjdk.samtools.SAMSequenceDictionary-">openCraiFileAsBaiStream</a></span>(java.io.InputStream&nbsp;indexStream,
                        <a href="../../../htsjdk/samtools/SAMSequenceDictionary.html" title="class in htsjdk.samtools">SAMSequenceDictionary</a>&nbsp;dictionary)</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
-<td class="colFirst"><code>static java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIIndex.html#readIndex-java.io.InputStream-">readIndex</a></span>(java.io.InputStream&nbsp;is)</code>&nbsp;</td>
+<tr id="i7" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIIndex.html#processContainer-htsjdk.samtools.cram.structure.Container-">processContainer</a></span>(<a href="../../../htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a>&nbsp;c)</code>
+<div class="block">Create index entries for a single container.</div>
+</td>
 </tr>
-<tr id="i6" class="altColor">
-<td class="colFirst"><code>static void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIIndex.html#writeIndex-java.io.OutputStream-java.util.List-">writeIndex</a></span>(java.io.OutputStream&nbsp;os,
-          java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;index)</code>&nbsp;</td>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIIndex.html#writeIndex-java.io.OutputStream-">writeIndex</a></span>(java.io.OutputStream&nbsp;os)</code>
+<div class="block">Write out the index to an output stream;</div>
+</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -280,31 +293,85 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="writeIndex-java.io.OutputStream-java.util.List-">
+<a name="addEntry-htsjdk.samtools.cram.CRAIEntry-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>addEntry</h4>
+<pre>public&nbsp;void&nbsp;addEntry(<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&nbsp;entry)</pre>
+<div class="block">Add a single entry to the CRAI index.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>entry</code> - entry to be added</dd>
+</dl>
+</li>
+</ul>
+<a name="getCRAIEntries--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getCRAIEntries</h4>
+<pre>public&nbsp;java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;getCRAIEntries()</pre>
+</li>
+</ul>
+<a name="writeIndex-java.io.OutputStream-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>writeIndex</h4>
-<pre>public static&nbsp;void&nbsp;writeIndex(java.io.OutputStream&nbsp;os,
-                              java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;index)
-                       throws java.io.IOException</pre>
+<pre>public&nbsp;void&nbsp;writeIndex(java.io.OutputStream&nbsp;os)</pre>
+<div class="block">Write out the index to an output stream;</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>os</code> - Stream to write index to</dd>
+</dl>
+</li>
+</ul>
+<a name="processContainer-htsjdk.samtools.cram.structure.Container-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>processContainer</h4>
+<pre>public&nbsp;void&nbsp;processContainer(<a href="../../../htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a>&nbsp;c)</pre>
+<div class="block">Create index entries for a single container.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>c</code> - the container to index</dd>
+</dl>
+</li>
+</ul>
+<a name="openCraiFileAsBaiStream-java.io.File-htsjdk.samtools.SAMSequenceDictionary-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>openCraiFileAsBaiStream</h4>
+<pre>public static&nbsp;<a href="../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;openCraiFileAsBaiStream(java.io.File&nbsp;cramIndexFile,
+                                                     <a href="../../../htsjdk/samtools/SAMSequenceDictionary.html" title="class in htsjdk.samtools">SAMSequenceDictionary</a>&nbsp;dictionary)
+                                              throws java.io.IOException</pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code>java.io.IOException</code></dd>
 </dl>
 </li>
 </ul>
-<a name="readIndex-java.io.InputStream-">
+<a name="openCraiFileAsBaiStream-java.io.InputStream-htsjdk.samtools.SAMSequenceDictionary-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>readIndex</h4>
-<pre>public static&nbsp;java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;readIndex(java.io.InputStream&nbsp;is)
-                                           throws <a href="../../../htsjdk/samtools/cram/CRAIIndex.CRAIIndexException.html" title="class in htsjdk.samtools.cram">CRAIIndex.CRAIIndexException</a></pre>
+<h4>openCraiFileAsBaiStream</h4>
+<pre>public static&nbsp;<a href="../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;openCraiFileAsBaiStream(java.io.InputStream&nbsp;indexStream,
+                                                     <a href="../../../htsjdk/samtools/SAMSequenceDictionary.html" title="class in htsjdk.samtools">SAMSequenceDictionary</a>&nbsp;dictionary)
+                                              throws java.io.IOException,
+                                                     <a href="../../../htsjdk/samtools/cram/CRAIIndex.CRAIIndexException.html" title="class in htsjdk.samtools.cram">CRAIIndex.CRAIIndexException</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.io.IOException</code></dd>
 <dd><code><a href="../../../htsjdk/samtools/cram/CRAIIndex.CRAIIndexException.html" title="class in htsjdk.samtools.cram">CRAIIndex.CRAIIndexException</a></code></dd>
 </dl>
 </li>
@@ -333,7 +400,7 @@ extends java.lang.Object</pre>
 <a name="findLastAlignedEntry-java.util.List-">
 <!--   -->
 </a>
-<ul class="blockList">
+<ul class="blockListLast">
 <li class="blockList">
 <h4>findLastAlignedEntry</h4>
 <pre>public static&nbsp;int&nbsp;findLastAlignedEntry(java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;list)</pre>
@@ -343,38 +410,6 @@ extends java.lang.Object</pre>
 <dd><code>list</code> - a list of CRAI entries</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>integer index of the last entry with sequence id not equal to -1</dd>
-</dl>
-</li>
-</ul>
-<a name="openCraiFileAsBaiStream-java.io.File-htsjdk.samtools.SAMSequenceDictionary-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>openCraiFileAsBaiStream</h4>
-<pre>public static&nbsp;<a href="../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;openCraiFileAsBaiStream(java.io.File&nbsp;cramIndexFile,
-                                                     <a href="../../../htsjdk/samtools/SAMSequenceDictionary.html" title="class in htsjdk.samtools">SAMSequenceDictionary</a>&nbsp;dictionary)
-                                              throws java.io.IOException</pre>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.io.IOException</code></dd>
-</dl>
-</li>
-</ul>
-<a name="openCraiFileAsBaiStream-java.io.InputStream-htsjdk.samtools.SAMSequenceDictionary-">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>openCraiFileAsBaiStream</h4>
-<pre>public static&nbsp;<a href="../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;openCraiFileAsBaiStream(java.io.InputStream&nbsp;indexStream,
-                                                     <a href="../../../htsjdk/samtools/SAMSequenceDictionary.html" title="class in htsjdk.samtools">SAMSequenceDictionary</a>&nbsp;dictionary)
-                                              throws java.io.IOException,
-                                                     <a href="../../../htsjdk/samtools/cram/CRAIIndex.CRAIIndexException.html" title="class in htsjdk.samtools.cram">CRAIIndex.CRAIIndexException</a></pre>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.io.IOException</code></dd>
-<dd><code><a href="../../../htsjdk/samtools/cram/CRAIIndex.CRAIIndexException.html" title="class in htsjdk.samtools.cram">CRAIIndex.CRAIIndexException</a></code></dd>
 </dl>
 </li>
 </ul>

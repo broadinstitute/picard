@@ -321,7 +321,7 @@
 <dd>
 <div class="block">Adds a Collection of intervals to the list of intervals.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/OverlapDetector.html#addAll-java.util.List-java.util.List-">addAll(List&lt;T&gt;, List&lt;Interval&gt;)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/OverlapDetector.html" title="class in htsjdk.samtools.util">OverlapDetector</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/OverlapDetector.html#addAll-java.util.List-java.util.List-">addAll(List&lt;T&gt;, List&lt;? extends Locatable&gt;)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/OverlapDetector.html" title="class in htsjdk.samtools.util">OverlapDetector</a></dt>
 <dd>
 <div class="block">Adds all items to the overlap detector.</div>
 </dd>
@@ -343,6 +343,16 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/ref/ReferenceTracks.html#addCoverage-int-int-">addCoverage(int, int)</a></span> - Method in class htsjdk.samtools.cram.ref.<a href="htsjdk/samtools/cram/ref/ReferenceTracks.html" title="class in htsjdk.samtools.cram.ref">ReferenceTracks</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/digest/ContentDigests.html#addCramRecords-java.lang.Iterable-">addCramRecords(Iterable&lt;CramCompressionRecord&gt;)</a></span> - Method in class htsjdk.samtools.cram.digest.<a href="htsjdk/samtools/cram/digest/ContentDigests.html" title="class in htsjdk.samtools.cram.digest">ContentDigests</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#addDeleted-htsjdk.samtools.SAMRecord-int-">addDeleted(SAMRecord, int)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamLocusIterator.LocusInfo.html" title="class in htsjdk.samtools.util">SamLocusIterator.LocusInfo</a></dt>
+<dd>
+<div class="block">Accumulate info for one read with a deletion</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIIndex.html#addEntry-htsjdk.samtools.cram.CRAIEntry-">addEntry(CRAIEntry)</a></span> - Method in class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIIndex.html" title="class in htsjdk.samtools.cram">CRAIIndex</a></dt>
+<dd>
+<div class="block">Add a single entry to the CRAI index.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMCRAIIndexer.html#addEntry-htsjdk.samtools.cram.CRAIEntry-">addEntry(CRAIEntry)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMCRAIIndexer.html" title="class in htsjdk.samtools">CRAMCRAIIndexer</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/bed/FullBEDFeature.html#addExon-htsjdk.tribble.bed.FullBEDFeature.Exon-">addExon(FullBEDFeature.Exon)</a></span> - Method in class htsjdk.tribble.bed.<a href="htsjdk/tribble/bed/FullBEDFeature.html" title="class in htsjdk.tribble.bed">FullBEDFeature</a></dt>
 <dd>&nbsp;</dd>
@@ -412,9 +422,13 @@
 <dd>
 <div class="block">Adds the first chunk to the bin</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/OverlapDetector.html#addLhs-T-htsjdk.samtools.util.Interval-">addLhs(T, Interval)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/OverlapDetector.html" title="class in htsjdk.samtools.util">OverlapDetector</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#addInserted-htsjdk.samtools.SAMRecord-int-">addInserted(SAMRecord, int)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamLocusIterator.LocusInfo.html" title="class in htsjdk.samtools.util">SamLocusIterator.LocusInfo</a></dt>
 <dd>
-<div class="block">Adds a mapping to the set of mappings against which to match candidates.</div>
+<div class="block">Accumulate info for one read with an insertion.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/OverlapDetector.html#addLhs-T-htsjdk.samtools.util.Locatable-">addLhs(T, Locatable)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/OverlapDetector.html" title="class in htsjdk.samtools.util">OverlapDetector</a></dt>
+<dd>
+<div class="block">Adds a Locatable to the set of Locatables against which to match candidates.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFHeader.html#addMetaDataLine-htsjdk.variant.vcf.VCFHeaderLine-">addMetaDataLine(VCFHeaderLine)</a></span> - Method in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFHeader.html" title="class in htsjdk.variant.vcf">VCFHeader</a></dt>
 <dd>
@@ -517,6 +531,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/LineIteratorImpl.html#advance--">advance()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineIteratorImpl.html" title="class in htsjdk.tribble.readers">LineIteratorImpl</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#advanceToAlignmentInContainer-int-int-">advanceToAlignmentInContainer(int, int)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
+<dd>
+<div class="block">Skip cached records until given alignment start position.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/RelativeIso8601Date.html#after-java.util.Date-">after(Date)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/RelativeIso8601Date.html" title="class in htsjdk.samtools.util">RelativeIso8601Date</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/filter/AggregateFilter.html" title="class in htsjdk.samtools.filter"><span class="typeNameLink">AggregateFilter</span></a> - Class in <a href="htsjdk/samtools/filter/package-summary.html">htsjdk.samtools.filter</a></dt>
@@ -818,8 +836,6 @@
 <div class="block">Throws an exception only if both (first) parameters are not null
  optionally check that one list is a (nonempty) prefix of the other.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html#assertSorted-htsjdk.samtools.SAMFileHeader.SortOrder-">assertSorted(SAMFileHeader.SortOrder)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools">CRAMFileReader.IntervalIterator</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#assertSorted-htsjdk.samtools.SAMFileHeader.SortOrder-">assertSorted(SAMFileHeader.SortOrder)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamReader.AssertingIterator.html#assertSorted-htsjdk.samtools.SAMFileHeader.SortOrder-">assertSorted(SAMFileHeader.SortOrder)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SamReader.AssertingIterator.html" title="class in htsjdk.samtools">SamReader.AssertingIterator</a></dt>
@@ -979,6 +995,12 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/BamIndexValidator.html#BamIndexValidator--">BamIndexValidator()</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/BamIndexValidator.html" title="class in htsjdk.samtools">BamIndexValidator</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/BamIndexValidator.IndexValidationStringency.html" title="enum in htsjdk.samtools"><span class="typeNameLink">BamIndexValidator.IndexValidationStringency</span></a> - Enum in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="htsjdk/samtools/BAMQueryMultipleIntervalsIteratorFilter.html" title="class in htsjdk.samtools"><span class="typeNameLink">BAMQueryMultipleIntervalsIteratorFilter</span></a> - Class in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
+<dd>
+<div class="block">Filters out records that do not match any of the given intervals and query type.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/BAMQueryMultipleIntervalsIteratorFilter.html#BAMQueryMultipleIntervalsIteratorFilter-htsjdk.samtools.QueryInterval:A-boolean-">BAMQueryMultipleIntervalsIteratorFilter(QueryInterval[], boolean)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/BAMQueryMultipleIntervalsIteratorFilter.html" title="class in htsjdk.samtools">BAMQueryMultipleIntervalsIteratorFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/BAMRecord.html" title="class in htsjdk.samtools"><span class="typeNameLink">BAMRecord</span></a> - Class in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
 <dd>
@@ -1387,27 +1409,40 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.lang.String-">BlockCompressedOutputStream(String)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util">BlockCompressedOutputStream</a></dt>
 <dd>
-<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel</div>
+<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel
+ Note: this constructor uses the default <a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>BlockCompressedOutputStream.getDefaultDeflaterFactory()</code></a>.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.File-">BlockCompressedOutputStream(File)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util">BlockCompressedOutputStream</a></dt>
 <dd>
-<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel</div>
+<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel
+ Note: this constructor uses the default <a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>BlockCompressedOutputStream.getDefaultDeflaterFactory()</code></a>.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.lang.String-int-">BlockCompressedOutputStream(String, int)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util">BlockCompressedOutputStream</a></dt>
 <dd>
-<div class="block">Prepare to compress at the given compression level</div>
+<div class="block">Prepare to compress at the given compression level
+ Note: this constructor uses the default <a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>BlockCompressedOutputStream.getDefaultDeflaterFactory()</code></a>.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.File-int-">BlockCompressedOutputStream(File, int)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util">BlockCompressedOutputStream</a></dt>
 <dd>
 <div class="block">Prepare to compress at the given compression level</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.File-int-htsjdk.samtools.util.zip.DeflaterFactory-">BlockCompressedOutputStream(File, int, DeflaterFactory)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util">BlockCompressedOutputStream</a></dt>
+<dd>
+<div class="block">Prepare to compress at the given compression level</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.OutputStream-java.io.File-">BlockCompressedOutputStream(OutputStream, File)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util">BlockCompressedOutputStream</a></dt>
 <dd>
-<div class="block">Constructors that take output streams
- file may be null</div>
+<div class="block">Uses default compression level, which is 5 unless changed by setCompressionLevel
+ Note: this constructor uses the default <a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>BlockCompressedOutputStream.getDefaultDeflaterFactory()</code></a>.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.OutputStream-java.io.File-int-">BlockCompressedOutputStream(OutputStream, File, int)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util">BlockCompressedOutputStream</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Note: this constructor uses the default <a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a>, see <a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--"><code>BlockCompressedOutputStream.getDefaultDeflaterFactory()</code></a>.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#BlockCompressedOutputStream-java.io.OutputStream-java.io.File-int-htsjdk.samtools.util.zip.DeflaterFactory-">BlockCompressedOutputStream(OutputStream, File, int, DeflaterFactory)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util">BlockCompressedOutputStream</a></dt>
+<dd>
+<div class="block">Creates the output stream.</div>
+</dd>
 <dt><a href="htsjdk/samtools/util/BlockCompressedStreamConstants.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">BlockCompressedStreamConstants</span></a> - Class in <a href="htsjdk/samtools/util/package-summary.html">htsjdk.samtools.util</a></dt>
 <dd>
 <div class="block">Constants shared by BlockCompressed{Input,Output}Stream classes</div>
@@ -1530,6 +1565,8 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/EncodingKey.html#byFirstTwoChars-java.lang.String-">byFirstTwoChars(String)</a></span> - Static method in enum htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/EncodingKey.html" title="enum in htsjdk.samtools.cram.structure">EncodingKey</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIEntry.html#byStart">byStart</a></span> - Static variable in class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIEntry.html#byStartDesc">byStartDesc</a></span> - Static variable in class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/build/CompressionHeaderFactory.html#BYTE_SPACE_SIZE">BYTE_SPACE_SIZE</a></span> - Static variable in class htsjdk.samtools.cram.build.<a href="htsjdk/samtools/cram/build/CompressionHeaderFactory.html" title="class in htsjdk.samtools.cram.build">CompressionHeaderFactory</a></dt>
 <dd>&nbsp;</dd>
@@ -1728,6 +1765,10 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/build/CramIO.html#checkHeaderAndEOF-java.io.File-">checkHeaderAndEOF(File)</a></span> - Static method in class htsjdk.samtools.cram.build.<a href="htsjdk/samtools/cram/build/CramIO.html" title="class in htsjdk.samtools.cram.build">CramIO</a></dt>
 <dd>
 <div class="block">Check if the file: 1) contains proper CRAM header.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/sra/SRAAccession.html#checkIfInitialized--">checkIfInitialized()</a></span> - Static method in class htsjdk.samtools.sra.<a href="htsjdk/samtools/sra/SRAAccession.html" title="class in htsjdk.samtools.sra">SRAAccession</a></dt>
+<dd>
+<div class="block">Tries to initialize SRA.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypesContext.html#checkImmutability--">checkImmutability()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypesContext.html" title="class in htsjdk.variant.variantcontext">GenotypesContext</a></dt>
 <dd>&nbsp;</dd>
@@ -1929,8 +1970,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.html#close--">close()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools">CRAMFileReader</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html#close--">close()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools">CRAMFileReader.IntervalIterator</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#close--">close()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/DownsamplingIterator.html#close--">close()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/DownsamplingIterator.html" title="class in htsjdk.samtools">DownsamplingIterator</a></dt>
@@ -1993,7 +2032,11 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html#close--">close()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html" title="class in htsjdk.samtools.seekablestream">SeekableMemoryStream</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html#close--">close()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream">SeekablePathStream</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableStream.html#close--">close()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/sra/SRAAlignmentIterator.html#close--">close()</a></span> - Method in class htsjdk.samtools.sra.<a href="htsjdk/samtools/sra/SRAAlignmentIterator.html" title="class in htsjdk.samtools.sra">SRAAlignmentIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/sra/SRAIndexedSequenceFile.html#close--">close()</a></span> - Method in class htsjdk.samtools.sra.<a href="htsjdk/samtools/sra/SRAIndexedSequenceFile.html" title="class in htsjdk.samtools.sra">SRAIndexedSequenceFile</a></dt>
 <dd>&nbsp;</dd>
@@ -2124,6 +2167,8 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableFileStream.html#closeAllInstances--">closeAllInstances()</a></span> - Static method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableFileStream.html" title="class in htsjdk.samtools.seekablestream">SeekableFileStream</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html#closeAllInstances--">closeAllInstances()</a></span> - Static method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream">SeekablePathStream</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/ftp/FTPClient.html#closeDataStream--">closeDataStream()</a></span> - Method in class htsjdk.samtools.util.ftp.<a href="htsjdk/samtools/util/ftp/FTPClient.html" title="class in htsjdk.samtools.util.ftp">FTPClient</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/util/CloserUtil.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">CloserUtil</span></a> - Class in <a href="htsjdk/samtools/util/package-summary.html">htsjdk.samtools.util</a></dt>
@@ -2212,6 +2257,11 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/ComparableTuple.html#ComparableTuple-A-B-">ComparableTuple(A, B)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/ComparableTuple.html" title="class in htsjdk.samtools.util">ComparableTuple</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#comparator--">comparator()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
+<dd>
+<div class="block">Returns the comparator used to order the keys in this histogram, or
+ <code>null</code> if this histogram uses the natural ordering of its keys.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/DuplicateScoringStrategy.html#compare-htsjdk.samtools.SAMRecord-htsjdk.samtools.SAMRecord-htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy-boolean-">compare(SAMRecord, SAMRecord, DuplicateScoringStrategy.ScoringStrategy, boolean)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/DuplicateScoringStrategy.html" title="class in htsjdk.samtools">DuplicateScoringStrategy</a></dt>
 <dd>
 <div class="block">Compare two records based on their duplicate scores.</div>
@@ -2248,6 +2298,8 @@
 <dd>
 <div class="block">Compares double values for equality (within epsilon), or inequality.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/BAMQueryMultipleIntervalsIteratorFilter.html#compareIntervalToRecord-htsjdk.samtools.QueryInterval-htsjdk.samtools.SAMRecord-">compareIntervalToRecord(QueryInterval, SAMRecord)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/BAMQueryMultipleIntervalsIteratorFilter.html" title="class in htsjdk.samtools">BAMQueryMultipleIntervalsIteratorFilter</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMUtils.html#compareMapqs-int-int-">compareMapqs(int, int)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMUtils.html" title="class in htsjdk.samtools">SAMUtils</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMRecordQueryNameComparator.html#compareReadNames-java.lang.String-java.lang.String-">compareReadNames(String, String)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordQueryNameComparator.html" title="class in htsjdk.samtools">SAMRecordQueryNameComparator</a></dt>
@@ -2299,6 +2351,8 @@
 <div class="block">IT IS CRITICAL THAT THIS BE OVERRIDDEN SO WE SORT THE CONTIGS IN THE CORRECT ORDER</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFHeaderLine.html#compareTo-java.lang.Object-">compareTo(Object)</a></span> - Method in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFHeaderLine.html" title="class in htsjdk.variant.vcf">VCFHeaderLine</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/BAMQueryMultipleIntervalsIteratorFilter.html#compareToFilter-htsjdk.samtools.SAMRecord-">compareToFilter(SAMRecord)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/BAMQueryMultipleIntervalsIteratorFilter.html" title="class in htsjdk.samtools">BAMQueryMultipleIntervalsIteratorFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/common/Version.html#compatibleWith-htsjdk.samtools.cram.common.Version-">compatibleWith(Version)</a></span> - Method in class htsjdk.samtools.cram.common.<a href="htsjdk/samtools/cram/common/Version.html" title="class in htsjdk.samtools.cram.common">Version</a></dt>
 <dd>&nbsp;</dd>
@@ -2489,6 +2543,10 @@
 <dd>
 <div class="block">
  Tests if the specified object is a key in this hashtable.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#containsKey-K-">containsKey(K)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
+<dd>
+<div class="block">Return whether this histogram contains the given key.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/IntervalTreeMap.html#containsKey-java.lang.Object-">containsKey(Object)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/IntervalTreeMap.html" title="class in htsjdk.samtools.util">IntervalTreeMap</a></dt>
 <dd>&nbsp;</dd>
@@ -2695,7 +2753,7 @@
 </dd>
 <dt><a href="htsjdk/samtools/cram/CRAIIndex.html" title="class in htsjdk.samtools.cram"><span class="typeNameLink">CRAIIndex</span></a> - Class in <a href="htsjdk/samtools/cram/package-summary.html">htsjdk.samtools.cram</a></dt>
 <dd>
-<div class="block">A collection of static methods to read, write and convert CRAI index.</div>
+<div class="block">CRAI index used for CRAM files.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIIndex.html#CRAIIndex--">CRAIIndex()</a></span> - Constructor for class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIIndex.html" title="class in htsjdk.samtools.cram">CRAIIndex</a></dt>
 <dd>&nbsp;</dd>
@@ -2756,6 +2814,14 @@
 <div class="block">Create a CRAMContainerStreamWriter for writing SAM records into a series of CRAM
  containers on output stream, with an optional index.</div>
 </dd>
+<dt><a href="htsjdk/samtools/CRAMCRAIIndexer.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMCRAIIndexer</span></a> - Class in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
+<dd>
+<div class="block">Indexer for creating/reading/writing a CRAIIndex for a CRAM file/stream.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMCRAIIndexer.html#CRAMCRAIIndexer-java.io.OutputStream-htsjdk.samtools.SAMFileHeader-">CRAMCRAIIndexer(OutputStream, SAMFileHeader)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMCRAIIndexer.html" title="class in htsjdk.samtools">CRAMCRAIIndexer</a></dt>
+<dd>
+<div class="block">Create a CRAMCRAIIndexer that writes to the given output stream.</div>
+</dd>
 <dt><a href="htsjdk/samtools/cram/CRAMException.html" title="class in htsjdk.samtools.cram"><span class="typeNameLink">CRAMException</span></a> - Exception in <a href="htsjdk/samtools/cram/package-summary.html">htsjdk.samtools.cram</a></dt>
 <dd>
 <div class="block">Created by edwardk on 8/13/15.</div>
@@ -2804,8 +2870,6 @@
 <div class="block">Create a CRAMFileReader from a CRAM file and optional index file using the supplied reference
  source and validation stringency.</div>
 </dd>
-<dt><a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMFileReader.IntervalIterator</span></a> - Class in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
-<dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMFileWriter</span></a> - Class in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-htsjdk.samtools.cram.ref.CRAMReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter(OutputStream, CRAMReferenceSource, SAMFileHeader, String)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools">CRAMFileWriter</a></dt>
@@ -2896,6 +2960,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/digest/ContentDigests.html#create-htsjdk.samtools.SAMBinaryTagAndValue-">create(SAMBinaryTagAndValue)</a></span> - Static method in class htsjdk.samtools.cram.digest.<a href="htsjdk/samtools/cram/digest/ContentDigests.html" title="class in htsjdk.samtools.cram.digest">ContentDigests</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/OverlapDetector.html#create-java.util.List-">create(List&lt;T&gt;)</a></span> - Static method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/OverlapDetector.html" title="class in htsjdk.samtools.util">OverlapDetector</a></dt>
+<dd>
+<div class="block">Creates a new OverlapDetector with no trim and the given set of intervals.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/Allele.html#create-byte:A-boolean-">create(byte[], boolean)</a></span> - Static method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/Allele.html" title="class in htsjdk.variant.variantcontext">Allele</a></dt>
 <dd>
 <div class="block">Create a new Allele that includes bases and if tagged as the reference allele if isRef == true.</div>
@@ -3390,8 +3458,7 @@
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><span class="typeNameLink">DeflaterFactory</span></a> - Class in <a href="htsjdk/samtools/util/zip/package-summary.html">htsjdk.samtools.util.zip</a></dt>
 <dd>
-<div class="block">Create a hardware-accelerated Intel deflater if the required library is available on the classpath and
- <a href="htsjdk/samtools/Defaults.html#TRY_USE_INTEL_DEFLATER"><code>Defaults.TRY_USE_INTEL_DEFLATER</code></a> is true, otherwise create a standard JDK deflater.</div>
+<div class="block">Factory for <code>Deflater</code> objects used by <a href="htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util"><code>BlockCompressedOutputStream</code></a>.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/DeflaterFactory.html#DeflaterFactory--">DeflaterFactory()</a></span> - Constructor for class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a></dt>
 <dd>&nbsp;</dd>
@@ -3472,6 +3539,11 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/bcf2/BCF2Utils.html#determineIntegerType-java.util.List-">determineIntegerType(List&lt;Integer&gt;)</a></span> - Static method in class htsjdk.variant.bcf2.<a href="htsjdk/variant/bcf2/BCF2Utils.html" title="class in htsjdk.variant.bcf2">BCF2Utils</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/writer/VariantContextWriterBuilder.html#determineOutputTypeFromFile-java.io.File-">determineOutputTypeFromFile(File)</a></span> - Static method in class htsjdk.variant.variantcontext.writer.<a href="htsjdk/variant/variantcontext/writer/VariantContextWriterBuilder.html" title="class in htsjdk.variant.variantcontext.writer">VariantContextWriterBuilder</a></dt>
+<dd>
+<div class="block">Attempts to determine the type of file/data to write based on the File path being
+ written to.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/Genotype.html#determineType--">determineType()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/Genotype.html" title="class in htsjdk.variant.variantcontext">Genotype</a></dt>
 <dd>
 <div class="block">Internal code to determine the type of the genotype from the alleles vector</div>
@@ -3643,7 +3715,7 @@
 <dd>
 <div class="block">Force all lazily-initialized data members to be initialized.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#EBI_REFERENCE_SEVICE_URL_MASK">EBI_REFERENCE_SEVICE_URL_MASK</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#EBI_REFERENCE_SERVICE_URL_MASK">EBI_REFERENCE_SERVICE_URL_MASK</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
 <dd>
 <div class="block">A mask (pattern) to use when building EBI reference service URL for a
  given MD5 checksum.</div>
@@ -3889,6 +3961,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html#eof--">eof()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html" title="class in htsjdk.samtools.seekablestream">SeekableMemoryStream</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html#eof--">eof()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream">SeekablePathStream</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableStream.html#eof--">eof()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/FastLineReader.html#eof--">eof()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/FastLineReader.html" title="class in htsjdk.samtools.util">FastLineReader</a></dt>
@@ -4009,8 +4083,6 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/IntervalList.html#equals-java.lang.Object-">equals(Object)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/IntervalList.html" title="class in htsjdk.samtools.util">IntervalList</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/IntervalTreeMap.html#equals-java.lang.Object-">equals(Object)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/IntervalTreeMap.html" title="class in htsjdk.samtools.util">IntervalTreeMap</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Objects.html#equals-java.lang.Object-java.lang.Object-">equals(Object, Object)</a></span> - Static method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Objects.html" title="class in htsjdk.samtools.util">Objects</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/RelativeIso8601Date.html#equals-java.lang.Object-">equals(Object)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/RelativeIso8601Date.html" title="class in htsjdk.samtools.util">RelativeIso8601Date</a></dt>
 <dd>&nbsp;</dd>
@@ -4639,6 +4711,10 @@
 <dd>
 <div class="block">Finds the index file associated with the provided SAM file.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamFiles.html#findIndex-java.nio.file.Path-">findIndex(Path)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SamFiles.html" title="class in htsjdk.samtools">SamFiles</a></dt>
+<dd>
+<div class="block">Finds the index file associated with the provided SAM file.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIIndex.html#findLastAlignedEntry-java.util.List-">findLastAlignedEntry(List&lt;CRAIEntry&gt;)</a></span> - Static method in class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIIndex.html" title="class in htsjdk.samtools.cram">CRAIIndex</a></dt>
 <dd>
 <div class="block">Find index of the last aligned entry in the list.</div>
@@ -4664,6 +4740,10 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMContainerStreamWriter.html#finish-boolean-">finish(boolean)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMContainerStreamWriter.html" title="class in htsjdk.samtools">CRAMContainerStreamWriter</a></dt>
 <dd>
 <div class="block">Finish writing to the stream.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMCRAIIndexer.html#finish--">finish()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMCRAIIndexer.html" title="class in htsjdk.samtools">CRAMCRAIIndexer</a></dt>
+<dd>
+<div class="block">Finish creating the index by writing the accumulated entries out to the stream.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileWriter.html#finish--">finish()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools">CRAMFileWriter</a></dt>
 <dd>&nbsp;</dd>
@@ -4717,6 +4797,10 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMContainerStreamWriter.html#flushContainer--">flushContainer()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMContainerStreamWriter.html" title="class in htsjdk.samtools">CRAMContainerStreamWriter</a></dt>
 <dd>
 <div class="block">Complete the current container and flush it to the output stream.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamFlagField.html#format-int-">format(int)</a></span> - Method in enum htsjdk.samtools.<a href="htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a></dt>
+<dd>
+<div class="block">Returns the string associated with this flag field.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMRecord.html#format--">format()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></dt>
 <dd>
@@ -5176,13 +5260,14 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/sra/ReferenceCache.html#get-int-">get(int)</a></span> - Method in class htsjdk.samtools.sra.<a href="htsjdk/samtools/sra/ReferenceCache.html" title="class in htsjdk.samtools.sra">ReferenceCache</a></dt>
 <dd>
 <div class="block">This method returns Reference objects by reference indexes in SAM header
- Those obejcts can be used from different threads
-
- This method maintains thread safety, so that if Reference object is set already, it can be easily returned
- without locks.</div>
+ Those objects do not maintain thread safety</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/CollectionUtil.DefaultingMap.html#get-java.lang.Object-">get(Object)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/CollectionUtil.DefaultingMap.html" title="class in htsjdk.samtools.util">CollectionUtil.DefaultingMap</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#get-K-">get(K)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
+<dd>
+<div class="block">Retrieves the bin associated with the given key.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/IntervalListReferenceSequenceMask.html#get-int-int-">get(int, int)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/IntervalListReferenceSequenceMask.html" title="class in htsjdk.samtools.util">IntervalListReferenceSequenceMask</a></dt>
 <dd>
 <div class="block">It is required that sequenceIndex is >= any previous sequenceIndex passed to this class.</div>
@@ -5780,6 +5865,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFHeader.html#getContigLines--">getContigLines()</a></span> - Method in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFHeader.html" title="class in htsjdk.variant.vcf">VCFHeader</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/liftover/LiftOver.html#getContigMap--">getContigMap()</a></span> - Method in class htsjdk.samtools.liftover.<a href="htsjdk/samtools/liftover/LiftOver.html" title="class in htsjdk.samtools.liftover">LiftOver</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/io/CountingInputStream.html#getCount--">getCount()</a></span> - Method in class htsjdk.samtools.cram.io.<a href="htsjdk/samtools/cram/io/CountingInputStream.html" title="class in htsjdk.samtools.cram.io">CountingInputStream</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/AlignmentSpan.html#getCount--">getCount()</a></span> - Method in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/AlignmentSpan.html" title="class in htsjdk.samtools.cram.structure">AlignmentSpan</a></dt>
@@ -5801,6 +5888,8 @@
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/writer/BCF2FieldEncoder.html#getCountType--">getCountType()</a></span> - Method in class htsjdk.variant.variantcontext.writer.<a href="htsjdk/variant/variantcontext/writer/BCF2FieldEncoder.html" title="class in htsjdk.variant.variantcontext.writer">BCF2FieldEncoder</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFCompoundHeaderLine.html#getCountType--">getCountType()</a></span> - Method in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFCompoundHeaderLine.html" title="class in htsjdk.variant.vcf">VCFCompoundHeaderLine</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIIndex.html#getCRAIEntries--">getCRAIEntries()</a></span> - Method in class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIIndex.html" title="class in htsjdk.samtools.cram">CRAIIndex</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/build/CramContainerIterator.html#getCramHeader--">getCramHeader()</a></span> - Method in class htsjdk.samtools.cram.build.<a href="htsjdk/samtools/cram/build/CramContainerIterator.html" title="class in htsjdk.samtools.cram.build">CramContainerIterator</a></dt>
 <dd>&nbsp;</dd>
@@ -5853,6 +5942,8 @@
 <div class="block">Attempts to construct a default CRAMReferenceSource for use with CRAM files when
  one has not been explicitly provided.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#getDefaultDeflaterFactory--">getDefaultDeflaterFactory()</a></span> - Static method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util">BlockCompressedOutputStream</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMFileWriterImpl.html#getDefaultMaxRecordsInRam--">getDefaultMaxRecordsInRam()</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMFileWriterImpl.html" title="class in htsjdk.samtools">SAMFileWriterImpl</a></dt>
 <dd>
 <div class="block">When writing records that are not presorted, this number determines the 
@@ -5866,6 +5957,8 @@
 <dd>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 &nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#getDeletedInRecord--">getDeletedInRecord()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamLocusIterator.LocusInfo.html" title="class in htsjdk.samtools.util">SamLocusIterator.LocusInfo</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/gelitext/GeliTextFeature.html#getDepthOfCoverage--">getDepthOfCoverage()</a></span> - Method in class htsjdk.tribble.gelitext.<a href="htsjdk/tribble/gelitext/GeliTextFeature.html" title="class in htsjdk.tribble.gelitext">GeliTextFeature</a></dt>
 <dd>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
@@ -6448,6 +6541,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BinaryCodec.html#getInputStream--">getInputStream()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BinaryCodec.html" title="class in htsjdk.samtools.util">BinaryCodec</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#getInsertedInRecord--">getInsertedInRecord()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamLocusIterator.LocusInfo.html" title="class in htsjdk.samtools.util">SamLocusIterator.LocusInfo</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CustomReaderFactory.html#getInstance--">getInstance()</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/CustomReaderFactory.html" title="class in htsjdk.samtools">CustomReaderFactory</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/DefaultSAMRecordFactory.html#getInstance--">getInstance()</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/DefaultSAMRecordFactory.html" title="class in htsjdk.samtools">DefaultSAMRecordFactory</a></dt>
@@ -6693,7 +6788,9 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/sra/SRALazyRecord.html#getMateUnmappedFlag--">getMateUnmappedFlag()</a></span> - Method in class htsjdk.samtools.sra.<a href="htsjdk/samtools/sra/SRALazyRecord.html" title="class in htsjdk.samtools.sra">SRALazyRecord</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#getMax--">getMax()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Returns the key with the highest count.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/AbstractBAMFileIndex.html#getMaxAddressibleGenomicLocation--">getMaxAddressibleGenomicLocation()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/AbstractBAMFileIndex.html" title="class in htsjdk.samtools">AbstractBAMFileIndex</a></dt>
 <dd>
 <div class="block">Gets the possible number of bins for a given reference sequence.</div>
@@ -6804,7 +6901,9 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/metrics/MetricsFile.html#getMetricsColumnLabels--">getMetricsColumnLabels()</a></span> - Method in class htsjdk.samtools.metrics.<a href="htsjdk/samtools/metrics/MetricsFile.html" title="class in htsjdk.samtools.metrics">MetricsFile</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#getMin--">getMin()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Returns the key with the lowest count.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/LinearIndex.html#getMinimumOffset-int-">getMinimumOffset(int)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/LinearIndex.html" title="class in htsjdk.samtools">LinearIndex</a></dt>
 <dd>
 <div class="block">Gets the minimum offset of any alignment start appearing in this index, according to the linear index.</div>
@@ -6980,9 +7079,9 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/IntervalTreeMap.html#getOverlapping-htsjdk.samtools.util.Interval-">getOverlapping(Interval)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/IntervalTreeMap.html" title="class in htsjdk.samtools.util">IntervalTreeMap</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/OverlapDetector.html#getOverlaps-htsjdk.samtools.util.Interval-">getOverlaps(Interval)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/OverlapDetector.html" title="class in htsjdk.samtools.util">OverlapDetector</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/OverlapDetector.html#getOverlaps-htsjdk.samtools.util.Locatable-">getOverlaps(Locatable)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/OverlapDetector.html" title="class in htsjdk.samtools.util">OverlapDetector</a></dt>
 <dd>
-<div class="block">Gets the collection of objects that overlap the provided mapping.</div>
+<div class="block">Gets the Set of objects that overlap the provided locatable.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/Cigar.html#getPaddedReferenceLength--">getPaddedReferenceLength()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/Cigar.html" title="class in htsjdk.samtools">Cigar</a></dt>
 <dd>&nbsp;</dd>
@@ -7671,6 +7770,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html#getSource--">getSource()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html" title="class in htsjdk.samtools.seekablestream">SeekableMemoryStream</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html#getSource--">getSource()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream">SeekablePathStream</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableStream.html#getSource--">getSource()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/TabixReader.html#getSource--">getSource()</a></span> - Method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/TabixReader.html" title="class in htsjdk.tribble.readers">TabixReader</a></dt>
@@ -8265,6 +8366,8 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.Bin.html#hashCode--">hashCode()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.Bin.html" title="class in htsjdk.samtools.util">Histogram.Bin</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#hashCode--">hashCode()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Interval.html#hashCode--">hashCode()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Interval.html" title="class in htsjdk.samtools.util">Interval</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/IntervalList.html#hashCode--">hashCode()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/IntervalList.html" title="class in htsjdk.samtools.util">IntervalList</a></dt>
@@ -8347,8 +8450,6 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/build/CramContainerIterator.html#hasNext--">hasNext()</a></span> - Method in class htsjdk.samtools.cram.build.<a href="htsjdk/samtools/cram/build/CramContainerIterator.html" title="class in htsjdk.samtools.cram.build">CramContainerIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/build/CramSpanContainerIterator.html#hasNext--">hasNext()</a></span> - Method in class htsjdk.samtools.cram.build.<a href="htsjdk/samtools/cram/build/CramSpanContainerIterator.html" title="class in htsjdk.samtools.cram.build">CramSpanContainerIterator</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html#hasNext--">hasNext()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools">CRAMFileReader.IntervalIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#hasNext--">hasNext()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
 <dd>&nbsp;</dd>
@@ -8513,11 +8614,11 @@
 <dd>
 <div class="block">Constructs a new Histogram with supplied bin and value labels.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#Histogram-java.util.Comparator-">Histogram(Comparator&lt;K&gt;)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#Histogram-java.util.Comparator-">Histogram(Comparator&lt;? super K&gt;)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
 <dd>
 <div class="block">Constructs a new Histogram that'll use the supplied comparator to sort keys.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#Histogram-java.lang.String-java.lang.String-java.util.Comparator-">Histogram(String, String, Comparator&lt;K&gt;)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#Histogram-java.lang.String-java.lang.String-java.util.Comparator-">Histogram(String, String, Comparator&lt;? super K&gt;)</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
 <dd>
 <div class="block">Constructor that takes labels for the bin and values and a comparator to sort the bins.</div>
 </dd>
@@ -8525,7 +8626,7 @@
 <dd>
 <div class="block">Copy constructor for a histogram.</div>
 </dd>
-<dt><a href="htsjdk/samtools/util/Histogram.Bin.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">Histogram.Bin</span></a> - Class in <a href="htsjdk/samtools/util/package-summary.html">htsjdk.samtools.util</a></dt>
+<dt><a href="htsjdk/samtools/util/Histogram.Bin.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">Histogram.Bin</span></a>&lt;<a href="htsjdk/samtools/util/Histogram.Bin.html" title="type parameter in Histogram.Bin">K</a> extends java.lang.Comparable&gt; - Class in <a href="htsjdk/samtools/util/package-summary.html">htsjdk.samtools.util</a></dt>
 <dd>
 <div class="block">Represents a bin in the Histogram.</div>
 </dd>
@@ -8733,6 +8834,10 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/Slice.html#index">index</a></span> - Variable in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/Slice.html" title="class in htsjdk.samtools.cram.structure">Slice</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamInputResource.html#index-java.io.File-">index(File)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SamInputResource.html" title="class in htsjdk.samtools">SamInputResource</a></dt>
+<dd>
+<div class="block">Updates the index to point at the provided resource, then returns itself.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamInputResource.html#index-java.nio.file.Path-">index(Path)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SamInputResource.html" title="class in htsjdk.samtools">SamInputResource</a></dt>
 <dd>
 <div class="block">Updates the index to point at the provided resource, then returns itself.</div>
 </dd>
@@ -8945,8 +9050,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/writer/BCF2FieldWriter.IntegerTypeGenotypesWriter.html#IntegerTypeGenotypesWriter-htsjdk.variant.vcf.VCFHeader-htsjdk.variant.variantcontext.writer.BCF2FieldEncoder-">IntegerTypeGenotypesWriter(VCFHeader, BCF2FieldEncoder)</a></span> - Constructor for class htsjdk.variant.variantcontext.writer.<a href="htsjdk/variant/variantcontext/writer/BCF2FieldWriter.IntegerTypeGenotypesWriter.html" title="class in htsjdk.variant.variantcontext.writer">BCF2FieldWriter.IntegerTypeGenotypesWriter</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/DeflaterFactory.html#INTEL_DEFLATER_CLASS_NAME">INTEL_DEFLATER_CLASS_NAME</a></span> - Static variable in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/TribbleException.InternalCodecException.html#InternalCodecException-java.lang.String-">InternalCodecException(String)</a></span> - Constructor for exception htsjdk.tribble.<a href="htsjdk/tribble/TribbleException.InternalCodecException.html" title="class in htsjdk.tribble">TribbleException.InternalCodecException</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIEntry.html#intersect-htsjdk.samtools.cram.CRAIEntry-htsjdk.samtools.cram.CRAIEntry-">intersect(CRAIEntry, CRAIEntry)</a></span> - Static method in class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a></dt>
@@ -9014,10 +9117,6 @@
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/index/interval/IntervalIndexCreator.html#IntervalIndexCreator-java.io.File-int-">IntervalIndexCreator(File, int)</a></span> - Constructor for class htsjdk.tribble.index.interval.<a href="htsjdk/tribble/index/interval/IntervalIndexCreator.html" title="class in htsjdk.tribble.index.interval">IntervalIndexCreator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/index/interval/IntervalIndexCreator.html#IntervalIndexCreator-java.io.File-">IntervalIndexCreator(File)</a></span> - Constructor for class htsjdk.tribble.index.interval.<a href="htsjdk/tribble/index/interval/IntervalIndexCreator.html" title="class in htsjdk.tribble.index.interval">IntervalIndexCreator</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-">IntervalIterator(CloseableIterator&lt;SAMRecord&gt;, QueryInterval)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools">CRAMFileReader.IntervalIterator</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-boolean-">IntervalIterator(CloseableIterator&lt;SAMRecord&gt;, QueryInterval, boolean)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools">CRAMFileReader.IntervalIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/util/IntervalList.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">IntervalList</span></a> - Class in <a href="htsjdk/samtools/util/package-summary.html">htsjdk.samtools.util</a></dt>
 <dd>
@@ -9339,7 +9438,13 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/DiskBackedQueue.html#isEmpty--">isEmpty()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/DiskBackedQueue.html" title="class in htsjdk.samtools.util">DiskBackedQueue</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#isEmpty--">isEmpty()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
+<dd>
+<div class="block">Returns true if this histogram has no data in in, false otherwise.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/IntervalTreeMap.html#isEmpty--">isEmpty()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/IntervalTreeMap.html" title="class in htsjdk.samtools.util">IntervalTreeMap</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/SamLocusIterator.LocusInfo.html#isEmpty--">isEmpty()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamLocusIterator.LocusInfo.html" title="class in htsjdk.samtools.util">SamLocusIterator.LocusInfo</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/SamRecordTrackingBuffer.html#isEmpty--">isEmpty()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamRecordTrackingBuffer.html" title="class in htsjdk.samtools.util">SamRecordTrackingBuffer</a></dt>
 <dd>
@@ -9411,6 +9516,8 @@
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/Genotype.html#isHomRef--">isHomRef()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/Genotype.html" title="class in htsjdk.variant.variantcontext">Genotype</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/Genotype.html#isHomVar--">isHomVar()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/Genotype.html" title="class in htsjdk.variant.variantcontext">Genotype</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/SamLocusIterator.html#isIncludeIndels--">isIncludeIndels()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamLocusIterator.html" title="class in htsjdk.samtools.util">SamLocusIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/SamLocusIterator.html#isIncludeNonPfReads--">isIncludeNonPfReads()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamLocusIterator.html" title="class in htsjdk.samtools.util">SamLocusIterator</a></dt>
 <dd>&nbsp;</dd>
@@ -9604,7 +9711,7 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/sra/SRAAccession.html#isSupported--">isSupported()</a></span> - Static method in class htsjdk.samtools.sra.<a href="htsjdk/samtools/sra/SRAAccession.html" title="class in htsjdk.samtools.sra">SRAAccession</a></dt>
 <dd>
-<div class="block">Returns true if SRA is supported on the running platform</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/Allele.html#isSymbolic--">isSymbolic()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/Allele.html" title="class in htsjdk.variant.variantcontext">Allele</a></dt>
 <dd>&nbsp;</dd>
@@ -9907,10 +10014,6 @@
 <dd>
 <div class="block">Returns a string of the form elt1.toString() [sep elt2.toString() ...</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#jumpWithinContainerToPos-int-int-">jumpWithinContainerToPos(int, int)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
-<dd>
-<div class="block">Skip cached records until given alignment start position.</div>
-</dd>
 </dl>
 <a name="I:K">
 <!--   -->
@@ -9919,6 +10022,10 @@
 <dl>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMReadGroupRecord.html#KEY_SEQUENCE_TAG">KEY_SEQUENCE_TAG</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/SAMReadGroupRecord.html" title="class in htsjdk.samtools">SAMReadGroupRecord</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#keySet--">keySet()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
+<dd>
+<div class="block">Returns the set of keys for this histogram.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/ReadTag.html#keyType3Bytes">keyType3Bytes</a></span> - Variable in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/ReadTag.html" title="class in htsjdk.samtools.cram.structure">ReadTag</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/ReadTag.html#keyType3BytesAsInt">keyType3BytesAsInt</a></span> - Variable in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/ReadTag.html" title="class in htsjdk.samtools.cram.structure">ReadTag</a></dt>
@@ -9997,6 +10104,8 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableHTTPStream.html#length--">length()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableHTTPStream.html" title="class in htsjdk.samtools.seekablestream">SeekableHTTPStream</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html#length--">length()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html" title="class in htsjdk.samtools.seekablestream">SeekableMemoryStream</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html#length--">length()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream">SeekablePathStream</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableStream.html#length--">length()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a></dt>
 <dd>&nbsp;</dd>
@@ -10392,8 +10501,10 @@
 <dd>
 <div class="block">Creates a copy of the default <a href="htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools"><code>SamReaderFactory</code></a>.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/DeflaterFactory.html#makeDeflater-int-boolean-">makeDeflater(int, boolean)</a></span> - Static method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a></dt>
-<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/DeflaterFactory.html#makeDeflater-int-boolean-">makeDeflater(int, boolean)</a></span> - Method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a></dt>
+<dd>
+<div class="block">Returns a deflater object that will be used when writing BAM files.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/bcf2/BCF2Utils.html#makeDictionary-htsjdk.variant.vcf.VCFHeader-">makeDictionary(VCFHeader)</a></span> - Static method in class htsjdk.variant.bcf2.<a href="htsjdk/variant/bcf2/BCF2Utils.html" title="class in htsjdk.variant.bcf2">BCF2Utils</a></dt>
 <dd>
 <div class="block">Create a strings dictionary from the VCF header
@@ -10896,8 +11007,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/CramCompressionRecord.html#next">next</a></span> - Variable in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/CramCompressionRecord.html" title="class in htsjdk.samtools.cram.structure">CramCompressionRecord</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html#next--">next()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools">CRAMFileReader.IntervalIterator</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#next--">next()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/DuplicateSetIterator.html#next--">next()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/DuplicateSetIterator.html" title="class in htsjdk.samtools">DuplicateSetIterator</a></dt>
@@ -11232,12 +11341,6 @@
 <dd>
 <div class="block">Simple case-insensitive lexical comparator of objects using their <code>Object.toString()</code> value.</div>
 </dd>
-<dt><a href="htsjdk/samtools/util/Objects.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">Objects</span></a> - Class in <a href="htsjdk/samtools/util/package-summary.html">htsjdk.samtools.util</a></dt>
-<dd>
-<div class="block">Subset of JDK7's <code>Objects</code> for non-JDK7 support.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Objects.html#Objects--">Objects()</a></span> - Constructor for class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Objects.html" title="class in htsjdk.samtools.util">Objects</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamPairUtil.html#obtainAssertedMate-java.util.Iterator-htsjdk.samtools.SAMRecord-">obtainAssertedMate(Iterator&lt;SAMRecord&gt;, SAMRecord)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SamPairUtil.html" title="class in htsjdk.samtools">SamPairUtil</a></dt>
 <dd>
 <div class="block">Obtain the secondOfPair mate belonging to the firstOfPair SAMRecord
@@ -11247,7 +11350,15 @@
 <dd>
 <div class="block">The original cigar before indel cleaning, or 454 cafie and homopolymer correction</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamFlagField.html#of-java.lang.String-">of(String)</a></span> - Static method in enum htsjdk.samtools.<a href="htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a></dt>
+<dd>
+<div class="block">Returns the type of flag field for this string.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamInputResource.html#of-java.io.File-">of(File)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SamInputResource.html" title="class in htsjdk.samtools">SamInputResource</a></dt>
+<dd>
+<div class="block">Creates a <a href="htsjdk/samtools/SamInputResource.html" title="class in htsjdk.samtools"><code>SamInputResource</code></a> reading from the provided resource, with no index.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamInputResource.html#of-java.nio.file.Path-">of(Path)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SamInputResource.html" title="class in htsjdk.samtools">SamInputResource</a></dt>
 <dd>
 <div class="block">Creates a <a href="htsjdk/samtools/SamInputResource.html" title="class in htsjdk.samtools"><code>SamInputResource</code></a> reading from the provided resource, with no index.</div>
 </dd>
@@ -11290,6 +11401,8 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CustomReaderFactory.ICustomReaderFactory.html#open-java.net.URL-">open(URL)</a></span> - Method in interface htsjdk.samtools.<a href="htsjdk/samtools/CustomReaderFactory.ICustomReaderFactory.html" title="interface in htsjdk.samtools">CustomReaderFactory.ICustomReaderFactory</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamReaderFactory.html#open-java.io.File-">open(File)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamReaderFactory.html#open-java.nio.file.Path-">open(Path)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamReaderFactory.html#open-htsjdk.samtools.SamInputResource-">open(SamInputResource)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></dt>
 <dd>&nbsp;</dd>
@@ -11479,6 +11592,10 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/index/interval/Interval.html#overlaps-htsjdk.tribble.index.interval.Interval-">overlaps(Interval)</a></span> - Method in class htsjdk.tribble.index.interval.<a href="htsjdk/tribble/index/interval/Interval.html" title="class in htsjdk.tribble.index.interval">Interval</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/OverlapDetector.html#overlapsAny-htsjdk.samtools.util.Locatable-">overlapsAny(Locatable)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/OverlapDetector.html" title="class in htsjdk.samtools.util">OverlapDetector</a></dt>
+<dd>
+<div class="block">Returns true iff the given locatable overlaps any locatable in this detector.</div>
+</dd>
 </dl>
 <a name="I:P">
 <!--   -->
@@ -11527,6 +11644,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/metrics/VersionHeader.html#parse-java.lang.String-">parse(String)</a></span> - Method in class htsjdk.samtools.metrics.<a href="htsjdk/samtools/metrics/VersionHeader.html" title="class in htsjdk.samtools.metrics">VersionHeader</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamFlagField.html#parse-java.lang.String-">parse(String)</a></span> - Method in enum htsjdk.samtools.<a href="htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a></dt>
+<dd>
+<div class="block">Parses the flag.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/DateParser.html#parse-java.lang.String-">parse(String)</a></span> - Static method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/DateParser.html" title="class in htsjdk.samtools.util">DateParser</a></dt>
 <dd>
 <div class="block">Parse the given string in ISO 8601 format and build a Date object.</div>
@@ -11554,6 +11675,10 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/FormatUtil.html#parseDate-java.lang.String-">parseDate(String)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/FormatUtil.html" title="class in htsjdk.samtools.util">FormatUtil</a></dt>
 <dd>
 <div class="block">Parses a String into a date.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamFlagField.html#parseDefault-java.lang.String-">parseDefault(String)</a></span> - Static method in enum htsjdk.samtools.<a href="htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a></dt>
+<dd>
+<div class="block">Infers the format from the flag string and parses the flag.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/FormatUtil.html#parseDouble-java.lang.String-">parseDouble(String)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/FormatUtil.html" title="class in htsjdk.samtools.util">FormatUtil</a></dt>
 <dd>
@@ -11628,6 +11753,10 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/structure/Container.html#parseTime">parseTime</a></span> - Variable in class htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamFlagField.html#parseWithoutValidation-java.lang.String-">parseWithoutValidation(String)</a></span> - Method in enum htsjdk.samtools.<a href="htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a></dt>
+<dd>
+<div class="block">Performs the actual parsing based on the radix.</div>
+</dd>
 <dt><a href="htsjdk/tribble/util/ParsingUtils.html" title="class in htsjdk.tribble.util"><span class="typeNameLink">ParsingUtils</span></a> - Class in <a href="htsjdk/tribble/util/package-summary.html">htsjdk.tribble.util</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/util/ParsingUtils.html#ParsingUtils--">ParsingUtils()</a></span> - Constructor for class htsjdk.tribble.util.<a href="htsjdk/tribble/util/ParsingUtils.html" title="class in htsjdk.tribble.util">ParsingUtils</a></dt>
@@ -11799,6 +11928,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html#position--">position()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html" title="class in htsjdk.samtools.seekablestream">SeekableMemoryStream</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html#position--">position()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream">SeekablePathStream</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableStream.html#position--">position()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/tribble/readers/Positional.html" title="interface in htsjdk.tribble.readers"><span class="typeNameLink">Positional</span></a> - Interface in <a href="htsjdk/tribble/readers/package-summary.html">htsjdk.tribble.readers</a></dt>
@@ -11893,9 +12024,17 @@
 <dd>
 <div class="block">Record any index information for a given BAM record.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIIndex.html#processContainer-htsjdk.samtools.cram.structure.Container-">processContainer(Container)</a></span> - Method in class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIIndex.html" title="class in htsjdk.samtools.cram">CRAIIndex</a></dt>
+<dd>
+<div class="block">Create index entries for a single container.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMBAIIndexer.html#processContainer-htsjdk.samtools.cram.structure.Container-htsjdk.samtools.ValidationStringency-">processContainer(Container, ValidationStringency)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMBAIIndexer.html" title="class in htsjdk.samtools">CRAMBAIIndexer</a></dt>
 <dd>
 <div class="block">Index a container, any of mapped, unmapped and multiple references are allowed.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMCRAIIndexer.html#processContainer-htsjdk.samtools.cram.structure.Container-">processContainer(Container)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMCRAIIndexer.html" title="class in htsjdk.samtools">CRAMCRAIIndexer</a></dt>
+<dd>
+<div class="block">Create index entries for a single container.</div>
 </dd>
 <dt><a href="htsjdk/samtools/util/ProcessExecutor.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">ProcessExecutor</span></a> - Class in <a href="htsjdk/samtools/util/package-summary.html">htsjdk.samtools.util</a></dt>
 <dd>
@@ -12273,6 +12412,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html#read--">read()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html" title="class in htsjdk.samtools.seekablestream">SeekableMemoryStream</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html#read-byte:A-int-int-">read(byte[], int, int)</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream">SeekablePathStream</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html#read--">read()</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream">SeekablePathStream</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableStream.html#read-byte:A-int-int-">read(byte[], int, int)</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedInputStream.html#read--">read()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedInputStream.html" title="class in htsjdk.samtools.util">BlockCompressedInputStream</a></dt>
@@ -12522,8 +12665,10 @@
 <dd>
 <div class="block">Method to read the header from a metrics file.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIIndex.html#readIndex-java.io.InputStream-">readIndex(InputStream)</a></span> - Static method in class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIIndex.html" title="class in htsjdk.samtools.cram">CRAIIndex</a></dt>
-<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMCRAIIndexer.html#readIndex-java.io.InputStream-">readIndex(InputStream)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMCRAIIndexer.html" title="class in htsjdk.samtools">CRAMCRAIIndexer</a></dt>
+<dd>
+<div class="block">Read an input stream containing a .crai index and return a CRAIIndex object.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BinaryCodec.html#readInt--">readInt()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BinaryCodec.html" title="class in htsjdk.samtools.util">BinaryCodec</a></dt>
 <dd>
 <div class="block">Read an int off the input stream</div>
@@ -12916,8 +13061,6 @@
 <div class="block">
  Removes the key (and its corresponding value) from this hashtable.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html#remove--">remove()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools">CRAMFileReader.IntervalIterator</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMIterator.html#remove--">remove()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/DownsamplingIterator.html#remove--">remove()</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/DownsamplingIterator.html" title="class in htsjdk.samtools">DownsamplingIterator</a></dt>
@@ -13255,6 +13398,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/IOUtil.html#SAM_FILE_EXTENSION">SAM_FILE_EXTENSION</a></span> - Static variable in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/IOUtil.html" title="class in htsjdk.samtools.util">IOUtil</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#SAM_FLAG_FIELD_FORMAT">SAM_FLAG_FIELD_FORMAT</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
+<dd>
+<div class="block">The output format of the flag field when writing SAM text.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/index/tabix/TabixFormat.html#SAM_FLAGS">SAM_FLAGS</a></span> - Static variable in class htsjdk.tribble.index.tabix.<a href="htsjdk/tribble/index/tabix/TabixFormat.html" title="class in htsjdk.tribble.index.tabix">TabixFormat</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamReader.Type.html#SAM_TYPE">SAM_TYPE</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/SamReader.Type.html" title="class in htsjdk.samtools">SamReader.Type</a></dt>
@@ -13445,6 +13592,10 @@
 <dd>
 <div class="block">SAM flags as enum, to be used in GUI, menu, etc...</div>
 </dd>
+<dt><a href="htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools"><span class="typeNameLink">SamFlagField</span></a> - Enum in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
+<dd>
+<div class="block">This determines how flag fields are represented in the SAM file.</div>
+</dd>
 <dt><a href="htsjdk/samtools/SAMFormatException.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMFormatException</span></a> - Exception in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
 <dd>
 <div class="block">Thrown when a SAM file being read or decoded (text or binary) looks bad.</div>
@@ -13473,7 +13624,7 @@
 </dd>
 <dt><a href="htsjdk/samtools/SAMLineParser.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMLineParser</span></a> - Class in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
 <dd>
-<div class="block">this class enables creation of a SAMRecord object from a String in SAM text format.</div>
+<div class="block">This class enables creation of a SAMRecord object from a String in SAM text format.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMLineParser.html#SAMLineParser-htsjdk.samtools.SAMFileHeader-">SAMLineParser(SAMFileHeader)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/SAMLineParser.html" title="class in htsjdk.samtools">SAMLineParser</a></dt>
 <dd>
@@ -13785,6 +13936,18 @@
 <dd>
 <div class="block">Constructs a SAMTextWriter that writes to an OutputStream.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMTextWriter.html#SAMTextWriter-java.io.Writer-htsjdk.samtools.SamFlagField-">SAMTextWriter(Writer, SamFlagField)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/SAMTextWriter.html" title="class in htsjdk.samtools">SAMTextWriter</a></dt>
+<dd>
+<div class="block">Constructs a SAMTextWriter that outputs to a Writer.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMTextWriter.html#SAMTextWriter-java.io.File-htsjdk.samtools.SamFlagField-">SAMTextWriter(File, SamFlagField)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/SAMTextWriter.html" title="class in htsjdk.samtools">SAMTextWriter</a></dt>
+<dd>
+<div class="block">Constructs a SAMTextWriter that writes to a File.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMTextWriter.html#SAMTextWriter-java.io.OutputStream-htsjdk.samtools.SamFlagField-">SAMTextWriter(OutputStream, SamFlagField)</a></span> - Constructor for class htsjdk.samtools.<a href="htsjdk/samtools/SAMTextWriter.html" title="class in htsjdk.samtools">SAMTextWriter</a></dt>
+<dd>
+<div class="block">Constructs a SAMTextWriter that writes to an OutputStream.</div>
+</dd>
 <dt><a href="htsjdk/samtools/SAMTools.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMTools</span></a> - Class in <a href="htsjdk/samtools/package-summary.html">htsjdk.samtools</a></dt>
 <dd>
 <div class="block">Command line utility for manipulating SAM/BAM files.</div>
@@ -13872,6 +14035,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html#seek-long-">seek(long)</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html" title="class in htsjdk.samtools.seekablestream">SeekableMemoryStream</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html#seek-long-">seek(long)</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream">SeekablePathStream</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableStream.html#seek-long-">seek(long)</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedInputStream.html#seek-long-">seek(long)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedInputStream.html" title="class in htsjdk.samtools.util">BlockCompressedInputStream</a></dt>
@@ -13909,6 +14074,12 @@
 <dt><a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html" title="class in htsjdk.samtools.seekablestream"><span class="typeNameLink">SeekableMemoryStream</span></a> - Class in <a href="htsjdk/samtools/seekablestream/package-summary.html">htsjdk.samtools.seekablestream</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html#SeekableMemoryStream-byte:A-java.lang.String-">SeekableMemoryStream(byte[], String)</a></span> - Constructor for class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableMemoryStream.html" title="class in htsjdk.samtools.seekablestream">SeekableMemoryStream</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream"><span class="typeNameLink">SeekablePathStream</span></a> - Class in <a href="htsjdk/samtools/seekablestream/package-summary.html">htsjdk.samtools.seekablestream</a></dt>
+<dd>
+<div class="block">An implementation of <a href="htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream"><code>SeekableStream</code></a> for <code>Path</code>.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html#SeekablePathStream-java.nio.file.Path-">SeekablePathStream(Path)</a></span> - Constructor for class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream">SeekablePathStream</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream"><span class="typeNameLink">SeekableStream</span></a> - Class in <a href="htsjdk/samtools/seekablestream/package-summary.html">htsjdk.samtools.seekablestream</a></dt>
 <dd>&nbsp;</dd>
@@ -14207,6 +14378,10 @@
 <dd>
 <div class="block">Sets the default for whether to create md5Files for BAM files this factory.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedOutputStream.html#setDefaultDeflaterFactory-htsjdk.samtools.util.zip.DeflaterFactory-">setDefaultDeflaterFactory(DeflaterFactory)</a></span> - Static method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedOutputStream.html" title="class in htsjdk.samtools.util">BlockCompressedOutputStream</a></dt>
+<dd>
+<div class="block">Sets the default <a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip"><code>DeflaterFactory</code></a> that will be used for all instances unless specified otherwise in the constructor.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMFileWriterImpl.html#setDefaultMaxRecordsInRam-int-">setDefaultMaxRecordsInRam(int)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMFileWriterImpl.html" title="class in htsjdk.samtools">SAMFileWriterImpl</a></dt>
 <dd>
 <div class="block">When writing records that are not presorted, specify the number of records stored in RAM
@@ -14224,6 +14399,10 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamReaderFactory.html#setDefaultValidationStringency-htsjdk.samtools.ValidationStringency-">setDefaultValidationStringency(ValidationStringency)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMFileWriterFactory.html#setDeflaterFactory-htsjdk.samtools.util.zip.DeflaterFactory-">setDeflaterFactory(DeflaterFactory)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></dt>
+<dd>
+<div class="block">Set the deflater factory used by BAM writers created by this writer factory.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMReadGroupRecord.html#setDescription-java.lang.String-">setDescription(String)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMReadGroupRecord.html" title="class in htsjdk.samtools">SAMReadGroupRecord</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/bed/SimpleBEDFeature.html#setDescription-java.lang.String-">setDescription(String)</a></span> - Method in class htsjdk.tribble.bed.<a href="htsjdk/tribble/bed/SimpleBEDFeature.html" title="class in htsjdk.tribble.bed">SimpleBEDFeature</a></dt>
@@ -14323,6 +14502,8 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMFileWriter.html#setIgnoreTags-java.util.Set-">setIgnoreTags(Set&lt;String&gt;)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools">CRAMFileWriter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamFileValidator.html#setIgnoreWarnings-boolean-">setIgnoreWarnings(boolean)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SamFileValidator.html" title="class in htsjdk.samtools">SamFileValidator</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/SamLocusIterator.html#setIncludeIndels-boolean-">setIncludeIndels(boolean)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamLocusIterator.html" title="class in htsjdk.samtools.util">SamLocusIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/SamLocusIterator.html#setIncludeNonPfReads-boolean-">setIncludeNonPfReads(boolean)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamLocusIterator.html" title="class in htsjdk.samtools.util">SamLocusIterator</a></dt>
 <dd>&nbsp;</dd>
@@ -14787,6 +14968,10 @@
 <dd>
 <div class="block">Controls which, if any, SAMRecords are filtered.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMFileWriterFactory.html#setSamFlagFieldOutput-htsjdk.samtools.SamFlagField-">setSamFlagFieldOutput(SamFlagField)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></dt>
+<dd>
+<div class="block">Set the flag output format only when writing text.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMReadGroupRecord.html#setSample-java.lang.String-">setSample(String)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMReadGroupRecord.html" title="class in htsjdk.samtools">SAMReadGroupRecord</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMFileReader.html#setSAMRecordFactory-htsjdk.samtools.SAMRecordFactory-">setSAMRecordFactory(SAMRecordFactory)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMFileReader.html" title="class in htsjdk.samtools">SAMFileReader</a></dt>
@@ -15083,6 +15268,10 @@
 <dd>
 <div class="block">Return the size of the remote file</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#size--">size()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
+<dd>
+<div class="block">Returns the size of this histogram.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/IntervalList.html#size--">size()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/IntervalList.html" title="class in htsjdk.samtools.util">IntervalList</a></dt>
 <dd>
 <div class="block">Returns the count of intervals in the list.</div>
@@ -15138,6 +15327,8 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableFTPStreamHelper.html#skip-long-">skip(long)</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableFTPStreamHelper.html" title="class in htsjdk.samtools.seekablestream">SeekableFTPStreamHelper</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekableHTTPStream.html#skip-long-">skip(long)</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekableHTTPStream.html" title="class in htsjdk.samtools.seekablestream">SeekableHTTPStream</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/seekablestream/SeekablePathStream.html#skip-long-">skip(long)</a></span> - Method in class htsjdk.samtools.seekablestream.<a href="htsjdk/samtools/seekablestream/SeekablePathStream.html" title="class in htsjdk.samtools.seekablestream">SeekablePathStream</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Md5CalculatingInputStream.html#skip-long-">skip(long)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Md5CalculatingInputStream.html" title="class in htsjdk.samtools.util">Md5CalculatingInputStream</a></dt>
 <dd>&nbsp;</dd>
@@ -15331,6 +15522,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamStreams.html#sourceLikeBam-htsjdk.samtools.seekablestream.SeekableStream-">sourceLikeBam(SeekableStream)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SamStreams.html" title="class in htsjdk.samtools">SamStreams</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamStreams.html#sourceLikeCram-htsjdk.samtools.seekablestream.SeekableStream-">sourceLikeCram(SeekableStream)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SamStreams.html" title="class in htsjdk.samtools">SamStreams</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/Allele.html#SPAN_DEL">SPAN_DEL</a></span> - Static variable in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/Allele.html" title="class in htsjdk.variant.variantcontext">Allele</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/Allele.html#SPAN_DEL_STRING">SPAN_DEL_STRING</a></span> - Static variable in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/Allele.html" title="class in htsjdk.variant.variantcontext">Allele</a></dt>
@@ -15400,6 +15593,11 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SRAIndex.html#SRA_CHUNK_SIZE">SRA_CHUNK_SIZE</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/SRAIndex.html" title="class in htsjdk.samtools">SRAIndex</a></dt>
 <dd>
 <div class="block">Chunks of that size will be created when using SRA index</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#SRA_LIBRARIES_DOWNLOAD">SRA_LIBRARIES_DOWNLOAD</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
+<dd>
+<div class="block">Boolean describing whether downloading of SRA native libraries is allowed,
+ in case such native libraries are not found locally</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamReader.Type.html#SRA_TYPE">SRA_TYPE</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/SamReader.Type.html" title="class in htsjdk.samtools">SamReader.Type</a></dt>
 <dd>&nbsp;</dd>
@@ -16131,6 +16329,8 @@
 <dd>
 <div class="block">Returns the String format for the value in the bin.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#toString--">toString()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Interval.html#toString--">toString()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Interval.html" title="class in htsjdk.samtools.util">Interval</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/IntervalTree.Node.html#toString--">toString()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/IntervalTree.Node.html" title="class in htsjdk.samtools.util">IntervalTree.Node</a></dt>
@@ -16286,10 +16486,6 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMSequenceRecord.html#truncateSequenceName-java.lang.String-">truncateSequenceName(String)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMSequenceRecord.html" title="class in htsjdk.samtools">SAMSequenceRecord</a></dt>
 <dd>
 <div class="block">Truncate sequence name at first whitespace.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#TRY_USE_INTEL_DEFLATER">TRY_USE_INTEL_DEFLATER</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
-<dd>
-<div class="block">Should BlockCompressedOutputStream attempt to load libIntelDeflater?</div>
 </dd>
 <dt><a href="htsjdk/samtools/util/Tuple.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">Tuple</span></a>&lt;<a href="htsjdk/samtools/util/Tuple.html" title="type parameter in Tuple">A</a>,<a href="htsjdk/samtools/util/Tuple.html" title="type parameter in Tuple">B</a>&gt; - Class in <a href="htsjdk/samtools/util/package-summary.html">htsjdk.samtools.util</a></dt>
 <dd>
@@ -16474,17 +16670,17 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/util/ParsingUtils.html#urlHelperClass">urlHelperClass</a></span> - Static variable in class htsjdk.tribble.util.<a href="htsjdk/tribble/util/ParsingUtils.html" title="class in htsjdk.tribble.util">ParsingUtils</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#USE_ASYNC_IO">USE_ASYNC_IO</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#USE_ASYNC_IO_READ_FOR_SAMTOOLS">USE_ASYNC_IO_READ_FOR_SAMTOOLS</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
 <dd>
-<div class="block">Should asynchronous I/O be used where supported throughout all of htsjdk (one thread per file).</div>
+<div class="block">Should asynchronous read I/O be used where supported by the samtools package (one thread per file).</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#USE_ASYNC_IO_FOR_SAMTOOLS">USE_ASYNC_IO_FOR_SAMTOOLS</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#USE_ASYNC_IO_WRITE_FOR_SAMTOOLS">USE_ASYNC_IO_WRITE_FOR_SAMTOOLS</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
 <dd>
-<div class="block">Should asynchronous I/O be used where supported by the samtools package (one thread per file).</div>
+<div class="block">Should asynchronous write I/O be used where supported by the samtools package (one thread per file).</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#USE_ASYNC_IO_FOR_TRIBBLE">USE_ASYNC_IO_FOR_TRIBBLE</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#USE_ASYNC_IO_WRITE_FOR_TRIBBLE">USE_ASYNC_IO_WRITE_FOR_TRIBBLE</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
 <dd>
-<div class="block">Should asynchronous I/O be used where supported by the tribble package (one thread per file).</div>
+<div class="block">Should asynchronous write I/O be used where supported by the tribble package (one thread per file).</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/Defaults.html#USE_CRAM_REF_DOWNLOAD">USE_CRAM_REF_DOWNLOAD</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></dt>
 <dd>
@@ -16493,8 +16689,6 @@
  Enabling this is not necessarily a good idea, since this process often fails</div>
 </dd>
 <dt><a href="htsjdk/samtools/seekablestream/UserPasswordInput.html" title="interface in htsjdk.samtools.seekablestream"><span class="typeNameLink">UserPasswordInput</span></a> - Interface in <a href="htsjdk/samtools/seekablestream/package-summary.html">htsjdk.samtools.seekablestream</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/zip/DeflaterFactory.html#usingIntelDeflater--">usingIntelDeflater()</a></span> - Static method in class htsjdk.samtools.util.zip.<a href="htsjdk/samtools/util/zip/DeflaterFactory.html" title="class in htsjdk.samtools.util.zip">DeflaterFactory</a></dt>
 <dd>&nbsp;</dd>
 </dl>
 <a name="I:V">
@@ -16650,6 +16844,10 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMFlag.html#valueOf-int-">valueOf(int)</a></span> - Static method in enum htsjdk.samtools.<a href="htsjdk/samtools/SAMFlag.html" title="enum in htsjdk.samtools">SAMFlag</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamFlagField.html#valueOf-java.lang.String-">valueOf(String)</a></span> - Static method in enum htsjdk.samtools.<a href="htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a></dt>
+<dd>
+<div class="block">Returns the enum constant of this type with the specified name.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamIndexes.html#valueOf-java.lang.String-">valueOf(String)</a></span> - Static method in enum htsjdk.samtools.<a href="htsjdk/samtools/SamIndexes.html" title="enum in htsjdk.samtools">SamIndexes</a></dt>
 <dd>
 <div class="block">Returns the enum constant of this type with the specified name.</div>
@@ -16866,6 +17064,11 @@ the order they are declared.</div>
 <div class="block">Returns an array containing the constants of this enum type, in
 the order they are declared.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SamFlagField.html#values--">values()</a></span> - Static method in enum htsjdk.samtools.<a href="htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a></dt>
+<dd>
+<div class="block">Returns an array containing the constants of this enum type, in
+the order they are declared.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SamIndexes.html#values--">values()</a></span> - Static method in enum htsjdk.samtools.<a href="htsjdk/samtools/SamIndexes.html" title="enum in htsjdk.samtools">SamIndexes</a></dt>
 <dd>
 <div class="block">Returns an array containing the constants of this enum type, in
@@ -16915,6 +17118,10 @@ the order they are declared.</div>
 <dd>
 <div class="block">Returns an array containing the constants of this enum type, in
 the order they are declared.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Histogram.html#values--">values()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/Histogram.html" title="class in htsjdk.samtools.util">Histogram</a></dt>
+<dd>
+<div class="block">Returns a <code>Collection</code> view of the values contained in this histogram.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/Log.LogLevel.html#values--">values()</a></span> - Static method in enum htsjdk.samtools.util.<a href="htsjdk/samtools/util/Log.LogLevel.html" title="enum in htsjdk.samtools.util">Log.LogLevel</a></dt>
 <dd>
@@ -17367,6 +17574,10 @@ the order they are declared.</div>
 <dd>
 <div class="block">Can we encode value v in this type, according to its declared range.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMLineParser.html#withSamFlagField-htsjdk.samtools.SamFlagField-">withSamFlagField(SamFlagField)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMLineParser.html" title="class in htsjdk.samtools">SAMLineParser</a></dt>
+<dd>
+<div class="block">Sets the expected SAM flag type expected for all records.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFUtils.html#withUpdatedContigs-htsjdk.variant.vcf.VCFHeader-java.io.File-htsjdk.samtools.SAMSequenceDictionary-">withUpdatedContigs(VCFHeader, File, SAMSequenceDictionary)</a></span> - Static method in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFUtils.html" title="class in htsjdk.variant.vcf">VCFUtils</a></dt>
 <dd>
 <div class="block">Add / replace the contig header lines in the VCFHeader with the in the reference file and master reference dictionary</div>
@@ -17645,8 +17856,14 @@ the order they are declared.</div>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/writer/VariantContextWriter.html#writeHeader-htsjdk.variant.vcf.VCFHeader-">writeHeader(VCFHeader)</a></span> - Method in interface htsjdk.variant.variantcontext.writer.<a href="htsjdk/variant/variantcontext/writer/VariantContextWriter.html" title="interface in htsjdk.variant.variantcontext.writer">VariantContextWriter</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIIndex.html#writeIndex-java.io.OutputStream-java.util.List-">writeIndex(OutputStream, List&lt;CRAIEntry&gt;)</a></span> - Static method in class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIIndex.html" title="class in htsjdk.samtools.cram">CRAIIndex</a></dt>
-<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/CRAIIndex.html#writeIndex-java.io.OutputStream-">writeIndex(OutputStream)</a></span> - Method in class htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIIndex.html" title="class in htsjdk.samtools.cram">CRAIIndex</a></dt>
+<dd>
+<div class="block">Write out the index to an output stream;</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/CRAMCRAIIndexer.html#writeIndex-htsjdk.samtools.seekablestream.SeekableStream-java.io.OutputStream-">writeIndex(SeekableStream, OutputStream)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/CRAMCRAIIndexer.html" title="class in htsjdk.samtools">CRAMCRAIIndexer</a></dt>
+<dd>
+<div class="block">Generate and write a CRAI index to an output stream from a CRAM input stream</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/index/IndexFactory.html#writeIndex-htsjdk.tribble.index.Index-java.io.File-">writeIndex(Index, File)</a></span> - Static method in class htsjdk.tribble.index.<a href="htsjdk/tribble/index/IndexFactory.html" title="class in htsjdk.tribble.index">IndexFactory</a></dt>
 <dd>
 <div class="block">Write the index to a file; little endian.</div>

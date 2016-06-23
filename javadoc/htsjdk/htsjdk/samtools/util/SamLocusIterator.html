@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -235,45 +235,53 @@ implements java.lang.Iterable&lt;<a href="../../../htsjdk/samtools/util/SamLocus
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#isIncludeNonPfReads--">isIncludeNonPfReads</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#isIncludeIndels--">isIncludeIndels</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i7" class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#isIncludeNonPfReads--">isIncludeNonPfReads</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>java.util.Iterator&lt;<a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html" title="class in htsjdk.samtools.util">SamLocusIterator.LocusInfo</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#iterator--">iterator</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html" title="class in htsjdk.samtools.util">SamLocusIterator.LocusInfo</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#next--">next</a></span>()</code>
 <div class="block">hasNext() has been fixed so that if it returns true, next() is now guaranteed not to return null.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#remove--">remove</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#setEmitUncoveredLoci-boolean-">setEmitUncoveredLoci</a></span>(boolean&nbsp;emitUncoveredLoci)</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#setIncludeIndels-boolean-">setIncludeIndels</a></span>(boolean&nbsp;includeIndels)</code>&nbsp;</td>
+</tr>
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#setIncludeNonPfReads-boolean-">setIncludeNonPfReads</a></span>(boolean&nbsp;includeNonPfReads)</code>&nbsp;</td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#setMappingQualityScoreCutoff-int-">setMappingQualityScoreCutoff</a></span>(int&nbsp;mappingQualityScoreCutoff)</code>&nbsp;</td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#setMaxReadsToAccumulatePerLocus-int-">setMaxReadsToAccumulatePerLocus</a></span>(int&nbsp;maxReadsToAccumulatePerLocus)</code>
 <div class="block">If set, this will cap the number of reads we accumulate for any given position.</div>
 </td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#setQualityScoreCutoff-int-">setQualityScoreCutoff</a></span>(int&nbsp;qualityScoreCutoff)</code>&nbsp;</td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#setSamFilters-java.util.List-">setSamFilters</a></span>(java.util.List&lt;<a href="../../../htsjdk/samtools/filter/SamRecordFilter.html" title="interface in htsjdk.samtools.filter">SamRecordFilter</a>&gt;&nbsp;samFilters)</code>
 <div class="block">Controls which, if any, SAMRecords are filtered.</div>
@@ -554,13 +562,31 @@ implements java.lang.Iterable&lt;<a href="../../../htsjdk/samtools/util/SamLocus
 <a name="setMaxReadsToAccumulatePerLocus-int-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>setMaxReadsToAccumulatePerLocus</h4>
 <pre>public&nbsp;void&nbsp;setMaxReadsToAccumulatePerLocus(int&nbsp;maxReadsToAccumulatePerLocus)</pre>
 <div class="block">If set, this will cap the number of reads we accumulate for any given position.
  As is pointed out above, setting this could cause major bias because of the non-random nature with which the
  cap is applied (the first maxReadsToAccumulatePerLocus reads are kept and all subsequent ones are dropped).</div>
+</li>
+</ul>
+<a name="isIncludeIndels--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>isIncludeIndels</h4>
+<pre>public&nbsp;boolean&nbsp;isIncludeIndels()</pre>
+</li>
+</ul>
+<a name="setIncludeIndels-boolean-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>setIncludeIndels</h4>
+<pre>public&nbsp;void&nbsp;setIncludeIndels(boolean&nbsp;includeIndels)</pre>
 </li>
 </ul>
 </li>

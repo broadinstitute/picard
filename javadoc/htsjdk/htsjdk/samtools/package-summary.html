@@ -225,89 +225,101 @@
 </td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><a href="../../htsjdk/samtools/BAMQueryMultipleIntervalsIteratorFilter.html" title="class in htsjdk.samtools">BAMQueryMultipleIntervalsIteratorFilter</a></td>
+<td class="colLast">
+<div class="block">Filters out records that do not match any of the given intervals and query type.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/BAMRecord.html" title="class in htsjdk.samtools">BAMRecord</a></td>
 <td class="colLast">
 <div class="block">Wrapper class for binary BAM records.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/BAMRecordCodec.html" title="class in htsjdk.samtools">BAMRecordCodec</a></td>
 <td class="colLast">
 <div class="block">Class for translating between in-memory and disk representation of BAMRecord.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/Bin.html" title="class in htsjdk.samtools">Bin</a></td>
 <td class="colLast">
 <div class="block">An individual bin in a BAM file.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/BinaryTagCodec.html" title="class in htsjdk.samtools">BinaryTagCodec</a></td>
 <td class="colLast">
 <div class="block">Converter between disk and in-memory representation of a SAMRecord tag.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/BinList.html" title="class in htsjdk.samtools">BinList</a></td>
 <td class="colLast">
 <div class="block">Provides a list of all bins which could exist in the BAM file.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/BinningIndexBuilder.html" title="class in htsjdk.samtools">BinningIndexBuilder</a></td>
 <td class="colLast">
 <div class="block">Builder for a BinningIndexContent object.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/BinningIndexContent.html" title="class in htsjdk.samtools">BinningIndexContent</a></td>
 <td class="colLast">
 <div class="block">In-memory representation of the binning index for a single reference.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/BinningIndexContent.BinList.html" title="class in htsjdk.samtools">BinningIndexContent.BinList</a></td>
 <td class="colLast">
 <div class="block">This class is used to encapsulate the list of Bins store in the BAMIndexContent
  While it is currently represented as an array, we may decide to change it to an ArrayList or other structure</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/Chunk.html" title="class in htsjdk.samtools">Chunk</a></td>
 <td class="colLast">
 <div class="block">A [start,stop) file pointer pairing into the BAM file, stored
  as a BAM file index.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/Cigar.html" title="class in htsjdk.samtools">Cigar</a></td>
 <td class="colLast">
 <div class="block">A list of CigarElements, which describes how a read aligns with the reference.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/CigarElement.html" title="class in htsjdk.samtools">CigarElement</a></td>
 <td class="colLast">
 <div class="block">One component of a cigar string.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/CoordinateSortedPairInfoMap.html" title="class in htsjdk.samtools">CoordinateSortedPairInfoMap</a>&lt;KEY,REC&gt;</td>
 <td class="colLast">
 <div class="block">Holds info about a mate pair for use when processing a coordinate sorted file.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/CRAMBAIIndexer.html" title="class in htsjdk.samtools">CRAMBAIIndexer</a></td>
 <td class="colLast">
 <div class="block">Class for both constructing BAM index content and writing it out.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/CRAMContainerStreamWriter.html" title="class in htsjdk.samtools">CRAMContainerStreamWriter</a></td>
 <td class="colLast">
 <div class="block">Class for writing SAMRecords into a series of CRAM containers on an output stream.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../htsjdk/samtools/CRAMCRAIIndexer.html" title="class in htsjdk.samtools">CRAMCRAIIndexer</a></td>
+<td class="colLast">
+<div class="block">Indexer for creating/reading/writing a CRAIIndex for a CRAM file/stream.</div>
 </td>
 </tr>
 <tr class="altColor">
@@ -317,142 +329,138 @@
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><a href="../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools">CRAMFileReader.IntervalIterator</a></td>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/CRAMFileWriter.html" title="class in htsjdk.samtools">CRAMFileWriter</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools">CRAMIterator</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/CustomReaderFactory.html" title="class in htsjdk.samtools">CustomReaderFactory</a></td>
 <td class="colLast">
 <div class="block">Factory for creating custom readers for accessing API based resources, 
  e.g.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/Defaults.html" title="class in htsjdk.samtools">Defaults</a></td>
 <td class="colLast">
 <div class="block">Embodies defaults for global values that affect how the SAM JDK operates.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/DefaultSAMRecordFactory.html" title="class in htsjdk.samtools">DefaultSAMRecordFactory</a></td>
 <td class="colLast">
 <div class="block">Default factory for creating SAM and BAM records used by the SAMFileReader classes.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/DiskBasedBAMFileIndex.html" title="class in htsjdk.samtools">DiskBasedBAMFileIndex</a></td>
 <td class="colLast">
 <div class="block">A class for reading BAM file indices, hitting the disk once per query.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/DownsamplingIterator.html" title="class in htsjdk.samtools">DownsamplingIterator</a></td>
 <td class="colLast">
 <div class="block">Abstract base class for all DownsamplingIterators that provides a uniform interface for recording
  and reporting statistics bout how many records have been kept and discarded.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/DownsamplingIteratorFactory.html" title="class in htsjdk.samtools">DownsamplingIteratorFactory</a></td>
 <td class="colLast">
 <div class="block">A factory for creating DownsamplingIterators that uses a number of different strategies to achieve downsampling while
  meeting various criteria.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/DuplicateScoringStrategy.html" title="class in htsjdk.samtools">DuplicateScoringStrategy</a></td>
 <td class="colLast">
 <div class="block">This class helps us compute and compare duplicate scores, which are used for selecting the non-duplicate
  during duplicate marking (see MarkDuplicates).</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/DuplicateSet.html" title="class in htsjdk.samtools">DuplicateSet</a></td>
 <td class="colLast">
 <div class="block">Stores a set of records that are duplicates of each other.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/DuplicateSetIterator.html" title="class in htsjdk.samtools">DuplicateSetIterator</a></td>
 <td class="colLast">
 <div class="block">An iterator of sets of duplicates.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/FixBAMFile.html" title="class in htsjdk.samtools">FixBAMFile</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/GenomicIndexUtil.html" title="class in htsjdk.samtools">GenomicIndexUtil</a></td>
 <td class="colLast">
 <div class="block">Constants and methods used by BAM and Tribble indices</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/LinearIndex.html" title="class in htsjdk.samtools">LinearIndex</a></td>
 <td class="colLast">
 <div class="block">The linear index associated with a given reference in a BAM index.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/MergingSamRecordIterator.html" title="class in htsjdk.samtools">MergingSamRecordIterator</a></td>
 <td class="colLast">
 <div class="block">Provides an iterator interface for merging multiple underlying iterators into a single
  iterable stream.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/NotPrimarySkippingIterator.html" title="class in htsjdk.samtools">NotPrimarySkippingIterator</a></td>
 <td class="colLast">
 <div class="block">Wrapper around SAMRecord iterator that skips over non-primary elements.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a></td>
 <td class="colLast">
 <div class="block">Interval relative to a reference, for querying a BAM file.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/ReservedTagConstants.html" title="class in htsjdk.samtools">ReservedTagConstants</a></td>
 <td class="colLast">
 <div class="block">Constants for tags used in our SAM/BAM files</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMBinaryTagAndUnsignedArrayValue.html" title="class in htsjdk.samtools">SAMBinaryTagAndUnsignedArrayValue</a></td>
 <td class="colLast">
 <div class="block">Simple extension to SAMBinaryTagAndValue in order to distinguish unsigned array values, because
  signedness cannot be determined by introspection of value.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMBinaryTagAndValue.html" title="class in htsjdk.samtools">SAMBinaryTagAndValue</a></td>
 <td class="colLast">
 <div class="block">Holds a SAMRecord attribute and the tagname (in binary form) for that attribute.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a></td>
 <td class="colLast">
 <div class="block">Header information from a SAM or BAM file.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMFileHeader.PgIdGenerator.html" title="class in htsjdk.samtools">SAMFileHeader.PgIdGenerator</a></td>
 <td class="colLast">
 <div class="block">Little class to generate program group IDs</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamFileHeaderMerger.html" title="class in htsjdk.samtools">SamFileHeaderMerger</a></td>
 <td class="colLast">
 <div class="block">Merges SAMFileHeaders that have the same sequences into a single merged header
@@ -460,25 +468,25 @@
  clash across input headers.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMFileReader.html" title="class in htsjdk.samtools">SAMFileReader</a></td>
 <td class="colLast">Deprecated</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamFiles.html" title="class in htsjdk.samtools">SamFiles</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMFileSource.html" title="class in htsjdk.samtools">SAMFileSource</a></td>
 <td class="colLast">
 <div class="block">Represents the origin of a SAM record.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMFileTruncatedReader.html" title="class in htsjdk.samtools">SAMFileTruncatedReader</a></td>
 <td class="colLast">Deprecated</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamFileValidator.html" title="class in htsjdk.samtools">SamFileValidator</a></td>
 <td class="colLast">
 <div class="block">Validates SAM files as follows:
@@ -495,226 +503,226 @@
  </div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamFileValidator.ValidationMetrics.html" title="class in htsjdk.samtools">SamFileValidator.ValidationMetrics</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></td>
 <td class="colLast">
 <div class="block">Create a writer for writing SAM, BAM, or CRAM files.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in htsjdk.samtools">SAMFileWriterImpl</a></td>
 <td class="colLast">
 <div class="block">Base class for implementing SAM writer with any underlying format.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMHeaderRecordComparator.html" title="class in htsjdk.samtools">SAMHeaderRecordComparator</a>&lt;T extends <a href="../../htsjdk/samtools/AbstractSAMHeaderRecord.html" title="class in htsjdk.samtools">AbstractSAMHeaderRecord</a>&gt;</td>
 <td class="colLast">
 <div class="block">Provides ordering based on SAM header records' attribute values.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamInputResource.html" title="class in htsjdk.samtools">SamInputResource</a></td>
 <td class="colLast">
 <div class="block">Describes a SAM-like resource, including its data (where the records are), and optionally an index.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMLineParser.html" title="class in htsjdk.samtools">SAMLineParser</a></td>
 <td class="colLast">
-<div class="block">this class enables creation of a SAMRecord object from a String in SAM text format.</div>
+<div class="block">This class enables creation of a SAMRecord object from a String in SAM text format.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamPairUtil.html" title="class in htsjdk.samtools">SamPairUtil</a></td>
 <td class="colLast">
 <div class="block">Utility methods for pairs of SAMRecords</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamPairUtil.SetMateInfoIterator.html" title="class in htsjdk.samtools">SamPairUtil.SetMateInfoIterator</a></td>
 <td class="colLast">
 <div class="block">A class to iterate through SAMRecords and set mate information on the given records, and optionally
  set the mate cigar tag (true by default).</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMProgramRecord.html" title="class in htsjdk.samtools">SAMProgramRecord</a></td>
 <td class="colLast">
 <div class="block">In-memory representation of @PG SAM header record.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamReader.AssertingIterator.html" title="class in htsjdk.samtools">SamReader.AssertingIterator</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamReader.PrimitiveSamReaderToSamReaderAdapter.html" title="class in htsjdk.samtools">SamReader.PrimitiveSamReaderToSamReaderAdapter</a></td>
 <td class="colLast">
 <div class="block">Decorator for a <a href="../../htsjdk/samtools/SamReader.PrimitiveSamReader.html" title="interface in htsjdk.samtools"><code>SamReader.PrimitiveSamReader</code></a> that expands its functionality into a <a href="../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools"><code>SamReader</code></a>,
  given the backing <a href="../../htsjdk/samtools/SamInputResource.html" title="class in htsjdk.samtools"><code>SamInputResource</code></a>.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamReader.ReaderImplementation.html" title="class in htsjdk.samtools">SamReader.ReaderImplementation</a></td>
 <td class="colLast">
 <div class="block">Internal interface for SAM/BAM/CRAM file reader implementations,
  as distinct from non-file-based readers.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamReader.Type.html" title="class in htsjdk.samtools">SamReader.Type</a></td>
 <td class="colLast">
 <div class="block">Describes a type of SAM file.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools">SamReaderFactory</a></td>
 <td class="colLast">
 <div class="block">Describes the functionality for producing <a href="../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools"><code>SamReader</code></a>, and offers a
  handful of static generators.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMReadGroupRecord.html" title="class in htsjdk.samtools">SAMReadGroupRecord</a></td>
 <td class="colLast">
 <div class="block">Header information about a read group.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></td>
 <td class="colLast">
 <div class="block">Java binding for a SAM file record.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMRecord.SAMTagAndValue.html" title="class in htsjdk.samtools">SAMRecord.SAMTagAndValue</a></td>
 <td class="colLast">
 <div class="block">Tag name and value of an attribute, for getAttributes() method.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMRecordCoordinateComparator.html" title="class in htsjdk.samtools">SAMRecordCoordinateComparator</a></td>
 <td class="colLast">
 <div class="block">Comparator for sorting SAMRecords by coordinate.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a></td>
 <td class="colLast">
 <div class="block">Compares records based on if they should be considered PCR Duplicates (see MarkDuplicates).</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMRecordQueryHashComparator.html" title="class in htsjdk.samtools">SAMRecordQueryHashComparator</a></td>
 <td class="colLast">
 <div class="block">SAMRecord comparator that provides an ordering based on a hash of the queryname.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMRecordQueryNameComparator.html" title="class in htsjdk.samtools">SAMRecordQueryNameComparator</a></td>
 <td class="colLast">
 <div class="block">Comparator for "queryname" ordering of SAMRecords.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMRecordSetBuilder.html" title="class in htsjdk.samtools">SAMRecordSetBuilder</a></td>
 <td class="colLast">
 <div class="block">Factory class for creating SAMRecords for testing purposes.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMRecordUtil.html" title="class in htsjdk.samtools">SAMRecordUtil</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMSequenceDictionary.html" title="class in htsjdk.samtools">SAMSequenceDictionary</a></td>
 <td class="colLast">
 <div class="block">Collection of SAMSequenceRecords.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMSequenceRecord.html" title="class in htsjdk.samtools">SAMSequenceRecord</a></td>
 <td class="colLast">
 <div class="block">Header information about a reference sequence.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMSortOrderChecker.html" title="class in htsjdk.samtools">SAMSortOrderChecker</a></td>
 <td class="colLast">
 <div class="block">Encapsulates simple check for SAMRecord order.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamStreams.html" title="class in htsjdk.samtools">SamStreams</a></td>
 <td class="colLast">
 <div class="block">Utilities related to processing of <code>InputStream</code>s encoding SAM data</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMTagUtil.html" title="class in htsjdk.samtools">SAMTagUtil</a></td>
 <td class="colLast">
 <div class="block">Facility for converting between String and short representation of a SAM tag.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMTestUtil.html" title="class in htsjdk.samtools">SAMTestUtil</a></td>
 <td class="colLast">
 <div class="block">Misc methods for SAM-related unit tests.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMTextHeaderCodec.html" title="class in htsjdk.samtools">SAMTextHeaderCodec</a></td>
 <td class="colLast">
 <div class="block">Parser for a SAM text header, and a generator of SAM text header.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMTextWriter.html" title="class in htsjdk.samtools">SAMTextWriter</a></td>
 <td class="colLast">
 <div class="block">Writer for text-format SAM files.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMTools.html" title="class in htsjdk.samtools">SAMTools</a></td>
 <td class="colLast">
 <div class="block">Command line utility for manipulating SAM/BAM files.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMUtils.html" title="class in htsjdk.samtools">SAMUtils</a></td>
 <td class="colLast">
 <div class="block">Utilty methods.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMValidationError.html" title="class in htsjdk.samtools">SAMValidationError</a></td>
 <td class="colLast">
 <div class="block">Class that encapsulates a validation error message as well as a type code so that
  errors can be aggregated by type.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SecondaryOrSupplementarySkippingIterator.html" title="class in htsjdk.samtools">SecondaryOrSupplementarySkippingIterator</a></td>
 <td class="colLast">
 <div class="block">Wrapper around SAMRecord iterator that skips over secondary and supplementary elements.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SQTagUtil.html" title="class in htsjdk.samtools">SQTagUtil</a></td>
 <td class="colLast">
 <div class="block">Utility methods for encoding and decoding the SQ tag value of SAMRecord.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SRAFileReader.html" title="class in htsjdk.samtools">SRAFileReader</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SRAIndex.html" title="class in htsjdk.samtools">SRAIndex</a></td>
 <td class="colLast">
 <div class="block">Emulates BAM index so that we can request chunks of records from SRAFileReader
@@ -724,31 +732,31 @@
   a length of all references.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SRAIterator.html" title="class in htsjdk.samtools">SRAIterator</a></td>
 <td class="colLast">
 <div class="block">SRA iterator which returns SAMRecords for requested list of chunks</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SRAIterator.RecordRangeInfo.html" title="class in htsjdk.samtools">SRAIterator.RecordRangeInfo</a></td>
 <td class="colLast">
 <div class="block">Describes record ranges info needed for emulating BAM index</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/TagValueAndUnsignedArrayFlag.html" title="class in htsjdk.samtools">TagValueAndUnsignedArrayFlag</a></td>
 <td class="colLast">
 <div class="block">CVO to use as a method return value.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/TextCigarCodec.html" title="class in htsjdk.samtools">TextCigarCodec</a></td>
 <td class="colLast">
 <div class="block">Convert between String and Cigar class representations of CIGAR.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/TextTagCodec.html" title="class in htsjdk.samtools">TextTagCodec</a></td>
 <td class="colLast">
 <div class="block">Converter between SAM text representation of a tag, and in-memory Object representation.</div>
@@ -802,48 +810,54 @@
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a></td>
+<td class="colLast">
+<div class="block">This determines how flag fields are represented in the SAM file.</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamIndexes.html" title="enum in htsjdk.samtools">SamIndexes</a></td>
 <td class="colLast">
 <div class="block">A helper class to read BAI and CRAI indexes.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamPairUtil.PairOrientation.html" title="enum in htsjdk.samtools">SamPairUtil.PairOrientation</a></td>
 <td class="colLast">
 <div class="block">The possible orientations of paired reads.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SamReaderFactory.Option.html" title="enum in htsjdk.samtools">SamReaderFactory.Option</a></td>
 <td class="colLast">
 <div class="block">A collection of binary <a href="../../htsjdk/samtools/SamReaderFactory.html" title="class in htsjdk.samtools"><code>SamReaderFactory</code></a> options.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMReadGroupRecord.PlatformValue.html" title="enum in htsjdk.samtools">SAMReadGroupRecord.PlatformValue</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMTag.html" title="enum in htsjdk.samtools">SAMTag</a></td>
 <td class="colLast">
 <div class="block">The standard tags for a SAM record that are defined in the SAM spec.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMValidationError.Severity.html" title="enum in htsjdk.samtools">SAMValidationError.Severity</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SAMValidationError.Type.html" title="enum in htsjdk.samtools">SAMValidationError.Type</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/SQTagUtil.SQBase.html" title="enum in htsjdk.samtools">SQTagUtil.SQBase</a></td>
 <td class="colLast">
 <div class="block">The ordinals of these are stored in the high-order 2 bits of each byte of the SQ tag.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a></td>
 <td class="colLast">
 <div class="block">How strict to be when reading a SAM or BAM, beyond bare minimum validation.</div>

@@ -82,6 +82,10 @@
 </tr>
 <tbody>
 <tr class="altColor">
+<td class="colFirst"><a href="#htsjdk.samtools">htsjdk.samtools</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><a href="#htsjdk.samtools.cram">htsjdk.samtools.cram</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -90,6 +94,24 @@
 </li>
 <li class="blockList">
 <ul class="blockList">
+<li class="blockList"><a name="htsjdk.samtools">
+<!--   -->
+</a>
+<h3>Uses of <a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a> in <a href="../../../../htsjdk/samtools/package-summary.html">htsjdk.samtools</a></h3>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
+<caption><span>Methods in <a href="../../../../htsjdk/samtools/package-summary.html">htsjdk.samtools</a> with parameters of type <a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Method and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><span class="typeNameLabel">CRAMCRAIIndexer.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/CRAMCRAIIndexer.html#addEntry-htsjdk.samtools.cram.CRAIEntry-">addEntry</a></span>(<a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&nbsp;entry)</code>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</li>
 <li class="blockList"><a name="htsjdk.samtools.cram">
 <!--   -->
 </a>
@@ -108,6 +130,10 @@
 <tr class="rowColor">
 <td class="colFirst"><code>static java.util.Comparator&lt;<a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">CRAIEntry.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/CRAIEntry.html#byStart">byStart</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static java.util.Comparator&lt;<a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">CRAIEntry.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/CRAIEntry.html#byStartDesc">byStartDesc</a></span></code>&nbsp;</td>
 </tr>
 </tbody>
 </table>
@@ -147,8 +173,8 @@
 <td class="colLast"><span class="typeNameLabel">CRAIEntry.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/CRAIEntry.html#fromContainer-htsjdk.samtools.cram.structure.Container-">fromContainer</a></span>(<a href="../../../../htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a>&nbsp;container)</code>&nbsp;</td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>static java.util.List&lt;<a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">CRAIIndex.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/CRAIIndex.html#readIndex-java.io.InputStream-">readIndex</a></span>(java.io.InputStream&nbsp;is)</code>&nbsp;</td>
+<td class="colFirst"><code>java.util.List&lt;<a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">CRAIIndex.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/CRAIIndex.html#getCRAIEntries--">getCRAIEntries</a></span>()</code>&nbsp;</td>
 </tr>
 </tbody>
 </table>
@@ -160,10 +186,16 @@
 </tr>
 <tbody>
 <tr class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><span class="typeNameLabel">CRAIIndex.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/CRAIIndex.html#addEntry-htsjdk.samtools.cram.CRAIEntry-">addEntry</a></span>(<a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&nbsp;entry)</code>
+<div class="block">Add a single entry to the CRAI index.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><span class="typeNameLabel">CRAIEntry.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/CRAIEntry.html#compareTo-htsjdk.samtools.cram.CRAIEntry-">compareTo</a></span>(<a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&nbsp;o)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">CRAIEntry.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/CRAIEntry.html#intersect-htsjdk.samtools.cram.CRAIEntry-htsjdk.samtools.cram.CRAIEntry-">intersect</a></span>(<a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&nbsp;e0,
          <a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&nbsp;e1)</code>&nbsp;</td>
@@ -193,11 +225,6 @@
 <tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a></code></td>
 <td class="colLast"><span class="typeNameLabel">CRAIIndex.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/CRAIIndex.html#getLeftmost-java.util.List-">getLeftmost</a></span>(java.util.List&lt;<a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;list)</code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code>static void</code></td>
-<td class="colLast"><span class="typeNameLabel">CRAIIndex.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/CRAIIndex.html#writeIndex-java.io.OutputStream-java.util.List-">writeIndex</a></span>(java.io.OutputStream&nbsp;os,
-          java.util.List&lt;<a href="../../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;index)</code>&nbsp;</td>
 </tr>
 </tbody>
 </table>

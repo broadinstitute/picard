@@ -143,12 +143,30 @@ extends <a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in h
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMTextWriter.html#SAMTextWriter-java.io.File-htsjdk.samtools.SamFlagField-">SAMTextWriter</a></span>(java.io.File&nbsp;file,
+             <a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a>&nbsp;samFlagFieldOutput)</code>
+<div class="block">Constructs a SAMTextWriter that writes to a File.</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMTextWriter.html#SAMTextWriter-java.io.OutputStream-">SAMTextWriter</a></span>(java.io.OutputStream&nbsp;stream)</code>
+<div class="block">Constructs a SAMTextWriter that writes to an OutputStream.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMTextWriter.html#SAMTextWriter-java.io.OutputStream-htsjdk.samtools.SamFlagField-">SAMTextWriter</a></span>(java.io.OutputStream&nbsp;stream,
+             <a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a>&nbsp;samFlagFieldOutput)</code>
 <div class="block">Constructs a SAMTextWriter that writes to an OutputStream.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMTextWriter.html#SAMTextWriter-java.io.Writer-">SAMTextWriter</a></span>(java.io.Writer&nbsp;out)</code>
+<div class="block">Constructs a SAMTextWriter that outputs to a Writer.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMTextWriter.html#SAMTextWriter-java.io.Writer-htsjdk.samtools.SamFlagField-">SAMTextWriter</a></span>(java.io.Writer&nbsp;out,
+             <a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a>&nbsp;samFlagFieldOutput)</code>
 <div class="block">Constructs a SAMTextWriter that outputs to a Writer.</div>
 </td>
 </tr>
@@ -257,10 +275,56 @@ extends <a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in h
 <a name="SAMTextWriter-java.io.OutputStream-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>SAMTextWriter</h4>
 <pre>public&nbsp;SAMTextWriter(java.io.OutputStream&nbsp;stream)</pre>
+<div class="block">Constructs a SAMTextWriter that writes to an OutputStream.  The OutputStream
+ is wrapped in an AsciiWriter, which can be retrieved with getWriter().</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>stream</code> - Need not be buffered because this class provides buffering.</dd>
+</dl>
+</li>
+</ul>
+<a name="SAMTextWriter-java.io.Writer-htsjdk.samtools.SamFlagField-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>SAMTextWriter</h4>
+<pre>public&nbsp;SAMTextWriter(java.io.Writer&nbsp;out,
+                     <a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a>&nbsp;samFlagFieldOutput)</pre>
+<div class="block">Constructs a SAMTextWriter that outputs to a Writer.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>out</code> - Writer.</dd>
+</dl>
+</li>
+</ul>
+<a name="SAMTextWriter-java.io.File-htsjdk.samtools.SamFlagField-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>SAMTextWriter</h4>
+<pre>public&nbsp;SAMTextWriter(java.io.File&nbsp;file,
+                     <a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a>&nbsp;samFlagFieldOutput)</pre>
+<div class="block">Constructs a SAMTextWriter that writes to a File.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>file</code> - Where to write the output.</dd>
+</dl>
+</li>
+</ul>
+<a name="SAMTextWriter-java.io.OutputStream-htsjdk.samtools.SamFlagField-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>SAMTextWriter</h4>
+<pre>public&nbsp;SAMTextWriter(java.io.OutputStream&nbsp;stream,
+                     <a href="../../htsjdk/samtools/SamFlagField.html" title="enum in htsjdk.samtools">SamFlagField</a>&nbsp;samFlagFieldOutput)</pre>
 <div class="block">Constructs a SAMTextWriter that writes to an OutputStream.  The OutputStream
  is wrapped in an AsciiWriter, which can be retrieved with getWriter().</div>
 <dl>
