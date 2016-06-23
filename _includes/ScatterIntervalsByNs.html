@@ -1,6 +1,6 @@
 <h3 id="ScatterIntervalsByNs">ScatterIntervalsByNs</h3>
 <section>
-<p>Writes an interval list based on splitting the reference by Ns.  This tool identifies positions in the reference where the basecalls are Ns and writes out an interval list using the resulting coordinates (excluding the N bases). This can be used to create an interval list for whole genome sequence (WGS) for e.g. scatter-gather purposes, as an alternative to using fixed-length intervals. The number of contiguous Ns that can be tolerated before creating a break is adjustable from the command line.<br /><h4>Usage example:</h4><pre>java -jar picard.jar ScatterIntervalsByNs \<br />      R=reference_sequence.fasta \<br />      OT=BOTH \<br />      O=output.interval_list</pre><hr /></p>
+<p>Writes an interval list based on splitting a reference by Ns.  This tool identifies positions in a reference where the bases are 'no-calls' and writes out an interval-list using the resulting coordinates. This can be used to create an interval list for whole genome sequence (WGS) for e.g. scatter-gather purposes, as an alternative to using fixed-length intervals. The number of contiguous nocalls that can be tolerated before creating a break is adjustable from the command line.<br /><h4>Usage example:</h4><pre>java -jar picard.jar ScatterIntervalsByNs \<br />      R=reference_sequence.fasta \<br />      OT=BOTH \<br />      O=output.interval_list</pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>REFERENCE (File)</td><td>Reference sequence to use.  Required. </td></tr>
