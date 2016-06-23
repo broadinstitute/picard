@@ -6,7 +6,7 @@ resolvers += Resolver.sbtPluginRepo("releases")
 
 name := "picard"
 
-version := "2.4.1"
+version := "2.5.0"
 
 organization := "com.github.broadinstitute"
 
@@ -17,7 +17,7 @@ javaSource in Test := baseDirectory.value / "src/tests"
 unmanagedResourceDirectories in Test := Seq(baseDirectory.value / "src/scripts", baseDirectory.value / "testdata", baseDirectory.value / "src/tests/scripts")
 
 libraryDependencies ++= Seq(
-  "com.github.samtools" % "htsjdk" % "2.4.1",
+  "com.github.samtools" % "htsjdk" % "2.5.0",
   ("com.google.cloud.genomics" % "gatk-tools-java" % "1.1" % "picardopt").
     exclude("org.mortbay.jetty", "servlet-api"),
   "org.testng" % "testng" % "6.8.8" % Test
