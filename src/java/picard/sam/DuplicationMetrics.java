@@ -177,7 +177,7 @@ public class DuplicationMetrics extends MetricBase {
         System.out.println();
 
         System.out.println("X Seq\tX Unique");
-        for (Histogram<Double>.Bin bin : m.calculateRoiHistogram().values()) {
+        for (Histogram.Bin<Double> bin : m.calculateRoiHistogram().values()) {
             System.out.println(bin.getId() + "\t" + bin.getValue());
         }
 

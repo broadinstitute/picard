@@ -32,7 +32,7 @@ public class BclQualityEvaluationStrategy {
     private final  Map<Byte, AtomicInteger> qualityCountMap = Collections.synchronizedMap(new CollectionUtil.DefaultingMap<Byte, AtomicInteger>(
             new CollectionUtil.DefaultingMap.Factory<AtomicInteger, Byte>() {
                 @Override
-                public AtomicInteger make(final Byte _) {
+                public AtomicInteger make(final Byte key) {
                     return new AtomicInteger(0);
                 }
             }, true));

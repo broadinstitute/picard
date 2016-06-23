@@ -232,7 +232,7 @@ public class GenotypeConcordanceCounts {
      * Returns the count defined by the truth state set and call state set.
      */
     public long getCount(final TruthAndCallStates truthAndCallStates) {
-        final Histogram<TruthAndCallStates>.Bin bin = this.counter.get(truthAndCallStates);
+        final Histogram.Bin<TruthAndCallStates> bin = this.counter.get(truthAndCallStates);
         return (bin == null ? 0L : (long) bin.getValue());
     }
 

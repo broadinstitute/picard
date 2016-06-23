@@ -346,10 +346,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
                 log.debug("using barcodes?" + useBarcodes);
 
-                // need to assign this to a variable otherwise it's a compilation error.
-                {
-                    final int _ = useBarcodes ? locusData.nGoodBarcodes++ : locusData.nBadBarcodes++;
-                }
+                if(useBarcodes) locusData.nGoodBarcodes++; else locusData.nBadBarcodes++;
 
                 final List<String> barcodes = set.getRecords().stream()
                         .map(read -> read.getStringAttribute(BARCODE_TAG))
@@ -366,8 +363,8 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                 log.debug("Edit distance between umi: " + editDistance);
 
                 if (useBarcodes && editDistance != 0) {
-                    final int _ = hasMultipleOrientations ? locusData.nMismatchingUMIsInContraOrientedBiDups++ :
-                            locusData.nMismatchingUMIsInCoOrientedBiDups++;
+                    if (hasMultipleOrientations) locusData.nMismatchingUMIsInContraOrientedBiDups++;
+                    else locusData.nMismatchingUMIsInCoOrientedBiDups++;
                 }
 
                 // sanity check the number of distinct tags
@@ -376,16 +373,15 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                     if (useBarcodes) {
                         umiEditDistanceInDiffBiDups.increment(editDistance);
 
-                        final int _ = editDistance == 0 ? locusData.nMatchingUMIsInDiffBiDups++ :
-                                locusData.nMismatchingUMIsInDiffBiDups++;
+                        if(editDistance == 0) locusData.nMatchingUMIsInDiffBiDups++; else locusData.nMismatchingUMIsInDiffBiDups++;
                     }
 
                     // we're going to toss out this locus.
                 } else if (classification == SetClassification.MISMATCHING_ALLELE) {
                     locusData.nMismatchingAllelesBiDups++;
                 } else { // the classification is either ALTERNATE_ALLELE or REFERENCE_ALLELE if we've reached here
-                    final int _ = classification == SetClassification.ALTERNATE_ALLELE ? locusData.nAlternateAllelesBiDups++:
-                        locusData.nReferenceAllelesBiDups++;
+                    if (classification == SetClassification.ALTERNATE_ALLELE) locusData.nAlternateAllelesBiDups++;
+                    else locusData.nReferenceAllelesBiDups++;
 
                     if (useBarcodes) {
 
@@ -394,8 +390,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                         umiConfusionMatrix.increment(key);
                         if (!umiConfusionMatrixEditDistance.containsKey(key)) umiConfusionMatrixEditDistance.increment(key, editDistance);
 
-                        final int __ = editDistance == 0 ? locusData.nMatchingUMIsInSameBiDups++:
-                            locusData.nMismatchingUMIsInSameBiDups++;
+                        if (editDistance == 0) locusData.nMatchingUMIsInSameBiDups++; else  locusData.nMismatchingUMIsInSameBiDups++;
                     }
                 }
             }
