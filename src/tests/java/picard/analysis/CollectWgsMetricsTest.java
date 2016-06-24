@@ -8,6 +8,7 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.Histogram;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
@@ -189,7 +190,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> output = new MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>>();
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
         for (final CollectWgsMetrics.WgsMetrics metrics : output.getMetrics()) {
@@ -197,7 +198,87 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
             Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.271403);
             Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.182149);
             Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.091075);
-
         }
+    }
+
+    @Test
+    public void testExclusions() throws IOException {
+        final File reference = new File("testdata/picard/sam/merger.fasta");
+        final File tempSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
+        tempSamFile.deleteOnExit();
+
+        final SAMFileHeader header = new SAMFileHeader();
+
+        //Check that dictionary file is readable and then set header dictionary
+        try {
+            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(reference));
+            header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        } catch (final SAMException e) {
+            e.printStackTrace();
+        }
+
+        //Set readGroupRecord
+        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord(READ_GROUP_ID);
+        readGroupRecord.setSample(SAMPLE);
+        readGroupRecord.setPlatform(PLATFORM);
+        readGroupRecord.setLibrary(LIBRARY);
+        readGroupRecord.setPlatformUnit(READ_GROUP_ID);
+        header.addReadGroup(readGroupRecord);
+
+        //Add to setBuilder
+        final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true, 100);
+        setBuilder.setReadGroup(readGroupRecord);
+        setBuilder.setUseNmFlag(true);
+        setBuilder.setHeader(header);
+
+        setBuilder.setReadLength(10);
+
+        int expectedSingltonCoverage = 0;
+
+        expectedSingltonCoverage += 13;
+        setBuilder.addPair("overlappingReads", 0, 2, 5, false, false, "10M", "10M", true, false, 30);
+
+        expectedSingltonCoverage += 2 * 5; // 5 bases for each mate are good (see AAA!!!AA!! below).
+        setBuilder.addPair("poorQualityReads", 1, 2, 20, false, false, "10M", "10M", true, false, -1);
+
+        // modify quality of reads
+        setBuilder.getRecords().stream()
+                .filter(samRecord -> samRecord.getReadName().equals("poorQualityReads"))
+                .forEach(record -> record.setBaseQualityString("AAA!!!AA!!"));
+
+        setBuilder.getSamReader();
+
+        // Write SAM file
+        final SAMFileWriter writer = new SAMFileWriterFactory()
+                .setCreateIndex(true).makeBAMWriter(header, false, tempSamFile);
+
+        for (final SAMRecord record : setBuilder) {
+            writer.addAlignment(record);
+        }
+        writer.close();
+
+        // create output files for tests
+        final File outfile = File.createTempFile("testWgsMetrics", ".txt");
+        outfile.deleteOnExit();
+
+        final String[] args = new String[] {
+                "INPUT="  + tempSamFile.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+                "INCLUDE_BQ_HISTOGRAM=true"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> output = new MetricsFile<>();
+        output.read(new FileReader(outfile));
+        final CollectWgsMetrics.WgsMetrics metrics = output.getMetrics().get(0);
+
+        final Histogram<Integer> depthHistogram = output.getAllHistograms().get(0);
+        final Histogram<Integer> baseQHistogram = output.getAllHistograms().get(1);
+
+        Assert.assertEquals((long) depthHistogram.getSumOfValues(), metrics.GENOME_TERRITORY);
+        Assert.assertEquals(baseQHistogram.getSumOfValues(), depthHistogram.getSum());
+        Assert.assertEquals((long) depthHistogram.get(1).getValue(), expectedSingltonCoverage);
+
     }
 }
