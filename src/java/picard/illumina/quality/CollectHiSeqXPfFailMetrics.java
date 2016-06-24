@@ -117,9 +117,9 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
             "      PROB_EXPLICIT_READS=1" +
             "</pre>" +
             "" +
-            "Please see our documentation on the" +
-            "https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectHiSeqXPfFailMetrics.PFFailSummaryMetric'>SUMMARY</a>" +
-            " and" +
+            "Please see our documentation on the " +
+            "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectHiSeqXPfFailMetrics.PFFailSummaryMetric'>SUMMARY</a>" +
+            " and " +
             "" +
             "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectHiSeqXPfFailMetrics.PFFailDetailedMetric'>DETAILED</a> " +
             "metrics for comprehensive explanations of the outputs produced by this tool." +
