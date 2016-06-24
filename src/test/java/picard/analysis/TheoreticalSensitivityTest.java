@@ -188,7 +188,7 @@ public class TheoreticalSensitivityTest {
             qualityDistribution[j] = scanBaseQ.nextDouble();
         }
 
-        final int sampleSize = 1000;
+        final int sampleSize = 1_000;
         final double logOddsThreshold = 3.0;
         final double result = TheoreticalSensitivity.hetSNPSensitivity(depthDistribution, qualityDistribution, sampleSize, logOddsThreshold);
         Assert.assertEquals(result, expectedResult, tolerance);
@@ -202,16 +202,16 @@ public class TheoreticalSensitivityTest {
         final File wgsSampledMetricsFile = new File(TEST_DIR, "test_Solexa-316269_sampled.wgs_metrics");
 
         return new Object[][] {
-                {.9130, wgsMetricsFile},
-                {.9784, hsMetricsFile},
-                {.9562, targetedMetricsFile},
-                {.9892, wgsSampledMetricsFile}
+                {0.897_342_54, wgsMetricsFile},
+                {0.967_707_04, hsMetricsFile},
+                {0.956_186_66, targetedMetricsFile},
+                {0.995_084_32, wgsSampledMetricsFile}
         };
     }
 
     @Test(dataProvider = "hetSensDataProvider")
     public void testHetSensTargeted(final double expected, final File metricsFile) throws Exception{
-        final double tolerance = 0.02;
+        final double tolerance = 0.000_000_01;
 
         final MetricsFile Metrics = new MetricsFile();
         Metrics.read(new FileReader(metricsFile));
@@ -222,7 +222,7 @@ public class TheoreticalSensitivityTest {
         final double [] depthDistribution = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
         final double [] qualityDistribution = TheoreticalSensitivity.normalizeHistogram(qualityHistogram);
 
-        final int sampleSize = 1000;
+        final int sampleSize = 1_000;
         final double logOddsThreshold = 3.0;
 
         final double result = TheoreticalSensitivity.hetSNPSensitivity(depthDistribution, qualityDistribution, sampleSize, logOddsThreshold);
