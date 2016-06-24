@@ -67,21 +67,24 @@ import java.util.stream.IntStream;
         programGroup = Metrics.class
 )
 public class CollectWgsMetrics extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.";
-    static final String USAGE_DETAILS = "This tool collects metrics about the percentages of reads that pass base- and mapping- quality " +
-            "filters as well as coverage (read-depth) levels. Both minimum base- and mapping-quality values as well as the maximum " +
-            "read depths (coverage cap) are user defined." +
-            "<h4>Usage Example:</h4>" +
-            "<pre>"  +
-            "java -jar picard.jar CollectWgsMetrics \\<br /> " +
-            "      I=input.bam \\<br /> "+
-            "      O=collect_wgs_metrics.txt \\<br /> " +
-            "      R=reference_sequence.fasta " +
-            "</pre>" +
-            "Please see " +
-            "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics'>" +
-            "the WgsMetrics documentation</a> for detailed explanations of the output metrics." +
-            "<hr />";
+static final String USAGE_SUMMARY = "Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.";
+static final String USAGE_DETAILS = "<p>This tool collects metrics about the fractions of reads that pass base- and mapping-quality "+
+"filters as well as coverage (read-depth) levels for WGS analyses. Both minimum base- and mapping-quality values as well as the maximum "+
+"read depths (coverage cap) are user defined.</p>" +
+
+"<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>"+
+"<h4>Usage Example:</h4>"+
+"<pre>"  +
+"java -jar picard.jar CollectWgsMetrics \\<br /> " +
+"      I=input.bam \\<br /> "+
+"      O=collect_wgs_metrics.txt \\<br /> " +
+"      R=reference_sequence.fasta " +
+"</pre>" +
+"Please see "+
+"<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics'>CollectWgsMetrics</a> "+
+"for detailed explanations of the output metrics." +
+"<hr />"
+;
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;

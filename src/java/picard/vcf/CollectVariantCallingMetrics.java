@@ -149,7 +149,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         /** The number of SNPs that are also filtered */
         public long FILTERED_SNPS;
 
-        /** The percentage of high confidence SNPs in dbSNP */
+        /** The fraction of high confidence SNPs in dbSNP */
         public float PCT_DBSNP;
 
         /** The Transition/Transversion ratio of the SNP calls made at dbSNP sites */
@@ -167,7 +167,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         /** The number of indels that are also filtered */
         public long FILTERED_INDELS;
 
-        /** The percentage of high confidence Indels in dbSNP */
+        /** The fraction of high confidence Indels in dbSNP */
         public float PCT_DBSNP_INDELS;
 
         /** The number of high confidence Indels found in dbSNP */

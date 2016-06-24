@@ -61,26 +61,28 @@ import java.util.List;
 )
 public class CollectJumpingLibraryMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Collect jumping library metrics. ";
-    static final String USAGE_DETAILS = "This tool collects high-level metrics about the " +
-            "presence of outward-facing (jumping) and inward-facing (non-jumping) read pairs within a SAM or BAM file.<br /><br />" +
-            "For a brief primer on jumping libraries, see <a href='http://gatkforums.broadinstitute.org/discussion/6326/jumping-libraries'>" +
-            "the GATK Dictionary</a>." +
-            "<br /><br />." +
-            "This program gets all data for computation from the first read in each pair in which the mapping quality (MQ) tag " +
-            "is set with the mate's mapping quality.  If the MQ tag is not set, then the program assumes that the mate's MQ is " +
-            "greater than or equal to MINIMUM_MAPPING_QUALITY (default value is 0).<br /><br /> "+
-            "All the output metrics files are structured text files."  +
-            "<br /><br />" +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar CollectJumpingLibraryMetrics \\<br />" +
-            "      I=input.bam  \\<br />" +
-            "      O=jumping_metrics.txt" +
-            "</pre>" +
-            "<hr />" +
-            "" +
-            "Please see <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#JumpingLibraryMetrics'>" +
-            "the JumpingLibraryMetrics documentation</a> for details and explanations of the output metrics.";
+    static final String USAGE_DETAILS = "<p>This tool collects high-level metrics about the " +
+"presence of outward-facing (jumping) and inward-facing (non-jumping) read pairs within a SAM or BAM file." +
+"For a brief primer on jumping libraries, see the GATK "+
+"<a href='https://www.broadinstitute.org/gatk/guide/article?id=6326'>Dictionary</a></p>." +
+
+"<p>This program gets all data for computation from the first read in each pair in which the mapping quality (MQ) tag " +
+"is set with the mate's mapping quality.  If the MQ tag is not set, then the program assumes that the mate's MQ is " +
+"greater than or equal to MINIMUM_MAPPING_QUALITY (default value is 0).</p> "+
+
+"<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
+
+"<h4>Usage example:</h4>" +
+"<pre>" +
+"java -jar picard.jar CollectJumpingLibraryMetrics \\<br />" +
+"      I=input.bam  \\<br />" +
+"      O=jumping_metrics.txt" +
+"</pre>" +
+
+"Please see the output metrics documentation on "+
+"<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#JumpingLibraryMetrics'>JumpingLibraryMetrics</a> "+
+"for detailed explanations of the output metrics."+
+"<hr />";
 
     // Usage and parameters
 

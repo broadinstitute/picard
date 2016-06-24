@@ -48,11 +48,12 @@ import java.util.List;
 )
 public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
-    static final String USAGE_SUMMARY = "Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.";
+    static final String USAGE_SUMMARY = "Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.  ";
     static final String USAGE_DETAILS = "This tool collects metrics about the percentages of reads that pass base- and mapping- quality " +
             "filters as well as coverage (read-depth) levels. Both minimum base- and mapping-quality values as well as the maximum " +
             "read depths (coverage cap) are user defined.  This extends CollectWgsMetrics by including metrics related only to sites" +
             "with non-zero (>0) coverage." +
+            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
             "<h4>Usage Example:</h4>" +
             "<pre>"  +
             "java -jar picard.jar CollectWgsMetricsWithNonZeroCoverage \\<br /> " +
@@ -61,9 +62,9 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
             "      CHART=collect_wgs_metrics.pdf  \\<br /> " +
             "      R=reference_sequence.fasta " +
             "</pre>" +
-            "Please see " +
+            "Please see the " +
             "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage'>" +
-            "the WgsMetricsWithNonZeroCoverage documentation</a> for detailed explanations of the output metrics." +
+            "WgsMetricsWithNonZeroCoverage</a> documentation for detailed explanations of the output metrics." +
             "<hr />";
 
     @Option(shortName = "CHART", doc = "A file (with .pdf extension) to write the chart to.")

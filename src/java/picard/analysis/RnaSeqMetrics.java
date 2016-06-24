@@ -39,73 +39,73 @@ public class RnaSeqMetrics extends MultilevelMetrics {
      */
     public long PF_ALIGNED_BASES;
 
-    /** Number of bases in primary aligments that align to ribosomal sequence. */
+    /** Number of bases in primary alignments that align to ribosomal sequence. */
     public Long RIBOSOMAL_BASES;
 
-    /** Number of bases in primary aligments that align to a non-UTR coding base for some gene, and not ribosomal sequence. */
+    /** Number of bases in primary alignments that align to a non-UTR coding base for some gene, and not ribosomal sequence. */
     public long CODING_BASES;
 
-    /** Number of bases in primary aligments that align to a UTR base for some gene, and not a coding base. */
+    /** Number of bases in primary alignments that align to a UTR base for some gene, and not a coding base. */
     public long UTR_BASES;
 
-    /** Number of bases in primary aligments that align to an intronic base for some gene, and not a coding or UTR base. */
+    /** Number of bases in primary alignments that align to an intronic base for some gene, and not a coding or UTR base. */
     public long INTRONIC_BASES;
 
-    /** Number of bases in primary aligments that do not align to any gene. */
+    /** Number of bases in primary alignments that do not align to any gene. */
     public long INTERGENIC_BASES;
-
     /**
-     * Number of primary alignments that map to a sequence specified on command-line as IGNORED_SEQUENCE.  These are not
+     * Number of primary alignments that are mapped to a sequence specified on command-line as IGNORED_SEQUENCE.  These are not
      * counted in PF_ALIGNED_BASES, CORRECT_STRAND_READS, INCORRECT_STRAND_READS, or any of the base-counting metrics.
      * These reads are counted in PF_BASES.
      */
     public long IGNORED_READS;
 
-    /** Number of aligned reads that map to the correct strand.  0 if library is not strand-specific. */
+    /** Number of aligned reads that are mapped to the correct strand.  0 if library is not strand-specific. */
     public long CORRECT_STRAND_READS;
 
-    /** Number of aligned reads that map to the incorrect strand.  0 if library is not strand-specific. */
+    /** Number of aligned reads that are mapped to the incorrect strand.  0 if library is not strand-specific. */
     public long INCORRECT_STRAND_READS;
 
-    /** RIBOSOMAL_BASES / PF_ALIGNED_BASES */
+    /** Fraction of PF_ALIGNED_BASES that mapped to regions encoding ribosomal RNA, RIBOSOMAL_BASES/PF_ALIGNED_BASES */
     public Double PCT_RIBOSOMAL_BASES;
 
-    /** CODING_BASES / PF_ALIGNED_BASES */
+    /** Fraction of PF_ALIGNED_BASES that mapped to protein coding regions of genes, CODING_BASES/PF_ALIGNED_BASES */
     public double PCT_CODING_BASES;
 
-    /** UTR_BASES / PF_ALIGNED_BASES */
+    /** Fraction of PF_ALIGNED_BASES that mapped to untranslated regions (UTR) of genes, UTR_BASES/PF_ALIGNED_BASES */
     public double PCT_UTR_BASES;
 
-    /** INTRONIC_BASES / PF_ALIGNED_BASES */
+    /** Fraction of PF_ALIGNED_BASES that correspond to gene introns, INTRONIC_BASES/PF_ALIGNED_BASES */
     public double PCT_INTRONIC_BASES;
 
-    /** INTERGENIC_BASES / PF_ALIGNED_BASES */
+    /** Fraction of PF_ALIGNED_BASES that mapped to intergenic regions of genomic DNA, INTERGENIC_BASES/PF_ALIGNED_BASES */
     public double PCT_INTERGENIC_BASES;
 
-    /** PCT_UTR_BASES + PCT_CODING_BASES */
+    /** Sum of bases mapped to regions corresponding to UTRs and coding regions of mRNA transcripts, PCT_UTR_BASES + PCT_CODING_BASES */
     public double PCT_MRNA_BASES;
 
-    /** The percentage of bases mapping to mRNA divided by the total number of PF bases. */
+    /** The fraction of bases mapping to mRNA divided by the total number of PF bases, (CODING_BASES + UTR_BASES)/PF_BASES. */
     public double PCT_USABLE_BASES;
 
-    /** CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific. */
+    /** Fraction of reads corresponding to mRNA transcripts which map to the correct strand of a reference genome
+    = CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific. */
     public double PCT_CORRECT_STRAND_READS;
 
-    /** The median CV of coverage of the 1000 most highly expressed transcripts. Ideal value = 0. */
+    /** The median coefficient of variation (CV) or stdev/mean for coverage values of the 1000 most highly expressed transcripts. Ideal value = 0. */
     public double MEDIAN_CV_COVERAGE;
 
     /**
-     * The median 5 prime bias of the 1000 most highly expressed transcripts, where 5 prime bias is calculated per
-     * transcript as: mean coverage of the 5' most 100 bases divided by the mean coverage of the whole transcript.
+     * The median 5 prime bias of the 1000 most highly expressed transcripts. The 5 prime bias is calculated per
+     * transcript as: mean coverage of the 5 prime-most 100 bases divided by the mean coverage of the whole transcript.
      */
     public double MEDIAN_5PRIME_BIAS;
 
     /**
      * The median 3 prime bias of the 1000 most highly expressed transcripts, where 3 prime bias is calculated per
-     * transcript as: mean coverage of the 3' most 100 bases divided by the mean coverage of the whole transcript.
+     * transcript as: mean coverage of the 3 prime-most 100 bases divided by the mean coverage of the whole transcript.
      */
     public double MEDIAN_3PRIME_BIAS;
 
-    /** The ratio of coverage at the 5' end of to the 3' end based on the 1000 most highly expressed transcripts. */
+    /** The ratio of coverage at the 5 prime end to the 3 prime end based on the 1000 most highly expressed transcripts. */
     public double MEDIAN_5PRIME_TO_3PRIME_BIAS;
 }

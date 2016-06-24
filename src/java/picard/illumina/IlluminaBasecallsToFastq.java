@@ -68,15 +68,52 @@ import java.util.Map;
 import java.util.Set;
 
 @CommandLineProgramProperties(
-        usage = "Generate fastq file(s) from data in an Illumina basecalls output directory.\n" +
-                "Separate fastq file(s) are created for each template read, and for each barcode read, in the basecalls.\n" +
-                "Template fastqs have extensions like .<number>.fastq, where <number> is the number of the template read,\n" +
-                "starting with 1.  Barcode fastqs have extensions like .barcode_<number>.fastq, where <number> is the number\n" +
-                "of the barcode read, starting with 1.",
-        usageShort = "Generate fastq file(s) from data in an Illumina basecalls output directory",
-        programGroup = Illumina.class
+  usage = IlluminaBasecallsToFastq.USAGE_SUMMARY + IlluminaBasecallsToFastq.USAGE_DETAILS,
+  usageShort = IlluminaBasecallsToFastq.USAGE_SUMMARY,
+  programGroup = Illumina.class
 )
 public class IlluminaBasecallsToFastq extends CommandLineProgram {
+  static final String USAGE_SUMMARY = "Generate FASTQ file(s) from Illumina basecall read data.  ";
+  static final String USAGE_DETAILS = "<p>This tool generates FASTQ files from data in an Illumina BaseCalls output directory.  " +
+          "Separate FASTQ files are created for each template, barcode, and index (molecular barcode) read.  Briefly, the template reads " +
+          "are the target sequence of your experiment, the barcode sequence reads facilitate sample demultiplexing, and the index reads " +
+          "help mitigate instrument phasing errors.  For additional information on the read types, please see the following " +
+          "reference <a href'=http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3245947/'>here</a>.</p>" +
+          "" +
+          "<p>In the absence of sample pooling (multiplexing) and/or barcodes, then an OUTPUT_PREFIX (file directory) must be " +
+          "provided as the sample identifier.  For multiplexed samples, a MULTIPLEX_PARAMS file must be specified.  " +
+          "The MULTIPLEX_PARAMS file contains the list of sample barcodes used to sort template, barcode, and index reads.  " +
+          "It is essentially the same as the BARCODE_FILE used in the" +
+          "<a href='http://broadinstitute.github.io/picard/command-line-overview.html#ExtractIlluminaBarcodes'>ExtractIlluminaBarcodes</a> " +
+          "tool.</p>     "+
+          "" +
+          "<p>Files from this tool use the following naming format: {prefix}.{type}_{number}.fastq with the {prefix} indicating the sample " +
+          "barcode, the {type} indicating the types of reads e.g. index, barcode, or blank (if it contains a template read).  " +
+          "The {number} indicates the read number, either first (1) or second (2) for paired-end sequencing. </p> " +
+
+"<h4>Usage examples:</h4>" +
+"<pre>" +
+"Example 1: Sample(s) with either no barcode or barcoded without multiplexing <br />" +
+"java -jar picard.jar IlluminaBasecallsToFastq \\<br />"+
+"      READ_STRUCTURE=25T8B25T \\<br />"+
+"      BASECALLS_DIR=basecallDirectory \\<br />"+
+"      LANE=001 \\<br />"+
+"      OUTPUT_PREFIX=noBarcode.1 \\<br />"+
+"      RUN_BARCODE=run15 \\<br />"+
+"      FLOWCELL_BARCODE=abcdeACXX <br /><br />" +
+
+"Example 2: Multiplexed samples <br />" +
+"java -jar picard.jar IlluminaBasecallsToFastq \\<br />"+
+"      READ_STRUCTURE=25T8B25T \\<br />"+
+"      BASECALLS_DIR=basecallDirectory \\<br />"+
+"      LANE=001 \\<br />"+
+"      MULTIPLEX_PARAMS=demultiplexed_output.txt \\<br />"+
+"      RUN_BARCODE=run15 \\<br />"+
+"      FLOWCELL_BARCODE=abcdeACXX <br />" +
+"</pre>"+
+"<p>The FLOWCELL_BARCODE is required if emitting Casava 1.8-style read name headers.</p>" +
+          "<hr />"
+;
     // The following attributes define the command-line arguments
 
     @Option(doc = "The basecalls directory. ", shortName = "B")
@@ -88,9 +125,8 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     @Option(doc = "Lane number. ", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Option(doc = "The prefix for output fastqs.  Extensions as described above are appended.  Use this option for " +
-            "a non-barcoded run, or for a barcoded run in which it is not desired to demultiplex reads into separate " +
-            "files by barcode.",
+    @Option(doc = "The prefix for output FASTQs.  Extensions as described above are appended.  Use this option for a non-barcoded run, or" +
+            " for a barcoded run in which it is not desired to demultiplex reads into separate files by barcode.",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             mutex = {"MULTIPLEX_PARAMS"})
     public File OUTPUT_PREFIX;
@@ -107,7 +143,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     @Option(doc = ReadStructure.PARAMETER_DOC, shortName = "RS")
     public String READ_STRUCTURE;
 
-    @Option(doc = "Tab-separated file for creating all output fastqs demultiplexed by barcode for a lane with single " +
+    @Option(doc = "Tab-separated file for creating all output FASTQs demultiplexed by barcode for a lane with single " +
             "IlluminaBasecallsToFastq invocation.  The columns are OUTPUT_PREFIX, and BARCODE_1, BARCODE_2 ... BARCODE_X " +
             "where X = number of barcodes per cluster (optional).  Row with BARCODE_1 set to 'N' is used to specify " +
             "an output_prefix for no barcode match.",
@@ -154,7 +190,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     public boolean INCLUDE_NON_PF_READS = true;
 
     @Option(doc="Whether to ignore reads whose barcodes are not found in MULTIPLEX_PARAMS.  Useful when outputting " +
-            "fastqs for only a subset of the barcodes in a lane.", shortName="INGORE_UNEXPECTED")
+            "FASTQs for only a subset of the barcodes in a lane.", shortName="INGORE_UNEXPECTED")
     public boolean IGNORE_UNEXPECTED_BARCODES = false;
 
     @Option(doc="The read name header formatting to emit.  Casava1.8 formatting has additional information beyond Illumina, including: " +

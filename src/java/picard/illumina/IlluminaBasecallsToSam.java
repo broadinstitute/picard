@@ -95,11 +95,42 @@ import java.util.Set;
  * @author mccowan@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = IlluminaBasecallsToSam.USAGE,
-        usageShort = IlluminaBasecallsToSam.USAGE,
+        usage = IlluminaBasecallsToSam.USAGE_SUMMARY + IlluminaBasecallsToSam.USAGE_DETAILS,
+        usageShort = IlluminaBasecallsToSam.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
 public class IlluminaBasecallsToSam extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Transforms raw Illumina sequencing data into an unmapped SAM or BAM file."  ;
+    static final String USAGE_DETAILS = "<p>The IlluminaBaseCallsToSam program collects, demultiplexes, and sorts reads across all " +
+            "of the tiles of a lane via barcode to produce an unmapped SAM/BAM file.  An unmapped BAM file is often referred to as a uBAM.  " +
+            "All barcode, sample, and library data is provided in the LIBRARY_PARAMS file.  Note, this LIBRARY_PARAMS file " +
+            "should be formatted according to the specifications indicated below.  The following is an example of a properly" +
+            " formmated LIBRARY_PARAMS file:</p>" +
+            "BARCODE_1\tOUTPUT\tSAMPLE_ALIAS\tLIBRARY_NAME\n" +
+            "AAAAAAAA\tSA_AAAAAAAA.bam\tSA_AAAAAAAA\tLN_AAAAAAAA\n" +
+            "AAAAGAAG\tSA_AAAAGAAG.bam\tSA_AAAAGAAG\tLN_AAAAGAAG\n" +
+            "AACAATGG\tSA_AACAATGG.bam\tSA_AACAATGG\tLN_AACAATGG\n" +
+            "N\tSA_non_indexed.bam\tSA_non_indexed\tLN_NNNNNNNN\n " +
+            "" +
+            "<p>The BARCODES_DIR file is produced by the " +
+            "<a href='http://broadinstitute.github.io/picard/command-line-overview.html#ExtractIlluminaBarcodes'>ExtractIlluminaBarcodes</a> " +
+            "tool for each lane of a flow cell.</p>  " +
+
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "" +
+            "java -jar picard.jar IlluminaBasecallsToSam \\<br />" +
+            "      BASECALLS_DIR=/BaseCalls/ \\<br />" +
+            "      LANE=001 \\<br />" +
+            "      READ_STRUCTURE=25T8B25T \\<br />" +
+            "      RUN_BARCODE=run15 \\<br />" +
+            "      IGNORE_UNEXPECTED_BARCODES=true \\<br />" +
+            "      LIBRARY_PARAMS=library.params " +
+            "</pre>" +
+            "<hr />"
+    ;
+
+
     // The following attributes define the command-line arguments
 
     public static final String USAGE = "Generate a SAM or BAM file from data in an Illumina basecalls output directory";

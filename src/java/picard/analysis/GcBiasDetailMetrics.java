@@ -47,7 +47,7 @@ public class GcBiasDetailMetrics extends MultilevelMetrics {
     public int MEAN_BASE_QUALITY;
 
     /**
-     * The ration of "coverage" in this GC bin vs. the mean coverage of all GC bins. A number of
+     * The ratio of "coverage" in this GC bin vs. the mean coverage of all GC bins. A number of
      * 1 represents mean coverage, a number less than one represents lower than mean coverage (e.g. 0.5
      * means half as much coverage as average) while a number greater than one represents higher than
      * mean coverage (e.g. 3.1 means this GC bin has 3.1 times more reads per window than average).

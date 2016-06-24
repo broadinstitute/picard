@@ -43,25 +43,54 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /***
- *  A Command line tool to collect Illumina Basecalling metrics for a sequencing run
- *  Requires a Lane and an input file of Barcodes to expect.
- *  Outputs metrics:
- *    *  Mean Clusters Per Tile
- *    *  Standard Deviation of Clusters Per Tile
- *    *  Mean Pf Clusters Per Tile
- *    *  Standard Deviation of Pf Clusters Per Tile
- *    *  Mean Percentage of Pf Clusters Per Tile
- *    *  Standard Deviation of Percentage of Pf Clusters Per Tile
- */
+        - *  A Command line tool to collect Illumina Basecalling metrics for a sequencing run
+        - *  Requires a Lane and an input file of Barcodes to expect.
+        - *  Outputs metrics:
+        - *    *  Mean Clusters Per Tile
+        - *    *  Standard Deviation of Clusters Per Tile
+        - *    *  Mean Pf Clusters Per Tile
+        - *    *  Standard Deviation of Pf Clusters Per Tile
+        - *    *  Mean Percentage of Pf Clusters Per Tile
+        - *    *  Standard Deviation of Percentage of Pf Clusters Per Tile
+        - */
+
 @CommandLineProgramProperties(
-        usage = CollectIlluminaBasecallingMetrics.USAGE,
-        usageShort = CollectIlluminaBasecallingMetrics.USAGE,
+        usage = CollectIlluminaBasecallingMetrics.USAGE_SUMMARY + CollectIlluminaBasecallingMetrics.USAGE_DETAILS,
+        usageShort = CollectIlluminaBasecallingMetrics.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
 public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Collects Illumina Basecalling metrics for a sequencing run.  ";
+    static final String USAGE_DETAILS = "<p>This tool will produce per-barcode and per-lane basecall metrics for each sequencing run.  " +
+            "Mean values for each metric are determined using data from all of the tiles.  This tool requires the following data, LANE(#), " +
+            "BASECALLS_DIR, READ_STRUCTURE, and an input file listing the sample barcodes.  " +
+            "Program will provide metrics including: the total numbers of bases, reads, and clusters, as well as the fractions of each " +
+            "bases, reads, and clusters that passed Illumina quality filters (PF) both per barcode and per lane.  " +
+            "For additional information on Illumina's PF quality metric, please see the corresponding " +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>GATK Dictionary entry</a>.</p> " +
+            "<p>The input barcode_list.txt file is a file containing all of the sample and molecular barcodes and can be obtained from the " +
+            "<a href='http://broadinstitute.github.io/picard/command-line-overview.html#ExtractIlluminaBarcodes'>ExtractIlluminaBarcodes</a> " +
+            "tool.  </p>" +
+            ""   +
+            "Note: Metrics labeled as percentages are actually expressed as fractions!  " +
+            "" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CollectIlluminaBasecallingMetrics \\<br />" +
+            "      BASECALLS_DIR=/BaseCalls/ \\<br />" +
+            "      LANE=001 \\<br />" +
+            "      READ_STRUCTURE=25T8B25T \\<br />" +
+            "      INPUT=barcode_list.txt " +
+            "</pre>" +
+
+            "<p>Please see the CollectIlluminaBasecallingMetrics " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaBasecallingMetrics'>definitions</a> " +
+            "for a complete description of the metrics produced by this tool.  </p>" +
+
+            "<hr />"
+    ;
     //Command Line Arguments
-    static final String USAGE = "Given an Illumina basecalling and a lane, produces per-lane-barcode basecalling metrics";
-    
+
     @Option(doc="The Illumina basecalls output directory from which data are read", shortName="B")
     public File BASECALLS_DIR;
 

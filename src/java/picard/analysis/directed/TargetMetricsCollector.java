@@ -857,7 +857,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
  * how well those regions were targeted.
  */
 class TargetMetrics extends MultilevelMetrics {
-    /**  The name of the PROBE_SET (BAIT SET, AMPLICON SET, ...) used in this metrics collection run */
+    /**  The name of the PROBE_SET (BAIT_SET, AMPLICON_SET, ...) used in this metrics collection run */
     public String PROBE_SET;
 
     /** The number of unique bases covered by the intervals of all probes in the probe set */
@@ -872,34 +872,35 @@ class TargetMetrics extends MultilevelMetrics {
     /** The total number of reads in the SAM or BAM file examined. */
     public long TOTAL_READS;
 
-    /** The number of reads that pass the vendor's filter. */
+    /** The number of passing filter reads (PF). */
     public long PF_READS;
 
-    /** The number of bases in the SAM or BAM file to be examined */
+    /** The number of bases in the PF_READS of a SAM or BAM file */
     public long PF_BASES;
 
-    /** The number of PF reads that are not marked as duplicates. */
+    /** The number of PF_READS that are not marked as duplicates. */
     public long PF_UNIQUE_READS;
 
     /** Tracks the number of read pairs that we see that are PF (used to calculate library size) */
     public long PF_SELECTED_PAIRS;
 
-    /** Tracks the number of unique PF reads pairs we see (used to calc library size) */
+    /** Tracks the number of unique PF_SELECTED_PAIRS we see (used to calc library size) */
     public long PF_SELECTED_UNIQUE_PAIRS;
 
-    /** The number of PF unique reads that are aligned with mapping score > 0 to the reference genome. */
+    /** The number of PF_UNIQUE_READS that are aligned with mapping score > 0 to the reference genome. */
     public long PF_UQ_READS_ALIGNED;
 
-    /** The number of PF unique bases that are aligned with mapping score > 0 to the reference genome. */
+    /** The number of PF_BASES that are aligned with mapping score > 0 to the reference genome. */
     public long PF_BASES_ALIGNED;
 
     /** The number of PF unique bases that are aligned with mapping score > 0 to the reference genome. */
     public long PF_UQ_BASES_ALIGNED;
 
-    /** The number of PF aligned probed that mapped to a baited region of the genome. */
+    /** The number of PF aligned probed bases that mapped to a baited region of the genome. */
     public long ON_PROBE_BASES;
 
-    /** The number of PF aligned bases that mapped to within a fixed interval of a probed region, but not on a baited region. */
+    /** The number of PF aligned bases that mapped to within a fixed interval of a probed region, but not on a
+     *  baited region. */
     public long NEAR_PROBE_BASES;
 
     /** The number of PF aligned bases that mapped to neither on or near a probe. */
@@ -913,28 +914,33 @@ class TargetMetrics extends MultilevelMetrics {
 
     //metrics below here are derived after collection
 
-    /** PF reads / total reads.  The percent of reads passing filter. */
+    /** The fraction of reads passing filter, PF_READS/TOTAL_READS.   */
     public double PCT_PF_READS;
 
-    /** PF Unique Reads / Total Reads. */
+    /** The fraction of unique reads passing filter, PF_UNIQUE_READS/TOTAL_READS. */
     public double PCT_PF_UQ_READS;
 
-    /** PF Reads Aligned / PF Reads. */
+    /** The fraction of unique reads passing filter that align to the reference,
+     * PF_UQ_READS_ALIGNED/PF_UNIQUE_READS. */
     public double PCT_PF_UQ_READS_ALIGNED;
 
-    /** On+Near Bait Bases / PF Bases Aligned. */
+    /** The fraction of bases that map on or near a probe (ON_PROBE_BASES + NEAR_PROBE_BASES)/(ON_PROBE_BASES +
+     * NEAR_PROBE_BASES + OFF_PROBE_BASES). */
     public double PCT_SELECTED_BASES;
 
-    /** The percentage of aligned PF bases that mapped neither on or near a probe. */
+    /** The fraction of aligned PF bases that mapped neither on or near a probe, OFF_PROBE_BASES/(ON_PROBE_BASES +
+     *  NEAR_PROBE_BASES + OFF_PROBE_BASES). */
     public double PCT_OFF_PROBE;
 
-    /** The percentage of on+near probe bases that are on as opposed to near. */
+    /** The fraction of on+near probe bases that are on as opposed to near, ON_PROBE_BASES/(ON_PROBE_BASES +
+     * NEAR_PROBE_BASES). */
     public double ON_PROBE_VS_SELECTED;
 
-    /** The mean coverage of all probes in the experiment. */
+    /** The mean coverage of all probes in the experiment, ON_PROBE_BASES/PROBE_TERRITORY. */
     public double MEAN_PROBE_COVERAGE;
 
-    /** The fold by which the probed region has been amplified above genomic background. */
+    /** The fold by which the probed region has been amplified above genomic background,
+     * (ON_PROBE_BASES/(ON_PROBE_BASES + NEAR_PROBE_BASES + OFF_PROBE_BASES))/(PROBE_TERRITORY/GENOME_SIZE) */
     public double FOLD_ENRICHMENT;
 
     /** The mean coverage of targets. */
@@ -955,7 +961,8 @@ class TargetMetrics extends MultilevelMetrics {
     /** The fraction of aligned bases that were filtered out because they were of low base quality. */
     public double PCT_EXC_BASEQ;
 
-    /** The fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads. */
+    /** The fraction of aligned bases that were filtered out because they were the second observation from
+     *  an insert with overlapping reads. */
     public double PCT_EXC_OVERLAP;
 
     /** The fraction of aligned bases that were filtered out because they did not align over a target base. */
@@ -967,21 +974,21 @@ class TargetMetrics extends MultilevelMetrics {
      */
     public double FOLD_80_BASE_PENALTY;
 
-    /** The percentage of all target bases achieving 1X or greater coverage. */
+    /** The fraction of all target bases achieving 1X or greater coverage. */
     public double PCT_TARGET_BASES_1X;
-    /** The percentage of all target bases achieving 2X or greater coverage. */
+    /** The fraction of all target bases achieving 2X or greater coverage. */
     public double PCT_TARGET_BASES_2X;
-    /** The percentage of all target bases achieving 10X or greater coverage. */
+    /** The fraction of all target bases achieving 10X or greater coverage. */
     public double PCT_TARGET_BASES_10X;
-    /** The percentage of all target bases achieving 20X or greater coverage. */
+    /** The fraction of all target bases achieving 20X or greater coverage. */
     public double PCT_TARGET_BASES_20X;
-    /** The percentage of all target bases achieving 30X or greater coverage. */
+    /** The fraction of all target bases achieving 30X or greater coverage. */
     public double PCT_TARGET_BASES_30X;
-    /** The percentage of all target bases achieving 40X or greater coverage. */
+    /** The fraction of all target bases achieving 40X or greater coverage. */
     public double PCT_TARGET_BASES_40X;
-    /** The percentage of all target bases achieving 50X or greater coverage. */
+    /** The fraction of all target bases achieving 50X or greater coverage. */
     public double PCT_TARGET_BASES_50X;
-    /** The percentage of all target bases achieving 100X or greater coverage. */
+    /** The fraction of all target bases achieving 100X or greater coverage. */
     public double PCT_TARGET_BASES_100X;
 
     /**
