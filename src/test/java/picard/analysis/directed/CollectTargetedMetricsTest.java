@@ -24,7 +24,7 @@ import java.util.Random;
 public class CollectTargetedMetricsTest extends CommandLineProgramTest {
     private final static File TEST_DIR = new File("testdata/picard/sam/CollectGcBiasMetrics/");
     private final File dict = new File(TEST_DIR, "Mheader.dict");
-    private File tempSamFile;
+    private File tempSamFile, tempSamFileIndex;
     private File outfile;
     private File perTargetOutfile;
     private final static int LENGTH = 99;
@@ -47,9 +47,11 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
         //Create Sam Files
         tempSamFile = File.createTempFile("CollectTargetedMetrics", ".bam", TEST_DIR);
+        tempSamFileIndex = new File(tempSamFile.toString().replaceAll("\\.bam$",".bai"));
         final File tempSamFileUnsorted = File.createTempFile("CollectTargetedMetrics", ".bam", TEST_DIR);
         tempSamFileUnsorted.deleteOnExit();
         tempSamFile.deleteOnExit();
+        tempSamFileIndex.deleteOnExit();
         final SAMFileHeader header = new SAMFileHeader();
 
         //Check that dictionary file is readable and then set header dictionary
