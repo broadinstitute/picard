@@ -25,6 +25,8 @@ Enjoy!
 
     java -jar dist/picard.jar
 
+**NOTE:** Picard expects the *latest tagged release* version of HTSJDK. It is *not* guaranteed to be able to build from older versions of HTSJDK nor from the latest state of the HTSJDK master branch. When you run `ant clone-htsjdk` the first time, Picard will fetch the appropriate tagged version. Subsequently, to update HTSJDK (if for example you run into build issues) you can do so manually by running `git checkout <tag>` within your HTSJDK clone, where `<tag>` is the latest release tag number. You can find that number by running `git tag` in your HTSJDK clone and taking the highest number. 
+
 ----
 
 
