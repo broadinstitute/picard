@@ -201,7 +201,7 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
             else if (vc.isIndel()) metric.FILTERED_INDELS++;
             return;
         }
-
+        vc.getType();
         if (hasSingletonSample) {
             ++metric.NUM_SINGLETONS;
         }
