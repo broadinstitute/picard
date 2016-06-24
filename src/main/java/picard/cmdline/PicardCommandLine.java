@@ -4,6 +4,7 @@ import htsjdk.samtools.Defaults;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 
+import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -169,7 +170,9 @@ public class PicardCommandLine {
         return (CommandLineProgramProperties)clazz.getAnnotation(CommandLineProgramProperties.class);
     }
 
-    private static class SimpleNameComparator implements Comparator<Class> {
+    private static class SimpleNameComparator implements Comparator<Class>, Serializable {
+        private static final long serialVersionUID = -1201103996188234064L;
+
         @Override
         public int compare(final Class aClass, final Class bClass) {
             return aClass.getSimpleName().compareTo(bClass.getSimpleName());

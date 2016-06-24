@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -1145,7 +1146,8 @@ public class CommandLineParser {
         String getHelpDoc();
     }
 
-    protected static class OptionDefinitionByPrintOrderComparator implements Comparator<OptionDefinition> {
+    protected static class OptionDefinitionByPrintOrderComparator implements Comparator<OptionDefinition>, Serializable {
+        private static final long serialVersionUID = 6476036013963135375L;
 
         @Override
         public int compare(OptionDefinition o1, OptionDefinition o2) {

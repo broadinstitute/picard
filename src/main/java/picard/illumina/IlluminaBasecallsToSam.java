@@ -53,6 +53,7 @@ import picard.util.TabbedTextFileWithHeaderParser;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -529,7 +530,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
     }
 
-    static class QueryNameComparator implements Comparator<SAMRecordsForCluster> {
+    static class QueryNameComparator implements Comparator<SAMRecordsForCluster>, Serializable {
+        private static final long serialVersionUID = -250586611537988409L;
+
         private final SAMRecordQueryNameComparator comparator = new SAMRecordQueryNameComparator();
         @Override
         public int compare(final SAMRecordsForCluster s1, final SAMRecordsForCluster s2) {
