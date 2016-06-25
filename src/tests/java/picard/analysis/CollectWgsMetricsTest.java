@@ -241,6 +241,10 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         expectedSingltonCoverage += 2 * 5; // 5 bases for each mate are good (see AAA!!!AA!! below).
         setBuilder.addPair("poorQualityReads", 1, 2, 20, false, false, "10M", "10M", true, false, -1);
 
+        for(int i = 1; i < 5; i++) {
+            setBuilder.addPair("deepStack-" + i, 2, 2, 20, false, false, "10M", "10M", true, false, 30);
+        }
+
         // modify quality of reads
         setBuilder.getRecords().stream()
                 .filter(samRecord -> samRecord.getReadName().equals("poorQualityReads"))
@@ -265,7 +269,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
                 "INPUT="  + tempSamFile.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
-                "INCLUDE_BQ_HISTOGRAM=true"
+                "INCLUDE_BQ_HISTOGRAM=true",
+                "COVERAGE_CAP=3"
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -279,6 +284,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals((long) depthHistogram.getSumOfValues(), metrics.GENOME_TERRITORY);
         Assert.assertEquals(baseQHistogram.getSumOfValues(), depthHistogram.getSum());
         Assert.assertEquals((long) depthHistogram.get(1).getValue(), expectedSingltonCoverage);
+        Assert.assertEquals((long) depthHistogram.get(3).getValue(), 2*10);
 
     }
 }

@@ -76,7 +76,7 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
             Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.181818); // 2 of 11
             Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.090909); // 1 of 9
             Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.090909); // 1 of 9
-            Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, 0.34655, .02);
+            Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, 0.4955, .02);
         }
     }
 
