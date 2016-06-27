@@ -99,7 +99,8 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     @Option(shortName = "MQ", doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
     public int MINIMUM_MAPPING_QUALITY = 20;
 
-    @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.", overridable = true)
+    @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage. N's in the SEQ will be excluded" +
+            "from coverage and counted as though they are excluded for quality regardless of the value of this parameter.", overridable = true)
     public int MINIMUM_BASE_QUALITY = 20;
 
     @Option(shortName = "CAP", doc = "Treat positions with coverage exceeding this value as if they had coverage at this value (but calculate the difference for PCT_EXC_CAPPED).", overridable = true)
@@ -363,14 +364,13 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             file.addHistogram(depthHistogram);
         }
 
-        protected Histogram<Integer> getDepthHistogram(){
+        protected Histogram<Integer> getDepthHistogram() {
             return getHistogram(depthHistogramArray,"coverage", "count");
         }
 
-        protected Histogram<Integer> getBaseQHistogram(){
+        protected Histogram<Integer> getBaseQHistogram() {
             return getHistogram(baseQHistogramArray, "value", "baseq_count");
         }
-
 
         private Histogram<Integer> getHistogram(final long[] array, final String binLabel, final String valueLabel) {
             final Histogram<Integer> histogram = new Histogram<>(binLabel, valueLabel);
@@ -408,7 +408,6 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             metrics.PCT_EXC_CAPPED   = basesExcludedByCapping / totalWithExcludes;
             metrics.PCT_EXC_TOTAL    = (totalWithExcludes - total) / totalWithExcludes;
 
-
             metrics.PCT_1X    = MathUtil.sum(depthHistogramArray, 1, depthHistogramArray.length)   / (double) metrics.GENOME_TERRITORY;
             metrics.PCT_5X    = MathUtil.sum(depthHistogramArray, 5, depthHistogramArray.length)   / (double) metrics.GENOME_TERRITORY;
             metrics.PCT_10X   = MathUtil.sum(depthHistogramArray, 10, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
@@ -433,6 +432,5 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             return metrics;
         }
     }
-
 }
 
