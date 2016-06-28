@@ -61,11 +61,12 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
                 "INTERVALS=" + intervals.getAbsolutePath(),
+                "INCLUDE_BQ_HISTOGRAM=true",
                 "SAMPLE_SIZE=" + sampleSize
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectWgsMetricsFromSampledSites.SampledWgsMetrics, Comparable<?>> output = new MetricsFile<CollectWgsMetricsFromSampledSites.SampledWgsMetrics, Comparable<?>>();
+        final MetricsFile<CollectWgsMetricsFromSampledSites.SampledWgsMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
         for (final CollectWgsMetrics.WgsMetrics metrics : output.getMetrics()) {
@@ -75,7 +76,7 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
             Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.181818); // 2 of 11
             Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.090909); // 1 of 9
             Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.090909); // 1 of 9
-            Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, 0.34655, .02);
+            Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, 0.4955, .02);
         }
     }
 
@@ -96,7 +97,7 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> output = new MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>>();
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
         for (final CollectWgsMetrics.WgsMetrics metrics : output.getMetrics()) {
@@ -120,7 +121,7 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
         final int sampleSize = 1000;
         outfile.deleteOnExit();
 
-        final Map<String, String> args = new HashMap<String, String>(5);
+        final Map<String, String> args = new HashMap<>(5);
         args.put("INPUT", "INPUT=" + input.getAbsolutePath());
         args.put("REFERENCE_SEQUENCE", "REFERENCE_SEQUENCE=" + ref.getAbsolutePath());
         args.put("INTERVALS", "INTERVALS=" + intervals.getAbsolutePath());
@@ -129,7 +130,7 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
         args.put("OUTPUT", "OUTPUT=" + outfile.getAbsolutePath());
         Assert.assertEquals(runPicardCommandLine(args.values().toArray(new String[]{})), 0);
 
-        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> output = new MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>>();
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
         final File collectWgsOutfile = File.createTempFile("collectWgsMetrics.test", ".wgs_metrics");
@@ -144,7 +145,7 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
         CollectWgsMetrics collectWgsMetrics = new CollectWgsMetrics();
         collectWgsMetrics.instanceMain(args.values().toArray(new String[]{}));
 
-        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> collectWgsMetricsOutput = new MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>>();
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> collectWgsMetricsOutput = new MetricsFile<>();
         collectWgsMetricsOutput.read(new FileReader(collectWgsOutfile));
 
         for (final CollectWgsMetrics.WgsMetrics metrics : output.getMetrics()) {
