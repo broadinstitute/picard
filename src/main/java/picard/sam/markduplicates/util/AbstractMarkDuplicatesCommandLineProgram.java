@@ -116,6 +116,18 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     /** The program groups that have been seen during the course of examining the input records. */
     protected final Set<String> pgIdsSeen = new HashSet<>();
 
+    @Override
+    protected String[] customCommandLineValidation() {
+
+        // ASSUME_SORT_ORDER and ASSUME_SORTED are mutually exclusive, and ASSUME_SORTED
+        // simply means ASSUME_SORT_ORDER=coordianate, so we impose that here.
+        if (ASSUME_SORT_ORDER == null) {
+            ASSUME_SORT_ORDER = SAMFileHeader.SortOrder.coordinate;
+            ASSUME_SORTED = false; // to maintain the "mutex" regarding these two arguments.
+        }
+
+        return super.customCommandLineValidation();
+    }
 
     /**
      * We have to re-chain the program groups based on this algorithm.  This returns the map from existing program group ID
@@ -215,11 +227,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             headers.add(header);
             readers.add(reader);
         }
-        if (ASSUME_SORT_ORDER != null || ASSUME_SORTED) {
-            if (ASSUME_SORT_ORDER == null) {
-                ASSUME_SORT_ORDER = SAMFileHeader.SortOrder.coordinate;
-                ASSUME_SORTED = false; // to maintain the "mutex" regarding these two arguments.
-            }
+        if (ASSUME_SORT_ORDER != null) {
 
             //if we assume a particular order, then the output will have that order in the header
             headers.get(0).setSortOrder(ASSUME_SORT_ORDER);

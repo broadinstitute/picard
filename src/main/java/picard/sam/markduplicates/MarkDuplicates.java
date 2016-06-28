@@ -234,11 +234,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         final SAMFileHeader.SortOrder sortOrder = header.getSortOrder();
 
         final SAMFileHeader outputHeader = header.clone();
-        if(ASSUME_SORTED || ASSUME_SORT_ORDER != null) {
+
+        // no need to look at ASSUME_SORTED since if ASSUME_SORTED is set,
+        // we set ASSUME_SORT_ORDER=SortOrder.coordinate in customCommandLineValidation
+        if (ASSUME_SORT_ORDER != null) {
             outputHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
         }
 
-        log.info("Reads are assumed to be ordered by: " + sortOrder);
+        log.info("Reads are assumed to be ordered by: " + ASSUME_SORT_ORDER);
 
         if (sortOrder != SAMFileHeader.SortOrder.coordinate && sortOrder != SAMFileHeader.SortOrder.queryname) {
             throw new PicardException("This program requires input that are either coordinate or query sorted. " +
