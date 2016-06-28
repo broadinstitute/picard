@@ -99,8 +99,8 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     @Option(shortName = "MQ", doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
     public int MINIMUM_MAPPING_QUALITY = 20;
 
-    @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage. N's in the SEQ will be excluded" +
-            "from coverage and counted as though they are excluded for quality regardless of the value of this parameter.", overridable = true)
+    @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage. N bases will be treated as having a base quality " +
+            "of negative infinity and will therefore be excluded from coverage regardless of the value of this parameter.", overridable = true)
     public int MINIMUM_BASE_QUALITY = 20;
 
     @Option(shortName = "CAP", doc = "Treat positions with coverage exceeding this value as if they had coverage at this value (but calculate the difference for PCT_EXC_CAPPED).", overridable = true)
