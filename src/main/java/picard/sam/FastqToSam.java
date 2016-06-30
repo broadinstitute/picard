@@ -461,7 +461,7 @@ public class FastqToSam extends CommandLineProgram {
     private String [] getReadNameTokens(final String readName, final int pairNum, final FastqReader freader) {
         if(readName.equals("")) throw new PicardException(error(freader,"Pair read name "+pairNum+" cannot be empty: "+readName));
 
-        final int idx = readName.lastIndexOf("/");
+        final int idx = readName.lastIndexOf('/');
         final String[] result = new String[2];
 
         if (idx == -1) {
@@ -489,7 +489,7 @@ public class FastqToSam extends CommandLineProgram {
 
     // Read names cannot contain blanks
     private String getReadName(final String fastqHeader, final boolean paired) {
-        final int idx = fastqHeader.indexOf(" ");
+        final int idx = fastqHeader.indexOf(' ');
         String readName = (idx == -1) ? fastqHeader : fastqHeader.substring(0,idx);
 
         // NOTE: the while loop isn't necessarily the most efficient way to handle this but we don't
