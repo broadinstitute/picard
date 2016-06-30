@@ -137,12 +137,17 @@ public class OutputMapping {
 
         @Override
         public boolean equals(final Object thatObj) {
-            if(thatObj == null || !(thatObj instanceof TwoDIndex)) {
+            if (this == thatObj) {
+                return true;
+            }
+            if (thatObj == null) {
                 return false;
             }
-
-            final TwoDIndex that = (TwoDIndex) thatObj;
-            return this.majorIndex == that.majorIndex && this.minorIndex == that.minorIndex;
+            if (this.getClass() == thatObj.getClass()) {
+                final TwoDIndex that = (TwoDIndex) thatObj;
+                return this.majorIndex == that.majorIndex && this.minorIndex == that.minorIndex;
+            }
+            return false;
         }
     }
 

@@ -64,7 +64,9 @@ public class Gene extends Interval implements Iterable<Gene.Transcript>  {
     }
 
     public boolean equals(final Object other) {
-        if (!(other instanceof Gene)) return false;
+        if (this == other) return true;
+        if (other == null) return false;
+        if (this.getClass() != other.getClass()) return false;
         else if (this == other) return true;
         else {
             final Gene that = (Gene)other;

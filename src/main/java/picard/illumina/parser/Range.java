@@ -45,12 +45,17 @@ public class Range {
 
     @Override
     public boolean equals(final Object object) {
-        if(object == null || !(object instanceof Range)) {
+        if (this == object) {
+            return true;
+        }
+        if (object == null) {
             return false;
         }
-
-        final Range that = (Range) object;
-        return that.start == this.start && that.end == this.end;
+        if (this.getClass() == object.getClass()) {
+            final Range that = (Range) object;
+            return that.start == this.start && that.end == this.end;
+        }
+        return false;
     }
 
     @Override
