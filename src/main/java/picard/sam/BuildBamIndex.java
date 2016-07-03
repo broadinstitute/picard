@@ -103,7 +103,7 @@ public class BuildBamIndex extends CommandLineProgram {
             final String baseFileName;
             if (inputUrl != null) {
                 final String path = inputUrl.getPath();
-                final int lastSlash = path.lastIndexOf("/");
+                final int lastSlash = path.lastIndexOf('/');
                 baseFileName = path.substring(lastSlash + 1, path.length());
             } else {
                 baseFileName = inputFile.getAbsolutePath();
@@ -111,7 +111,7 @@ public class BuildBamIndex extends CommandLineProgram {
 
             if (baseFileName.endsWith(BamFileIoUtils.BAM_FILE_EXTENSION)) {
 
-                final int index = baseFileName.lastIndexOf(".");
+                final int index = baseFileName.lastIndexOf('.');
                 OUTPUT = new File(baseFileName.substring(0, index) + BAMIndex.BAMIndexSuffix);
 
             } else {
