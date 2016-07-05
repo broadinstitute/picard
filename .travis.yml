@@ -13,3 +13,5 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
 script: ./gradlew jacocoTestReport
+after_success:
+  - ./gradlew coveralls
