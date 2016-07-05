@@ -27,6 +27,9 @@
           ./gradlew test --tests "*ParserTest"
           ./gradlew test --tests "*ParserTest" --debug-jvm
 
+        run tests and collect coverage information (report will be in `build/reports/jacoco/test/html/index.html`)
+          ./gradlew jacocoTestReport
+ 
         clean the project directory
           ./gradlew clean
 
