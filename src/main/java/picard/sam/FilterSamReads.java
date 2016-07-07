@@ -34,13 +34,12 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.filter.AlignedFilter;
-import htsjdk.samtools.filter.FilteringIterator;
-import htsjdk.samtools.filter.JavascriptSamRecordFilter;
-import htsjdk.samtools.filter.ReadNameFilter;
+import htsjdk.samtools.filter.*;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.Interval;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -51,6 +50,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.List;
 
 /**
  * From a SAM or BAM file, produce a new SAM or BAM by filtering aligned reads or a list of read
@@ -86,7 +86,8 @@ public class FilterSamReads extends CommandLineProgram {
         excludeAligned("OUTPUT SAM/BAM will contain un-mapped reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note that *both* first and second of pair must be aligned to be excluded from the OUTPUT SAM or BAM)"),
         includeReadList("OUTPUT SAM/BAM will contain reads that are supplied in the READ_LIST_FILE file"),
         excludeReadList("OUTPUT bam will contain reads that are *not* supplied in the READ_LIST_FILE file"),
-    	includeJavascript("OUTPUT bam will contain reads that hava been accepted by the JAVASCRIPT_FILE script.");
+    	includeJavascript("OUTPUT bam will contain reads that hava been accepted by the JAVASCRIPT_FILE script."),
+        includePairedIntervals("OUTPUT SAM/BAM will contain any reads (and their mate) that overlap with an interval. INPUT SAM/BAM and INTERVAL_LIST must be in coordinate SortOrder. Only aligned reads will be output.");
         private final String description;
 
         Filter(final String description) {
@@ -112,6 +113,11 @@ public class FilterSamReads extends CommandLineProgram {
             shortName = "RLF")
     public File READ_LIST_FILE;
 
+    @Option(doc = "Interval List File containing intervals that will be included or excluded from the OUTPUT SAM or BAM file.",
+            optional = true,
+            shortName = "IL")
+    public File INTERVAL_LIST;
+
     @Option(
             doc = "SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.",
             optional = true, shortName = "SO")
@@ -136,7 +142,7 @@ public class FilterSamReads extends CommandLineProgram {
 	public File JAVASCRIPT_FILE = null;
 
     
-    private void filterReads(final FilteringIterator filteringIterator) {
+    private void filterReads(final FilteringSamIterator filteringIterator) {
 
         // get OUTPUT header from INPUT and overwrite it if necessary
         final SAMFileHeader fileHeader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(INPUT);
@@ -144,6 +150,11 @@ public class FilterSamReads extends CommandLineProgram {
         if (SORT_ORDER != null) {
             fileHeader.setSortOrder(SORT_ORDER);
         }
+
+        if (FILTER == Filter.includePairedIntervals && fileHeader.getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+            throw new UnsupportedOperationException("Input must be coordinate sorted to use includePairedIntervals");
+        }
+
         final boolean presorted = inputSortOrder.equals(fileHeader.getSortOrder());
         log.info("Filtering [presorted=" + presorted + "] " + INPUT.getName() + " -> OUTPUT=" +
                 OUTPUT.getName() + " [sortorder=" + fileHeader.getSortOrder().name() + "]");
@@ -186,6 +197,11 @@ public class FilterSamReads extends CommandLineProgram {
         IOUtil.assertFileIsReadable(readsFile);
     }
 
+    private List<Interval> getIntervalList (final File intervalFile) throws IOException {
+        IOUtil.assertFileIsReadable(intervalFile);
+        return IntervalList.fromFile(intervalFile).getIntervals();
+    }
+
     @Override
     protected int doWork() {
 
@@ -193,33 +209,37 @@ public class FilterSamReads extends CommandLineProgram {
             IOUtil.assertFileIsReadable(INPUT);
             IOUtil.assertFileIsWritable(OUTPUT);
             if (WRITE_READS_FILES) writeReadsFile(INPUT);
+            final List<Interval> intervalList = getIntervalList(INTERVAL_LIST);
+
             final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-            final FilteringIterator filteringIterator;
+            final FilteringSamIterator filteringIterator;
             
             switch (FILTER) {
                 case includeAligned:
-                	filteringIterator = new FilteringIterator(samReader.iterator(),
+                	filteringIterator = new FilteringSamIterator(samReader.iterator(),
                             new AlignedFilter(true), true);
                     break;
                 case excludeAligned:
-                	filteringIterator = new FilteringIterator(samReader.iterator(),
+                	filteringIterator = new FilteringSamIterator(samReader.iterator(),
                             new AlignedFilter(false), true);
                     break;
                 case includeReadList:
-                	filteringIterator = new FilteringIterator(samReader.iterator(),
+                	filteringIterator = new FilteringSamIterator(samReader.iterator(),
                             new ReadNameFilter(READ_LIST_FILE, true));
                     break;
                 case excludeReadList:
-                	filteringIterator = new FilteringIterator(samReader.iterator(),
+                	filteringIterator = new FilteringSamIterator(samReader.iterator(),
                             new ReadNameFilter(READ_LIST_FILE, false));
                     break;
                 case includeJavascript:
-                	filteringIterator = new FilteringIterator(samReader.iterator(),
+                	filteringIterator = new FilteringSamIterator(samReader.iterator(),
                 			new JavascriptSamRecordFilter(
                 			        JAVASCRIPT_FILE,
-                					samReader.getFileHeader()
-                					));
-                	
+                					samReader.getFileHeader()));
+                    break;
+                case includePairedIntervals:
+                    filteringIterator = new FilteringSamIterator(samReader.iterator(),
+                            new IntervalKeepPairFilter(intervalList), false);
                     break;
                 default:
                     throw new UnsupportedOperationException(FILTER.name() + " has not been implemented!");
@@ -252,6 +272,10 @@ public class FilterSamReads extends CommandLineProgram {
                 READ_LIST_FILE == null) {
             return new String[]{"A READ_LIST_FILE must be specified when using the " + FILTER.name() + " option"};
 
+        }
+
+        if (FILTER.equals(Filter.includePairedIntervals) && INTERVAL_LIST == null) {
+            return new String[]{"A INTERVAL_LIST must be specified when using the " + FILTER.name() + " option"};
         }
 
         return super.customCommandLineValidation();

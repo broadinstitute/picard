@@ -23,13 +23,12 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.*;
 import org.testng.Assert;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
@@ -40,11 +39,33 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         return FilterSamReads.class.getSimpleName();
     }
 
+    private static final int READ_LENGTH = 151;
+    private final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+    private final static File TEST_DIR = new File("testdata/picard/sam/FilterSamReads/");
+
+
+    @BeforeTest
+    public void setUp() {
+        builder.setReadLength(READ_LENGTH);
+        builder.addPair("mapped_pair_chr1", 0, 1, 151); //should be kept in first test, filtered out in third
+        builder.addPair("mapped_pair_chr2", 1, 1, 151); //should be filtered out for first test, and kept in third
+        builder.addPair("prove_one_of_pair", 0, 1000, 1000); //neither of these will be kept in any test
+        builder.addPair("one_of_pair", 0, 1, 1000); //first read should pass, second should not, but both will be kept in first test
+    }
+
     @DataProvider(name = "dataTestJsFilter")
     public Object[][] dataTestJsFilter() {
         return new Object[][]{
-                {"testdata/picard/sam/aligned.sam","testdata/picard/sam/FilterSamReads/filterOddStarts.js",3},
-                {"testdata/picard/sam/aligned.sam","testdata/picard/sam/FilterSamReads/filterReadsWithout5primeSoftClip.js", 0}
+                {"testdata/picard/sam/aligned.sam", "testdata/picard/sam/FilterSamReads/filterOddStarts.js",3},
+                {"testdata/picard/sam/aligned.sam", "testdata/picard/sam/FilterSamReads/filterReadsWithout5primeSoftClip.js", 0}
+        };
+    }
+
+    @DataProvider(name = "dataTestPairedIntervalFilter")
+    public Object[][] dataTestPairedIntervalFilter() {
+        return new Object[][]{
+                {"testdata/picard/sam/FilterSamReads/filter1.interval_list", 4},
+                {"testdata/picard/sam/FilterSamReads/filter2.interval_list", 0}
         };
     }
     
@@ -69,9 +90,49 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         final SamReader samReader = SamReaderFactory.makeDefault().open(program.OUTPUT);
         final SAMRecordIterator iter = samReader.iterator();
         int count = 0;
-        while(iter.hasNext()) { iter.next(); ++ count; }
+        while (iter.hasNext()) {
+            iter.next(); ++ count;
+        }
         iter.close();
         samReader.close();
         Assert.assertEquals(count, expectNumber);
-    	}
-	}
+    }
+
+    @Test(dataProvider = "dataTestPairedIntervalFilter")
+    public void testPairedIntervalFilter(final String intervalFilename, final int expectNumber) throws Exception {
+        // input as SAM file
+        final File inputSam = File.createTempFile("testSam", ".sam", TEST_DIR);
+        inputSam.deleteOnExit();
+
+        final SAMFileWriter writer = new SAMFileWriterFactory()
+                .setCreateIndex(true).makeBAMWriter(builder.getHeader(), false, inputSam);
+
+        for (final SAMRecord record : builder) {
+            writer.addAlignment(record);
+        }
+        writer.close();
+
+        final File intervalFile = new File(intervalFilename);
+
+        //loop over javascript filters
+        final FilterSamReads program = new FilterSamReads();
+        program.INPUT = inputSam;
+        program.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
+        program.OUTPUT.deleteOnExit();
+        program.FILTER = FilterSamReads.Filter.includePairedIntervals;
+        program.INTERVAL_LIST = intervalFile;
+        Assert.assertEquals(program.doWork(),0);
+
+        //count reads
+        final SamReader samReader = SamReaderFactory.makeDefault().open(program.OUTPUT);
+        final SAMRecordIterator iter = samReader.iterator();
+        int count = 0;
+        while (iter.hasNext()) {
+            iter.next(); ++ count;
+        }
+
+        iter.close();
+        samReader.close();
+        Assert.assertEquals(count, expectNumber);
+    }
+}
