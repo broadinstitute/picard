@@ -1,0 +1,88 @@
+---
+---
+<!doctype html>
+<html>
+{% include head.html title="Explain Base Qualities" %}
+
+<script type="text/javascript">
+    // minimum value, maximum value, ascii shift
+	var qualValues = [
+		[0,  93, 33], // Sanger
+		[-5, 62, 64], // Solexa
+		[0,  40, 64], // Illumina 1.3+
+		[2,  40, 64], // Illumina 1.5+
+		[0,  93, 33]  // Illumina 1.8+
+	];
+	var resultPrefix = "<strong>Result: </strong>"
+    function convert(which) {
+		var qualValuesIndex = -1;
+		var qualFormats = document.getElementsByName('format');
+		for (var i = 0; i < qualFormats.length; i++) {
+			if (qualFormats[i].checked) {
+				qualValuesIndex = i;
+				break;
+			}
+		}
+		var minQual         = qualValues[qualValuesIndex][0];
+		var maxQual         = qualValues[qualValuesIndex][1];
+		var qualShift       = qualValues[qualValuesIndex][2];
+		var input           = document.getElementById('input').value;
+		if (which == "From Ascii") {
+			var asciiQuals = input;
+			var integerQuals = new Array(asciiQuals.length);
+			for (var i = 0; i < asciiQuals.length; i++) {
+				integerQuals[i] = Math.min(maxQual, Math.max(minQual, asciiQuals.charCodeAt(i) - qualShift));
+			}
+			document.getElementById('output').innerHTML = resultPrefix + integerQuals.join();
+		}
+		else {
+			var strings = input.split(",");
+			var chars = new Array(strings.length);
+			for (var i = 0; i < strings.length; i++) {
+				var qual = qualShift + Math.min(maxQual, Math.max(minQual, parseInt(strings[i])));
+				chars[i] = String.fromCharCode(qual);
+			}
+			document.getElementById('output').innerHTML = resultPrefix + chars.join("");
+		}
+    }
+</script>
+
+<noscript>This page requires JavaScript. Please enable it in your browser settings.</noscript>
+
+<body>
+<div class="wrapper">
+    {% include header.html %}
+
+    <h2>Explain Base Qualities</h2>
+    <section>
+
+		<p>This utility makes it easy to convert between base qualities in ASCII (FASTQ) and Phred-scale integers.
+		<br />
+		<small>See the <a href="https://en.wikipedia.org/wiki/FASTQ_format#Encoding">FASTQ format</a> for more details on encoding types. </small></p>
+
+		<form onSubmit="convert(this.submitted); return false;" action="">
+			<input type=submit onclick="this.form.submitted=this.value;" value="From Ascii" />
+			<input type=submit onclick="this.form.submitted=this.value;" value="To Ascii" />
+			<input id="input" type=txtField size=100 /> &nbsp; &nbsp; &nbsp;
+			<br />
+		</form>
+		<form onSubmit="setFormat(); return false;" action="">
+			Encoding:
+			<input checked type="radio" name="format" value=0>Sanger</input>
+			<input type="radio" name="format" value=1>Solexa</input>
+			<input type="radio" name="format" value=2>Illumina 1.3+</input>
+			<input type="radio" name="format" value=3>Illumina 1.5+</input>
+			<input type="radio" name="format" value=4>Illumina 1.8+</input>
+			<br />
+		</form>
+		<p id="output">
+		<strong>Result: </strong>
+		</p>
+		<br />
+
+    </section>
+
+</div>
+{% include footer.html %}
+</body>
+</html>
