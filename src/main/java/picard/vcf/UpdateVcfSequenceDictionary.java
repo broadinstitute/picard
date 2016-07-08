@@ -98,7 +98,7 @@ public class UpdateVcfSequenceDictionary extends CommandLineProgram {
         while (iterator.hasNext()) {
             final VariantContext context = iterator.next();
             vcfWriter.add(context);
-            progress.record(context.getChr(), context.getStart());
+            progress.record(context.getContig(), context.getStart());
         }
 
         CloserUtil.close(iterator);
