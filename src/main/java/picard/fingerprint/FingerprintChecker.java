@@ -151,8 +151,8 @@ public class FingerprintChecker {
             if (samples == null) samples = ctx.getSampleNames();
 
             if (isUsableSnp(ctx)) {
-                final HaplotypeBlock h = this.haplotypes.getHaplotype(ctx.getChr(), ctx.getStart());
-                final Snp snp = this.haplotypes.getSnp(ctx.getChr(), ctx.getStart());
+                final HaplotypeBlock h = this.haplotypes.getHaplotype(ctx.getContig(), ctx.getStart());
+                final Snp snp = this.haplotypes.getSnp(ctx.getContig(), ctx.getStart());
                 if (h == null) continue;
 
                 // Check the alleles from the file against the expected set of genotypes

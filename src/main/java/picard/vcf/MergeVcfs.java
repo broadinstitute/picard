@@ -150,7 +150,7 @@ public class MergeVcfs extends CommandLineProgram {
         while (mergingIterator.hasNext()) {
             final VariantContext context = mergingIterator.next();
             writer.add(context);
-            progress.record(context.getChr(), context.getStart());
+            progress.record(context.getContig(), context.getStart());
         }
 
         CloserUtil.close(mergingIterator);

@@ -98,7 +98,7 @@ public class GenotypeReader {
                 if (next == null) {
                     while (i.hasNext()) {
                         final VariantContext ctx = i.next();
-                        final Interval ctxInterval = new Interval(ctx.getChr(), ctx.getStart(), ctx.getEnd());
+                        final Interval ctxInterval = new Interval(ctx.getContig(), ctx.getStart(), ctx.getEnd());
                         final Collection<Interval> hits = detector.getOverlaps(ctxInterval);
                         if (hits != null && !hits.isEmpty()) {
                             next = ctx;

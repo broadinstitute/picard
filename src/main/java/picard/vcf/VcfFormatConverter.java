@@ -119,7 +119,7 @@ public class VcfFormatConverter extends CommandLineProgram {
 	    while (iterator.hasNext()) {
 		    final VariantContext context = iterator.next();
             writer.add(context);
-            progress.record(context.getChr(), context.getStart());
+            progress.record(context.getContig(), context.getStart());
         }
 
 	    CloserUtil.close(iterator);

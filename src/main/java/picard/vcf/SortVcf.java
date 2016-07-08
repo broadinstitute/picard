@@ -166,7 +166,7 @@ public class SortVcf extends CommandLineProgram {
             log.info("Reading entries from input file " + readerCount);
             for (final VariantContext variantContext : reader) {
                 sorter.add(variantContext);
-                readProgress.record(variantContext.getChr(), variantContext.getStart());
+                readProgress.record(variantContext.getContig(), variantContext.getStart());
             }
             reader.close();
             readerCount++;
@@ -184,7 +184,7 @@ public class SortVcf extends CommandLineProgram {
         out.writeHeader(outputHeader);
         for (final VariantContext variantContext : sortedOutput) {
             out.add(variantContext);
-            writeProgress.record(variantContext.getChr(), variantContext.getStart());
+            writeProgress.record(variantContext.getContig(), variantContext.getStart());
         }
         out.close();
     }
