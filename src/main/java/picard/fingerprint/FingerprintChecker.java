@@ -128,13 +128,11 @@ public class FingerprintChecker {
      */
     public Map<String,Fingerprint> loadFingerprints(final File fingerprintFile, final String specificSample) {
         final IntervalList loci = this.haplotypes.getIntervalList();
-        final VCFFileReader read = new VCFFileReader(fingerprintFile);
-        final CloseableIterator<VariantContext> iterator = read.iterator();
-        //final GenotypeReader reader = new GenotypeReader();
-        //final GenotypeReader.VariantIterator iterator = reader.read(fingerprintFile, loci);
+        final VCFFileReader reader = new VCFFileReader(fingerprintFile);
+        final CloseableIterator<VariantContext> iterator = reader.iterator();
 
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
-                read.getSequenceDictionary(fingerprintFile));
+                                                        reader.getSequenceDictionary(fingerprintFile));
 
         final Map<String, Fingerprint> fingerprints = new HashMap<>();
         Set<String> samples = null;
