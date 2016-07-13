@@ -36,7 +36,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
     private final int minimumLength;
     private final StrandSpecificity strandSpecificity;
     private final double rrnaFragmentPercentage;
-    private final Long ribosomalInitialValue;
+    protected final Long ribosomalInitialValue;
 
     final private Set<Integer> ignoredSequenceIndices;
 
@@ -95,21 +95,34 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         return ignoredSequenceIndices;
     }
 
-    private class PerUnitRnaSeqMetricsCollector implements PerUnitMetricCollector<RnaSeqMetrics, Integer, SAMRecord> {
+    protected class PerUnitRnaSeqMetricsCollector implements PerUnitMetricCollector<RnaSeqMetrics, Integer, SAMRecord> {
 
-        final RnaSeqMetrics metrics = new RnaSeqMetrics();
-        
+        protected final RnaSeqMetrics metrics;
+
         private final Map<Gene.Transcript, int[]> coverageByTranscript = new HashMap<Gene.Transcript, int[]>();
+
+        /**
+         * Derived classes that need to capture some additional metrics can use this ctor to supply a metrics instance
+         * that is a subclass of RnaSeqMetrics.
+         */
+        protected PerUnitRnaSeqMetricsCollector(final RnaSeqMetrics metrics,
+                                                final String sample,
+                                                final String library,
+                                                final String readGroup,
+                                                final Long ribosomalBasesInitialValue) {
+            this.metrics = metrics;
+            this.metrics.SAMPLE = sample;
+            this.metrics.LIBRARY = library;
+            this.metrics.READ_GROUP = readGroup;
+            this.metrics.RIBOSOMAL_BASES = ribosomalBasesInitialValue;
+
+        }
 
         public PerUnitRnaSeqMetricsCollector(final String sample,
                                              final String library,
                                              final String readGroup,
                                              final Long ribosomalBasesInitialValue) {
-            this.metrics.SAMPLE = sample;
-            this.metrics.LIBRARY = library;
-            this.metrics.READ_GROUP = readGroup;
-            this.metrics.RIBOSOMAL_BASES = ribosomalBasesInitialValue;
-            
+            this(new RnaSeqMetrics(), sample, library, readGroup, ribosomalBasesInitialValue);
         }
 
         public void acceptRecord(SAMRecord rec) {
@@ -156,11 +169,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                     // Assume entire read is ribosomal.
                     // TODO: Should count reads, not bases?
                     metrics.RIBOSOMAL_BASES += rec.getReadLength();
-                    int numAlignedBases = 0;
-                    for (final AlignmentBlock alignmentBlock : rec.getAlignmentBlocks()) {
-                        numAlignedBases += alignmentBlock.getLength();
-                    }
-                    metrics.PF_ALIGNED_BASES += numAlignedBases;
+                    metrics.PF_ALIGNED_BASES += getNumAlignedBases(rec);
                     return;
                 }
             }
@@ -242,6 +251,14 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                 }
             }
 
+        }
+
+        protected int getNumAlignedBases(SAMRecord rec) {
+            int numAlignedBases = 0;
+            for (final AlignmentBlock alignmentBlock : rec.getAlignmentBlocks()) {
+                numAlignedBases += alignmentBlock.getLength();
+            }
+            return numAlignedBases;
         }
 
         public void finish() {
