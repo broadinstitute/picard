@@ -25,6 +25,7 @@
 package picard.analysis;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.SamPairUtil.PairOrientation;
 
@@ -66,7 +67,7 @@ public class ChimeraUtil {
                 (Math.abs(r1.getInferredInsertSize()) > maxInsertSize ||            //    either far apart on the same contig
                         !r1.getReferenceIndex().equals(r2.getReferenceIndex()) ||   //    or on different contigs
                         !matchesExpectedOrientations(r1, expectedOrientations) ||   //    or in unexpected orientations
-                        r2.getAttribute("SA") != null);                             //      (another check for an unexpected orientation here)
+                        r2.getAttribute(SAMTag.SA.toString()) != null);                             //      (another check for an unexpected orientation here)
     }
 
     private static boolean isMappedPair(final SAMRecord rec) {
@@ -74,6 +75,6 @@ public class ChimeraUtil {
     }
 
     private static boolean matchesExpectedOrientations(final SAMRecord rec, final Set<PairOrientation> expectedOrientations) {
-        return expectedOrientations.contains(SamPairUtil.getPairOrientation(rec)) && rec.getAttribute("SA") == null;
+        return expectedOrientations.contains(SamPairUtil.getPairOrientation(rec)) && rec.getAttribute(SAMTag.SA.toString()) == null;
     }
 }

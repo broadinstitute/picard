@@ -24,13 +24,7 @@
 
 package picard.analysis;
 
-import htsjdk.samtools.AlignmentBlock;
-import htsjdk.samtools.BAMRecord;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.ReservedTagConstants;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CoordMath;
@@ -253,7 +247,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                             metrics.READS_ALIGNED_IN_PAIRS++;
 
                             // Check that both ends have mapq > minimum
-                            final Integer mateMq = record.getIntegerAttribute("MQ");
+                            final Integer mateMq = record.getIntegerAttribute(SAMTag.MQ.toString());
                             if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESOLD && record.getMappingQuality() >= MAPPING_QUALITY_THRESOLD) {
                                 ++this.chimerasDenominator;
 
@@ -267,7 +261,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                             // Consider chimeras that occur *within* the read using the SA tag
                             if (record.getMappingQuality() >= MAPPING_QUALITY_THRESOLD) {
                                 ++this.chimerasDenominator;
-                                if (record.getAttribute("SA") != null) ++this.chimeras;
+                                if (record.getAttribute(SAMTag.SA.toString()) != null) ++this.chimeras;
                             }
                         }
                     }

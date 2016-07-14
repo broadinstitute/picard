@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static htsjdk.samtools.util.CodeUtil.getOrElse;
+import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
 /**
  * Quantify substitution errors caused by mismatched base pairings during various
@@ -105,7 +106,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
     @Option(shortName = "Q", doc = "The minimum base quality score for a base to be included in analysis.")
     public int MINIMUM_QUALITY_SCORE = 20;
 
-    @Option(shortName = "MQ", doc = "The minimum mapping quality score for a base to be included in analysis.")
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "The minimum mapping quality score for a base to be included in analysis.")
     public int MINIMUM_MAPPING_QUALITY = 30;
 
     @Option(shortName = "MIN_INS", doc = "The minimum insert size for a read to be included in analysis.")

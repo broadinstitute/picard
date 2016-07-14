@@ -28,6 +28,8 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 
+import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
+
 /**
  * Calculates a set of HS metrics from a sam or bam file.  See HsMetricsCollector and CollectTargetedMetrics for more details.
  *
@@ -45,7 +47,7 @@ import picard.cmdline.programgroups.Metrics;
 @Deprecated
 public class CalculateHsMetrics extends CollectHsMetrics {
 
-    @Option(shortName = "MQ", doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
     public int MINIMUM_MAPPING_QUALITY = 1;
 
     @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.", overridable = true)

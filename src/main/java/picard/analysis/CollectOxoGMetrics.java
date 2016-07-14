@@ -60,6 +60,7 @@ import java.util.Set;
 import static htsjdk.samtools.util.CodeUtil.getOrElse;
 import static htsjdk.samtools.util.SequenceUtil.generateAllKmers;
 import static java.lang.Math.log10;
+import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
 /**
  * Class for trying to quantify the CpCG->CpCA error rate.
@@ -117,7 +118,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
             doc = "The minimum base quality score for a base to be included in analysis.")
     public int MINIMUM_QUALITY_SCORE = 20;
 
-    @Option(shortName = "MQ",
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME,
             doc = "The minimum mapping quality score for a base to be included in analysis.")
     public int MINIMUM_MAPPING_QUALITY = 30;
 

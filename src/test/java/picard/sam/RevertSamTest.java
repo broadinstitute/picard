@@ -250,7 +250,7 @@ public class RevertSamTest extends CommandLineProgramTest {
 
             for (final SAMRecord.SAMTagAndValue attr : rec.getAttributes()) {
                 if (removeAlignmentInfo || (!attr.tag.equals("PG") && !attr.tag.equals("NM")
-                        && !attr.tag.equals("MQ"))) {
+                        && !attr.tag.equals(SAMTag.MQ.toString()))) {
                     Assert.assertFalse(reverter.ATTRIBUTE_TO_CLEAR.contains(attr.tag),
                             attr.tag + " should have been cleared.");
                 }
