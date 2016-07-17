@@ -29,18 +29,14 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.samtools.util.*;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeLikelihoods;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFFileReader;
 import picard.PicardException;
 
 import java.io.File;
@@ -132,11 +128,11 @@ public class FingerprintChecker {
      */
     public Map<String,Fingerprint> loadFingerprints(final File fingerprintFile, final String specificSample) {
         final IntervalList loci = this.haplotypes.getIntervalList();
-        final GenotypeReader reader = new GenotypeReader();
-        final GenotypeReader.VariantIterator iterator = reader.read(fingerprintFile, loci);
+        final VCFFileReader reader = new VCFFileReader(fingerprintFile);
+        final CloseableIterator<VariantContext> iterator = reader.iterator(); 
 
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
-                                                     iterator.getSequenceDictionary());
+                                                        reader.getSequenceDictionary(fingerprintFile));
 
         final Map<String, Fingerprint> fingerprints = new HashMap<>();
         Set<String> samples = null;
@@ -151,8 +147,8 @@ public class FingerprintChecker {
             if (samples == null) samples = ctx.getSampleNames();
 
             if (isUsableSnp(ctx)) {
-                final HaplotypeBlock h = this.haplotypes.getHaplotype(ctx.getChr(), ctx.getStart());
-                final Snp snp = this.haplotypes.getSnp(ctx.getChr(), ctx.getStart());
+                final HaplotypeBlock h = this.haplotypes.getHaplotype(ctx.getContig(), ctx.getStart());
+                final Snp snp = this.haplotypes.getSnp(ctx.getContig(), ctx.getStart());
                 if (h == null) continue;
 
                 // Check the alleles from the file against the expected set of genotypes
