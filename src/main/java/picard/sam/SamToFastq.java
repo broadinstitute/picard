@@ -298,10 +298,7 @@ public class SamToFastq extends CommandLineProgram {
         }
         fileName = IOUtil.makeFileNameSafe(fileName);
         if (preExtSuffix != null) fileName += preExtSuffix;
-        fileName += ".fastq";
-        if (COMPRESS_OUTPUTS_PER_RG) {
-            fileName += ".gz";
-        }
+        fileName += COMPRESS_OUTPUTS_PER_RG ? ".fastq.gz" : ".fastq";
 
         final File result = (OUTPUT_DIR != null)
                 ? new File(OUTPUT_DIR, fileName)
