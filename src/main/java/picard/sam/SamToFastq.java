@@ -84,19 +84,24 @@ public class SamToFastq extends CommandLineProgram {
     public File INPUT;
 
     @Option(shortName = "F", doc = "Output FASTQ file (single-end fastq or, if paired, first end of the pair FASTQ).",
-            mutex = {"OUTPUT_PER_RG"})
+            mutex = {"OUTPUT_PER_RG", "COMPRESS_OUTPUTS_PER_RG"})
     public File FASTQ;
 
     @Option(shortName = "F2", doc = "Output FASTQ file (if paired, second end of the pair FASTQ).", optional = true,
-            mutex = {"OUTPUT_PER_RG"})
+            mutex = {"OUTPUT_PER_RG", "COMPRESS_OUTPUTS_PER_RG"})
     public File SECOND_END_FASTQ;
 
-    @Option(shortName = "FU", doc = "Output FASTQ file for unpaired reads; may only be provided in paired-FASTQ mode", optional = true, mutex = {"OUTPUT_PER_RG"})
+    @Option(shortName = "FU", doc = "Output FASTQ file for unpaired reads; may only be provided in paired-FASTQ mode", optional = true,
+            mutex = {"OUTPUT_PER_RG", "COMPRESS_OUTPUTS_PER_RG"})
     public File UNPAIRED_FASTQ;
 
     @Option(shortName = "OPRG", doc = "Output a FASTQ file per read group (two FASTQ files per read group if the group is paired).",
             optional = true, mutex = {"FASTQ", "SECOND_END_FASTQ", "UNPAIRED_FASTQ"})
     public boolean OUTPUT_PER_RG;
+
+    @Option(shortName = "GZRG", doc = "Compress output FASTQ files per read group using gzip and append a .gz extension to the file names.",
+            optional = false, mutex = {"FASTQ", "SECOND_END_FASTQ", "UNPAIRED_FASTQ"})
+    public Boolean COMPRESS_OUTPUTS_PER_RG = false;
 
     @Option(shortName="RGT", doc = "The read group tag (PU or ID) to be used to output a FASTQ file per read group.")
     public String RG_TAG = "PU";
@@ -132,9 +137,6 @@ public class SamToFastq extends CommandLineProgram {
             "parameters, ensure that the resulting reads after clipping are at least CLIPPING_MIN_LENGTH bases long. " +
             "If the original read is shorter than CLIPPING_MIN_LENGTH then the original read length will be maintained.")
     public int CLIPPING_MIN_LENGTH = 0;
-
-    @Option(shortName = "GZIP", doc = "Compress output FASTQ files using gzip and append a .gz extension to the file names.", optional = false)
-    public Boolean COMPRESS_OUTPUTS = false;
 
     @Option(shortName = "R1_TRIM", doc = "The number of bases to trim from the beginning of read 1.")
     public int READ1_TRIM = 0;
@@ -289,7 +291,7 @@ public class SamToFastq extends CommandLineProgram {
         fileName = IOUtil.makeFileNameSafe(fileName);
         if (preExtSuffix != null) fileName += preExtSuffix;
         fileName += ".fastq";
-        if (COMPRESS_OUTPUTS) {
+        if (COMPRESS_OUTPUTS_PER_RG) {
             fileName += ".gz";
         }
 
