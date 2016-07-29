@@ -23,12 +23,12 @@ import java.util.Map;
  */
 public abstract class SamFileTester extends CommandLineProgramTest {
 
-    private final SAMRecordSetBuilder samRecordSetBuilder;
+    protected final SAMRecordSetBuilder samRecordSetBuilder;
     protected final Map<String, Boolean> duplicateFlags = new HashMap<>();
     private File outputDir;
     private File output;
     private int readNameCounter = 0;
-    private boolean noMateCigars = false;
+    protected boolean noMateCigars = false;
     private boolean deleteOnExit = true;
     private final ArrayList<String> args = new ArrayList<>();
 

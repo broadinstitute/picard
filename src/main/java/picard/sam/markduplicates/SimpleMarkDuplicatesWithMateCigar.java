@@ -32,10 +32,7 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordDuplicateComparator;
 import htsjdk.samtools.SAMTag;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.IterableAdapter;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.*;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Testing;
@@ -120,10 +117,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         final SAMRecordDuplicateComparator comparator = new SAMRecordDuplicateComparator(Collections.singletonList(headerAndIterator.header));
         comparator.setScoringStrategy(this.DUPLICATE_SCORING_STRATEGY);
 
-        final DuplicateSetIterator iterator = new DuplicateSetIterator(headerAndIterator.iterator,
-                headerAndIterator.header,
-                false,
-                comparator);
+        final CloseableIterator<DuplicateSet> iterator = getDuplicateSetIterator(headerAndIterator, comparator);
 
         // progress logger!
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
@@ -232,5 +226,12 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         finalizeAndWriteMetrics(libraryIdGenerator);
 
         return 0;
+    }
+
+    protected CloseableIterator<DuplicateSet> getDuplicateSetIterator(final SamHeaderAndIterator headerAndIterator, final SAMRecordDuplicateComparator comparator) {
+        return new DuplicateSetIterator(headerAndIterator.iterator,
+                    headerAndIterator.header,
+                    false,
+                    comparator);
     }
 }
