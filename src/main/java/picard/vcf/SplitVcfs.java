@@ -113,7 +113,7 @@ public class SplitVcfs extends CommandLineProgram {
                 else incorrectVariantCount++;
             }
 
-            progress.record(context.getChr(), context.getStart());
+            progress.record(context.getContig(), context.getStart());
         }
 
         if (incorrectVariantCount > 0) {

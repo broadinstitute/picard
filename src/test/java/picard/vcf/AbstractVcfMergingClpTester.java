@@ -169,6 +169,6 @@ public abstract class AbstractVcfMergingClpTester {
 	}
 
 	static String getContigPosition(final VariantContext context) {
-		return context.getChr() + "-" + Integer.toString(context.getStart());
+		return context.getContig() + "-" + Integer.toString(context.getStart());
 	}
 }

@@ -175,7 +175,7 @@ public class GatherVcfs extends CommandLineProgram {
             while (variantIterator.hasNext()) {
                 lastContext = variantIterator.next();
                 out.add(lastContext);
-                progress.record(lastContext.getChr(), lastContext.getStart());
+                progress.record(lastContext.getContig(), lastContext.getStart());
             }
 
             lastFile = f;

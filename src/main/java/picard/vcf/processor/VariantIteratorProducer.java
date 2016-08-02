@@ -244,7 +244,7 @@ public abstract class VariantIteratorProducer {
                     return true;
                 }
                 final Collection<VcfFileSegment> intersectingSegments =
-                        multiSegmentDetectorPerFile.get(sourceSegment.vcf()).getOverlaps(new Interval(vc.getChr(), vc.getStart(), vc.getEnd()));
+                        multiSegmentDetectorPerFile.get(sourceSegment.vcf()).getOverlaps(new Interval(vc.getContig(), vc.getStart(), vc.getEnd()));
                 if (intersectingSegments.size() < 2) {
                     // There's only one segment that produces this variant
                     return true;
@@ -268,8 +268,8 @@ public abstract class VariantIteratorProducer {
         final class OverlapsPredicate implements Predicate<VariantContext> {
             @Override
             public boolean apply(final VariantContext vc) {
-                final boolean include = !intervalsOfInterestDetector.getOverlaps(new Interval(vc.getChr(), vc.getStart(), vc.getEnd())).isEmpty();
-                if (!include) LOG.debug("Filtering variant at ", vc.getChr(), ":", vc.getStart(), "-", vc.getEnd());
+                final boolean include = !intervalsOfInterestDetector.getOverlaps(new Interval(vc.getContig(), vc.getStart(), vc.getEnd())).isEmpty();
+                if (!include) LOG.debug("Filtering variant at ", vc.getContig(), ":", vc.getStart(), "-", vc.getEnd());
                 return include;
             }
         }
