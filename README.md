@@ -9,27 +9,74 @@ sequencing data such as [SAM][2] and [VCF][3].
 
 As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last version to support Java 1.7 was release 1.141.
 
-To clone and build:
-Clone the repo:
+####Building Picard
 
+* First, clone the repo:
+```
     git clone git@github.com:broadinstitute/picard.git
     cd picard/
+```
+
+* Picard is now built using [gradle](http://gradle.org/). A wrapper script (`gradlew`) is included which will download the appropriate version of gradle on the first invocation.
     
-Clone htsjdk into a subdirectory:
+* To build a fully-packaged, runnable Picard jar with all dependencies included, run:
+```
+    ./gradlew shadowJar
+```
 
-    ant clone-htsjdk
-Build:
+* The resulting jar will be in `build/libs`. To run it, the command is:
+```
+    java -jar build/libs/picard-*-all.jar
+    // actual name of the jar will vary depending on the current Picard version
+```    
+    
+* To build a jar containing only Picard classes (without its dependencies), run:
+```
+    ./gradlew jar
+```    
+    
+* To clean the build directory, run:
+```
+    ./gradlew clean
+```
 
-    ant
+####Running Tests
 
-Enjoy!
+* To run all tests, the command is:
+```
+    ./gradlew test
+```
 
-    java -jar dist/picard.jar
+* To run a specific test, the command is:
+```
+    ./gradlew test -Dtest.single=TestClassName 
+```
 
-**NOTE:** Picard expects the *latest tagged release* version of HTSJDK. It is *not* guaranteed to be able to build from older versions of HTSJDK nor from the latest state of the HTSJDK master branch. When you run `ant clone-htsjdk` the first time, Picard will fetch the appropriate tagged version. Subsequently, to update HTSJDK (if for example you run into build issues) you can do so manually by running `git checkout <tag>` within your HTSJDK clone, where `<tag>` is the latest release tag number. You can find that number by running `git tag` in your HTSJDK clone and taking the highest number. 
+####Changing the released version of HTSJDK that Picard depends on
+
+To switch Picard's HTSJDK dependency to a different released version:
+
+* Open `build.gradle`
+* Edit VERSION in the following line to be a different released version of HTSJDK. HTSJDK releases are listed [here](https://github.com/samtools/htsjdk/releases)
+```
+    final htsjdkVersion = System.getProperty('htsjdk.version', 'VERSION')`
+```
+* Open a pull request with this change
+
+####Building Picard with a Custom Version of HTSJDK
+
+During development in Picard, it is sometimes necessary to build locally against an unreleased version or branch of HTSJDK. 
+
+* To build against an unreleased version of HTSJDK's master branch:
+    * Go to the [Broad artifactory](https://artifactory.broadinstitute.org/artifactory/simple/libs-snapshot-local/com/github/samtools/htsjdk/), where continuous snapshots of HTSJDK's master branch are published, and select the version you want to use. For example, `2.5.1-9-g5740ca1-SNAPSHOT`. You can search by tag or short git commit hash.
+    * In your Picard clone, run `./gradlew shadowJar -Dhtsjdk.version=VERSION`, where VERSION is the version of the HTSJDK master branch snapshot you want to use.
+    
+* To build against a version of HTSJDK that has *not* yet been merged into HTSJDK's master branch:
+    * Clone [HTSJDK](https://github.com/samtools/htsjdk/), and in your clone check out the tag or branch you want to build Picard with.
+    * Run `./gradlew install printVersion` in your htsjdk clone to install that version to your local maven repository. Take note of the version number that gets printed at the end.
+    * Switch back to your Picard clone, and run `./gradlew shadowJar -Dhtsjdk.version=VERSION`, where VERSION is the version of HTSJDK you installed to your local maven repository.
 
 ----
-
 
 It's also possible to build a version of Picard that supports reading from
 GA4GH API, e.g. Google Genomics:
@@ -72,6 +119,8 @@ INPUT=https://www.googleapis.com/genomics/v1beta2/readgroupsets/CK256frpGBD44IWH
 GA4GH_CLIENT_SECRETS=../client_secrets.json
 ```
 For Java 7 (as opposed to 8) use ```alpn-boot-7.1.3.v20150130.jar```.
+
+----
 
 Picard is migrating to semantic versioning (http://semver.org/). We will eventually adhere to it strictly and bump our major version whenever there are breaking changes to our API, but until we more clearly define what constitutes our official API, clients should assume that every release potentially contains at least minor changes to public methods.
 
