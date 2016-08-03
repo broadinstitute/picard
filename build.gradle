@@ -45,7 +45,7 @@ jacoco {
 
 dependencies {
     compile 'com.google.guava:guava:15.0'
-    compile ('com.github.samtools:htsjdk:2.5.0')
+    compile ('com.github.samtools:htsjdk:2.6.0')
     //tools dependency for doclet requires sdk devel
     compile(files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs()))
     testCompile 'org.testng:testng:6.9.10'
