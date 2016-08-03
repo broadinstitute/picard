@@ -4,7 +4,7 @@
 ##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
 ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
 ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Total read depth summed across all datasets, excluding MQ0 reads">
-##FORMAT=<ID=FT,Number=1,Type=String,Description="Genotype-level filter">
+##FORMAT=<ID=FT,Number=.,Type=String,Description="Genotype-level filter">
 ##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
 ##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Net Genotype quality across all datasets, defined as difference between most likely and next most likely genotype likelihoods">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
