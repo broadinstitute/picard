@@ -1,5 +1,6 @@
+import org.gradle.internal.os.OperatingSystem
+
 import javax.tools.ToolProvider
-import org.ajoberstar.grgit.*
 
 buildscript {
     repositories {
@@ -25,6 +26,9 @@ mainClassName = "picard.cmdline.PicardCommandLine"
 repositories {
     mavenLocal()
     mavenCentral()
+    maven {
+        url "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/" //for htsjdk snapshots
+    }
 }
 
 jacocoTestReport {
@@ -73,9 +77,6 @@ jar {
                 'Implementation-Version': version
     }
 }
-
-import org.gradle.internal.os.OperatingSystem;
-
 // This is a hack to disable the java 8 default javadoc lint until we fix the html formatting
 if (JavaVersion.current().isJava8Compatible()) {
     tasks.withType(Javadoc) {
