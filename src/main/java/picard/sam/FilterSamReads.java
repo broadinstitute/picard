@@ -211,7 +211,7 @@ public class FilterSamReads extends CommandLineProgram {
             IOUtil.assertFileIsWritable(OUTPUT);
             if (WRITE_READS_FILES) writeReadsFile(INPUT);
 
-            List<Interval> intervalList;
+            List<Interval> intervalList = new ArrayList<>();
 
             if (INTERVAL_LIST != null) {
                 intervalList = getIntervalList(INTERVAL_LIST);
