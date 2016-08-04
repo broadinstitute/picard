@@ -50,6 +50,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -209,7 +210,12 @@ public class FilterSamReads extends CommandLineProgram {
             IOUtil.assertFileIsReadable(INPUT);
             IOUtil.assertFileIsWritable(OUTPUT);
             if (WRITE_READS_FILES) writeReadsFile(INPUT);
-            final List<Interval> intervalList = getIntervalList(INTERVAL_LIST);
+
+            List<Interval> intervalList;
+
+            if (INTERVAL_LIST != null) {
+                intervalList = getIntervalList(INTERVAL_LIST);
+            }
 
             final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
             final FilteringSamIterator filteringIterator;
