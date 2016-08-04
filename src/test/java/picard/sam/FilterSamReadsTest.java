@@ -77,24 +77,12 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         // input as SAM file 
         final File inputSam = new File(samFilename);
         final File javascriptFile = new File(javascriptFilename);
-        //loop over javascript filters
-        final FilterSamReads program = new FilterSamReads();
-        program.INPUT = inputSam;
-        program.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
-        program.OUTPUT.deleteOnExit();
-        program.FILTER = FilterSamReads.Filter.includeJavascript;
-        program.JAVASCRIPT_FILE = javascriptFile;
-        Assert.assertEquals(program.doWork(),0);
-        
-        //count reads
-        final SamReader samReader = SamReaderFactory.makeDefault().open(program.OUTPUT);
-        final SAMRecordIterator iter = samReader.iterator();
-        int count = 0;
-        while (iter.hasNext()) {
-            iter.next(); ++ count;
-        }
-        iter.close();
-        samReader.close();
+
+        FilterSamReads filterTest = setupProgram(javascriptFile, inputSam, FilterSamReads.Filter.includeJavascript);
+        Assert.assertEquals(filterTest.doWork(),0);
+
+        int count = getReadCount(filterTest);
+
         Assert.assertEquals(count, expectNumber);
     }
 
@@ -117,17 +105,35 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
 
         final File intervalFile = new File(intervalFilename);
 
+        FilterSamReads filterTest = setupProgram(intervalFile, inputSam, FilterSamReads.Filter.includePairedIntervals);
+        Assert.assertEquals(filterTest.doWork(),0);
+
+        int count = getReadCount(filterTest);
+
+        Assert.assertEquals(count, expectNumber);
+    }
+
+    private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter) throws Exception {
         final FilterSamReads program = new FilterSamReads();
         program.INPUT = inputSam;
         program.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
         program.OUTPUT.deleteOnExit();
-        program.FILTER = FilterSamReads.Filter.includePairedIntervals;
-        program.INTERVAL_LIST = intervalFile;
-        Assert.assertEquals(program.doWork(),0);
+        program.FILTER = filter;
 
-        //count reads
-        final SamReader samReader = SamReaderFactory.makeDefault().open(program.OUTPUT);
+        if(filter == FilterSamReads.Filter.includePairedIntervals) {
+            program.INTERVAL_LIST = inputFile;
+        }
+        else {
+            program.JAVASCRIPT_FILE = inputFile;
+        }
+
+        return program;
+    }
+
+    private int getReadCount(FilterSamReads filterTest) throws Exception {
+        final SamReader samReader = SamReaderFactory.makeDefault().open(filterTest.OUTPUT);
         final SAMRecordIterator iter = samReader.iterator();
+
         int count = 0;
         while (iter.hasNext()) {
             iter.next(); ++ count;
@@ -135,6 +141,6 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
 
         iter.close();
         samReader.close();
-        Assert.assertEquals(count, expectNumber);
+        return count;
     }
 }
