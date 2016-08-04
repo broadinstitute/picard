@@ -98,6 +98,9 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         Assert.assertEquals(count, expectNumber);
     }
 
+    /**
+     * filters a SAM using an interval filter
+     */
     @Test(dataProvider = "dataTestPairedIntervalFilter")
     public void testPairedIntervalFilter(final String intervalFilename, final int expectNumber) throws Exception {
         // input as SAM file
@@ -114,7 +117,6 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
 
         final File intervalFile = new File(intervalFilename);
 
-        //loop over javascript filters
         final FilterSamReads program = new FilterSamReads();
         program.INPUT = inputSam;
         program.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
