@@ -69,7 +69,7 @@ group = 'com.github.broadinstitute'
 
 defaultTasks 'all'
 
-task all(dependsOn: ['jar', 'distZip', 'documentAll'])
+task all(dependsOn: ['jar', 'distZip', 'documentAll', 'shadowJar', 'currentJar'])
 
 jar {
     manifest {
@@ -84,6 +84,16 @@ if (JavaVersion.current().isJava8Compatible()) {
     tasks.withType(Javadoc) {
         options.addStringOption('Xdoclint:none', '-quiet')
     }
+}
+
+task currentJar(type: Copy){
+    from shadowJar
+    into new File(buildDir, "libs")
+    rename { string -> "picard.jar"}
+}
+
+shadowJar {
+    finalizedBy currentJar
 }
 
 tasks.withType(Test) {
