@@ -26,9 +26,13 @@ As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last ver
 
 * The resulting jar will be in `build/libs`. To run it, the command is:
 ```
-    java -jar build/libs/picard-*-all.jar
-    // actual name of the jar will vary depending on the current Picard version
+    java -jar build/libs/picard.jar
+    
+    or
+    
+    java -jar build/libs/picard-<VERSION>-all.jar 
 ```    
+
     
 * To build a jar containing only Picard classes (without its dependencies), run:
 ```
