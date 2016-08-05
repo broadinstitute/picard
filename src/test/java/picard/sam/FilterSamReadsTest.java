@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.util.stream.StreamSupport;
 
 public class FilterSamReadsTest extends CommandLineProgramTest {
     @Override
@@ -81,7 +82,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         FilterSamReads filterTest = setupProgram(javascriptFile, inputSam, FilterSamReads.Filter.includeJavascript);
         Assert.assertEquals(filterTest.doWork(),0);
 
-        int count = getReadCount(filterTest);
+        long count = getReadCount(filterTest);
 
         Assert.assertEquals(count, expectNumber);
     }
@@ -91,7 +92,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
      */
     @Test(dataProvider = "dataTestPairedIntervalFilter")
     public void testPairedIntervalFilter(final String intervalFilename, final int expectNumber) throws Exception {
-        // input as SAM file
+        // Build a sam file for testing
         final File inputSam = File.createTempFile("testSam", ".sam", TEST_DIR);
         inputSam.deleteOnExit();
 
@@ -108,7 +109,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         FilterSamReads filterTest = setupProgram(intervalFile, inputSam, FilterSamReads.Filter.includePairedIntervals);
         Assert.assertEquals(filterTest.doWork(),0);
 
-        int count = getReadCount(filterTest);
+        long count = getReadCount(filterTest);
 
         Assert.assertEquals(count, expectNumber);
     }
@@ -130,16 +131,12 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         return program;
     }
 
-    private int getReadCount(FilterSamReads filterTest) throws Exception {
+    private long getReadCount(FilterSamReads filterTest) throws Exception {
         final SamReader samReader = SamReaderFactory.makeDefault().open(filterTest.OUTPUT);
-        final SAMRecordIterator iter = samReader.iterator();
 
-        int count = 0;
-        while (iter.hasNext()) {
-            iter.next(); ++ count;
-        }
+        long count = StreamSupport.stream(samReader.spliterator(), false)
+                .count();
 
-        iter.close();
         samReader.close();
         return count;
     }
