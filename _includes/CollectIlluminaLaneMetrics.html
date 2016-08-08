@@ -1,6 +1,6 @@
 <h3 id="CollectIlluminaLaneMetrics">CollectIlluminaLaneMetrics</h3>
 <section>
-<p>Collects Illumina lane metrics for the given basecalling analysis directory</p>
+<p>Collects Illumina lane metrics for the given BaseCalling analysis directory.  This tool produces quality control metrics on cluster density for each lane of an Illumina flowcell.  This tool takes Illumina TileMetrics data and places them into directories containing lane- and phasing-level metrics.  In this context, phasing refers to the fraction of molecules that fall behind or jump ahead (prephasing) during a read cycle.<h4>Usage example:</h4><pre>java -jar picard.jar CollectIlluminaLaneMetrics \<br />      RUN_DIR=test_run \<br />      OUTPUT_DIRECTORY=Lane_output_metrics \<br />      OUTPUT_PREFIX=experiment1 \<br />      READ_STRUCTURE=25T8B25T </pre><p>Please see the CollectIlluminaLaneMetrics <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectIlluminaLaneMetrics'>definitions</a> for a complete description of the metrics produced by this tool.</p><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>RUN_DIRECTORY (File)</td><td>The Illumina run directory of the run for which the lane metrics are to be generated  Required. </td></tr>

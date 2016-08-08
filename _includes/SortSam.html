@@ -1,6 +1,6 @@
 <h3 id="SortSam">SortSam</h3>
 <section>
-<p>Sorts a SAM or BAM file.  This tool sorts the input SAM or BAM file by coordinate, queryname  or some other property of the SAMRecord. Input and output formats (SAM or BAM) are determined by the file extension.<br /><h4>Usage example:</h4><pre>java -jar picard.jar SortSam \<br />      I=input.bam \<br />      O=sorted.bam \<br />      SORT_ORDER=coordinate</pre><hr /></p>
+<p>Sorts a SAM or BAM file.  This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property of the SAM record. The SortOrder of a SAM/BAM file is found in the SAM file header tag @HD in the field labeled SO.  <p>For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.</p>For queryname-sorted alignments, all alignments are grouped using the queryname field but the alignments are not necessarily sorted within these groups.  Reads having the same queryname are derived from the same template.  <h4>Usage example:</h4><pre>java -jar picard.jar SortSam \<br />      I=input.bam \<br />      O=sorted.bam \<br />      SORT_ORDER=coordinate</pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT (File)</td><td>The BAM or SAM file to sort.  Required. </td></tr>

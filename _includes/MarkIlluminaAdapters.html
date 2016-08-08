@@ -1,10 +1,6 @@
 <h3 id="MarkIlluminaAdapters">MarkIlluminaAdapters</h3>
 <section>
-<p>Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.
-Clear any existing adapter-trimming tags (XT:i:).
-Only works for unaligned files in query-name order.
-Note: This is a utility program and will not be run in the pipeline.
-</p>
+<p>Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  <p>This tool clears any existing adapter-trimming tags (XT:i:) in the optional tag region of a SAM file.  The SAM/BAM file must be sorted by query name.</p> <p>Outputs a metrics file histogram showing counts of bases_clipped per read.<h4>Usage example:</h4><pre>java -jar picard.jar MarkIlluminaAdapters \<br /> INPUT=input.sam \<br />METRICS=metrics.txt </pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT (File)</td><td>Required. </td></tr>
