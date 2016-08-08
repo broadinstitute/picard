@@ -40,7 +40,9 @@ public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends C
     @Option(doc = "Regular expression that can be used to parse read names in the incoming SAM file. Read names are " +
             "parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used " +
             "to estimate the rate of optical duplication in order to give a more accurate estimated library size. " +
-            "Set this option to null to disable optical duplicate detection. " +
+            "Set this option to null to disable optical duplicate detection, e.g. for RNA-seq " +
+            "or other data where duplicate sets are extremely large and estimating library complexity is not an aim. " +
+            "Note that without optical duplicate counts, library size estimation will be inaccurate. " +
             "The regular expression should contain three capture groups for the three variables, in order. " +
             "It must match the entire read name. " +
             "Note that if the default regex is specified, a regex match is not actually done, but instead the read name " +
