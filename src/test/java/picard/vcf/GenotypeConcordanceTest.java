@@ -25,12 +25,15 @@
 package picard.vcf;
 
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.LineReader;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
@@ -39,16 +42,16 @@ import picard.vcf.GenotypeConcordanceStates.CallState;
 import picard.vcf.GenotypeConcordanceStates.TruthAndCallStates;
 import picard.vcf.GenotypeConcordanceStates.TruthState;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class GenotypeConcordanceTest {
 
@@ -56,7 +59,7 @@ public class GenotypeConcordanceTest {
     private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
 
     // Test VCFs
-    private final File CEU_TRIOS_SNPS_VCF = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
+    private static final File CEU_TRIOS_SNPS_VCF = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
     private static final File CEU_TRIOS_INDELS_VCF = new File(TEST_DATA_PATH, "CEUTrio-indels.vcf");
 
     // Test that missing sites flag for new scheme works for NIST data sets
@@ -100,6 +103,9 @@ public class GenotypeConcordanceTest {
     private static final Allele AAAA = Allele.create("AAAA");
     private static final Allele AAAAA = Allele.create("AAAAA");
 
+    private static final String NORMALIZE_ALLELES_TRUTH = "normalize_alleles_truth.vcf";
+    private static final String NORMALIZE_ALLELES_CALL = "normalize_alleles_call.vcf";
+
     @AfterClass
     public void tearDown() {
         IOUtil.deleteDirectoryTree(OUTPUT_DATA_PATH);
@@ -124,30 +130,62 @@ public class GenotypeConcordanceTest {
     public void testGenotypeConcordance(final File vcf1, final String sample1, final File vcf2, final String sample2,
                                         final Integer minGq, final Integer minDp, final boolean outputAllRows, final boolean missingSitesFlag,
                                         final String expectedOutputFileBaseName) throws Exception {
-        final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "actualGtConc");
-        final File outputSummaryFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION);
-        final File outputDetailsFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.DETAILED_METRICS_FILE_EXTENSION);
-        final File outputContingencyFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
-        outputSummaryFile.deleteOnExit();
-        outputDetailsFile.deleteOnExit();
-        outputContingencyFile.deleteOnExit();
+        final List<Boolean> withVcfs = Arrays.asList(true, false);
+        for (final boolean withVcf : withVcfs) {
+            final File outputBaseFileName    = new File(OUTPUT_DATA_PATH, "actualGtConc");
+            final File outputSummaryFile     = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION);
+            final File outputDetailsFile     = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.DETAILED_METRICS_FILE_EXTENSION);
+            final File outputContingencyFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
+            final Path outputVcfFile         = Paths.get(outputBaseFileName.getAbsolutePath() + ".vcf.gz");
+            outputSummaryFile.deleteOnExit();
+            outputDetailsFile.deleteOnExit();
+            outputContingencyFile.deleteOnExit();
+            outputVcfFile.toFile().deleteOnExit();
 
-        final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
-        genotypeConcordance.TRUTH_VCF = vcf1;
-        genotypeConcordance.TRUTH_SAMPLE = sample1;
-        genotypeConcordance.CALL_VCF = vcf2;
-        genotypeConcordance.CALL_SAMPLE = sample2;
-        if (minGq != null) genotypeConcordance.MIN_GQ = minGq;
-        if (minDp != null) genotypeConcordance.MIN_DP = minDp;
-        genotypeConcordance.OUTPUT_ALL_ROWS = outputAllRows;
-        genotypeConcordance.OUTPUT = outputBaseFileName;
-        genotypeConcordance.MISSING_SITES_HOM_REF = missingSitesFlag;
-        if (missingSitesFlag) genotypeConcordance.INTERVALS = Collections.singletonList(new File(TEST_DATA_PATH, "IntervalList1PerChrom.interval_list"));
+            final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
+            genotypeConcordance.TRUTH_VCF = vcf1;
+            genotypeConcordance.TRUTH_SAMPLE = sample1;
+            genotypeConcordance.CALL_VCF = vcf2;
+            genotypeConcordance.CALL_SAMPLE = sample2;
+            if (minGq != null) genotypeConcordance.MIN_GQ = minGq;
+            if (minDp != null) genotypeConcordance.MIN_DP = minDp;
+            genotypeConcordance.OUTPUT_ALL_ROWS = outputAllRows;
+            genotypeConcordance.OUTPUT = outputBaseFileName;
+            genotypeConcordance.MISSING_SITES_HOM_REF = missingSitesFlag;
+            if (missingSitesFlag) {
+                genotypeConcordance.INTERVALS = Collections.singletonList(new File(TEST_DATA_PATH, "IntervalList1PerChrom.interval_list"));
+            }
+            genotypeConcordance.OUTPUT_VCF = withVcf;
 
-        Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
-        assertMetricsFileEqual(outputSummaryFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION));
-        assertMetricsFileEqual(outputDetailsFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.DETAILED_METRICS_FILE_EXTENSION));
-        assertMetricsFileEqual(outputContingencyFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION));
+            Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
+            assertMetricsFileEqual(outputSummaryFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION));
+            assertMetricsFileEqual(outputDetailsFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.DETAILED_METRICS_FILE_EXTENSION));
+            assertMetricsFileEqual(outputContingencyFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION));
+
+            if (withVcf) {
+                // An ugly way to compare VCFs
+                final Path expectedVcf = Paths.get(TEST_DATA_PATH.getAbsolutePath(), expectedOutputFileBaseName + ".vcf");
+                final BufferedLineReader reader = new BufferedLineReader(new GZIPInputStream(new FileInputStream(outputVcfFile.toFile())));
+                final Iterator<String> actualLines;
+                {
+                    final List<String> lines = new ArrayList<>();
+                    while (-1 != reader.peek()) {
+                        lines.add(reader.readLine());
+                    }
+                    reader.close();
+                    actualLines = lines.iterator();
+                }
+
+                final Iterator<String> expectedLines = Files.lines(expectedVcf).iterator();
+                while (actualLines.hasNext() && expectedLines.hasNext()) {
+                    final String actualLine = actualLines.next();
+                    final String expectedLine = expectedLines.next();
+                    Assert.assertEquals(actualLine, expectedLine);
+                }
+                Assert.assertFalse(actualLines.hasNext());
+                Assert.assertFalse(expectedLines.hasNext());
+            }
+        }
     }
 
     private void assertMetricsFileEqual(final File actualMetricsFile, final File expectedMetricsFile) throws FileNotFoundException {
@@ -487,5 +525,43 @@ public class GenotypeConcordanceTest {
         }
         if (!uniqueAlleles.contains(Aref)) uniqueAlleles.add(Aref);
         return new ArrayList<Allele>(uniqueAlleles);
+    }
+
+    /**
+     * Tests that we normalize indels correctly
+     */
+    @Test
+    public void testNormalizeAllelesForIndels() {
+
+        final Path truthVcfPath = Paths.get(TEST_DATA_PATH.getAbsolutePath(), NORMALIZE_ALLELES_TRUTH);
+        final Path callVcfPath  = Paths.get(TEST_DATA_PATH.getAbsolutePath(), NORMALIZE_ALLELES_CALL);
+
+        final VCFFileReader truthReader = new VCFFileReader(truthVcfPath.toFile(), false);
+        final VCFFileReader callReader  = new VCFFileReader(callVcfPath.toFile(), false);
+
+        final Iterator<VariantContext> truthIterator = truthReader.iterator();
+        final Iterator<VariantContext> callIterator = callReader.iterator();
+
+        final String truthSample = truthReader.getFileHeader().getSampleNamesInOrder().get(0);
+        final String callSample  = callReader.getFileHeader().getSampleNamesInOrder().get(0);
+
+        while (truthIterator.hasNext()) {
+            final VariantContext truthCtx = truthIterator.next();
+            final VariantContext callCtx  = callIterator.next();
+
+            {
+                final GenotypeConcordance.Alleles alleles = GenotypeConcordance.normalizeAlleles(truthCtx, truthSample, callCtx, callSample);
+                Assert.assertEquals(alleles.truthAllele1, alleles.callAllele1);
+                Assert.assertEquals(alleles.truthAllele2, alleles.callAllele2);
+            }
+            {
+                final GenotypeConcordance.Alleles alleles = GenotypeConcordance.normalizeAlleles(callCtx, callSample, truthCtx, truthSample);
+                Assert.assertEquals(alleles.truthAllele1, alleles.callAllele1);
+                Assert.assertEquals(alleles.truthAllele2, alleles.callAllele2);
+            }
+        }
+
+        truthReader.close();
+        callReader.close();
     }
 }
