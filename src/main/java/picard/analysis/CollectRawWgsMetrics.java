@@ -28,6 +28,8 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 
+import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
+
 /**
  * Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing
  * experiments, same implementation as CollectWgsMetrics, with different defaults: lacks baseQ and mappingQ filters
@@ -71,7 +73,7 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
             "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics'>" +
             "the WgsMetrics documentation</a> for detailed explanations of the output metrics." +
             "<hr />";
-    @Option(shortName="MQ", doc="Minimum mapping quality for a read to contribute coverage.")
+    @Option(shortName=MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc="Minimum mapping quality for a read to contribute coverage.")
     public int MINIMUM_MAPPING_QUALITY = 0;
 
     @Option(shortName="Q", doc="Minimum base quality for a base to contribute coverage.")
