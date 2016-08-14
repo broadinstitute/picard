@@ -588,7 +588,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                 }
             }
 
-            metrics.calculateDerivedMetrics();
+            metrics.calculateDerivedFields();
             file.addMetric(metrics);
             file.addHistogram(duplicationHisto);
 

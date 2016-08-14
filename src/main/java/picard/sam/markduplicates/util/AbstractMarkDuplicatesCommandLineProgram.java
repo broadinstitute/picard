@@ -176,7 +176,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
                     metrics.READ_PAIR_OPTICAL_DUPLICATES = (long) bin.getValue();
                 }
             }
-            metrics.calculateDerivedMetrics();
+            metrics.calculateDerivedFields();
             file.addMetric(metrics);
         }
 
