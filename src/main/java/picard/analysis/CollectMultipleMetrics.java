@@ -61,7 +61,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     static final String USAGE_DETAILS ="This 'meta-metrics' tool runs one or more of the metrics collection modules at the same" +
             " time to cut down on the time spent reading in data from input files. Available modules include " +
             "CollectAlignmentSummaryMetrics, CollectInsertSizeMetrics, QualityScoreDistribution,  MeanQualityByCycle, " +
-            "and CollectBaseDistributionByCycle.  The tool produces outputs of '.pdf' and '.txt' files for each module, except for the " +
+            "CollectBaseDistributionByCycle, CollectGcBiasMetrics, RnaSeqMetrics, CollectSequencingArtifactMetrics, and CollectQualityYieldMetrics. " +
+            "The tool produces outputs of '.pdf' and '.txt' files for each module, except for the " +
             "CollectAlignmentSummaryMetrics module, which outputs only a '.txt' file. Output files are named by specifying a base name " +
             "(without any file extensions).<br /><br />" +
             "" +
