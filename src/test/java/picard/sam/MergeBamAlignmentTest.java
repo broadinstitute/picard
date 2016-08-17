@@ -1177,18 +1177,25 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final Map<String, SAMRecord> firstReadEncountered = new HashMap<String, SAMRecord>();
 
         for (final SAMRecord rec : result) {
-            final SAMRecord otherEnd = firstReadEncountered.get(rec.getReadName());
+            final String[] readNameFields = rec.getReadName().split(":");
+            final SAMRecord otherEnd      = firstReadEncountered.get(rec.getReadName());
             if (otherEnd == null) {
                 firstReadEncountered.put(rec.getReadName(), rec);
             } else {
                 final int fragmentStart = Math.min(rec.getAlignmentStart(), otherEnd.getAlignmentStart());
                 final int fragmentEnd = Math.max(rec.getAlignmentEnd(), otherEnd.getAlignmentEnd());
-                final String[] readNameFields = rec.getReadName().split(":");
                 // Read name of each pair includes the expected fragment start and fragment end positions.
                 final int expectedFragmentStart = Integer.parseInt(readNameFields[1]);
                 final int expectedFragmentEnd = Integer.parseInt(readNameFields[2]);
                 Assert.assertEquals(fragmentStart, expectedFragmentStart, rec.getReadName());
                 Assert.assertEquals(fragmentEnd, expectedFragmentEnd, rec.getReadName());
+            }
+            // check NM and MD.  We have a mismatching base in the overlap.
+            if (readNameFields.length > 3) {
+                final String md = readNameFields[3];
+                final Integer nm = Integer.parseInt(readNameFields[4]);
+                Assert.assertEquals(rec.getStringAttribute(SAMTag.MD.name()), md);
+                Assert.assertEquals(rec.getIntegerAttribute(SAMTag.NM.name()), nm);
             }
         }
         result.close();
