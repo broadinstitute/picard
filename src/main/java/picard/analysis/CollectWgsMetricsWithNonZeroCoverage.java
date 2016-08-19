@@ -26,7 +26,6 @@ package picard.analysis;
 
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
@@ -93,12 +92,12 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
         this.collector = new WgsMetricsWithNonZeroCoverageCollector(COVERAGE_CAP);
 
+        super.doWork();
+
         final List<SAMReadGroupRecord> readGroups = this.getSamFileHeader().getReadGroups();
         final String plotSubtitle = (readGroups.size() == 1) ? StringUtil.asEmptyIfNull(readGroups.get(0).getLibrary()) : "";
 
-        super.doWork();
-
-        if (collector.areHistogramsEmpty()) {
+        if (false) { // TS. fix
             log.warn("No valid bases found in input file. No plot will be produced.");
         } else {
             final int rResult = RExecutor.executeFromClasspath("picard/analysis/wgsHistogram.R",
@@ -126,8 +125,6 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     }
 
     protected class WgsMetricsWithNonZeroCoverageCollector extends WgsMetricsCollector {
-        Histogram<Integer> depthHistogram = null;
-
         public WgsMetricsWithNonZeroCoverageCollector(final int coverageCap) {
             super(coverageCap);
         }
@@ -138,13 +135,15 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
                                      final CountingFilter dupeFilter,
                                      final CountingFilter mapqFilter,
                                      final CountingPairedFilter pairFilter) {
-            this.depthHistogram                            = getDepthHistogram();
-            final Histogram<Integer> depthHistogramNonZero = depthHistogramNonZero();
 
-            final WgsMetricsWithNonZeroCoverage metrics        = (WgsMetricsWithNonZeroCoverage) getMetrics(depthHistogram, dupeFilter, mapqFilter, pairFilter);
-            final WgsMetricsWithNonZeroCoverage metricsNonZero = (WgsMetricsWithNonZeroCoverage) getMetrics(depthHistogramNonZero, dupeFilter, mapqFilter, pairFilter);
+            // calculate metrics the same way as in CollectWgsMetrics
+            final WgsMetricsWithNonZeroCoverage metrics = (WgsMetricsWithNonZeroCoverage) getMetrics(dupeFilter, mapqFilter, pairFilter);
+            metrics.CATEGORY = WgsMetricsWithNonZeroCoverage.Category.WHOLE_GENOME;
 
-            metrics.CATEGORY        = WgsMetricsWithNonZeroCoverage.Category.WHOLE_GENOME;
+            // set count of the coverage-zero bin to 0 and re-calculate metrics
+            highQualityDepthHistogramArray[0] = 0;
+            unfilteredDepthHistogramArray[0] = 0;
+            final WgsMetricsWithNonZeroCoverage metricsNonZero = (WgsMetricsWithNonZeroCoverage) getMetrics(dupeFilter, mapqFilter, pairFilter);
             metricsNonZero.CATEGORY = WgsMetricsWithNonZeroCoverage.Category.NON_ZERO_REGIONS;
 
             file.addMetric(metrics);
@@ -153,20 +152,11 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
             if (includeBQHistogram) {
                 addBaseQHistogram(file);
             }
+
+            file.addHistogram(getHighQualityDepthHistogram());
         }
 
-        private Histogram<Integer> depthHistogramNonZero() {
-            final Histogram<Integer> depthHistogram = new Histogram<>("coverage", "count");
-            // do not include the zero-coverage bin
-            for (int i = 1; i < depthHistogramArray.length; ++i) {
-                depthHistogram.increment(i, depthHistogramArray[i]);
-            }
-            return depthHistogram;
-        }
-
-        public boolean areHistogramsEmpty() {
-            return (null == depthHistogram || depthHistogram.isEmpty());
-        }
+        // public boolean areHistogramsEmpty() { return (null == depthHistogram || depthHistogram.isEmpty()); }
     }
 
 }
