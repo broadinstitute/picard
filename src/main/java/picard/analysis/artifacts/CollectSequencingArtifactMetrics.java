@@ -119,6 +119,9 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
             "MINIMUM_INSERT_SIZE and MAXIMUM_INSERT_SIZE will be ignored.")
     public boolean INCLUDE_UNPAIRED = false;
 
+    @Option(shortName = "DUPES", doc = "Include duplicate reads. If set to true then all reads flagged as duplicates will be included as well.")
+    public boolean INCLUDE_DUPLICATES = false;
+
     @Option(shortName = "TANDEM", doc = "Set to true if mate pairs are being sequenced from the same strand, " +
             "i.e. they're expected to face the same direction.")
     public boolean TANDEM_READS = false;
@@ -212,7 +215,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
         final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
         filters.add(new FailsVendorReadQualityFilter());
         filters.add(new NotPrimaryAlignmentFilter());
-        filters.add(new DuplicateReadFilter());
+        if (!INCLUDE_DUPLICATES) filters.add(new DuplicateReadFilter());
         filters.add(new AlignedFilter(true)); // discard unmapped reads
         filters.add(new MappingQualityFilter(MINIMUM_MAPPING_QUALITY));
         if (!INCLUDE_UNPAIRED) {
