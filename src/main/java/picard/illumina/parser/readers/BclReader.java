@@ -208,7 +208,7 @@ public class BclReader implements CloseableIterator<BclData> {
         final long elementsInFile = file.length() - HEADER_SIZE;
         if (numClusters != elementsInFile) {
             CloserUtil.close(stream);
-            throw new PicardException("Expected " + numClusters + " in file but found " + elementsInFile);
+            throw new PicardException("Expected " + numClusters + " in file " + file.getAbsolutePath() + " but found " + elementsInFile);
         }
     }
 
