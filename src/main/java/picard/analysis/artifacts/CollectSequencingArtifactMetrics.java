@@ -158,10 +158,6 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
     private final Set<String> libraries = new HashSet<String>();
     private final Map<String, ArtifactCounter> artifactCounters = new HashMap<String, ArtifactCounter>();
 
-    public static void main(final String[] args) {
-        new CollectSequencingArtifactMetrics().instanceMainWithExit(args);
-    }
-
     @Override
     protected String[] customCommandLineValidation() {
         final List<String> messages = new ArrayList<String>();
@@ -179,6 +175,8 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
         if (MAXIMUM_INSERT_SIZE > 0 && MAXIMUM_INSERT_SIZE < MINIMUM_INSERT_SIZE) {
             messages.add("MAXIMUM_INSERT_SIZE cannot be less than MINIMUM_INSERT_SIZE unless set to 0");
         }
+
+        if (REFERENCE_SEQUENCE == null) messages.add("REFERENCE_SEQUENCE must be provided.");
 
         return messages.isEmpty() ? null : messages.toArray(new String[messages.size()]);
     }
