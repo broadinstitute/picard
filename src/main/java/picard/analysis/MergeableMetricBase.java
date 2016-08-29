@@ -45,17 +45,32 @@ import java.lang.reflect.Field;
  */
 public class MergeableMetricBase extends MetricBase {
 
+    /** Metrics whose values can be merged by adding. */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
     protected @interface MergeByAdding {}
 
+    /** Metrics whose values should be equal when merging. */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
     protected @interface MergeByAssertEquals {}
 
+    /** Metrics that are not merged, but are subsequently derived from other metrics, for example by
+     * {@link #calculateDerivedFields()}. */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
     protected @interface NoMergingIsDerived {}
+
+    /** Metrics that are merged manually in the {@link #merge(MergeableMetricBase)} ()}. Typically these metrics need
+     * access to both metrics being merged. */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    protected @interface MergingIsManual {}
+
+    /** Metrics that are not merged. */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    protected @interface NoMergingKeepsValue {}
 
     /** checks if this instance can be merged with another
      *
@@ -116,7 +131,9 @@ public class MergeableMetricBase extends MetricBase {
 
             if (field.getAnnotationsByType(MergeByAdding.class).length +
                     field.getAnnotationsByType(MergeByAssertEquals.class).length +
-                    field.getAnnotationsByType(NoMergingIsDerived.class).length == 0) {
+                    field.getAnnotationsByType(NoMergingIsDerived.class).length +
+                    field.getAnnotationsByType(MergingIsManual.class).length +
+                    field.getAnnotationsByType(NoMergingKeepsValue.class).length == 0) {
                 throw new IllegalStateException("All fields of this class must be annotated with @MergeByAdding, @NoMergingIsDerived, or @MergeByAssertEquals. " +
                         "Field " + field.getName() + " isn't annotated.");
             }

@@ -25,11 +25,9 @@
 package picard.analysis;
 
 import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -80,7 +78,28 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         public enum Category { WHOLE_GENOME, NON_ZERO_REGIONS }
 
         /** One of either WHOLE_GENOME or NON_ZERO_REGIONS */
+        @MergeByAssertEquals
         public Category CATEGORY;
+
+        public WgsMetricsWithNonZeroCoverage() {
+            super();
+        }
+
+        public WgsMetricsWithNonZeroCoverage(final IntervalList intervals,
+                                             final Histogram<Integer> depthHistogram,
+                                             final double pctExcludedByMapq,
+                                             final double pctExcludedByDupes,
+                                             final double pctExcludedByPairing,
+                                             final double pctExcludedByBaseq,
+                                             final double pctExcludedByOverlap,
+                                             final double pctExcludedByCapping,
+                                             final double pctTotal,
+                                             final int coverageCap,
+                                             final Histogram<Integer> baseQHistogram,
+                                             final int sampleSize) {
+            super(intervals, depthHistogram, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
+                    pctExcludedByOverlap, pctExcludedByCapping, pctTotal, coverageCap, baseQHistogram, sampleSize);
+        }
     }
 
     public static void main(final String[] args) {
@@ -91,7 +110,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     protected int doWork() {
         IOUtil.assertFileIsWritable(CHART_OUTPUT);
 
-        this.collector = new WgsMetricsWithNonZeroCoverageCollector(COVERAGE_CAP);
+        this.collector = new WgsMetricsWithNonZeroCoverageCollector(COVERAGE_CAP, getIntervalsToExamine());
 
         final List<SAMReadGroupRecord> readGroups = this.getSamFileHeader().getReadGroups();
         final String plotSubtitle = (readGroups.size() == 1) ? StringUtil.asEmptyIfNull(readGroups.get(0).getLibrary()) : "";
@@ -115,12 +134,34 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     }
 
     @Override
-    protected WgsMetricsWithNonZeroCoverage generateWgsMetrics() {
-        return new WgsMetricsWithNonZeroCoverage();
+    protected WgsMetrics generateWgsMetrics(final IntervalList intervals,
+                                            final Histogram<Integer> depthHistogram,
+                                            final double pctExcludedByMapq,
+                                            final double pctExcludedByDupes,
+                                            final double pctExcludedByPairing,
+                                            final double pctExcludedByBaseq,
+                                            final double pctExcludedByOverlap,
+                                            final double pctExcludedByCapping,
+                                            final double pctTotal,
+                                            final int coverageCap,
+                                            final Histogram<Integer> baseQHistogram,
+                                            final int sampleSize) {
+        return new WgsMetricsWithNonZeroCoverage(
+                intervals,
+                depthHistogram,
+                pctExcludedByMapq,
+                pctExcludedByDupes,
+                pctExcludedByPairing,
+                pctExcludedByBaseq,
+                pctExcludedByOverlap,
+                pctExcludedByCapping,
+                pctTotal,
+                coverageCap,
+                baseQHistogram,
+                sampleSize);
     }
-
     @Override
-    protected WgsMetricsCollector getCollector(final int coverageCap) {
+    protected WgsMetricsCollector getCollector(final int coverageCap, final IntervalList intervals) {
         assert(coverageCap == this.collector.coverageCap);
         return this.collector;
     }
@@ -128,8 +169,8 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     protected class WgsMetricsWithNonZeroCoverageCollector extends WgsMetricsCollector {
         Histogram<Integer> depthHistogram = null;
 
-        public WgsMetricsWithNonZeroCoverageCollector(final int coverageCap) {
-            super(coverageCap);
+        public WgsMetricsWithNonZeroCoverageCollector(final int coverageCap, final IntervalList intervals) {
+            super(coverageCap, intervals);
         }
 
         @Override

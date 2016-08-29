@@ -24,6 +24,8 @@
 
 package picard.analysis;
 
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IntervalList;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
@@ -86,11 +88,54 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
     public int LOCUS_ACCUMULATION_CAP = 200000;
 
     // rename the class so that in the metric file it is annotated differently.
-    public static class RawWgsMetrics extends WgsMetrics {}
+    public static class RawWgsMetrics extends WgsMetrics {
+        public RawWgsMetrics() {
+            super();
+        }
+
+        public RawWgsMetrics(final IntervalList intervals,
+                             final Histogram<Integer> depthHistogram,
+                             final double pctExcludedByMapq,
+                             final double pctExcludedByDupes,
+                             final double pctExcludedByPairing,
+                             final double pctExcludedByBaseq,
+                             final double pctExcludedByOverlap,
+                             final double pctExcludedByCapping,
+                             final double pctTotal,
+                             final int coverageCap,
+                             final Histogram<Integer> baseQHistogram,
+                             final int sampleSize) {
+            super(intervals, depthHistogram, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
+                    pctExcludedByOverlap, pctExcludedByCapping, pctTotal, coverageCap, baseQHistogram, sampleSize);
+        }
+    }
 
     @Override
-    protected WgsMetrics generateWgsMetrics() {
-        return new RawWgsMetrics();
+    protected WgsMetrics generateWgsMetrics(final IntervalList intervals,
+                                            final Histogram<Integer> depthHistogram,
+                                            final double pctExcludedByMapq,
+                                            final double pctExcludedByDupes,
+                                            final double pctExcludedByPairing,
+                                            final double pctExcludedByBaseq,
+                                            final double pctExcludedByOverlap,
+                                            final double pctExcludedByCapping,
+                                            final double pctTotal,
+                                            final int coverageCap,
+                                            final Histogram<Integer> baseQHistogram,
+                                            final int sampleSize) {
+        return new RawWgsMetrics(
+                intervals,
+                depthHistogram,
+                pctExcludedByMapq,
+                pctExcludedByDupes,
+                pctExcludedByPairing,
+                pctExcludedByBaseq,
+                pctExcludedByOverlap,
+                pctExcludedByCapping,
+                pctTotal,
+                coverageCap,
+                baseQHistogram,
+                sampleSize);
     }
 
 }
