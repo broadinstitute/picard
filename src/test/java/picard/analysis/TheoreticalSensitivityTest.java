@@ -201,7 +201,7 @@ public class TheoreticalSensitivityTest {
         final File targetedMetricsFile = new File(TEST_DIR, "test_25103070136.targeted_pcr_metrics");
         final File wgsSampledMetricsFile = new File(TEST_DIR, "test_Solexa-316269_sampled.wgs_metrics");
 
-        //This magic numbers come from a separate implementation of the code in R.
+        //These magic numbers come from a separate implementation of the code in R.
         return new Object[][] {
                 {0.897_342_54, wgsMetricsFile},
                 {0.967_707_04, hsMetricsFile},
