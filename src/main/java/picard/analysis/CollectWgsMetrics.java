@@ -40,6 +40,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.QualityUtil;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -358,7 +359,9 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             highQualityDepthHistogramArray[highQualityDepth]++;
 
             // check that we added the same number of bases to the raw coverage histogram and the base quality histograms
-            if (Arrays.stream(unfilteredBaseQHistogramArray).sum() !=  LongStream.rangeClosed(0,coverageCap).map(i -> (i * unfilteredDepthHistogramArray[(int)i])).sum()) throw new IllegalStateException("updated coverage and baseQ distributions unequally");
+            if (Arrays.stream(unfilteredBaseQHistogramArray).sum() !=  LongStream.rangeClosed(0,coverageCap).map(i -> (i * unfilteredDepthHistogramArray[(int)i])).sum()) {
+                throw new PicardException("updated coverage and baseQ distributions unequally");
+            }
         }
 
         public void addToMetricsFile(final MetricsFile<WgsMetrics, Integer> file,

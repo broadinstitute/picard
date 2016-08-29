@@ -89,26 +89,8 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     @Override
     protected int doWork() {
         IOUtil.assertFileIsWritable(CHART_OUTPUT);
-
         this.collector = new WgsMetricsWithNonZeroCoverageCollector(COVERAGE_CAP);
-
         super.doWork();
-
-        final List<SAMReadGroupRecord> readGroups = this.getSamFileHeader().getReadGroups();
-        final String plotSubtitle = (readGroups.size() == 1) ? StringUtil.asEmptyIfNull(readGroups.get(0).getLibrary()) : "";
-
-        if (false) { // TS. fix
-            log.warn("No valid bases found in input file. No plot will be produced.");
-        } else {
-            final int rResult = RExecutor.executeFromClasspath("picard/analysis/wgsHistogram.R",
-                    OUTPUT.getAbsolutePath(),
-                    CHART_OUTPUT.getAbsolutePath(),
-                    INPUT.getName(),
-                    plotSubtitle);
-            if (rResult != 0) {
-                throw new PicardException("R script wgsHistogram.R failed with return code " + rResult);
-            }
-        }
 
         return 0;
     }
@@ -143,6 +125,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
             // set count of the coverage-zero bin to 0 and re-calculate metrics
             highQualityDepthHistogramArray[0] = 0;
             unfilteredDepthHistogramArray[0] = 0;
+
             final WgsMetricsWithNonZeroCoverage metricsNonZero = (WgsMetricsWithNonZeroCoverage) getMetrics(dupeFilter, mapqFilter, pairFilter);
             metricsNonZero.CATEGORY = WgsMetricsWithNonZeroCoverage.Category.NON_ZERO_REGIONS;
 
@@ -155,8 +138,6 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
             file.addHistogram(getHighQualityDepthHistogram());
         }
-
-        // public boolean areHistogramsEmpty() { return (null == depthHistogram || depthHistogram.isEmpty()); }
     }
 
 }

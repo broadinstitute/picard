@@ -25,7 +25,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
 
         return new Object[][] {
                 // test that all bases (read 2) with base quality 1 are filtered out
-                {TEST_DIR + "/lowbaseq.sam",    referenceFile, intervals, "NONE", 1, 1, true,  2, 202, 0.5, 0.0, 0.505, 0.0,   1000},
+                {TEST_DIR + "/lowbaseq.sam",    referenceFile, intervals, "NONE", 1, 1, true,  2, 202, 1.0, 0.0, 0.0,   0.0,   1000},
                 // test that read 2 (with mapping quality 1) is filtered out with minimum mapping quality 2
                 {TEST_DIR + "/lowmapq.sam",     referenceFile, intervals, "NONE", 2, 0, true,  2, 202, 0,   0.0, 0.505, 0.0,   1000},
                 // test that we clip overlapping bases
@@ -79,5 +79,6 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
             Assert.assertEquals(metrics.PCT_TARGET_BASES_1X, pctTargetBases1x);
             Assert.assertEquals(metrics.PCT_TARGET_BASES_2X, pctTargetBases2x);
         }
+
     }
 }
