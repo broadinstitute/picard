@@ -23,7 +23,7 @@
 <tr><td>SORT_ORDER (SortOrder)</td><td>The sort order for the output sam/bam file.  Default value: queryname. This option can be set to 'null' to clear the default value. Possible values: {unsorted, queryname, coordinate, duplicate} </td></tr>
 <tr><td>MIN_Q (Integer)</td><td>Minimum quality allowed in the input fastq.  An exception will be thrown if a quality is less than this value.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>MAX_Q (Integer)</td><td>Maximum quality allowed in the input fastq.  An exception will be thrown if a quality is greater than this value.  Default value: 93. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>STRIP_UNPAIRED_MATE_NUMBER (Boolean)</td><td>If true and this is an unpaired fastq any occurrence of '/1' will be removed from the end of a read name.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>STRIP_UNPAIRED_MATE_NUMBER (Boolean)</td><td>Deprecated (No longer used). If true and this is an unpaired fastq any occurrence of '/1' or '/2' will be removed from the end of a read name.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>ALLOW_AND_IGNORE_EMPTY_LINES (Boolean)</td><td>Allow (and ignore) empty lines  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 </table>
 </section>
