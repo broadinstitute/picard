@@ -292,7 +292,7 @@ public class CheckFingerprint extends CommandLineProgram {
         return super.customCommandLineValidation();
     }
 
-    private boolean isBamOrSamFile(final File f) {
+    static boolean isBamOrSamFile(final File f) {
         return (BamFileIoUtils.isBamFile(f) || f.getName().endsWith(IOUtil.SAM_FILE_EXTENSION));
     }
 }

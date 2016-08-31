@@ -2,7 +2,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010 The Broad Institute
+ * Copyright (c) 2010, 2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,105 +26,101 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.BamFileIoUtils;
-import picard.cmdline.CommandLineProgramProperties;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.FormatUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.SAMReadGroupRecord;
 import picard.cmdline.programgroups.Fingerprinting;
+import picard.util.GraphUtils;
 
 import java.io.File;
-import java.io.PrintStream;
+import java.io.OutputStreamWriter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toSet;
+import static picard.fingerprint.CrosscheckMetric.FingerprintResult.*;
+import static picard.fingerprint.CrosscheckMetric.FingerprintResult;
 
 /**
- * Program to check that all read groups within the set of BAM files appear to come from the same
- * individual.
+ * Program to check that all (read-)groups within the set of input files appear to come from the same
+ * individual. Can be used to cross-check libraries, samples, or files.
  *
  * @author Tim Fennell
+ * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        usage = "Checks if all read groups within a set of BAM files appear to come from the same individual",
-        usageShort = "Checks if all read groups appear to come from the same individual",
+        usage = "Checks if all (read-)groups within a set of files appear to come from the same individual.",
+        usageShort = "Checks if all (read-)groups appear to come from the same individual.",
         programGroup = Fingerprinting.class
 )
 public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc="One or more input BAM files (or lists of BAM files) to compare fingerprints for.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+            doc = "One or more input files (or lists of files) to compare fingerprints for.")
     public List<File> INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional=true,
-            doc="Optional output file to write metrics to. Default is to write to stdout.")
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
+            doc = "Optional output file to write metrics to. Default is to write to stdout.")
     public File OUTPUT;
 
     @Option(shortName="H", doc="The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
 	    "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
     public File HAPLOTYPE_MAP;
 
-    @Option(shortName="LOD",
-            doc="If any two read groups match with a LOD score lower than the threshold the program will exit " +
-                "with a non-zero code to indicate error. 0 means equal probability the read groups match vs. " +
-                "come from different individuals, negative numbers mean N logs more likely that the read groups " +
-                "are from different individuals and positive numbers mean N logs more likely that the read groups " +
-                "are from the sample individual.")
+    @Option(shortName = "LOD",
+            doc = "If any two groups (with the same sample name) match with a LOD score lower than the threshold " +
+                    "the program will exit with a non-zero code to indicate error." +
+                    " Program will also exit with an error if it finds two groups with different sample name that " +
+                    "match with a LOD score greater than -LOD_THRESHOLD." +
+                    "\n\n" +
+                    "LOD score 0 means equal likelihood" +
+                    "that the groups match vs. come from different individuals, negative LOD scores mean N logs more likely " +
+                    "that the groups are from different individuals, and positive numbers mean N logs more likely that" +
+                    " the groups are from the sample individual. ")
     public double LOD_THRESHOLD = 0;
 
-	@Option(doc="Instead of producing the normal comparison of read-groups, roll fingerprints up to the sample level " +
-            "and print out a sample x sample matrix with LOD scores.")
-	public boolean CROSSCHECK_SAMPLES = false;
+    @Option(doc = "Which data-type should crosscheck use as the basic comparison unit? Fingerprints from readgroups can " +
+            "be \"rolled-up\" to the library, sample, or file level before being compared.")
+    public CrosscheckMetric.DataType CROSSCHECK_BY = CrosscheckMetric.DataType.READGROUP;
 
-    @Option(doc="Instead of producing the normal comparison of read-groups, roll fingerprints up to the library level " +
-            "and print out a library x library matrix with LOD scores.")
-    public boolean CROSSCHECK_LIBRARIES = false;
+    @Option(doc = "The number of threads to use to process files and generate Fingerprints.")
+    public int NUM_THREADS = 1;
 
-	@Option(doc="The number of threads to use to process BAM files and generate Fingerprints.")
-	public int NUM_THREADS = 1;
-
-    @Option(doc="Allow the use of duplicate reads in performing the comparison. Can be useful when duplicate " +
+    @Option(doc = "Allow the use of duplicate reads in performing the comparison. Can be useful when duplicate " +
             "marking has been overly aggressive and coverage is low.")
     public boolean ALLOW_DUPLICATE_READS = false;
 
-    @Option(doc="Assumed genotyping error rate that provides a floor on the probability that a genotype comes from" +
-            " the expected sample.")
-    public double GENOTYPING_ERROR_RATE = 0.01;
-
-    @Option(doc="If true then only read groups that do not relate to each other as expected will have their LODs reported.")
+    @Option(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.",mutex = {"CLUSTER_OUTPUT"})
     public boolean OUTPUT_ERRORS_ONLY = false;
 
-    @Option(doc ="The rate at which a het in a normal sample turns into a hom in the tumor.", optional = true)
+    @Option(doc = "The rate at which a heterozygous genotype in a normal sample turns into a homozygous (via loss of heterozygosity) " +
+            "in the tumor (model assumes independent events, so this needs to be larger than reality).", optional = true)
     public double LOSS_OF_HET_RATE = 0.5;
 
-    @Option(doc="Expect all read groups' fingerprints to match, irrespective of their sample names.  By default (with this value set to " +
-            "false), read groups with different sample names are expected to mismatch, and those with the same sample name are expected " +
-            "to match.")
-    public boolean EXPECT_ALL_READ_GROUPS_TO_MATCH = false;
+    @Option(doc = "Expect all groups' fingerprints to match, irrespective of their sample names.  By default (with this value set to " +
+            "false), groups (readgroups, libraries, files, or samples) with different sample names are expected to mismatch, and those with the " +
+            "same sample name are expected to match. ")
+    public boolean EXPECT_ALL_GROUPS_TO_MATCH = false;
 
-    @Option(doc="When one or more mismatches between read groups are detected, exit with this value instead of 0.")
+    @Option(doc = "When one or more mismatches between groups is detected, exit with this value instead of 0.")
     public int EXIT_CODE_WHEN_MISMATCH = 1;
 
     private final Log log = Log.getInstance(CrosscheckReadGroupFingerprints.class);
 
-    private final FormatUtil formatUtil = new FormatUtil();
+    // the rate at which we expect a given genotype to change for an individual (exceedingly small)
+    final static private double GENOTYPING_ERROR_RATE = 1e-6;
 
-    // These are public so that other programs can parse status from the crosscheck file
-    public static final String EXPECTED_MATCH = "EXPECTED MATCH";
-    public static final String EXPECTED_MISMATCH = "EXPECTED MISMATCH";
-    public static final String UNEXPECTED_MATCH = "UNEXPECTED MATCH";
-    public static final String UNEXPECTED_MISMATCH = "UNEXPECTED MISMATCH";
-
-    /** Stock main method. */
-    public static void main(final String[] args) {
-        new CrosscheckReadGroupFingerprints().instanceMainWithExit(args);
-    }
-
-    @Override protected int doWork() {
+    @Override
+    protected int doWork() {
         // Check inputs
-        for (final File f : INPUT) IOUtil.assertFileIsReadable(f);
+        INPUT.forEach(IOUtil::assertFileIsReadable);
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
         if (OUTPUT != null) IOUtil.assertFileIsWritable(OUTPUT);
 
@@ -133,181 +129,197 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
 
         checker.setAllowDuplicateReads(ALLOW_DUPLICATE_READS);
 
-		log.info("Done checking input files, moving onto fingerprinting files.");
+        log.info("Done checking input files, moving onto fingerprinting files.");
 
-        List<File> unrolledFiles = IOUtil.unrollFiles(INPUT, BamFileIoUtils.BAM_FILE_EXTENSION, IOUtil.SAM_FILE_EXTENSION);
-        final Map<SAMReadGroupRecord, Fingerprint> fpMap = checker.fingerprintSamFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
-        final List<Fingerprint> fingerprints = new ArrayList<>(fpMap.values());
+        final List<String> extensions = new ArrayList<>();
 
-		log.info("Finished generating fingerprints from BAM files, moving on to cross-checking.");
+        extensions.add(BamFileIoUtils.BAM_FILE_EXTENSION);
+        extensions.add(IOUtil.SAM_FILE_EXTENSION);
+        extensions.addAll(Arrays.asList(IOUtil.VCF_EXTENSIONS));
 
-        // Setup the output
-        final PrintStream out;
+        List<File> unrolledFiles = IOUtil.unrollFiles(INPUT, extensions.toArray(new String[extensions.size()]));
+
+        final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
+
+        log.info("Finished generating fingerprints from files, moving on to cross-checking.");
+
+        final List<CrosscheckMetric> metrics = new ArrayList<>();
+        final int numUnexpected;
+
+        numUnexpected = crossCheckGrouped(fpMap, metrics, getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
+
+        MetricsFile<CrosscheckMetric, ?> metricsFile = getMetricsFile();
+        metricsFile.addAllMetrics(metrics);
         if (OUTPUT != null) {
-            out = new PrintStream(IOUtil.openFileForWriting(OUTPUT), true);
-        }
-        else {
-            out = System.out;
+            metricsFile.write(OUTPUT);
+        } else {
+            metricsFile.write(new OutputStreamWriter(System.out));
         }
 
-		if (this.CROSSCHECK_SAMPLES) {
-			crossCheckSamples(fingerprints, out);
-			return 0;
-		}
-        else if (this.CROSSCHECK_LIBRARIES) {
-            crossCheckLibraries(fpMap, out);
+
+        if (numUnexpected > 0) {
+            log.warn("At least two read groups did not relate as expected.");
+            return EXIT_CODE_WHEN_MISMATCH;
+        } else {
+            log.info("All read groups related as expected.");
             return 0;
         }
-		else {
-			return crossCheckReadGroups(fpMap, out);
-		}
     }
 
-	/**
-	 * Method that combines the fingerprint evidence across all the read groups for the same sample
-	 * and then produces a matrix of LOD scores for comparing every sample with every other sample.
-	 */
-	private void crossCheckSamples(final List<Fingerprint> fingerprints, final PrintStream out) {
-		final SortedMap<String,Fingerprint> sampleFps = FingerprintChecker.mergeFingerprintsBySample(fingerprints);
-		final SortedSet<String> samples = (SortedSet<String>) sampleFps.keySet();
-
-		// Print header row
-		out.print("\t");
-		for (final String sample : samples) { out.print(sample); out.print("\t"); }
-		out.println();
-
-		// Print results rows
-		for (final String sample : samples) {
-			out.print(sample);
-			final Fingerprint fp = sampleFps.get(sample);
-
-			for (final String otherSample : samples) {
-				final MatchResults results = FingerprintChecker.calculateMatchResults(fp, sampleFps.get(otherSample), GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE);
-				out.print("\t");
-				out.print(formatUtil.format(results.getLOD()));
-			}
-
-			out.println();
-		}
-	}
-
-    /**
-     * Method that combines the fingerprint evidence across all the read groups for the same library
-     * and then produces a matrix of LOD scores for comparing every library with every other library.
-     */
-    private void crossCheckLibraries(final Map<SAMReadGroupRecord,Fingerprint> fingerprints, final PrintStream out) {
-        final List<Fingerprint> fixedFps = new ArrayList<>();
-        for (final SAMReadGroupRecord rg : fingerprints.keySet()) {
-            final Fingerprint old = fingerprints.get(rg);
-            final String name = rg.getSample() + "::" + rg.getLibrary();
-            final Fingerprint newFp = new Fingerprint(name, old.getSource(), old.getInfo());
-            newFp.putAll(old);
-
-            fixedFps.add(newFp);
+    private static Function<FingerprintIdDetails, String> getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType CROSSCHECK_BY) {
+        Function<FingerprintIdDetails, String> groupByTemp;
+        switch (CROSSCHECK_BY) {
+            case READGROUP:
+                groupByTemp = details -> details.platformUnit;
+                break;
+            case LIBRARY:
+                groupByTemp = details -> details.sample + "::" + details.library;
+                break;
+            case FILE:
+                groupByTemp = details -> details.file;
+                break;
+            case SAMPLE:
+                groupByTemp = details -> details.sample;
+                break;
+            default:
+                throw new PicardException("unpossible");
         }
 
-        crossCheckSamples(fixedFps, out);
+        // if the groupBy string is null (e.g. a vcf file has no read group info) then the hashcode is
+        // used intending to be unique per object (ignoring possible collisions)
+        return key -> {
+            final String temp = groupByTemp.apply(key);
+            return temp == null ? Integer.toString(key.hashCode()) : temp;
+        };
     }
 
-	/**
-	 * Method that pairwise checks every pair of read groups and reports a LOD score for the two read groups
-	 * coming from the same sample.
-	 */
-	private int crossCheckReadGroups(final Map<SAMReadGroupRecord,Fingerprint> fingerprints, final PrintStream out) {
-		int mismatches = 0;
-		int unexpectedMatches = 0;
+    /**
+     * Method that combines the fingerprint evidence across all the read groups for the same sample
+     * and then produces a matrix of LOD scores for comparing every sample with every other sample.
+     */
+    private int crossCheckGrouped(final Map<FingerprintIdDetails, Fingerprint> fingerprints, final List<CrosscheckMetric> metrics,
+                                  final Function<FingerprintIdDetails, String> by,
+                                  CrosscheckMetric.DataType type) {
 
-		final List<SAMReadGroupRecord> readGroupRecords = new ArrayList<>(fingerprints.keySet());
-		final List<String> output = new ArrayList<>();
+        // collect the various entries according to the grouping "by"
 
-		for (int i = 0; i < readGroupRecords.size(); i++) {
-			final SAMReadGroupRecord lhsRg = readGroupRecords.get(i);
-			for (int j= i+1; j < readGroupRecords.size(); j++) {
-				final SAMReadGroupRecord rhsRg = readGroupRecords.get(j);
-				final boolean expectedToMatch = EXPECT_ALL_READ_GROUPS_TO_MATCH || lhsRg.getSample().equals(rhsRg.getSample());
+        final Map<String, List<Map.Entry<FingerprintIdDetails, Fingerprint>>> collection =
+                fingerprints.entrySet()
+                        .stream()
+                        .collect(Collectors.groupingBy(entry -> by.apply(entry.getKey())));
 
-				final MatchResults results = FingerprintChecker.calculateMatchResults(fingerprints.get(lhsRg), fingerprints.get(rhsRg), GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE);
-                if (expectedToMatch) {
-                    if (results.getLOD() < LOD_THRESHOLD) {
-                        mismatches++;
-                        output.add(getMatchDetails(UNEXPECTED_MISMATCH, results, lhsRg, rhsRg));
-                    } else {
-                        if (!OUTPUT_ERRORS_ONLY) {
-                            output.add(getMatchDetails(EXPECTED_MATCH, results, lhsRg, rhsRg));
-                        }
-                    }
-                } else {
-                    if (results.getLOD() > -LOD_THRESHOLD) {
-                        unexpectedMatches++;
-                        output.add(getMatchDetails(UNEXPECTED_MATCH, results, lhsRg, rhsRg));
-                    } else {
-                        if (!OUTPUT_ERRORS_ONLY) {
-                            output.add(getMatchDetails(EXPECTED_MISMATCH, results, lhsRg, rhsRg));
-                        }
-                    }
+        Map<FingerprintIdDetails, Fingerprint> fingerprintsByGroup = collection.entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> {
+                            // merge the keys (unequal values are eliminated by merge).
+
+                            final FingerprintIdDetails finalId = new FingerprintIdDetails();
+                            entry.getValue().stream().forEach(id -> finalId.merge(id.getKey()));
+                            finalId.group = entry.getKey();
+                            return finalId;
+
+                        }, entry -> {
+                            // merge the values by merging the fingerprints.
+
+                            final FingerprintIdDetails firstDetail = entry.getValue().get(0).getKey();
+                            //use the "by" function to determine the "info" part of the fingerprint
+                            final Fingerprint sampleFp = new Fingerprint(firstDetail.sample, null, by.apply(firstDetail));
+                            entry.getValue().stream().map(Map.Entry::getValue).collect(toSet()).forEach(sampleFp::merge);
+                            return sampleFp;
+
+                        }));
+
+        return crossCheckFingerprints(fingerprintsByGroup, type, metrics);
+    }
+
+    /**
+     * Method that pairwise checks every pair of read groups and reports a LOD score for the two read groups
+     * coming from the same sample.
+     */
+    private int crossCheckFingerprints(final Map<FingerprintIdDetails, Fingerprint> fingerprints, final CrosscheckMetric.DataType type, final List<CrosscheckMetric> metrics) {
+        int unexpectedResults = 0;
+
+        final List<FingerprintIdDetails> fingerprintIdDetails = new ArrayList<>(fingerprints.keySet());
+
+        for (int i = 0; i < fingerprintIdDetails.size(); i++) {
+            final FingerprintIdDetails lhsRg = fingerprintIdDetails.get(i);
+            for (int j = i + 1; j < fingerprintIdDetails.size(); j++) {
+                final FingerprintIdDetails rhsRg = fingerprintIdDetails.get(j);
+                final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsRg.sample.equals(rhsRg.sample);
+
+                final MatchResults results = FingerprintChecker.calculateMatchResults(fingerprints.get(lhsRg), fingerprints.get(rhsRg), GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE);
+
+                final CrosscheckMetric.FingerprintResult result = getMatchResults(expectedToMatch, results);
+
+                if (!OUTPUT_ERRORS_ONLY || !result.isExpected()) {
+                    metrics.add(getMatchDetails(result, results, lhsRg, rhsRg, type));
                 }
-			}
-		}
+                if (result != INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
+            }
+        }
 
-		if (!output.isEmpty()) {
-			out.println("RESULT\tLOD_SCORE\tLOD_SCORE_TUMOR_NORMAL\tLOD_SCORE_NORMAL_TUMOR\tLEFT_RUN_BARCODE\tLEFT_LANE\tLEFT_MOLECULAR_BARCODE_SEQUENCE\tLEFT_LIBRARY\tLEFT_SAMPLE\t" +
-				"RIGHT_RUN_BARCODE\tRIGHT_LANE\tRIGHT_MOLECULAR_BARCODE_SEQUENCE\tRIGHT_LIBRARY\tRIGHT_SAMPLE");
-			out.println(String.join("\n", output));
-		}
-
-		if (mismatches + unexpectedMatches > 0) {
-			log.info("WARNING: At least two read groups did not relate as expected.");
-			return EXIT_CODE_WHEN_MISMATCH;
-		}
-		else {
-			log.info("All read groups related as expected.");
-			return 0;
-		}
-	}
+        return unexpectedResults;
+    }
 
     /**
      * Generates tab delimited string containing details about a possible match between fingerprints on two different SAMReadGroupRecords
-     * @param matchResult String describing the match type.
-     * @param results MatchResults object
-     * @param left left hand side SAMReadGroupRecord
-     * @param right right hand side SAMReadGroupRecord
+     *
+     * @param matchResult    String describing the match type.
+     * @param results        MatchResults object
+     * @param leftPuDetails  left hand side FingerprintIdDetails
+     * @param rightPuDetails right hand side FingerprintIdDetails
      * @return tab delimited string containing details about a possible match
      */
-    private String getMatchDetails(final String matchResult, final MatchResults results, final SAMReadGroupRecord left, final SAMReadGroupRecord right) {
-        final List<String> elements = new ArrayList<>(4);
-        elements.add(matchResult);
-        elements.add(formatUtil.format(results.getLOD()));
-        elements.add(formatUtil.format(results.getLodTN()));
-        elements.add(formatUtil.format(results.getLodNT()));
-        elements.add(getReadGroupDetails(left));
-        elements.add(getReadGroupDetails(right));
-        return String.join("\t", elements);
+    private CrosscheckMetric getMatchDetails(final FingerprintResult matchResult,
+                                             final MatchResults results,
+                                             final FingerprintIdDetails leftPuDetails,
+                                             final FingerprintIdDetails rightPuDetails,
+                                             final CrosscheckMetric.DataType type) {
+        final CrosscheckMetric metric = new CrosscheckMetric();
+
+        metric.LEFT_GROUP_VALUE  = leftPuDetails.group;
+        metric.RIGHT_GROUP_VALUE = rightPuDetails.group;
+
+        metric.RESULT = matchResult;
+        metric.LOD_SCORE = results.getLOD();
+        metric.LOD_SCORE_TUMOR_NORMAL = results.getLodTN();
+        metric.LOD_SCORE_NORMAL_TUMOR = results.getLodNT();
+        metric.DATA_TYPE = type;
+
+        metric.LEFT_RUN_BARCODE = leftPuDetails.runBarcode;
+        metric.LEFT_LANE = leftPuDetails.runLane;
+        metric.LEFT_MOLECULAR_BARCODE_SEQUENCE = leftPuDetails.molecularBarcode;
+        metric.LEFT_LIBRARY = leftPuDetails.library;
+        metric.LEFT_SAMPLE = leftPuDetails.sample;
+        metric.LEFT_FILE = leftPuDetails.file;
+
+        metric.RIGHT_RUN_BARCODE = rightPuDetails.runBarcode;
+        metric.RIGHT_LANE = rightPuDetails.runLane;
+        metric.RIGHT_MOLECULAR_BARCODE_SEQUENCE = rightPuDetails.molecularBarcode;
+        metric.RIGHT_LIBRARY = rightPuDetails.library;
+        metric.RIGHT_SAMPLE = rightPuDetails.sample;
+        metric.RIGHT_FILE = rightPuDetails.file;
+
+        return metric;
     }
 
-    /**
-     * Generates tab delimited string containing details about the passed SAMReadGroupRecord
-     * @param readGroupRecord record
-     * @return tab delimited string containing details about the SAMReadGroupRecord
-     */
-    private String getReadGroupDetails(final SAMReadGroupRecord readGroupRecord) {
-        final List<String> elements = new ArrayList<>(5);
-
-        final String[] tmp = readGroupRecord.getPlatformUnit().split("\\.");    // Expect to look like: D047KACXX110901.1.ACCAACTG
-        String runBarcode = "?";
-        String lane = "?";
-        String molBarcode = "?";
-        if ((tmp.length == 3) || (tmp.length == 2)) {
-            runBarcode = tmp[0];
-            lane = tmp[1];
-            molBarcode = (tmp.length == 3) ? tmp[2] : "";       // In older BAMS there may be no molecular barcode sequence
+    private FingerprintResult getMatchResults(boolean expectedToMatch, MatchResults results) {
+        if (expectedToMatch) {
+            if (results.getLOD() < LOD_THRESHOLD) {
+                return UNEXPECTED_MISMATCH;
+            } else if (results.getLOD() > -LOD_THRESHOLD) {
+                return EXPECTED_MATCH;
+            } else {
+                return INCONCLUSIVE;
+            }
         } else {
-            log.error("Unexpected format " + readGroupRecord.getPlatformUnit() + " for PU attribute");
+            if (results.getLOD() > -LOD_THRESHOLD) {
+                return UNEXPECTED_MATCH;
+            } else if (results.getLOD() < LOD_THRESHOLD) {
+                return EXPECTED_MISMATCH;
+            } else {
+                return INCONCLUSIVE;
+            }
         }
-        elements.add(runBarcode);
-        elements.add(lane);
-        elements.add(molBarcode);
-        elements.add(readGroupRecord.getLibrary());
-        elements.add(readGroupRecord.getSample());
-        return String.join("\t", elements);
     }
 }

@@ -42,6 +42,9 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import static htsjdk.samtools.SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES;
 
 /**
  * Major class that coordinates the activities involved in comparing genetic fingerprint
@@ -130,7 +133,7 @@ public class FingerprintChecker {
         final CloseableIterator<VariantContext> iterator = reader.iterator();  
 
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
-                                                        reader.getSequenceDictionary(fingerprintFile));
+                                                        VCFFileReader.getSequenceDictionary(fingerprintFile));
 
         final Map<String, Fingerprint> fingerprints = new HashMap<>();
         Set<String> samples = null;
@@ -240,7 +243,6 @@ public class FingerprintChecker {
         return true;
     }
 
-
     /**
      * Takes a set of fingerprints and returns an IntervalList containing all the loci that
      * can be productively examined in sequencing data to compare to one or more of the
@@ -261,11 +263,27 @@ public class FingerprintChecker {
         return intervals.uniqued();
     }
 
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final File vcfFile) {
+        Map<FingerprintIdDetails, Fingerprint> fpIdMap = new HashMap<>();
+
+        final Map< String, Fingerprint> sampleFpMap = loadFingerprints(vcfFile, null);
+
+        sampleFpMap.entrySet().stream().forEach(entry -> {
+            FingerprintIdDetails fpId = new FingerprintIdDetails();
+            fpId.sample = entry.getKey();
+            fpId.file = vcfFile.getAbsolutePath();
+
+
+            fpIdMap.put(fpId, entry.getValue());
+        });
+        return fpIdMap;
+    }
+
     /**
      * Generates a Fingerprint per read group in the supplied SAM file using the loci provided in
      * the interval list.
      */
-    public Map<SAMReadGroupRecord, Fingerprint> fingerprintSamFile(final File samFile, final IntervalList loci) {
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final File samFile, final IntervalList loci) {
         final SamReader in = SamReaderFactory.makeDefault()
                                              .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
                                              .open(samFile);
@@ -287,13 +305,17 @@ public class FingerprintChecker {
             iterator.setSamFilters(filters);
         }
 
-        final Map<SAMReadGroupRecord, Fingerprint> fingerprintsByReadGroup = new HashMap<>();
-        final List<SAMReadGroupRecord> rgs = in.getFileHeader().getReadGroups();
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = new HashMap<>();
+        final Collection<FingerprintIdDetails> rgs = in.getFileHeader().getReadGroups().stream().map(rg->
+        {FingerprintIdDetails id = new FingerprintIdDetails(rg.getPlatformUnit(), samFile.getAbsolutePath());
+         id.library = rg.getLibrary();
+         id.sample  = rg.getSample();
+         return id;}).collect(Collectors.toSet());
 
-        for (final SAMReadGroupRecord rg : rgs) {
-            final Fingerprint fingerprint = new Fingerprint(rg.getSample(),
+        for (final FingerprintIdDetails rg : rgs) {
+            final Fingerprint fingerprint = new Fingerprint(rg.sample,
                                                             samFile,
-                                                            rg.getPlatformUnit() != null ? rg.getPlatformUnit() : rg.getId());
+                                                            rg.platformUnit);
             fingerprintsByReadGroup.put(rg, fingerprint);
 
             for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
@@ -304,7 +326,7 @@ public class FingerprintChecker {
         // Set of read/template names from which we have already sampled a base and a qual. Since we assume
         // that all evidence for a haplotype is independent we can't sample two or more bases from a single
         // read or read-pair because they would not be independent!
-        final Set<String> usedReadNames = new HashSet<String>(10000);
+        final Set<String> usedReadNames = new HashSet<>(10000);
 
         // Now go through the data at each locus and figure stuff out!
         for (final SamLocusIterator.LocusInfo info : iterator) {
@@ -318,15 +340,20 @@ public class FingerprintChecker {
 
             for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
-                if (rg == null || !fingerprintsByReadGroup.containsKey(rg)) {
-                    final PicardException e = new PicardException("Unknown read group: " + rg);
+                if (rg == null) {
+                    final PicardException e = new PicardException("Found read with no readgroup: " + rec.getRecord().getReadName());
                     log.error(e);
                     throw e;
                 }
-                else {
+                final FingerprintIdDetails details = new FingerprintIdDetails(rg, samFile.getAbsolutePath());
+                if (!fingerprintsByReadGroup.containsKey(details)) {
+                    final PicardException e = new PicardException("Unknown read group: " + rg);
+                    log.error(e);
+                    throw e;
+                } else {
                     final String readName = rec.getRecord().getReadName();
                     if (!usedReadNames.contains(readName)) {
-                        final HaplotypeProbabilitiesFromSequence probs = (HaplotypeProbabilitiesFromSequence) fingerprintsByReadGroup.get(rg).get(haplotypeBlock);
+                        final HaplotypeProbabilitiesFromSequence probs = (HaplotypeProbabilitiesFromSequence) fingerprintsByReadGroup.get(details).get(haplotypeBlock);
                         final byte base = StringUtil.toUpperCase(rec.getReadBase());
                         final byte qual = rec.getBaseQuality();
 
@@ -345,7 +372,7 @@ public class FingerprintChecker {
      * Data is aggregated by sample, not read-group.
      */
     public Map<String, Fingerprint> identifyContaminant(final File samFile, final double contamination, final int locusMaxReads) {
-        final SamReader in = SamReaderFactory.makeDefault().enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES).open(samFile);
+        final SamReader in = SamReaderFactory.makeDefault().enable(CACHE_FILE_BASED_INDEXES).open(samFile);
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
                 in.getFileHeader().getSequenceDictionary());
 
@@ -443,29 +470,44 @@ public class FingerprintChecker {
         return shortList;
     }
 
-    /**
-     * Fingerprints one or more SAM/BAM files at all available loci within the haplotype map, using multiple threads
-     * to speed up the processing.
-     */
-    public Map<SAMReadGroupRecord, Fingerprint> fingerprintSamFiles(final Collection<File> files, final int threads,
+
+    @Deprecated
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFiles(final Collection<File> files, final int threads,
+                                                                   final int waitTime, final TimeUnit waitTimeUnit) {
+        return fingerprintFiles(files,  threads, waitTime, waitTimeUnit);
+    }
+
+        /**
+         * Fingerprints one or more SAM/BAM/VCF files at all available loci within the haplotype map, using multiple threads
+         * to speed up the processing.
+         */
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintFiles(final Collection<File> files, final int threads,
                                                                     final int waitTime, final TimeUnit waitTimeUnit) {
 
-        // Generate fingerprints from each BAM file first
+        // Generate fingerprints from each file
         final AtomicInteger filesRead = new AtomicInteger(0);
         final ExecutorService executor = Executors.newFixedThreadPool(threads);
         final IntervalList intervals = this.haplotypes.getIntervalList();
-        final Map<SAMReadGroupRecord, Fingerprint> retval = new ConcurrentHashMap<>();
+        final Map<FingerprintIdDetails, Fingerprint> retval = new ConcurrentHashMap<>();
 
         for (final File f : files) {
             executor.submit(() -> {
-                retval.putAll(fingerprintSamFile(f, intervals));
+                try {
+                    if (CheckFingerprint.isBamOrSamFile(f)) {
+                        retval.putAll(fingerprintSamFile(f, intervals));
+                    } else {
+                        retval.putAll(fingerprintVcf(f));
+                    }
 
-                if (filesRead.incrementAndGet() % 100 == 0) {
-                    log.info("Processed " + filesRead.get() + " out of " + files.size());
+                    if (filesRead.incrementAndGet() % 100 == 0) {
+                        log.info("Processed " + filesRead.get() + " out of " + files.size());
+                    }
+                } catch(Exception e){
+                    log.warn("Exception thrown in thread:" + e.getMessage());
+                    throw e;
                 }
             });
         }
-
         executor.shutdown();
         try { executor.awaitTermination(waitTime, waitTimeUnit); }
         catch (final InterruptedException ie) { log.warn(ie, "Interrupted while waiting for executor to terminate."); }
@@ -521,7 +563,7 @@ public class FingerprintChecker {
 
         // Fingerprint the SAM files and calculate the results
         for (final File f : samFiles) {
-            final Map<SAMReadGroupRecord, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(f, intervals);
+            final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(f, intervals);
 
             if (ignoreReadGroups) {
                 final Fingerprint combinedFp = new Fingerprint(specificSample, f, null);
@@ -536,8 +578,8 @@ public class FingerprintChecker {
                 resultsList.add(results);
 
             } else {
-                for (final SAMReadGroupRecord rg : fingerprintsByReadGroup.keySet()) {
-                    final FingerprintResults results = new FingerprintResults(f, rg.getPlatformUnit(), specificSample);
+                for (final FingerprintIdDetails rg : fingerprintsByReadGroup.keySet()) {
+                    final FingerprintResults results = new FingerprintResults(f, rg.platformUnit, rg.sample);
                     for (final Fingerprint expectedFp : expectedFingerprints) {
                         final MatchResults result = calculateMatchResults(fingerprintsByReadGroup.get(rg), expectedFp, 0, pLossofHet);
                         results.addResults(result);

@@ -112,4 +112,15 @@ public class FingerprintCheckerTest {
         Assert.assertEquals(mr.getPopulationLikelihood(), llRandomSample, DELTA);
         Assert.assertEquals(mr.getLOD(), lodExpectedSample, DELTA);
     }
+
+
+    @Test(dataProvider = "checkFingerprintsVcfDataProvider")
+    public void testFingerprintVcf(File vcfFile,  File genotypesFile,  String observedSampleAlias,  String expectedSampleAlias,
+                                      double llExpectedSample, double llRandomSample, double lodExpectedSample) throws IOException {
+        final FingerprintChecker fpChecker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        Map<FingerprintIdDetails, Fingerprint> fp1=fpChecker.fingerprintVcf(vcfFile);
+
+        Assert.assertFalse(fp1.isEmpty());
+    }
+
 }
