@@ -27,17 +27,11 @@ package picard.analysis;
 import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.PicardException;
-import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.Metrics;
@@ -62,7 +56,7 @@ import java.util.Set;
         programGroup = Metrics.class
 )
 @DocumentedFeature
-public class CollectRrbsMetrics extends CommandLineProgram {
+public class CollectRrbsMetrics extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "<b>Collects metrics from reduced representation bisulfite sequencing (Rrbs) data.</b>  ";
     static final String USAGE_DETAILS = "<p>This tool uses reduced representation bisulfite sequencing (Rrbs) data to determine cytosine " +
             "methylation status across all reads of a genomic DNA sequence.  For a primer on bisulfite sequencing and cytosine methylation, " +
@@ -82,7 +76,18 @@ public class CollectRrbsMetrics extends CommandLineProgram {
             "The detailed metrics table includes the coordinates of all of the CpG sites for the experiment as well as the conversion rates " +
             "observed for each site.</p>" +
 
-            "<h4>Usage example:</h4>" +
+            "<p>It is possible to launch CollectRrbsMetrics tool by setting all output files or by indicating a base name for metrics files only. See examples:</p>" +
+
+            "<h4>Usage example 1:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CollectRrbsMetrics \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=detail_output.bam \\<br />" +
+            "      CHART=chart_output.pdf \\<br />" +
+            "      S=summary_output.bam \\<br />" +
+            "      R=reference_sequence.fasta" +
+            "</pre>" +
+            "<h4>Usage example 2:</h4>" +
             "<pre>" +
             "java -jar picard.jar CollectRrbsMetrics \\<br />" +
             "      R=reference_sequence.fasta \\<br />" +
@@ -95,13 +100,11 @@ public class CollectRrbsMetrics extends CommandLineProgram {
             " for a complete description of both the detail and summary metrics produced by this tool.</p>" +
             "<hr />";
 
-// Path to R file for plotting purposes
+    // Path to R file for plotting purposes
 
-private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
+    private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
 
-    @Argument(doc = "The BAM or SAM file containing aligned reads. Must be coordinate sorted", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
-    public File INPUT;
-    @Argument(doc = "Base name for output files", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME)
+    @Argument(doc = "Base name for output files", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME, mutex = {"OUTPUT", "CHART_OUTPUT", "SUMMARY_OUTPUT"})
     public String METRICS_FILE_PREFIX;
     @Argument(doc = "Minimum read length")
     public int MINIMUM_READ_LENGTH = 5;
@@ -112,18 +115,19 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
     @Argument(doc = "Maximum percentage of mismatches in a read for it to be considered, with a range of 0-1")
     public double MAX_MISMATCH_RATE = 0.1;
     @Argument(doc = "Set of sequence names to consider, if not specified all sequences will be used", optional = true)
-    public Set<String> SEQUENCE_NAMES = new HashSet<String>();
-    @Argument(shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME,
-            doc = "If true, assume that the input file is coordinate sorted even if the header says otherwise.")
-    public boolean ASSUME_SORTED = false;
+    public Set<String> SEQUENCE_NAMES = new HashSet<>();
     @Argument(shortName = "LEVEL", doc = "The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
+    @Argument(shortName = "CHART", doc = "The PDF file to render the chart to.", mutex = {"METRICS_FILE_PREFIX"})
+    public File CHART_OUTPUT;
+    @Argument(shortName = "S", doc = "The text file to write summary metrics to.", mutex = {"METRICS_FILE_PREFIX"})
+    public File SUMMARY_OUTPUT;
 
     public static final String DETAIL_FILE_EXTENSION = "rrbs_detail_metrics";
     public static final String SUMMARY_FILE_EXTENSION = "rrbs_summary_metrics";
     public static final String PDF_FILE_EXTENSION = "rrbs_qc.pdf";
 
-    private static final Log log = Log.getInstance(CollectRrbsMetrics.class);
+    private RrbsMetricsCollector metricsCollector;
 
     // return a custom argument collection since this tool uses a (required) argument name
     // of "REFERENCE", not "REFERENCE_SEQUENCE"
@@ -147,33 +151,43 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
     }
 
     @Override
-    protected int doWork() {
-        if (!METRICS_FILE_PREFIX.endsWith(".")) {
-            METRICS_FILE_PREFIX = METRICS_FILE_PREFIX + ".";
-        }
-        final File SUMMARY_OUT = new File(METRICS_FILE_PREFIX + SUMMARY_FILE_EXTENSION);
-        final File DETAILS_OUT = new File(METRICS_FILE_PREFIX + DETAIL_FILE_EXTENSION);
-        final File PLOTS_OUT = new File(METRICS_FILE_PREFIX + PDF_FILE_EXTENSION);
-        assertIoFiles(SUMMARY_OUT, DETAILS_OUT, PLOTS_OUT);
-
-        final SamReader samReader = SamReaderFactory.makeDefault().open(INPUT);
-        if (!ASSUME_SORTED && samReader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-            throw new PicardException("The input file " + INPUT.getAbsolutePath() + " does not appear to be coordinate sorted");
-        }
-
-        final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-        final ProgressLogger progressLogger = new ProgressLogger(log);
-
-        final RrbsMetricsCollector metricsCollector = new RrbsMetricsCollector(METRIC_ACCUMULATION_LEVEL, samReader.getFileHeader().getReadGroups(),
-                C_QUALITY_THRESHOLD, NEXT_BASE_QUALITY_THRESHOLD, MINIMUM_READ_LENGTH, MAX_MISMATCH_RATE);
-
-        for (final SAMRecord samRecord : samReader) {
-            progressLogger.record(samRecord);
-            if (!samRecord.getReadUnmappedFlag() && !isSequenceFiltered(samRecord.getReferenceName())) {
-                final ReferenceSequence referenceSequence = refWalker.get(samRecord.getReferenceIndex());
-                metricsCollector.acceptRecord(samRecord, referenceSequence);
+    protected void setup(final SAMFileHeader header, final File samFile) {
+        if (METRICS_FILE_PREFIX != null) {
+            if (!METRICS_FILE_PREFIX.endsWith(".")) {
+                METRICS_FILE_PREFIX = METRICS_FILE_PREFIX + ".";
             }
+            OUTPUT = new File(METRICS_FILE_PREFIX + DETAIL_FILE_EXTENSION);
+            SUMMARY_OUTPUT = new File(METRICS_FILE_PREFIX + SUMMARY_FILE_EXTENSION);
+            CHART_OUTPUT = new File(METRICS_FILE_PREFIX + PDF_FILE_EXTENSION);
         }
+        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsWritable(SUMMARY_OUTPUT);
+        IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        metricsCollector = new RrbsMetricsCollector(
+                METRIC_ACCUMULATION_LEVEL,
+                header.getReadGroups(),
+                C_QUALITY_THRESHOLD,
+                NEXT_BASE_QUALITY_THRESHOLD,
+                MINIMUM_READ_LENGTH,
+                MAX_MISMATCH_RATE
+        );
+    }
+
+    @Override
+    protected void acceptRead(final SAMRecord samRecord, final ReferenceSequence ref) {
+        if (!samRecord.getReadUnmappedFlag() && !isSequenceFiltered(samRecord.getReferenceName())) {
+            metricsCollector.acceptRecord(samRecord, ref);
+        }
+    }
+
+    private boolean isSequenceFiltered(final String sequenceName) {
+        return SEQUENCE_NAMES != null
+                && !SEQUENCE_NAMES.isEmpty()
+                && !SEQUENCE_NAMES.contains(sequenceName);
+    }
+
+    @Override
+    protected void finish() {
         metricsCollector.finish();
         final MetricsFile<RrbsMetrics, Comparable<?>> rrbsMetrics = getMetricsFile();
         metricsCollector.addAllLevelsToFile(rrbsMetrics);
@@ -182,34 +196,23 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
         // we get it out split it apart to the two separate MetricsFiles and write them to file
         final MetricsFile<RrbsSummaryMetrics, ?> summaryFile = getMetricsFile();
         final MetricsFile<RrbsCpgDetailMetrics, ?> detailsFile = getMetricsFile();
-        for (final RrbsMetrics rrbsMetric : rrbsMetrics.getMetrics()) {
+        rrbsMetrics.getMetrics().forEach(rrbsMetric -> {
             summaryFile.addMetric(rrbsMetric.getSummaryMetrics());
-            for (final RrbsCpgDetailMetrics detailMetric : rrbsMetric.getDetailMetrics()) {
-                detailsFile.addMetric(detailMetric);
-            }
-        }
-        summaryFile.write(SUMMARY_OUT);
-        detailsFile.write(DETAILS_OUT);
-        RExecutor.executeFromClasspath(R_SCRIPT, DETAILS_OUT.getAbsolutePath(), SUMMARY_OUT.getAbsolutePath(), PLOTS_OUT.getAbsolutePath());
-        CloserUtil.close(samReader);
-        return 0;
-    }
+            rrbsMetric.getDetailMetrics().forEach(detailsFile::addMetric);
+        });
 
-    private boolean isSequenceFiltered(final String sequenceName) {
-        return (SEQUENCE_NAMES != null) && (!SEQUENCE_NAMES.isEmpty()) && (!SEQUENCE_NAMES.contains(sequenceName));
-    }
+        summaryFile.write(SUMMARY_OUTPUT);
+        detailsFile.write(OUTPUT);
 
-    private void assertIoFiles(final File summaryFile, final File detailsFile, final File plotsFile) {
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
-        IOUtil.assertFileIsWritable(summaryFile);
-        IOUtil.assertFileIsWritable(detailsFile);
-        IOUtil.assertFileIsWritable(plotsFile);
+        RExecutor.executeFromClasspath(R_SCRIPT,
+                OUTPUT.getAbsolutePath(),
+                SUMMARY_OUTPUT.getAbsolutePath(),
+                CHART_OUTPUT.getAbsolutePath());
     }
 
     @Override
     protected String[] customCommandLineValidation() {
-        final List<String> errorMsgs = new ArrayList<String>();
+        final List<String> errorMsgs = new ArrayList<>();
         if (MAX_MISMATCH_RATE < 0 || MAX_MISMATCH_RATE > 1) {
             errorMsgs.add("MAX_MISMATCH_RATE must be in the range of 0-1");
         }

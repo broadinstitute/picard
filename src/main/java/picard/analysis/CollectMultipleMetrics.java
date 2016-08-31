@@ -63,7 +63,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     static final String USAGE_DETAILS ="This 'meta-metrics' tool runs one or more of the metrics collection modules at the same" +
             " time to cut down on the time spent reading in data from input files. Available modules include " +
             "CollectAlignmentSummaryMetrics, CollectInsertSizeMetrics, QualityScoreDistribution,  MeanQualityByCycle, " +
-            "CollectBaseDistributionByCycle, CollectGcBiasMetrics, RnaSeqMetrics, CollectSequencingArtifactMetrics, and CollectQualityYieldMetrics. " +
+            "CollectBaseDistributionByCycle, CollectGcBiasMetrics, RnaSeqMetrics, CollectSequencingArtifactMetrics, " +
+            "CollectQualityYieldMetrics and CollectRrbsMetrics. " +
             "The tool produces outputs of '.pdf' and '.txt' files for each module, except for the " +
             "CollectAlignmentSummaryMetrics module, which outputs only a '.txt' file. Output files are named by specifying a base name " +
             "(without any file extensions).<br /><br />" +
@@ -103,6 +104,29 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     }
 
     public static enum Program implements ProgramInterface {
+        CollectRrbsMetrics {
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+                final CollectRrbsMetrics program = new CollectRrbsMetrics();
+                program.OUTPUT = new File(outbase + ".rrbc.detail_metrics" + outext);
+                program.SUMMARY_OUTPUT = new File(outbase + ".rrbc.summary_metrics" + outext);
+                program.CHART_OUTPUT = new File(outbase + ".rrbc.pdf");
+                program.INPUT = input;
+                program.METRIC_ACCUMULATION_LEVEL = metricAccumulationLevel;
+                program.ASSUME_SORTED = false;
+                program.setReferenceSequence(reference);
+
+                return program;
+            }
+            @Override
+            public boolean needsReferenceSequence() {
+                return true;
+            }
+            @Override
+            public boolean supportsMetricAccumulationLevel() {
+                return true;
+            }
+        },
         CollectAlignmentSummaryMetrics {
             @Override
             public boolean needsReferenceSequence() {
