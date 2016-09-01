@@ -585,20 +585,6 @@ public abstract class AbstractAlignmentMerger {
     }
 
     /**
-     * Updates the MD and NM tags if present.
-     * @param rec
-     */
-    private void calculateMdAndNmTags(final SAMRecord rec) {
-        // update NM and MD
-        final boolean calculateNm = rec.getIntegerAttribute(ReservedTagConstants.NM) != null;
-        final boolean calculateMd = rec.getStringAttribute(SAMTag.MD.name()) != null;
-        if (calculateNm || calculateMd) {
-            final byte[] referenceBases = this.refSeq.get(this.refSeq.getSequenceDictionary().getSequenceIndex(rec.getReferenceName())).getBases();
-            SequenceUtil.calculateMdAndNmTags(rec, referenceBases, calculateNm, calculateMd);
-        }
-    }
-
-    /**
      * Checks to see whether the ends of the reads overlap and soft clips reads
      * them if necessary.
      */
@@ -619,13 +605,11 @@ public abstract class AbstractAlignmentMerger {
                     if (posDiff > 0) {
                         CigarUtil.softClip3PrimeEndOfRead(pos, Math.min(pos.getReadLength(),
                                 pos.getReadLength() - posDiff + 1));
-                        calculateMdAndNmTags(pos);
                     }
 
                     if (negDiff > 0) {
                         CigarUtil.softClip3PrimeEndOfRead(neg, Math.min(neg.getReadLength(),
                                 neg.getReadLength() - negDiff + 1));
-                        calculateMdAndNmTags(neg);
                     }
 
                 }
