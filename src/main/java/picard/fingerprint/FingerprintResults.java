@@ -29,27 +29,31 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Class that is used to represent the results of comparing a read group within a SAM file
- * against one or more set of fingerprint genotypes.
+ * Class that is used to represent the results of comparing a read group within a SAM file, or a sample
+ * within a VCF against one or more set of fingerprint genotypes.
  *
  * @author Tim Fennell
  */
 public class FingerprintResults {
-    private final File samFile;
-    private final String readGroup;
+    private final File inputFile;
+    private final String readGroup;         // null if the input is a VCF.
+    private final String sampleAlias;
     private final SortedSet<MatchResults> matchResults = new TreeSet<>();
 
-    public FingerprintResults(final File samFile, final String readGroup) {
-        this.samFile = samFile;
+    public FingerprintResults(final File inputFile, final String readGroup, final String sampleAlias) {
+        this.inputFile = inputFile;
         this.readGroup = readGroup;
+        this.sampleAlias = sampleAlias;
     }
 
     public void addResults(final MatchResults matchResults) {
         this.matchResults.add(matchResults);
     }
 
-    public File getSamFile() { return samFile; }
+    public File getInputFile() { return inputFile; }
     public String getReadGroup() { return readGroup; }
+    public String getSampleAlias() { return sampleAlias; }
+
     public SortedSet<MatchResults> getMatchResults() { return matchResults; }
 }
 
