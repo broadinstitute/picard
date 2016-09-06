@@ -45,7 +45,6 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.FilteringIterator;
-import htsjdk.samtools.filter.OverclippedReadFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.CigarUtil;
@@ -73,7 +72,7 @@ import java.util.List;
  * 2.  Merge the alignment information and public tags ONLY from the aligned SAMRecords
  * 3.  Do additional modifications -- handle clipping, trimming, etc.
  * 4.  Fix up mate information on paired reads
- * 5.  Do a final calculation of the NM and UQ tags.
+ * 5.  Do a final calculation of the NM and UQ tags (coordinate sorted only)
  * 6.  Write the records to the output file.
  * <p/>
  * Concrete subclasses which extend AbstractAlignmentMerger should implement getQueryNameSortedAlignedRecords.
@@ -477,7 +476,7 @@ public abstract class AbstractAlignmentMerger {
 
             for (final SAMRecord rec : sink.sorter) {
                 if (!rec.getReadUnmappedFlag() && refSeq != null) {
-                    fixNMandUQ(rec, refSeq, bisulfiteSequence);
+                    fixNmMdAndUq(rec, refSeq, bisulfiteSequence);
                 }
                 writer.addAlignment(rec);
                 finalProgress.record(rec);
@@ -490,7 +489,7 @@ public abstract class AbstractAlignmentMerger {
         log.info("Wrote " + aligned + " alignment records and " + (alignedReadsOnly ? 0 : unmapped) + " unmapped reads.");
     }
 
-    /** Calculates and sets the NM and UQ tags from the record and the reference
+    /** Calculates and sets the NM, MD, and and UQ tags from the record and the reference
      *
      * @param record the record to be fixed
      * @param refSeqWalker a ReferenceSequenceWalker that will be used to traverse the reference
@@ -499,10 +498,13 @@ public abstract class AbstractAlignmentMerger {
      *
      * No return value, modifies the provided record.
      */
-    public static void fixNMandUQ(final SAMRecord record, final ReferenceSequenceFileWalker refSeqWalker, final boolean isBisulfiteSequence) {
+    public static void fixNmMdAndUq(final SAMRecord record, final ReferenceSequenceFileWalker refSeqWalker, final boolean isBisulfiteSequence) {
         final byte[] referenceBases = refSeqWalker.get(refSeqWalker.getSequenceDictionary().getSequenceIndex(record.getReferenceName())).getBases();
-        record.setAttribute(SAMTag.NM.name(), SequenceUtil.calculateSamNmTag(record, referenceBases, 0, isBisulfiteSequence));
-
+        // only recalculate NM if it isn't bisulfite, since it needs to be treated specially below
+        SequenceUtil.calculateMdAndNmTags(record, referenceBases, true, !isBisulfiteSequence);
+        if (isBisulfiteSequence) {  // recalculate the NM tag for bisulfite data
+            record.setAttribute(SAMTag.NM.name(), SequenceUtil.calculateSamNmTag(record, referenceBases, 0, isBisulfiteSequence));
+        }
         if (record.getBaseQualities() != SAMRecord.NULL_QUALS) {
             record.setAttribute(SAMTag.UQ.name(), SequenceUtil.sumQualitiesOfMismatches(record, referenceBases, 0, isBisulfiteSequence));
         }
@@ -605,11 +607,13 @@ public abstract class AbstractAlignmentMerger {
                     if (posDiff > 0) {
                         CigarUtil.softClip3PrimeEndOfRead(pos, Math.min(pos.getReadLength(),
                                 pos.getReadLength() - posDiff + 1));
+                        removeNmMdAndUqTags(pos); // these tags are now invalid!
                     }
 
                     if (negDiff > 0) {
                         CigarUtil.softClip3PrimeEndOfRead(neg, Math.min(neg.getReadLength(),
                                 neg.getReadLength() - negDiff + 1));
+                        removeNmMdAndUqTags(neg); // these tags are now invalid!
                     }
 
                 }
@@ -736,6 +740,7 @@ public abstract class AbstractAlignmentMerger {
         // If the adapter sequence is marked and clipAdapter is true, clip it
         if (this.clipAdapters && rec.getAttribute(ReservedTagConstants.XT) != null) {
             CigarUtil.softClip3PrimeEndOfRead(rec, rec.getIntegerAttribute(ReservedTagConstants.XT));
+            removeNmMdAndUqTags(rec); // these tags are now invalid!
         }
     }
 
@@ -796,5 +801,16 @@ public abstract class AbstractAlignmentMerger {
 
     public void close() {
         CloserUtil.close(this.refSeq);
+    }
+
+
+    /** Removes the NM, MD, and UQ tags.  This is useful if we modify the read and are not able to recompute these tags,
+     * for example when no reference is available.
+     * @param rec the record to modify.
+     */
+    private static void removeNmMdAndUqTags(final SAMRecord rec) {
+        rec.setAttribute(SAMTag.NM.name(), null);
+        rec.setAttribute(SAMTag.MD.name(), null);
+        rec.setAttribute(SAMTag.UQ.name(), null);
     }
 }

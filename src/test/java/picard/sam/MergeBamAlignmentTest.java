@@ -23,23 +23,7 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.BamFileIoUtils;
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.Defaults;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SAMTag;
-import htsjdk.samtools.SamPairUtil;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
@@ -105,7 +89,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true, fasta, outputWithSupplemental,
-                SamPairUtil.PairOrientation.FR, null, null, null, null);
+                SamPairUtil.PairOrientation.FR, null, null, null, null, null);
 
         final SamReader result = SamReaderFactory.makeDefault().open(outputWithSupplemental);
 
@@ -176,7 +160,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true, fasta, output,
-                SamPairUtil.PairOrientation.FR, null, null, null, null);
+                SamPairUtil.PairOrientation.FR, null, null, null, null, null);
 
         SamReader result = SamReaderFactory.makeDefault().open(output);
         Assert.assertEquals(result.getFileHeader().getSequenceDictionary().getSequences().size(), 8,
@@ -237,7 +221,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 null, null, null, null,
                 true, fasta, output,
-                SamPairUtil.PairOrientation.FR, null, null, null, null);
+                SamPairUtil.PairOrientation.FR, null, null, null, null, null);
 
         CloserUtil.close(result);
 
@@ -266,7 +250,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true, fasta, output,
-                SamPairUtil.PairOrientation.FR, null, null, null, null);
+                SamPairUtil.PairOrientation.FR, null, null, null, null, null);
 
         final SamReader result = SamReaderFactory.makeDefault().open(output);
 
@@ -310,14 +294,15 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider="data")
-    public void testSortingOnSamAlignmentMerger(final File unmapped, final File aligned, final boolean sorted, final String testName)
+    public void testSortingOnSamAlignmentMerger(final File unmapped, final File aligned, final boolean sorted, final boolean coordinateSorted, final String testName)
         throws IOException {
 
         final File target = File.createTempFile("target", "bam");
         target.deleteOnExit();
         final SamAlignmentMerger merger = new SamAlignmentMerger(unmapped,  target, fasta, null, true, false,
                 false, Arrays.asList(aligned), 1, null, null, null, null, null, null,
-                Arrays.asList(SamPairUtil.PairOrientation.FR), SAMFileHeader.SortOrder.coordinate,
+                Arrays.asList(SamPairUtil.PairOrientation.FR),
+                coordinateSorted ? SAMFileHeader.SortOrder.coordinate : SAMFileHeader.SortOrder.queryname,
                 new BestMapqPrimaryAlignmentSelectionStrategy(), false, false, 30);
 
         merger.mergeAlignment(Defaults.REFERENCE_FASTA);
@@ -336,9 +321,10 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     @DataProvider(name="data")
     public Object[][] getDataForSortingTest() {
         return new Object[][] {
-                {unmappedBam, alignedQuerynameSortedBam, true, "Basic test with pre-sorted alignment"},
-                {unmappedBam, alignedBam, false, "Basic test with unsorted alignment"}
-
+                {unmappedBam, alignedQuerynameSortedBam, true, true, "Basic test with pre-sorted alignment"},
+                {unmappedBam, alignedBam, false, true, "Basic test with unsorted alignment"},
+                {unmappedBam, alignedQuerynameSortedBam, true, false, "Basic test with pre-sorted alignment"},
+                {unmappedBam, alignedBam, false, false, "Basic test with unsorted alignment"}
         };
     }
 
@@ -354,7 +340,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true, fasta, output,
-                SamPairUtil.PairOrientation.FR, null, null, null, null);
+                SamPairUtil.PairOrientation.FR, null, null, null, null, null);
 
         SamReaderFactory factory = SamReaderFactory.makeDefault();
         final SamReader result = factory.open(output);
@@ -419,7 +405,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 "0", "1.0", "align!", "myAligner",
                 true, fasta, merged,
                 SamPairUtil.PairOrientation.FR, null,
-                null, null, null);
+                null, null, null, null);
         Assert.fail("Merger should have failed because unmapped reads are not in queryname order but didn't");
     }
 
@@ -435,7 +421,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true, fasta, merged,
-                null, null, null, null, null);
+                null, null, null, null, null, null);
 
         // Iterate over the merged output and gather some statistics
         final Map<String, AlignmentAccumulator> accumulatorMap = new HashMap<String, AlignmentAccumulator>();
@@ -597,7 +583,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true, fasta, mergedSam,
-                null, null, null, null, null);
+                null, null, null, null, null, null);
 
         assertSamValid(mergedSam);
 
@@ -859,7 +845,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 false, fasta, mergedSam,
-                null, null, null, null, null);
+                null, null, null, null, null, null);
 
         assertSamValid(mergedSam);
 
@@ -1006,7 +992,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 fasta, output,
                 SamPairUtil.PairOrientation.FR,
                 MergeBamAlignment.PrimaryAlignmentStrategy.EarliestFragment,
-                null, null, null);
+                null, null, null, null);
 
         Assert.fail("Exception was not thrown");
     }
@@ -1029,7 +1015,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 true, fasta, output,
                 SamPairUtil.PairOrientation.FR, MergeBamAlignment.PrimaryAlignmentStrategy.EarliestFragment,
                 ONE_OF_THE_BEST_TAG,
-                null, false);
+                null, false, null);
 
 
         final SamReader mergedReader = SamReaderFactory.makeDefault().open(output);
@@ -1171,7 +1157,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 true,
                 new File(TEST_DATA_DIR, "cliptest.fasta"), output,
                 SamPairUtil.PairOrientation.FR, null,
-                null, null, null);
+                null, null, null, null);
 
         final SamReader result = SamReaderFactory.makeDefault().open(output);
         final Map<String, SAMRecord> firstReadEncountered = new HashMap<String, SAMRecord>();
@@ -1259,7 +1245,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 new File(TEST_DATA_DIR, "cliptest.fasta"), output,
                 SamPairUtil.PairOrientation.FR,
                 MergeBamAlignment.PrimaryAlignmentStrategy.BestEndMapq,
-                null, includeSecondary, null);
+                null, includeSecondary, null, null);
         final SamReader reader = SamReaderFactory.makeDefault().open(output);
 
         int numFirstRecords = 0;
@@ -1304,7 +1290,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                                   final SamPairUtil.PairOrientation expectedOrientation, final MergeBamAlignment.PrimaryAlignmentStrategy primaryAlignmentStrategy,
                                   final String attributesToRetain,
                                   final Boolean includeSecondary,
-                                  final Boolean unmapContaminantReads) {
+                                  final Boolean unmapContaminantReads,
+                                  final SAMFileHeader.SortOrder sortOrder) {
 
         final List<String> args = new ArrayList<String>(Arrays.asList(
                 "UNMAPPED_BAM=" + unmappedBam.getAbsolutePath(),
@@ -1363,6 +1350,9 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         }
         if (unmapContaminantReads != null) {
             args.add("UNMAP_CONTAMINANT_READS=" + unmapContaminantReads);
+        }
+        if (sortOrder != null) {
+            args.add("SORT_ORDER=" + sortOrder.name());
         }
         Assert.assertEquals(runPicardCommandLine(args), 0, "Merge did not succeed");
     }
@@ -1501,7 +1491,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 "0", "1.0", "align!", "myAligner",
                 true, fasta, output,
                 SamPairUtil.PairOrientation.FR, MergeBamAlignment.PrimaryAlignmentStrategy.MostDistant,
-                null, includeSecondary, null);
+                null, includeSecondary, null, null);
 
         final SamReader reader = SamReaderFactory.makeDefault().open(output);
         int numFirstRecords = 0;
@@ -1680,9 +1670,43 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true, refFasta, mergedSam,
-                null, null, null, null, true);
+                null, null, null, null, true, null);
 
         assertSamValid(mergedSam);
         IOUtil.assertFilesEqual(expectedSam, mergedSam);
+    }
+
+    @Test
+    public void testRemoveNmMdAndUqOnOverlappingReads() throws IOException {
+        final File output = File.createTempFile("testRemoveNmMdAndUqOnOverlappingReads", ".sam");
+        output.deleteOnExit();
+        doMergeAlignment(new File(TEST_DATA_DIR, "removetags.unmapped.sam"),
+                Collections.singletonList(new File(TEST_DATA_DIR, "removetags.aligned.sam")),
+                null, null, null, null,
+                false, true, false, 1,
+                "0", "1.0", "align!", "myAligner",
+                true,
+                new File(TEST_DATA_DIR, "removetags.fasta"), output,
+                SamPairUtil.PairOrientation.FR, null,
+                null, null, null, SAMFileHeader.SortOrder.queryname);
+
+        final SamReader result = SamReaderFactory.makeDefault().open(output);
+        for (final SAMRecord rec : result) {
+            boolean hasTags = false;
+            if (rec.getReadName().startsWith("CLIPPED")) {
+                final String[] readNameFields = rec.getReadName().split(":");
+                final int index = rec.getFirstOfPairFlag() ? 1 : 2;
+                hasTags = Integer.parseInt(readNameFields[index]) == 1;
+            }
+            if (hasTags) {
+                Assert.assertNull(rec.getAttribute("MD"));
+                Assert.assertNull(rec.getAttribute("NM"));
+            }
+            else {
+                Assert.assertNotNull(rec.getAttribute("MD"));
+                Assert.assertNotNull(rec.getAttribute("NM"));
+            }
+        }
+        result.close();
     }
 }
