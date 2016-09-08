@@ -67,6 +67,7 @@ import java.util.Set;
 public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, Histogram_KEY extends Comparable, ARGTYPE>  {
 
     public static final String UNKNOWN = "unknown";
+    public static boolean IS_NON_DUPLICATES;
     //The collector that will accept all records (allReads is NULL if !calculateAll)
     private PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> allReadCollector;
 

@@ -34,6 +34,7 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.metrics.GcBiasMetrics;
+import picard.metrics.MultiLevelCollector;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -93,24 +94,26 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
             "mean coverage (e.g. 3.1 means this GC bin has 3.1 times more reads per window than average).  " +
             "" +
             "This tool also tracks mean base-quality scores of the reads within each GC content bin, enabling the user to determine " +
-            "how base quality scores vary with GC content.  <br /> <br />"+
+            "how base quality scores vary with GC content.  <br /> <br />" +
             "" +
             "The chart output associated with this data table plots the NORMALIZED_COVERAGE, the distribution of WINDOWs corresponding " +
-            "to GC percentages, and base qualities corresponding to each %GC bin."+
+            "to GC percentages, and base qualities corresponding to each %GC bin." +
             "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
-            "<h4>Usage Example:</h4>"+
+            "<h4>Usage Example:</h4>" +
             "<pre>" +
-            "java -jar picard.jar CollectGcBiasMetrics \\<br />"+
-            "      I=input.bam \\<br />"+
-            "      O=gc_bias_metrics.txt \\<br />"+
-            "      CHART=gc_bias_metrics.pdf \\<br />"+
-            "      S=summary_metrics.txt \\<br />"+
-            "      R=reference_sequence.fasta"+
-            "</pre>"+
+            "java -jar picard.jar CollectGcBiasMetrics \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=gc_bias_metrics.txt \\<br />" +
+            "      CHART=gc_bias_metrics.pdf \\<br />" +
+            "      S=summary_metrics.txt \\<br />" +
+            "      R=reference_sequence.fasta" +
+            "</pre>" +
             "Please see <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#GcBiasMetrics'>" +
             "the GcBiasMetrics documentation</a> for further explanations of each metric." +
             "<hr />";
-    /** The location of the R script to do the plotting. */
+    /**
+     * The location of the R script to do the plotting.
+     */
     private static final String R_SCRIPT = "picard/analysis/gcBias.R";
 
     // Usage and parameters
@@ -132,6 +135,9 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
 
     @Option(shortName = "LEVEL", doc = "The level(s) at which to accumulate metrics.")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
+
+    @Option(shortName = "ALSO_IGNORE_DUPLICATES", doc = "Use to get additional results without duplicates.")
+    public boolean ALSO_IGNORE_DUPLICATES = false;
 
     // Calculates GcBiasMetrics for all METRIC_ACCUMULATION_LEVELs provided
     private GcBiasMetricsCollector multiCollector;
@@ -158,11 +164,14 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
         IOUtil.assertFileIsWritable(SUMMARY_OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 
+        MultiLevelCollector.IS_NON_DUPLICATES = ALSO_IGNORE_DUPLICATES;
+
         //Calculate windowsByGc for the reference sequence
         final int[] windowsByGc = GcBiasUtils.calculateRefWindowsByGc(BINS, REFERENCE_SEQUENCE, SCAN_WINDOW_SIZE);
 
         //Delegate actual collection to GcBiasMetricCollector
-        multiCollector = new GcBiasMetricsCollector(METRIC_ACCUMULATION_LEVEL, windowsByGc, header.getReadGroups(), SCAN_WINDOW_SIZE, IS_BISULFITE_SEQUENCED);
+        multiCollector = new GcBiasMetricsCollector(METRIC_ACCUMULATION_LEVEL, windowsByGc, header.getReadGroups(),
+                SCAN_WINDOW_SIZE, IS_BISULFITE_SEQUENCED);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -179,14 +188,18 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
     @Override
     protected void finish() {
         multiCollector.finish();
+        writeResultsToFiles(OUTPUT, SUMMARY_OUTPUT, CHART_OUTPUT);
+    }
+
+    private void writeResultsToFiles(final File OUTPUT, final File SUMMARY_OUTPUT, final File CHART_OUTPUT) {
         final MetricsFile<GcBiasMetrics, Integer> file = getMetricsFile();
         final MetricsFile<GcBiasDetailMetrics, ?> detailMetricsFile = getMetricsFile();
         final MetricsFile<GcBiasSummaryMetrics, ?> summaryMetricsFile = getMetricsFile();
         multiCollector.addAllLevelsToFile(file);
         final List<GcBiasMetrics> gcBiasMetricsList = file.getMetrics();
-        for(final GcBiasMetrics gcbm : gcBiasMetricsList){
+        for (final GcBiasMetrics gcbm : gcBiasMetricsList) {
             final List<GcBiasDetailMetrics> gcDetailList = gcbm.DETAILS.getMetrics();
-            for(final GcBiasDetailMetrics d : gcDetailList) {
+            for (final GcBiasDetailMetrics d : gcDetailList) {
                 detailMetricsFile.addMetric(d);
             }
             summaryMetricsFile.addMetric(gcbm.SUMMARY);
