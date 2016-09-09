@@ -126,7 +126,6 @@ public class RevertSam extends CommandLineProgram {
     @Option(shortName = "OBRFF", doc = "When using OUTPUT_BY_READGROUP, the output file format can be set to a certain format." )
     public FileType  OUTPUT_BY_READGROUP_FILE_FORMAT=FileType.dynamic;
 
-
     @Option(shortName = "SO", doc = "The sort order to create the reverted output file with.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
 
@@ -214,13 +213,13 @@ public class RevertSam extends CommandLineProgram {
 
         final Map<String, File> outputMap;
         final Map<String, SAMFileHeader> headerMap;
-        if (OUTPUT_BY_READGROUP){
+        if (OUTPUT_BY_READGROUP) {
 
             final String defaultExtension;
-            if (OUTPUT_BY_READGROUP_FILE_FORMAT==FileType.dynamic){
+            if (OUTPUT_BY_READGROUP_FILE_FORMAT==FileType.dynamic) {
                 defaultExtension = getDefaultExtension(INPUT.toString());
-	    }else{
-                defaultExtension="."+OUTPUT_BY_READGROUP_FILE_FORMAT.toString();
+	    } else {
+                defaultExtension= "." + OUTPUT_BY_READGROUP_FILE_FORMAT.toString();
 	    }
 
             outputMap = createOutputMap(OUTPUT_MAP, OUTPUT, defaultExtension, inHeader.getReadGroups());
