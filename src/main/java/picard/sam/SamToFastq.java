@@ -99,7 +99,7 @@ public class SamToFastq extends CommandLineProgram {
             optional = true, mutex = {"FASTQ", "SECOND_END_FASTQ", "UNPAIRED_FASTQ"})
     public boolean OUTPUT_PER_RG;
 
-    @Option(shortName = "GZRG", doc = "Compress output FASTQ files per read group using gzip and append a .gz extension to the file names.",
+    @Option(shortName = "GZOPRG", doc = "Compress output FASTQ files per read group using gzip and append a .gz extension to the file names.",
             optional = false, mutex = {"FASTQ", "SECOND_END_FASTQ", "UNPAIRED_FASTQ"})
     public Boolean COMPRESS_OUTPUTS_PER_RG = false;
 
