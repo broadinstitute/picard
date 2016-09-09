@@ -108,6 +108,7 @@ public class RevertSam extends CommandLineProgram {
             "</pre>" +
             "Will output a BAM/SAM file per read group. By default, all outputs will be in BAM format. " +
             "However, outputs will be in SAM format if the input path ends with '.sam', or CRAM format if it ends with '.cram'." +
+            " This behaviour can be overriden with OUTPUT_BY_READGROUP_FILE_FORMAT option."+
             "<hr />";
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")
     public File INPUT;
@@ -120,6 +121,11 @@ public class RevertSam extends CommandLineProgram {
 
     @Option(shortName = "OBR", doc = "When true, outputs each read group in a separate file.")
     public boolean OUTPUT_BY_READGROUP = false;
+
+    public static enum FileType {sam, bam, cram,dynamic}
+    @Option(shortName = "OBRFF", doc = "When using OUTPUT_BY_READGROUP, the output file format can be set to a certain format." )
+    public FileType  OUTPUT_BY_READGROUP_FILE_FORMAT=FileType.dynamic;
+
 
     @Option(shortName = "SO", doc = "The sort order to create the reverted output file with.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
@@ -208,8 +214,15 @@ public class RevertSam extends CommandLineProgram {
 
         final Map<String, File> outputMap;
         final Map<String, SAMFileHeader> headerMap;
-        if (OUTPUT_BY_READGROUP) {
-            final String defaultExtension = getDefaultExtension(INPUT.toString());
+        if (OUTPUT_BY_READGROUP){
+
+            final String defaultExtension;
+            if (OUTPUT_BY_READGROUP_FILE_FORMAT==FileType.dynamic){
+                defaultExtension = getDefaultExtension(INPUT.toString());
+	    }else{
+                defaultExtension="."+OUTPUT_BY_READGROUP_FILE_FORMAT.toString();
+	    }
+
             outputMap = createOutputMap(OUTPUT_MAP, OUTPUT, defaultExtension, inHeader.getReadGroups());
             ValidationUtil.assertAllReadGroupsMapped(outputMap, inHeader.getReadGroups());
             headerMap = createHeaderMap(inHeader, SORT_ORDER, REMOVE_ALIGNMENT_INFORMATION);
