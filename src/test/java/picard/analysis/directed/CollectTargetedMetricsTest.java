@@ -21,6 +21,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Random;
 
+
+// TODO: is this a test for TargetMetricsCollector, or CollectTargetedPcrMetrics?
+
 public class CollectTargetedMetricsTest extends CommandLineProgramTest {
     private final static File TEST_DIR = new File("testdata/picard/sam/CollectGcBiasMetrics/");
     private final File dict = new File(TEST_DIR, "Mheader.dict");
@@ -119,9 +122,17 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         final String emptyIntervals = "testdata/picard/quality/chrM.empty.interval_list";
         final String singleIntervals = "testdata/picard/quality/chrM.single.interval_list";
 
+        final File newinput = new File("testdata/picard/sam/CollectTargetedMetrics/single-read17367664134279602.bam");
+        // TODO: change to File.createTempFile eventually
+        final File newoutput = new File("testdata/picard/sam/CollectTargetedMetrics/single-read.TargetMetrics_Coverage");
+        final File newpertarget = new File("testdata/picard/sam/CollectTargetedMetrics/single-read.perTargetCoverage");
+        final String newintervals = "testdata/picard/sam/CollectTargetedMetrics/chrM.two.interval_list";
+
+
         return new Object[][] {
                 {tempSamFile, outfile, perTargetOutfile, referenceFile, singleIntervals, 1000},
-                {tempSamFile, outfile, perTargetOutfile, referenceFile, emptyIntervals, 1000}
+                {tempSamFile, outfile, perTargetOutfile, referenceFile, emptyIntervals, 1000},
+                {newinput, newoutput,  newpertarget, referenceFile, newintervals, 1000}
         };
     }
 

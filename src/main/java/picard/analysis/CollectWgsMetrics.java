@@ -330,37 +330,53 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             final HashSet<String> readNames = new HashSet<>(info.getRecordAndPositions().size());
             int numReadsVisited = 0;
 
-            // the depth at the locus. includes all but quality 2 bases
-            int rawDepth = 0;
+            // depth at the locus. includes all but quality 2 bases
+            int unfilteredDepth = 0;
 
             // this one excludes bases of quality lower than 20
             int highQualityDepth = 0;
+            int numLowQualityBases = 0;
+            int numOverlappingBases = 0;
+            int numBasesAboveCoverageCap = 0;
 
             for (final SamLocusIterator.RecordAndOffset recs : info.getRecordAndPositions()) {
                 numReadsVisited++;
-                if (recs.getBaseQuality() <= 2 || SequenceUtil.isNoCall(recs.getReadBase())) { ++basesExcludedByBaseq; continue; } // TS: either create basesExcludedBecauseItsNoCall or make a seperate if clause
-                if (!readNames.add(recs.getRecord().getReadName())) { ++basesExcludedByOverlap; continue; }
+                if (recs.getBaseQuality() <= 2 || SequenceUtil.isNoCall(recs.getReadBase())) { ++numLowQualityBases; continue; } // TS: either create basesExcludedBecauseItsNoCall or make a seperate if clause
+                if (!readNames.add(recs.getRecord().getReadName())) { ++numOverlappingBases; continue; }
 
                 // the raw depth may exceed the coverageCap before the high-quality depth does. So stop counting once we reach the coverage cap.
-                if (rawDepth < coverageCap) {
-                    unfilteredBaseQHistogramArray[recs.getRecord().getBaseQualities()[recs.getOffset()]]++;
-                    rawDepth++;
+                if (unfilteredDepth < coverageCap) {
+                    unfilteredBaseQHistogramArray[recs.getBaseQuality()]++;
+                    unfilteredDepth++;
                 }
 
-                if (recs.getBaseQuality() < MINIMUM_BASE_QUALITY) continue;
+                if (recs.getBaseQuality() < MINIMUM_BASE_QUALITY) {
+                    ++numLowQualityBases;
+                    continue;
+                }
+
                 highQualityDepth++;
                 if (highQualityDepth >= coverageCap) break;
             }
 
-            if (highQualityDepth >= coverageCap) basesExcludedByCapping += info.getRecordAndPositions().size() - numReadsVisited;
+            if (highQualityDepth >= coverageCap) numBasesAboveCoverageCap = info.getRecordAndPositions().size() - numReadsVisited;
 
-            if (rawDepth > coverageCap || highQualityDepth > coverageCap) throw new IllegalStateException("coverage exceeded the cap");
-            unfilteredDepthHistogramArray[rawDepth]++;
+
+            if (unfilteredDepth > coverageCap || highQualityDepth > coverageCap) throw new IllegalStateException("coverage exceeded the cap");
+
+            if (info.getRecordAndPositions().size() != numLowQualityBases + numOverlappingBases + numBasesAboveCoverageCap + highQualityDepth) {
+                throw new IllegalStateException("the numbers of excluded and included bases don't add up to the total number of bases");
+            }
+
+            basesExcludedByBaseq += numLowQualityBases;
+            basesExcludedByOverlap += numOverlappingBases;
+            basesExcludedByCapping += numBasesAboveCoverageCap;
+            unfilteredDepthHistogramArray[unfilteredDepth]++;
             highQualityDepthHistogramArray[highQualityDepth]++;
 
             // check that we added the same number of bases to the raw coverage histogram and the base quality histograms
-            if (Arrays.stream(unfilteredBaseQHistogramArray).sum() !=  LongStream.rangeClosed(0,coverageCap).map(i -> (i * unfilteredDepthHistogramArray[(int)i])).sum()) {
-                throw new PicardException("updated coverage and baseQ distributions unequally");
+            if (LongStream.of(unfilteredBaseQHistogramArray).sum() !=  LongStream.rangeClosed(0,coverageCap).map(i -> (i * unfilteredDepthHistogramArray[(int)i])).sum()) {
+                throw new IllegalStateException("coverage and base quality distributions have different numbers of bases");
             }
         }
 
@@ -392,7 +408,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         }
 
         protected Histogram<Integer> getHighQualityDepthHistogram() {
-            return getHistogram(highQualityDepthHistogramArray,"coverage", "count");
+            return getHistogram(highQualityDepthHistogramArray,"coverage", "coverage-count");
         }
 
         protected Histogram<Integer> getUnfilteredDepthHistogram(){
@@ -400,7 +416,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         }
 
         protected Histogram<Integer> getUnfilteredBaseQHistogram() {
-            return getHistogram(unfilteredBaseQHistogramArray, "baseq", "count");
+            return getHistogram(unfilteredBaseQHistogramArray, "baseQ", "baseQ-count");
         }
 
         private Histogram<Integer> getHistogram(final long[] array, final String binLabel, final String valueLabel) {

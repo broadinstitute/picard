@@ -10,6 +10,7 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
@@ -171,6 +172,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         //create output files for tests
         outfile = File.createTempFile("testWgsMetrics", ".txt");
         outfile.deleteOnExit();
+
     }
 
     @Test
@@ -207,6 +209,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final File tempSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
         tempSamFile.deleteOnExit();
 
+
+        // TODO: refactor to use createSAM
         final SAMFileHeader header = new SAMFileHeader();
 
         //Check that dictionary file is readable and then set header dictionary
@@ -287,4 +291,113 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals((long) depthHistogram.get(3).getValue(), 2*10);
 
     }
+
+    // TODO: rename
+    @Test
+    public void testExcludedBases() throws IOException {
+        final File reference = new File("testdata/picard/quality/chrM.reference.fasta");
+        final File tempSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
+        tempSamFile.deleteOnExit();
+
+        /**
+         *  Our test reads look as follows:
+         *
+         *   ----------   <- reads with great base qualities (60)
+         *   ----------
+         *   ----------
+         *   **********   <- reads with poor base qualities (10)
+         *   **********
+         *   **********
+         *
+         *  We stagger the reads as shown above so that SamLocusIterator visits the good base quality reads first.
+         *  When the coverage cap is 3, and when we always see the good quality bases at each locus, we always ignore the poor quality
+         *  bases due to the coverage cap. In other words, we should not increment basesExcludedByBaseq for those baess.
+         *
+         */
+
+        final SAMRecordSetBuilder setBuilder = createTestSAMBuilder(reference);
+        setBuilder.setReadLength(10);
+        for (int i = 0; i < 3; i++){
+            setBuilder.addPair("GreatBQRead:" + i, 0, 1, 30, false, false, "10M", "10M", false, true, 60);
+        }
+
+        for (int i = 0; i < 3; i++){
+            setBuilder.addPair("PoorBQRead:" + i, 0, 1, 30, false, false, "10M", "10M", false, true, 10);
+        }
+
+        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, tempSamFile);
+
+        for (final SAMRecord record : setBuilder) {
+            writer.addAlignment(record);
+        }
+
+        writer.close();
+
+        final File outfile = createTestSAM(setBuilder, "testExcludedBases-metrics");
+
+        final String[] args = new String[] {
+                "INPUT="  + tempSamFile.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+                "INCLUDE_BQ_HISTOGRAM=true",
+                "COVERAGE_CAP=3"
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> output = new MetricsFile<>();
+        output.read(new FileReader(outfile));
+
+        final CollectWgsMetrics.WgsMetrics metrics = output.getMetrics().get(0);
+
+        Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.0);
+        Assert.assertEquals(metrics.PCT_EXC_CAPPED, 60/10);
+
+    }
+
+    // TODO: add support for sorted/unsorted SAM
+    // TODO: rename as appropriate
+    private SAMRecordSetBuilder createTestSAMBuilder(final File reference){
+        final SAMFileHeader header = new SAMFileHeader();
+
+        //Check that dictionary file is readable and then set header dictionary
+        try {
+            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(reference));
+            header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        } catch (final SAMException e) {
+            e.printStackTrace();
+        }
+
+        //Set readGroupRecord
+        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord(READ_GROUP_ID);
+        readGroupRecord.setSample(SAMPLE);
+        readGroupRecord.setPlatform(PLATFORM);
+        readGroupRecord.setLibrary(LIBRARY);
+        readGroupRecord.setPlatformUnit(READ_GROUP_ID);
+        header.addReadGroup(readGroupRecord);
+
+        final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true, 100);
+        setBuilder.setReadGroup(readGroupRecord);
+        setBuilder.setUseNmFlag(true);
+        setBuilder.setHeader(header);
+
+        return(setBuilder);
+    }
+
+
+    private File createTestSAM(SAMRecordSetBuilder setBuilder, String metricsFileName) throws IOException {
+        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, tempSamFile);
+
+        for (final SAMRecord record : setBuilder) {
+            writer.addAlignment(record);
+        }
+
+        writer.close();
+
+        final File outfile = File.createTempFile(metricsFileName, ".txt");
+        outfile.deleteOnExit();
+
+        return(outfile);
+    }
+
 }
