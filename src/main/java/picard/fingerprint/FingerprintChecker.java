@@ -30,7 +30,6 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.util.*;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -268,8 +267,10 @@ public class FingerprintChecker {
      * the interval list.
      */
     public Map<SAMReadGroupRecord, Fingerprint> fingerprintSamFile(final File samFile, final IntervalList loci) {
-        final SAMFileReader in = new SAMFileReader(samFile);
-        in.enableIndexCaching(true);
+        final SamReader in = SamReaderFactory.makeDefault()
+                                             .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
+                                             .open(samFile);
+
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
                                                      in.getFileHeader().getSequenceDictionary());
 
