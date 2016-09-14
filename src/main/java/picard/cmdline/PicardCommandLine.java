@@ -303,7 +303,7 @@ public class PicardCommandLine {
         }
 
         // Output similar matches
-        System.err.println(String.format("'%s' is not a valid command. See PicardCommandLine --help for more information.", command));
+        System.err.println(String.format("'%s' is not a valid command. See PicardCommandLine -h for more information.", command));
         if (bestDistance < HELP_SIMILARITY_FLOOR) {
             System.err.println(String.format("Did you mean %s?", (bestN < 2) ? "this" : "one of these"));
             for (final Class clazz : classes) {
