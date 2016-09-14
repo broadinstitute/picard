@@ -79,8 +79,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     private static final File secondReadAlignedBam_firstHalf = new File(TEST_DATA_DIR, "firsthalf.read2.trimmed.aligned.sam");
     private static final File secondReadAlignedBam_secondHalf = new File(TEST_DATA_DIR, "secondhalf.read2.trimmed.aligned.sam");
     private static final File supplementalReadAlignedBam = new File(TEST_DATA_DIR, "aligned.supplement.sam");
-    private static final File alignedQuerynameSortedBam =
-            new File("testdata/picard/sam/aligned_queryname_sorted.sam");
+    private static final File alignedQuerynameSortedBam = new File("testdata/picard/sam/aligned_queryname_sorted.sam");
     private static final File fasta = new File("testdata/picard/sam/merger.fasta");
     private static final String bigSequenceName = "chr7"; // The longest sequence in merger.fasta
     private static final File sequenceDict = new File("testdata/picard/sam/merger.dict");
@@ -1672,6 +1671,26 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final File alignedSam = new File(TEST_DATA_DIR, "contam.aligned.sam");
         final File expectedSam = new File(TEST_DATA_DIR, "contam.expected.sam");
         final File refFasta = new File(TEST_DATA_DIR, "cliptest.fasta");
+        final File mergedSam = File.createTempFile("merged", ".sam");
+        mergedSam.deleteOnExit();
+
+        doMergeAlignment(unmappedSam, Collections.singletonList(alignedSam),
+                null, null, null, null,
+                false, true, false, 1,
+                "0", "1.0", "align!", "myAligner",
+                true, refFasta, mergedSam,
+                null, null, null, null, true);
+
+        assertSamValid(mergedSam);
+        IOUtil.assertFilesEqual(expectedSam, mergedSam);
+    }
+
+    @Test
+    public void testHeaderFromMapped() throws IOException {
+        final File unmappedSam = new File(TEST_DATA_DIR, "specialHeader.unmapped.sam");
+        final File alignedSam = new File(TEST_DATA_DIR, "specialHeader.aligned.sam");
+        final File expectedSam = new File(TEST_DATA_DIR, "specialHeader.expected.sam");
+        final File refFasta = new File(TEST_DATA_DIR, "specialHeader.fasta");
         final File mergedSam = File.createTempFile("merged", ".sam");
         mergedSam.deleteOnExit();
 

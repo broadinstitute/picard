@@ -1,31 +1,15 @@
 package picard.sam;
 
-import htsjdk.samtools.BAMRecordCodec;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.MergingSamRecordIterator;
-import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.*;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordQueryNameComparator;
-import htsjdk.samtools.SamFileHeaderMerger;
-import htsjdk.samtools.SamPairUtil;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.filter.OverclippedReadFilter;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.DelegatingIterator;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.PeekableIterator;
-import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.*;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import picard.PicardException;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Class that takes in a set of alignment information in SAM format and merges it with the set
@@ -140,7 +124,6 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         log.info("Processing SAM file(s): " + alignedSamFile != null ? alignedSamFile : read1AlignedSamFile + "," + read2AlignedSamFile);
     }
 
-
     /**
      * Merges the alignment from the map file with the non-aligned records from the source BAM file.
      * Overrides mergeAlignment in AbstractAlignmentMerger.  Tries first to proceed on the assumption
@@ -158,6 +141,70 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         }
     }
 
+    @Override
+    protected SAMSequenceDictionary getDictionaryForMergedBam() {
+        SAMSequenceDictionary finalDict = null;
+        if (alignedSamFile != null && !alignedSamFile.isEmpty()) {
+            for (final File alignedFile : alignedSamFile) {
+                final SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(alignedFile);
+                if (finalDict == null) {
+                    finalDict = dict;
+                } else {
+                    if (!compareSequenceDictionaries(finalDict, dict)) {
+                        log.error("Dictionaries of input files differ. Unable to continue.");
+                        throw new UnsupportedOperationException("Cannot use input files with different dictionaries.");
+                    }
+                }
+            }
+        } else {
+            final SeparateEndAlignmentIterator mergingIterator = new SeparateEndAlignmentIterator(this.read1AlignedSamFile, this.read2AlignedSamFile, referenceFasta);
+            finalDict = mergingIterator.getHeader().getSequenceDictionary();
+        }
+
+        SAMSequenceDictionary referenceDict = SAMSequenceDictionaryExtractor.extractDictionary(referenceFasta);
+        if (referenceDict == null) {
+            throw new PicardException("No sequence dictionary found for " + referenceFasta.getAbsolutePath() +
+                    ".  Use CreateSequenceDictionary.jar to create a sequence dictionary.");
+        }
+        return mergeDictionaries(finalDict, SAMSequenceDictionaryExtractor.extractDictionary(referenceFasta));
+    }
+
+    private SAMSequenceDictionary mergeDictionaries(SAMSequenceDictionary dict1, SAMSequenceDictionary dict2) {
+
+        final SAMSequenceDictionary finalDict = new SAMSequenceDictionary(dict1.getSequences());
+        for (final SAMSequenceRecord sequence : finalDict.getSequences()) {
+            final int sequenceIndex = sequence.getSequenceIndex();
+            final Set<String> allTags = new HashSet<>();
+
+            for (SAMSequenceRecord seq : Arrays.asList(
+                    dict1.getSequence(sequenceIndex),
+                    dict2.getSequence(sequenceIndex))) {
+
+                final Set<String> dictTags = seq
+                        .getAttributes().parallelStream()
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.toSet());
+                allTags.addAll(dictTags);
+            }
+
+            for (final String tag : allTags) {
+                final String value1 = dict1.getSequence(sequenceIndex).getAttribute(tag);
+                final String value2 = dict2.getSequence(sequenceIndex).getAttribute(tag);
+
+                if (value1 != null && value2 != null && !value1.equals(value2)) {
+                    throw new PicardException("Cannot merge the two dictionaries. Found sequence entry for which " +
+                            String.format("tags differ: %s and tag %s has the two values: %s and %s",
+                                    dict1.getSequence(sequenceIndex).getSequenceName(),
+                                    tag,
+                                    value1,
+                                    value2));
+                }
+                sequence.setAttribute(tag, value1 == null ? value2 : value1);
+            }
+        }
+        return finalDict;
+    }
+
     /**
      * Reads the aligned SAM records into a SortingCollection and returns an iterator over that collection
      */
@@ -168,8 +215,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
         // When the alignment records, including both ends of a pair, are in SAM files
         if (alignedSamFile != null && !alignedSamFile.isEmpty()) {
-            final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(alignedSamFile.size());
-            final List<SamReader> readers = new ArrayList<SamReader>(alignedSamFile.size());
+            final List<SAMFileHeader> headers = new ArrayList<>(alignedSamFile.size());
+            final List<SamReader> readers = new ArrayList<>(alignedSamFile.size());
             for (final File f : this.alignedSamFile) {
                 final SamReader r = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(f);
                 headers.add(r.getFileHeader());
@@ -272,9 +319,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         private final SAMFileHeader header;
 
         public SeparateEndAlignmentIterator(final List<File> read1Alignments, final List<File> read2Alignments, File referenceFasta) {
-            final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
-            final List<SamReader> read1 = new ArrayList<SamReader>(read1Alignments.size());
-            final List<SamReader> read2 = new ArrayList<SamReader>(read2Alignments.size());
+            final List<SAMFileHeader> headers = new ArrayList<>();
+            final List<SamReader> read1 = new ArrayList<>(read1Alignments.size());
+            final List<SamReader> read2 = new ArrayList<>(read2Alignments.size());
             for (final File f : read1Alignments) {
                 final SamReader r = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(f);
                 headers.add(r.getFileHeader());
@@ -287,9 +334,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             }
 
             final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, false);
-            read1Iterator = new PeekableIterator<SAMRecord>(
+            read1Iterator = new PeekableIterator<>(
                     new SuffixTrimingSamRecordIterator(new MergingSamRecordIterator(headerMerger, read1, true), "/1"));
-            read2Iterator = new PeekableIterator<SAMRecord>(
+            read2Iterator = new PeekableIterator<>(
                     new SuffixTrimingSamRecordIterator(new MergingSamRecordIterator(headerMerger, read2, true), "/2"));
 
             header = headerMerger.getMergedHeader();
@@ -370,4 +417,37 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
     // Accessor for testing
     public boolean getForceSort() {return this.forceSort; }
+
+    private boolean compareSequenceDictionaries(final SAMSequenceDictionary d1, final SAMSequenceDictionary d2) {
+        final List<SAMSequenceRecord> s1 = d1.getSequences();
+        final List<SAMSequenceRecord> s2 = d2.getSequences();
+        if (s1.size() != s2.size()) {
+            return false;
+        }
+        for (int i = 0; i < s1.size(); ++i) {
+            if (!compareSequenceRecord(s1.get(i), s2.get(i))) return false;
+        }
+        return true;
+    }
+
+    private boolean compareSequenceRecord(final SAMSequenceRecord sequenceRecord1, final SAMSequenceRecord sequenceRecord2) {
+        return sequenceRecord1.getSequenceName().equals(sequenceRecord2.getSequenceName()) &&
+                compareValues(sequenceRecord1.getSequenceLength(), sequenceRecord2.getSequenceLength()) &&
+                compareValues(sequenceRecord1.getSpecies(), sequenceRecord2.getSpecies()) &&
+                compareValues(sequenceRecord1.getAssembly(), sequenceRecord2.getAssembly()) &&
+                compareValues(sequenceRecord1.getAttribute("M5"), sequenceRecord2.getAttribute("M5")) &&
+                compareValues(sequenceRecord1.getAttribute("UR"), sequenceRecord2.getAttribute("UR")) &&
+                compareValues(sequenceRecord1.getAttribute("AH"), sequenceRecord2.getAttribute("AH"));
+
+    }
+
+    private <T> boolean compareValues(final T v1, final T v2) {
+        if (v1 == null) {
+            return v2 == null;
+        }
+        if (v2 == null) {
+            return false;
+        }
+        return v1.equals(v2);
+    }
 }
