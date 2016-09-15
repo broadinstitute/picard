@@ -1,3 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2015 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package picard.analysis;
 
 import htsjdk.samtools.SAMException;
@@ -35,7 +59,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
     private File tempSamFile;
     private File outfile;
 
-    private final static int LENGTH = 99;
+    private final static int READ_PAIR_DISTANCE = 99;
     private final static String SAMPLE = "TestSample1";
     private final static String READ_GROUP_ID = "TestReadGroup1";
     private final static String PLATFORM = "ILLUMINA";
@@ -146,7 +170,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         for (int i = 0; i < NUM_READS; i++) {
             final int start = rg.nextInt(maxReadStart) + minReadStart;
             final String newReadName = readName + separator + ID + separator + i;
-            setBuilder.addPair(newReadName, 0, start + ID, start + ID + LENGTH);
+            setBuilder.addPair(newReadName, 0, start + ID, start + ID + READ_PAIR_DISTANCE);
         }
 
         //Write SAM file
@@ -207,29 +231,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final File tempSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
         tempSamFile.deleteOnExit();
 
-        final SAMFileHeader header = new SAMFileHeader();
 
-        //Check that dictionary file is readable and then set header dictionary
-        try {
-            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(reference));
-            header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
-        } catch (final SAMException e) {
-            e.printStackTrace();
-        }
-
-        //Set readGroupRecord
-        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord(READ_GROUP_ID);
-        readGroupRecord.setSample(SAMPLE);
-        readGroupRecord.setPlatform(PLATFORM);
-        readGroupRecord.setLibrary(LIBRARY);
-        readGroupRecord.setPlatformUnit(READ_GROUP_ID);
-        header.addReadGroup(readGroupRecord);
-
-        //Add to setBuilder
-        final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true, 100);
-        setBuilder.setReadGroup(readGroupRecord);
-        setBuilder.setUseNmFlag(true);
-        setBuilder.setHeader(header);
+        final SAMRecordSetBuilder setBuilder = CollectWgsMetricsTestUtils.createTestSAMBuilder(reference, READ_GROUP_ID, SAMPLE, PLATFORM, LIBRARY);
 
         setBuilder.setReadLength(10);
 
@@ -254,7 +257,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         // Write SAM file
         final SAMFileWriter writer = new SAMFileWriterFactory()
-                .setCreateIndex(true).makeBAMWriter(header, false, tempSamFile);
+                .setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, tempSamFile);
 
         for (final SAMRecord record : setBuilder) {
             writer.addAlignment(record);
@@ -278,13 +281,72 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         output.read(new FileReader(outfile));
         final CollectWgsMetrics.WgsMetrics metrics = output.getMetrics().get(0);
 
-        final Histogram<Integer> depthHistogram = output.getAllHistograms().get(0);
+        final Histogram<Integer> highQualityDepthHistogram = output.getAllHistograms().get(0);
         final Histogram<Integer> baseQHistogram = output.getAllHistograms().get(1);
 
-        Assert.assertEquals((long) depthHistogram.getSumOfValues(), metrics.GENOME_TERRITORY);
-        Assert.assertEquals(baseQHistogram.getSumOfValues(), depthHistogram.getSum());
-        Assert.assertEquals((long) depthHistogram.get(1).getValue(), expectedSingletonCoverage);
-        Assert.assertEquals((long) depthHistogram.get(3).getValue(), 2*10);
+        Assert.assertEquals((long) highQualityDepthHistogram.getSumOfValues(), metrics.GENOME_TERRITORY);
+        Assert.assertEquals((long) highQualityDepthHistogram.get(1).getValue(), expectedSingletonCoverage);
+        Assert.assertEquals((long) highQualityDepthHistogram.get(3).getValue(), 2*10);
+    }
 
+    @Test
+    public void testPoorQualityBases() throws IOException {
+        final File reference = new File("testdata/picard/quality/chrM.reference.fasta");
+        final File testSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
+        testSamFile.deleteOnExit();
+
+        /**
+         *  Our test SAM looks as follows:
+         *
+         *   ----------   <- reads with great base qualities (60) ->  ----------
+         *   ----------                                               ----------
+         *   ----------                                               ----------
+         *   **********   <- reads with poor base qualities (10) ->   **********
+         *   **********                                               **********
+         *   **********                                               **********
+         *
+         *  We exclude half of the bases because they are low quality.
+         *  We do not exceed the coverage cap (3), thus none of the bases is excluded as such.
+         *
+         */
+
+        final SAMRecordSetBuilder setBuilder = CollectWgsMetricsTestUtils.createTestSAMBuilder(reference, READ_GROUP_ID, SAMPLE, PLATFORM, LIBRARY);
+        setBuilder.setReadLength(10);
+        for (int i = 0; i < 3; i++){
+            setBuilder.addPair("GreatBQRead:" + i, 0, 1, 30, false, false, "10M", "10M", false, true, 40);
+        }
+
+        for (int i = 0; i < 3; i++){
+            setBuilder.addPair("PoorBQRead:" + i, 0, 1, 30, false, false, "10M", "10M", false, true, 10);
+        }
+
+        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile);
+
+        for (final SAMRecord record : setBuilder) {
+            writer.addAlignment(record);
+        }
+
+        writer.close();
+
+        final File outfile = File.createTempFile("testExcludedBases-metrics", ".txt");
+        outfile.deleteOnExit();
+
+        final String[] args = new String[] {
+                "INPUT="  + testSamFile.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+                "INCLUDE_BQ_HISTOGRAM=true",
+                "COVERAGE_CAP=3"
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> output = new MetricsFile<>();
+        output.read(new FileReader(outfile));
+
+        final CollectWgsMetrics.WgsMetrics metrics = output.getMetrics().get(0);
+
+        Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.5);
+        Assert.assertEquals(metrics.PCT_EXC_CAPPED, 0.0);
     }
 }
