@@ -130,6 +130,9 @@ public class CollectOxoGMetrics extends CommandLineProgram {
             doc = "The maximum insert size for a read to be included in analysis. Set of 0 to allow unpaired reads.")
     public int MAXIMUM_INSERT_SIZE = 600;
 
+    @Option(shortName = "NON_PF", doc = "Whether or not to include non-PF reads.")
+    public boolean INCLUDE_NON_PF_READS = true;
+
     @Option(doc = "When available, use original quality scores for filtering.")
     public boolean USE_OQ = true;
 
@@ -284,6 +287,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
         }
         iterator.setEmitUncoveredLoci(false);
         iterator.setMappingQualityScoreCutoff(MINIMUM_MAPPING_QUALITY);
+        iterator.setIncludeNonPfReads(INCLUDE_NON_PF_READS);
 
         final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
         filters.add(new NotPrimaryAlignmentFilter());

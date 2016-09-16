@@ -122,6 +122,9 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
     @Option(shortName = "DUPES", doc = "Include duplicate reads. If set to true then all reads flagged as duplicates will be included as well.")
     public boolean INCLUDE_DUPLICATES = false;
 
+    @Option(shortName = "NON_PF", doc = "Whether or not to include non-PF reads.")
+    public boolean INCLUDE_NON_PF_READS = false;
+
     @Option(shortName = "TANDEM", doc = "Set to true if mate pairs are being sequenced from the same strand, " +
             "i.e. they're expected to face the same direction.")
     public boolean TANDEM_READS = false;
@@ -211,7 +214,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
 
         // set record-level filters
         final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
-        filters.add(new FailsVendorReadQualityFilter());
+        if (!INCLUDE_NON_PF_READS) filters.add(new FailsVendorReadQualityFilter());
         filters.add(new NotPrimaryAlignmentFilter());
         if (!INCLUDE_DUPLICATES) filters.add(new DuplicateReadFilter());
         filters.add(new AlignedFilter(true)); // discard unmapped reads
