@@ -127,7 +127,6 @@ public class FingerprintChecker {
      * @return a Map of Sample name to Fingerprint
      */
     public Map<String,Fingerprint> loadFingerprints(final File fingerprintFile, final String specificSample) {
-        final IntervalList loci = this.haplotypes.getIntervalList();
         final VCFFileReader reader = new VCFFileReader(fingerprintFile);
         final CloseableIterator<VariantContext> iterator = reader.iterator();  
 
@@ -527,7 +526,7 @@ public class FingerprintChecker {
                 final Fingerprint combinedFp = new Fingerprint(specificSample, f, null);
                 fingerprintsByReadGroup.values().forEach(combinedFp::merge);
 
-                final FingerprintResults results = new FingerprintResults(f, specificSample);
+                final FingerprintResults results = new FingerprintResults(f, null, specificSample);
                 for (final Fingerprint expectedFp : expectedFingerprints) {
                     final MatchResults result = calculateMatchResults(combinedFp, expectedFp, 0, pLossofHet);
                     results.addResults(result);
@@ -537,7 +536,7 @@ public class FingerprintChecker {
 
             } else {
                 for (final SAMReadGroupRecord rg : fingerprintsByReadGroup.keySet()) {
-                    final FingerprintResults results = new FingerprintResults(f, rg.getPlatformUnit());
+                    final FingerprintResults results = new FingerprintResults(f, rg.getPlatformUnit(), specificSample);
                     for (final Fingerprint expectedFp : expectedFingerprints) {
                         final MatchResults result = calculateMatchResults(fingerprintsByReadGroup.get(rg), expectedFp, 0, pLossofHet);
                         results.addResults(result);
@@ -550,6 +549,51 @@ public class FingerprintChecker {
 
         return resultsList;
     }
+
+    /**
+     * Top level method to take a set of one or more observed genotype (VCF) files and one or more expected genotype (VCF) files and compare
+     * one or more sample in the observed genotype file with one or more in the expected file and generate results for each set.
+     *
+     * @param observedGenotypeFiles The list of genotype files containing observed calls, from which to pull fingerprint genotypes
+     * @param expectedGenotypeFiles The list of genotype files containing expected calls, from which to pull fingerprint genotypes
+     * @param observedSample an optional single sample whose genotypes to load from the observed genotype file (if null, use all)
+     * @param expectedSample an optional single sample whose genotypes to load from the expected genotype file (if null, use all)
+     */
+    public List<FingerprintResults> checkFingerprints(final List<File> observedGenotypeFiles,
+                                                      final List<File> expectedGenotypeFiles,
+                                                      final String observedSample,
+                                                      final String expectedSample) {
+
+        // Load the expected fingerprint genotypes
+        final List<Fingerprint> expectedFingerprints = new ArrayList<>();
+        for (final File f : expectedGenotypeFiles) {
+            expectedFingerprints.addAll(loadFingerprints(f, expectedSample).values());
+        }
+
+        if (expectedFingerprints.isEmpty()) {
+            throw new IllegalStateException("Could not find any fingerprints in: " + expectedGenotypeFiles);
+        }
+
+        final List<FingerprintResults> resultsList = new ArrayList<>();
+
+        for (final File f : observedGenotypeFiles) {
+            final Map<String, Fingerprint> observedFingerprintsBySample = loadFingerprints(f, observedSample);
+            if (observedFingerprintsBySample.isEmpty()) {
+                throw new IllegalStateException("Found no fingerprints in observed genotypes file: " + observedGenotypeFiles);
+            }
+
+            for (final String sample : observedFingerprintsBySample.keySet()) {
+                final FingerprintResults results = new FingerprintResults(f, null, sample);
+                for (Fingerprint expectedFp : expectedFingerprints) {
+                    final MatchResults result = calculateMatchResults(observedFingerprintsBySample.get(sample), expectedFp, 0, pLossofHet);
+                    results.addResults(result);
+                }
+                resultsList.add(results);
+            }
+        }
+        return resultsList;
+    }
+
 
     /**
      * Compares two fingerprints and calculates a MatchResults object which contains detailed

@@ -34,7 +34,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.FormatUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.SAMReadGroupRecord;
-import picard.cmdline.programgroups.Alpha;
+import picard.cmdline.programgroups.Fingerprinting;
 
 import java.io.File;
 import java.io.PrintStream;
@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 @CommandLineProgramProperties(
         usage = "Checks if all read groups within a set of BAM files appear to come from the same individual",
         usageShort = "Checks if all read groups appear to come from the same individual",
-        programGroup = Alpha.class  // TODO -- when mature please move to a to-be-created Fingerprinting.class
+        programGroup = Fingerprinting.class
 )
 public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
 
