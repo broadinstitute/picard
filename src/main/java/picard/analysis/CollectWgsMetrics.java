@@ -393,6 +393,14 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         new CollectWgsMetrics().instanceMainWithExit(args);
     }
 
+    /** Gets the SamReader from which records will be examined.  This will also set the header so that it is available in
+     *  */
+    protected SamReader getSamReader() {
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        this.header        = in.getFileHeader();
+        return in;
+    }
+
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
@@ -411,8 +419,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         // Setup all the inputs
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Processed", "loci");
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-        this.header = in.getFileHeader();
+        final SamReader in = getSamReader();
         final SamLocusIterator iterator = getLocusIterator(in);
 
         final List<SamRecordFilter> filters = new ArrayList<>();
@@ -480,6 +487,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         return intervals;
     }
 
+    /** This method should only be called after {@link this.getSamReader()} is called. */
     protected SAMFileHeader getSamFileHeader() {
         return this.header;
     }
@@ -648,7 +656,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             return getHistogram(baseQHistogramArray, "value", "baseq_count");
         }
 
-        private Histogram<Integer> getHistogram(final long[] array, final String binLabel, final String valueLabel) {
+        protected Histogram<Integer> getHistogram(final long[] array, final String binLabel, final String valueLabel) {
             final Histogram<Integer> histogram = new Histogram<>(binLabel, valueLabel);
             for (int i = 0; i < array.length; ++i) {
                 histogram.increment(i, array[i]);
