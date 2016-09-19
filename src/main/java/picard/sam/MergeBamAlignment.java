@@ -58,7 +58,9 @@ public class MergeBamAlignment extends CommandLineProgram {
             "  The purpose of this tool is to use information from the unmapped BAM to fix up aligner output.  The resulting file will be valid " +
             "for use by other Picard tools.  For simple BAM file merges, use MergeSamFiles.  Note that MergeBamAlignment expects to " +
             "find a sequence dictionary in the same directory as REFERENCE_SEQUENCE and expects it " +
-            "to have the same base name as the reference FASTA except with the extension \".dict\". "         +
+            "to have the same base name as the reference FASTA except with the extension \".dict\".  If " +
+            "the output sort order is not coordinate, then reads that are clipped due to adapters or overlapping " +
+            "will not contain the NM, MD, or UQ tags." +
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar MergeBamAlignment \\<br /> " +
