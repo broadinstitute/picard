@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 The Broad Institute
+ * Copyright (c) 2009 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,8 +45,6 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 import picard.sam.DuplicationMetrics;
 import picard.sam.markduplicates.util.AbstractOpticalDuplicateFinderCommandLineProgram;
-import picard.sam.markduplicates.util.OpticalDuplicateFinder;
-import picard.sam.util.PhysicalLocation;
 import picard.sam.util.PhysicalLocationShort;
 
 import java.io.DataInputStream;
@@ -193,7 +191,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         int[] hashes2;
 
         // Possible candidates for this PairedReadSequence
-        HashSet<PairedReadSequence> dupCandidates;
+        Set<PairedReadSequence> dupCandidates;
 
         public static int getSizeInBytes() {
             // rough guess at memory footprint, summary size of all fields
