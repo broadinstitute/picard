@@ -39,6 +39,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,6 +52,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -235,6 +238,8 @@ public class CommandLineParser {
 
         if (null != this.programVersion && 0 < this.programVersion.length()) {
             usagePreamble += "Version: " + getVersion() + "\n";
+            usagePreamble += "HTSJDK Version: " + getHtsjdkVersion() + "\n";
+
         }
         //checkForNonASCII(usagePreamble, "preamble");
 
@@ -298,6 +303,19 @@ public class CommandLineParser {
         return this.callerOptions.getClass().getPackage().getImplementationVersion();
     }
 
+
+    public String getHtsjdkVersion() {
+
+        URL url = ((URLClassLoader) getClass().getClassLoader()).findResource("META-INF/MANIFEST.MF");
+        try{
+            final Manifest manifest = new Manifest(url.openStream());
+            return manifest.getMainAttributes().getValue("HTSJDK-Version");
+        } catch (IOException e) {
+            throw new PicardException(e.getMessage());
+        }
+
+
+    }
     /**
      * Print a usage message based on the options object passed to the ctor.
      *
