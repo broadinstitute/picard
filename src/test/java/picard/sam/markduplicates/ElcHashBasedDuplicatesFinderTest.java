@@ -49,8 +49,8 @@ public class ElcHashBasedDuplicatesFinderTest extends ElcIdenticalBasesDuplicate
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generatePrs(false),
-                        generateSeqs(0, false),
+                        generatePairedReadSequence(false),
+                        generatePairedReadSequences(0, false),
                         1,
                         0,
                         0
@@ -60,8 +60,8 @@ public class ElcHashBasedDuplicatesFinderTest extends ElcIdenticalBasesDuplicate
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generatePrs(true),
-                        generateSeqs(10, false),
+                        generatePairedReadSequence(true),
+                        generatePairedReadSequences(10, false),
                         11,
                         0,
                         0
@@ -72,8 +72,8 @@ public class ElcHashBasedDuplicatesFinderTest extends ElcIdenticalBasesDuplicate
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generatePrs(true),
-                        generateSeqs(10, true),
+                        generatePairedReadSequence(true),
+                        generatePairedReadSequences(10, true),
                         11,
                         11,
                         10
@@ -89,7 +89,7 @@ public class ElcHashBasedDuplicatesFinderTest extends ElcIdenticalBasesDuplicate
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generateSeqs(1, false),
+                        generatePairedReadSequences(1, false),
                         1,
                         0,
                         0
@@ -99,7 +99,7 @@ public class ElcHashBasedDuplicatesFinderTest extends ElcIdenticalBasesDuplicate
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generateSeqs(10, false),
+                        generatePairedReadSequences(10, false),
                         10,
                         0,
                         0
@@ -120,7 +120,7 @@ public class ElcHashBasedDuplicatesFinderTest extends ElcIdenticalBasesDuplicate
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generateSeqs(10, true),
+                        generatePairedReadSequences(10, true),
                         10,
                         10,
                         9

@@ -58,8 +58,8 @@ public class ElcIdenticalBasesDuplicatesFinderTest {
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generatePrs(false),
-                        generateSeqs(0, false),
+                        generatePairedReadSequence(false),
+                        generatePairedReadSequences(0, false),
                         1,
                         0,
                         0
@@ -69,8 +69,8 @@ public class ElcIdenticalBasesDuplicatesFinderTest {
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generatePrs(false),
-                        generateSeqs(10, false),
+                        generatePairedReadSequence(false),
+                        generatePairedReadSequences(10, false),
                         11,
                         0,
                         0
@@ -81,8 +81,8 @@ public class ElcIdenticalBasesDuplicatesFinderTest {
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generatePrs(true),
-                        generateSeqs(10, true),
+                        generatePairedReadSequence(true),
+                        generatePairedReadSequences(10, true),
                         11,
                         11,
                         10
@@ -98,7 +98,7 @@ public class ElcIdenticalBasesDuplicatesFinderTest {
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generateSeqs(1, false),
+                        generatePairedReadSequences(1, false),
                         1,
                         0,
                         0
@@ -108,7 +108,7 @@ public class ElcIdenticalBasesDuplicatesFinderTest {
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generateSeqs(10, false),
+                        generatePairedReadSequences(10, false),
                         10,
                         0,
                         0
@@ -119,7 +119,7 @@ public class ElcIdenticalBasesDuplicatesFinderTest {
                         duplicatesFinder,
                         new Histogram<>(),
                         new Histogram<>(),
-                        generateSeqs(10, true),
+                        generatePairedReadSequences(10, true),
                         10,
                         10,
                         9
@@ -169,23 +169,23 @@ public class ElcIdenticalBasesDuplicatesFinderTest {
         }
     }
 
-    protected ArrayList<PairedReadSequence> generateSeqs(int seqsSize, boolean isOpticalDuplicates) {
+    protected ArrayList<PairedReadSequence> generatePairedReadSequences(int seqsSize, boolean isOpticalDuplicates) {
         ArrayList<PairedReadSequence> seq = new ArrayList<>(seqsSize);
         for (int i = 0; i < seqsSize; i++) {
-            seq.add(generatePrs(isOpticalDuplicates));
+            seq.add(generatePairedReadSequence(isOpticalDuplicates));
         }
         return seq;
     }
 
     protected ArrayList<PairedReadSequence> generateSeqsWithNoDup(int seqsSize, boolean isOpticalDuplicates) {
-        ArrayList<PairedReadSequence> seq = generateSeqs(seqsSize, isOpticalDuplicates);
+        ArrayList<PairedReadSequence> seq = generatePairedReadSequences(seqsSize, isOpticalDuplicates);
         PairedReadSequence prs = seq.get(seq.size() - 1);
         changeReadContent(prs.read1);
         changeReadContent(prs.read2);
         return seq;
     }
 
-    protected PairedReadSequence generatePrs(boolean isOpticalDuplicates) {
+    protected PairedReadSequence generatePairedReadSequence(boolean isOpticalDuplicates) {
         PairedReadSequence prs = new PairedReadSequence();
         prs.read1 = new byte[100];
         prs.read2 = new byte[100];
