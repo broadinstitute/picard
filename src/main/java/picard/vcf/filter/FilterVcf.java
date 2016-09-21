@@ -89,7 +89,7 @@ public class FilterVcf extends CommandLineProgram {
 	        + " The script puts the following variables in the script context: "
 	        + " 'variant' a VariantContext ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/variantcontext/VariantContext.html ) and "
 	        + " 'header' a VCFHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/vcf/VCFHeader.html )."
-	        + " Last value of the script should be a boolean to tell wether we should accept or reject the record.",
+	        + " Last value of the script should be a boolean to tell whether we should accept or reject the record.",
 	        optional = true)
 	public File JAVASCRIPT_FILE = null;
 
