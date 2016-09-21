@@ -8,8 +8,9 @@ import java.util.Comparator;
 public class SequencingArtifactMetrics {
     public static final String PRE_ADAPTER_SUMMARY_EXT = ".pre_adapter_summary_metrics";
     public static final String PRE_ADAPTER_DETAILS_EXT = ".pre_adapter_detail_metrics";
-    public static final String BAIT_BIAS_SUMMARY_EXT = ".bait_bias_summary_metrics";
-    public static final String BAIT_BIAS_DETAILS_EXT = ".bait_bias_detail_metrics";
+    public static final String BAIT_BIAS_SUMMARY_EXT   = ".bait_bias_summary_metrics";
+    public static final String BAIT_BIAS_DETAILS_EXT   = ".bait_bias_detail_metrics";
+    public static final String ERROR_SUMMARY_EXT       = ".error_summary_metrics";
 
     private static final double MIN_ERROR = 1e-10; // minimum error rate to report
 
