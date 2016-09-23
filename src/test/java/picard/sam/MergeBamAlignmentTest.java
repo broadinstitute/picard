@@ -70,6 +70,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     private static final File sequenceDict = new File("testdata/picard/sam/merger.dict");
     private static final File badorderUnmappedBam = new File(TEST_DATA_DIR, "unmapped.badorder.sam");
     private static final File badorderAlignedBam = new File(TEST_DATA_DIR, "aligned.badorder.sam");
+    private static final File multipleStrandsAlignedBam = new File(TEST_DATA_DIR, "aligned.both.strands.sam");
 
     // For EarliestFragment tests, tag placed on the alignments which are expected to be marked as primary.
     private static final String ONE_OF_THE_BEST_TAG = "YB";
@@ -1708,5 +1709,47 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             }
         }
         result.close();
+    }
+    
+    @Test
+    public void testMappedToMultipleStrands() throws Exception {
+        final File outputMappedToMultipleStands = File.createTempFile("mappedToMultipleStrands", ".sam");
+        outputMappedToMultipleStands.deleteOnExit();
+
+        doMergeAlignment(mergingUnmappedBam,
+                Collections.singletonList(multipleStrandsAlignedBam),
+                null, null, null, null,
+                false, true, false, 1,
+                "0", "1.0", "align!", "myAligner",
+                true, fasta, outputMappedToMultipleStands,
+                SamPairUtil.PairOrientation.FR, null, null, null, null, null);
+
+        final SamReader result = SamReaderFactory.makeDefault().open(outputMappedToMultipleStands);
+
+        for (final SAMRecord sam : result) {
+            if (sam.getReadName().equals("test:1") && !sam.getReadUnmappedFlag()) {
+                if (sam.getReadNegativeStrandFlag() && sam.getFirstOfPairFlag()) {
+                    Assert.assertEquals(sam.getReadString(), "TTTACTGATGTTATGACCATTACTCCGAAAGTGCCAAGATCATGAAGGGCAAGGAGAGAGTGGGATCCCCGGGTAC", "Read aligned to negative strand has unexpected bases.");
+                } else {
+                    Assert.assertEquals(sam.getReadString(), "GTACCCGGGGATCCCACTCTCTCCTTGCCCTTCATGATCTTGGCACTTTCGGAGTAATGGTCATAACATCAGTAAA", "Read aligned to positive strand has unexpected bases.");
+                }
+            }
+
+            if (sam.getReadName().equals("test:2") && !sam.getReadUnmappedFlag()) {
+                if (sam.getReadNegativeStrandFlag() && sam.getSecondOfPairFlag()) {
+                    Assert.assertEquals(sam.getReadString(), "TTATTCACTTAGTGTGTTTTTCCTGAGAACTTGCTATGTGTTAGGTCCTAGGCTGGGTGGGATCCTCTAGAGTCGA", "Read aligned to negative strand has unexpected bases.");
+                } else {
+                    Assert.assertEquals(sam.getReadString(), "TCGACTCTAGAGGATCCCACCCAGCCTAGGACCTAACACATAGCAAGTTCTCAGGAAAAACACACTAAGTGAATAA", "Read aligned to positive strand has unexpected bases.");
+                }
+            }
+
+            if (sam.getReadName().equals("test:5") && !sam.getReadUnmappedFlag()) {
+                if (sam.getReadNegativeStrandFlag()) {
+                    Assert.assertEquals(sam.getReadString(), "AGTTTTGGTTTGTCAGACCCAGCCCTGGGCACAGATGAGGAATTCTGGCTTCTCCTCCTGTGGGATCCCCGGGTAC", "Read aligned to negative strand has unexpected bases.");
+                } else {
+                    Assert.assertEquals(sam.getReadString(), "GTACCCGGGGATCCCACAGGAGGAGAAGCCAGAATTCCTCATCTGTGCCCAGGGCTGGGTCTGACAAACCAAAACT", "Read aligned to positive strand has unexpected bases.");
+                }
+            }
+        }
     }
 }
