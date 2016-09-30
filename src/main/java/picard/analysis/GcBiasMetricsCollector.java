@@ -190,7 +190,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                 final int[] readsByGc = gcCur.readsByGc;
                 final long[] errorsByGc = gcCur.errorsByGc;
                 final long[] basesByGc = gcCur.basesByGc;
-                final int totalClusters = gcCur.totalClusters;
+                final long totalClusters = gcCur.totalClusters;
                 final long totalAlignedReads = gcCur.totalAlignedReads;
                 final String group = gcCur.group;
 
@@ -308,7 +308,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     //Keeps track of each level of GcCalculation
     /////////////////////////////////////////////////////////////////////////////
     class GcObject {
-        int totalClusters = 0;
+        long totalClusters = 0;
         long totalAlignedReads = 0;
         int[] readsByGc = new int[BINS];
         long[] basesByGc = new long[BINS];
