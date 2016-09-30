@@ -156,10 +156,10 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
     public static class QualityYieldMetrics extends MetricBase {
 
         /** The total number of reads in the input file */
-        public int TOTAL_READS = 0;
+        public long TOTAL_READS = 0;
 
         /** The number of reads that are PF - pass filter */
-        public int PF_READS = 0;
+        public long PF_READS = 0;
 
         /** The average read length of all the reads (will be fixed for a lane) */
         public int READ_LENGTH = 0;
