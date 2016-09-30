@@ -25,7 +25,7 @@
 package picard.analysis;
 
 import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.*;
 import picard.PicardException;
@@ -37,7 +37,11 @@ import picard.filter.CountingPairedFilter;
 import picard.util.RExecutor;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @CommandLineProgramProperties(
         usage = CollectWgsMetricsWithNonZeroCoverage.USAGE_SUMMARY + CollectWgsMetricsWithNonZeroCoverage.USAGE_DETAILS,
@@ -73,6 +77,8 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     // Store this here since we need access to it in the doWork method
     private WgsMetricsWithNonZeroCoverageCollector collector = null;
 
+    private SamReader samReader = null;
+
     /** Metrics for evaluating the performance of whole genome sequencing experiments. */
     public static class WgsMetricsWithNonZeroCoverage extends WgsMetrics {
         public enum Category { WHOLE_GENOME, NON_ZERO_REGIONS }
@@ -107,15 +113,27 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     }
 
     @Override
+    protected SamReader getSamReader() {
+        if (this.samReader == null) {
+            this.samReader = super.getSamReader();
+        }
+        return this.samReader;
+    }
+
+    @Override
     protected int doWork() {
         IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        IOUtil.assertFileIsReadable(INPUT);
+
+        // Initialize the SamReader, so the header is available prior to super.doWork, for getIntervalsToExamine call. */
+        getSamReader();
 
         this.collector = new WgsMetricsWithNonZeroCoverageCollector(COVERAGE_CAP, getIntervalsToExamine());
 
-        final List<SAMReadGroupRecord> readGroups = this.getSamFileHeader().getReadGroups();
-        final String plotSubtitle = (readGroups.size() == 1) ? StringUtil.asEmptyIfNull(readGroups.get(0).getLibrary()) : "";
-
         super.doWork();
+
+        final List<SAMReadGroupRecord> readGroups = getSamFileHeader().getReadGroups();
+        final String plotSubtitle = (readGroups.size() == 1) ? StringUtil.asEmptyIfNull(readGroups.get(0).getLibrary()) : "";
 
         if (collector.areHistogramsEmpty()) {
             log.warn("No valid bases found in input file. No plot will be produced.");
@@ -180,7 +198,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
                                      final CountingFilter mapqFilter,
                                      final CountingPairedFilter pairFilter) {
             this.depthHistogram                            = getDepthHistogram();
-            final Histogram<Integer> depthHistogramNonZero = depthHistogramNonZero();
+            final Histogram<Integer> depthHistogramNonZero = getDepthHistogramNonZero();
 
             final WgsMetricsWithNonZeroCoverage metrics        = (WgsMetricsWithNonZeroCoverage) getMetrics(depthHistogram, dupeFilter, mapqFilter, pairFilter);
             final WgsMetricsWithNonZeroCoverage metricsNonZero = (WgsMetricsWithNonZeroCoverage) getMetrics(depthHistogramNonZero, dupeFilter, mapqFilter, pairFilter);
@@ -190,14 +208,21 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
             file.addMetric(metrics);
             file.addMetric(metricsNonZero);
+            file.addHistogram(depthHistogram);
+            file.addHistogram(depthHistogramNonZero);
 
             if (includeBQHistogram) {
                 addBaseQHistogram(file);
             }
         }
 
-        private Histogram<Integer> depthHistogramNonZero() {
-            final Histogram<Integer> depthHistogram = new Histogram<>("coverage", "count");
+        @Override
+        protected Histogram<Integer> getDepthHistogram() {
+            return getHistogram(depthHistogramArray, "coverage", "count_WHOLE_GENOME");
+        }
+
+        private Histogram<Integer> getDepthHistogramNonZero() {
+            final Histogram<Integer> depthHistogram = new Histogram<>("coverage", "count_NON_ZERO_REGIONS");
             // do not include the zero-coverage bin
             for (int i = 1; i < depthHistogramArray.length; ++i) {
                 depthHistogram.increment(i, depthHistogramArray[i]);

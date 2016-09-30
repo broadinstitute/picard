@@ -76,10 +76,10 @@ for (i in 1:2) {
 	percentOfMean <- coverage / meanCoverage; # x-axis
 	percentCovered <- rep(0, length(count)); # y-axis
 
-	# must do a cumulative sume of percentCovered
+	# must do a cumulative sum of percentCovered
 	totalCount = sum(as.numeric(count));
 	for (j in 1:length(percentCovered)) {
-		percentCovered[j] = 100.0# sum(as.numeric(count[j:length(percentCovered)])) / totalCount;
+		percentCovered[j] = sum(as.numeric(count[j:length(percentCovered)])) / totalCount;
 	}
 
 	ymin = percentCovered[round(meanCoverage+1)]

@@ -233,12 +233,12 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         setBuilder.setReadLength(10);
 
-        int expectedSingltonCoverage = 0;
+        int expectedSingletonCoverage = 0;
 
-        expectedSingltonCoverage += 13;
+        expectedSingletonCoverage += 13;
         setBuilder.addPair("overlappingReads", 0, 2, 5, false, false, "10M", "10M", true, false, 30);
 
-        expectedSingltonCoverage += 2 * 5; // 5 bases for each mate are good (see AAA!!!AA!! below).
+        expectedSingletonCoverage += 2 * 5; // 5 bases for each mate are good (see AAA!!!AA!! below).
         setBuilder.addPair("poorQualityReads", 1, 2, 20, false, false, "10M", "10M", true, false, -1);
 
         for(int i = 1; i < 5; i++) {
@@ -283,7 +283,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals((long) depthHistogram.getSumOfValues(), metrics.GENOME_TERRITORY);
         Assert.assertEquals(baseQHistogram.getSumOfValues(), depthHistogram.getSum());
-        Assert.assertEquals((long) depthHistogram.get(1).getValue(), expectedSingltonCoverage);
+        Assert.assertEquals((long) depthHistogram.get(1).getValue(), expectedSingletonCoverage);
         Assert.assertEquals((long) depthHistogram.get(3).getValue(), 2*10);
 
     }
