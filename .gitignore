@@ -13,4 +13,5 @@ htsjdk
 target
 report
 jacoco.data
-
+.gradle
+build
