@@ -489,6 +489,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
 
     /** This method should only be called after {@link this.getSamReader()} is called. */
     protected SAMFileHeader getSamFileHeader() {
+        if (this.header == null) throw new IllegalStateException("getSamFileHeader() was called but this.header is null");
         return this.header;
     }
 

@@ -50,8 +50,7 @@ public class CollectWgsMetricsWithNonZeroCoverageTest  extends CommandLineProgra
                 Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.182149);
                 Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.091075);
                 Assert.assertEquals(metrics.PCT_1X, 0.107438);
-            }
-            else {
+            } else {
                 Assert.assertEquals(metrics.GENOME_TERRITORY, 130);
                 Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.271403);
                 Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.182149);
@@ -63,8 +62,7 @@ public class CollectWgsMetricsWithNonZeroCoverageTest  extends CommandLineProgra
         for (final Histogram<Integer> histogram : output.getAllHistograms()) {
             if (histogram.getValueLabel().equals("count_WHOLE_GENOME")) {
                 Assert.assertEquals(histogram.get(0).getValue(), 1080d);
-            }
-            else {
+            } else {
                 Assert.assertEquals(histogram.get(0).getValue(), 0d);
             }
             Assert.assertEquals(histogram.get(1).getValue(), 9d);
@@ -104,8 +102,7 @@ public class CollectWgsMetricsWithNonZeroCoverageTest  extends CommandLineProgra
                 Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.182149);
                 Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.091075);
                 Assert.assertEquals(metrics.PCT_1X, 0.321782);
-            }
-            else {
+            } else {
                 Assert.assertEquals(metrics.GENOME_TERRITORY, 130);
                 Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.271403);
                 Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.182149);
@@ -117,8 +114,7 @@ public class CollectWgsMetricsWithNonZeroCoverageTest  extends CommandLineProgra
         for (final Histogram<Integer> histogram : output.getAllHistograms()) {
             if (histogram.getValueLabel().equals("count_WHOLE_GENOME")) {
                 Assert.assertEquals(histogram.get(0).getValue(), 274d);
-            }
-            else {
+            } else {
                 Assert.assertEquals(histogram.get(0).getValue(), 0d);
             }
             Assert.assertEquals(histogram.get(1).getValue(), 9d);
