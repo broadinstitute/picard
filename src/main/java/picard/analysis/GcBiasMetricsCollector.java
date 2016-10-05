@@ -61,7 +61,6 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
 
     private static final Log log = Log.getInstance(GcBiasMetricsCollector.class);
 
-
     public GcBiasMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final int[] windowsByGc,
                                   final List<SAMReadGroupRecord> samRgRecords, final int scanWindowSize,
                                   final boolean bisulfite) {
@@ -98,7 +97,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
         private final String library;
         private final String readGroup;
         private static final String allReads = "All_Reads";
-
+        private int logCounter;
 
         /////////////////////////////////////////////////////////////////////////////
         //Records the accumulation level for each level of collection and initializes
@@ -121,8 +120,11 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
         @Override
         public void acceptRecord(final GcBiasCollectorArgs args) {
             final SAMRecord rec = args.getRec();
-            if (rec.getReadBases().length == 0) {
+            if (rec.getReadBases().length == 0 && logCounter < 100) {
                 log.warn("Omitting read " + rec.getReadName() + " with '*' in SEQ field.");
+                if (++logCounter == 100) {
+                    log.warn("You have more than 100 reads with '*' in SEQ field.");
+                }
                 return;
             }
             if (!rec.getReadUnmappedFlag()) {
@@ -141,9 +143,9 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                     addReadToGcData(rec, this.gcDataNonDups, NON_DUPS_PREFIX);
                 }
             } else {
-                updTotalClusters(rec, this.gcData);
+                updateTotalClusters(rec, this.gcData);
                 if (IS_NON_DUPLICATES && !rec.getDuplicateReadFlag()) {
-                    updTotalClusters(rec, this.gcDataNonDups);
+                    updateTotalClusters(rec, this.gcDataNonDups);
                 }
             }
         }
@@ -163,7 +165,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
             }
         }
 
-        private void updTotalClusters(final SAMRecord rec, final Map<String, GcObject> gcData) {
+        private void updateTotalClusters(final SAMRecord rec, final Map<String, GcObject> gcData) {
             for (final Map.Entry<String, GcObject> entry : gcData.entrySet()) {
                 final GcObject gcCur = entry.getValue();
                 if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) ++gcCur.totalClusters;

@@ -302,8 +302,6 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
         detailsOutfile.deleteOnExit();
         summaryOutfile.deleteOnExit();
 
-
-
         runGcBias(inputFileWithDuplicates, REFERENCE_FILE_2, summaryOutfile, detailsOutfile, true);
 
         final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> outputSummary = new MetricsFile<>();

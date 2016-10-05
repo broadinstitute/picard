@@ -94,26 +94,24 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
             "mean coverage (e.g. 3.1 means this GC bin has 3.1 times more reads per window than average).  " +
             "" +
             "This tool also tracks mean base-quality scores of the reads within each GC content bin, enabling the user to determine " +
-            "how base quality scores vary with GC content.  <br /> <br />" +
+            "how base quality scores vary with GC content.  <br /> <br />"+
             "" +
             "The chart output associated with this data table plots the NORMALIZED_COVERAGE, the distribution of WINDOWs corresponding " +
-            "to GC percentages, and base qualities corresponding to each %GC bin." +
+            "to GC percentages, and base qualities corresponding to each %GC bin."+
             "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
-            "<h4>Usage Example:</h4>" +
+            "<h4>Usage Example:</h4>"+
             "<pre>" +
-            "java -jar picard.jar CollectGcBiasMetrics \\<br />" +
-            "      I=input.bam \\<br />" +
-            "      O=gc_bias_metrics.txt \\<br />" +
-            "      CHART=gc_bias_metrics.pdf \\<br />" +
-            "      S=summary_metrics.txt \\<br />" +
-            "      R=reference_sequence.fasta" +
-            "</pre>" +
+            "java -jar picard.jar CollectGcBiasMetrics \\<br />"+
+            "      I=input.bam \\<br />"+
+            "      O=gc_bias_metrics.txt \\<br />"+
+            "      CHART=gc_bias_metrics.pdf \\<br />"+
+            "      S=summary_metrics.txt \\<br />"+
+            "      R=reference_sequence.fasta"+
+            "</pre>"+
             "Please see <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#GcBiasMetrics'>" +
             "the GcBiasMetrics documentation</a> for further explanations of each metric." +
             "<hr />";
-    /**
-     * The location of the R script to do the plotting.
-     */
+    /** The location of the R script to do the plotting. */
     private static final String R_SCRIPT = "picard/analysis/gcBias.R";
 
     // Usage and parameters
@@ -170,8 +168,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
         final int[] windowsByGc = GcBiasUtils.calculateRefWindowsByGc(BINS, REFERENCE_SEQUENCE, SCAN_WINDOW_SIZE);
 
         //Delegate actual collection to GcBiasMetricCollector
-        multiCollector = new GcBiasMetricsCollector(METRIC_ACCUMULATION_LEVEL, windowsByGc, header.getReadGroups(),
-                SCAN_WINDOW_SIZE, IS_BISULFITE_SEQUENCED);
+        multiCollector = new GcBiasMetricsCollector(METRIC_ACCUMULATION_LEVEL, windowsByGc, header.getReadGroups(), SCAN_WINDOW_SIZE, IS_BISULFITE_SEQUENCED);
     }
 
     ////////////////////////////////////////////////////////////////////////////

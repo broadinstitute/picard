@@ -71,7 +71,7 @@ for (k in 1:(num.plots)){
         if(accLevel == "Read Group"){datasetName <- summaryMetrics[k, "READ_GROUP"]}
         if(accLevel == "Non-Duplicates All Reads"){datasetName <- summaryMetrics[k, "ALL_READS"]}
         if(accLevel == "Non-Duplicates Sample"){datasetName <- summaryMetrics[k, "SAMPLE"]}
-        if(accLevel == "Non-Duplicates Library"){datasetName <- summaryMetrics[k, "LUBRARY"]}
+        if(accLevel == "Non-Duplicates Library"){datasetName <- summaryMetrics[k, "LIBRARY"]}
         if(accLevel == "Non-Duplicates Read Group"){datasetName <- summaryMetrics[k, "READ_GROUP"]}
         }
     subtitle = cat("Total clusters: ",summaryMetrics[k,"TOTAL_CLUSTERS"],", Aligned reads: ",summaryMetrics[k, "ALIGNED_READS"]);
