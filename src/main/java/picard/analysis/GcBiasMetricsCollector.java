@@ -120,10 +120,10 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
         @Override
         public void acceptRecord(final GcBiasCollectorArgs args) {
             final SAMRecord rec = args.getRec();
-            if (rec.getReadBases().length == 0 && logCounter < 100) {
+            if (logCounter < 100 && rec.getReadBases().length == 0) {
                 log.warn("Omitting read " + rec.getReadName() + " with '*' in SEQ field.");
                 if (++logCounter == 100) {
-                    log.warn("You have more than 100 reads with '*' in SEQ field.");
+                    log.warn("There are more than 100 reads with '*' in SEQ field in file.");
                 }
                 return;
             }
