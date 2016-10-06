@@ -194,24 +194,21 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
         private void addReadToGcData(final SAMRecord rec, final Map<String, GcObject> gcData,
                                      final String nonDupsPrefix) {
             final String type;
-            final String group;
+            String group = nonDupsPrefix;
             if (this.readGroup != null) {
                 type = this.readGroup;
-                group = nonDupsPrefix + "Read Group";
-                addRead(gcData.get(type), rec, group, gc, refBases);
+                group += "Read Group";
             } else if (this.library != null) {
                 type = this.library;
-                group = nonDupsPrefix + "Library";
-                addRead(gcData.get(type), rec, group, gc, refBases);
+                group += "Library";
             } else if (this.sample != null) {
                 type = this.sample;
-                group = nonDupsPrefix + "Sample";
-                addRead(gcData.get(type), rec, group, gc, refBases);
+                group += "Sample";
             } else {
                 type = allReads;
-                group = nonDupsPrefix + "All Reads";
-                addRead(gcData.get(type), rec, group, gc, refBases);
+                group += "All Reads";
             }
+            addRead(gcData.get(type), rec, group, gc, refBases);
         }
 
         /////////////////////////////////////////////////////////////////////////////
