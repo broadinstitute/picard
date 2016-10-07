@@ -44,6 +44,7 @@ import picard.vcf.processor.VariantProcessor;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /** Collects summary and per-sample metrics about variant calls in a VCF file. */
@@ -101,7 +102,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         final IntervalList targetIntervals = (TARGET_INTERVALS == null) ? null : IntervalList.fromFile(TARGET_INTERVALS).uniqued();
 
         log.info("Loading dbSNP file ...");
-        final DbSnpBitSetUtil.DbSnpBitSets dbsnp = DbSnpBitSetUtil.createSnpAndIndelBitSets(DBSNP, sequenceDictionary, targetIntervals);
+        final DbSnpBitSetUtil.DbSnpBitSets dbsnp = DbSnpBitSetUtil.createSnpAndIndelBitSets(DBSNP, sequenceDictionary, targetIntervals, Optional.of(log));
 
         log.info("Starting iteration of variants.");
 
