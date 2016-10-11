@@ -1,6 +1,7 @@
 package picard.analysis.directed;
 
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.Histogram;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -67,8 +68,11 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<HsMetrics, Comparable<?>> output = new MetricsFile<HsMetrics, Comparable<?>>();
+        final MetricsFile<HsMetrics, Integer> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
+
+        final Histogram<Integer> coverageHistogram = output.getHistogram();
+        final long territory = (long) coverageHistogram.getSumOfValues();
 
         for (final HsMetrics metrics : output.getMetrics()) {
             // overlap
@@ -78,6 +82,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
             Assert.assertEquals(metrics.PCT_EXC_OVERLAP, pctExcOverlap);
             Assert.assertEquals(metrics.PCT_TARGET_BASES_1X, pctTargetBases1x);
             Assert.assertEquals(metrics.PCT_TARGET_BASES_2X, pctTargetBases2x);
+            Assert.assertEquals(metrics.TARGET_TERRITORY, territory);
         }
     }
 }

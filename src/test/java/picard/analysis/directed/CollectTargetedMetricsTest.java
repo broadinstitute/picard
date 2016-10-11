@@ -144,12 +144,14 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<TargetedPcrMetrics, Comparable<?>> output = new MetricsFile<TargetedPcrMetrics, Comparable<?>>();
+        final MetricsFile<TargetedPcrMetrics, Integer> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
+        final long territory = (long) output.getHistogram().getSumOfValues();
 
         for (final TargetedPcrMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.TOTAL_READS, numReads * 2);
             Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, .997972, .02);
+            Assert.assertEquals(metrics.TARGET_TERRITORY, territory);
         }
     }
 }
