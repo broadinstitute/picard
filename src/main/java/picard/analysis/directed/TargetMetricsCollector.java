@@ -58,14 +58,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * TargetMetrics, are metrics to measure how well we hit specific targets (or baits) when using a targeted sequencing process like hybrid selection
@@ -404,6 +397,11 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /** Sets the name of the bait set explicitly instead of inferring it from the bait file. */
         public void setBaitSetName(final String name) {
             this.metrics.PROBE_SET = name;
+        }
+
+        /** Returns the accumulated coverage per target. */
+        public Map<Interval,Coverage> getCoverageByTarget() {
+            return Collections.unmodifiableMap(this.coverageByTarget);
         }
 
         /** Adds information about an individual SAMRecord to the statistics. */
