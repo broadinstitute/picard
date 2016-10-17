@@ -59,6 +59,7 @@ import picard.PicardException;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Abstract class that coordinates the general task of taking in a set of alignment information,
@@ -86,6 +87,7 @@ public abstract class AbstractAlignmentMerger {
     public static final int MAX_RECORDS_IN_RAM = 500000;
 
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X', 'Y', 'Z'};
+    private static final int MAX_FOREIGN_CONTAM_WARN = 1_000;
 
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
     private final ProgressLogger progress = new ProgressLogger(this.log, 1000000, "Merged", "records");
@@ -537,6 +539,8 @@ public abstract class AbstractAlignmentMerger {
         return null;
     }
 
+    private int numForeignContaminantWarnings = 0;
+
     /**
      * Copies alignment info from aligned to unaligned read, clips as appropriate, and sets PG ID.
      * May also un-map the resulting read if the alignment is bad (e.g. no unclipped bases).
@@ -555,13 +559,37 @@ public abstract class AbstractAlignmentMerger {
             log.warn("Record mapped off end of reference; making unmapped: " + aligned);
             SAMUtils.makeReadUnmapped(unaligned);
         } else if (isContaminant) {
-            log.warn("Record looks like foreign contamination; making unmapped: " + aligned);
-            // NB: for reads that look like contamination, just set unmapped flag and zero MQ but keep other flags as-is.
-            // this maintains the sort order so that downstream analyses can use them for calculating evidence
-            // of contamination vs other causes (e.g. structural variants)
+            if (numForeignContaminantWarnings < MAX_FOREIGN_CONTAM_WARN) {
+                log.warn("Record looks like foreign contamination ; making unmapped: " + aligned);
+                numForeignContaminantWarnings++;
+            }
+
+            if (numForeignContaminantWarnings == MAX_FOREIGN_CONTAM_WARN) {
+                log.warn("No more warnings regarding foreign contamination; limit reached.");
+            }
+
+            // For reads that look like contamination, set unmap. And reset the mapping information as
+            // keeping it violates the sam-spec and is not supported by some formats (CRAM)
+
+            // Save the old alignment information in a "PA" Tag in case it is needed.
+            unaligned.setAttribute("PA", String.join(",",
+                    aligned.getContig(),
+                    ((Integer) aligned.getAlignmentStart()).toString(),
+                    aligned.getCigarString(),
+                    ((Integer) aligned.getMappingQuality()).toString(),
+                    aligned.getStringAttribute(SAMTag.NM.name()))+";");
+
             unaligned.setReadUnmappedFlag(true);
             unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
-            unaligned.setAttribute(SAMTag.FT.name(), "Cross-species contamination");
+            unaligned.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
+            unaligned.setAlignmentStart(0);
+            unaligned.setCigar(null);
+            unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+
+            // if there already is a comment, add second comment with a | separator:
+            Optional<String> optionalComment = Optional.ofNullable(unaligned.getStringAttribute(SAMTag.CO.name()));
+            unaligned.setAttribute(optionalComment.map(s -> s + " | ").orElse("") +
+                    SAMTag.CO.name(), "Cross-species contamination");
         }
     }
 
