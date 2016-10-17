@@ -80,6 +80,10 @@ During development in Picard, it is sometimes necessary to build locally against
     * Run `./gradlew install printVersion` in your htsjdk clone to install that version to your local maven repository. Take note of the version number that gets printed at the end.
     * Switch back to your Picard clone, and run `./gradlew shadowJar -Dhtsjdk.version=VERSION`, where VERSION is the version of HTSJDK you installed to your local maven repository.
 
+####Releasing Picard
+
+Full instructions on how to create a new release of Picard are [here](https://github.com/broadinstitute/picard/wiki/How-to-release-Picard)
+
 ----
 
 It's also possible to build a version of Picard that supports reading from
