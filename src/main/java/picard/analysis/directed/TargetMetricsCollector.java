@@ -399,8 +399,12 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             this.metrics.PROBE_SET = name;
         }
 
-        /** Returns the accumulated coverage per target. */
-        public Map<Interval,Coverage> getCoverageByTarget() {
+        /**
+         * Returns the accumulated coverage per target.  Note that while the returned Map is
+         * immutable, it is possible that the underlying Map will continue to be mutated if
+         * the map is retrieved prior to additional calls to {@link #acceptRecord(SAMRecord)}.
+         */
+        public Map<Interval, Coverage> getCoverageByTarget() {
             return Collections.unmodifiableMap(this.coverageByTarget);
         }
 
