@@ -33,6 +33,7 @@ import picard.PicardException;
 import picard.sam.DuplicationMetrics;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.SortedSet;
@@ -51,7 +52,9 @@ public class MarkQueue {
      * Comparator to order the mark queue nonDuplicateReadEndsSet.  The nonDuplicateReadEndsSet of all the read ends that are compared to be the same should
      * be used for duplicate marking.
      */
-    private class MarkQueueComparator implements Comparator<ReadEndsForMateCigar> {
+    private class MarkQueueComparator implements Comparator<ReadEndsForMateCigar>, Serializable {
+        private static final long serialVersionUID = -6956889883827037267L;
+
         public int compare(final ReadEndsForMateCigar lhs, final ReadEndsForMateCigar rhs) {
             int retval = lhs.libraryId - rhs.libraryId;
             if (retval == 0) retval = lhs.read1ReferenceIndex - rhs.read1ReferenceIndex;
@@ -67,7 +70,9 @@ public class MarkQueue {
      * Comparator for ReadEndsForMateCigar that orders by read1 position then pair orientation then read2 position.
      * This is the main comparator to choose the best representative read and end to store as the non-duplicate.
      */
-    class ReadEndsMCComparator implements Comparator<ReadEndsForMateCigar> {
+    class ReadEndsMCComparator implements Comparator<ReadEndsForMateCigar>, Serializable {
+        private static final long serialVersionUID = 2538562381318322869L;
+
         private final ScoringStrategy duplicateScoringStrategy;
 
         public ReadEndsMCComparator(final ScoringStrategy duplicateScoringStrategy) {

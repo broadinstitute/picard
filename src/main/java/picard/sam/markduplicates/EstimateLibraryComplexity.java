@@ -56,6 +56,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -343,7 +344,9 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
      * Comparator that orders read pairs on the first N bases of both reads.
      * There is no tie-breaking, so any sort is stable, not total.
      */
-    private class PairedReadComparator implements Comparator<PairedReadSequence> {
+    private class PairedReadComparator implements Comparator<PairedReadSequence>, Serializable {
+        private static final long serialVersionUID = 2467976276921568474L;
+
         final int BASES = EstimateLibraryComplexity.this.MIN_IDENTICAL_BASES;
 
         public int compare(final PairedReadSequence lhs, final PairedReadSequence rhs) {
