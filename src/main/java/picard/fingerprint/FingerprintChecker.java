@@ -125,8 +125,8 @@ public class FingerprintChecker {
      *                         of an individual sample to load (and exclude all others).
      * @return a Map of Sample name to Fingerprint
      */
-    public Map<String,Fingerprint> loadFingerprints(final File fingerprintFile, final String specificSample) {
-        final VCFFileReader reader = new VCFFileReader(fingerprintFile);
+    public Map<String, Fingerprint> loadFingerprints(final File fingerprintFile, final String specificSample) {
+        final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
         final CloseableIterator<VariantContext> iterator = reader.iterator();  
 
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
