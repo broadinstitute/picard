@@ -94,12 +94,10 @@ public class FingerprintCheckerTest {
     @Test(dataProvider = "checkFingerprintsVcfDataProvider")
     public void testCheckFingerprints(File vcfFile,  File genotypesFile,  String observedSampleAlias,  String expectedSampleAlias,
                                       double llExpectedSample, double llRandomSample, double lodExpectedSample) throws IOException {
-        final File indexedInputVcf = VcfTestUtils.createIndexedVcf(vcfFile, "fingerprintcheckertest.tmp.");
-        final File indexedGenotypesVcf = VcfTestUtils.createIndexedVcf(genotypesFile, "fingerprintcheckertest.tmp.");
 
         final FingerprintChecker fpChecker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
-        final List<FingerprintResults> results = fpChecker.checkFingerprints(Collections.singletonList(indexedInputVcf),
-                Collections.singletonList(indexedGenotypesVcf),
+        final List<FingerprintResults> results = fpChecker.checkFingerprints(Collections.singletonList(vcfFile),
+                Collections.singletonList(genotypesFile),
                 observedSampleAlias,
                 expectedSampleAlias);
         Assert.assertEquals(results.size(), 1);
