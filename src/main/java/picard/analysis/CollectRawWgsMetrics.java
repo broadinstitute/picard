@@ -94,7 +94,8 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
         }
 
         public RawWgsMetrics(final IntervalList intervals,
-                             final Histogram<Integer> depthHistogram,
+                             final Histogram<Integer> highQualityDepthHistogram,
+                             final Histogram<Integer> unfilteredDepthHistogram,
                              final double pctExcludedByMapq,
                              final double pctExcludedByDupes,
                              final double pctExcludedByPairing,
@@ -103,16 +104,17 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
                              final double pctExcludedByCapping,
                              final double pctTotal,
                              final int coverageCap,
-                             final Histogram<Integer> baseQHistogram,
+                             final Histogram<Integer> unfilteredBaseQHistogram,
                              final int sampleSize) {
-            super(intervals, depthHistogram, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
-                    pctExcludedByOverlap, pctExcludedByCapping, pctTotal, coverageCap, baseQHistogram, sampleSize);
+            super(intervals, highQualityDepthHistogram, unfilteredDepthHistogram, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
+                    pctExcludedByOverlap, pctExcludedByCapping, pctTotal, coverageCap, unfilteredBaseQHistogram, sampleSize);
         }
     }
 
     @Override
     protected WgsMetrics generateWgsMetrics(final IntervalList intervals,
-                                            final Histogram<Integer> depthHistogram,
+                                            final Histogram<Integer> highQualityDepthHistogram,
+                                            final Histogram<Integer> unfilteredDepthHistogram,
                                             final double pctExcludedByMapq,
                                             final double pctExcludedByDupes,
                                             final double pctExcludedByPairing,
@@ -121,11 +123,12 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
                                             final double pctExcludedByCapping,
                                             final double pctTotal,
                                             final int coverageCap,
-                                            final Histogram<Integer> baseQHistogram,
+                                            final Histogram<Integer> unfilteredBaseQHistogram,
                                             final int sampleSize) {
         return new RawWgsMetrics(
                 intervals,
-                depthHistogram,
+                highQualityDepthHistogram,
+                unfilteredDepthHistogram,
                 pctExcludedByMapq,
                 pctExcludedByDupes,
                 pctExcludedByPairing,
@@ -134,7 +137,7 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
                 pctExcludedByCapping,
                 pctTotal,
                 coverageCap,
-                baseQHistogram,
+                unfilteredBaseQHistogram,
                 sampleSize);
     }
 

@@ -39,7 +39,7 @@ public class WgsMetricsTest {
     private CollectWgsMetrics.WgsMetrics emptyMetrics() {
         return new CollectWgsMetrics.WgsMetrics(
                 buildIntervalList(-1, -1),
-                emptyDepthHistogram(),
+                emptyDepthHistogram(), emptyDepthHistogram(),
                 0, 0, 0, 0, 0, 0, 0, 1000000,
                 null, -1
         );
@@ -50,6 +50,7 @@ public class WgsMetricsTest {
         final int totalExcluded = (10 + 20 + 30 + 40 + 50 + 60) * countScale;
         return new CollectWgsMetrics.WgsMetrics(
                 buildIntervalList(start, start),
+                singleDepthHistogram(depth, count),
                 singleDepthHistogram(depth, count),
                 10d * countScale / count, 20d * countScale / count, 30d * countScale / count,
                 40d * countScale / count, 50d * countScale / count, 60d * countScale / count,
@@ -69,6 +70,7 @@ public class WgsMetricsTest {
         final int totalExcluded = (10 + 20 + 30 + 40 + 50 + 60) * countScale;
         return new CollectWgsMetrics.WgsMetrics(
                 buildIntervalList(start, start+1),
+                twoSiteDepthHistogram(depth1, count1, depth2, count2),
                 twoSiteDepthHistogram(depth1, count1, depth2, count2),
                 10d * countScale / count, 20d * countScale / count, 30d * countScale / count,
                 40d * countScale / count, 50d * countScale / count, 60d * countScale / count,

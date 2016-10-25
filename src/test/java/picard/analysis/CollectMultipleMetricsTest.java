@@ -316,7 +316,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
     private final static String library3 = "TestLibrary3";
 
     private final static File TEST_DIR = new File("testdata/picard/sam/CollectGcBiasMetrics/");
-    private final File dict = new File(TEST_DIR, "Mheader.dict");
+    private final File dict = new File("testdata/picard/quality/chrM.reference.dict");
 
     private File tempSamFile;
 
