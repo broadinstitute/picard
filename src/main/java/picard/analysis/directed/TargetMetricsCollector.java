@@ -621,10 +621,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 final boolean hasCoverage = c.hasCoverage();
                 final int[] targetDepths = c.getDepths();
 
-                if (!hasCoverage) {
-                    zeroCoverageTargets++;
-                    coverageDistribution[0] += c.getDepths().length;
-                }
+                if (!hasCoverage) zeroCoverageTargets++;
 
                 for (final int depth : targetDepths) {
                     if (0 < depth) totalCoverage += depth;
