@@ -30,7 +30,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 
 /**
- * Utilities to clip the adapater sequence from a SAMRecord read
+ * Utilities to clip the adapter sequence from a SAMRecord read
  *
  * @author Tim Fennell
  */

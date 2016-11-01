@@ -182,7 +182,7 @@ public class ValidateSamFile extends CommandLineProgram {
             validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
         }
         if (VALIDATE_INDEX) {
-            validator.setValidateIndex(VALIDATE_INDEX);
+            validator.setIndexValidationStringency(VALIDATE_INDEX ? IndexValidationStringency.EXHAUSTIVE : IndexValidationStringency.NONE);
         }
         if (IOUtil.isRegularPath(INPUT)) {
             // Do not check termination if reading from a stream

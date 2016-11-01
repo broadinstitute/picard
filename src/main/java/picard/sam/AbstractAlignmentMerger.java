@@ -36,7 +36,6 @@ import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordCoordinateComparator;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
-import htsjdk.samtools.SAMRecordUtil;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SAMTag;
@@ -44,7 +43,7 @@ import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.CigarUtil;
@@ -290,7 +289,7 @@ public abstract class AbstractAlignmentMerger {
         int unmapped = 0;
 
         // Get the aligned records and set up the first one
-        alignedIterator = new MultiHitAlignedReadIterator(new FilteringIterator(getQuerynameSortedAlignedRecords(), alignmentFilter), primaryAlignmentSelectionStrategy);
+        alignedIterator = new MultiHitAlignedReadIterator(new FilteringSamIterator(getQuerynameSortedAlignedRecords(), alignmentFilter), primaryAlignmentSelectionStrategy);
         HitsForInsert nextAligned = nextAligned();
 
         // Check that the program record we are going to insert is not already used in the unmapped SAM
@@ -580,7 +579,7 @@ public abstract class AbstractAlignmentMerger {
         if (firstAligned != null) transferAlignmentInfoToFragment(firstUnaligned, firstAligned, isContaminant);
         if (secondAligned != null) transferAlignmentInfoToFragment(secondUnaligned, secondAligned, isContaminant);
         if (isClipOverlappingReads()) clipForOverlappingReads(firstUnaligned, secondUnaligned);
-        SamPairUtil.setMateInfo(secondUnaligned, firstUnaligned, header, addMateCigar);
+        SamPairUtil.setMateInfo(secondUnaligned, firstUnaligned, addMateCigar);
         if (!keepAlignerProperPairFlags) {
             SamPairUtil.setProperPairFlags(secondUnaligned, firstUnaligned, expectedOrientations);
         }
@@ -663,7 +662,7 @@ public abstract class AbstractAlignmentMerger {
         // If it's on the negative strand, reverse complement the bases
         // and reverse the order of the qualities
         if (rec.getReadNegativeStrandFlag()) {
-            SAMRecordUtil.reverseComplement(rec);
+            rec.reverseComplement();
         }
 
     }
