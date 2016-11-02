@@ -183,7 +183,7 @@ public class RevertSam extends CommandLineProgram {
      */
     @Override
     protected String[] customCommandLineValidation() {
-        final List<String> errors = new ArrayList<String>();
+        final List<String> errors = new ArrayList<>();
         ValidationUtil.validateSanitizeSortOrder(SANITIZE, SORT_ORDER, errors);
         ValidationUtil.validateOutputParams(OUTPUT_BY_READGROUP, OUTPUT, OUTPUT_MAP, errors);
 
@@ -218,9 +218,9 @@ public class RevertSam extends CommandLineProgram {
             final String defaultExtension;
             if (OUTPUT_BY_READGROUP_FILE_FORMAT==FileType.dynamic) {
                 defaultExtension = getDefaultExtension(INPUT.toString());
-	    } else {
-                defaultExtension= "." + OUTPUT_BY_READGROUP_FILE_FORMAT.toString();
-	    }
+            } else {
+                defaultExtension = "." + OUTPUT_BY_READGROUP_FILE_FORMAT.toString();
+            }
 
             outputMap = createOutputMap(OUTPUT_MAP, OUTPUT, defaultExtension, inHeader.getReadGroups());
             ValidationUtil.assertAllReadGroupsMapped(outputMap, inHeader.getReadGroups());
@@ -320,7 +320,7 @@ public class RevertSam extends CommandLineProgram {
 
         if (REMOVE_ALIGNMENT_INFORMATION) {
             if (rec.getReadNegativeStrandFlag()) {
-                SAMRecordUtil.reverseComplement(rec);
+                rec.reverseComplement(true);
                 rec.setReadNegativeStrandFlag(false);
             }
 
@@ -416,7 +416,7 @@ public class RevertSam extends CommandLineProgram {
      * remaining returns an empty list.
      */
     private List<SAMRecord> fetchByReadName(final PeekableIterator<SAMRecord> iterator) {
-        final List<SAMRecord> out = new ArrayList<SAMRecord>();
+        final List<SAMRecord> out = new ArrayList<>();
 
         if (iterator.hasNext()) {
             final SAMRecord first = iterator.next();
@@ -454,7 +454,7 @@ public class RevertSam extends CommandLineProgram {
     }
 
     private static Map<String, File> createOutputMapFromFile(final File outputMapFile) {
-        final Map<String, File> outputMap = new HashMap<String, File>();
+        final Map<String, File> outputMap = new HashMap<>();
         final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(outputMapFile);
         for (final TabbedTextFileWithHeaderParser.Row row : parser) {
             final String id = row.getField("READ_GROUP_ID");
@@ -467,7 +467,7 @@ public class RevertSam extends CommandLineProgram {
     }
 
     private static Map<String, File> createOutputMap(final List<SAMReadGroupRecord> readGroups, final File outputDir, final String extension) {
-        final Map<String, File> outputMap = new HashMap<String, File>();
+        final Map<String, File> outputMap = new HashMap<>();
         for (final SAMReadGroupRecord readGroup : readGroups) {
             final String id = readGroup.getId();
             final String fileName = id + extension;
@@ -482,7 +482,7 @@ public class RevertSam extends CommandLineProgram {
             final SortOrder sortOrder,
             final boolean removeAlignmentInformation) {
         
-        final Map<String, SAMFileHeader> headerMap = new HashMap<String, SAMFileHeader>();
+        final Map<String, SAMFileHeader> headerMap = new HashMap<>();
         for (final SAMReadGroupRecord readGroup : inHeader.getReadGroups()) {
             final SAMFileHeader header = createOutHeader(inHeader, sortOrder, removeAlignmentInformation);
             header.addReadGroup(readGroup);
@@ -512,7 +512,7 @@ public class RevertSam extends CommandLineProgram {
             final File input,
             final boolean restoreOriginalQualities) {
 
-        final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<SAMReadGroupRecord, FastqQualityFormat>();
+        final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<>();
 
         // Figure out the quality score encoding scheme for each read group.
         for (final SAMReadGroupRecord rg : inHeader.getReadGroups()) {
@@ -544,7 +544,7 @@ public class RevertSam extends CommandLineProgram {
      * and a single writer used when OUTPUT_BY_READGROUP=false.
      */
     private static class RevertSamWriter {
-        private final Map<String, SAMFileWriter> writerMap = new HashMap<String, SAMFileWriter>();
+        private final Map<String, SAMFileWriter> writerMap = new HashMap<>();
         private final SAMFileWriter singleWriter;
         private final boolean outputByReadGroup;
 
@@ -585,9 +585,7 @@ public class RevertSam extends CommandLineProgram {
 
         void close() {
             if (outputByReadGroup) {
-                for (final SAMFileWriter writer : writerMap.values()) {
-                    writer.close();
-                }
+                writerMap.values().forEach(SAMFileWriter::close);
             } else {
                 singleWriter.close();
             }
@@ -599,7 +597,7 @@ public class RevertSam extends CommandLineProgram {
      * and a single sorter used when OUTPUT_BY_READGROUP=false.
      */
     private static class RevertSamSorter {
-        private final Map<String, SortingCollection<SAMRecord>> sorterMap = new HashMap<String, SortingCollection<SAMRecord>>();
+        private final Map<String, SortingCollection<SAMRecord>> sorterMap = new HashMap<>();
         private final SortingCollection<SAMRecord> singleSorter;
         private final boolean outputByReadGroup;
 
@@ -634,14 +632,14 @@ public class RevertSam extends CommandLineProgram {
         }
 
         List<PeekableIterator<SAMRecord>> iterators() {
-            final List<PeekableIterator<SAMRecord>> iterators = new ArrayList<PeekableIterator<SAMRecord>>();
+            final List<PeekableIterator<SAMRecord>> iterators = new ArrayList<>();
             if (outputByReadGroup) {
                 for (final SortingCollection<SAMRecord> sorter : sorterMap.values()) {
-                    final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(sorter.iterator());
+                    final PeekableIterator<SAMRecord> iterator = new PeekableIterator<>(sorter.iterator());
                     iterators.add(iterator);
                 }
             } else {
-                final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(singleSorter.iterator());
+                final PeekableIterator<SAMRecord> iterator = new PeekableIterator<>(singleSorter.iterator());
                 iterators.add(iterator);
             }
             return iterators;

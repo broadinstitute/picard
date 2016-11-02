@@ -23,16 +23,15 @@
  */
 package picard.vcf.processor;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import picard.vcf.processor.util.PredicateFilterDecoratingClosableIterator;
@@ -101,12 +100,7 @@ public abstract class VariantIteratorProducer {
 
         /** Maps directly to {@link #segments}; useful for determining if a given variant falls into multiple segments (don't double-count!). */
         final Map<File, OverlapDetector<VcfFileSegment>> multiSegmentDetectorPerFile =
-                new CollectionUtil.DefaultingMap<File,OverlapDetector<VcfFileSegment>>(new CollectionUtil.DefaultingMap.Factory<OverlapDetector<VcfFileSegment>, File>() {
-                    @Override
-                    public OverlapDetector<VcfFileSegment> make(final File f) {
-                        return new OverlapDetector<VcfFileSegment>(0, 0);
-                    }
-                }, true);
+                new CollectionUtil.DefaultingMap<>(f -> new OverlapDetector<>(0, 0), true);
 
 
         Threadsafe(final VcfFileSegmentGenerator segmenter, final List<File> vcfs) {
@@ -115,8 +109,8 @@ public abstract class VariantIteratorProducer {
 
         Threadsafe(final VcfFileSegmentGenerator segmenter, final List<File> vcfs, final IntervalList intervals) {
             if (intervals != null) {
-                final List<Interval> uniques = intervals.getUniqueIntervals(false);
-                this.intervalsOfInterestDetector = new OverlapDetector<Interval>(0, 0);
+                final List<Interval> uniques = intervals.uniqued(false).getIntervals();
+                this.intervalsOfInterestDetector = new OverlapDetector<>(0, 0);
                 intervalsOfInterestDetector.addAll(uniques, uniques);
             } else {
                 intervalsOfInterestDetector = null;
@@ -135,7 +129,7 @@ public abstract class VariantIteratorProducer {
              */
             final VcfFileSegmentGenerator interestingSegmentSegmenter =
                     intervalsOfInterestDetector == null ? segmenter : VcfFileSegmentGenerator.excludingNonOverlaps(segmenter, intervalsOfInterestDetector);
-            segments = new ArrayList<VcfFileSegment>();
+            segments = new ArrayList<>();
             for (final File vcf : vcfs) {
                 for (final VcfFileSegment segment : interestingSegmentSegmenter.forVcf(vcf)) {
                     segments.add(segment);
@@ -160,7 +154,7 @@ public abstract class VariantIteratorProducer {
          * All of the {@link VCFFileReader}s opened by this object, across all threads.  (We can't get this
          * value out of {@link #localVcfFileReaders} because of the way {@link java.lang.ThreadLocal} works.
          */
-        final Collection<VCFFileReader> allReaders = Collections.synchronizedCollection(new ArrayList<VCFFileReader>());
+        final Collection<VCFFileReader> allReaders = Collections.synchronizedCollection(new ArrayList<>());
 
         /**
          * A map maintained for each thread that contains the {@link htsjdk.variant.vcf.VCFFileReader}s that it has opened for a
@@ -173,14 +167,11 @@ public abstract class VariantIteratorProducer {
                 new ThreadLocal<CollectionUtil.DefaultingMap<File, VCFFileReader>>() {
                     @Override
                     protected CollectionUtil.DefaultingMap<File, VCFFileReader> initialValue() {
-                        return new CollectionUtil.DefaultingMap<File, VCFFileReader>(new CollectionUtil.DefaultingMap.Factory<VCFFileReader, File>() {
-                            @Override
-                            public VCFFileReader make(final File file) {
-                                final VCFFileReader reader = new VCFFileReader(file);
-                                LOG.debug(String.format("Producing a reader of %s for %s.", file, Thread.currentThread()));
-                                allReaders.add(reader);
-                                return reader;
-                            }
+                        return new CollectionUtil.DefaultingMap<>(file -> {
+                            final VCFFileReader reader = new VCFFileReader(file);
+                            LOG.debug(String.format("Producing a reader of %s for %s.", file, Thread.currentThread()));
+                            allReaders.add(reader);
+                            return reader;
                         }, true);
                     }
                 };
@@ -196,22 +187,17 @@ public abstract class VariantIteratorProducer {
                             .query(segment.contig(), segment.start(), segment.stop()); // Query the segment
 
             // Then wrap the iterator in a on-the-fly interval-list based filter, if requested.
-            final Collection<Predicate<VariantContext>> filters = new ArrayList<Predicate<VariantContext>>();
+            final Collection<Predicate<VariantContext>> filters = new ArrayList<>();
             if (intervalsOfInterestDetector != null) {
                 filters.add(new OverlapsPredicate());
             }
             filters.add(new NonUniqueVariantPredicate(segment));
-            return new PredicateFilterDecoratingClosableIterator<VariantContext>(query, filters);
+            return new PredicateFilterDecoratingClosableIterator<>(query, filters);
         }
 
         @Override
         public Iterable<CloseableIterator<VariantContext>> iterators() {
-            return FluentIterable.from(segments).transform(new Function<VcfFileSegment, CloseableIterator<VariantContext>>() {
-                @Override
-                public CloseableIterator<VariantContext> apply(final VcfFileSegment segment) {
-                    return iteratorForSegment(segment);
-                }
-            });
+            return FluentIterable.from(segments).transform(this::iteratorForSegment);
         }
 
         @Override
@@ -274,5 +260,4 @@ public abstract class VariantIteratorProducer {
             }
         }
     }
-
 }
