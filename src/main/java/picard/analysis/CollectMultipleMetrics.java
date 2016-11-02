@@ -241,6 +241,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 program.MINIMUM_GENOME_FRACTION = 1.0E-5;
                 program.IS_BISULFITE_SEQUENCED = false;
                 program.ASSUME_SORTED = false;
+                program.ALSO_IGNORE_DUPLICATES = false;
 
                 //GC_Bias actually uses the class-level REFERENCE_SEQUENCE variable.
                 program.REFERENCE_SEQUENCE = reference;

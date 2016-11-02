@@ -38,7 +38,7 @@ public class GcBiasSummaryMetrics extends MultilevelMetrics {
     public int WINDOW_SIZE;
 
     /** The total number of clusters that were seen in the gc bias calculation. */
-    public int TOTAL_CLUSTERS;
+    public long TOTAL_CLUSTERS;
 
     /** The total number of aligned reads used to compute the gc bias metrics. */
     public long ALIGNED_READS;

@@ -64,16 +64,12 @@ for (k in 1:(num.plots)){
     par(mar = c(5, 4, 4, 4));
 
     accLevel = summaryMetrics[k,"ACCUMULATION_LEVEL"];
-    if(accLevel=="All Reads"){datasetName <- "All Reads";}
-    else{
-    	if(accLevel == "Sample"){datasetName <- summaryMetrics[k, "SAMPLE"]}
-    	if(accLevel == "Library"){datasetName <- summaryMetrics[k, "LIBRARY"]}
-        if(accLevel == "Read Group"){datasetName <- summaryMetrics[k, "READ_GROUP"]}
-        if(accLevel == "Non-Duplicates All Reads"){datasetName <- summaryMetrics[k, "ALL_READS"]}
-        if(accLevel == "Non-Duplicates Sample"){datasetName <- summaryMetrics[k, "SAMPLE"]}
-        if(accLevel == "Non-Duplicates Library"){datasetName <- summaryMetrics[k, "LIBRARY"]}
-        if(accLevel == "Non-Duplicates Read Group"){datasetName <- summaryMetrics[k, "READ_GROUP"]}
-        }
+    if(accLevel=="All Reads" || accLevel=="Non-Duplicates All Reads"){datasetName <- "All Reads";
+    } else {
+    	if(accLevel == "Sample" || accLevel == "Non-Duplicates Sample"){datasetName <- summaryMetrics[k, "SAMPLE"]}
+    	if(accLevel == "Library" || accLevel == "Non-Duplicates Library"){datasetName <- summaryMetrics[k, "LIBRARY"]}
+        if(accLevel == "Read Group" || accLevel == "Non-Duplicates Read Group"){datasetName <- summaryMetrics[k, "READ_GROUP"]}
+    }
     subtitle = cat("Total clusters: ",summaryMetrics[k,"TOTAL_CLUSTERS"],", Aligned reads: ",summaryMetrics[k, "ALIGNED_READS"]);
     # Do the main plot of the normalized coverage by GC
     plot(type="p", x=metrics$GC, y=metrics$NORMALIZED_COVERAGE,
