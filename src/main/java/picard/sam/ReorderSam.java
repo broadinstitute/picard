@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 The Broad Institute
+ * Copyright (c) 2011-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -121,7 +121,7 @@ public class ReorderSam extends CommandLineProgram {
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        try (final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT)) {
+        try (SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT)) {
 
             final SAMSequenceDictionary outputDictionary = SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY.toPath());
 
@@ -130,7 +130,7 @@ public class ReorderSam extends CommandLineProgram {
                 return 1;
             }
 
-            printDictionary("SAM/BAM file", in.getFileHeader().getSequenceDictionary());
+            printDictionary("SAM/BAM/CRAM file", in.getFileHeader().getSequenceDictionary());
             printDictionary("Reference", outputDictionary);
             final Map<Integer, Integer> newOrder;
             try {
@@ -145,7 +145,7 @@ public class ReorderSam extends CommandLineProgram {
 
             log.info("Writing reads...");
             if (in.hasIndex()) {
-                try (final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, false, OUTPUT)) {
+                try (SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outHeader, false, OUTPUT, REFERENCE_SEQUENCE)) {
 
                     // write the reads in contig order
                     for (final SAMSequenceRecord contig : in.getFileHeader().getSequenceDictionary().getSequences()) {
@@ -158,7 +158,7 @@ public class ReorderSam extends CommandLineProgram {
                     writeReads(out, in.queryUnmapped(), newOrder, "unmapped");
                 }
             } else {
-                try (final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, false, OUTPUT)) {
+                try (SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outHeader, false, OUTPUT, REFERENCE_SEQUENCE)) {
                     writeReads(out, in.iterator(), newOrder, "All reads");
                 }
             }
@@ -242,7 +242,7 @@ public class ReorderSam extends CommandLineProgram {
                                                              final SAMSequenceDictionary readsDict) {
         Map<Integer, Integer> newOrder = new HashMap<>();
 
-        log.info("Reordering SAM/BAM file:");
+        log.info("Reordering SAM/BAM/CRAM file:");
         for (final SAMSequenceRecord refRec : refDict.getSequences()) {
             final SAMSequenceRecord readsRec = readsDict.getSequence(refRec.getSequenceName());
 
@@ -284,7 +284,7 @@ public class ReorderSam extends CommandLineProgram {
     private void printDictionary(String name, SAMSequenceDictionary dict) {
         log.info(name);
         for (final SAMSequenceRecord contig : dict.getSequences()) {
-            log.info(String.format("   SN=%s LN=%d", contig.getSequenceName(), contig.getSequenceLength()));
+            log.info(String.format("   SN=%s LN=%d%n", contig.getSequenceName(), contig.getSequenceLength()));
         }
     }
 }

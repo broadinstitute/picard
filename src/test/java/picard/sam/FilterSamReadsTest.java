@@ -216,16 +216,32 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
      */
     @Test(dataProvider = "dataTestJsFilter")
     public void testJavaScriptFilters(final String samFilename, final String javascriptFilename, final int expectNumber) throws Exception {
-        // input as SAM file 
+        launchJavaScriptFilter(samFilename, javascriptFilename, expectNumber);
+    }
+
+    @Test
+    public void testJavaScriptFiltersWithCRAM() throws Exception {
+        final FilterSamReads program = setupProgram(
+                new File("testdata/picard/sam/FilterSamReads/filterOddStarts.js"),
+                new File(CramCompatibilityTest.CRAM_FILE),
+                FilterSamReads.Filter.includeJavascript, false,
+                CramCompatibilityTest.REFERENCE_FILE);
+        Assert.assertEquals(program.doWork(), 0);
+        CramCompatibilityTest.assertCRAM(program.OUTPUT);
+    }
+
+    private FilterSamReads launchJavaScriptFilter(String samFilename, String javascriptFilename, int expectNumber) throws Exception {
+        // input as SAM file
         final File inputSam = new File(samFilename);
         final File javascriptFile = new File(javascriptFilename);
 
         FilterSamReads filterTest = setupProgram(javascriptFile, inputSam, FilterSamReads.Filter.includeJavascript);
         Assert.assertEquals(filterTest.doWork(), 0);
-
         long count = getReadCount(filterTest);
 
         Assert.assertEquals(count, expectNumber);
+
+        return filterTest;
     }
 
     /**
@@ -247,7 +263,6 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         final File intervalFile = new File(TEST_DIR,intervalFilename);
 
         FilterSamReads filterTest = setupProgram(intervalFile, inputSam, FilterSamReads.Filter.includePairedIntervals);
-
         Assert.assertEquals(filterTest.doWork(), 0);
 
         long count = getReadCount(filterTest);
@@ -273,7 +288,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         final File inputSam = new File(TEST_DIR + "aligned.sam");
         final File javascriptFile = new File(TEST_DIR + "FilterSamReads/filterOddStarts.js");
 
-        FilterSamReads filterTest = setupProgram(javascriptFile, inputSam, FilterSamReads.Filter.includeJavascript, writeDebugReads);
+        FilterSamReads filterTest = setupProgram(javascriptFile, inputSam, FilterSamReads.Filter.includeJavascript, writeDebugReads, null);
         Assert.assertEquals(filterTest.doWork(), 0);
 
         final File inputReadsFile = new File(filterTest.OUTPUT.getParentFile(), IOUtil.basename(filterTest.INPUT) + ".reads");
@@ -289,10 +304,10 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         Files.deleteIfExists(inputReadsFile.toPath());
     }
 
-    private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter, final Boolean writeDebugReads) throws Exception {
+    private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter, final Boolean writeDebugReads, final String reference) throws Exception {
         final FilterSamReads program = new FilterSamReads();
         program.INPUT = inputSam;
-        program.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
+        program.OUTPUT = File.createTempFile("FilterSamReads.output.", getFilenameExtension(inputSam.getAbsolutePath()));
         program.OUTPUT.deleteOnExit();
         program.FILTER = filter;
         switch (filter) {
@@ -313,11 +328,15 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
             program.WRITE_READS_FILES = writeDebugReads;
         }
 
+        if (reference != null) {
+            program.setReferenceSequence(new File(reference));
+        }
+
         return program;
     }
 
     private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter) throws Exception {
-        return setupProgram(inputFile, inputSam, filter, null);
+        return setupProgram(inputFile, inputSam, filter, false, null);
     }
 
        /**
@@ -340,12 +359,17 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
            }
 
     private long getReadCount(FilterSamReads filterTest) throws Exception {
-        final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(filterTest.OUTPUT);
+        final SamReader samReader = SamReaderFactory.makeDefault().open(filterTest.OUTPUT);
 
         long count = StreamSupport.stream(samReader.spliterator(), false)
                 .count();
 
         samReader.close();
         return count;
+    }
+
+    private static String getFilenameExtension(String samFilename) {
+        final String[] split = samFilename.split("\\.");
+        return "." + split[split.length - 1];
     }
 }

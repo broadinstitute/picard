@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2015-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -163,7 +163,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM/CRAM file to downsample.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM or BAM file.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM/BAM/CRAM file.")
     public File OUTPUT;
 
     @Argument(shortName = "F", doc = "The (approximate) fraction of reads to be kept, between 0 and 1.")
@@ -266,7 +266,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         programRecord.setProgramVersion(getVersion());
         header.addProgramRecord(programRecord);
 
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT, REFERENCE_SEQUENCE);
 
         final CircleSelector selector = new CircleSelector(FRACTION);
 
@@ -308,7 +308,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         for (final SAMProgramRecord pg : in.getFileHeader().getProgramRecords()) {
             if (pg.getProgramName() != null && pg.getProgramName().equals(PG_PROGRAM_NAME)) {
 
-                final String outText = "Found previous Program Record that indicates that this BAM has been downsampled already with this program. Operation not supported! Previous PG: " + pg.toString();
+                final String outText = "Found previous Program Record that indicates that this file has been downsampled already with this program. Operation not supported! Previous PG: " + pg.toString();
 
                 if (ALLOW_MULTIPLE_DOWNSAMPLING_DESPITE_WARNINGS) {
                     log.warn(outText);

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,7 +62,7 @@ import java.util.Optional;
 @DocumentedFeature
 public class ReplaceSamHeader extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Replaces the SAMFileHeader in a SAM/BAM/CRAM file.  ";
-    static final String USAGE_DETAILS = "This tool makes it possible to replace the header of a SAM or BAM file with the header of another" +
+    static final String USAGE_DETAILS = "This tool makes it possible to replace the header of a SAM/BAM/CRAM file with the header of another" +
             "file, or a header block that has been edited manually (in a stub SAM file). The sort order (@SO) of the two input files must " +
             "be the same.<br /><br />" +
             "Note that validation is minimal, so it is up to the user to ensure that all the elements referred to in the SAMRecords " +
@@ -116,7 +116,7 @@ public class ReplaceSamHeader extends CommandLineProgram {
             throw new PicardException("Sort orders of INPUT (" + recordReader.getFileHeader().getSortOrder().name() +
                     ") and HEADER (" + replacementHeader.getSortOrder().name() + ") do not agree.");
         }
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(replacementHeader, true, OUTPUT);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(replacementHeader, true, OUTPUT, REFERENCE_SEQUENCE);
 
         final ProgressLogger progress = new ProgressLogger(Log.getInstance(ReplaceSamHeader.class));
         for (final SAMRecord rec : recordReader) {

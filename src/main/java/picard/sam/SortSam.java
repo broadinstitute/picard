@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -82,10 +82,10 @@ import java.io.File;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class SortSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Sorts a SAM or BAM file";
+    static final String USAGE_SUMMARY = "Sorts a SAM, BAM or CRAM file.  ";
     static final String USAGE_DETAILS = "This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property " +
-            "of the SAM record. The SortOrder of a SAM/BAM file is found in the SAM file header tag @HD in the field labeled SO.  " +
-            "<p> For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the " +
+            "of the SAM record. The SortOrder of a SAM/BAM/CRAM file is found in the SAM file header tag @HD in the field labeled SO.  " +
+            "<p> For a coordinate sorted SAM/BAM/CRAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the " +
             "reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping " +
             "position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.</p>" +
             "<p> For queryname-sorted alignments, the tool orders records deterministically by queryname field followed by " +
@@ -97,11 +97,13 @@ public class SortSam extends CommandLineProgram {
             "      I=input.bam \\<br />" +
             "      O=sorted.bam \\<br />" +
             "      SORT_ORDER=coordinate" +
-            "</pre>";
-    @Argument(doc = "Input BAM or SAM file to sort.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+            "</pre>" +
+
+            "<hr />";
+    @Argument(doc = "The SAM, BAM or CRAM file to sort.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Argument(doc = "Sorted BAM or SAM output file.", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc = "The sorted SAM, BAM or CRAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
     // note that SortOrder here is a local enum, not the SamFileHeader version.
@@ -152,7 +154,7 @@ public class SortSam extends CommandLineProgram {
         final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         ;
         reader.getFileHeader().setSortOrder(SORT_ORDER.getSortOrder());
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), false, OUTPUT,REFERENCE_SEQUENCE);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), false, OUTPUT, REFERENCE_SEQUENCE);
         writer.setProgressLogger(
                 new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
 

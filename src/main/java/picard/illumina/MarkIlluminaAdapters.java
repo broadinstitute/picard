@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -157,7 +157,7 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
         SAMFileWriter out = null;
         if (OUTPUT != null) {
             IOUtil.assertFileIsWritable(OUTPUT);
-            out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
+            out = new SAMFileWriterFactory().makeWriter(in.getFileHeader(), true, OUTPUT, REFERENCE_SEQUENCE);
         }
 
         final Histogram<Integer> histo = new Histogram<Integer>("clipped_bases", "read_count");
@@ -194,7 +194,7 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
             if (rec.getReadPairedFlag()) {
                 // Assert that the input file is in query name order only if we see some PE reads
                 if (order != SAMFileHeader.SortOrder.queryname) {
-                    throw new PicardException("Input BAM file must be sorted by queryname");
+                    throw new PicardException("Input file must be sorted by queryname");
                 }
 
                 if (rec2 == null) throw new PicardException("Missing mate pair for paired read: " + rec.getReadName());

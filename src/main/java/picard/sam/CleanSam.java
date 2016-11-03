@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010 The Broad Institute
+ * Copyright (c) 2010 - 2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,7 +76,7 @@ public class CleanSam extends CommandLineProgram {
             factory.validationStringency(ValidationStringency.LENIENT);
         }
         final SamReader reader = factory.open(INPUT);
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, OUTPUT, REFERENCE_SEQUENCE);
         final CloseableIterator<SAMRecord> it = reader.iterator();
         final ProgressLogger progress = new ProgressLogger(Log.getInstance(CleanSam.class));
 

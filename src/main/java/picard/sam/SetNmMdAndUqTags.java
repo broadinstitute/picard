@@ -91,13 +91,12 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
             "<br />"+
             "<h4>Usage example:</h4>" +
             "<pre>" +
-            "java -jar picard.jar SetNmMdAndUqTags <br />" +
-            "      R=reference_sequence.fasta <br />" +
-            "      I=sorted.bam <br />" +
-            "      O=fixed.bam <br />"+
-            "</pre>";
-
-    @Argument(doc = "The SAM/BAM/CRAM file to fix. ", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+            "java -jar picard.jar SetNmMDAndUqTags \\<br />" +
+            "      I=sorted.bam \\<br />" +
+            "      O=fixed.bam \\<br />"+
+            "</pre>" +
+            "<hr />";
+    @Argument(doc = "The SAM/BAM/CRAM file to fix.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
     @Argument(doc = "The fixed SAM/BAM/CRAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
@@ -126,7 +125,7 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
             throw new SAMException("Input must be coordinate-sorted for this program to run. Found: " + reader.getFileHeader().getSortOrder());
         }
 
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, OUTPUT,REFERENCE_SEQUENCE);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, OUTPUT, REFERENCE_SEQUENCE);
         writer.setProgressLogger(
                 new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
 

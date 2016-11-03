@@ -26,7 +26,7 @@ import java.io.File;
 import java.util.Iterator;
 
 /**
- * This tool reverts the original base qualities (if specified) and adds the mate cigar tag to mapped BAMs.
+ * This tool reverts the original base qualities (if specified) and adds the mate cigar tag to mapped SAM, BAM or CRAM files.
  * If the file does not have OQs and already has mate cigar tags, nothing is done.
  * New BAM/BAI/MD5 files are created.
  *
@@ -86,7 +86,7 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
         outHeader.setSortOrder(SORT_ORDER);
         SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(CREATE_INDEX);
         SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, false, OUTPUT);
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outHeader, false, OUTPUT, REFERENCE_SEQUENCE);
 
         // Iterate over the records, revert original base qualities, and push them into a SortingCollection by queryname
         final SortingCollection<SAMRecord> sorter = SortingCollection.newInstance(SAMRecord.class, new BAMRecordCodec(outHeader),
@@ -134,9 +134,9 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
      * Used as a return for the canSkipSAMFile function.
      */
     public enum CanSkipSamFile {
-        CAN_SKIP("Can skip the BAM file", true),
-        CANNOT_SKIP_FOUND_OQ("Cannot skip the BAM as we found a record with an OQ", false),
-        CANNOT_SKIP_FOUND_NO_MC("Cannot skip the BAM as we found a mate with no mate cigar tag", false),
+        CAN_SKIP("Can skip the SAM/BAM/CRAM file", true),
+        CANNOT_SKIP_FOUND_OQ("Cannot skip the SAM/BAM/CRAM as we found a record with an OQ", false),
+        CANNOT_SKIP_FOUND_NO_MC("Cannot skip the SAM/BAM/CRAM as we found a mate with no mate cigar tag", false),
         FOUND_NO_EVIDENCE("Found no evidence of OQ or mate with no mate cigar in the first %d records.  Will continue...", false);
         final private String format;
         final private boolean skip;
@@ -152,9 +152,9 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
     }
 
     /**
-     * Checks if we can skip the SAM/BAM file when reverting origin base qualities and adding mate cigars.
+     * Checks if we can skip the SAM/BAM/CRAM file when reverting origin base qualities and adding mate cigars.
      *
-     * @param inputFile                   the SAM/BAM input file
+     * @param inputFile                   the SAM/BAM/CRAM input file
      * @param maxRecordsToExamine         the maximum number of records to examine before quitting
      * @param revertOriginalBaseQualities true if we are to revert original base qualities, false otherwise
      * @return whether we can skip or not, and the explanation why.
