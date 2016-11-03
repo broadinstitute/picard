@@ -69,22 +69,38 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
                 {"testdata/picard/sam/FilterSamReads/filter2.interval_list", 0}
         };
     }
-    
+
     /**
      * filters a SAM using a javascript filter
      */
     @Test(dataProvider = "dataTestJsFilter")
     public void testJavaScriptFilters(final String samFilename, final String javascriptFilename,final int expectNumber) throws Exception {
-        // input as SAM file 
+        launchJavaScriptFilter(samFilename, javascriptFilename, expectNumber);
+    }
+
+    @Test
+    public void testJavaScriptFiltersWithCRAM() throws Exception {
+        final FilterSamReads program = setupProgram(
+                new File("testdata/picard/sam/FilterSamReads/filterOddStarts.js"),
+                new File(CramCompatibilityTest.CRAM_FILE),
+                FilterSamReads.Filter.includeJavascript,
+                CramCompatibilityTest.REFERENCE_FILE);
+        Assert.assertEquals(program.doWork(), 0);
+        CramCompatibilityTest.assertCRAM(program.OUTPUT);
+    }
+
+    private FilterSamReads launchJavaScriptFilter(String samFilename, String javascriptFilename, int expectNumber) throws Exception {
+        // input as SAM file
         final File inputSam = new File(samFilename);
         final File javascriptFile = new File(javascriptFilename);
 
-        FilterSamReads filterTest = setupProgram(javascriptFile, inputSam, FilterSamReads.Filter.includeJavascript);
-        Assert.assertEquals(filterTest.doWork(),0);
-
+        FilterSamReads filterTest = setupProgram(javascriptFile, inputSam, FilterSamReads.Filter.includeJavascript, null);
+        Assert.assertEquals(filterTest.doWork(), 0);
         long count = getReadCount(filterTest);
 
         Assert.assertEquals(count, expectNumber);
+
+        return filterTest;
     }
 
     /**
@@ -108,8 +124,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
 
         final File intervalFile = new File(intervalFilename);
 
-        FilterSamReads filterTest = setupProgram(intervalFile, inputSam, FilterSamReads.Filter.includePairedIntervals);
-
+        FilterSamReads filterTest = setupProgram(intervalFile, inputSam, FilterSamReads.Filter.includePairedIntervals, null);
         Assert.assertEquals(filterTest.doWork(),0);
 
         long count = getReadCount(filterTest);
@@ -117,18 +132,21 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         Assert.assertEquals(count, expectNumber);
     }
 
-    private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter) throws Exception {
+    private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter, final String reference) throws Exception {
         final FilterSamReads program = new FilterSamReads();
         program.INPUT = inputSam;
-        program.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
+        program.OUTPUT = File.createTempFile("FilterSamReads.output.", getFilenameExtension(inputSam.getAbsolutePath()));
         program.OUTPUT.deleteOnExit();
         program.FILTER = filter;
 
-        if(filter == FilterSamReads.Filter.includePairedIntervals) {
+        if (filter == FilterSamReads.Filter.includePairedIntervals) {
             program.INTERVAL_LIST = inputFile;
-        }
-        else {
+        } else {
             program.JAVASCRIPT_FILE = inputFile;
+        }
+
+        if (reference != null) {
+            program.setReferenceSequence(new File(reference));
         }
 
         return program;
@@ -142,5 +160,10 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
 
         samReader.close();
         return count;
+    }
+
+    private static String getFilenameExtension(String samFilename) {
+        final String[] split = samFilename.split("\\.");
+        return "." + split[split.length - 1];
     }
 }

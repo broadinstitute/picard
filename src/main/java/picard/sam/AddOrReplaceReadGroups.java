@@ -26,7 +26,7 @@ import java.io.File;
 import java.util.Arrays;
 
 /**
- * Replaces read groups in a BAM file
+ * Replaces read groups in a SAM, BAM or CRAM file
  *
  * @author mdepristo
  */
@@ -36,12 +36,12 @@ import java.util.Arrays;
         programGroup = SamOrBam.class)
 @DocumentedFeature
 public class AddOrReplaceReadGroups extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Replace read groups in a BAM file.";
+    static final String USAGE_SUMMARY = "Replace read groups in a SAM, BAM or CRAM file.";
     static final String USAGE_DETAILS = "This tool enables the user to replace all read groups in the INPUT file with a single new read " +
-            "group and assign all reads to this read group in the OUTPUT BAM file.<br /><br />" +
+            "group and assign all reads to this read group in the OUTPUT SAM, BAM or CRAM file.<br /><br />" +
             "For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>" +
             "GATK Dictionary entry.</a> <br /><br /> " +
-            "This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation)." +
+            "This tool accepts INPUT SAM, BAM or CRAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation)." +
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar AddOrReplaceReadGroups \\<br />" +
@@ -54,10 +54,10 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
             "      RGSM=20" +
             "</pre>" +
             "<hr />" ;
-    @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (BAM or SAM or a GA4GH url).")
+    @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (SAM, BAM or CRAM or a GA4GH url).")
     public String INPUT = null;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file (BAM or SAM).")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file (SAM, BAM or CRAM).")
     public File OUTPUT = null;
 
     @Argument(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, optional = true,
@@ -141,9 +141,10 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
         outHeader.setReadGroups(Arrays.asList(rg));
         if (SORT_ORDER != null) outHeader.setSortOrder(SORT_ORDER);
 
-        final SAMFileWriter outWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader,
+        final SAMFileWriter outWriter = new SAMFileWriterFactory().makeWriter(outHeader,
                 outHeader.getSortOrder() == inHeader.getSortOrder(),
-                OUTPUT);
+                OUTPUT,
+                REFERENCE_SEQUENCE);
 
         final ProgressLogger progress = new ProgressLogger(log);
         for (final SAMRecord read : in) {

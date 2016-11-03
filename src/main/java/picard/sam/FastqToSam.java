@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,7 +57,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Converts a fastq file to an unaligned BAM/SAM format.
+ * Converts a fastq file to an unaligned BAM/SAM/CRAM format.
  * See <a href="http://maq.sourceforge.net/fastq.shtml">MAQ FastQ specification</a> for details.
  * Three fastq versions are supported: FastqSanger, FastqSolexa and FastqIllumina.
  * Input files can be in GZip format (end in .gz).
@@ -68,7 +68,7 @@ import java.util.List;
         programGroup = SamOrBam.class)
 @DocumentedFeature
 public class FastqToSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Converts a FASTQ file to an unaligned BAM or SAM file.  ";
+    static final String USAGE_SUMMARY = "Converts a FASTQ file to an unaligned BAM/SAM/CRAM file.  ";
     static final String USAGE_DETAILS = "This tool extracts read sequences and base qualities from the input FASTQ file and writes them" +
             " out to a new file in unaligned BAM (uBAM) format. Read group information can be provided on the command line. <br /><br />  " +
             "Three versions of FASTQ quality scales are supported: FastqSanger, FastqSolexa and FastqIllumina " +
@@ -98,7 +98,7 @@ public class FastqToSam extends CommandLineProgram {
             "If this value is not specified, the quality format will be detected automatically.", optional = true)
     public FastqQualityFormat QUALITY_FORMAT;
 
-    @Argument(doc="Output SAM/BAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc="Output BAM/SAM/CRAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT ;
 
     @Argument(shortName="RG", doc="Read group name")
@@ -137,7 +137,7 @@ public class FastqToSam extends CommandLineProgram {
     @Argument(shortName = "DT", doc = "Date the run was produced, to insert into the read group header", optional = true)
     public Iso8601Date RUN_DATE;
 
-    @Argument(shortName="SO", doc="The sort order for the output sam/bam file.")
+    @Argument(shortName="SO", doc="The sort order for the output BAM/SAM/CRAM file.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
 
     @Argument(doc="Minimum quality allowed in the input fastq.  An exception will be thrown if a quality is less than this value.")
@@ -245,7 +245,7 @@ public class FastqToSam extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
 
         final SAMFileHeader header = createSamFileHeader();
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(header, false, OUTPUT, REFERENCE_SEQUENCE);
 
         // Set the quality format
         QUALITY_FORMAT = FastqToSam.determineQualityFormat(fileToFastqReader(FASTQ),

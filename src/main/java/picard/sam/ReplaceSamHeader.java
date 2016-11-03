@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,8 +54,8 @@ import java.io.File;
         programGroup = SamOrBam.class)
 @DocumentedFeature
 public class ReplaceSamHeader extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Replaces the SAMFileHeader in a SAM or BAM file.  ";
-    static final String USAGE_DETAILS = "This tool makes it possible to replace the header of a SAM or BAM file with the header of another" +
+    static final String USAGE_SUMMARY = "Replaces the SAMFileHeader in a SAM, BAM or CRAM file.  ";
+    static final String USAGE_DETAILS = "This tool makes it possible to replace the header of a SAM, BAM or CRAM  file with the header of another" +
             "file, or a header block that has been edited manually (in a stub SAM file). The sort order (@SO) of the two input files must " +
             "be the same.<br /><br />" +
             "Note that validation is minimal, so it is up to the user to ensure that all the elements referred to in the SAMRecords " +
@@ -69,10 +69,10 @@ public class ReplaceSamHeader extends CommandLineProgram {
             "      O=bam_with_new_head.bam" +
             "</pre>" +
             "<hr />";
-    @Argument(doc = "SAM file from which SAMRecords will be read.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "SAM, BAM or CRAM file from which SAMRecords will be read.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Argument(doc = "SAM file from which SAMFileHeader will be read.")
+    @Argument(doc = "SAM, BAM or CRAM file from which SAMFileHeader will be read.")
     public File HEADER;
 
     @Argument(doc = "SAMFileHeader from HEADER file will be written to this file, followed by SAMRecords from INPUT file",
@@ -112,7 +112,7 @@ public class ReplaceSamHeader extends CommandLineProgram {
             throw new PicardException("Sort orders of INPUT (" + recordReader.getFileHeader().getSortOrder().name() +
                     ") and HEADER (" + replacementHeader.getSortOrder().name() + ") do not agree.");
         }
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(replacementHeader, true, OUTPUT);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(replacementHeader, true, OUTPUT, REFERENCE_SEQUENCE);
 
         final ProgressLogger progress = new ProgressLogger(Log.getInstance(ReplaceSamHeader.class));
         for (final SAMRecord rec : recordReader) {

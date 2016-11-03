@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,9 +71,9 @@ import static picard.util.IlluminaUtil.IlluminaAdapterPair;
 @DocumentedFeature
 public class MarkIlluminaAdapters extends CommandLineProgram {
 
-    static final String USAGE_SUMMARY = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  ";
+    static final String USAGE_SUMMARY = "Reads a SAM, BAM or CRAM file and rewrites it with new adapter-trimming tags.  ";
     static final String USAGE_DETAILS = "<p>This tool clears any existing adapter-trimming tags (XT:i:) in the optional tag region of " +
-            "a SAM file.  The SAM/BAM file must be sorted by query name.</p> "+
+            "a SAM file.  The SAM/BAM/CRAM file must be sorted by query name.</p> "+
             "<p>Outputs a metrics file histogram showing counts of bases_clipped per read." +
             "" +
     "<h4>Usage example:</h4>" +
@@ -162,7 +162,7 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
         SAMFileWriter out = null;
         if (OUTPUT != null) {
             IOUtil.assertFileIsWritable(OUTPUT);
-            out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
+            out = new SAMFileWriterFactory().makeWriter(in.getFileHeader(), true, OUTPUT, REFERENCE_SEQUENCE);
         }
 
         final Histogram<Integer> histo = new Histogram<Integer>("clipped_bases", "read_count");
@@ -199,7 +199,7 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
             if (rec.getReadPairedFlag()) {
                 // Assert that the input file is in query name order only if we see some PE reads
                 if (order != SAMFileHeader.SortOrder.queryname) {
-                    throw new PicardException("Input BAM file must be sorted by queryname");
+                    throw new PicardException("Input file must be sorted by queryname");
                 }
 
                 if (rec2 == null) throw new PicardException("Missing mate pair for paired read: " + rec.getReadName());

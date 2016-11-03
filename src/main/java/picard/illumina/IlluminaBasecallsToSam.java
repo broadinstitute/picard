@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 The Broad Institute
+ * Copyright (c) 2011-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,11 +69,11 @@ import java.util.Set;
 
 /**
  * IlluminaBasecallsToSam transforms a lane of Illumina data file formats (bcl, locs, clocs, qseqs, etc.) into
- * SAM or BAM file format.
+ * SAM, BAM or CRAM file format.
  * <p/>
  * In this application, barcode data is read from Illumina data file groups, each of which is associated with a tile.
  * Each tile may contain data for any number of barcodes, and a single barcode's data may span multiple tiles.  Once the
- * barcode data is collected from files, each barcode's data is written to its own SAM/BAM.  The barcode data must be
+ * barcode data is collected from files, each barcode's data is written to its own SAM/BAM/CRAM.  The barcode data must be
  * written in order; this means that barcode data from each tile is sorted before it is written to file, and that if a
  * barcode's data does span multiple tiles, data collected from each tile must be written in the order of the tiles
  * themselves.
@@ -103,9 +103,9 @@ import java.util.Set;
 )
 @DocumentedFeature
 public class IlluminaBasecallsToSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Transforms raw Illumina sequencing data into an unmapped SAM or BAM file.";
+    static final String USAGE_SUMMARY = "Transforms raw Illumina sequencing data into an unmapped SAM, BAM or CRAM file.";
     static final String USAGE_DETAILS = "<p>The IlluminaBaseCallsToSam program collects, demultiplexes, and sorts reads across all " +
-            "of the tiles of a lane via barcode to produce an unmapped SAM/BAM file.  An unmapped BAM file is often referred to as a uBAM.  " +
+            "of the tiles of a lane via barcode to produce an unmapped SAM, BAM or CRAM file.  An unmapped BAM file is often referred to as a uBAM.  " +
             "All barcode, sample, and library data is provided in the LIBRARY_PARAMS file.  Note, this LIBRARY_PARAMS file " +
             "should be formatted according to the specifications indicated below.  The following is an example of a properly" +
             " formatted LIBRARY_PARAMS file:</p>" +
@@ -135,7 +135,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     // The following attributes define the command-line arguments
 
-    public static final String USAGE = "Generate a SAM or BAM file from data in an Illumina basecalls output directory";
+    public static final String USAGE = "Generate a SAM, BAM or CRAM file from data in an Illumina basecalls output directory";
 
     @Argument(doc = "The basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
@@ -146,7 +146,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Argument(doc = "Lane number. ", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Argument(doc = "Deprecated (use LIBRARY_PARAMS).  The output SAM or BAM file. Format is determined by extension.",
+    @Argument(doc = "Deprecated (use LIBRARY_PARAMS).  The output SAM, BAM or CRAM file. Format is determined by extension.",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public File OUTPUT;
@@ -183,18 +183,18 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Argument(doc = ReadStructure.PARAMETER_DOC, shortName = "RS")
     public String READ_STRUCTURE;
 
-    @Argument(doc = "Deprecated (use LIBRARY_PARAMS).  Tab-separated file for creating all output BAMs for barcoded run " +
+    @Argument(doc = "Deprecated (use LIBRARY_PARAMS).  Tab-separated file for creating all output SAM, BAM or CRAM files for barcoded run " +
             "with single IlluminaBasecallsToSam invocation.  Columns are BARCODE, OUTPUT, SAMPLE_ALIAS, and " +
             "LIBRARY_NAME.  Row with BARCODE=N is used to specify a file for no barcode match",
             mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME", "LIBRARY_PARAMS"})
     public File BARCODE_PARAMS;
 
-    @Argument(doc = "Tab-separated file for creating all output BAMs for a lane with single IlluminaBasecallsToSam " +
+    @Argument(doc = "Tab-separated file for creating all output SAM, BAM or CRAM files for a lane with single IlluminaBasecallsToSam " +
             "invocation.  The columns are OUTPUT, SAMPLE_ALIAS, and LIBRARY_NAME, BARCODE_1, BARCODE_2 ... BARCODE_X " +
             "where X = number of barcodes per cluster (optional).  Row with BARCODE_1 set to 'N' is used to specify a file " +
             "for no barcode match.  You may also provide any 2 letter RG header attributes (excluding PU, CN, PL, and" +
             " DT)  as columns in this file and the values for those columns will be inserted into the RG tag for the" +
-            " BAM file created for a given row.",
+            " SAM, BAM or CRAM file created for a given row.",
             mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME", "BARCODE_PARAMS"})
     public File LIBRARY_PARAMS;
 
@@ -244,7 +244,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public boolean INCLUDE_NON_PF_READS = true;
 
     @Argument(doc = "Whether to ignore reads whose barcodes are not found in LIBRARY_PARAMS.  Useful when outputting " +
-            "BAMs for only a subset of the barcodes in a lane.", shortName = "IGNORE_UNEXPECTED")
+            "SAM, BAM or CRAM files for only a subset of the barcodes in a lane.", shortName = "IGNORE_UNEXPECTED")
     public boolean IGNORE_UNEXPECTED_BARCODES = false;
 
     @Argument(doc = "The tag to use to store any molecular indexes.  If more than one molecular index is found, they will be concatenated and stored here.", optional = true)
@@ -478,7 +478,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         header.setSortOrder(SAMFileHeader.SortOrder.queryname);
         header.addReadGroup(rg);
-        return new SAMFileWriterWrapper(new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, output));
+        return new SAMFileWriterWrapper(new SAMFileWriterFactory().makeWriter(header, presorted, output, REFERENCE_SEQUENCE));
     }
 
     public static void main(final String[] args) {

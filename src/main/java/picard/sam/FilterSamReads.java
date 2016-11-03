@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 The Broad Institute
+ * Copyright (c) 2011-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,7 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * From a SAM or BAM file, produce a new SAM or BAM by filtering aligned reads or a list of read
+ * From a SAM/BAM/CRAM file, produce a new SAM/BAM/CRAM by filtering aligned reads or a list of read
  * names provided in a file (one readname per line)
  * <p/>
  * $Id$
@@ -66,8 +66,8 @@ import java.util.List;
         programGroup = SamOrBam.class)
 @DocumentedFeature
 public class FilterSamReads extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Subset read data from a SAM or BAM file";
-    static final String USAGE_DETAILS = "This tool takes a SAM or BAM file and subsets it to a new file that either excludes or " +
+    static final String USAGE_SUMMARY = "Subset read data from a SAM/BAM/CRAM file";
+    static final String USAGE_DETAILS = "This tool takes a SAM/BAM/CRAM file and subsets it to a new file that either excludes or " +
             "only includes either aligned or unaligned reads (set using FILTER), or specific reads based on a list of reads names " +
             "supplied in the READ_LIST_FILE.  " +
             "" +
@@ -84,12 +84,12 @@ public class FilterSamReads extends CommandLineProgram {
     private static final Log log = Log.getInstance(FilterSamReads.class);
     
     protected /* <- used in test */ enum Filter {
-        includeAligned("OUTPUT SAM/BAM will contain aligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note that *both* first and second of paired reads must be aligned to be included in the OUTPUT SAM or BAM)"),
-        excludeAligned("OUTPUT SAM/BAM will contain un-mapped reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note that *both* first and second of pair must be aligned to be excluded from the OUTPUT SAM or BAM)"),
-        includeReadList("OUTPUT SAM/BAM will contain reads that are supplied in the READ_LIST_FILE file"),
-        excludeReadList("OUTPUT bam will contain reads that are *not* supplied in the READ_LIST_FILE file"),
-    	includeJavascript("OUTPUT bam will contain reads that hava been accepted by the JAVASCRIPT_FILE script."),
-        includePairedIntervals("OUTPUT SAM/BAM will contain any reads (and their mate) that overlap with an interval. INPUT SAM/BAM and INTERVAL_LIST must be in coordinate SortOrder. Only aligned reads will be output.");
+        includeAligned("OUTPUT SAM/BAM/CRAM will contain aligned reads only. INPUT SAM/BAM/CRAM must be in queryname SortOrder. (Note that *both* first and second of paired reads must be aligned to be included in the OUTPUT SAM/BAM/CRAM)"),
+        excludeAligned("OUTPUT SAM/BAM/CRAM will contain un-mapped reads only. INPUT SAM/BAM/CRAM must be in queryname SortOrder. (Note that *both* first and second of pair must be aligned to be excluded from the OUTPUT SAM/BAM/CRAM)"),
+        includeReadList("OUTPUT SAM/BAM/CRAM will contain reads that are supplied in the READ_LIST_FILE file"),
+        excludeReadList("OUTPUT SAM/BAM/CRAM will contain reads that are *not* supplied in the READ_LIST_FILE file"),
+    	includeJavascript("OUTPUT SAM/BAM/CRAM will contain reads that have been accepted by the JAVASCRIPT_FILE script."),
+        includePairedIntervals("OUTPUT SAM/BAM/CRAM will contain any reads (and their mate) that overlap with an interval. INPUT SAM/BAM/CRAM and INTERVAL_LIST must be in coordinate SortOrder. Only aligned reads will be output.");
         private final String description;
 
         Filter(final String description) {
@@ -102,7 +102,7 @@ public class FilterSamReads extends CommandLineProgram {
         }
     }
 
-    @Argument(doc = "The SAM or BAM file that will be filtered.",
+    @Argument(doc = "The SAM/BAM/CRAM file that will be filtered.",
             optional = false,
             shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
@@ -110,18 +110,18 @@ public class FilterSamReads extends CommandLineProgram {
     @Argument(doc = "Filter.", optional = false)
     public Filter FILTER = null;
 
-    @Argument(doc = "Read List File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.",
+    @Argument(doc = "Read List File containing reads that will be included or excluded from the OUTPUT SAM/BAM/CRAM file.",
             optional = true,
             shortName = "RLF")
     public File READ_LIST_FILE;
 
-    @Argument(doc = "Interval List File containing intervals that will be included or excluded from the OUTPUT SAM or BAM file.",
+    @Argument(doc = "Interval List File containing intervals that will be included or excluded from the OUTPUT SAM/BAM/CRAM file.",
             optional = true,
             shortName = "IL")
     public File INTERVAL_LIST;
 
     @Argument(
-            doc = "SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.",
+            doc = "SortOrder of the OUTPUT SAM/BAM/CRAM file, otherwise use the SortOrder of the INPUT file.",
             optional = true, shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
@@ -130,12 +130,12 @@ public class FilterSamReads extends CommandLineProgram {
             optional = true)
     public boolean WRITE_READS_FILES = true;
 
-    @Argument(doc = "SAM or BAM file to write read excluded results to",
+    @Argument(doc = "SAM/BAM/CRAM file to write read excluded results to",
             optional = false, shortName = "O")
     public File OUTPUT;
     
 	@Argument(shortName = "JS",
-			doc = "Filters a SAM or BAM file with a javascript expression using the java javascript-engine. "
+			doc = "Filters a SAM/BAM/CRAM file with a javascript expression using the java javascript-engine. "
 	        + " The script puts the following variables in the script context: "
 	        + " 'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and "
 	        + " 'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html )."
@@ -143,7 +143,14 @@ public class FilterSamReads extends CommandLineProgram {
 	        optional = true)
 	public File JAVASCRIPT_FILE = null;
 
-    
+    /**
+     * This method should be used only for testing needs
+     * @param referenceSequence
+     */
+	void setReferenceSequence(File referenceSequence) {
+        this.REFERENCE_SEQUENCE = referenceSequence;
+    }
+
     private void filterReads(final FilteringSamIterator filteringIterator) {
 
         // get OUTPUT header from INPUT and overwrite it if necessary
@@ -162,7 +169,7 @@ public class FilterSamReads extends CommandLineProgram {
                 OUTPUT.getName() + " [sortorder=" + fileHeader.getSortOrder().name() + "]");
 
         // create OUTPUT file
-        final SAMFileWriter outputWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(fileHeader, presorted, OUTPUT);
+        final SAMFileWriter outputWriter = new SAMFileWriterFactory().makeWriter(fileHeader, presorted, OUTPUT, REFERENCE_SEQUENCE);
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Written");
 
@@ -180,7 +187,7 @@ public class FilterSamReads extends CommandLineProgram {
     /**
      * Write out a file of read names for debugging purposes.
      *
-     * @param samOrBamFile The SAM or BAM file for which we are going to write out a file of its
+     * @param samOrBamFile The SAM/BAM/CRAM file for which we are going to write out a file of its
      *                     containing read names
      */
     private void writeReadsFile(final File samOrBamFile) throws IOException {

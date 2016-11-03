@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2015-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,10 +43,9 @@ import picard.cmdline.programgroups.SamOrBam;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Random;
 
 /**
- * Class to randomly downsample a BAM file while respecting that we should either retain or discard
+ * Class to randomly downsample a SAM, BAM or CRAM file while respecting that we should either retain or discard
  * all of the reads for a template - i.e. all reads with the same name, whether first or second of
  * pair, secondary or supplementary, all travel together.
  *
@@ -58,8 +57,8 @@ import java.util.Random;
         programGroup = SamOrBam.class)
 @DocumentedFeature
 public class DownsampleSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Downsample a SAM or BAM file.  ";
-    static final String USAGE_DETAILS = "This tool applies a random downsampling algorithm to a SAM or BAM file to retain " +
+    static final String USAGE_SUMMARY = "Downsample a SAM, BAM or CRAM file.  ";
+    static final String USAGE_DETAILS = "This tool applies a random downsampling algorithm to a SAM, BAM or CRAM file to retain " +
             "only a random subset of the reads. Reads in a mate-pair are either both kept or both discarded. Reads marked as not primary " +
             "alignments are all discarded. Each read is given a probability P of being retained so that runs performed with the exact " +
             "same input in the same order and with the same value for RANDOM_SEED will produce the same results." +
@@ -78,10 +77,10 @@ public class DownsampleSam extends CommandLineProgram {
             "      O=downsampled.bam" +
             "</pre>" +
             "<hr />";
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM, BAM or CRAM file to downsample.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM or BAM file to write.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM, BAM or CRAM file to write.")
     public File OUTPUT;
 
     @Argument(shortName="S", doc="The downsampling strategy to use. See usage for discussion.")
@@ -118,9 +117,8 @@ public class DownsampleSam extends CommandLineProgram {
             log.warn("Running DownsampleSam with PROBABILITY=1! This will likely just recreate the input file.");
         }
 
-        final Random r = RANDOM_SEED == null ? new Random() : new Random(RANDOM_SEED);
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(in.getFileHeader(), true, OUTPUT, REFERENCE_SEQUENCE);
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
         final QualityYieldMetricsCollector metricsCollector = new QualityYieldMetricsCollector(true, false, false);

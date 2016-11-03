@@ -48,8 +48,8 @@ import java.util.stream.StreamSupport;
         programGroup = SamOrBam.class)
 @DocumentedFeature
 public class SetNmMdAndUqTags extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Fixes the NM, MD, and UQ tags in a SAM file.  ";
-    static final String USAGE_DETAILS = "This tool takes in a SAM or BAM file (sorted by coordinate) and calculates the NM, MD, and UQ tags by comparing with the reference."+
+    static final String USAGE_SUMMARY = "Fixes the NM, MD, and UQ tags in a SAM, BAM or CRAM file.  ";
+    static final String USAGE_DETAILS = "This tool takes in a SAM, BAM or CRAM file (sorted by coordinate) and calculates the NM, MD, and UQ tags by comparing with the reference."+
             "<br />" +
                     "This may be needed when MergeBamAlignment was run with SORT_ORDER different from 'coordinate' and thus could not fix\n"+
                     "these tags then.<br />"+
@@ -60,10 +60,10 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
             "      O=fixed.bam \\<br />"+
             "</pre>" +
             "<hr />";
-    @Argument(doc = "The BAM or SAM file to fix.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "The SAM, BAM or CRAM file to fix.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Argument(doc = "The fixed BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc = "The fixed SAM, BAM or CRAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
     @Argument(doc = "Whether the file contains bisulfite sequence (used when calculating the NM tag).")
@@ -93,7 +93,7 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
             throw new SAMException("Input must be coordinate-sorted for this program to run. Found: " + reader.getFileHeader().getSortOrder());
         }
 
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, OUTPUT, REFERENCE_SEQUENCE);
         writer.setProgressLogger(
                 new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
 

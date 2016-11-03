@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2015-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,12 +55,12 @@ import java.util.Map;
 
 
 /**
- * Class to downsample a BAM file while respecting that we should either get rid
+ * Class to downsample a SAM/BAM/CRAM file while respecting that we should either get rid
  * of both ends of a pair or neither end of the pair. In addition, this program uses the read-name
  * and extracts the position within the tile whence the read came from. The downsampling is based on this position.
  * <p/>
  * Note 1: This is technology and read-name dependent. If your read-names do not have coordinate information, or if your
- * BAM contains reads from multiple technologies (flowcell versions, sequencing machines) this will not work properly.
+ * SAM/BAM/CRAM contains reads from multiple technologies (flowcell versions, sequencing machines) this will not work properly.
  * This has been designed with Illumina MiSeq/HiSeq in mind.
  * <p/>
  * Note 2: The downsampling is _not_ random. It is deterministically dependent on the position of the read within its tile. Specifically,
@@ -75,13 +75,13 @@ import java.util.Map;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        summary = "Class to downsample a BAM file while respecting that we should either get rid of both ends of a pair or neither \n" +
+        summary = "Class to downsample a SAM/BAM/CRAM file while respecting that we should either get rid of both ends of a pair or neither \n" +
                 "end of the pair. In addition, this program uses the read-name and extracts the position within the tile whence \n" +
                 "the read came from. The downsampling is based on this position. Results with the exact same input will produce the \n" +
                 "same results.\n" +
                 "\n" +
                 "Note 1: This is technology and read-name dependent. If your read-names do not have coordinate information, or if your\n" +
-                "BAM contains reads from multiple technologies (flowcell versions, sequencing machines) this will not work properly. \n" +
+                "SAM/BAM/CRAM contains reads from multiple technologies (flowcell versions, sequencing machines) this will not work properly. \n" +
                 "This has been designed with Illumina MiSeq/HiSeq in mind.\n" +
                 "Note 2: The downsampling is not random. It is deterministically dependent on the position of the read within its tile.\n" +
                 "Note 3: Downsampling twice with this program is not supported.\n" +
@@ -90,15 +90,15 @@ import java.util.Map;
                 "Finally, the code has been designed to simulate sequencing less as accurately as possible, not for getting an exact downsample \n" +
                 "fraction. In particular, since the reads may be distributed non-evenly within the lanes/tiles, the resulting downsampling \n" +
                 "percentage will not be accurately determined by the input argument FRACTION.",
-        oneLineSummary = "Downsample a SAM or BAM file to retain a subset of the reads based on the reads location in each tile in the flowcell.",
+        oneLineSummary = "Downsample a SAM/BAM/CRAM file to retain a subset of the reads based on the reads location in each tile in the flowcell.",
         programGroup = SamOrBam.class)
 @DocumentedFeature
 public class PositionBasedDownsampleSam extends CommandLineProgram {
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM/CRAM file to downsample.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM or BAM file to write.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM/BAM/CRAM file to write.")
     public File OUTPUT;
 
     @Argument(shortName = "F", doc = "The (approximate) fraction of reads to be kept, between 0 and 1.", optional = false)
@@ -199,7 +199,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         programRecord.setProgramVersion(getVersion());
         header.addProgramRecord(programRecord);
 
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT, REFERENCE_SEQUENCE);
 
         final CircleSelector selector = new CircleSelector(FRACTION);
 
@@ -241,7 +241,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         for (final SAMProgramRecord pg : in.getFileHeader().getProgramRecords()) {
             if (pg.getProgramName() != null && pg.getProgramName().equals(PG_PROGRAM_NAME)) {
 
-                final String outText = "Found previous Program Record that indicates that this BAM has been downsampled already with this program. Operation not supported! Previous PG: " + pg.toString();
+                final String outText = "Found previous Program Record that indicates that this file has been downsampled already with this program. Operation not supported! Previous PG: " + pg.toString();
 
                 if (ALLOW_MULTIPLE_DOWNSAMPLING_DESPITE_WARNINGS) {
                     log.warn(outText);

@@ -51,14 +51,14 @@ import java.util.Set;
 
 /**
  * Abstract class that holds parameters and methods common to classes that perform duplicate
- * detection and/or marking within SAM/BAM files.
+ * detection and/or marking within SAM/BAM/CRAM files.
  *
  * @author Nils Homer
  */
 public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractOpticalDuplicateFinderCommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "One or more input SAM or BAM files to analyze. Must be coordinate sorted.")
+            doc = "One or more input SAM, BAM or CRAM files to analyze. Must be coordinate sorted.")
     public List<String> INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
@@ -207,10 +207,11 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
 
         for (final String input : INPUT) {
             SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
-            SamReader reader = eagerlyDecode ? readerFactory.enable(SamReaderFactory.Option.EAGERLY_DECODE).open(SamInputResource.of(input)) :
-                    readerFactory.open(SamInputResource.of(input));
+            if (eagerlyDecode) {
+                readerFactory.enable(SamReaderFactory.Option.EAGERLY_DECODE);
+            }
+            SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(input));
             final SAMFileHeader header = reader.getFileHeader();
-
             headers.add(header);
             readers.add(reader);
         }
