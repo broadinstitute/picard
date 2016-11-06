@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
                 programGroup = None.class
         )
 public class BaitDesigner extends CommandLineProgram {
-static final String USAGE_SUMMARY = "<b>Designs oligonucleotide baits for hybrid selection reactions.</b>  ";
+static final String USAGE_SUMMARY = "Designs oligonucleotide baits for hybrid selection reactions.";
 static final String USAGE_DETAILS = "<p>This tool is used to design custom bait sets for hybrid selection experiments. The following " +
         "files are input into BaitDesigner: a (TARGET) interval list indicating the sequences of interest, e.g. exons with their " +
         "respective coordinates, a reference sequence, and a unique identifier string (DESIGN_NAME). </p>" +

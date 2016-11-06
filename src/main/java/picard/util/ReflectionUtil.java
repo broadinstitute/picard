@@ -24,8 +24,6 @@
 
 package picard.util;
 
-import sun.reflect.Reflection;
-
 import java.lang.reflect.Field;
 
 /**
@@ -35,17 +33,17 @@ import java.lang.reflect.Field;
  */
 public class ReflectionUtil {
 
-    static public <T,S extends T> void copyFromBaseClass(final T base, final S derived) {
+    static public <T, S extends T> void copyFromBaseClass(final T base, final S derived) {
         final Class<T> baseClazz = (Class<T>) base.getClass();
 
-        for (Field f : baseClazz.getDeclaredFields()) {
-            if (Reflection.quickCheckMemberAccess(baseClazz,f.getModifiers())) {
-                try {
-                    f.set(derived, f.get(base));
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e.getMessage() + "when trying to access" + f.getName());
-                }
+        for (Field f : baseClazz.getFields()) {
+
+            try {
+                f.set(derived, f.get(base));
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e.getMessage() + "when trying to access" + f.getName());
             }
+
         }
     }
 }

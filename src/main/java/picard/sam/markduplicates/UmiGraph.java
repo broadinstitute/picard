@@ -97,6 +97,7 @@ public class UmiGraph {
 
         GraphUtils.Graph<Integer> umiGraph = new GraphUtils.Graph<>();
         for (int i = 0; i < numUmis; i++) {
+            umiGraph.addNode(i);
             for (int j = i + 1; j < numUmis; j++) {
                 if (StringUtil.isWithinHammingDistance(umi[i], umi[j], maxEditDistanceToJoin)) {
                     umiGraph.addEdge(i, j);

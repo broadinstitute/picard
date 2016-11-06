@@ -154,7 +154,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
         tester.setExpectedAssignedUmis(assignedUmi).runTest();
     }
 
-    @Test(dataProvider = "testBadUmiSetsDataProvider", expectedExceptions = PicardException.class)
+    @Test(dataProvider = "testBadUmiSetsDataProvider", expectedExceptions = {IllegalArgumentException.class, PicardException.class})
     public void testBadUmis(List<String> umis, List<String> assignedUmi, final List<Boolean> isDuplicate, final int editDistanceToJoin) {
         UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
         tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
