@@ -23,7 +23,7 @@
  */
 package picard.vcf.MendelianViolations;
 
-import picard.analysis.replicates.MergeableMetricBase;
+import picard.analysis.MergeableMetricBase;
 import picard.pedigree.Sex;
 
 /**
