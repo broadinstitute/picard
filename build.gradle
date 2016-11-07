@@ -233,7 +233,7 @@ task createMetricsDoc(dependsOn: classes, type: Javadoc) << {
 
 task wrapper(type: Wrapper) {
     description = "Regenerate the gradle wrapper"
-    gradleVersion = '2.13'
+    gradleVersion = '3.1'
 }
 
 task javadocJar(type: Jar, dependsOn: documentAll) {
