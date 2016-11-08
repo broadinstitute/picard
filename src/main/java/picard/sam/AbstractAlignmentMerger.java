@@ -385,7 +385,7 @@ public abstract class AbstractAlignmentMerger {
                             r2Primary = secondToWrite;
                         }
 
-                        transferAlignmentInfoToPairedRead(firstToWrite, secondToWrite, firstAligned, secondAligned, unmapDueToContaminant);
+                        transferAlignmentInfoToPairedRead(firstToWrite, secondToWrite, firstAligned, secondAligned, unmapDueToContaminant, clone);
 
                         // Only write unmapped read when it has the mate info from the primary alignment.
                         // this avoids the scenario of having multiple unmapped reads with the same name & pair flags
@@ -409,7 +409,7 @@ public abstract class AbstractAlignmentMerger {
 
                         for (final SAMRecord supp : supplementals) {
                             final SAMRecord out = clone(sourceRec);
-                            transferAlignmentInfoToFragment(out, supp, unmapDueToContaminant);
+                            transferAlignmentInfoToFragment(out, supp, unmapDueToContaminant, clone);
                             if (matePrimary != null) SamPairUtil.setMateInformationOnSupplementalAlignment(out, matePrimary, addMateCigar);
                             // don't write supplementary reads that were unmapped by transferAlignmentInfoToFragment
                             if (!out.getReadUnmappedFlag()) {
@@ -422,7 +422,7 @@ public abstract class AbstractAlignmentMerger {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
                         final SAMRecord recToWrite = clone ? clone(rec) : rec;
                         final boolean isPrimary = !nextAligned.getFragment(i).isSecondaryOrSupplementary();
-                        transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i), unmapDueToContaminant);
+                        transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i), unmapDueToContaminant, clone);
                         // Only write unmapped read if it was originally the primary.
                         // this avoids the scenario of having multiple unmapped reads with the same name & pair flags
                         if (!recToWrite.getReadUnmappedFlag() || isPrimary) addIfNotFiltered(sink, recToWrite);
@@ -432,7 +432,7 @@ public abstract class AbstractAlignmentMerger {
                     // Take all of the supplemental reads which had been stashed and add them (as appropriate) to sorted
                     for (final SAMRecord supplementalRec : nextAligned.getSupplementalFirstOfPairOrFragment()) {
                         final SAMRecord recToWrite = clone(rec);
-                        transferAlignmentInfoToFragment(recToWrite, supplementalRec, unmapDueToContaminant);
+                        transferAlignmentInfoToFragment(recToWrite, supplementalRec, unmapDueToContaminant, clone);
                         // don't write supplementary reads that were unmapped by transferAlignmentInfoToFragment
                         if (!recToWrite.getReadUnmappedFlag()) {
                             addIfNotFiltered(sink, recToWrite);
@@ -545,8 +545,8 @@ public abstract class AbstractAlignmentMerger {
      * @param aligned   Holds alignment info that will be copied into unaligned.
      * @param isContaminant Should this read be unmapped due to contamination?
      */
-    private void transferAlignmentInfoToFragment(final SAMRecord unaligned, final SAMRecord aligned, final boolean isContaminant) {
-        setValuesFromAlignment(unaligned, aligned);
+    private void transferAlignmentInfoToFragment(final SAMRecord unaligned, final SAMRecord aligned, final boolean isContaminant, final boolean needsSafeReverseComplement) {
+        setValuesFromAlignment(unaligned, aligned, needsSafeReverseComplement);
         updateCigarForTrimmedOrClippedBases(unaligned, aligned);
         if (SAMUtils.cigarMapsNoBasesToRef(unaligned.getCigar())) {
             log.warn("Record contains no unclipped bases; making unmapped: " + aligned);
@@ -575,9 +575,10 @@ public abstract class AbstractAlignmentMerger {
      * @param isContaminant Should this pair be unmapped due to contamination?
      */
     private void transferAlignmentInfoToPairedRead(final SAMRecord firstUnaligned, final SAMRecord secondUnaligned,
-                                                   final SAMRecord firstAligned, final SAMRecord secondAligned, final boolean isContaminant) {
-        if (firstAligned != null) transferAlignmentInfoToFragment(firstUnaligned, firstAligned, isContaminant);
-        if (secondAligned != null) transferAlignmentInfoToFragment(secondUnaligned, secondAligned, isContaminant);
+                                                   final SAMRecord firstAligned, final SAMRecord secondAligned,
+                                                   final boolean isContaminant, final boolean needsSafeReverseComplement) {
+        if (firstAligned != null) transferAlignmentInfoToFragment(firstUnaligned, firstAligned, isContaminant, needsSafeReverseComplement);
+        if (secondAligned != null) transferAlignmentInfoToFragment(secondUnaligned, secondAligned, isContaminant, needsSafeReverseComplement);
         if (isClipOverlappingReads()) clipForOverlappingReads(firstUnaligned, secondUnaligned);
         SamPairUtil.setMateInfo(secondUnaligned, firstUnaligned, addMateCigar);
         if (!keepAlignerProperPairFlags) {
@@ -631,7 +632,7 @@ public abstract class AbstractAlignmentMerger {
      * @param rec       The unaligned read record
      * @param alignment The alignment record
      */
-    protected void setValuesFromAlignment(final SAMRecord rec, final SAMRecord alignment) {
+    protected void setValuesFromAlignment(final SAMRecord rec, final SAMRecord alignment, final boolean needsSafeReverseComplement) {
         for (final SAMRecord.SAMTagAndValue attr : alignment.getAttributes()) {
             // Copy over any non-reserved attributes.  attributesToRemove overrides attributesToRetain.
             if ((!isReservedTag(attr.tag) || this.attributesToRetain.contains(attr.tag)) && !this.attributesToRemove.contains(attr.tag)) {
@@ -662,7 +663,11 @@ public abstract class AbstractAlignmentMerger {
         // If it's on the negative strand, reverse complement the bases
         // and reverse the order of the qualities
         if (rec.getReadNegativeStrandFlag()) {
-            rec.reverseComplement(true);
+            if(needsSafeReverseComplement) {
+                rec.reverseComplement();
+            } else {
+                rec.reverseComplement(true);
+            }
         }
     }
 
