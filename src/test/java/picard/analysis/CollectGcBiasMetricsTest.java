@@ -308,7 +308,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
         outputSummary.read(new FileReader(summaryOutfile));
 
         for (final GcBiasSummaryMetrics summary : outputSummary.getMetrics()) {
-            if (summary.ACCUMULATION_LEVEL.equals("Non-Duplicates All Reads")) { //ALL_READS level for case without duplicates
+            if (summary.ACCUMULATION_LEVEL.equals("All Reads") && summary.READS_USED.equals("UNIQUE")) { //ALL_READS level for case without duplicates
                 Assert.assertEquals(summary.TOTAL_CLUSTERS, 3);
                 Assert.assertEquals(summary.ALIGNED_READS, 3);
                 Assert.assertEquals(summary.AT_DROPOUT, 79.180328);
@@ -319,7 +319,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(summary.GC_NC_60_79, 0.0);
                 Assert.assertEquals(summary.GC_NC_80_100, 0.0);
             }
-            if (summary.ACCUMULATION_LEVEL.equals("All Reads")) { //ALL_READS level
+            if (summary.ACCUMULATION_LEVEL.equals("All Reads") && summary.READS_USED.equals("ALL")) { //ALL_READS level
                 Assert.assertEquals(summary.TOTAL_CLUSTERS, 5);
                 Assert.assertEquals(summary.ALIGNED_READS, 5);
                 Assert.assertEquals(summary.AT_DROPOUT, 79.180328);

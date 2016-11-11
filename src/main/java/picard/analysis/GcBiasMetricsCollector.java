@@ -93,25 +93,6 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
         return new PerUnitGcBiasMetricsCollector(sample, library, readGroup);
     }
 
-    private enum GroupsType {
-        ALL_READS ("All Reads", "Non-Duplicates All Reads"),
-        LIBRARY ("Library", "Non-Duplicates Library"),
-        SAMPLE ("Sample", "Non-Duplicates Sample"),
-        READ_GROUP ("Read Group", "Non-Duplicates Read Group");
-
-        private final String groupsType;
-        private final String nonDuplicatesGroupType;
-
-        GroupsType(final String groupType, final String nonDuplicatesGroupType) {
-            this.groupsType = groupType;
-            this.nonDuplicatesGroupType = nonDuplicatesGroupType;
-        }
-
-        public String getGroupType(final boolean includeDuplicates) {
-            return includeDuplicates ? groupsType : nonDuplicatesGroupType;
-        }
-    }
-
     /////////////////////////////////////////////////////////////////////////////
     //A collector for individual GcBiasMetrics for a given SAMPLE or SAMPLE/LIBRARY
     //or SAMPLE/LIBRARY/READ_GROUP (depending on aggregation levels)
@@ -124,6 +105,12 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
         private final String library;
         private final String readGroup;
         private static final String allReads = "All_Reads";
+        private final static String ACCUMULATION_LEVEL_ALL_READS = "All Reads";
+        private final static String ACCUMULATION_LEVEL_LIBRARY = "Library";
+        private final static String ACCUMULATION_LEVEL_SAMPLE = "Sample";
+        private final static String ACCUMULATION_LEVEL_READ_GROUP = "Read Group";
+        private final static String READS_USED_ALL = "ALL";
+        private final static String READS_USED_UNIQUE = "UNIQUE";
         private int logCounter;
 
         /////////////////////////////////////////////////////////////////////////////
@@ -165,9 +152,9 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                     referenceIndex = rec.getReferenceIndex();
                 }
 
-                addReadToGcData(rec, this.gcData, true);
+                addReadToGcData(rec, this.gcData);
                 if (ignoreDuplicates && !rec.getDuplicateReadFlag()) {
-                    addReadToGcData(rec, this.gcDataNonDups, false);
+                    addReadToGcData(rec, this.gcDataNonDups);
                 }
             } else {
                 updateTotalClusters(rec, this.gcData);
@@ -215,22 +202,21 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
             return gcData;
         }
 
-        private void addReadToGcData(final SAMRecord rec, final Map<String, GcObject> gcData,
-                                     final boolean includeDuplicates) {
+        private void addReadToGcData(final SAMRecord rec, final Map<String, GcObject> gcData) {
             final String type;
             String group;
             if (this.readGroup != null) {
                 type = this.readGroup;
-                group = GroupsType.READ_GROUP.getGroupType(includeDuplicates);
+                group = ACCUMULATION_LEVEL_READ_GROUP;
             } else if (this.library != null) {
                 type = this.library;
-                group = GroupsType.LIBRARY.getGroupType(includeDuplicates);
+                group = ACCUMULATION_LEVEL_LIBRARY;
             } else if (this.sample != null) {
                 type = this.sample;
-                group = GroupsType.SAMPLE.getGroupType(includeDuplicates);
+                group = ACCUMULATION_LEVEL_SAMPLE;
             } else {
                 type = allReads;
-                group = GroupsType.ALL_READS.getGroupType(includeDuplicates);
+                group = ACCUMULATION_LEVEL_ALL_READS;
             }
             addRead(gcData.get(type), rec, group, gc, refBases);
         }
@@ -284,18 +270,22 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                             detail.ERROR_BAR_WIDTH = 0;
                         }
                         detail.ACCUMULATION_LEVEL = group;
-                        if (group.equals(GroupsType.READ_GROUP.getGroupType(includeDuplicates))) {detail.READ_GROUP = gcType;}
-                        else if (group.equals(GroupsType.SAMPLE.getGroupType(includeDuplicates))) {detail.SAMPLE = gcType;}
-                        else if (group.equals(GroupsType.LIBRARY.getGroupType(includeDuplicates))) {detail.LIBRARY = gcType;}
+                        if (group.equals(ACCUMULATION_LEVEL_READ_GROUP)) {detail.READ_GROUP = gcType;}
+                        else if (group.equals(ACCUMULATION_LEVEL_SAMPLE)) {detail.SAMPLE = gcType;}
+                        else if (group.equals(ACCUMULATION_LEVEL_LIBRARY)) {detail.LIBRARY = gcType;}
+
+                        detail.READS_USED = includeDuplicates ? READS_USED_ALL : READS_USED_UNIQUE;
 
                         metrics.DETAILS.addMetric(detail);
                     }
 
                     // Synthesize the high level summary metrics
                     final GcBiasSummaryMetrics summary = new GcBiasSummaryMetrics();
-                    if (group.equals(GroupsType.READ_GROUP.getGroupType(includeDuplicates))) {summary.READ_GROUP = gcType;}
-                    else if (group.equals(GroupsType.SAMPLE.getGroupType(includeDuplicates))) {summary.SAMPLE = gcType;}
-                    else if (group.equals(GroupsType.LIBRARY.getGroupType(includeDuplicates))) {summary.LIBRARY = gcType;}
+                    if (group.equals(ACCUMULATION_LEVEL_READ_GROUP)) {summary.READ_GROUP = gcType;}
+                    else if (group.equals(ACCUMULATION_LEVEL_SAMPLE)) {summary.SAMPLE = gcType;}
+                    else if (group.equals(ACCUMULATION_LEVEL_LIBRARY)) {summary.LIBRARY = gcType;}
+
+                    summary.READS_USED = includeDuplicates ? READS_USED_ALL : READS_USED_UNIQUE;
 
                     summary.ACCUMULATION_LEVEL = group;
                     summary.WINDOW_SIZE = scanWindowSize;
