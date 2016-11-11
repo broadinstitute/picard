@@ -48,13 +48,14 @@ public class FingerprintCheckerTest {
 
         for (int i = 1; i < 20; i++) {
             listOfDoubles.add(new Object[]{i / 40D});
+            System.out.print("\nnumber:");
+            System.out.print(i/40D);
         }
         return listOfDoubles.iterator();
     }
 
     @Test(dataProvider = "pLoH")
     public void testMatchResults(final double pLoH) {
-
         final Fingerprint fpObserved = new Fingerprint("test", null, "noop");
         final Fingerprint fpExpected = new Fingerprint("test", null, "noop");
 
