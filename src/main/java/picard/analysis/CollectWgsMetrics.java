@@ -308,9 +308,11 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         /**
          * Merges the various PCT_EXC_* metrics.
          * @param other metric to merge into this one.
+         *
+         * @return result of merging, also known as "this"
          */
         @Override
-        public void merge(final MergeableMetricBase other) {
+        public MergeableMetricBase merge(final MergeableMetricBase other) {
             final WgsMetrics otherMetric = (WgsMetrics) other;
 
             if (highQualityDepthHistogram == null || otherMetric.highQualityDepthHistogram == null ||
@@ -356,6 +358,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             unfilteredDepthHistogram.addHistogram(otherMetric.unfilteredDepthHistogram);
             if (unfilteredBaseQHistogram != null && otherMetric.unfilteredBaseQHistogram != null)
                 unfilteredBaseQHistogram.addHistogram(otherMetric.unfilteredBaseQHistogram);
+            return this;
         }
 
         @Override
