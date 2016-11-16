@@ -236,7 +236,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public boolean INCLUDE_NON_PF_READS = true;
 
     @Option(doc="Whether to ignore reads whose barcodes are not found in LIBRARY_PARAMS.  Useful when outputting " +
-            "BAMs for only a subset of the barcodes in a lane.", shortName="INGORE_UNEXPECTED")
+            "BAMs for only a subset of the barcodes in a lane.", shortName="IGNORE_UNEXPECTED")
     public boolean IGNORE_UNEXPECTED_BARCODES = false;
 
     @Option(doc="The tag to use to store any molecular indexes.  If more than one molecular index is found, they will be concatenated and stored here.", optional=true)
