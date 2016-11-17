@@ -39,10 +39,10 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Fasta;
+import picard.cmdline.StandardOptionDefinitions;
 
-import java.io.*;
+import java.io.File;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -71,7 +71,6 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             "" +
             "</pre>" +
             "<hr />";
-
     // The following attributes define the command-line arguments
 
     @Option(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
