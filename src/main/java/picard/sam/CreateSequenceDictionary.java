@@ -42,7 +42,7 @@ import picard.cmdline.Option;
 import picard.cmdline.programgroups.Fasta;
 import picard.cmdline.StandardOptionDefinitions;
 
-import java.io.File;
+import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -135,7 +135,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
         // SortingCollection is used to check uniqueness of sequence names
         final SortingCollection<String> sequenceNames = makeSortingCollection();
-        try (Writer writer = makeWriter()) {
+        try (BufferedWriter writer = makeWriter()) {
             final ReferenceSequenceFile refSeqFile = ReferenceSequenceFileFactory.
                     getReferenceSequenceFile(REFERENCE, TRUNCATE_NAMES_AT_WHITESPACE);
             SAMSequenceDictionaryCodec samDictCodec = new SAMSequenceDictionaryCodec(writer);
@@ -168,13 +168,15 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         return 0;
     }
 
-    private Writer makeWriter() throws FileNotFoundException {
-        return new AsciiWriter(this.CREATE_MD5_FILE ?
+    private BufferedWriter makeWriter() throws FileNotFoundException {
+        return new BufferedWriter(
+                new AsciiWriter(this.CREATE_MD5_FILE ?
                         new Md5CalculatingOutputStream(
                                 new FileOutputStream(OUTPUT, false),
                                 new File(OUTPUT.getAbsolutePath() + ".md5")
                         )
                         : new FileOutputStream(OUTPUT)
+                )
         );
     }
 
