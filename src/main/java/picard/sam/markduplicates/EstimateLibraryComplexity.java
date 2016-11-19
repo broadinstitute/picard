@@ -45,8 +45,6 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 import picard.sam.DuplicationMetrics;
 import picard.sam.markduplicates.util.AbstractOpticalDuplicateFinderCommandLineProgram;
-import picard.sam.markduplicates.util.OpticalDuplicateFinder;
-import picard.sam.util.PhysicalLocation;
 import picard.sam.util.PhysicalLocationShort;
 
 import java.io.DataInputStream;
@@ -56,11 +54,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.lang.Math.pow;
 
@@ -182,14 +176,26 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
      * Little class to hold the sequence of a pair of reads and tile location information.
      */
     static class PairedReadSequence extends PhysicalLocationShort {
+
+        //just for rough estimate size of reads, does not affect the fundamental operation of the algorithm
+        static final int NUMBER_BASES_IN_READ = 150;
+
         short readGroup = -1;
         boolean qualityOk = true;
         byte[] read1;
         byte[] read2;
         short libraryId;
 
+        // Hashes corresponding to read1 and read2
+        int[] hashes1;
+        int[] hashes2;
+
+        // Possible candidates for this PairedReadSequence
+        Set<PairedReadSequence> dupCandidates;
+
         public static int getSizeInBytes() {
-            return 2 + 1 + 4 + 1 + 300; // rough guess at memory footprint
+            // rough guess at memory footprint, summary size of all fields
+            return 16 + 4 + (2 * 4) + 1 + 2 * (24 + 8 + NUMBER_BASES_IN_READ) + 2 + (2 * (24 + 8)) + 8 + 4;
         }
 
         public short getReadGroup() { return this.readGroup; }
@@ -202,6 +208,31 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
 
         public static SortingCollection.Codec<PairedReadSequence> getCodec() {
             return new PairedReadCodec();
+        }
+
+        void initHashes(int maxReadLength, int hashLength, int skippedBases) {
+            dupCandidates = new HashSet<>();
+            hashes1 = getHashes(read1, maxReadLength, hashLength, skippedBases);
+            hashes2 = getHashes(read2, maxReadLength, hashLength, skippedBases);
+        }
+
+        // Split read by (MAX_DIFF_RATE * read.length + 1) parts and hash each part
+        private int[] getHashes(byte[] read, int maxReadLength, int hashLength, int skippedBases) {
+            int maxLengthWithoutHead = maxReadLength - skippedBases;
+            int hashNum = (Math.min(read.length - skippedBases, maxLengthWithoutHead)) /
+                    hashLength;
+            int[] hashValues = new int[hashNum];
+            for (int i = 0; i < hashNum; ++i) {
+                int st = skippedBases + i * hashLength;
+                int end = st + hashLength;
+
+                // use custom hash to avoid using System.arraycopy
+                hashValues[i] = 1;
+                for (int j = st; j < end; ++j) {
+                    hashValues[i] = 31 * hashValues[i] + read[j];
+                }
+            }
+            return hashValues;
         }
     }
 
@@ -499,6 +530,14 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         long lastLogTime = System.currentTimeMillis();
         final int meanGroupSize = (int) (Math.max(1, (progress.getCount() / 2) / (int) pow(4, MIN_IDENTICAL_BASES * 2)));
 
+        ElcDuplicatesFinderResolver algorithmResolver = new ElcDuplicatesFinderResolver(
+                MAX_DIFF_RATE,
+                MAX_READ_LENGTH,
+                MIN_IDENTICAL_BASES,
+                useBarcodes,
+                opticalDuplicateFinder
+        );
+
         while (iterator.hasNext()) {
             // Get the next group and split it apart by library
             final List<PairedReadSequence> group = getNextGroup(iterator);
@@ -521,41 +560,13 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                     Histogram<Integer> duplicationHisto = duplicationHistosByLibrary.get(library);
                     Histogram<Integer> opticalHisto = opticalHistosByLibrary.get(library);
                     if (duplicationHisto == null) {
-                        duplicationHisto = new Histogram<Integer>("duplication_group_count", library);
-                        opticalHisto = new Histogram<Integer>("duplication_group_count", "optical_duplicates");
+                        duplicationHisto = new Histogram<>("duplication_group_count", library);
+                        opticalHisto = new Histogram<>("duplication_group_count", "optical_duplicates");
                         duplicationHistosByLibrary.put(library, duplicationHisto);
                         opticalHistosByLibrary.put(library, opticalHisto);
                     }
 
-                    // Figure out if any reads within this group are duplicates of one another
-                    for (int i = 0; i < seqs.size(); ++i) {
-                        final PairedReadSequence lhs = seqs.get(i);
-                        if (lhs == null) continue;
-                        final List<PairedReadSequence> dupes = new ArrayList<PairedReadSequence>();
-
-                        for (int j = i + 1; j < seqs.size(); ++j) {
-                            final PairedReadSequence rhs = seqs.get(j);
-                            if (rhs == null) continue;
-
-                            if (matches(lhs, rhs, MAX_DIFF_RATE, useBarcodes)) {
-                                dupes.add(rhs);
-                                seqs.set(j, null);
-                            }
-                        }
-
-                        if (!dupes.isEmpty()) {
-                            dupes.add(lhs);
-                            final int duplicateCount = dupes.size();
-                            duplicationHisto.increment(duplicateCount);
-
-                            final boolean[] flags = opticalDuplicateFinder.findOpticalDuplicates(dupes, lhs);
-                            for (final boolean b : flags) {
-                                if (b) opticalHisto.increment(duplicateCount);
-                            }
-                        } else {
-                            duplicationHisto.increment(1);
-                        }
-                    }
+                    algorithmResolver.resolveAndSearch(seqs, duplicationHisto, opticalHisto);
                 }
 
                 ++groupsProcessed;
@@ -600,44 +611,6 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
     }
 
     /**
-     * Checks to see if two reads pairs have sequence that are the same, give or take a few
-     * errors/diffs as dictated by the maxDiffRate.
-     */
-    private boolean matches(final PairedReadSequence lhs, final PairedReadSequence rhs, final double maxDiffRate, final boolean useBarcodes) {
-        final int maxReadLength = (MAX_READ_LENGTH <= 0) ? Integer.MAX_VALUE : MAX_READ_LENGTH;
-        final int read1Length = Math.min(Math.min(lhs.read1.length, rhs.read1.length), maxReadLength);
-        final int read2Length = Math.min(Math.min(lhs.read2.length, rhs.read2.length), maxReadLength);
-        final int maxErrors = (int) Math.floor((read1Length + read2Length) * maxDiffRate);
-        int errors = 0;
-
-        if (useBarcodes) {
-            final PairedReadSequenceWithBarcodes lhsWithBarcodes = (PairedReadSequenceWithBarcodes) lhs;
-            final PairedReadSequenceWithBarcodes rhsWithBarcodes = (PairedReadSequenceWithBarcodes) rhs;
-            if (lhsWithBarcodes.barcode != rhsWithBarcodes.barcode ||
-                    lhsWithBarcodes.readOneBarcode != rhsWithBarcodes.readOneBarcode ||
-                    lhsWithBarcodes.readTwoBarcode != rhsWithBarcodes.readTwoBarcode) {
-                return false;
-            }
-        }
-
-        // The loop can start from MIN_IDENTICAL_BASES because we've already confirmed that
-        // at least those first few bases are identical when sorting.
-        for (int i = MIN_IDENTICAL_BASES; i < read1Length; ++i) {
-            if (lhs.read1[i] != rhs.read1[i] && ++errors > maxErrors) {
-                return false;
-            }
-        }
-
-        for (int i = MIN_IDENTICAL_BASES; i < read2Length; ++i) {
-            if (lhs.read2[i] != rhs.read2[i] && ++errors > maxErrors) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Pulls out of the iterator the next group of reads that can be compared to each other to
      * identify duplicates.
      */
@@ -652,11 +625,8 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
             for (int i = 0; i < MIN_IDENTICAL_BASES; ++i) {
                 if (first.read1[i] != next.read1[i] || first.read2[i] != next.read2[i]) break outer;
             }
-
             group.add(iterator.next());
-
         }
-
         return group;
     }
 
@@ -666,9 +636,9 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
     Map<String, List<PairedReadSequence>> splitByLibrary(final List<PairedReadSequence> input,
                                                          final List<SAMReadGroupRecord> rgs) {
 
-        final Map<String, List<PairedReadSequence>> out = new HashMap<String, List<PairedReadSequence>>();
+        final Map<String, List<PairedReadSequence>> out = new HashMap<>();
         for (final PairedReadSequence seq : input) {
-            String library = null;
+            String library;
             if (seq.getReadGroup() != -1) {
                 library = rgs.get(seq.getReadGroup()).getLibrary();
                 if (library == null) library = "Unknown";
@@ -678,12 +648,11 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
 
             List<PairedReadSequence> librarySeqs = out.get(library);
             if (librarySeqs == null) {
-                librarySeqs = new ArrayList<PairedReadSequence>();
+                librarySeqs = new ArrayList<>();
                 out.put(library, librarySeqs);
             }
             librarySeqs.add(seq);
         }
-
         return out;
     }
 
