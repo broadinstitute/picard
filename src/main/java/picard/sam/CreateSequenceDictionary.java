@@ -140,11 +140,12 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                     getReferenceSequenceFile(REFERENCE, TRUNCATE_NAMES_AT_WHITESPACE);
             SAMSequenceDictionaryCodec samDictCodec = new SAMSequenceDictionaryCodec(writer);
 
+            samDictCodec.encodeHeaderLine(false);
             // read reference sequence one by one and write its metadata
             ReferenceSequence refSeq;
             while ((refSeq = refSeqFile.nextSequence()) != null) {
                 final SAMSequenceRecord samSequenceRecord = makeSequenceRecord(refSeq);
-                samDictCodec.encodeSQLine(samSequenceRecord);
+                samDictCodec.encodeSequenceRecord(samSequenceRecord);
                 sequenceNames.add(refSeq.getName());
             }
         } catch (FileNotFoundException e) {
