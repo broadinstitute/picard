@@ -14,6 +14,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
+import static picard.analysis.GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector.*;
 
 import java.io.File;
 import java.io.FileReader;
@@ -123,7 +124,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
         output.read(new FileReader(outfile));
 
         for (final GcBiasSummaryMetrics metrics : output.getMetrics()) {
-            if (metrics.ACCUMULATION_LEVEL.equals("All Reads")) { //ALL_READS level
+            if (metrics.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS)) { //ALL_READS level
                 Assert.assertEquals(metrics.TOTAL_CLUSTERS, 300);
                 Assert.assertEquals(metrics.ALIGNED_READS, 600);
                 Assert.assertEquals(metrics.AT_DROPOUT, 21.624498);
@@ -220,7 +221,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
 
         //Output for the two sam files are only the same for the "All Reads" level
         for (final GcBiasDetailMetrics metrics : outputAllChrDetails.getMetrics()) {
-            if (metrics.ACCUMULATION_LEVEL.equals("All Reads")) {
+            if (metrics.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS)) {
                 Assert.assertEquals(metrics.WINDOWS, details.get(i).WINDOWS);
                 i++;
             }
@@ -308,7 +309,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
         outputSummary.read(new FileReader(summaryOutfile));
 
         for (final GcBiasSummaryMetrics summary : outputSummary.getMetrics()) {
-            if (summary.ACCUMULATION_LEVEL.equals("All Reads") && summary.READS_USED.equals("UNIQUE")) { //ALL_READS level for case without duplicates
+            if (summary.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS) && summary.READS_USED.equals(READS_USED_UNIQUE)) { //ALL_READS level for case without duplicates
                 Assert.assertEquals(summary.TOTAL_CLUSTERS, 3);
                 Assert.assertEquals(summary.ALIGNED_READS, 3);
                 Assert.assertEquals(summary.AT_DROPOUT, 79.180328);
@@ -319,7 +320,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(summary.GC_NC_60_79, 0.0);
                 Assert.assertEquals(summary.GC_NC_80_100, 0.0);
             }
-            if (summary.ACCUMULATION_LEVEL.equals("All Reads") && summary.READS_USED.equals("ALL")) { //ALL_READS level
+            if (summary.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS) && summary.READS_USED.equals(READS_USED_ALL)) { //ALL_READS level
                 Assert.assertEquals(summary.TOTAL_CLUSTERS, 5);
                 Assert.assertEquals(summary.ALIGNED_READS, 5);
                 Assert.assertEquals(summary.AT_DROPOUT, 79.180328);
@@ -350,7 +351,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
         output.read(new FileReader(summaryOutfile));
 
         for (final GcBiasSummaryMetrics metrics : output.getMetrics()) {
-            if (metrics.ACCUMULATION_LEVEL.equals("All Reads")) { //ALL_READS level
+            if (metrics.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS)) { //ALL_READS level
                 Assert.assertEquals(metrics.TOTAL_CLUSTERS, 0);
                 Assert.assertEquals(metrics.ALIGNED_READS, 1);
                 Assert.assertEquals(metrics.AT_DROPOUT, 78.682453);

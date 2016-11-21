@@ -14,6 +14,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
+import static picard.analysis.GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -287,7 +288,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         output.read(new FileReader(outfile + ".gc_bias.summary_metrics"));
 
         for (final GcBiasSummaryMetrics metrics : output.getMetrics()) {
-            if (metrics.ACCUMULATION_LEVEL.equals("All Reads")) { //ALL_READS level
+            if (metrics.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS)) { //ALL_READS level
                 Assert.assertEquals(metrics.TOTAL_CLUSTERS, 300);
                 Assert.assertEquals(metrics.ALIGNED_READS, 600);
                 Assert.assertEquals(metrics.AT_DROPOUT, 7.234062);

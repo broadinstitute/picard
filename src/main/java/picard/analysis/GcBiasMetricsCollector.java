@@ -105,12 +105,12 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
         private final String library;
         private final String readGroup;
         private static final String allReads = "All_Reads";
-        private final static String ACCUMULATION_LEVEL_ALL_READS = "All Reads";
-        private final static String ACCUMULATION_LEVEL_LIBRARY = "Library";
-        private final static String ACCUMULATION_LEVEL_SAMPLE = "Sample";
-        private final static String ACCUMULATION_LEVEL_READ_GROUP = "Read Group";
-        private final static String READS_USED_ALL = "ALL";
-        private final static String READS_USED_UNIQUE = "UNIQUE";
+        final static String ACCUMULATION_LEVEL_ALL_READS = "All Reads";
+        final static String ACCUMULATION_LEVEL_LIBRARY = "Library";
+        final static String ACCUMULATION_LEVEL_SAMPLE = "Sample";
+        final static String ACCUMULATION_LEVEL_READ_GROUP = "Read Group";
+        final static String READS_USED_ALL = "ALL";
+        final static String READS_USED_UNIQUE = "UNIQUE";
         private int logCounter;
 
         /////////////////////////////////////////////////////////////////////////////
