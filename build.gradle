@@ -161,6 +161,7 @@ ext.commandClasses = ["picard.sam.AddCommentsToBam", "picard.sam.AddOrReplaceRea
                           "picard.analysis.CollectWgsMetricsWithNonZeroCoverage", "picard.analysis.CompareMetrics", "picard.sam.CompareSAMs",
                           "picard.analysis.artifacts.ConvertSequencingArtifactToOxoG", "picard.sam.CreateSequenceDictionary", "picard.sam.DownsampleSam",
                           "picard.illumina.ExtractIlluminaBarcodes", "picard.sam.markduplicates.EstimateLibraryComplexity", "picard.sam.FastqToSam", "picard.util.FifoBuffer",
+                          "picard.vcf.MendelianViolations.FindMendelianViolations",
                           "picard.sam.FilterSamReads", "picard.vcf.filter.FilterVcf", "picard.sam.FixMateInformation", "picard.sam.GatherBamFiles", "picard.vcf.GatherVcfs",
                           "picard.vcf.GenotypeConcordance", "picard.illumina.IlluminaBasecallsToFastq", "picard.illumina.IlluminaBasecallsToSam", "picard.illumina.CheckIlluminaDirectory",
                           "picard.sam.CheckTerminatorBlock", "picard.util.IntervalListTools", "picard.util.LiftOverIntervalList", "picard.vcf.LiftoverVcf", "picard.vcf.MakeSitesOnlyVcf",
@@ -168,7 +169,8 @@ ext.commandClasses = ["picard.sam.AddCommentsToBam", "picard.sam.AddOrReplaceRea
                           "picard.sam.MergeBamAlignment", "picard.sam.MergeSamFiles", "picard.vcf.MergeVcfs", "picard.reference.NormalizeFasta", "picard.sam.PositionBasedDownsampleSam",
                           "picard.reference.ExtractSequences", "picard.analysis.QualityScoreDistribution", "picard.vcf.RenameSampleInVcf", "picard.sam.ReorderSam",
                           "picard.sam.ReplaceSamHeader", "picard.sam.RevertSam", "picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar", "picard.sam.SamFormatConverter",
-                          "picard.sam.SamToFastq", "picard.util.ScatterIntervalsByNs", "picard.sam.SortSam", "picard.vcf.SortVcf", "picard.sam.SplitSamByLibrary",
+                          "picard.sam.SamToFastq", "picard.util.ScatterIntervalsByNs", "picard.sam.SetNmMdAndUqTags",
+                          "picard.sam.SortSam", "picard.vcf.SortVcf", "picard.sam.SplitSamByLibrary", "picard.sam.markduplicates.UmiAwareMarkDuplicatesWithMateCigar",
                           "picard.vcf.UpdateVcfSequenceDictionary", "picard.vcf.VcfFormatConverter", "picard.illumina.MarkIlluminaAdapters", "picard.vcf.SplitVcfs",
                           "picard.sam.ValidateSamFile", "picard.sam.ViewSam", "picard.vcf.VcfToIntervalList"]
 

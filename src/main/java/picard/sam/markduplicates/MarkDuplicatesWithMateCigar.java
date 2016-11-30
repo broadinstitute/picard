@@ -89,8 +89,16 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
 
     private final Log log = Log.getInstance(MarkDuplicatesWithMateCigar.class);
 
-    @Option(doc = "The minimum distance to buffer records to account for clipping on the 5' end of the records." +
-            "Set this number to -1 to use twice the first read's read length (or 100, whichever is smaller).", optional = true)
+    @Option(doc = "The minimum distance to buffer records to account for clipping on the 5' end of the records. " +
+            "For a given alignment, this parameter controls the width of the window to search for duplicates of that alignment. " +
+            "Due to 5' read clipping, duplicates do not necessarily have the same 5' alignment coordinates, so the algorithm " +
+            "needs to search around the neighborhood. For single end sequencing data, the neighborhood is only determined by " +
+            "the amount of clipping (assuming no split reads), thus setting MINIMUM_DISTANCE to twice the sequencing read length " +
+            "should be sufficient. For paired end sequencing, the neighborhood is also determined by the fragment insert size, " +
+            "so you may want to set MINIMUM_DISTANCE to something like twice the 99.5% percentile of the fragment insert size " +
+            "distribution (see CollectInsertSizeMetrics). Or you can set this number to -1 to use either a) twice the first read's " +
+            "read length, or b) 100, whichever is smaller. Note that the larger the window, the greater the RAM requirements, so " +
+            "you could run into performance limitations if you use a value that is unnecessarily large.", optional = true)
     public int MINIMUM_DISTANCE = -1;
 
     @Option(doc = "Skip record pairs with no mate cigar and include them in the output.")
