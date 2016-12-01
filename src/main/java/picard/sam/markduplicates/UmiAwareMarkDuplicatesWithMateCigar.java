@@ -51,15 +51,16 @@ import picard.cmdline.programgroups.Alpha;
         programGroup = Alpha.class
 )
 public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWithMateCigar {
-    static final String USAGE_SUMMARY = "Identifies duplicate reads using information from read positions and UMIs." +
-            "All records are then written to the output file with the duplicate records flagged.";
-    static final String USAGE_DETAILS = "<p>UmiAwareMarkDuplicatesWithMateCigar locates and tags duplicate reads in a BAM or SAM file, where duplicate reads are " +
-            "defined as originating from a single fragment of DNA. </p>" +
-            "<p>This tool identifies a duplicate set by assuming that all members of a duplicate set must have the same start and end position," +
-            "and must also have a sufficiently similar UMIs.  Sufficiently similar is parameterized by MAX_EDIT_DISTANCE_TO_JOIN which indicates" +
-            "the edit distance between UMIs that shall be considered to be part of the same original molecule.</p>" +
-            "<p>This tool is not intended to be used on data without UMIs, see MarkDuplicates for marking duplicates that" +
-            "do not have UMIs.</p>";
+    static final String USAGE_SUMMARY = "Identifies duplicate reads using information from read positions and UMIs. ";
+    static final String USAGE_DETAILS = "<p>This tool locates and tags duplicate reads in a BAM or SAM file, where duplicate reads are " +
+            "defined as originating from a single fragment of DNA. It is based on the MarkDuplicatesWithMateCigar tool, with added logic " +
+            "to leverage Unique Molecular Identifier (UMI) information.</p>" +
+            "<p>In addition to assuming that all members of a duplicate set must have the same start and end position, it imposes that" +
+            "they must also have sufficiently similar UMIs. In this context, 'sufficiently similar' is parameterized by the command line " +
+            "argument MAX_EDIT_DISTANCE_TO_JOIN, which sets the edit distance between UMIs that will be considered to be part of the same " +
+            "original molecule. This logic allows for sequencing errors in UMIs.</p>" +
+            "<p>This tool is NOT intended to be used on data without UMIs; for marking duplicates in non-UMI data, see MarkDuplicates or " +
+            "MarkDuplicatesWithMateCigar. Mixed data (where some reads have UMIs and others do not) is not supported.</p>";
 
     @Option(shortName = "MAX_EDIT_DISTANCE_TO_JOIN", doc = "Largest edit distance that UMIs must have in order to be considered as coming from distinct source molecules.", optional = true)
     public int MAX_EDIT_DISTANCE_TO_JOIN = 1;
@@ -73,7 +74,7 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
     // Since we inherit from SimpleMarkDuplicatesWithMateCigar, it is useful for us to also inherit the tests
     // which do not contain UMIs.  By default, we don't allow for missing UMIs, but for the inherited tests
     // we allow for missing UMIs.
-    @Option(doc = "Allow for missing UMIs if data doesn't have UMIs.  This option is intended to be used only for testing the code.  Use SimpleMarkDuplicatesWithMateCigar if data has missing UMIs.", optional = true)
+    @Option(doc = "FOR TESTING ONLY: allow for missing UMIs if data doesn't have UMIs. This option is intended to be used ONLY for testing the code. Use MarkDuplicatesWithMateCigar if data has no UMIs. Mixed data (where some reads have UMIs and others do not) is not supported.", optional = true)
     public boolean ALLOW_MISSING_UMIS = false;
 
     private final Log log = Log.getInstance(UmiAwareMarkDuplicatesWithMateCigar.class);
