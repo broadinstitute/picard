@@ -213,10 +213,16 @@
 					</div>
 				</div>
 				
-				
 				<div class="faq" onclick="toggle('faq26')">
-					<strong>Q:</strong> What is the limit for the length of a reference sequence in SAM/BAM?
+					<strong>Q:</strong> What is IntelDeflater and how do I control it?
 					<div id="faq26" class="ans">
+						<p><strong>A</strong> libIntelDeflater.so is a library that speeds compression on some Intel processors. See <a href="http://broadinstitute.github.io/picard/intel-deflater.html"><strong>this document</strong></a> for details.</p>
+					</div>
+				</div>
+				
+				<div class="faq" onclick="toggle('faq27')">
+					<strong>Q:</strong> What is the limit for the length of a reference sequence in SAM/BAM?
+					<div id="faq27" class="ans">
 						<p><strong>A</strong> The BAM index format imposes a limit of 512MB for a single reference sequence. If this limit is exceeded, various errors may occur depending on what steps have been taken, including the following:</p>
                         <ul>
                             <li>bin field of BAM record does not equal value computed based on alignment start
