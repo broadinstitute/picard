@@ -64,6 +64,15 @@ public class DbSnpBitSetUtil {
         this(dbSnpFile, sequenceDictionary, variantsToMatch, null);
     }
 
+
+    /** Constructor that creates a bit set with bits set to true for the given variant types over the given regions. */
+    public DbSnpBitSetUtil(final File dbSnpFile,
+                           final SAMSequenceDictionary sequenceDictionary,
+                           final Collection<VariantType> variantsToMatch,
+                           final IntervalList intervals) {
+        this(dbSnpFile, sequenceDictionary, variantsToMatch, intervals, Optional.empty());
+    }
+
     /**
      * Constructor.
      *
@@ -81,12 +90,13 @@ public class DbSnpBitSetUtil {
     public DbSnpBitSetUtil(final File dbSnpFile,
                            final SAMSequenceDictionary sequenceDictionary,
                            final Collection<VariantType> variantsToMatch,
-                           final IntervalList intervals) {
+                           final IntervalList intervals,
+                           final Optional<Log> log) {
 
         if (dbSnpFile == null) throw new IllegalArgumentException("null dbSnpFile");
         final Map<DbSnpBitSetUtil, Set<VariantType>> tmp = new HashMap<>();
         tmp.put(this, EnumSet.copyOf(variantsToMatch));
-        loadVcf(dbSnpFile, sequenceDictionary, tmp, intervals, Optional.empty());
+        loadVcf(dbSnpFile, sequenceDictionary, tmp, intervals, log);
     }
 
     /** Factory method to create both a SNP bitmask and an indel bitmask in a single pass of the VCF. */

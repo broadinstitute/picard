@@ -18,12 +18,12 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.DbSnpBitSetUtil;
+import picard.util.VariantType;
 
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.sun.tools.doclets.formats.html.markup.HtmlStyle.header;
 import static htsjdk.samtools.util.CodeUtil.getOrElse;
 import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
@@ -152,6 +152,8 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
     private final Set<String> libraries = new HashSet<String>();
     private final Map<String, ArtifactCounter> artifactCounters = new HashMap<String, ArtifactCounter>();
 
+    private static final Log log = Log.getInstance(CollectSequencingArtifactMetrics.class);
+
     @Override
     protected String[] customCommandLineValidation() {
         final List<String> messages = new ArrayList<String>();
@@ -192,12 +194,18 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
 
         if (INTERVALS != null) {
             IOUtil.assertFileIsReadable(INTERVALS);
-            intervalMask = new IntervalListReferenceSequenceMask(IntervalList.fromFile(INTERVALS).uniqued());
-        }
 
-        if (DB_SNP != null) {
+            final IntervalList intervalList = IntervalList.fromFile(INTERVALS).uniqued();
+            intervalMask = new IntervalListReferenceSequenceMask(intervalList);
+
+            if (DB_SNP != null) {
+                IOUtil.assertFileIsReadable(DB_SNP);
+                dbSnpMask = new DbSnpBitSetUtil(DB_SNP, header.getSequenceDictionary(), EnumSet.noneOf(VariantType.class), intervalList, Optional.of(log));
+            }
+        }
+        else if (DB_SNP != null) {
             IOUtil.assertFileIsReadable(DB_SNP);
-            dbSnpMask = new DbSnpBitSetUtil(DB_SNP, header.getSequenceDictionary());
+            dbSnpMask = new DbSnpBitSetUtil(DB_SNP, header.getSequenceDictionary(), EnumSet.noneOf(VariantType.class), null, Optional.of(log));
         }
 
         // set record-level filters
