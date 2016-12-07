@@ -1,0 +1,11 @@
+<h3 id="SetNmMdAndUqTags">SetNmMdAndUqTags</h3>
+<section>
+<p>Fixes the NM, MD, and UQ tags in a SAM file.  This tool takes in a SAM or BAM file (sorted by coordinate) and calculates the NM, MD, and UQ tags by comparing with the reference.<br />This may be needed when MergeBamAlignment was run with SORT_ORDER different from 'coordinate' and thus could not fix
+these tags then.<br /><h4>Usage example:</h4><pre>java -jar picard.jar SetNmMDAndUqTags \<br />      I=sorted.bam \<br />      O=fixed.bam \<br /></pre><hr /></p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>The BAM or SAM file to fix.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>The fixed BAM or SAM output file.   Required. </td></tr>
+<tr><td>IS_BISULFITE_SEQUENCE (Boolean)</td><td>Whether the file contains bisulfite sequence (used when calculating the NM tag).  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+</table>
+</section>

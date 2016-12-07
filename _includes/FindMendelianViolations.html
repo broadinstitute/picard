@@ -1,0 +1,27 @@
+<h3 id="FindMendelianViolations">FindMendelianViolations</h3>
+<section>
+<p>Finds mendelian violations of all types within a VCF. Takes in VCF or BCF and a pedigree file and looks for high confidence calls where the genotype of the offspring is incompatible with the genotypes of the parents. Assumes the existence of format fields AD, DP, GT, GQ, and PL fields. 
+Take note that the implementation assumes that reads from the PAR will be mapped to the female chromosomerather than the male. This requires that the PAR in the male chromosome be masked so that the aligner has a single coting to map to. This is normally done for the public releases of the human reference.
+Usage example: java -jar picard.jar FindMendelianViolations I=input.vcf \
+                 TRIO=family.ped \
+                 OUTPUT=mendelian.txt \
+                 MIN_DP=20 
+
+</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>Input VCF or BCF with genotypes.  Required. </td></tr>
+<tr><td>TRIOS (File)</td><td>File of Trio information in PED format (with no genotype columns).  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>Output metrics file.  Required. </td></tr>
+<tr><td>MIN_GQ (Integer)</td><td>Minimum genotyping quality (or non-ref likelihood) to perform tests.  Default value: 30. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MIN_DP (Integer)</td><td>Minimum depth in each sample to consider possible mendelian violations.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MIN_HET_FRACTION (Double)</td><td>Minimum allele balance at sites that are heterozygous in the offspring.  Default value: 0.3. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>VCF_DIR (File)</td><td>If provided, output per-family VCFs of mendelian violations into this directory.  Default value: null. </td></tr>
+<tr><td>SKIP_CHROMS (String)</td><td>List of chromosome names to skip entirely.  Default value: [MT, chrM]. This option can be set to 'null' to clear the default value. This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
+<tr><td>MALE_CHROMS (String)</td><td>List of possible names for male sex chromosome(s)  Default value: [chrY, Y]. This option can be set to 'null' to clear the default value. This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
+<tr><td>FEMALE_CHROMS (String)</td><td>List of possible names for female sex chromosome(s)  Default value: [chrX, X]. This option can be set to 'null' to clear the default value. This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
+<tr><td>PSEUDO_AUTOSOMAL_REGIONS (String)</td><td>List of chr:start-end for pseudo-autosomal regions on the female sex chromosome. Defaults to HG19/b37 & HG38 coordinates.  Default value: [chrX:10000-2781479, X:10001-2649520, chrX:155701382-156030895, X:59034050-59373566]. This option can be set to 'null' to clear the default value. This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
+<tr><td>THREAD_COUNT (Integer)</td><td>The number of threads that will be used to collect the metrics.   Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>TAB_MODE (Boolean)</td><td>If true then fields need to be delimited by a single tab. If false the delimiter is one or more whitespace characters. Note that tab mode does not strictly follow the PED spec  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+</table>
+</section>

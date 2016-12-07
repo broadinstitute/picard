@@ -23,6 +23,7 @@ picard.sam.markduplicates.util
 picard.sam.util
 picard.util
 picard.vcf
+picard.vcf.MendelianViolations
 picard.vcf.filter
 picard.vcf.processor
 picard.vcf.processor.util
