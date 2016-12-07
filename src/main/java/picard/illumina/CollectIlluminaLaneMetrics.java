@@ -33,13 +33,13 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Illumina;
-import picard.illumina.parser.ReadStructure;
-import picard.illumina.parser.Tile;
-import picard.illumina.parser.TileMetricsUtil;
+import picard.illumina.parser.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -84,10 +84,28 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
     @Option(doc = ReadStructure.PARAMETER_DOC, shortName = "RS")
     public ReadStructure READ_STRUCTURE;
 
+    @Option(doc = "Include skips and molecular barcodes for both phasing and pre-phasing values.  Use this if the either of the former are in-line in the read(s) (not in index reads).")
+    public boolean INCLUDE_SKIPS_AND_MOLECULAR_BARCODES = false;
+
     @Override
     protected int doWork() {
         final MetricsFile<MetricBase, Comparable<?>> laneMetricsFile = this.getMetricsFile();
         final MetricsFile<MetricBase, Comparable<?>> phasingMetricsFile = this.getMetricsFile();
+
+        // If skips or molecular identifiers are part of the read structure and also part of the non-index reads (line),
+        // then convert them template descriptors for our purposes.
+        if (INCLUDE_SKIPS_AND_MOLECULAR_BARCODES) {
+            final List<ReadDescriptor> descriptors = READ_STRUCTURE.descriptors.stream().map(descriptor -> {
+                if (descriptor.type == ReadType.Skip || descriptor.type == ReadType.MolecularIndex) {
+                    return new ReadDescriptor(descriptor.length, ReadType.Template);
+                }
+                else {
+                    return descriptor;
+                }
+            }).collect(Collectors.toList());
+            READ_STRUCTURE = new ReadStructure(descriptors);
+        }
+
         IlluminaLaneMetricsCollector.collectLaneMetrics(RUN_DIRECTORY, OUTPUT_DIRECTORY, OUTPUT_PREFIX, laneMetricsFile, phasingMetricsFile, READ_STRUCTURE);
         return 0;
     }
