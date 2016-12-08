@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<RunInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="4">
+  <Run>
+    <Reads>
+      <Read Number="1" NumCycles="95" IsIndexedRead="N" />
+      <Read Number="2" NumCycles="101" IsIndexedRead="N" />
+    </Reads>
+  </Run>
+</RunInfo>	
