@@ -70,13 +70,17 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
                 "TRUNCATE_NAMES_AT_WHITESPACE=false"
         };
         Assert.assertEquals(runPicardCommandLine(argv), 0);
-        
+
         List<String> currentDict = new BufferedReader(new FileReader(outputDict))
                 .lines()
+                //remove info about location fasta file
+                .map(s -> s.replaceAll("UR:.*", ""))
                 .collect(Collectors.toList());
 
-        List<String> expectedDict = new BufferedReader(new FileReader("testdata/picard/reference/csd_dict.dict"))
+        List<String> expectedDict = new BufferedReader(new FileReader(TEST_DATA_DIR + "/reference/csd_dict.dict"))
                 .lines()
+                //remove info about location fasta file
+                .map(s -> s.replaceAll("UR:.*", ""))
                 .collect(Collectors.toList());
 
         Assert.assertEquals(currentDict, expectedDict);
