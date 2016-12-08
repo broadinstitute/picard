@@ -72,10 +72,10 @@ public class ClusterDataToSamConverter implements
     // TODO: - https://github.com/broadinstitute/picard/issues/287
     // TODO: - HTS-spec issue: https://github.com/samtools/hts-specs/issues/109
     // TODO: - https://github.com/samtools/hts-specs/pull/119
-    private String molecularIndexTag          = "RX";
-    private String molecularIndexQualityTag   = "QX";
-    private String molecularIndexDelimiter    = "-";
-    private List<String> tagPerMolecularIndex = Collections.emptyList();
+    private String molecularIndexTag             = "RX";
+    private String molecularIndexQualityTag      = "QX";
+    private final String molecularIndexDelimiter = "-";
+    private List<String> tagPerMolecularIndex    = Collections.emptyList();
 
     /**
      * Constructor
