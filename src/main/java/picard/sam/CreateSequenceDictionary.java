@@ -23,6 +23,7 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceDictionaryCodec;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -46,9 +47,14 @@ import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
- * Create a .dict file from a fasta containing reference sequence. dict file contains only sequence records.
+ * Create a SAM/BAM file from a fasta containing reference sequence. The output SAM file contains a header but no
+ * SAMRecords, and the header contains only sequence records.
  */
 @CommandLineProgramProperties(
         usage = CreateSequenceDictionary.USAGE_SUMMARY + CreateSequenceDictionary.USAGE_DETAILS,
@@ -112,6 +118,28 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     }
 
     /**
+     * Read all the sequences from the given reference file, and convert into SAMSequenceRecords
+     * @param referenceFile fasta or fasta.gz
+     * @return SAMSequenceRecords containing info from the fasta, plus from cmd-line arguments.
+     */
+    @Deprecated
+    public SAMSequenceDictionary makeSequenceDictionary(final File referenceFile) {
+        final ReferenceSequenceFile refSeqFile =
+                ReferenceSequenceFileFactory.getReferenceSequenceFile(referenceFile, TRUNCATE_NAMES_AT_WHITESPACE);
+        ReferenceSequence refSeq;
+        final List<SAMSequenceRecord> ret = new ArrayList<>();
+        final Set<String> sequenceNames = new HashSet<>();
+        for (int numSequences = 0; numSequences < NUM_SEQUENCES && (refSeq = refSeqFile.nextSequence()) != null; ++numSequences) {
+            if (sequenceNames.contains(refSeq.getName())) {
+                throw new PicardException("Sequence name appears more than once in reference: " + refSeq.getName());
+            }
+            sequenceNames.add(refSeq.getName());
+            ret.add(makeSequenceRecord(refSeq));
+        }
+        return new SAMSequenceDictionary(ret);
+    }
+
+    /**
      * Use reference filename to create URI to go into header if URI was not passed on cmd line.
      */
     protected String[] customCommandLineValidation() {
@@ -156,7 +184,10 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
         // check uniqueness of sequences names
         final CloseableIterator<String> iterator = sequenceNames.iterator();
-        String first = iterator.hasNext() ? iterator.next() : "";
+
+        if(!iterator.hasNext()) return 0;
+
+        String first = iterator.next();
         while (iterator.hasNext()) {
             final String next = iterator.next();
             if (first.equals(next)) {
@@ -216,21 +247,15 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     }
 
     private SortingCollection<String> makeSortingCollection() {
-        final String parent = System.getProperty("java.io.tmpdir") + "/" + System.getProperty("user.name");
-        final String child = getClass().getSimpleName();
-        final File tmpDir = new File(parent, child);
-        IOUtil.deleteDirectoryTree(tmpDir);
-        if (!tmpDir.mkdirs()) {
-            throw new IllegalStateException("Could not create tmpdir: " + tmpDir.getAbsolutePath());
-        }
-        tmpDir.deleteOnExit();
+        final String name = getClass().getSimpleName();
+        final File tmpDir = IOUtil.createTempDir(name, null);
         // 256 byte for one name, and 1/10 part of all memory for this, rough estimate
         long maxNamesInRam = Runtime.getRuntime().maxMemory() / 256 / 10;
         return SortingCollection.newInstance(
                 String.class,
                 new StringCodec(),
                 String::compareTo,
-                maxNamesInRam > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) maxNamesInRam,
+                (int) Math.min(maxNamesInRam, Integer.MAX_VALUE),
                 tmpDir
         );
     }
