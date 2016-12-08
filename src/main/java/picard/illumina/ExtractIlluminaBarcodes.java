@@ -98,6 +98,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             "<li>Read subsequence at barcode position</li>" +
             "<li>Y or N indicating if there was a barcode match</li>" +
             "<li>Matched barcode sequence (empty if read did not match one of the barcodes)</li>  " +
+            "<li>The number of mismatches if there was a barcode match</li>  " +
+            "<li>The number of mismatches to the second best barcode if there was a barcode match</li>  " +
             "</ul>" +
             "If there is no match but we're close to the threshold of calling it a match, we output the barcode that would have been " +
             "matched but in lower case.  Threshold values can be adjusted to accommodate barcode sequence mismatches from the reads." +
