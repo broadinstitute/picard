@@ -87,7 +87,7 @@ public abstract class AbstractAlignmentMerger {
     public static final int MAX_RECORDS_IN_RAM = 500000;
 
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X', 'Y', 'Z'};
-    private static final int MAX_FOREIGN_CONTAM_WARN = 1_000;
+    private static final int MAX_CROSS_SPECIES_CONTAM_WARN = 1_000;
 
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
     private final ProgressLogger progress = new ProgressLogger(this.log, 1000000, "Merged", "records");
@@ -115,6 +115,8 @@ public abstract class AbstractAlignmentMerger {
     private boolean keepAlignerProperPairFlags = false;
     private boolean addMateCigar = false;
     private boolean unmapContaminantReads = false;
+    private UNMAPPING_READ_STRATEGY unmappingReadsStrategy = UNMAPPING_READ_STRATEGY.DO_NOT_CHANGE;
+
 
     private final SamRecordFilter alignmentFilter = new SamRecordFilter() {
         public boolean filterOut(final SAMRecord record) {
@@ -158,6 +160,29 @@ public abstract class AbstractAlignmentMerger {
         }
     }
 
+    public enum UNMAPPING_READ_STRATEGY {
+        // Leave on record, and copy to tag
+        COPY_TO_TAG(false,true),
+        // Leave on record, but do not create additional tag
+        DO_NOT_CHANGE(false, false),
+        // Add tag with information, and remove from standard fields in record
+        MOVE_TO_TAG(true, true);
+
+        private final boolean resetMappingInformation, populatePATag;
+
+        UNMAPPING_READ_STRATEGY(boolean resetMappingInformation, boolean populatePATag) {
+            this.resetMappingInformation = resetMappingInformation;
+            this.populatePATag = populatePATag;
+        }
+
+        public boolean isResetMappingInformation() {
+            return resetMappingInformation;
+        }
+
+        public boolean isPopulatePATag() {
+            return populatePATag;
+        }
+    }
 
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();
 
@@ -194,8 +219,10 @@ public abstract class AbstractAlignmentMerger {
      * @param primaryAlignmentSelectionStrategy What to do when there are multiple primary alignments, or multiple
      *                                          alignments but none primary, for a read or read pair.
      * @param addMateCigar                      True if we are to add or maintain the mate CIGAR (MC) tag, false if we are to remove or not include.
-     * @param unmapContaminantReads             If true, identify reads having the signature of contamination from a foreign organism (i.e. mostly clipped bases),
+     * @param unmapContaminantReads             If true, identify reads having the signature of cross-species contamination (i.e. mostly clipped bases),
      *                                          and mark them as unmapped.
+     * @param unmappingReadsStrategy            An enum desribing how to deal with reads whose mapping information is being removed (currently this happens due to cross-species
+     *                                          contamination)
      */
     public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
                                    final File referenceFasta, final boolean clipAdapters,
@@ -207,7 +234,8 @@ public abstract class AbstractAlignmentMerger {
                                    final SAMFileHeader.SortOrder sortOrder,
                                    final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
                                    final boolean addMateCigar,
-                                   final boolean unmapContaminantReads) {
+                                   final boolean unmapContaminantReads,
+                                   final UNMAPPING_READ_STRATEGY unmappingReadsStrategy) {
         IOUtil.assertFileIsReadable(unmappedBamFile);
         IOUtil.assertFileIsWritable(targetBamFile);
         IOUtil.assertFileIsReadable(referenceFasta);
@@ -257,6 +285,7 @@ public abstract class AbstractAlignmentMerger {
 
         this.addMateCigar = addMateCigar;
         this.unmapContaminantReads = unmapContaminantReads;
+        this.unmappingReadsStrategy = unmappingReadsStrategy;
     }
 
     /** Allows the caller to override the maximum records in RAM. */
@@ -539,7 +568,7 @@ public abstract class AbstractAlignmentMerger {
         return null;
     }
 
-    private int numForeignContaminantWarnings = 0;
+    private int numCrossSpeciesContaminantWarnings = 0;
 
     /**
      * Copies alignment info from aligned to unaligned read, clips as appropriate, and sets PG ID.
@@ -559,38 +588,55 @@ public abstract class AbstractAlignmentMerger {
             log.warn("Record mapped off end of reference; making unmapped: " + aligned);
             SAMUtils.makeReadUnmapped(unaligned);
         } else if (isContaminant) {
-            if (numForeignContaminantWarnings < MAX_FOREIGN_CONTAM_WARN) {
-                log.warn("Record looks like foreign contamination ; making unmapped: " + aligned);
-                numForeignContaminantWarnings++;
+            if (numCrossSpeciesContaminantWarnings < MAX_CROSS_SPECIES_CONTAM_WARN) {
+                log.warn("Record looks like cross-species contamination ; unmapping read: " + aligned);
+                numCrossSpeciesContaminantWarnings++;
+            } else if (numCrossSpeciesContaminantWarnings == MAX_CROSS_SPECIES_CONTAM_WARN) {
+                log.warn("No more warnings regarding cross-species contamination; limit reached.");
             }
 
-            if (numForeignContaminantWarnings == MAX_FOREIGN_CONTAM_WARN) {
-                log.warn("No more warnings regarding foreign contamination; limit reached.");
-            }
-
-            // For reads that look like contamination, set unmap. And reset the mapping information as
-            // keeping it violates the sam-spec and is not supported by some formats (CRAM)
+            // For reads that look like contamination, set unmap, and copy the mapping information to
+            // a tag since CRAM seems to throw away the mapping information for
+            // unaligned reads.
 
             // Save the old alignment information in a "PA" Tag in case it is needed.
-            unaligned.setAttribute("PA", String.join(",",
-                    aligned.getContig(),
-                    ((Integer) aligned.getAlignmentStart()).toString(),
-                    aligned.getCigarString(),
-                    ((Integer) aligned.getMappingQuality()).toString(),
-                    aligned.getStringAttribute(SAMTag.NM.name()))+";");
+
+            if (unmappingReadsStrategy.isResetMappingInformation()) {
+                unaligned.setAttribute("PA", encodeMappingInformation(aligned));
+            }
 
             unaligned.setReadUnmappedFlag(true);
-            unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
-            unaligned.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
-            unaligned.setAlignmentStart(0);
-            unaligned.setCigar(null);
-            unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+
+            if (unmappingReadsStrategy.isPopulatePATag()) {
+                unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
+                unaligned.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
+                unaligned.setAlignmentStart(0);
+                unaligned.setCigar(null);
+                unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+            }
 
             // if there already is a comment, add second comment with a | separator:
             Optional<String> optionalComment = Optional.ofNullable(unaligned.getStringAttribute(SAMTag.CO.name()));
             unaligned.setAttribute(optionalComment.map(s -> s + " | ").orElse("") +
                     SAMTag.CO.name(), "Cross-species contamination");
         }
+    }
+
+    /**
+     * Encodes mapping information from a record into a string according to the format sepcified in the
+     * Sam-Spec under the SA tag. No protection against missing values (for cigar, and NM tag).
+     * (Might make sense to move this to htsJDK.)
+     *
+     * @param rec SAMRecord whose alignment information will be encoded
+     * @return String encoding rec's alignment information according to SA tag in the SAM spec
+     */
+    static private String encodeMappingInformation(SAMRecord rec) {
+        return String.join(",",
+                rec.getContig(),
+                ((Integer) rec.getAlignmentStart()).toString(),
+                rec.getCigarString(),
+                ((Integer) rec.getMappingQuality()).toString(),
+                rec.getStringAttribute(SAMTag.NM.name()))+";";
     }
 
     /**

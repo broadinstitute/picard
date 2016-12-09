@@ -289,9 +289,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             } else {
                 throw new Exception("Unexpected read name: " + sam.getReadName());
             }
-
         }
-
     }
 
     @Test(dataProvider="data")
@@ -304,7 +302,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, Arrays.asList(aligned), 1, null, null, null, null, null, null,
                 Arrays.asList(SamPairUtil.PairOrientation.FR),
                 coordinateSorted ? SAMFileHeader.SortOrder.coordinate : SAMFileHeader.SortOrder.queryname,
-                new BestMapqPrimaryAlignmentSelectionStrategy(), false, false, 30);
+                new BestMapqPrimaryAlignmentSelectionStrategy(), false, false, 30, AbstractAlignmentMerger.UNMAPPING_READ_STRATEGY.DO_NOT_CHANGE);
 
         merger.mergeAlignment(Defaults.REFERENCE_FASTA);
         Assert.assertEquals(sorted, !merger.getForceSort());
@@ -1351,6 +1349,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         }
         if (unmapContaminantReads != null) {
             args.add("UNMAP_CONTAMINANT_READS=" + unmapContaminantReads);
+            args.add("UNMAPPED_READ_STRATEGY=MOVE_TO_TAG");
         }
         if (sortOrder != null) {
             args.add("SORT_ORDER=" + sortOrder.name());

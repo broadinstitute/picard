@@ -206,6 +206,9 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Option(doc = "If UNMAP_CONTAMINANT_READS is set, require this many unclipped bases or else the read will be marked as contaminant.")
     public int MIN_UNCLIPPED_BASES = 32;
 
+    @Option(doc = "How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.)", optional = true)
+    public AbstractAlignmentMerger.UNMAPPING_READ_STRATEGY UNMAPPED_READ_STRATEGY = AbstractAlignmentMerger.UNMAPPING_READ_STRATEGY.DO_NOT_CHANGE;
+
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
 
     /**
@@ -260,7 +263,7 @@ public class MergeBamAlignment extends CommandLineProgram {
                 ATTRIBUTES_TO_RETAIN, ATTRIBUTES_TO_REMOVE, READ1_TRIM, READ2_TRIM,
                 READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER,
                 PRIMARY_ALIGNMENT_STRATEGY.newInstance(), ADD_MATE_CIGAR, UNMAP_CONTAMINANT_READS,
-                MIN_UNCLIPPED_BASES);
+                MIN_UNCLIPPED_BASES, UNMAPPED_READ_STRATEGY);
         merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS);
         merger.setMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         merger.setKeepAlignerProperPairFlags(ALIGNER_PROPER_PAIR_FLAGS);

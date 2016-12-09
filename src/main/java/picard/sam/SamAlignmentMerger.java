@@ -88,7 +88,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      *                                          in which none are primary, or more than one is marked primary
      * @param addMateCigar                      True if we are to add or maintain the mate CIGAR (MC) tag, false if we are to remove or not include.
      *
-     * @param unmapContaminantReads             If true, identify reads having the signature of contamination from a foreign organism (i.e. mostly clipped bases),
+     * @param unmapContaminantReads             If true, identify reads having the signature of cross-species contamination (i.e. mostly clipped bases),
      *                                          and mark them as unmapped.
      * @param minUnclippedBases                 If unmapContaminantReads is set, require this many unclipped bases or else the read will be marked as contaminant.
      */
@@ -104,11 +104,13 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                               final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
                               final boolean addMateCigar,
                               final boolean unmapContaminantReads,
-                              final int minUnclippedBases) {
+                              final int minUnclippedBases,
+                              final UNMAPPING_READ_STRATEGY unmappingReadStrategy) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
                 alignedReadsOnly, programRecord, attributesToRetain, attributesToRemove, read1BasesTrimmed,
-                read2BasesTrimmed, expectedOrientations, sortOrder, primaryAlignmentSelectionStrategy, addMateCigar, unmapContaminantReads);
+                read2BasesTrimmed, expectedOrientations, sortOrder, primaryAlignmentSelectionStrategy, addMateCigar,
+                unmapContaminantReads, unmappingReadStrategy);
 
         if ((alignedSamFile == null || alignedSamFile.isEmpty()) &&
                 (read1AlignedSamFile == null || read1AlignedSamFile.isEmpty() ||
@@ -118,16 +120,10 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         }
 
         if (alignedSamFile != null) {
-            for (final File f : alignedSamFile) {
-                IOUtil.assertFileIsReadable(f);
-            }
+            alignedSamFile.forEach(IOUtil::assertFileIsReadable);
         } else {
-            for (final File f : read1AlignedSamFile) {
-                IOUtil.assertFileIsReadable(f);
-            }
-            for (final File f : read2AlignedSamFile) {
-                IOUtil.assertFileIsReadable(f);
-            }
+            read1AlignedSamFile.forEach(IOUtil::assertFileIsReadable);
+            read2AlignedSamFile.forEach(IOUtil::assertFileIsReadable);
         }
 
         this.alignedSamFile = alignedSamFile;
@@ -137,7 +133,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         this.minUnclippedBases = minUnclippedBases;
         this.contaminationFilter = new OverclippedReadFilter(minUnclippedBases, false);
 
-        log.info("Processing SAM file(s): " + alignedSamFile != null ? alignedSamFile : read1AlignedSamFile + "," + read2AlignedSamFile);
+        log.info("Processing SAM file(s): " + ((alignedSamFile != null) ? alignedSamFile : (read1AlignedSamFile + "," + read2AlignedSamFile)));
     }
 
 
