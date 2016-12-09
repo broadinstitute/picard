@@ -28,15 +28,20 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author alecw@broadinstitute.org
  */
 public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
-    public static File TEST_DATA_DIR = new File("testdata/picard/sam");
-    public static File BASIC_FASTA = new File(TEST_DATA_DIR, "basic.fasta");
-    public static File DUPLICATE_FASTA = new File(TEST_DATA_DIR, "duplicate_sequence_names.fasta");
+    public static File TEST_DATA_DIR = new File("testdata/picard");
+    public static File BASIC_FASTA = new File(TEST_DATA_DIR + "/sam", "basic.fasta");
+    public static File EQUIVALENCE_TEST_FASTA = new File(TEST_DATA_DIR + "/reference", "test.fasta");
+    public static File DUPLICATE_FASTA = new File(TEST_DATA_DIR + "/sam", "duplicate_sequence_names.fasta");
 
     public String getCommandLineProgramName() {
         return CreateSequenceDictionary.class.getSimpleName();
@@ -53,6 +58,32 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
                 "TRUNCATE_NAMES_AT_WHITESPACE=false"
         };
         Assert.assertEquals(runPicardCommandLine(argv), 0);
+    }
+
+    @Test
+    public void testForEquivalence() throws Exception {
+        final File outputDict = File.createTempFile("CreateSequenceDictionaryTest.", ".dict");
+        outputDict.delete();
+        final String[] argv = {
+                "REFERENCE=" + EQUIVALENCE_TEST_FASTA,
+                "OUTPUT=" + outputDict,
+                "TRUNCATE_NAMES_AT_WHITESPACE=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
+
+        List<String> currentDict = new BufferedReader(new FileReader(outputDict))
+                .lines()
+                //remove info about location fasta file
+                .map(s -> s.replaceAll("UR:.*", ""))
+                .collect(Collectors.toList());
+
+        List<String> expectedDict = new BufferedReader(new FileReader(TEST_DATA_DIR + "/reference/csd_dict.dict"))
+                .lines()
+                //remove info about location fasta file
+                .map(s -> s.replaceAll("UR:.*", ""))
+                .collect(Collectors.toList());
+
+        Assert.assertEquals(currentDict, expectedDict);
     }
 
     /**
