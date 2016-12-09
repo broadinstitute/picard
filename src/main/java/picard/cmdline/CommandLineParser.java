@@ -239,10 +239,8 @@ public class CommandLineParser {
         if (null != this.programVersion && 0 < this.programVersion.length()) {
             usagePreamble += "Version: " + getVersion() + "\n";
             usagePreamble += "HTSJDK Version: " + getHtsjdkVersion() + "\n";
-
         }
-        //checkForNonASCII(usagePreamble, "preamble");
-
+       
         return usagePreamble;
     }
 
@@ -305,7 +303,6 @@ public class CommandLineParser {
 
 
     public String getHtsjdkVersion() {
-
         URL url = ((URLClassLoader) getClass().getClassLoader()).findResource("META-INF/MANIFEST.MF");
         try{
             final Manifest manifest = new Manifest(url.openStream());
@@ -313,8 +310,6 @@ public class CommandLineParser {
         } catch (IOException e) {
             throw new PicardException(e.getMessage());
         }
-
-
     }
     /**
      * Print a usage message based on the options object passed to the ctor.
