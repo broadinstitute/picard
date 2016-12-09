@@ -8,6 +8,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;import java.lang.Exception;import java.lang.Object;import java.lang.String;
+import java.util.Arrays;
 
 /** @author mccowan */
 public class IlluminaLaneMetricsCollectorTest {
@@ -20,19 +21,21 @@ public class IlluminaLaneMetricsCollectorTest {
 
     @Test(dataProvider = "testLaneMetrics")
     public void testWriteLaneMetrics(final String testRun) throws Exception {
-        final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
-        clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
-        clp.RUN_DIRECTORY = new File(TEST_DIRECTORY, testRun);
-        clp.OUTPUT_PREFIX = "test";
-        clp.READ_STRUCTURE = new ReadStructure("101T8B101T");
-        clp.doWork();
+        for (final boolean useReadStructure : Arrays.asList(true, false)) {
+            final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
+            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
+            clp.RUN_DIRECTORY = new File(TEST_DIRECTORY, testRun);
+            clp.OUTPUT_PREFIX = "test";
+            if (useReadStructure) clp.READ_STRUCTURE = new ReadStructure("101T8B101T");
+            clp.doWork();
 
-        final File laneMetricsFile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaLaneMetrics.getExtension());
-        final File canonicalOutputFile = buildOutputFile(TEST_DIRECTORY, testRun, IlluminaLaneMetrics.getExtension());
+            final File laneMetricsFile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaLaneMetrics.getExtension());
+            final File canonicalOutputFile = buildOutputFile(TEST_DIRECTORY, testRun, IlluminaLaneMetrics.getExtension());
 
-        IOUtil.assertFilesEqual(canonicalOutputFile, laneMetricsFile);
+            IOUtil.assertFilesEqual(canonicalOutputFile, laneMetricsFile);
 
-        IOUtil.deleteDirectoryTree(clp.OUTPUT_DIRECTORY);
+            IOUtil.deleteDirectoryTree(clp.OUTPUT_DIRECTORY);
+        }
     }
 
     @DataProvider(name = "testLaneMetrics")
@@ -46,22 +49,24 @@ public class IlluminaLaneMetricsCollectorTest {
 
     @Test(dataProvider = "testCollectIlluminaLaneMetrics")
     public void testCollectIlluminaLaneMetrics(final String testRun, final ReadStructure readStructure) throws Exception {
-        final File runDirectory = new File(TILE_RUN_DIRECTORY, testRun);
-        final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
-        clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
-        clp.RUN_DIRECTORY = runDirectory;
-        clp.OUTPUT_PREFIX = "test";
-        clp.READ_STRUCTURE = readStructure;
-        clp.doWork();
+        for (final boolean useReadStructure : Arrays.asList(true, false)) {
+            final File runDirectory = new File(TILE_RUN_DIRECTORY, testRun);
+            final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
+            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
+            clp.RUN_DIRECTORY = runDirectory;
+            clp.OUTPUT_PREFIX = "test";
+            if (useReadStructure) clp.READ_STRUCTURE = readStructure;
+            clp.doWork();
 
-        final File phasingMetricsPhile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaPhasingMetrics.getExtension());
-        final File canonicalPhasingPhile = buildOutputFile(runDirectory, testRun, IlluminaPhasingMetrics.getExtension());
-        IOUtil.assertFilesEqual(canonicalPhasingPhile, phasingMetricsPhile);
+            final File phasingMetricsPhile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaPhasingMetrics.getExtension());
+            final File canonicalPhasingPhile = buildOutputFile(runDirectory, testRun, IlluminaPhasingMetrics.getExtension());
+            IOUtil.assertFilesEqual(canonicalPhasingPhile, phasingMetricsPhile);
 
-        final File laneMetricsFile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaLaneMetrics.getExtension());
-        final File canonicalLaneFile = buildOutputFile(runDirectory, testRun, IlluminaLaneMetrics.getExtension());
-        IOUtil.assertFilesEqual(canonicalLaneFile, laneMetricsFile);
-        IOUtil.deleteDirectoryTree(clp.OUTPUT_DIRECTORY);
+            final File laneMetricsFile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaLaneMetrics.getExtension());
+            final File canonicalLaneFile = buildOutputFile(runDirectory, testRun, IlluminaLaneMetrics.getExtension());
+            IOUtil.assertFilesEqual(canonicalLaneFile, laneMetricsFile);
+            IOUtil.deleteDirectoryTree(clp.OUTPUT_DIRECTORY);
+        }
     }
 
     @DataProvider(name = "testCollectIlluminaLaneMetrics")
