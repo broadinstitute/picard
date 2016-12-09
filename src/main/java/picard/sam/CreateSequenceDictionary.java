@@ -170,8 +170,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
             samDictCodec.encodeHeaderLine(false);
             // read reference sequence one by one and write its metadata
-            ReferenceSequence refSeq;
-            while ((refSeq = refSeqFile.nextSequence()) != null) {
+            for (ReferenceSequence refSeq = refSeqFile.nextSequence(); refSeq != null; refSeq = refSeqFile.nextSequence()) {
                 final SAMSequenceRecord samSequenceRecord = makeSequenceRecord(refSeq);
                 samDictCodec.encodeSequenceRecord(samSequenceRecord);
                 sequenceNames.add(refSeq.getName());
@@ -187,15 +186,15 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
         if(!iterator.hasNext()) return 0;
 
-        String first = iterator.next();
+        String current = iterator.next();
         while (iterator.hasNext()) {
             final String next = iterator.next();
-            if (first.equals(next)) {
+            if (current.equals(next)) {
                 OUTPUT.delete();
-                throw new PicardException("Sequence name " + first +
+                throw new PicardException("Sequence name " + current +
                         " appears more than once in reference file");
             }
-            first = next;
+            current = next;
         }
         return 0;
     }
@@ -249,6 +248,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     private SortingCollection<String> makeSortingCollection() {
         final String name = getClass().getSimpleName();
         final File tmpDir = IOUtil.createTempDir(name, null);
+        tmpDir.deleteOnExit();
         // 256 byte for one name, and 1/10 part of all memory for this, rough estimate
         long maxNamesInRam = Runtime.getRuntime().maxMemory() / 256 / 10;
         return SortingCollection.newInstance(
