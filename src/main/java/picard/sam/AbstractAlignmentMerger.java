@@ -58,6 +58,8 @@ import picard.PicardException;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -590,11 +592,10 @@ public abstract class AbstractAlignmentMerger {
      * Checks to see whether the ends of the reads overlap and soft clips reads
      * them if necessary.
      */
-    protected void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2) {
+    protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2) {
         // If both reads are mapped, see if we need to clip the ends due to small
         // insert size
         if (!(read1.getReadUnmappedFlag() || read2.getReadUnmappedFlag())) {
-
             if (read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag()) {
                 final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
                 final SAMRecord neg = (read1.getReadNegativeStrandFlag()) ? read1 : read2;
@@ -605,23 +606,35 @@ public abstract class AbstractAlignmentMerger {
                     final int negDiff = pos.getAlignmentStart() - neg.getAlignmentStart();
 
                     if (posDiff > 0) {
-                        CigarUtil.softClip3PrimeEndOfRead(pos, Math.min(pos.getReadLength(),
-                                pos.getReadLength() - posDiff + 1));
+                        final List<CigarElement> elems = new ArrayList<>(pos.getCigar().getCigarElements());
+                        Collections.reverse(elems);
+                        final int clipped = lengthOfSoftClipping(elems.iterator());
+                        final int clipFrom = pos.getReadLength() - posDiff - clipped + 1;
+                        CigarUtil.softClip3PrimeEndOfRead(pos, Math.min(pos.getReadLength(), clipFrom));
                         removeNmMdAndUqTags(pos); // these tags are now invalid!
                     }
 
                     if (negDiff > 0) {
-                        CigarUtil.softClip3PrimeEndOfRead(neg, Math.min(neg.getReadLength(),
-                                neg.getReadLength() - negDiff + 1));
+                        final int clipped = lengthOfSoftClipping(neg.getCigar().getCigarElements().iterator());
+                        final int clipFrom = neg.getReadLength() - negDiff - clipped + 1;
+                        CigarUtil.softClip3PrimeEndOfRead(neg, Math.min(neg.getReadLength(), clipFrom));
                         removeNmMdAndUqTags(neg); // these tags are now invalid!
                     }
-
                 }
-            } else {
-                // TODO: What about RR/FF pairs?
             }
         }
+    }
 
+    /** Returns the number of soft-clipped bases until a non-soft-clipping element is encountered. */
+    private static int lengthOfSoftClipping(Iterator<CigarElement> iterator) {
+        int clipped = 0;
+        while (iterator.hasNext()) {
+            final CigarElement elem = iterator.next();
+            if (elem.getOperator() != CigarOperator.SOFT_CLIP) break;
+            clipped = elem.getLength();
+        }
+
+        return clipped;
     }
 
     /**
