@@ -630,8 +630,8 @@ public abstract class AbstractAlignmentMerger {
         int clipped = 0;
         while (iterator.hasNext()) {
             final CigarElement elem = iterator.next();
-            if (elem.getOperator() != CigarOperator.SOFT_CLIP) break;
-            clipped = elem.getLength();
+            if (elem.getOperator() != CigarOperator.SOFT_CLIP && elem.getOperator() != CigarOperator.HARD_CLIP) break;
+            if (elem.getOperator() == CigarOperator.SOFT_CLIP) clipped = elem.getLength();
         }
 
         return clipped;
