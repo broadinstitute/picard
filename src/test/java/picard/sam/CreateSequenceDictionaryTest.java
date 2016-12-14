@@ -24,6 +24,7 @@
 package picard.sam;
 
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
@@ -45,6 +46,23 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
 
     public String getCommandLineProgramName() {
         return CreateSequenceDictionary.class.getSimpleName();
+    }
+
+    @DataProvider
+    public Object[][] fastaNames() {
+        return new Object[][] {
+                {"break.fa", "break.dict"},
+                {"break.txt.txt", "break.txt.dict"},
+                {"break.fasta.fasta", "break.fasta.dict"},
+                {"break.fa.gz", "break.dict"},
+                {"break.txt.gz.txt.gz", "break.txt.gz.dict"},
+                {"break.fasta.gz.fasta.gz", "break.fasta.gz.dict"}
+        };
+    }
+
+    @Test(dataProvider = "fastaNames")
+    public void testGetDictionaryNameForFasta(final String fastaFile, final String expectedDict) throws Exception {
+        Assert.assertEquals(CreateSequenceDictionary.getDefaultDictionaryNameForFasta(new File(fastaFile)), new File(expectedDict));
     }
 
     @Test

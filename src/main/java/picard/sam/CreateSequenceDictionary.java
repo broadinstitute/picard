@@ -23,6 +23,7 @@
  */
 package picard.sam;
 
+import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceDictionaryCodec;
 import htsjdk.samtools.SAMSequenceRecord;
@@ -32,6 +33,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.AsciiWriter;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.Md5CalculatingOutputStream;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SortingCollection;
@@ -50,6 +52,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -78,6 +81,8 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             "</pre>" +
             "<hr />";
     // The following attributes define the command-line arguments
+
+    private static final Log logger = Log.getInstance(CreateSequenceDictionary.class);
 
     @Option(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
     public File REFERENCE;
@@ -147,14 +152,23 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             URI = "file:" + REFERENCE.getAbsolutePath();
         }
         if (OUTPUT == null) {
-            // determine the name for the dict file in the same way as CachingIndexedFastaSequenceFile.checkAndCreate
-            final String name = REFERENCE.getName();
-            final String fastaExt = ReferenceSequenceFileFactory.FASTA_EXTENSIONS.stream()
-                    .filter(name::endsWith).findFirst().orElseGet(() -> "");
-            OUTPUT = new File(REFERENCE.getParentFile(),
-                    REFERENCE.getName().replace(fastaExt, IOUtil.DICT_FILE_EXTENSION));
+            OUTPUT = getDefaultDictionaryNameForFasta(REFERENCE);
+            logger.info("Output dictionary will be written in ", OUTPUT);
         }
         return null;
+    }
+
+    // TODO: move this method to ReferenceSequenceFileFactory
+    @VisibleForTesting
+    static File getDefaultDictionaryNameForFasta(final File fastaFile) {
+        final String name = fastaFile.getName();
+        final Optional<String> extension = ReferenceSequenceFileFactory.FASTA_EXTENSIONS
+                .stream().filter(name::endsWith).findFirst();
+        if (!extension.isPresent()) {
+            throw new IllegalArgumentException("File is not a supported reference file type: " + fastaFile.getAbsolutePath());
+        }
+        final int extensionIndex = name.length() - extension.get().length();
+        return new File(fastaFile.getParentFile(), name.substring(0, extensionIndex) + IOUtil.DICT_FILE_EXTENSION);
     }
 
     /**
