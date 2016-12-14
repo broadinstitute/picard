@@ -82,8 +82,8 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     @Option(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
     public File REFERENCE;
 
-    @Option(doc = "Output SAM or BAM file containing only the sequence dictionary",
-            shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Option(doc = "Output SAM file containing only the sequence dictionary. By default it will use the base name of the input reference with the .dict extension",
+            shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
     @Option(doc = "Put into AS field of sequence dictionary entry if supplied", optional = true)
@@ -145,6 +145,14 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         if (URI == null) {
             URI = "file:" + REFERENCE.getAbsolutePath();
+        }
+        if (OUTPUT == null) {
+            // determine the name for the dict file in the same way as CachingIndexedFastaSequenceFile.checkAndCreate
+            final String name = REFERENCE.getName();
+            final String fastaExt = ReferenceSequenceFileFactory.FASTA_EXTENSIONS.stream()
+                    .filter(name::endsWith).findFirst().orElseGet(() -> "");
+            OUTPUT = new File(REFERENCE.getParentFile(),
+                    REFERENCE.getName().replace(fastaExt, IOUtil.DICT_FILE_EXTENSION));
         }
         return null;
     }

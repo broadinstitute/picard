@@ -61,6 +61,19 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testDefaultOutputFile() throws Exception {
+        final File expectedDict = new File(TEST_DATA_DIR + "/sam", "basic.dict");
+        expectedDict.deleteOnExit();
+        Assert.assertFalse(expectedDict.exists());
+        final String[] argv = {
+                "REFERENCE=" + BASIC_FASTA,
+                "TRUNCATE_NAMES_AT_WHITESPACE=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
+        Assert.assertTrue(expectedDict.exists());
+    }
+
+    @Test
     public void testForEquivalence() throws Exception {
         final File outputDict = File.createTempFile("CreateSequenceDictionaryTest.", ".dict");
         outputDict.delete();
