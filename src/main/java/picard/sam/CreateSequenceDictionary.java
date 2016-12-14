@@ -152,22 +152,20 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             URI = "file:" + REFERENCE.getAbsolutePath();
         }
         if (OUTPUT == null) {
-            OUTPUT = getDefaultDictionaryNameForFasta(REFERENCE);
+            // TODO: use the htsjdk method implemented in https://github.com/samtools/htsjdk/pull/774
+            OUTPUT = getDefaultDictionaryForReferenceSequence(REFERENCE);
             logger.info("Output dictionary will be written in ", OUTPUT);
         }
         return null;
     }
 
-    // TODO: move this method to ReferenceSequenceFileFactory
+    // TODO: this method will be in htsjdk (https://github.com/samtools/htsjdk/pull/774)
     @VisibleForTesting
-    static File getDefaultDictionaryNameForFasta(final File fastaFile) {
+    static File getDefaultDictionaryForReferenceSequence(final File fastaFile) {
         final String name = fastaFile.getName();
-        final Optional<String> extension = ReferenceSequenceFileFactory.FASTA_EXTENSIONS
-                .stream().filter(name::endsWith).findFirst();
-        if (!extension.isPresent()) {
-            throw new IllegalArgumentException("File is not a supported reference file type: " + fastaFile.getAbsolutePath());
-        }
-        final int extensionIndex = name.length() - extension.get().length();
+        final String extension = ReferenceSequenceFileFactory.FASTA_EXTENSIONS.stream().filter(name::endsWith).findFirst()
+                .orElseGet(() -> {throw new IllegalArgumentException("File is not a supported reference file type: " + fastaFile.getAbsolutePath());});
+        final int extensionIndex = name.length() - extension.length();
         return new File(fastaFile.getParentFile(), name.substring(0, extensionIndex) + IOUtil.DICT_FILE_EXTENSION);
     }
 

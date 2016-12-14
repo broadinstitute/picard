@@ -61,8 +61,8 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "fastaNames")
-    public void testGetDictionaryNameForFasta(final String fastaFile, final String expectedDict) throws Exception {
-        Assert.assertEquals(CreateSequenceDictionary.getDefaultDictionaryNameForFasta(new File(fastaFile)), new File(expectedDict));
+    public void testGetDefaultDictionaryForReferenceSequence(final String fastaFile, final String expectedDict) throws Exception {
+        Assert.assertEquals(CreateSequenceDictionary.getDefaultDictionaryForReferenceSequence(new File(fastaFile)), new File(expectedDict));
     }
 
     @Test
