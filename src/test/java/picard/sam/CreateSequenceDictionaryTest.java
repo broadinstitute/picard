@@ -24,6 +24,7 @@
 package picard.sam;
 
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
@@ -47,6 +48,23 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         return CreateSequenceDictionary.class.getSimpleName();
     }
 
+    @DataProvider
+    public Object[][] fastaNames() {
+        return new Object[][] {
+                {"break.fa", "break.dict"},
+                {"break.txt.txt", "break.txt.dict"},
+                {"break.fasta.fasta", "break.fasta.dict"},
+                {"break.fa.gz", "break.dict"},
+                {"break.txt.gz.txt.gz", "break.txt.gz.dict"},
+                {"break.fasta.gz.fasta.gz", "break.fasta.gz.dict"}
+        };
+    }
+
+    @Test(dataProvider = "fastaNames")
+    public void testGetDefaultDictionaryForReferenceSequence(final String fastaFile, final String expectedDict) throws Exception {
+        Assert.assertEquals(CreateSequenceDictionary.getDefaultDictionaryForReferenceSequence(new File(fastaFile)), new File(expectedDict));
+    }
+
     @Test
     public void testBasic() throws Exception {
         final File outputDict = File.createTempFile("CreateSequenceDictionaryTest.", ".dict");
@@ -58,6 +76,19 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
                 "TRUNCATE_NAMES_AT_WHITESPACE=false"
         };
         Assert.assertEquals(runPicardCommandLine(argv), 0);
+    }
+
+    @Test
+    public void testDefaultOutputFile() throws Exception {
+        final File expectedDict = new File(TEST_DATA_DIR + "/sam", "basic.dict");
+        expectedDict.deleteOnExit();
+        Assert.assertFalse(expectedDict.exists());
+        final String[] argv = {
+                "REFERENCE=" + BASIC_FASTA,
+                "TRUNCATE_NAMES_AT_WHITESPACE=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
+        Assert.assertTrue(expectedDict.exists());
     }
 
     @Test

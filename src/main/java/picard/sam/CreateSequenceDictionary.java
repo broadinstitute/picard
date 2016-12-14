@@ -23,6 +23,7 @@
  */
 package picard.sam;
 
+import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceDictionaryCodec;
 import htsjdk.samtools.SAMSequenceRecord;
@@ -32,6 +33,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.AsciiWriter;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.Md5CalculatingOutputStream;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SortingCollection;
@@ -50,6 +52,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -79,11 +82,13 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             "<hr />";
     // The following attributes define the command-line arguments
 
+    private static final Log logger = Log.getInstance(CreateSequenceDictionary.class);
+
     @Option(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
     public File REFERENCE;
 
-    @Option(doc = "Output SAM or BAM file containing only the sequence dictionary",
-            shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Option(doc = "Output SAM file containing only the sequence dictionary. By default it will use the base name of the input reference with the .dict extension",
+            shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
     @Option(doc = "Put into AS field of sequence dictionary entry if supplied", optional = true)
@@ -146,7 +151,22 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         if (URI == null) {
             URI = "file:" + REFERENCE.getAbsolutePath();
         }
+        if (OUTPUT == null) {
+            // TODO: use the htsjdk method implemented in https://github.com/samtools/htsjdk/pull/774
+            OUTPUT = getDefaultDictionaryForReferenceSequence(REFERENCE);
+            logger.info("Output dictionary will be written in ", OUTPUT);
+        }
         return null;
+    }
+
+    // TODO: this method will be in htsjdk (https://github.com/samtools/htsjdk/pull/774)
+    @VisibleForTesting
+    static File getDefaultDictionaryForReferenceSequence(final File fastaFile) {
+        final String name = fastaFile.getName();
+        final String extension = ReferenceSequenceFileFactory.FASTA_EXTENSIONS.stream().filter(name::endsWith).findFirst()
+                .orElseGet(() -> {throw new IllegalArgumentException("File is not a supported reference file type: " + fastaFile.getAbsolutePath());});
+        final int extensionIndex = name.length() - extension.length();
+        return new File(fastaFile.getParentFile(), name.substring(0, extensionIndex) + IOUtil.DICT_FILE_EXTENSION);
     }
 
     /**
