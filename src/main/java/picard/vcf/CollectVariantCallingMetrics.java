@@ -251,7 +251,6 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
 
         public static <T extends VariantCallingSummaryMetrics> void foldInto(final T target, final Collection<T> metrics) {
             metrics.forEach(target::merge);
-            target.calculateDerivedFields();
         }
     }
 

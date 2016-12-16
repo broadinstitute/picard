@@ -76,10 +76,12 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
                 final VariantCallingDetailMetrics collapsed = new VariantCallingDetailMetrics();
                 VariantCallingDetailMetrics.foldInto(collapsed, sampleDetails);
                 collapsedDetails.add(collapsed);
+                collapsed.calculateDerivedFields();
             });
 
             final VariantCallingSummaryMetrics collapsedSummary = new VariantCallingSummaryMetrics();
             VariantCallingSummaryMetrics.foldInto(collapsedSummary, summaries);
+            collapsedSummary.calculateDerivedFields();
 
             return new Result(collapsedSummary, collapsedDetails);
         }
