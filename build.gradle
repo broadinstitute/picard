@@ -76,7 +76,8 @@ jar {
         attributes 'Main-Class': 'picard.cmdline.PicardCommandLine',
                 'Implementation-Title': 'Picard',
                 'Implementation-Vendor': 'Broad Institute',
-                'Implementation-Version': version
+                'Implementation-Version': version,
+                'HTSJDK-Version': htsjdkVersion
     }
 }
 // This is a hack to disable the java 8 default javadoc lint until we fix the html formatting
