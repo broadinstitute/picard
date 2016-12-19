@@ -207,7 +207,7 @@ public class MergeBamAlignment extends CommandLineProgram {
     public int MIN_UNCLIPPED_BASES = 32;
 
     @Option(doc = "How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) Currently ignored unless UNMAP_CONTAMINANT_READS = true", optional = true)
-    public AbstractAlignmentMerger.UNMAPPING_READ_STRATEGY UNMAPPED_READ_STRATEGY = AbstractAlignmentMerger.UNMAPPING_READ_STRATEGY.DO_NOT_CHANGE;
+    public AbstractAlignmentMerger.UnmappingReadStrategy UNMAPPED_READ_STRATEGY = AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE;
 
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
 

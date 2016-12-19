@@ -13,10 +13,8 @@ import htsjdk.samtools.SamFileHeaderMerger;
 import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.filter.OverclippedReadFilter;
 import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.DelegatingIterator;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -105,7 +103,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                               final boolean addMateCigar,
                               final boolean unmapContaminantReads,
                               final int minUnclippedBases,
-                              final UNMAPPING_READ_STRATEGY unmappingReadStrategy) {
+                              final UnmappingReadStrategy unmappingReadStrategy) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
                 alignedReadsOnly, programRecord, attributesToRetain, attributesToRemove, read1BasesTrimmed,

@@ -115,7 +115,7 @@ public abstract class AbstractAlignmentMerger {
     private boolean keepAlignerProperPairFlags = false;
     private boolean addMateCigar = false;
     private boolean unmapContaminantReads = false;
-    private UNMAPPING_READ_STRATEGY unmappingReadsStrategy = UNMAPPING_READ_STRATEGY.DO_NOT_CHANGE;
+    private UnmappingReadStrategy unmappingReadsStrategy = UnmappingReadStrategy.DO_NOT_CHANGE;
 
 
     private final SamRecordFilter alignmentFilter = new SamRecordFilter() {
@@ -160,7 +160,7 @@ public abstract class AbstractAlignmentMerger {
         }
     }
 
-    public enum UNMAPPING_READ_STRATEGY {
+    public enum UnmappingReadStrategy {
         // Leave on record, and copy to tag
         COPY_TO_TAG(false, true),
         // Leave on record, but do not create additional tag
@@ -170,7 +170,7 @@ public abstract class AbstractAlignmentMerger {
 
         private final boolean resetMappingInformation, populatePATag;
 
-        UNMAPPING_READ_STRATEGY(final boolean resetMappingInformation, final boolean populatePATag) {
+        UnmappingReadStrategy(final boolean resetMappingInformation, final boolean populatePATag) {
             this.resetMappingInformation = resetMappingInformation;
             this.populatePATag = populatePATag;
         }
@@ -179,7 +179,7 @@ public abstract class AbstractAlignmentMerger {
             return resetMappingInformation;
         }
 
-        public boolean isPopulatePATag() {
+        public boolean isPopulatePaTag() {
             return populatePATag;
         }
     }
@@ -235,7 +235,7 @@ public abstract class AbstractAlignmentMerger {
                                    final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
                                    final boolean addMateCigar,
                                    final boolean unmapContaminantReads,
-                                   final UNMAPPING_READ_STRATEGY unmappingReadsStrategy) {
+                                   final UnmappingReadStrategy unmappingReadsStrategy) {
         IOUtil.assertFileIsReadable(unmappedBamFile);
         IOUtil.assertFileIsWritable(targetBamFile);
         IOUtil.assertFileIsReadable(referenceFasta);
@@ -574,11 +574,11 @@ public abstract class AbstractAlignmentMerger {
      * Copies alignment info from aligned to unaligned read, clips as appropriate, and sets PG ID.
      * May also un-map the resulting read if the alignment is bad (e.g. no unclipped bases).
      *
-     * depending on the value of unmappingReadsStrategy this function will potentially
+     * Depending on the value of unmappingReadsStrategy this function will potentially
      *
      * - reset the mapping information (MOVE_TO_TAG)
      * - copy the original mapping information to a tag "PA" (MOVE_TO_TAG, or COPY_TO_TAG)
-     * a third possibility for unmappingReadsStrategy is DO_NOT_CHANGE
+     * a third possibility for unmappingReadsStrategy is to do nothig (DO_NOT_CHANGE)
      *
      * This is because the CRAM format will reset mapping information for reads that are flagged as unaligned.
      *
@@ -596,6 +596,7 @@ public abstract class AbstractAlignmentMerger {
             log.warn("Record mapped off end of reference; making unmapped: " + aligned);
             SAMUtils.makeReadUnmapped(unaligned);
         } else if (isContaminant) {
+
             if (numCrossSpeciesContaminantWarnings < MAX_CROSS_SPECIES_CONTAM_WARN) {
                 log.warn("Record looks like cross-species contamination ; unmapping read: " + aligned);
                 numCrossSpeciesContaminantWarnings++;
@@ -603,14 +604,13 @@ public abstract class AbstractAlignmentMerger {
                 log.warn("No more warnings regarding cross-species contamination; limit reached.");
             }
 
-            if (unmappingReadsStrategy.isPopulatePATag()) {
+            if (unmappingReadsStrategy.isPopulatePaTag()) {
                 unaligned.setAttribute("PA", encodeMappingInformation(aligned));
             }
 
-
             if (unmappingReadsStrategy.isResetMappingInformation()) {
                 unaligned.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
-                unaligned.setAlignmentStart(0);
+                unaligned.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
                 unaligned.setCigar(null);
                 unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
             }
@@ -618,7 +618,6 @@ public abstract class AbstractAlignmentMerger {
             unaligned.setReadUnmappedFlag(true);
             // Unmapped read cannot have non-zero mapping quality and remain valid
             unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
-
 
             // if there already is a comment, add second comment with a | separator:
             Optional<String> optionalComment = Optional.ofNullable(unaligned.getStringAttribute(SAMTag.CO.name()));

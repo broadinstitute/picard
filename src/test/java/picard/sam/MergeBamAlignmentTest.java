@@ -302,7 +302,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, Arrays.asList(aligned), 1, null, null, null, null, null, null,
                 Arrays.asList(SamPairUtil.PairOrientation.FR),
                 coordinateSorted ? SAMFileHeader.SortOrder.coordinate : SAMFileHeader.SortOrder.queryname,
-                new BestMapqPrimaryAlignmentSelectionStrategy(), false, false, 30, AbstractAlignmentMerger.UNMAPPING_READ_STRATEGY.DO_NOT_CHANGE);
+                new BestMapqPrimaryAlignmentSelectionStrategy(), false, false, 30, AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE);
 
         merger.mergeAlignment(Defaults.REFERENCE_FASTA);
         Assert.assertEquals(sorted, !merger.getForceSort());
@@ -1308,7 +1308,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                                   final Boolean includeSecondary,
                                   final Boolean unmapContaminantReads,
                                   final SAMFileHeader.SortOrder sortOrder,
-                                  final AbstractAlignmentMerger.UNMAPPING_READ_STRATEGY unmappingReadStrategy) {
+                                  final AbstractAlignmentMerger.UnmappingReadStrategy unmappingReadStrategy) {
 
         final List<String> args = new ArrayList<>(Arrays.asList(
                 "UNMAPPED_BAM=" + unmappedBam.getAbsolutePath(),
@@ -1679,15 +1679,15 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     @DataProvider(name="UnmappedReadStrategies")
     public Object[][]  UnmappedReadStrategiesProvider() {
         return new Object[][] {
-                {AbstractAlignmentMerger.UNMAPPING_READ_STRATEGY.DO_NOT_CHANGE, "contam.expected.NO_CHANGE.sam"},
+                {AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE, "contam.expected.NO_CHANGE.sam"},
                 {null,                                                          "contam.expected.NO_CHANGE.sam"},
-                {AbstractAlignmentMerger.UNMAPPING_READ_STRATEGY.COPY_TO_TAG,   "contam.expected.COPY_TO_TAG.sam"},
-                {AbstractAlignmentMerger.UNMAPPING_READ_STRATEGY.MOVE_TO_TAG,   "contam.expected.MOVE_TO_TAG.sam"}
+                {AbstractAlignmentMerger.UnmappingReadStrategy.COPY_TO_TAG,   "contam.expected.COPY_TO_TAG.sam"},
+                {AbstractAlignmentMerger.UnmappingReadStrategy.MOVE_TO_TAG,   "contam.expected.MOVE_TO_TAG.sam"}
         };
     }
 
     @Test(dataProvider = "UnmappedReadStrategies")
-    public void testContaminationDetection(final AbstractAlignmentMerger.UNMAPPING_READ_STRATEGY strategy, final String basename) throws IOException {
+    public void testContaminationDetection(final AbstractAlignmentMerger.UnmappingReadStrategy strategy, final String basename) throws IOException {
         final File unmappedSam = new File(TEST_DATA_DIR, "contam.unmapped.sam");
         final File alignedSam = new File(TEST_DATA_DIR, "contam.aligned.sam");
         final File expectedSam = new File(TEST_DATA_DIR, basename);
