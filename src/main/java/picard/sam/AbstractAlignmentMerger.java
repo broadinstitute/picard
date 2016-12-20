@@ -87,7 +87,7 @@ public abstract class AbstractAlignmentMerger {
     public static final int MAX_RECORDS_IN_RAM = 500000;
 
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X', 'Y', 'Z'};
-    private static final int MAX_CROSS_SPECIES_CONTAM_WARN = 1_000;
+    private int crossSpeciesReads = 0;
 
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
     private final ProgressLogger progress = new ProgressLogger(this.log, 1000000, "Merged", "records");
@@ -189,6 +189,43 @@ public abstract class AbstractAlignmentMerger {
     protected boolean ignoreAlignment(final SAMRecord sam) { return false; } // default implementation
 
     protected boolean isContaminant(final HitsForInsert hits) { return false; } // default implementation
+
+    /** constructor with a default setting for unmappingReadsStrategy.
+     *
+     * see full constructor for parameters
+     *
+     *
+     */
+    public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
+                                   final File referenceFasta, final boolean clipAdapters,
+                                   final boolean bisulfiteSequence, final boolean alignedReadsOnly,
+                                   final SAMProgramRecord programRecord, final List<String> attributesToRetain,
+                                   final List<String> attributesToRemove,
+                                   final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
+                                   final List<SamPairUtil.PairOrientation> expectedOrientations,
+                                   final SAMFileHeader.SortOrder sortOrder,
+                                   final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
+                                   final boolean addMateCigar,
+                                   final boolean unmapContaminantReads) {
+        this(unmappedBamFile,
+             targetBamFile,
+             referenceFasta,
+             clipAdapters,
+             bisulfiteSequence,
+             alignedReadsOnly,
+             programRecord,
+             attributesToRetain,
+             attributesToRemove,
+             read1BasesTrimmed,
+             read2BasesTrimmed,
+             expectedOrientations,
+             sortOrder,
+             primaryAlignmentSelectionStrategy,
+             addMateCigar,
+             unmapContaminantReads,
+             UnmappingReadStrategy.DO_NOT_CHANGE);
+    }
+
 
     /**
      * Constructor
@@ -546,7 +583,9 @@ public abstract class AbstractAlignmentMerger {
     private void addIfNotFiltered(final Sink out, final SAMRecord rec) {
         if (includeSecondaryAlignments || !rec.getNotPrimaryAlignmentFlag()) {
             out.add(rec);
-            this.progress.record(rec);
+            if (this.progress.record(rec) && crossSpeciesReads > 0) {
+                log.info(String.format("%d Reads have been unmapped due to being suspected of being Cross-species contamination.", crossSpeciesReads));
+            }
         }
     }
 
@@ -597,12 +636,7 @@ public abstract class AbstractAlignmentMerger {
             SAMUtils.makeReadUnmapped(unaligned);
         } else if (isContaminant) {
 
-            if (numCrossSpeciesContaminantWarnings < MAX_CROSS_SPECIES_CONTAM_WARN) {
-                log.warn("Record looks like cross-species contamination ; unmapping read: " + aligned);
-                numCrossSpeciesContaminantWarnings++;
-            } else if (numCrossSpeciesContaminantWarnings == MAX_CROSS_SPECIES_CONTAM_WARN) {
-                log.warn("No more warnings regarding cross-species contamination; limit reached.");
-            }
+            crossSpeciesReads++;
 
             if (unmappingReadsStrategy.isPopulatePaTag()) {
                 unaligned.setAttribute("PA", encodeMappingInformation(aligned));
