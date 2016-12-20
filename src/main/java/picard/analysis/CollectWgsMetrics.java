@@ -475,16 +475,17 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             // add to the collector
             collector.addInfo(info);
 
-            // check that we added the same number of bases to the raw coverage histogram and the base quality histograms
-            if (Arrays.stream(collector.unfilteredBaseQHistogramArray).sum() !=  LongStream.rangeClosed(0, collector.coverageCap).map(i -> (i * collector.unfilteredDepthHistogramArray[(int)i])).sum()) {
-                throw new PicardException("updated coverage and baseQ distributions unequally");
-            }
-
             // Record progress and perhaps stop
             progress.record(info.getSequenceName(), info.getPosition());
             if (usingStopAfter && ++counter > stopAfter) break;
         }
 
+        // check that we added the same number of bases to the raw coverage histogram and the base quality histograms
+        final long sumBaseQ= Arrays.stream(collector.unfilteredBaseQHistogramArray).sum();
+        final long sumDepthHisto = LongStream.rangeClosed(0, collector.coverageCap).map(i -> (i * collector.unfilteredDepthHistogramArray[(int) i])).sum();
+        if (sumBaseQ != sumDepthHisto) {
+            log.error("Coverage and baseQ distributions contain different amount of bases!");
+        }
 
         final MetricsFile<WgsMetrics, Integer> out = getMetricsFile();
         collector.addToMetricsFile(out, INCLUDE_BQ_HISTOGRAM, dupeFilter, mapqFilter, pairFilter);
