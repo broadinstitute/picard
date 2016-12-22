@@ -30,7 +30,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SAMUtils;
-import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.PeekableIterator;
@@ -70,7 +70,7 @@ class MultiHitAlignedReadIterator implements CloseableIterator<HitsForInsert> {
     MultiHitAlignedReadIterator(final CloseableIterator<SAMRecord> querynameOrderIterator,
                                 final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy) {
         this.primaryAlignmentSelectionStrategy = primaryAlignmentSelectionStrategy;
-        peekIterator = new PeekableIterator<SAMRecord>(new FilteringIterator(querynameOrderIterator,
+        peekIterator = new PeekableIterator<SAMRecord>(new FilteringSamIterator(querynameOrderIterator,
                 new SamRecordFilter() {
                     // Filter unmapped reads.
                     public boolean filterOut(final SAMRecord record) {

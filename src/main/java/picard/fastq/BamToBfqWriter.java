@@ -30,7 +30,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.AggregateFilter;
 import htsjdk.samtools.filter.FailsVendorReadQualityFilter;
-import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.TagFilter;
 import htsjdk.samtools.filter.WholeReadClippedFilter;
@@ -236,7 +236,7 @@ public class BamToBfqWriter {
 
         int records = 0;
 
-        final FilteringIterator it = new FilteringIterator(iterator, new AggregateFilter(filters));
+        final FilteringSamIterator it = new FilteringSamIterator(iterator, new AggregateFilter(filters));
         while (it.hasNext()) {
             final SAMRecord record = it.next();
             records++;
@@ -397,7 +397,7 @@ public class BamToBfqWriter {
             if (!this.includeNonPfReads) {
                 filters.add(new FailsVendorReadQualityFilter());
             }
-            final FilteringIterator itr = new FilteringIterator(it, new AggregateFilter(filters));
+            final FilteringSamIterator itr = new FilteringSamIterator(it, new AggregateFilter(filters));
             while (itr.hasNext()) {
                 itr.next();
                 count++;

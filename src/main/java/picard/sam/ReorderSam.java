@@ -149,7 +149,7 @@ public class ReorderSam extends CommandLineProgram {
         else {
             final Integer n = newOrder.get(oldIndex);
 
-            if (n == null) throw new PicardException("BUG: no mapping found for read " + read.format());
+            if (n == null) throw new PicardException("BUG: no mapping found for read " + read.getSAMString());
             else return n;
         }
     }

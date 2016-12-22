@@ -24,6 +24,7 @@
 
 package picard.fingerprint;
 
+import htsjdk.tribble.readers.SynchronousLineReader;
 import picard.PicardException;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
@@ -33,7 +34,6 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.tribble.readers.LineIteratorImpl;
-import htsjdk.tribble.readers.LineReaderUtil;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
@@ -140,7 +140,7 @@ public class GenotypeReader {
      * @deprecated  Please use VCFFileReader in Picard-public instead of this class.
      */
     VariantIterator readVcf(final File file) {
-        final LineIterator reader = new LineIteratorImpl(LineReaderUtil.fromBufferedStream(new BufferedInputStream(IOUtil.openFileForReading(file))));
+        final LineIterator reader = new LineIteratorImpl(new SynchronousLineReader(new BufferedInputStream(IOUtil.openFileForReading(file))));
         final VCFCodec codec   = new VCFCodec();
         final Object header;
         header = codec.readActualHeader(reader);

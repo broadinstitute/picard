@@ -32,12 +32,11 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
-import htsjdk.samtools.SAMRecordUtil;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.FastqQualityFormat;
@@ -526,7 +525,7 @@ public class RevertSam extends CommandLineProgram {
                     throw new UnsupportedOperationException();
                 }
             };
-            readGroupToFormat.put(rg, QualityEncodingDetector.detect(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, new FilteringIterator(reader.iterator(), filter), restoreOriginalQualities));
+            readGroupToFormat.put(rg, QualityEncodingDetector.detect(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, new FilteringSamIterator(reader.iterator(), filter), restoreOriginalQualities));
             CloserUtil.close(reader);
         }
         for (final SAMReadGroupRecord r : readGroupToFormat.keySet()) {

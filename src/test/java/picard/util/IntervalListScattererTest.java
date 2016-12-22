@@ -194,7 +194,7 @@ public class IntervalListScattererTest {
     
     private static Interval lookupIntervalContainingLocus(final IntervalList source, final String chromosome, final int startIndex) {
         for (final Interval interval : source) {
-            if (interval.getSequence().equals(chromosome) && startIndex >= interval.getStart() && startIndex <= interval.getEnd()) {
+            if (interval.getContig().equals(chromosome) && startIndex >= interval.getStart() && startIndex <= interval.getEnd()) {
                 return interval;
             }
         }

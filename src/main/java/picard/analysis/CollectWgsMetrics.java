@@ -639,11 +639,11 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         public void addInfo(final SamLocusIterator.LocusInfo info) {
 
             // Figure out the coverage while not counting overlapping reads twice, and excluding various things
-            final HashSet<String> readNames = new HashSet<>(info.getRecordAndPositions().size());
+            final HashSet<String> readNames = new HashSet<>(info.getRecordAndOffsets().size());
             int pileupSize = 0;
             int unfilteredDepth = 0;
 
-            for (final SamLocusIterator.RecordAndOffset recs : info.getRecordAndPositions()) {
+            for (final SamLocusIterator.RecordAndOffset recs : info.getRecordAndOffsets()) {
                 if (recs.getBaseQuality() <= 2) { ++basesExcludedByBaseq;   continue; }
 
                 // we add to the base quality histogram any bases that have quality > 2

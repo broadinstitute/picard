@@ -123,7 +123,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
                 if (target.length() <= baitSize) {
                     final int midpoint = target.getStart() + (target.length() / 2);
                     final int baitStart = midpoint - (baitSize / 2);
-                    final Bait bait = new Bait(target.getSequence(),
+                    final Bait bait = new Bait(target.getContig(),
                             baitStart,
                             CoordMath.getEnd(baitStart, baitSize),
                             target.isNegativeStrand(),
@@ -142,7 +142,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
                     int start = firstBaitStart;
                     while (start <= lastBaitStart) {
                         final int end = CoordMath.getEnd(start, baitSize);
-                        final Bait bait = new Bait(target.getSequence(),
+                        final Bait bait = new Bait(target.getContig(),
                                 start,
                                 end,
                                 target.isNegativeStrand(),
@@ -179,7 +179,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
                     final int addon = minTargetSize - target.length();
                     final int left = addon / 2;
                     final int right = addon - left;
-                    t2 = new Interval(target.getSequence(),
+                    t2 = new Interval(target.getContig(),
                             Math.max(target.getStart() - left, 1),
                             Math.min(target.getEnd() + right, reference.length()),
                             target.isNegativeStrand(),
@@ -223,7 +223,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
                         }
                     }
 
-                    final Bait bait = new Bait(t2.getSequence(),
+                    final Bait bait = new Bait(t2.getContig(),
                             start,
                             end,
                             t2.isNegativeStrand(),
@@ -251,7 +251,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
 
                 int i = 0;
                 for (int start = target.getStart(); start < lastPossibleBaitStart; start += baitOffset) {
-                    final Bait bait = new Bait(target.getSequence(),
+                    final Bait bait = new Bait(target.getContig(),
                             start,
                             CoordMath.getEnd(start, baitSize),
                             target.isNegativeStrand(),
@@ -415,9 +415,9 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
             final IntervalList padded = new IntervalList(originalTargets.getHeader());
             final SAMSequenceDictionary dict = padded.getHeader().getSequenceDictionary();
             for (final Interval i : originalTargets.getIntervals()) {
-                padded.add(new Interval(i.getSequence(),
+                padded.add(new Interval(i.getContig(),
                         Math.max(i.getStart() - PADDING, 1),
-                        Math.min(i.getEnd() + PADDING, dict.getSequence(i.getSequence()).getSequenceLength()),
+                        Math.min(i.getEnd() + PADDING, dict.getSequence(i.getContig()).getSequenceLength()),
                         i.isNegativeStrand(),
                         i.getName()));
             }
@@ -434,10 +434,10 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
 
                 while (iterator.hasNext()) {
                     final Interval next = iterator.next();
-                    if (previous.getSequence().equals(next.getSequence()) &&
+                    if (previous.getContig().equals(next.getContig()) &&
                             estimateBaits(previous.getStart(), previous.getEnd()) + estimateBaits(next.getStart(), next.getEnd()) >=
                                     estimateBaits(previous.getStart(), next.getEnd())) {
-                        previous = new Interval(previous.getSequence(),
+                        previous = new Interval(previous.getContig(),
                                 previous.getStart(),
                                 Math.max(previous.getEnd(), next.getEnd()),
                                 previous.isNegativeStrand(),
@@ -465,7 +465,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
         int discardedBaits = 0;
         final IntervalList baits = new IntervalList(targets.getHeader());
         for (final Interval target : targets) {
-            final int sequenceIndex = targets.getHeader().getSequenceIndex(target.getSequence());
+            final int sequenceIndex = targets.getHeader().getSequenceIndex(target.getContig());
             final ReferenceSequence reference = referenceWalker.get(sequenceIndex);
 
             for (final Bait bait : DESIGN_STRATEGY.design(this, target, reference)) {
