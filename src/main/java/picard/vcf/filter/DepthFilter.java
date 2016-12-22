@@ -24,11 +24,7 @@
 package picard.vcf.filter;
 
 import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Filters out a record if all variant samples have depth lower than the given value.

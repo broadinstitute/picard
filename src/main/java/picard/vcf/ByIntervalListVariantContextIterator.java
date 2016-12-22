@@ -8,9 +8,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Set;
 
 /**
  * Takes a VCFFileReader and an IntervalList and provides a single iterator over all variants in all the intervals.

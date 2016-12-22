@@ -36,7 +36,6 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;

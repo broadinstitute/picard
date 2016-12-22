@@ -42,7 +42,6 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
 import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;

@@ -2,8 +2,6 @@ package picard.cmdline;
 
 import org.testng.annotations.Test;
 
-import java.util.Collections;
-
 /**
  * Created by farjoun on 9/10/15.
  */

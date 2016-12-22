@@ -24,7 +24,6 @@
 
 package picard.vcf;
 
-import picard.PicardException;
 import picard.vcf.GenotypeConcordanceStates.*;
 
 /**

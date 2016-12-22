@@ -27,7 +27,6 @@ package picard.sam.markduplicates.util;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 
-import java.io.EOFException;
 import java.io.IOException;
 
 /**
