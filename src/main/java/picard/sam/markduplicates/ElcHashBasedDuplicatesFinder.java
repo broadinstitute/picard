@@ -42,6 +42,9 @@ class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
 
     // We split each read on several parts, each part represent set of nucleotides,
     // which behind each other on numberOfHashesInGroup.
+    // f. i.:
+    // 1 2 3 4 1 2 3 4 1 2 3 4
+    // A C A T T A C G G A T T
     private int numberOfHashesInGroup = -1; //initial value
     private int minReadLenInGroup = Integer.MAX_VALUE; //initial value
 
@@ -78,12 +81,12 @@ class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
         }
     }
 
-    private Set<PairedReadSequence> getSimilarReads(PairedReadSequence lhs) {
+    private Set<PairedReadSequence> getSimilarReads(final PairedReadSequence pattern) {
         final Set<PairedReadSequence> toCheck = new HashSet<>();
-        for (int[] hashesForRead: new int[][]{lhs.hashes1, lhs.hashes2}){
+        for (int[] hashesForRead: new int[][]{pattern.hashes1, pattern.hashes2}) {
             for (int hash : hashesForRead) {
                 List<PairedReadSequence> readsWithSameHash = readsByHashInGroup.get(hash);
-                // if size == 1, then this list contains only lhs read
+                // if size == 1, then this list contains only pattern read
                 if (readsWithSameHash.size() > 1) {
                     toCheck.addAll(readsWithSameHash);
                 }
@@ -106,7 +109,7 @@ class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
             int[][] readHashValues = {prs.hashes1, prs.hashes2};
             for (int[] readHashValue : readHashValues) {
                 for (int key : readHashValue) {
-                    List<PairedReadSequence> dupCandidates
+                    final List<PairedReadSequence> dupCandidates
                             = readsByHashInGroup.computeIfAbsent(key, k -> new ArrayList<>());
                     dupCandidates.add(prs);
                 }

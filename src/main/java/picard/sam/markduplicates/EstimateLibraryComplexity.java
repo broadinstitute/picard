@@ -220,12 +220,12 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         // skippedBases = 1
         // minReadLength = 15
         // So, method returns hashValues with 5 hash value
-        // first value calculated from read[0], read[5], read[10]
-        // second value calculated from read[1], read[6], read[11]
+        // first value calculated from read[1], read[6], read[11]
+        // second value calculated from read[2], read[7], read[12]
         // etc.
-        // chars from 15 to 19 position is a tail, see compareTails() in ElcHashBasedDuplicatesFinder
+        // chars from 16 to 19 position is a tail, see compareTails() in ElcHashBasedDuplicatesFinder
         private int[] getHashes(byte[] read, int numberOfHashes, int skippedBases, int minReadLength) {
-            int[] hashValues = new int[numberOfHashes];
+            final int[] hashValues = new int[numberOfHashes];
             for (int i = 0; i < numberOfHashes; ++i) {
                 hashValues[i] = 1;
                 int position = skippedBases + i;
