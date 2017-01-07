@@ -289,9 +289,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             } else {
                 throw new Exception("Unexpected read name: " + sam.getReadName());
             }
-
         }
-
     }
 
     @Test(dataProvider="data")
@@ -304,7 +302,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, Arrays.asList(aligned), 1, null, null, null, null, null, null,
                 Arrays.asList(SamPairUtil.PairOrientation.FR),
                 coordinateSorted ? SAMFileHeader.SortOrder.coordinate : SAMFileHeader.SortOrder.queryname,
-                new BestMapqPrimaryAlignmentSelectionStrategy(), false, false, 30);
+                new BestMapqPrimaryAlignmentSelectionStrategy(), false, false, 30, AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE);
 
         merger.mergeAlignment(Defaults.REFERENCE_FASTA);
         Assert.assertEquals(sorted, !merger.getForceSort());
@@ -1282,7 +1280,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             Assert.assertEquals(numSecondRecords, Math.max(1, secondMapQs.length));
         }
     }
-
+ 
     private void doMergeAlignment(final File unmappedBam, final List<File> alignedBams,
                                   final List<File> read1AlignedBams, final List<File> read2AlignedBams, final Integer read1Trim, final Integer read2Trim,
                                   final boolean alignReadsOnly, final boolean clipAdapters, final boolean isBisulfiteSequence, final int maxInsOrDels,
@@ -1293,8 +1291,26 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                                   final Boolean includeSecondary,
                                   final Boolean unmapContaminantReads,
                                   final SAMFileHeader.SortOrder sortOrder) {
+        doMergeAlignment(unmappedBam, alignedBams, read1AlignedBams, read2AlignedBams, read1Trim, read2Trim,
+                alignReadsOnly, clipAdapters, isBisulfiteSequence, maxInsOrDels,
+                progRecordId, progGroupVersion, progGroupCommandLine, progGroupName, pairedRun, refSeq, output,
+                expectedOrientation, primaryAlignmentStrategy, attributesToRetain, includeSecondary, unmapContaminantReads,
+                sortOrder, null);
+    }
 
-        final List<String> args = new ArrayList<String>(Arrays.asList(
+    private void doMergeAlignment(final File unmappedBam, final List<File> alignedBams,
+                                  final List<File> read1AlignedBams, final List<File> read2AlignedBams, final Integer read1Trim, final Integer read2Trim,
+                                  final boolean alignReadsOnly, final boolean clipAdapters, final boolean isBisulfiteSequence, final int maxInsOrDels,
+                                  final String progRecordId, final String progGroupVersion, final String progGroupCommandLine, final String progGroupName,
+                                  final boolean pairedRun, final File refSeq, final File output,
+                                  final SamPairUtil.PairOrientation expectedOrientation, final MergeBamAlignment.PrimaryAlignmentStrategy primaryAlignmentStrategy,
+                                  final String attributesToRetain,
+                                  final Boolean includeSecondary,
+                                  final Boolean unmapContaminantReads,
+                                  final SAMFileHeader.SortOrder sortOrder,
+                                  final AbstractAlignmentMerger.UnmappingReadStrategy unmappingReadStrategy) {
+
+        final List<String> args = new ArrayList<>(Arrays.asList(
                 "UNMAPPED_BAM=" + unmappedBam.getAbsolutePath(),
                 "ALIGNED_READS_ONLY=" + alignReadsOnly,
                 "CLIP_ADAPTERS=" + clipAdapters,
@@ -1351,6 +1367,9 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         }
         if (unmapContaminantReads != null) {
             args.add("UNMAP_CONTAMINANT_READS=" + unmapContaminantReads);
+        }
+        if (unmappingReadStrategy != null) {
+            args.add("UNMAPPED_READ_STRATEGY=" + unmappingReadStrategy);
         }
         if (sortOrder != null) {
             args.add("SORT_ORDER=" + sortOrder.name());
@@ -1657,11 +1676,21 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         };
     }
 
-    @Test
-    public void testContaminationDetection() throws IOException {
+    @DataProvider(name="UnmappedReadStrategies")
+    public Object[][]  UnmappedReadStrategiesProvider() {
+        return new Object[][] {
+                {AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE, "contam.expected.NO_CHANGE.sam"},
+                {null,                                                          "contam.expected.NO_CHANGE.sam"},
+                {AbstractAlignmentMerger.UnmappingReadStrategy.COPY_TO_TAG,   "contam.expected.COPY_TO_TAG.sam"},
+                {AbstractAlignmentMerger.UnmappingReadStrategy.MOVE_TO_TAG,   "contam.expected.MOVE_TO_TAG.sam"}
+        };
+    }
+
+    @Test(dataProvider = "UnmappedReadStrategies")
+    public void testContaminationDetection(final AbstractAlignmentMerger.UnmappingReadStrategy strategy, final String basename) throws IOException {
         final File unmappedSam = new File(TEST_DATA_DIR, "contam.unmapped.sam");
         final File alignedSam = new File(TEST_DATA_DIR, "contam.aligned.sam");
-        final File expectedSam = new File(TEST_DATA_DIR, "contam.expected.sam");
+        final File expectedSam = new File(TEST_DATA_DIR, basename);
         final File refFasta = new File(TEST_DATA_DIR, "cliptest.fasta");
         final File mergedSam = File.createTempFile("merged", ".sam");
         mergedSam.deleteOnExit();
@@ -1671,7 +1700,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true, refFasta, mergedSam,
-                null, null, null, null, true, null);
+                null, null, null, null, true, null, strategy);
 
         assertSamValid(mergedSam);
         IOUtil.assertFilesEqual(expectedSam, mergedSam);
