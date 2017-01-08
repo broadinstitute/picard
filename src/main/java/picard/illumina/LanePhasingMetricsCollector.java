@@ -29,7 +29,11 @@ import picard.illumina.parser.TileTemplateRead;
 import picard.util.MathUtil;
 import htsjdk.samtools.util.CollectionUtil;
 
-import java.lang.Float;import java.util.*;import java.util.Collection;import java.util.Collections;import java.util.Map;import java.util.TreeMap;
+import java.lang.Float;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 
 /** Helper class used to transform tile data for a lane into a collection of IlluminaPhasingMetrics */
 public class LanePhasingMetricsCollector {

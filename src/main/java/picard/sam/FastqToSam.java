@@ -32,7 +32,6 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
-import htsjdk.samtools.fastq.FastqConstants;
 import htsjdk.samtools.fastq.FastqConstants.FastqExtensions;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;

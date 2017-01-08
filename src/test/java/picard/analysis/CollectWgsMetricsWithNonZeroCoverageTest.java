@@ -4,7 +4,6 @@ import picard.analysis.CollectWgsMetricsWithNonZeroCoverage.*;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;

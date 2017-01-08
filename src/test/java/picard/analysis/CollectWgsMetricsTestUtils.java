@@ -29,7 +29,6 @@ import htsjdk.samtools.*;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 
 import java.io.File;
-import java.io.IOError;
 import java.io.IOException;
 import java.util.stream.IntStream;
 

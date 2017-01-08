@@ -49,7 +49,7 @@ public class HaplotypeMap {
     private final Map<String, HaplotypeBlock> haplotypesBySnpName = new HashMap<String, HaplotypeBlock>();
     private final Map<String, HaplotypeBlock> haplotypesBySnpLocus = new HashMap<String, HaplotypeBlock>();
     private final Map<String,Snp> snpsByPosition = new HashMap<String,Snp>();
-    private final IntervalList intervals;
+    private IntervalList intervals;
     private final SAMFileHeader header;
 
     /**
@@ -207,7 +207,7 @@ public class HaplotypeMap {
 
     /** Returns an IntervalList with an entry for every SNP in every Haplotype in the map. */
     public IntervalList getIntervalList() {
-        this.intervals.sort(); // TODO: should probably do this elsewhere
+        this.intervals = this.intervals.sorted(); // TODO: should probably do this elsewhere
         return this.intervals;
     }
 

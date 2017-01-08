@@ -11,7 +11,6 @@ import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
-import picard.cmdline.CommandLineProgram;
 import picard.sam.CleanSam;
 
 import java.io.PrintWriter;

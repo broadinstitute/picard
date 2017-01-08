@@ -316,7 +316,7 @@ public class FingerprintChecker {
             final HaplotypeBlock haplotypeBlock = this.haplotypes.getHaplotype(info.getSequenceName(), info.getPosition());
             final Snp snp = this.haplotypes.getSnp(info.getSequenceName(), info.getPosition());
 
-            for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndPositions()) {
+            for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
                 if (rg == null || !fingerprintsByReadGroup.containsKey(rg)) {
                     final PicardException e = new PicardException("Unknown read group: " + rg);
@@ -390,7 +390,7 @@ public class FingerprintChecker {
             final Snp snp = this.haplotypes.getSnp(info.getSequenceName(), info.getPosition());
 
             // randomly select locusMaxReads elements from the list
-            final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = randomSublist(info.getRecordAndPositions(), locusMaxReads);
+            final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = randomSublist(info.getRecordAndOffsets(), locusMaxReads);
 
             for (final SamLocusIterator.RecordAndOffset rec : recordAndOffsetList) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();

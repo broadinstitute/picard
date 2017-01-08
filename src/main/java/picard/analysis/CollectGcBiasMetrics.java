@@ -34,7 +34,6 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.metrics.GcBiasMetrics;
-import picard.metrics.MultiLevelCollector;
 import picard.util.RExecutor;
 
 import java.io.File;

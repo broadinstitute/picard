@@ -310,7 +310,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         if (refFile != null) {
             intervalToGc = new HashMap<Interval,Double>();
             for (final Interval target : uniqueTargets) {
-                final ReferenceSequence rs = refFile.getSubsequenceAt(target.getSequence(), target.getStart(), target.getEnd());
+                final ReferenceSequence rs = refFile.getSubsequenceAt(target.getContig(), target.getStart(), target.getEnd());
                 intervalToGc.put(target,SequenceUtil.calculateGc(rs.getBases()));
             }
         }
@@ -798,7 +798,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                             if (max < d) max = d;
                         }
 
-                        out.println(interval.getSequence() + "\t" +
+                        out.println(interval.getContig() + "\t" +
                                 interval.getStart() + "\t" +
                                 interval.getEnd() + "\t" +
                                 interval.length() + "\t" +

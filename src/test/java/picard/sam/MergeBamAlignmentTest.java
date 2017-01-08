@@ -561,7 +561,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             final HitSpec secondHitSpec = secondOfPair.isEmpty()? null: secondOfPair.get(i);
             final SAMRecord first = makeRead(alignedHeader, firstUnmappedRec, firstHitSpec, true, i);
             final SAMRecord second = makeRead(alignedHeader, secondUnmappedRec, secondHitSpec, false, i);
-            if (first != null && second != null) SamPairUtil.setMateInfo(first, second, alignedHeader);
+            if (first != null && second != null) SamPairUtil.setMateInfo(first, second);
             if (first != null) {
                 if (second == null) first.setMateUnmappedFlag(true);
                 alignedWriter.addAlignment(first);
@@ -936,7 +936,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         secondOfPair.setReadUnmappedFlag(true);
         secondOfPair.setReadPairedFlag(true);
         secondOfPair.setSecondOfPairFlag(true);
-        SamPairUtil.setMateInfo(firstOfPair, secondOfPair, header);
+        SamPairUtil.setMateInfo(firstOfPair, secondOfPair);
 
         final SAMFileWriter unmappedWriter = factory.makeSAMWriter(header, false, unmappedSam);
         unmappedWriter.addAlignment(firstOfPair);
@@ -976,7 +976,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             secondOfPairAligned.setSecondOfPairFlag(true);
             secondOfPairAligned.setAttribute(SAMTag.HI.name(), i);
 
-            SamPairUtil.setMateInfo(firstOfPairAligned, secondOfPairAligned, header);
+            SamPairUtil.setMateInfo(firstOfPairAligned, secondOfPairAligned);
 
             alignedWriter.addAlignment(firstOfPairAligned);
             alignedWriter.addAlignment(secondOfPairAligned);

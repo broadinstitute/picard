@@ -23,8 +23,6 @@
  */
 package picard.analysis;
 
-import picard.sam.DuplicationMetrics;
-import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.metrics.MetricBase;
 
 /**

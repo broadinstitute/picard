@@ -3,8 +3,6 @@ package picard.analysis.artifacts;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.util.QualityUtil;
 
-import java.util.Comparator;
-
 public class SequencingArtifactMetrics {
     public static final String PRE_ADAPTER_SUMMARY_EXT = ".pre_adapter_summary_metrics";
     public static final String PRE_ADAPTER_DETAILS_EXT = ".pre_adapter_detail_metrics";

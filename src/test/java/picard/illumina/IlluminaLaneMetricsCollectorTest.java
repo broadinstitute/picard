@@ -1,9 +1,7 @@
 package picard.illumina;
 
-import htsjdk.samtools.SAMException;
 import htsjdk.samtools.util.IOUtil;
 import picard.illumina.parser.ReadStructure;
-import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
