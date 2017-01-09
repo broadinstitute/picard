@@ -131,7 +131,7 @@ public class GenotypeConcordanceTest {
             final File outputSummaryFile     = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION);
             final File outputDetailsFile     = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.DETAILED_METRICS_FILE_EXTENSION);
             final File outputContingencyFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
-            final Path outputVcfFile         = Paths.get(outputBaseFileName.getAbsolutePath() + ".vcf.gz");
+            final Path outputVcfFile         = Paths.get(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.OUTPUT_VCF_FILE_EXTENSION);
             outputSummaryFile.deleteOnExit();
             outputDetailsFile.deleteOnExit();
             outputContingencyFile.deleteOnExit();
