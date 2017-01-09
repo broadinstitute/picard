@@ -381,7 +381,7 @@ public class GenotypeConcordance extends CommandLineProgram {
     /** Gets the variant context writer if the output VCF is to be written, otherwise empty. */
     private Optional<VariantContextWriter> getVariantContextWriter(final VCFFileReader truthReader, final VCFFileReader callReader) {
         if (OUTPUT_VCF) {
-            final File outputVcfFile = new File(OUTPUT + ".vcf.gz");
+            final File outputVcfFile = new File(OUTPUT + ".genotype_concordance.vcf.gz");
             final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
                     .setOutputFile(outputVcfFile)
                     .setReferenceDictionary(callReader.getFileHeader().getSequenceDictionary())
