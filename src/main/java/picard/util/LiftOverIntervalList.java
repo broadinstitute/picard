@@ -120,8 +120,7 @@ public class LiftOverIntervalList extends CommandLineProgram {
             }
         }
 
-        toIntervals.sorted();
-        toIntervals.write(OUTPUT);
+        toIntervals.sorted().write(OUTPUT);
         return anyFailed ? 1 : 0;
     }
 }
