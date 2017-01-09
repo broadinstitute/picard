@@ -160,9 +160,10 @@ public class GenotypeConcordance extends CommandLineProgram {
     private final Log log = Log.getInstance(GenotypeConcordance.class);
     private final ProgressLogger progress = new ProgressLogger(log, 10000, "checked", "variants");
 
-    public static final String SUMMARY_METRICS_FILE_EXTENSION = ".genotype_concordance_summary_metrics";
-    public static final String DETAILED_METRICS_FILE_EXTENSION = ".genotype_concordance_detail_metrics";
+    public static final String SUMMARY_METRICS_FILE_EXTENSION     = ".genotype_concordance_summary_metrics";
+    public static final String DETAILED_METRICS_FILE_EXTENSION    = ".genotype_concordance_detail_metrics";
     public static final String CONTINGENCY_METRICS_FILE_EXTENSION = ".genotype_concordance_contingency_metrics";
+    public static final String OUTPUT_VCF_FILE_EXTENSION          = ".genotype_concordance.vcf.gz";
 
     protected GenotypeConcordanceCounts snpCounter;
     public GenotypeConcordanceCounts getSnpCounter() { return snpCounter; }
@@ -381,7 +382,7 @@ public class GenotypeConcordance extends CommandLineProgram {
     /** Gets the variant context writer if the output VCF is to be written, otherwise empty. */
     private Optional<VariantContextWriter> getVariantContextWriter(final VCFFileReader truthReader, final VCFFileReader callReader) {
         if (OUTPUT_VCF) {
-            final File outputVcfFile = new File(OUTPUT + ".vcf.gz");
+            final File outputVcfFile = new File(OUTPUT + OUTPUT_VCF_FILE_EXTENSION);
             final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
                     .setOutputFile(outputVcfFile)
                     .setReferenceDictionary(callReader.getFileHeader().getSequenceDictionary())
