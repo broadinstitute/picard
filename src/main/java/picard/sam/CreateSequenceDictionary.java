@@ -151,21 +151,10 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             URI = "file:" + REFERENCE.getAbsolutePath();
         }
         if (OUTPUT == null) {
-            // TODO: use the htsjdk method implemented in https://github.com/samtools/htsjdk/pull/774
-            OUTPUT = getDefaultDictionaryForReferenceSequence(REFERENCE);
+            OUTPUT = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(REFERENCE);
             logger.info("Output dictionary will be written in ", OUTPUT);
         }
         return null;
-    }
-
-    // TODO: this method will be in htsjdk (https://github.com/samtools/htsjdk/pull/774)
-    @VisibleForTesting
-    static File getDefaultDictionaryForReferenceSequence(final File fastaFile) {
-        final String name = fastaFile.getName();
-        final String extension = ReferenceSequenceFileFactory.FASTA_EXTENSIONS.stream().filter(name::endsWith).findFirst()
-                .orElseGet(() -> {throw new IllegalArgumentException("File is not a supported reference file type: " + fastaFile.getAbsolutePath());});
-        final int extensionIndex = name.length() - extension.length();
-        return new File(fastaFile.getParentFile(), name.substring(0, extensionIndex) + IOUtil.DICT_FILE_EXTENSION);
     }
 
     /**

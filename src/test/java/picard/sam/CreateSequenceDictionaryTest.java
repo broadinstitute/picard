@@ -48,23 +48,6 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         return CreateSequenceDictionary.class.getSimpleName();
     }
 
-    @DataProvider
-    public Object[][] fastaNames() {
-        return new Object[][] {
-                {"break.fa", "break.dict"},
-                {"break.txt.txt", "break.txt.dict"},
-                {"break.fasta.fasta", "break.fasta.dict"},
-                {"break.fa.gz", "break.dict"},
-                {"break.txt.gz.txt.gz", "break.txt.gz.dict"},
-                {"break.fasta.gz.fasta.gz", "break.fasta.gz.dict"}
-        };
-    }
-
-    @Test(dataProvider = "fastaNames")
-    public void testGetDefaultDictionaryForReferenceSequence(final String fastaFile, final String expectedDict) throws Exception {
-        Assert.assertEquals(CreateSequenceDictionary.getDefaultDictionaryForReferenceSequence(new File(fastaFile)), new File(expectedDict));
-    }
-
     @Test
     public void testBasic() throws Exception {
         final File outputDict = File.createTempFile("CreateSequenceDictionaryTest.", ".dict");
