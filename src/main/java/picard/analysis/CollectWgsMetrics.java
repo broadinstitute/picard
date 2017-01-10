@@ -56,7 +56,9 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
 
 /**
  * Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing experiments.
- *
+ * Two algorithms are available for this metrics: default and fast. The fast algorithm is enabled by USE_FAST_ALGORITHM option.
+ * The fast algorithm works better for regions of BAM file with coverage at least 10 reads per locus,
+ * for lower coverage the algorithms perform the same.
  * @author tfennell
  */
 @CommandLineProgramProperties(
@@ -117,6 +119,12 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
 
     @Option(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
     public int SAMPLE_SIZE=10000;
+
+    @Option(doc = "If true, fast algorithm is used")
+    public boolean USE_FAST_ALGORITHM = false;
+
+    @Option(doc = "Average read length in the file. Default is 150.", optional = true)
+    public int READ_LENGTH = 150;
 
     @Option(doc = "An interval list file that contains the positions to restrict the assessment. Please note that " +
             "all bases of reads that overlap these intervals will be considered, even if some of those bases extend beyond the boundaries of " +
@@ -437,7 +445,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Processed", "loci");
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
         final SamReader in = getSamReader();
-        final SamLocusIterator iterator = getLocusIterator(in);
+        final AbstractLocusIterator iterator = getLocusIterator(in);
 
         final List<SamRecordFilter> filters = new ArrayList<>();
         final CountingFilter mapqFilter = new CountingMapQFilter(MINIMUM_MAPPING_QUALITY);
@@ -451,47 +459,24 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             filters.add(pairFilter);
         }
         iterator.setSamFilters(filters);
-        iterator.setEmitUncoveredLoci(true);
         iterator.setMappingQualityScoreCutoff(0); // Handled separately because we want to count bases
-        iterator.setQualityScoreCutoff(0);        // Handled separately because we want to count bases
         iterator.setIncludeNonPfReads(false);
-        iterator.setMaxReadsToAccumulatePerLocus(LOCUS_ACCUMULATION_CAP);
 
-        final WgsMetricsCollector collector = getCollector(COVERAGE_CAP, getIntervalsToExamine());
-
-        final boolean usingStopAfter = STOP_AFTER > 0;
-        final long stopAfter = STOP_AFTER - 1;
-        long counter = 0;
-
-        // Loop through all the loci
-        while (iterator.hasNext()) {
-            final SamLocusIterator.LocusInfo info = iterator.next();
-            final ReferenceSequence ref = refWalker.get(info.getSequenceIndex());
-
-            // Check that the reference is not N
-            final byte base = ref.getBases()[info.getPosition() - 1];
-            if (SequenceUtil.isNoCall(base)) continue;
-
-            // add to the collector
-            collector.addInfo(info);
-
-            // Record progress and perhaps stop
-            progress.record(info.getSequenceName(), info.getPosition());
-            if (usingStopAfter && ++counter > stopAfter) break;
-        }
-
-        // check that we added the same number of bases to the raw coverage histogram and the base quality histograms
-        final long sumBaseQ= Arrays.stream(collector.unfilteredBaseQHistogramArray).sum();
-        final long sumDepthHisto = LongStream.rangeClosed(0, collector.coverageCap).map(i -> (i * collector.unfilteredDepthHistogramArray[(int) i])).sum();
-        if (sumBaseQ != sumDepthHisto) {
-            log.error("Coverage and baseQ distributions contain different amount of bases!");
-        }
+        final AbstractWgsMetricsCollector collector = getCollector(COVERAGE_CAP, getIntervalsToExamine());
+        final WgsMetricsProcessor processor = getWgsMetricsProcessor(progress, refWalker, iterator, collector);
+        processor.processFile();
 
         final MetricsFile<WgsMetrics, Integer> out = getMetricsFile();
-        collector.addToMetricsFile(out, INCLUDE_BQ_HISTOGRAM, dupeFilter, mapqFilter, pairFilter);
+        processor.addToMetricsFile(out, INCLUDE_BQ_HISTOGRAM, dupeFilter, mapqFilter, pairFilter);
         out.write(OUTPUT);
 
         return 0;
+    }
+
+    private <T extends AbstractRecordAndOffset> WgsMetricsProcessorImpl<T> getWgsMetricsProcessor(
+            ProgressLogger progress, ReferenceSequenceFileWalker refWalker,
+            AbstractLocusIterator<T, AbstractLocusInfo<T>> iterator, AbstractWgsMetricsCollector<T> collector) {
+        return new WgsMetricsProcessorImpl<>(iterator, refWalker, collector, progress);
     }
 
     /** Gets the intervals over which we will calculate metrics. */
@@ -547,7 +532,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         );
     }
 
-    private WgsMetrics generateWgsMetrics(final IntervalList intervals,
+    WgsMetrics generateWgsMetrics(final IntervalList intervals,
                                           final Histogram<Integer> highQualityDepthHistogram,
                                           final Histogram<Integer> unfilteredDepthHistogram,
                                           final long basesExcludedByMapq,
@@ -596,48 +581,49 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         return filter.getFilteredBases();
     }
 
-    protected SamLocusIterator getLocusIterator(final SamReader in) {
-        return (INTERVALS != null) ? new SamLocusIterator(in, IntervalList.fromFile(INTERVALS)) : new SamLocusIterator(in);
+    /**
+     * Creates <code>AbstractLocusIterator</code> implementation according to <code>USE_FAST_ALGORITHM</code> value.
+     *
+     * @param in inner <code>SAMReader</code>
+     * @return if <code>USE_FAST_ALGORITHM</code> is enabled, returns <code>EdgeReadIterator</code> implementation,
+     * otherwise default algorithm is used and <code>SamLocusIterator</code> is returned.
+     */
+    protected AbstractLocusIterator getLocusIterator(final SamReader in) {
+        if (USE_FAST_ALGORITHM) {
+            return (INTERVALS != null) ? new EdgeReadIterator(in, IntervalList.fromFile(INTERVALS)) : new EdgeReadIterator(in);
+        }
+        SamLocusIterator iterator = (INTERVALS != null) ? new SamLocusIterator(in, IntervalList.fromFile(INTERVALS)) : new SamLocusIterator(in);
+        iterator.setMaxReadsToAccumulatePerLocus(LOCUS_ACCUMULATION_CAP);
+        iterator.setEmitUncoveredLoci(true);
+        iterator.setQualityScoreCutoff(0);
+        return iterator;
     }
 
     /**
+     * Creates <code>AbstractWgsMetricsCollector</code> implementation according to <code>USE_FAST_ALGORITHM</code> value.
+     *
      * @param coverageCap the maximum depth/coverage to consider.
      * @param intervals the intervals over which metrics are collected.
-     * @return
+     * @return if <code>USE_FAST_ALGORITHM</code> is enabled, returns <code>FastWgsMetricsCollector</code> implementation,
+     * otherwise default algorithm is used and <code>WgsMetricsCollector</code> is returned.
      */
-    protected WgsMetricsCollector getCollector(final int coverageCap, final IntervalList intervals) {
-        return new WgsMetricsCollector(coverageCap, intervals);
+    protected AbstractWgsMetricsCollector getCollector(final int coverageCap, final IntervalList intervals) {
+        return USE_FAST_ALGORITHM ? new FastWgsMetricsCollector(this, coverageCap, intervals) :
+                new WgsMetricsCollector(this, coverageCap, intervals);
     }
 
-    protected class WgsMetricsCollector {
+    protected static class WgsMetricsCollector extends AbstractWgsMetricsCollector<SamLocusIterator.RecordAndOffset> {
 
-        // Count of sites with a given depth of coverage. Includes all but quality 2 bases.
-        // We draw depths from this histogram when we calculate the theoretical het sensitivity.
-        protected final long[] unfilteredDepthHistogramArray;
-
-        // Count of bases observed with a given base quality. Includes all but quality 2 bases.
-        // We draw bases from this histogram when we calculate the theoretical het sensitivity.
-        protected final long[] unfilteredBaseQHistogramArray;
-
-        // Count of sites with a given depth of coverage. Excludes bases with quality below MINIMUM_BASE_QUALITY (default 20).
-        protected final long[] highQualityDepthHistogramArray;
-
-        private long basesExcludedByBaseq = 0;
-        private long basesExcludedByOverlap = 0;
-        private long basesExcludedByCapping = 0;
-        protected final IntervalList intervals;
-        protected final int coverageCap;
-
-        public WgsMetricsCollector(final int coverageCap, final IntervalList intervals) {
-            unfilteredDepthHistogramArray = new long[coverageCap + 1];
-            highQualityDepthHistogramArray = new long[coverageCap + 1];
-            unfilteredBaseQHistogramArray = new long[Byte.MAX_VALUE];
-            this.coverageCap    = coverageCap;
-            this.intervals      = intervals;
+        public WgsMetricsCollector(final CollectWgsMetrics metrics, final int coverageCap, final IntervalList intervals) {
+            super(metrics, coverageCap, intervals);
         }
 
-        public void addInfo(final SamLocusIterator.LocusInfo info) {
+        @Override
+        public void addInfo(final AbstractLocusInfo<SamLocusIterator.RecordAndOffset> info, final ReferenceSequence ref, boolean referenceBaseN) {
 
+            if (referenceBaseN) {
+                return;
+            }
             // Figure out the coverage while not counting overlapping reads twice, and excluding various things
             final HashSet<String> readNames = new HashSet<>(info.getRecordAndOffsets().size());
             int pileupSize = 0;
@@ -653,78 +639,15 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                     unfilteredDepth++;
                 }
 
-                if (recs.getBaseQuality() < MINIMUM_BASE_QUALITY ||
+                if (recs.getBaseQuality() < collectWgsMetrics.MINIMUM_BASE_QUALITY ||
                         SequenceUtil.isNoCall(recs.getReadBase()))                  { ++basesExcludedByBaseq;   continue; }
                 if (!readNames.add(recs.getRecord().getReadName()))                 { ++basesExcludedByOverlap; continue; }
-
                 pileupSize++;
             }
-
             final int highQualityDepth = Math.min(pileupSize, coverageCap);
             if (highQualityDepth < pileupSize) basesExcludedByCapping += pileupSize - coverageCap;
             highQualityDepthHistogramArray[highQualityDepth]++;
             unfilteredDepthHistogramArray[unfilteredDepth]++;
         }
-
-        public void addToMetricsFile(final MetricsFile<WgsMetrics, Integer> file,
-                                     final boolean includeBQHistogram,
-                                     final CountingFilter dupeFilter,
-                                     final CountingFilter mapqFilter,
-                                     final CountingPairedFilter pairFilter) {
-            final WgsMetrics metrics = getMetrics(dupeFilter, mapqFilter, pairFilter);
-
-            // add them to the file
-            file.addMetric(metrics);
-            file.addHistogram(getHighQualityDepthHistogram());
-            if (includeBQHistogram) addBaseQHistogram(file);
-
-
-        }
-
-        protected void addBaseQHistogram(final MetricsFile<WgsMetrics, Integer> file) {
-            file.addHistogram(getUnfilteredBaseQHistogram());
-        }
-
-        protected Histogram<Integer> getHighQualityDepthHistogram() {
-            return getHistogram(highQualityDepthHistogramArray, "coverage", "high_quality_coverage_count");
-        }
-
-        protected Histogram<Integer> getUnfilteredDepthHistogram(){
-            return getHistogram(unfilteredDepthHistogramArray, "coverage", "unfiltered_coverage_count");
-        }
-
-        protected Histogram<Integer> getUnfilteredBaseQHistogram() {
-            return getHistogram(unfilteredBaseQHistogramArray, "baseq", "unfiltered_baseq_count");
-        }
-
-        protected Histogram<Integer> getHistogram(final long[] array, final String binLabel, final String valueLabel) {
-            final Histogram<Integer> histogram = new Histogram<>(binLabel, valueLabel);
-            for (int i = 0; i < array.length; ++i) {
-                histogram.increment(i, array[i]);
-            }
-            return histogram;
-        }
-
-        protected WgsMetrics getMetrics(final CountingFilter dupeFilter,
-                                        final CountingFilter mapqFilter,
-                                        final CountingPairedFilter pairFilter) {
-            return generateWgsMetrics(
-                    this.intervals,
-                    getHighQualityDepthHistogram(),
-                    getUnfilteredDepthHistogram(),
-                    getBasesExcludedBy(mapqFilter),
-                    getBasesExcludedBy(dupeFilter),
-                    getBasesExcludedBy(pairFilter),
-                    basesExcludedByBaseq,
-                    basesExcludedByOverlap,
-                    basesExcludedByCapping,
-                    coverageCap,
-                    getUnfilteredBaseQHistogram(),
-                    SAMPLE_SIZE
-            );
-        }
-
-
     }
 }
-

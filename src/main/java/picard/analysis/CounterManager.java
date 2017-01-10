@@ -1,0 +1,189 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2016 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+package picard.analysis;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+/**
+ * Class for managing a list of Counters of integer,
+ * provides methods to access data from Counters with respect to an offset.
+ * Each Counter represents a certain region of a processed sequence starting from offset and
+ * can accumulate some value for each locus of this sequence, for instance, read coverage.
+ * @author Mariia_Zueva@epam.com, EPAM Systems, Inc. <www.epam.com>
+ */
+
+public class CounterManager {
+
+    /**
+     * Length of inner Counter arrays
+     */
+    private final int arrayLength;
+    /**
+     * Proposed length of processed reads
+     */
+    private final int readLength;
+    /**
+     * Current offset from the start of the processed sequence. If offset = 100, this means, that value in
+     * Counter arrays at index 0, represents the 100th position of the sequence.
+     */
+    private int offset = 0;
+    /**
+     * List of Counter arrays for managing
+     */
+    private final ArrayList<Counter> arrays = new ArrayList<>(2);
+
+    /**
+     * Constructor creates new CounterManager without any Counters,
+     * counters are added to CounterManager via newCounter() method
+     *
+     * @param arrayLength length of inner Counter arrays
+     * @param readLength  proposed length of processed reads
+     */
+    public CounterManager(final int arrayLength, int readLength) {
+        this.arrayLength = arrayLength;
+        this.readLength = readLength;
+    }
+
+    /**
+     * Method added for use in unit tests
+     *
+     * @return offset from the reference sequence, that is represented by index 0 of <code>Counter</code> arrays.
+     */
+    int getOffset() {
+        return offset;
+    }
+
+    /**
+     * Method added for use in unit tests
+     *
+     * @param offset from the reference sequence, that will be represented by index 0 of <code>Counter</code> arrays.
+     */
+    void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    /**
+     * Method checks that new locus position is not out of bounds of Counter arrays and there is enough
+     * space in them to hold information on at least one more read of length <code>readLength</code>.
+     * If there is no free space, but there is accumulated information in Counter arrays after new locus position
+     * that we may need, the arrays are rebased, so that 0 index of arrays represents new locus position.
+     * In other case, we just clear the arrays.
+     *
+     * @param locusPosition position in the reference sequence,
+     *                      that will be represented by index 0 of <code>Counter</code> arrays.
+     */
+    public void checkOutOfBounds(int locusPosition) {
+        if (locusPosition - offset + readLength >= arrayLength) {
+            if (locusPosition - offset < arrayLength) {
+                rebase(locusPosition);
+            } else {
+                clear();
+                offset = locusPosition;
+            }
+        }
+    }
+
+    /**
+     * Rebases inner Counter arrays so that 0 index of array represents the new locus position
+     *
+     * @param locusPosition position in the reference sequence,
+     *                      that will be represented by index 0 of <code>Counter</code> arrays.
+     */
+    private void rebase(int locusPosition) {
+        for (Counter counter : arrays) {
+            int[] array = counter.array;
+            System.arraycopy(array, locusPosition - offset, array, 0, arrayLength - locusPosition + offset);
+            Arrays.fill(array, arrayLength - locusPosition + offset, arrayLength, 0);
+        }
+        offset = locusPosition;
+    }
+
+    /**
+     * Clears all inner Counter arrays
+     */
+    public void clear() {
+        for (Counter counter : arrays) {
+            int[] array = counter.array;
+            Arrays.fill(array, 0);
+        }
+        offset = 0;
+    }
+
+    /**
+     * Creates a new Counter object and adds it to the list of managed Counters.
+     *
+     * @return <code>Counter</code>, that will be managed by current <code>CounterManager</code>
+     */
+    public Counter newCounter() {
+        Counter counter = new Counter(arrayLength);
+        arrays.add(counter);
+        return counter;
+    }
+
+    /**
+     * Class represents an integer array with methods to increment and get the values form it with respect
+     * to offset of outer <code>CounterManager</code>.
+     */
+    public class Counter {
+
+        /**
+         * Inner array to store accumulated values
+         */
+        private int[] array;
+
+        /**
+         * @param arrayLength length of the inner array
+         */
+        private Counter(int arrayLength) {
+            array = new int[arrayLength];
+        }
+
+        /**
+         * Increments value corresponding to reference sequence index
+         *
+         * @param index in the reference sequence
+         */
+        public void inc(int index) {
+            checkIndex(index);
+            array[index - offset]++;
+        }
+
+        /**
+         * @param index in the reference sequence
+         * @return value from the inner array, corresponding to input reference index
+         */
+        public int get(int index) {
+            checkIndex(index);
+            return array[index - offset];
+        }
+
+        private void checkIndex(int index) {
+            if ((index - offset) < 0 || (index - offset) >= array.length) {
+                throw new ArrayIndexOutOfBoundsException("The requested index is out of counter bounds.");
+            }
+        }
+    }
+}

@@ -75,12 +75,14 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final String referenceFile = "testdata/picard/quality/chrM.reference.fasta";
 
         return new Object[][] {
-                {tempSamFile, outfile, referenceFile}
+                {tempSamFile, outfile, referenceFile, "false"},
+                {tempSamFile, outfile, referenceFile, "true"},
         };
     }
 
     @Test(dataProvider = "wgsDataProvider")
-    public void testMetricsFromWGS(final File input, final File outfile, final String referenceFile) throws IOException {
+    public void testMetricsFromWGS(final File input, final File outfile, final String referenceFile,
+            final String useFastAlgorithm) throws IOException {
         outfile.deleteOnExit();
         final int sampleSize = 1000;
 
@@ -88,7 +90,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + referenceFile,
-                "SAMPLE_SIZE=" + sampleSize
+                "SAMPLE_SIZE=" + sampleSize,
+                "USE_FAST_ALGORITHM=" + useFastAlgorithm
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -193,12 +196,19 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         sorter.instanceMain(args);
 
         //create output files for tests
-        outfile = File.createTempFile("testWgsMetrics", ".txt");
+        outfile = File.createTempFile("testWgsMetrics", ".txt", TEST_DIR);
         outfile.deleteOnExit();
     }
 
-    @Test
-    public void testLargeIntervals() throws IOException {
+    @DataProvider(name = "wgsAlgorithm")
+    public Object[][] wgsAlgorithm() {
+        return new Object[][] {
+                {"false"},
+                {"true"},
+        };
+    }
+    @Test(dataProvider = "wgsAlgorithm")
+    public void testLargeIntervals(final String useFastAlgorithm) throws IOException {
         final File input = new File(TEST_DIR, "forMetrics.sam");
         final File outfile = File.createTempFile("test", ".wgs_metrics");
         final File ref = new File(TEST_DIR, "merger.fasta");
@@ -225,8 +235,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         }
     }
 
-    @Test
-    public void testExclusions() throws IOException {
+    @Test(dataProvider = "wgsAlgorithm")
+    public void testExclusions(final String useFastAlgorithm) throws IOException {
         final File reference = new File("testdata/picard/sam/merger.fasta");
         final File tempSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
         tempSamFile.deleteOnExit();
@@ -289,8 +299,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals((long) highQualityDepthHistogram.get(3).getValue(), 2*10);
     }
 
-    @Test
-    public void testPoorQualityBases() throws IOException {
+    @Test(dataProvider = "wgsAlgorithm")
+    public void testPoorQualityBases(final String useFastAlgorithm) throws IOException {
         final File reference = new File("testdata/picard/quality/chrM.reference.fasta");
         final File testSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
         testSamFile.deleteOnExit();

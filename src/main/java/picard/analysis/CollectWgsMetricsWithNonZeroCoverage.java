@@ -125,7 +125,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         // Initialize the SamReader, so the header is available prior to super.doWork, for getIntervalsToExamine call. */
         getSamReader();
 
-        this.collector = new WgsMetricsWithNonZeroCoverageCollector(COVERAGE_CAP, getIntervalsToExamine());
+        this.collector = new WgsMetricsWithNonZeroCoverageCollector(this, COVERAGE_CAP, getIntervalsToExamine());
         super.doWork();
 
         final List<SAMReadGroupRecord> readGroups = getSamFileHeader().getReadGroups();
@@ -187,8 +187,9 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         Histogram<Integer> highQualityDepthHistogram;
         Histogram<Integer> highQualityDepthHistogramNonZero;
 
-        public WgsMetricsWithNonZeroCoverageCollector(final int coverageCap, final IntervalList intervals) {
-            super(coverageCap, intervals);
+        public WgsMetricsWithNonZeroCoverageCollector(final CollectWgsMetricsWithNonZeroCoverage metrics,
+                final int coverageCap, final IntervalList intervals) {
+            super(metrics, coverageCap, intervals);
         }
 
         @Override
