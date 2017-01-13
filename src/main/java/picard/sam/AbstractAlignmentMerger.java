@@ -57,11 +57,7 @@ import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Abstract class that coordinates the general task of taking in a set of alignment information,
@@ -105,6 +101,8 @@ public abstract class AbstractAlignmentMerger {
     private final SAMFileHeader header;
     private final List<String> attributesToRetain = new ArrayList<String>();
     private final List<String> attributesToRemove = new ArrayList<String>();
+    private Set<String> attributesToReverse = new TreeSet<>(SAMRecord.TAGS_TO_REVERSE);
+    private Set<String> attributesToReverseComplement = new TreeSet<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
     protected final File referenceFasta;
     private final Integer read1BasesTrimmed;
     private final Integer read2BasesTrimmed;
@@ -325,6 +323,20 @@ public abstract class AbstractAlignmentMerger {
         this.addMateCigar = addMateCigar;
         this.unmapContaminantReads = unmapContaminantReads;
         this.unmappingReadsStrategy = unmappingReadsStrategy;
+    }
+
+    /** Gets the set of attributes to be reversed on reads marked as negative strand. */
+    public Set<String> getAttributesToReverse() { return attributesToReverse; }
+
+    /** Sets the set of attributes to be reversed on reads marked as negative strand. */
+    public void setAttributesToReverse(Set<String> attributesToReverse) { this.attributesToReverse = attributesToReverse; }
+
+    /** Gets the set of attributes to be reverse complemented on reads marked as negative strand. */
+    public Set<String> getAttributesToReverseComplement() { return attributesToReverseComplement; }
+
+    /** Sets the set of attributes to be reverse complemented on reads marked as negative strand. */
+    public void setAttributesToReverseComplement(Set<String> attributesToReverseComplement) {
+        this.attributesToReverseComplement = attributesToReverseComplement;
     }
 
     /** Allows the caller to override the maximum records in RAM. */
@@ -788,11 +800,7 @@ public abstract class AbstractAlignmentMerger {
         // If it's on the negative strand, reverse complement the bases
         // and reverse the order of the qualities
         if (rec.getReadNegativeStrandFlag()) {
-            if(needsSafeReverseComplement) {
-                rec.reverseComplement();
-            } else {
-                rec.reverseComplement(true);
-            }
+            rec.reverseComplement(attributesToReverseComplement, attributesToReverse, !needsSafeReverseComplement);
         }
     }
 
