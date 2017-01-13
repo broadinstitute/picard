@@ -94,6 +94,8 @@ public class MergeVcfs extends CommandLineProgram {
     protected int doWork() {
         final ProgressLogger progress = new ProgressLogger(log, 10000);
         final List<String> sampleList = new ArrayList<String>();
+        INPUT = IOUtil.unrollFiles(INPUT, IOUtil.VCF_EXTENSIONS);
+        for (final File f: INPUT) IOUtil.assertFileIsReadable(f);
         final Collection<CloseableIterator<VariantContext>> iteratorCollection = new ArrayList<CloseableIterator<VariantContext>>(INPUT.size());
         final Collection<VCFHeader> headers = new HashSet<VCFHeader>(INPUT.size());
 
