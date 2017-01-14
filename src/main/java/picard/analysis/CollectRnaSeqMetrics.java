@@ -23,18 +23,12 @@
  */
 package picard.analysis;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.OverlapDetector;
+import htsjdk.samtools.util.*;
 import picard.PicardException;
+import picard.analysis.StrandSpecificityUtil.StrandSpecificity;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
@@ -44,9 +38,7 @@ import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @CommandLineProgramProperties(
         usage = CollectRnaSeqMetrics.USAGE_SUMMARY + CollectRnaSeqMetrics.USAGE_DETAILS,
@@ -76,6 +68,10 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 "<a href='http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat'>description</a>.  "+
 "Build-specific REF_FLAT files can be obtained <a href='http://hgdownload.cse.ucsc.edu/goldenPath/'>here</a>.</p>"+
 
+"<p>The tool can also infer the strand specificity by examining a subset of the reads.  The strand of transcription is"+
+"inferred from the gene annotations.  For paired end reads, only forward/reverse orientation reads are considered."+
+"Finally, only reads that map to UTR or coding sequence will be examined when inferring strand specificity.</p>"+
+
 "<pNote: Metrics labeled as percentages are actually expressed as fractions!</p>"+
 "<h4>Usage example:</h4>"+
 "<pre>" +
@@ -103,8 +99,8 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     public File RIBOSOMAL_INTERVALS;
 
     @Option(shortName = "STRAND", doc="For strand-specific library prep. " +
-            "For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND if the reads are expected to be on the transcription strand.")
-    public RnaSeqMetricsCollector.StrandSpecificity STRAND_SPECIFICITY;
+            "For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND if the reads are expected to be on the transcription strand.  If null, we will attempt to infer the strand specificity.", optional = true)
+    public StrandSpecificity STRAND_SPECIFICITY = null;
 
     @Option(doc="When calculating coverage based values (e.g. CV of coverage) only use transcripts of this length or greater.")
     public int MINIMUM_LENGTH = 500;
@@ -122,6 +118,15 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
+    @Option(doc="The number of reads to examine when attempting to infer the strand specificity.")
+    public int STRAND_SPECIFICITY_SAMPLE_SIZE = 100000;
+
+    @Option(doc="The minimum mapping quality required to examine a read when attempting to infer the strand specificity.")
+    public int STRAND_SPECIFICITY_MINIMUM_MAPPING_QUALITY = 30;
+
+    @Option(doc="The minimum mapping fraction of reads agreeing with the majority model when attempting to infer the strand specificity.")
+    public double STRAND_SPECIFICITY_MINIMUM_FRACTION = 0.8;
+
     private RnaSeqMetricsCollector collector;
 
     /**
@@ -135,12 +140,29 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     }
 
     @Override
+    protected String[] customCommandLineValidation() {
+        if (STRAND_SPECIFICITY == null && STRAND_SPECIFICITY_MINIMUM_FRACTION < 0.5) {
+            return new String[]{"STRAND_SPECIFICITY_MINIMUM_FRACTION must be >= 0.5"};
+        }
+
+        return super.customCommandLineValidation();
+    }
+
+    @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
 
         if (CHART_OUTPUT != null) IOUtil.assertFileIsWritable(CHART_OUTPUT);
 
         final OverlapDetector<Gene> geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary());
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
+
+        if (STRAND_SPECIFICITY == null) {
+            final SamReader samReader = SamReaderFactory.makeDefault()
+                    .referenceSequence(REFERENCE_SEQUENCE)
+                    .open(SamInputResource.of(INPUT));
+            STRAND_SPECIFICITY = StrandSpecificityUtil.inferStrandSpecificity(samReader, geneOverlapDetector, STRAND_SPECIFICITY_SAMPLE_SIZE, STRAND_SPECIFICITY_MINIMUM_MAPPING_QUALITY, STRAND_SPECIFICITY_MINIMUM_FRACTION, Optional.of(LOG));
+            CloserUtil.close(samReader);
+        }
 
         final Long ribosomalBasesInitialValue = RIBOSOMAL_INTERVALS != null ? 0L : null;
         final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = RnaSeqMetricsCollector.makeOverlapDetector(samFile, header, RIBOSOMAL_INTERVALS);
