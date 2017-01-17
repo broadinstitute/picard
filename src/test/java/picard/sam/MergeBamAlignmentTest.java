@@ -213,6 +213,13 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 throw new Exception("Unexpected read name: " + sam.getReadName());
             }
 
+            final boolean pos = !sam.getReadNegativeStrandFlag();
+            Assert.assertEquals(sam.getAttribute("aa"), pos ? "Hello" : "olleH");
+            Assert.assertEquals(sam.getAttribute("ab"), pos ? "ATTCGG" : "CCGAAT");
+            Assert.assertEquals(sam.getAttribute("ac"), pos ? new byte[] {1,2,3} : new byte[] {3,2,1});
+            Assert.assertEquals(sam.getAttribute("as"), pos ? new short[]{1,2,3} : new short[]{3,2,1});
+            Assert.assertEquals(sam.getAttribute("ai"), pos ? new int[]  {1,2,3} : new int[]  {3,2,1});
+            Assert.assertEquals(sam.getAttribute("af"), pos ? new float[]{1,2,3} : new float[]{3,2,1});
         }
 
         // Quick test to make sure the program record gets picked up from the file if not specified
@@ -1310,6 +1317,11 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                                   final SAMFileHeader.SortOrder sortOrder,
                                   final AbstractAlignmentMerger.UnmappingReadStrategy unmappingReadStrategy) {
 
+        final List<String> tagsToRc  = new ArrayList<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
+        final List<String> tagsToRev = new ArrayList<>(SAMRecord.TAGS_TO_REVERSE);
+        tagsToRc.add("ab");
+        tagsToRev.addAll(Arrays.asList("aa", "ac", "as", "ai", "af"));
+
         final List<String> args = new ArrayList<>(Arrays.asList(
                 "UNMAPPED_BAM=" + unmappedBam.getAbsolutePath(),
                 "ALIGNED_READS_ONLY=" + alignReadsOnly,
@@ -1361,6 +1373,12 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         }
         if (attributesToRetain != null) {
             args.add("ATTRIBUTES_TO_RETAIN=" + attributesToRetain);
+        }
+        for (final String t : tagsToRc) {
+            args.add("ATTRIBUTES_TO_REVERSE_COMPLEMENT=" + t);
+        }
+        for (final String t : tagsToRev) {
+            args.add("ATTRIBUTES_TO_REVERSE=" + t);
         }
         if (includeSecondary != null) {
             args.add("INCLUDE_SECONDARY_ALIGNMENTS=" + includeSecondary);

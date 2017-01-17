@@ -25,6 +25,7 @@ package picard.sam;
 
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
@@ -35,9 +36,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * A command-line tool to merge BAM/SAM alignment info from a third-party aligner with the data in an
@@ -154,6 +153,12 @@ public class MergeBamAlignment extends CommandLineProgram {
             "  This overrides ATTRIBUTES_TO_RETAIN if they share common tags.")
     public List<String> ATTRIBUTES_TO_REMOVE = new ArrayList<String>();
 
+    @Option(shortName="RV", doc="Attributes on negative strand reads that need to be reversed.")
+    public Set<String> ATTRIBUTES_TO_REVERSE = new TreeSet<>(SAMRecord.TAGS_TO_REVERSE);
+
+    @Option(shortName="RC", doc="Attributes on negative strand reads that need to be reverse complemented.")
+    public Set<String> ATTRIBUTES_TO_REVERSE_COMPLEMENT = new TreeSet<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
+
     @Option(shortName = "R1_TRIM",
             doc = "The number of bases trimmed from the beginning of read 1 prior to alignment")
     public int READ1_TRIM = 0;
@@ -268,6 +273,8 @@ public class MergeBamAlignment extends CommandLineProgram {
         merger.setMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         merger.setKeepAlignerProperPairFlags(ALIGNER_PROPER_PAIR_FLAGS);
         merger.setIncludeSecondaryAlignments(INCLUDE_SECONDARY_ALIGNMENTS);
+        merger.setAttributesToReverse(ATTRIBUTES_TO_REVERSE);
+        merger.setAttributesToReverseComplement(ATTRIBUTES_TO_REVERSE_COMPLEMENT);
         merger.mergeAlignment(REFERENCE_SEQUENCE);
         merger.close();
 
