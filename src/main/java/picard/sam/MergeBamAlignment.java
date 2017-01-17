@@ -26,6 +26,7 @@ package picard.sam;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
@@ -37,6 +38,7 @@ import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.*;
+
 
 /**
  * A command-line tool to merge BAM/SAM alignment info from a third-party aligner with the data in an
@@ -211,6 +213,9 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Option(doc = "If UNMAP_CONTAMINANT_READS is set, require this many unclipped bases or else the read will be marked as contaminant.")
     public int MIN_UNCLIPPED_BASES = 32;
 
+    @Option(doc = "List of Sequence Records tags that must be equal (if present) in the reference dictionary and in the aligned file. Mismatching tags will cause an error if in this list, and a warning otherwise.")
+    public List<String> MATCHING_DICTIONARY_TAGS = SAMSequenceDictionary.DEFAULT_DICTIONARY_EQUAL_TAG;
+
     @Option(doc = "How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) Currently ignored unless UNMAP_CONTAMINANT_READS = true", optional = true)
     public AbstractAlignmentMerger.UnmappingReadStrategy UNMAPPED_READ_STRATEGY = AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE;
 
@@ -257,9 +262,9 @@ public class MergeBamAlignment extends CommandLineProgram {
         }
         // TEMPORARY FIX until internal programs all specify EXPECTED_ORIENTATIONS
         if (JUMP_SIZE != null) {
-            EXPECTED_ORIENTATIONS = Arrays.asList(SamPairUtil.PairOrientation.RF);
+            EXPECTED_ORIENTATIONS = Collections.singletonList(SamPairUtil.PairOrientation.RF);
         } else if (EXPECTED_ORIENTATIONS == null || EXPECTED_ORIENTATIONS.isEmpty()) {
-            EXPECTED_ORIENTATIONS = Arrays.asList(SamPairUtil.PairOrientation.FR);
+            EXPECTED_ORIENTATIONS = Collections.singletonList(SamPairUtil.PairOrientation.FR);
         }
 
         final SamAlignmentMerger merger = new SamAlignmentMerger(UNMAPPED_BAM, OUTPUT,
@@ -268,7 +273,7 @@ public class MergeBamAlignment extends CommandLineProgram {
                 ATTRIBUTES_TO_RETAIN, ATTRIBUTES_TO_REMOVE, READ1_TRIM, READ2_TRIM,
                 READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER,
                 PRIMARY_ALIGNMENT_STRATEGY.newInstance(), ADD_MATE_CIGAR, UNMAP_CONTAMINANT_READS,
-                MIN_UNCLIPPED_BASES, UNMAPPED_READ_STRATEGY);
+                MIN_UNCLIPPED_BASES, UNMAPPED_READ_STRATEGY, MATCHING_DICTIONARY_TAGS);
         merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS);
         merger.setMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         merger.setKeepAlignerProperPairFlags(ALIGNER_PROPER_PAIR_FLAGS);
@@ -311,10 +316,8 @@ public class MergeBamAlignment extends CommandLineProgram {
         if (ALIGNED_BAM == null || ALIGNED_BAM.isEmpty() && !(r1sExist && r2sExist)) {
             return new String[]{"Either ALIGNED_BAM or the combination of " +
                     "READ1_ALIGNED_BAM and READ2_ALIGNED_BAM must be supplied."};
-
         }
 
         return null;
     }
-
 }

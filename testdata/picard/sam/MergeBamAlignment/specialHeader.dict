@@ -1,0 +1,3 @@
+@HD	VN:1.5	SO:unsorted
+@SQ	SN:chr1	LN:1000	M5:17522ddd273279f4595f50fea9864734	UR:file:testdata/picard/sam/MergeBamAlignment/specialHeaderTest.fasta
+@SQ	SN:chr1_alt	LN:200	M5:8e0c728a0fb8a73feb55f9a447f4b144	UR:file:testdata/picard/sam/MergeBamAlignment/specialHeaderTest.fasta
