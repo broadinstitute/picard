@@ -71,11 +71,11 @@ import java.util.Set;
 public class SamToFastq extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Converts a SAM or BAM file to FASTQ.  ";
     static final String USAGE_DETAILS = "This tool extracts read sequences and base quality scores from the input SAM/BAM file and " +
-            "outputs them in FASTQ format. This can be used (by way of a pipe) to run BWA MEM on unmapped BAM (uBAM) files."+
+            "outputs them in FASTQ format. This can be used by way of a pipe to run BWA MEM on unmapped BAM (uBAM) files efficiently."+
             "<br />" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
-            "java -jar picard.jar SamToFASTQ \\<br />" +
+            "java -jar picard.jar SamToFastq \\<br />" +
             "     I=input.bam \\<br />" +
             "     FASTQ=output.fastq" +
             "</pre>" +
