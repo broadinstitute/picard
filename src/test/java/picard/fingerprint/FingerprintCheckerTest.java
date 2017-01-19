@@ -4,6 +4,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.vcf.VcfTestUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,10 +94,12 @@ public class FingerprintCheckerTest {
     @Test(dataProvider = "checkFingerprintsVcfDataProvider")
     public void testCheckFingerprints(File vcfFile,  File genotypesFile,  String observedSampleAlias,  String expectedSampleAlias,
                                       double llExpectedSample, double llRandomSample, double lodExpectedSample) throws IOException {
+        final File indexedInputVcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(vcfFile, "fingerprintcheckertest.tmp.");
+        final File indexedGenotypesVcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(genotypesFile, "fingerprintcheckertest.tmp.");
 
         final FingerprintChecker fpChecker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
-        final List<FingerprintResults> results = fpChecker.checkFingerprints(Collections.singletonList(vcfFile),
-                Collections.singletonList(genotypesFile),
+        final List<FingerprintResults> results = fpChecker.checkFingerprints(Collections.singletonList(indexedInputVcf),
+                Collections.singletonList(indexedGenotypesVcf),
                 observedSampleAlias,
                 expectedSampleAlias);
         Assert.assertEquals(results.size(), 1);
