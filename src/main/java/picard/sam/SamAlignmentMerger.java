@@ -31,6 +31,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
     private final int minUnclippedBases;
     private boolean forceSort = false;
     private final OverclippedReadFilter contaminationFilter;
+    private final List<String> requiredMatchingDictionaryTags;
+    private SAMSequenceDictionary alignedSamDictionary;
 
     /**
      *  Constructor with a default value for unmappingReadStrategy
@@ -70,7 +72,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                 addMateCigar,
                 unmapContaminantReads,
                 minUnclippedBases,
-                UnmappingReadStrategy.DO_NOT_CHANGE);
+                UnmappingReadStrategy.DO_NOT_CHANGE,
+                SAMSequenceDictionary.DEFAULT_DICTIONARY_EQUAL_TAG
+                );
     }
 
         /**
@@ -117,6 +121,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
          * @param minUnclippedBases                 If unmapContaminantReads is set, require this many unclipped bases or else the read will be marked as contaminant.
          * @param unmappingReadStrategy             An enum describing how to deal with reads whose mapping information are being removed (currently this happens due to cross-species
          *                                          contamination). Ignored unless unmapContaminantReads is true.
+         * @param requiredMatchingDictionaryTags            A list of SAMSequenceRecord tags that must be equal (if present) in the aligned bam and the reference dictionary.
+         *                                          Program will issue a warning about other tags, if present in both files and are different.
          */
     public SamAlignmentMerger(final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
                               final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
@@ -131,7 +137,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                               final boolean addMateCigar,
                               final boolean unmapContaminantReads,
                               final int minUnclippedBases,
-                              final UnmappingReadStrategy unmappingReadStrategy) {
+                              final UnmappingReadStrategy unmappingReadStrategy,
+                              final List<String> requiredMatchingDictionaryTags) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
                 alignedReadsOnly, programRecord, attributesToRetain, attributesToRemove, read1BasesTrimmed,
@@ -158,6 +165,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         this.maxGaps = maxGaps;
         this.minUnclippedBases = minUnclippedBases;
         this.contaminationFilter = new OverclippedReadFilter(minUnclippedBases, false);
+        this.requiredMatchingDictionaryTags = requiredMatchingDictionaryTags;
 
         log.info("Processing SAM file(s): " + ((alignedSamFile != null) ? alignedSamFile : (read1AlignedSamFile + "," + read2AlignedSamFile)));
     }
@@ -177,6 +185,16 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             resetRefSeqFileWalker();
             super.mergeAlignment(referenceFasta);
         }
+    }
+
+    @Override
+    protected SAMSequenceDictionary getDictionaryForMergedBam() {
+        SAMSequenceDictionary referenceDict = SAMSequenceDictionaryExtractor.extractDictionary(referenceFasta);
+        if (referenceDict == null) {
+            throw new PicardException("No sequence dictionary found for " + referenceFasta.getAbsolutePath() +
+                    ".  Use Picard's CreateSequenceDictionary to create a sequence dictionary.");
+        }
+        return SAMSequenceDictionary.mergeDictionaries(alignedSamDictionary, referenceDict, requiredMatchingDictionaryTags);
     }
 
     /**
@@ -203,6 +221,12 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                 }
             }
 
+            // assert that all the dictionaries are the same before merging the headers.
+            alignedSamDictionary = headers.get(0).getSequenceDictionary();
+            headers.stream()
+                    .map(SAMFileHeader::getSequenceDictionary)
+                    .forEach(alignedSamDictionary::assertSameDictionary);
+
             final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SortOrder.queryname, headers, false);
 
             mergingIterator = new MergingSamRecordIterator(headerMerger, readers, true);
@@ -212,8 +236,11 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         // When the ends are aligned separately and don't have firstOfPair information correctly
         // set we use this branch.
         else {
+            // this merging iterator already asserts that all the headers are the same
             mergingIterator = new SeparateEndAlignmentIterator(this.read1AlignedSamFile, this.read2AlignedSamFile, referenceFasta);
             header = ((SeparateEndAlignmentIterator) mergingIterator).getHeader();
+
+            alignedSamDictionary = header.getSequenceDictionary();
 
             // As we're going through and opening the aligned files, if we don't have a @PG yet
             // and there is only a single one in the input file, use that!

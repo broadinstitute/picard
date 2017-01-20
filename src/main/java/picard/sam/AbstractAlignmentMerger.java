@@ -67,7 +67,6 @@ public abstract class AbstractAlignmentMerger {
 
     private final File unmappedBamFile;
     private final File targetBamFile;
-    private final SAMSequenceDictionary sequenceDictionary;
     private ReferenceSequenceFileWalker refSeq = null;
     private final boolean clipAdapters;
     private final boolean bisulfiteSequence;
@@ -158,6 +157,7 @@ public abstract class AbstractAlignmentMerger {
             return populatePATag;
         }
     }
+    protected abstract SAMSequenceDictionary getDictionaryForMergedBam();
 
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();
 
@@ -257,11 +257,6 @@ public abstract class AbstractAlignmentMerger {
         this.referenceFasta = referenceFasta;
 
         this.refSeq = new ReferenceSequenceFileWalker(referenceFasta);
-        this.sequenceDictionary = refSeq.getSequenceDictionary();
-        if (this.sequenceDictionary == null) {
-            throw new PicardException("No sequence dictionary found for " + referenceFasta.getAbsolutePath() +
-                    ".  Use CreateSequenceDictionary.jar to create a sequence dictionary.");
-        }
 
         this.clipAdapters = clipAdapters;
         this.bisulfiteSequence = bisulfiteSequence;
@@ -273,7 +268,7 @@ public abstract class AbstractAlignmentMerger {
         if (programRecord != null) {
             setProgramRecord(programRecord);
         }
-        header.setSequenceDictionary(this.sequenceDictionary);
+
         if (attributesToRetain != null) {
             this.attributesToRetain.addAll(attributesToRetain);
         }
@@ -345,6 +340,10 @@ public abstract class AbstractAlignmentMerger {
 
         // Get the aligned records and set up the first one
         alignedIterator = new MultiHitAlignedReadIterator(new FilteringSamIterator(getQuerynameSortedAlignedRecords(), alignmentFilter), primaryAlignmentSelectionStrategy);
+
+        // once the aligned Iterator has been set-up we can merge the reference dictionary and that from the input files
+        this.header.setSequenceDictionary(getDictionaryForMergedBam());
+
         HitsForInsert nextAligned = nextAligned();
 
         // Check that the program record we are going to insert is not already used in the unmapped SAM
@@ -593,8 +592,6 @@ public abstract class AbstractAlignmentMerger {
         if (alignedIterator.hasNext()) return alignedIterator.next();
         return null;
     }
-
-    private int numCrossSpeciesContaminantWarnings = 0;
 
     /**
      * Copies alignment info from aligned to unaligned read, clips as appropriate, and sets PG ID.
@@ -852,8 +849,6 @@ public abstract class AbstractAlignmentMerger {
             removeNmMdAndUqTags(rec); // these tags are now invalid!
         }
     }
-
-    protected SAMSequenceDictionary getSequenceDictionary() { return this.sequenceDictionary; }
 
     protected SAMProgramRecord getProgramRecord() { return this.programRecord; }
 
