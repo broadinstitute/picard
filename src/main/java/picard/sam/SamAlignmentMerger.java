@@ -1,25 +1,11 @@
 package picard.sam;
 
-import htsjdk.samtools.BAMRecordCodec;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.MergingSamRecordIterator;
-import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.*;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordQueryNameComparator;
-import htsjdk.samtools.SamFileHeaderMerger;
-import htsjdk.samtools.SamPairUtil;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.OverclippedReadFilter;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.DelegatingIterator;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.PeekableIterator;
-import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.*;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import picard.PicardException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -176,7 +162,6 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         log.info("Processing SAM file(s): " + ((alignedSamFile != null) ? alignedSamFile : (read1AlignedSamFile + "," + read2AlignedSamFile)));
     }
 
-
     /**
      * Merges the alignment from the map file with the non-aligned records from the source BAM file.
      * Overrides mergeAlignment in AbstractAlignmentMerger.  Tries first to proceed on the assumption
@@ -204,8 +189,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
         // When the alignment records, including both ends of a pair, are in SAM files
         if (alignedSamFile != null && !alignedSamFile.isEmpty()) {
-            final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(alignedSamFile.size());
-            final List<SamReader> readers = new ArrayList<SamReader>(alignedSamFile.size());
+            final List<SAMFileHeader> headers = new ArrayList<>(alignedSamFile.size());
+            final List<SamReader> readers = new ArrayList<>(alignedSamFile.size());
             for (final File f : this.alignedSamFile) {
                 final SamReader r = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(f);
                 headers.add(r.getFileHeader());
@@ -237,11 +222,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             }
         }
 
-
         if (!forceSort) {
             return mergingIterator;
         }
-
 
         final SortingCollection<SAMRecord> alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
                 new BAMRecordCodec(header), new SAMRecordQueryNameComparator(), MAX_RECORDS_IN_RAM);
@@ -308,9 +291,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         private final SAMFileHeader header;
 
         public SeparateEndAlignmentIterator(final List<File> read1Alignments, final List<File> read2Alignments, File referenceFasta) {
-            final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
-            final List<SamReader> read1 = new ArrayList<SamReader>(read1Alignments.size());
-            final List<SamReader> read2 = new ArrayList<SamReader>(read2Alignments.size());
+            final List<SAMFileHeader> headers = new ArrayList<>();
+            final List<SamReader> read1 = new ArrayList<>(read1Alignments.size());
+            final List<SamReader> read2 = new ArrayList<>(read2Alignments.size());
             for (final File f : read1Alignments) {
                 final SamReader r = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(f);
                 headers.add(r.getFileHeader());
@@ -323,9 +306,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             }
 
             final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, false);
-            read1Iterator = new PeekableIterator<SAMRecord>(
+            read1Iterator = new PeekableIterator<>(
                     new SuffixTrimingSamRecordIterator(new MergingSamRecordIterator(headerMerger, read1, true), "/1"));
-            read2Iterator = new PeekableIterator<SAMRecord>(
+            read2Iterator = new PeekableIterator<>(
                     new SuffixTrimingSamRecordIterator(new MergingSamRecordIterator(headerMerger, read2, true), "/2"));
 
             header = headerMerger.getMergedHeader();

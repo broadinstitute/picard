@@ -23,37 +23,12 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.BAMRecordCodec;
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.ReservedTagConstants;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordCoordinateComparator;
-import htsjdk.samtools.SAMRecordQueryNameComparator;
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SAMTag;
-import htsjdk.samtools.SAMUtils;
-import htsjdk.samtools.SamPairUtil;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.CigarUtil;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.util.*;
 import picard.PicardException;
 
 import java.io.File;
@@ -99,8 +74,8 @@ public abstract class AbstractAlignmentMerger {
     private SAMProgramRecord programRecord;
     private final boolean alignedReadsOnly;
     private final SAMFileHeader header;
-    private final List<String> attributesToRetain = new ArrayList<String>();
-    private final List<String> attributesToRemove = new ArrayList<String>();
+    private final List<String> attributesToRetain = new ArrayList<>();
+    private final List<String> attributesToRemove = new ArrayList<>();
     private Set<String> attributesToReverse = new TreeSet<>(SAMRecord.TAGS_TO_REVERSE);
     private Set<String> attributesToReverseComplement = new TreeSet<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
     protected final File referenceFasta;
@@ -203,7 +178,7 @@ public abstract class AbstractAlignmentMerger {
                                    final List<String> attributesToRemove,
                                    final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
                                    final List<SamPairUtil.PairOrientation> expectedOrientations,
-                                   final SAMFileHeader.SortOrder sortOrder,
+                                   final SortOrder sortOrder,
                                    final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
                                    final boolean addMateCigar,
                                    final boolean unmapContaminantReads) {
@@ -268,7 +243,7 @@ public abstract class AbstractAlignmentMerger {
                                    final List<String> attributesToRemove,
                                    final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
                                    final List<SamPairUtil.PairOrientation> expectedOrientations,
-                                   final SAMFileHeader.SortOrder sortOrder,
+                                   final SortOrder sortOrder,
                                    final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
                                    final boolean addMateCigar,
                                    final boolean unmapContaminantReads,
@@ -306,12 +281,10 @@ public abstract class AbstractAlignmentMerger {
             this.attributesToRemove.addAll(attributesToRemove);
             // attributesToRemove overrides attributesToRetain
             if (!this.attributesToRetain.isEmpty()) {
-                for (String attribute : this.attributesToRemove) {
-                    if (this.attributesToRetain.contains(attribute)) {
-                        log.info("Overriding retaining the " + attribute + " tag since remove overrides retain.");
-                        this.attributesToRetain.remove(attribute);
-                    }
-                }
+                this.attributesToRemove.stream()
+                        .filter(this.attributesToRetain::contains)
+                        .peek(a->log.info("Overriding retaining the " + a + " tag since 'remove' overrides 'retain'."))
+                        .forEach(this.attributesToRetain::remove);
             }
         }
         this.read1BasesTrimmed = read1BasesTrimmed;

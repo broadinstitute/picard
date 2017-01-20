@@ -257,9 +257,9 @@ public class MergeBamAlignment extends CommandLineProgram {
         }
         // TEMPORARY FIX until internal programs all specify EXPECTED_ORIENTATIONS
         if (JUMP_SIZE != null) {
-            EXPECTED_ORIENTATIONS = Arrays.asList(SamPairUtil.PairOrientation.RF);
+            EXPECTED_ORIENTATIONS = Collections.singletonList(SamPairUtil.PairOrientation.RF);
         } else if (EXPECTED_ORIENTATIONS == null || EXPECTED_ORIENTATIONS.isEmpty()) {
-            EXPECTED_ORIENTATIONS = Arrays.asList(SamPairUtil.PairOrientation.FR);
+            EXPECTED_ORIENTATIONS = Collections.singletonList(SamPairUtil.PairOrientation.FR);
         }
 
         final SamAlignmentMerger merger = new SamAlignmentMerger(UNMAPPED_BAM, OUTPUT,
@@ -311,10 +311,8 @@ public class MergeBamAlignment extends CommandLineProgram {
         if (ALIGNED_BAM == null || ALIGNED_BAM.isEmpty() && !(r1sExist && r2sExist)) {
             return new String[]{"Either ALIGNED_BAM or the combination of " +
                     "READ1_ALIGNED_BAM and READ2_ALIGNED_BAM must be supplied."};
-
         }
 
         return null;
     }
-
 }
