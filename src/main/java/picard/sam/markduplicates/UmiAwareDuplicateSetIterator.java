@@ -34,12 +34,18 @@
 
 package picard.sam.markduplicates;
 
+import com.google.common.math.LongMath;
 import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.DuplicateSetIterator;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.Histogram;
 import picard.PicardException;
+import picard.sam.UmiMetrics;
 
 import java.util.*;
+
+import static htsjdk.samtools.util.StringUtil.hammingDistance;
 
 /**
  * UmiAwareDuplicateSetIterator is an iterator that wraps a duplicate set iterator
@@ -55,22 +61,33 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
     private final String inferredUmiTag;
     private final boolean allowMissingUmis;
     private boolean isOpen = false;
+    private UmiMetrics metrics;
+    private boolean haveWeSeenFirstRead = false;
+    private long duplicateSetsWithUmi = 0;
+    private long duplicateSetsWithoutUmi = 0;
+    private double expectedCollisions = 0;
+    private int observedBaseErrors = 0;
+
+    private Histogram<String> observedUmis = new Histogram<>();
+    private Histogram<String> inferredUmis = new Histogram<>();
 
     /**
      * Creates a UMI aware duplicate set iterator
      *
-     * @param wrappedIterator UMI aware duplicate set iterator is a wrapper
+     * @param wrappedIterator       UMI aware duplicate set iterator is a wrapper
      * @param maxEditDistanceToJoin The edit distance between UMIs that will be used to union UMIs into groups
-     * @param umiTag The tag used in the bam file that designates the UMI
-     * @param assignedUmiTag The tag in the bam file that designates the assigned UMI
+     * @param umiTag                The tag used in the bam file that designates the UMI
+     * @param assignedUmiTag        The tag in the bam file that designates the assigned UMI
      */
     UmiAwareDuplicateSetIterator(final DuplicateSetIterator wrappedIterator, final int maxEditDistanceToJoin,
-                                 final String umiTag, final String assignedUmiTag, final boolean allowMissingUmis) {
+                                 final String umiTag, final String assignedUmiTag, final boolean allowMissingUmis,
+                                 final UmiMetrics metrics) {
         this.wrappedIterator = wrappedIterator;
         this.maxEditDistanceToJoin = maxEditDistanceToJoin;
         this.umiTag = umiTag;
         this.inferredUmiTag = assignedUmiTag;
         this.allowMissingUmis = allowMissingUmis;
+        this.metrics = metrics;
         isOpen = true;
         nextSetsIterator = Collections.emptyIterator();
     }
@@ -79,18 +96,21 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
     public void close() {
         isOpen = false;
         wrappedIterator.close();
+
+        if (metrics.UMI_LENGTH > 0) {
+            collectMetrics();
+        }
+
     }
 
     @Override
     public boolean hasNext() {
-        if(!isOpen) {
+        if (!isOpen) {
             return false;
-        }
-        else {
-            if(nextSetsIterator.hasNext() || wrappedIterator.hasNext()) {
+        } else {
+            if (nextSetsIterator.hasNext() || wrappedIterator.hasNext()) {
                 return true;
-            }
-            else {
+            } else {
                 isOpen = false;
                 return false;
             }
@@ -119,6 +139,84 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
         }
 
         final UmiGraph umiGraph = new UmiGraph(set, umiTag, inferredUmiTag, allowMissingUmis);
-        nextSetsIterator = umiGraph.joinUmisIntoDuplicateSets(maxEditDistanceToJoin).iterator();
+
+        List<DuplicateSet> duplicateSets = umiGraph.joinUmisIntoDuplicateSets(maxEditDistanceToJoin);
+
+        // Collect statistics on numbers of observed and inferred UMIs
+        // and total numbers of observed and inferred UMIs
+        for (DuplicateSet ds : duplicateSets) {
+            List<SAMRecord> records = ds.getRecords();
+            SAMRecord representativeRead = ds.getRepresentative();
+
+            String inferredUmi = representativeRead.getStringAttribute(inferredUmiTag);
+
+            for (SAMRecord rec : records) {
+                String currentUmi = rec.getStringAttribute(umiTag);
+
+                if (currentUmi != null) {
+                    if (!haveWeSeenFirstRead) {
+                        metrics.UMI_LENGTH = currentUmi.length();
+                        haveWeSeenFirstRead = true;
+                    }
+
+                    metrics.OBSERVED_BASE_ERRORS += hammingDistance(currentUmi, inferredUmi);
+                    observedBaseErrors += metrics.UMI_LENGTH;
+
+                    observedUmis.increment(currentUmi);
+                    inferredUmis.increment(inferredUmi);
+                }
+            }
+
+            duplicateSetsWithUmi++;
+        }
+        duplicateSetsWithoutUmi++;
+
+        // For each duplicate set estimate the number of expected umi collisions
+        double Z = 0;
+        for (int k = 0; k <= maxEditDistanceToJoin; k++) {
+            if (metrics.UMI_LENGTH > 0) {
+                Z = Z + LongMath.binomial(metrics.UMI_LENGTH, k) * Math.pow(3.0, k);
+            }
+        }
+        expectedCollisions = expectedCollisions +
+                (1 - Math.pow(1 - Z / Math.pow(4, metrics.UMI_LENGTH), duplicateSets.size() - 1)) * duplicateSets.size();
+
+        nextSetsIterator = duplicateSets.iterator();
+    }
+
+    private void collectMetrics() {
+        metrics.OBSERVED_UNIQUE_UMIS = observedUmis.size();
+        metrics.INFERRED_UNIQUE_UMIS = inferredUmis.size();
+
+        metrics.EFFECTIVE_LENGTH_OF_OBSERVED_UMIS = effectiveNumberOfBases(observedUmis);
+        metrics.EFFECTIVE_LENGTH_OF_INFERRED_UMIS = effectiveNumberOfBases(inferredUmis);
+
+        metrics.DUPLICATE_SETS_WITH_UMI = duplicateSetsWithUmi;
+        metrics.DUPLICATE_SETS_WITHOUT_UMI = duplicateSetsWithoutUmi;
+        metrics.EXPECTED_READS_WITH_UMI_COLLISION = expectedCollisions;
+
+        metrics.UMI_COLLISION_Q = -10 * Math.log10(expectedCollisions / inferredUmis.size());
+
+        double Z = 0;
+        for (int k = 0; k <= maxEditDistanceToJoin; k++) {
+            Z = Z + LongMath.binomial(metrics.UMI_LENGTH, k) * Math.pow(3.0, k);
+        }
+
+        metrics.estimateBaseQualities(observedBaseErrors);
+    }
+
+    private double effectiveNumberOfBases(Histogram<?> observations) {
+        double H = 0.0;
+
+        double totalObservations = observations.getSumOfValues();
+        for (Histogram.Bin observation : observations.values()) {
+            double p = observation.getValue() / totalObservations;
+            H = H - p * Math.log(p);
+        }
+
+        // Convert to log base 4 so that the entropy is now a measure
+        // of the effective number of DNA bases.  If we used log(2.0)
+        // our result would be in bits.
+        return H / Math.log(4.0);
     }
 }

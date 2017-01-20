@@ -27,6 +27,7 @@ package picard.sam.markduplicates;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
+import picard.sam.UmiMetrics;
 
 import java.util.*;
 
@@ -162,5 +163,91 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
             tester.addMatePairWithUmi(umis.get(i), assignedUmi.get(i), isDuplicate.get(i), isDuplicate.get(i));
         }
         tester.setExpectedAssignedUmis(assignedUmi).runTest();
+    }
+
+    @DataProvider(name = "testUmiMetricsDataProvider")
+    private Object[][] testUmiMetricsDataProvider() {
+
+        // Calculate values of metrics by hand to ensure they are right
+        // effectiveLength4_1 is the effective UMI length observing 5 UMIs where 4 are the same
+        double effectiveLength4_1 = -(4./5.)*Math.log(4./5.)/Math.log(4.) -(1./5.)*Math.log(1./5.)/Math.log(4.);
+        // effectiveLength4_1 is the effective UMI length observing 5 UMIs where 3 are the same and the other two are
+        // unique
+        double effectiveLength3_1_1 = -(3./5.)*Math.log(3./5.)/Math.log(4.) -2*(1./5.)*Math.log(1./5.)/Math.log(4.);
+        // estimatedBaseQualityk_n is the phred scaled base quality score where k of n bases are incorrect
+        double estimatedBaseQuality1_20 = -10*Math.log10(1./20.);
+        double estimatedBaseQuality3_20 = -10*Math.log10(3./20.);
+
+        // expectedCollisionsi_j_k where edit distance to join is i, duplicate sets is k and UMI length is k.
+        double expectedCollisions1_2_4 = 13./64.;
+        double expectedCollisions0_16_2 = (1. - Math.pow(1. - 1./16., 15))*16.*2.;
+        double collisionQ1_2_4 = -10*Math.log10(expectedCollisions1_2_4/2.0);
+        double collisionQ0_16_2 = -10*Math.log10(expectedCollisions0_16_2/16.0);
+        return new Object[][]{{
+                // Test basic error correction using edit distance of 1
+                Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAT"}), // Observed UMI
+                Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAA"}), // Expected inferred UMI
+                Arrays.asList(new Boolean[]{false, true, false, true, true}), // Should it be marked as duplicate?
+                1, // Edit Distance to Join
+                new UmiMetrics(4,                        // UMI_LENGTH
+                               3,                        // OBSERVED_UNIQUE_UMIS
+                               2,                        // INFERRED_UNIQUE_UMIS
+                               2,                        // OBSERVED_BASE_ERRORS (Note: This is 2 rather than 1 because we are using paired end reads)
+                               2,                        // DUPLICATE_SETS_WITHOUT_UMI
+                               4,                        // DUPLICATE_SETS_WITH_UMI
+                               effectiveLength4_1,       // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
+                               effectiveLength3_1_1,     // EFECTIVE_LENGTH_OF_OBSERVED_UMIS
+                               estimatedBaseQuality1_20, // ESTIMATED_BASE_QUALITY_OF_UMIS
+                               expectedCollisions1_2_4,  // EXPECTED_READS_WITH_UMI_COLLISION
+                               collisionQ1_2_4)          // UMI_COLLISION_Q
+        }, {
+                // Test basic error correction using edit distance of 2
+                Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAT"}),
+                Arrays.asList(new String[]{"AAAA", "AAAA", "AAAA", "AAAA", "AAAA"}),
+                Arrays.asList(new Boolean[]{false, true, true, true, true}),
+                2,
+                new UmiMetrics(4,                        // UMI_LENGTH
+                               3,                        // OBSERVED_UNIQUE_UMIS
+                               1,                        // INFERRED_UNIQUE_UMIS
+                               6,                        // OBSERVED_BASE_ERRORS
+                               2,                        // DUPLICATE_SETS_WITHOUT_UMI
+                               2,                        // DUPLICATE_SETS_WITH_UMI
+                               0.0,                      // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
+                               effectiveLength3_1_1,     // EFECTIVE_LENGTH_OF_OBSERVED_UMIS
+                               estimatedBaseQuality3_20, // ESTIMATED_BASE_QUALITY_OF_UMIS
+                               0,                        // EXPECTED_READS_WITH_UMI_COLLISION
+                               Double.NaN)               // UMI_COLLISION_Q
+        }, {
+                // Test maximum entropy (EFFECTIVE_LENGTH_OF_INFERRED_UMIS)
+                Arrays.asList(new String[]{"AA", "AT", "AC", "AG", "TA", "TT", "TC", "TG", "CA", "CT", "CC", "CG", "GA", "GT", "GC", "GG"}),
+                Arrays.asList(new String[]{"AA", "AT", "AC", "AG", "TA", "TT", "TC", "TG", "CA", "CT", "CC", "CG", "GA", "GT", "GC", "GG"}),
+                Arrays.asList(new Boolean[]{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false}),
+                0,
+                new UmiMetrics(2,                         // UMI_LENGTH
+                               16,                        // OBSERVED_UNIQUE_UMIS
+                               16,                        // INFERRED_UNIQUE_UMIS
+                               0,                         // OBSERVED_BASE_ERRORS
+                               2,                         // DUPLICATE_SETS_WITHOUT_UMI
+                               16,                        // DUPLICATE_SETS_WITH_UMI
+                               2.0,                       // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
+                               2,                         // EFECTIVE_LENGTH_OF_OBSERVED_UMIS
+                               Double.NaN,                // ESTIMATED_BASE_QUALITY_OF_UMIS
+                               expectedCollisions0_16_2,  // EXPECTED_READS_WITH_UMI_COLLISION
+                               collisionQ0_16_2)          // UMI_COLLISION_Q
+        }};
+    }
+
+    @Test(dataProvider = "testUmiMetricsDataProvider")
+    public void testUmiMetrics(List<String> umis, List<String> assignedUmi, final List<Boolean> isDuplicate,
+                               final int editDistanceToJoin, final UmiMetrics expectedMetrics) {
+        UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
+        tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
+
+        for(int i = 0;i < umis.size();i++) {
+            tester.addMatePairWithUmi(umis.get(i), assignedUmi.get(i), isDuplicate.get(i), isDuplicate.get(i));
+        }
+        tester.setExpectedAssignedUmis(assignedUmi);
+        tester.setExpectedMetrics(expectedMetrics);
+        tester.runTest();
     }
 }

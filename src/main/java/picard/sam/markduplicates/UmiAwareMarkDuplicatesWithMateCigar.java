@@ -27,10 +27,14 @@ package picard.sam.markduplicates;
 import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.DuplicateSetIterator;
 import htsjdk.samtools.SAMRecordDuplicateComparator;
+import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.*;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Alpha;
+import picard.sam.UmiMetrics;
+
+import java.io.File;
 
 /**
  * This is a simple tool to mark duplicates making use of UMIs in the reads.
@@ -65,6 +69,9 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
     @Option(shortName = "MAX_EDIT_DISTANCE_TO_JOIN", doc = "Largest edit distance that UMIs must have in order to be considered as coming from distinct source molecules.", optional = true)
     public int MAX_EDIT_DISTANCE_TO_JOIN = 1;
 
+    @Option(shortName = "UMI_METRICS", doc = "UMI Metrics", optional = true)
+    public File UMI_METRICS_FILE = null;
+
     @Option(shortName = "UMI_TAG_NAME", doc = "Tag name to use for UMI", optional = true)
     public String UMI_TAG_NAME = "RX";
 
@@ -78,6 +85,21 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
     public boolean ALLOW_MISSING_UMIS = false;
 
     private final Log log = Log.getInstance(UmiAwareMarkDuplicatesWithMateCigar.class);
+    private UmiMetrics metrics = new UmiMetrics();
+
+    @Override
+    protected int doWork() {
+        // Perform Mark Duplicates work
+        int retval=super.doWork();
+
+        // Write metrics specific to UMIs
+        if(UMI_METRICS_FILE != null) {
+            MetricsFile<UmiMetrics, Double> metricsFile = getMetricsFile();
+            metricsFile.addMetric(metrics);
+            metricsFile.write(UMI_METRICS_FILE);
+        }
+        return retval;
+    }
 
     @Override
     protected CloseableIterator<DuplicateSet> getDuplicateSetIterator(final SamHeaderAndIterator headerAndIterator, final SAMRecordDuplicateComparator comparator) {
@@ -85,6 +107,6 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
                     new DuplicateSetIterator(headerAndIterator.iterator,
                     headerAndIterator.header,
                     false,
-                    comparator), MAX_EDIT_DISTANCE_TO_JOIN, UMI_TAG_NAME, ASSIGNED_UMI_TAG, ALLOW_MISSING_UMIS);
+                    comparator), MAX_EDIT_DISTANCE_TO_JOIN, UMI_TAG_NAME, ASSIGNED_UMI_TAG, ALLOW_MISSING_UMIS, metrics);
     }
 }
