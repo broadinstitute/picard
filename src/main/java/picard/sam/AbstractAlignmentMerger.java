@@ -23,37 +23,12 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.BAMRecordCodec;
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.ReservedTagConstants;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordCoordinateComparator;
-import htsjdk.samtools.SAMRecordQueryNameComparator;
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SAMTag;
-import htsjdk.samtools.SAMUtils;
-import htsjdk.samtools.SamPairUtil;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.CigarUtil;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.util.*;
 import picard.PicardException;
 
 import java.io.File;
@@ -92,15 +67,14 @@ public abstract class AbstractAlignmentMerger {
 
     private final File unmappedBamFile;
     private final File targetBamFile;
-    private final SAMSequenceDictionary sequenceDictionary;
     private ReferenceSequenceFileWalker refSeq = null;
     private final boolean clipAdapters;
     private final boolean bisulfiteSequence;
     private SAMProgramRecord programRecord;
     private final boolean alignedReadsOnly;
     private final SAMFileHeader header;
-    private final List<String> attributesToRetain = new ArrayList<String>();
-    private final List<String> attributesToRemove = new ArrayList<String>();
+    private final List<String> attributesToRetain = new ArrayList<>();
+    private final List<String> attributesToRemove = new ArrayList<>();
     private Set<String> attributesToReverse = new TreeSet<>(SAMRecord.TAGS_TO_REVERSE);
     private Set<String> attributesToReverseComplement = new TreeSet<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
     protected final File referenceFasta;
@@ -184,6 +158,8 @@ public abstract class AbstractAlignmentMerger {
         }
     }
 
+    protected abstract SAMSequenceDictionary getDictionaryForMergedBam();
+
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();
 
     protected boolean ignoreAlignment(final SAMRecord sam) { return false; } // default implementation
@@ -203,7 +179,7 @@ public abstract class AbstractAlignmentMerger {
                                    final List<String> attributesToRemove,
                                    final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
                                    final List<SamPairUtil.PairOrientation> expectedOrientations,
-                                   final SAMFileHeader.SortOrder sortOrder,
+                                   final SortOrder sortOrder,
                                    final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
                                    final boolean addMateCigar,
                                    final boolean unmapContaminantReads) {
@@ -268,7 +244,7 @@ public abstract class AbstractAlignmentMerger {
                                    final List<String> attributesToRemove,
                                    final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
                                    final List<SamPairUtil.PairOrientation> expectedOrientations,
-                                   final SAMFileHeader.SortOrder sortOrder,
+                                   final SortOrder sortOrder,
                                    final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
                                    final boolean addMateCigar,
                                    final boolean unmapContaminantReads,
@@ -282,11 +258,6 @@ public abstract class AbstractAlignmentMerger {
         this.referenceFasta = referenceFasta;
 
         this.refSeq = new ReferenceSequenceFileWalker(referenceFasta);
-        this.sequenceDictionary = refSeq.getSequenceDictionary();
-        if (this.sequenceDictionary == null) {
-            throw new PicardException("No sequence dictionary found for " + referenceFasta.getAbsolutePath() +
-                    ".  Use CreateSequenceDictionary.jar to create a sequence dictionary.");
-        }
 
         this.clipAdapters = clipAdapters;
         this.bisulfiteSequence = bisulfiteSequence;
@@ -298,7 +269,7 @@ public abstract class AbstractAlignmentMerger {
         if (programRecord != null) {
             setProgramRecord(programRecord);
         }
-        header.setSequenceDictionary(this.sequenceDictionary);
+
         if (attributesToRetain != null) {
             this.attributesToRetain.addAll(attributesToRetain);
         }
@@ -306,12 +277,10 @@ public abstract class AbstractAlignmentMerger {
             this.attributesToRemove.addAll(attributesToRemove);
             // attributesToRemove overrides attributesToRetain
             if (!this.attributesToRetain.isEmpty()) {
-                for (String attribute : this.attributesToRemove) {
-                    if (this.attributesToRetain.contains(attribute)) {
-                        log.info("Overriding retaining the " + attribute + " tag since remove overrides retain.");
-                        this.attributesToRetain.remove(attribute);
-                    }
-                }
+                this.attributesToRemove.stream()
+                        .filter(this.attributesToRetain::contains)
+                        .peek(a->log.info("Overriding retaining the " + a + " tag since 'remove' overrides 'retain'."))
+                        .forEach(this.attributesToRetain::remove);
             }
         }
         this.read1BasesTrimmed = read1BasesTrimmed;
@@ -372,6 +341,10 @@ public abstract class AbstractAlignmentMerger {
 
         // Get the aligned records and set up the first one
         alignedIterator = new MultiHitAlignedReadIterator(new FilteringSamIterator(getQuerynameSortedAlignedRecords(), alignmentFilter), primaryAlignmentSelectionStrategy);
+
+        // once the aligned Iterator has been set-up we can merge the reference dictionary and that from the input files
+        this.header.setSequenceDictionary(getDictionaryForMergedBam());
+
         HitsForInsert nextAligned = nextAligned();
 
         // Check that the program record we are going to insert is not already used in the unmapped SAM
@@ -620,8 +593,6 @@ public abstract class AbstractAlignmentMerger {
         if (alignedIterator.hasNext()) return alignedIterator.next();
         return null;
     }
-
-    private int numCrossSpeciesContaminantWarnings = 0;
 
     /**
      * Copies alignment info from aligned to unaligned read, clips as appropriate, and sets PG ID.
@@ -879,8 +850,6 @@ public abstract class AbstractAlignmentMerger {
             removeNmMdAndUqTags(rec); // these tags are now invalid!
         }
     }
-
-    protected SAMSequenceDictionary getSequenceDictionary() { return this.sequenceDictionary; }
 
     protected SAMProgramRecord getProgramRecord() { return this.programRecord; }
 

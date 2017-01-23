@@ -1,25 +1,11 @@
 package picard.sam;
 
-import htsjdk.samtools.BAMRecordCodec;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.MergingSamRecordIterator;
-import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.*;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordQueryNameComparator;
-import htsjdk.samtools.SamFileHeaderMerger;
-import htsjdk.samtools.SamPairUtil;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.OverclippedReadFilter;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.DelegatingIterator;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.PeekableIterator;
-import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.*;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import picard.PicardException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -45,6 +31,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
     private final int minUnclippedBases;
     private boolean forceSort = false;
     private final OverclippedReadFilter contaminationFilter;
+    private final List<String> requiredMatchingDictionaryTags;
+    private SAMSequenceDictionary alignedSamDictionary;
 
     /**
      *  Constructor with a default value for unmappingReadStrategy
@@ -84,7 +72,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                 addMateCigar,
                 unmapContaminantReads,
                 minUnclippedBases,
-                UnmappingReadStrategy.DO_NOT_CHANGE);
+                UnmappingReadStrategy.DO_NOT_CHANGE,
+                SAMSequenceDictionary.DEFAULT_DICTIONARY_EQUAL_TAG
+                );
     }
 
         /**
@@ -131,6 +121,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
          * @param minUnclippedBases                 If unmapContaminantReads is set, require this many unclipped bases or else the read will be marked as contaminant.
          * @param unmappingReadStrategy             An enum describing how to deal with reads whose mapping information are being removed (currently this happens due to cross-species
          *                                          contamination). Ignored unless unmapContaminantReads is true.
+         * @param requiredMatchingDictionaryTags            A list of SAMSequenceRecord tags that must be equal (if present) in the aligned bam and the reference dictionary.
+         *                                          Program will issue a warning about other tags, if present in both files and are different.
          */
     public SamAlignmentMerger(final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
                               final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
@@ -145,7 +137,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                               final boolean addMateCigar,
                               final boolean unmapContaminantReads,
                               final int minUnclippedBases,
-                              final UnmappingReadStrategy unmappingReadStrategy) {
+                              final UnmappingReadStrategy unmappingReadStrategy,
+                              final List<String> requiredMatchingDictionaryTags) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
                 alignedReadsOnly, programRecord, attributesToRetain, attributesToRemove, read1BasesTrimmed,
@@ -172,10 +165,10 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         this.maxGaps = maxGaps;
         this.minUnclippedBases = minUnclippedBases;
         this.contaminationFilter = new OverclippedReadFilter(minUnclippedBases, false);
+        this.requiredMatchingDictionaryTags = requiredMatchingDictionaryTags;
 
         log.info("Processing SAM file(s): " + ((alignedSamFile != null) ? alignedSamFile : (read1AlignedSamFile + "," + read2AlignedSamFile)));
     }
-
 
     /**
      * Merges the alignment from the map file with the non-aligned records from the source BAM file.
@@ -194,6 +187,16 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         }
     }
 
+    @Override
+    protected SAMSequenceDictionary getDictionaryForMergedBam() {
+        SAMSequenceDictionary referenceDict = SAMSequenceDictionaryExtractor.extractDictionary(referenceFasta);
+        if (referenceDict == null) {
+            throw new PicardException("No sequence dictionary found for " + referenceFasta.getAbsolutePath() +
+                    ".  Use Picard's CreateSequenceDictionary to create a sequence dictionary.");
+        }
+        return SAMSequenceDictionary.mergeDictionaries(alignedSamDictionary, referenceDict, requiredMatchingDictionaryTags);
+    }
+
     /**
      * Reads the aligned SAM records into a SortingCollection and returns an iterator over that collection
      */
@@ -204,8 +207,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
         // When the alignment records, including both ends of a pair, are in SAM files
         if (alignedSamFile != null && !alignedSamFile.isEmpty()) {
-            final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(alignedSamFile.size());
-            final List<SamReader> readers = new ArrayList<SamReader>(alignedSamFile.size());
+            final List<SAMFileHeader> headers = new ArrayList<>(alignedSamFile.size());
+            final List<SamReader> readers = new ArrayList<>(alignedSamFile.size());
             for (final File f : this.alignedSamFile) {
                 final SamReader r = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(f);
                 headers.add(r.getFileHeader());
@@ -218,6 +221,12 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                 }
             }
 
+            // assert that all the dictionaries are the same before merging the headers.
+            alignedSamDictionary = headers.get(0).getSequenceDictionary();
+            headers.stream()
+                    .map(SAMFileHeader::getSequenceDictionary)
+                    .forEach(alignedSamDictionary::assertSameDictionary);
+
             final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SortOrder.queryname, headers, false);
 
             mergingIterator = new MergingSamRecordIterator(headerMerger, readers, true);
@@ -227,8 +236,11 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         // When the ends are aligned separately and don't have firstOfPair information correctly
         // set we use this branch.
         else {
+            // this merging iterator already asserts that all the headers are the same
             mergingIterator = new SeparateEndAlignmentIterator(this.read1AlignedSamFile, this.read2AlignedSamFile, referenceFasta);
             header = ((SeparateEndAlignmentIterator) mergingIterator).getHeader();
+
+            alignedSamDictionary = header.getSequenceDictionary();
 
             // As we're going through and opening the aligned files, if we don't have a @PG yet
             // and there is only a single one in the input file, use that!
@@ -237,11 +249,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             }
         }
 
-
         if (!forceSort) {
             return mergingIterator;
         }
-
 
         final SortingCollection<SAMRecord> alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
                 new BAMRecordCodec(header), new SAMRecordQueryNameComparator(), MAX_RECORDS_IN_RAM);
@@ -308,9 +318,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         private final SAMFileHeader header;
 
         public SeparateEndAlignmentIterator(final List<File> read1Alignments, final List<File> read2Alignments, File referenceFasta) {
-            final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
-            final List<SamReader> read1 = new ArrayList<SamReader>(read1Alignments.size());
-            final List<SamReader> read2 = new ArrayList<SamReader>(read2Alignments.size());
+            final List<SAMFileHeader> headers = new ArrayList<>();
+            final List<SamReader> read1 = new ArrayList<>(read1Alignments.size());
+            final List<SamReader> read2 = new ArrayList<>(read2Alignments.size());
             for (final File f : read1Alignments) {
                 final SamReader r = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(f);
                 headers.add(r.getFileHeader());
@@ -323,9 +333,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             }
 
             final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, false);
-            read1Iterator = new PeekableIterator<SAMRecord>(
+            read1Iterator = new PeekableIterator<>(
                     new SuffixTrimingSamRecordIterator(new MergingSamRecordIterator(headerMerger, read1, true), "/1"));
-            read2Iterator = new PeekableIterator<SAMRecord>(
+            read2Iterator = new PeekableIterator<>(
                     new SuffixTrimingSamRecordIterator(new MergingSamRecordIterator(headerMerger, read2, true), "/2"));
 
             header = headerMerger.getMergedHeader();
