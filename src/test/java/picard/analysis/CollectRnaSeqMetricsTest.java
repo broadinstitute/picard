@@ -48,7 +48,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void basic() throws Exception {
+    public void testBasic() throws Exception {
         final String sequence = "chr1";
         final String ignoredSequence = "chrM";
 
@@ -212,13 +212,166 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.CORRECT_STRAND_READS, 0);
                 Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 2);
                 Assert.assertEquals(metrics.IGNORED_READS, 1);
-
             }
         }
     }
 
+    @Test
+    public void testStrandSpecificityPairedEnd() throws Exception {
+        final String sequence = "chr1";
 
-    public File getRefFlatFile(String sequence) throws Exception {
+        for (final boolean firstStrand : new Boolean[]{true, false}) {
+            // Create some alignments that hit the ribosomal sequence, various parts of the gene, and intergenic.
+            final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
+            // Set seed so that strandedness is consistent among runs.
+            builder.setRandomSeed(0);
+            final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
+            builder.addPair("pair1", sequenceIndex, 45, 475);
+            builder.addPair("pair2", sequenceIndex, 90, 225);
+            builder.addPair("pair3", sequenceIndex, 120, 600);
+            builder.getRecords().forEach(rec -> {
+                if (rec.getFirstOfPairFlag()) rec.setReadNegativeStrandFlag(!firstStrand);
+                else rec.setReadNegativeStrandFlag(firstStrand);
+            });
+
+            final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
+            samFile.deleteOnExit();
+
+            final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
+            for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
+            samWriter.close();
+
+            // Generate the metrics.
+            final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+            metricsFile.deleteOnExit();
+
+            final String[] args = new String[] {
+                    "INPUT=" +    samFile.getAbsolutePath(),
+                    "OUTPUT=" +   metricsFile.getAbsolutePath(),
+                    "REF_FLAT=" + getRefFlatFile(sequence).getAbsolutePath(),
+                    "STRAND_SPECIFICITY=null"
+            };
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+
+            final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
+            output.read(new FileReader(metricsFile));
+
+            final RnaSeqMetrics metrics = output.getMetrics().get(0);
+            Assert.assertEquals(metrics.PF_ALIGNED_BASES, 216);
+            Assert.assertEquals(metrics.PF_BASES, 216);
+            Assert.assertEquals(metrics.RIBOSOMAL_BASES, null);
+            Assert.assertEquals(metrics.CODING_BASES, 89);
+            Assert.assertEquals(metrics.UTR_BASES, 51);
+            Assert.assertEquals(metrics.INTRONIC_BASES, 25);
+            Assert.assertEquals(metrics.INTERGENIC_BASES, 51);
+            Assert.assertEquals(metrics.CORRECT_STRAND_READS, 5);
+            Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 0);
+            Assert.assertEquals(metrics.IGNORED_READS, 0);
+        }
+    }
+
+    @Test
+    public void testNoStrandSpecificityPairedEnd() throws Exception {
+        final String sequence = "chr1";
+
+        // Create some alignments that hit the ribosomal sequence, various parts of the gene, and intergenic.
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
+        // Set seed so that strandedness is consistent among runs.
+        builder.setRandomSeed(0);
+        final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
+        for (int i = 0; i < 1000; i++) {
+            builder.addPair("pair" + i, sequenceIndex, 45, 475);
+        }
+
+        final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
+        samFile.deleteOnExit();
+
+        final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
+        for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
+        samWriter.close();
+
+        // Generate the metrics.
+        final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+        metricsFile.deleteOnExit();
+
+        final String[] args = new String[] {
+                "INPUT=" +    samFile.getAbsolutePath(),
+                "OUTPUT=" +   metricsFile.getAbsolutePath(),
+                "REF_FLAT=" + getRefFlatFile(sequence).getAbsolutePath(),
+                "STRAND_SPECIFICITY=null"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
+        output.read(new FileReader(metricsFile));
+
+        final RnaSeqMetrics metrics = output.getMetrics().get(0);
+        Assert.assertEquals(metrics.PF_ALIGNED_BASES, 72000);
+        Assert.assertEquals(metrics.PF_BASES, 72000);
+        Assert.assertEquals(metrics.RIBOSOMAL_BASES, null);
+        Assert.assertEquals(metrics.CODING_BASES, 6000);
+        Assert.assertEquals(metrics.UTR_BASES, 51000);
+        Assert.assertEquals(metrics.INTRONIC_BASES, 0);
+        Assert.assertEquals(metrics.INTERGENIC_BASES, 15000);
+        Assert.assertEquals(metrics.CORRECT_STRAND_READS, 0);
+        Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 0);
+        Assert.assertEquals(metrics.IGNORED_READS, 0);
+    }
+
+    @Test
+    public void testStrandSpecificitySingleEnd() throws Exception {
+        final String sequence = "chr1";
+
+        for (final boolean firstStrand : new Boolean[]{true, false}) {
+            // Create some alignments that hit the ribosomal sequence, various parts of the gene, and intergenic.
+            final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
+            // Set seed so that strandedness is consistent among runs.
+            builder.setRandomSeed(0);
+            final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
+            builder.addFrag("frag1", sequenceIndex, 45, !firstStrand);
+            builder.addFrag("frag2", sequenceIndex, 90, !firstStrand);
+            builder.addFrag("frag3", sequenceIndex, 120, !firstStrand);
+            builder.addFrag("frag4", sequenceIndex, 225, !firstStrand);
+            builder.addFrag("frag5", sequenceIndex, 475, !firstStrand);
+            builder.addFrag("frag6", sequenceIndex, 600, firstStrand);
+
+            final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
+            samFile.deleteOnExit();
+
+            final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
+            for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
+            samWriter.close();
+
+            // Generate the metrics.
+            final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+            metricsFile.deleteOnExit();
+
+            final String[] args = new String[] {
+                    "INPUT=" +    samFile.getAbsolutePath(),
+                    "OUTPUT=" +   metricsFile.getAbsolutePath(),
+                    "REF_FLAT=" + getRefFlatFile(sequence).getAbsolutePath(),
+                    "STRAND_SPECIFICITY=null"
+            };
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+
+            final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
+            output.read(new FileReader(metricsFile));
+
+            final RnaSeqMetrics metrics = output.getMetrics().get(0);
+            Assert.assertEquals(metrics.PF_ALIGNED_BASES, 216);
+            Assert.assertEquals(metrics.PF_BASES, 216);
+            Assert.assertEquals(metrics.RIBOSOMAL_BASES, null);
+            Assert.assertEquals(metrics.CODING_BASES, 89);
+            Assert.assertEquals(metrics.UTR_BASES, 51);
+            Assert.assertEquals(metrics.INTRONIC_BASES, 25);
+            Assert.assertEquals(metrics.INTERGENIC_BASES, 51);
+            Assert.assertEquals(metrics.CORRECT_STRAND_READS, 5);
+            Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 0);
+            Assert.assertEquals(metrics.IGNORED_READS, 0);
+        }
+    }
+
+    private File getRefFlatFile(String sequence) throws Exception {
         // Create a refFlat file with a single gene containing two exons, one of which is overlapped by the
         // ribosomal interval.
         final String[] refFlatFields = new String[RefFlatColumns.values().length];
