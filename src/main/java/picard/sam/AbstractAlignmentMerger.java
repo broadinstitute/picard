@@ -157,6 +157,7 @@ public abstract class AbstractAlignmentMerger {
             return populatePATag;
         }
     }
+
     protected abstract SAMSequenceDictionary getDictionaryForMergedBam();
 
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();

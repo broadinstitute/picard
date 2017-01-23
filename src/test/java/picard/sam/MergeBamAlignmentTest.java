@@ -26,6 +26,7 @@ package picard.sam;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -952,7 +953,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         alignedSam.deleteOnExit();
 
         // Populate the header with SAMSequenceRecords
-        header.setSequenceDictionary(SamReaderFactory.makeDefault().getFileHeader(sequenceDict2).getSequenceDictionary());
+        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2));
 
         // Create 2 alignments for each end of pair
         final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
@@ -1106,7 +1107,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
             final String sequence = "chr1";
             // Populate the header with SAMSequenceRecords
-            header.setSequenceDictionary(SamReaderFactory.makeDefault().getFileHeader(sequenceDict2).getSequenceDictionary());
+            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2));
 
             final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
             for (final MultipleAlignmentSpec spec : specs) {
@@ -1231,8 +1232,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
         final String sequence = "chr1";
         // Populate the header with SAMSequenceRecords
-        header.setSequenceDictionary(SamReaderFactory.makeDefault().getFileHeader(sequenceDict2).getSequenceDictionary());
-
+        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2));
         final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
 
         addAlignmentsForBestFragmentMapqStrategy(alignedWriter, firstUnmappedRead, sequence, firstMapQs);
