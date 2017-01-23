@@ -1233,6 +1233,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final String sequence = "chr1";
         // Populate the header with SAMSequenceRecords
         header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2));
+
         final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
 
         addAlignmentsForBestFragmentMapqStrategy(alignedWriter, firstUnmappedRead, sequence, firstMapQs);
