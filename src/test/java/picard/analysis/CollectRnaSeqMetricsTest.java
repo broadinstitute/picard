@@ -23,12 +23,7 @@
  */
 package picard.analysis;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
@@ -48,7 +43,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void basic() throws Exception {
+    public void testBasic() throws Exception {
         final String sequence = "chr1";
         final String ignoredSequence = "chrM";
 
@@ -92,7 +87,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
                 "REF_FLAT=" +            getRefFlatFile(sequence).getAbsolutePath(),
                 "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
                 "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
-                "IGNORE_SEQUENCE=" +ignoredSequence
+                "IGNORE_SEQUENCE=" + ignoredSequence
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -110,6 +105,11 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.CORRECT_STRAND_READS, 3);
         Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 4);
         Assert.assertEquals(metrics.IGNORED_READS, 1);
+        Assert.assertEquals(metrics.NUM_R1_TRANSCRIPT_STRAND_READS, 1);
+        Assert.assertEquals(metrics.NUM_R2_TRANSCRIPT_STRAND_READS, 2);
+        Assert.assertEquals(metrics.NUM_UNEXPLAINED_READS, 2);
+        Assert.assertEquals(metrics.PCT_R1_TRANSCRIPT_STRAND_READS, 0.333333);
+        Assert.assertEquals(metrics.PCT_R2_TRANSCRIPT_STRAND_READS, 0.666667);
     }
 
     @Test
@@ -165,7 +165,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
                 "REF_FLAT=" +            getRefFlatFile(sequence).getAbsolutePath(),
                 "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
                 "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
-                "IGNORE_SEQUENCE=" +ignoredSequence,
+                "IGNORE_SEQUENCE=" + ignoredSequence,
                 "LEVEL=null",
                 "LEVEL=SAMPLE",
                 "LEVEL=LIBRARY"
@@ -187,6 +187,11 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.CORRECT_STRAND_READS, 3);
                 Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 4);
                 Assert.assertEquals(metrics.IGNORED_READS, 1);
+                Assert.assertEquals(metrics.NUM_R1_TRANSCRIPT_STRAND_READS, 1);
+                Assert.assertEquals(metrics.NUM_R2_TRANSCRIPT_STRAND_READS, 2);
+                Assert.assertEquals(metrics.NUM_UNEXPLAINED_READS, 2);
+                Assert.assertEquals(metrics.PCT_R1_TRANSCRIPT_STRAND_READS, 0.333333);
+                Assert.assertEquals(metrics.PCT_R2_TRANSCRIPT_STRAND_READS, 0.666667);
             }
             else if (metrics.LIBRARY.equals("foo")) {
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 216);
@@ -199,7 +204,11 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.CORRECT_STRAND_READS, 3);
                 Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 2);
                 Assert.assertEquals(metrics.IGNORED_READS, 0);
-
+                Assert.assertEquals(metrics.NUM_R1_TRANSCRIPT_STRAND_READS, 0);
+                Assert.assertEquals(metrics.NUM_R2_TRANSCRIPT_STRAND_READS, 2);
+                Assert.assertEquals(metrics.NUM_UNEXPLAINED_READS, 1);
+                Assert.assertEquals(metrics.PCT_R1_TRANSCRIPT_STRAND_READS, 0.0);
+                Assert.assertEquals(metrics.PCT_R2_TRANSCRIPT_STRAND_READS, 1.0);
             }
             else if (metrics.LIBRARY.equals("bar")) {
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 180);
@@ -212,11 +221,104 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.CORRECT_STRAND_READS, 0);
                 Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 2);
                 Assert.assertEquals(metrics.IGNORED_READS, 1);
-
+                Assert.assertEquals(metrics.NUM_R1_TRANSCRIPT_STRAND_READS, 1);
+                Assert.assertEquals(metrics.NUM_R2_TRANSCRIPT_STRAND_READS, 0);
+                Assert.assertEquals(metrics.NUM_UNEXPLAINED_READS, 1);
+                Assert.assertEquals(metrics.PCT_R1_TRANSCRIPT_STRAND_READS, 1.0);
+                Assert.assertEquals(metrics.PCT_R2_TRANSCRIPT_STRAND_READS, 0.0);
             }
         }
     }
 
+    @Test
+    public void testTranscriptionStrandMetrics() throws Exception {
+        final String sequence = "chr1";
+        final String ignoredSequence = "chrM";
+
+        // Create some alignments that hit the ribosomal sequence, various parts of the gene, and intergenic.
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
+        // Set seed so that strandedness is consistent among runs.
+        builder.setRandomSeed(0);
+        builder.setReadLength(50);
+        final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
+
+        // Reads that start *before* the gene: count as unexamined
+        builder.addPair("pair_prior_1", sequenceIndex, 45, 50, false, false, "50M", "50M", true, false, -1);
+        builder.addPair("pair_prior_2", sequenceIndex, 49, 50, false, false, "50M", "50M", true, false, -1);
+
+        // Read that is enclosed in the gene, but one end does not map: count as unexamined
+        builder.addPair("read_one_end_unmapped", sequenceIndex, 50, 51, false, true, "50M", null, false, false, -1);
+
+        // Reads that are enclosed in the gene, paired and frag: one count per template
+        builder.addFrag("frag_enclosed_forward", sequenceIndex, 150, false);
+        builder.addFrag("frag_enclosed_reverse", sequenceIndex, 150, true);
+        builder.addPair("pair_enclosed_forward", sequenceIndex, 150, 200, false, false, "50M", "50M", false, true, -1);
+        builder.addPair("pair_enclosed_reverse", sequenceIndex, 200, 150, false, false, "50M", "50M", true, false, -1);
+
+        // Read that starts *after* the gene: not counted
+        builder.addPair("pair_after_1", sequenceIndex, 545, 550, false, false, "50M", "50M", true, false, -1);
+        builder.addPair("pair_after_2", sequenceIndex, 549, 550, false, false, "50M", "50M", true, false, -1);
+
+        // A read that uses the read length instead of the mate cigar
+        builder.addFrag("frag_enclosed_forward_no_mate_cigar", sequenceIndex, 150, false).setAttribute(SAMTag.MC.name(), null);
+
+        // Duplicate reads are counted
+        builder.addFrag("frag_duplicate", sequenceIndex, 150, false).setDuplicateReadFlag(true);
+
+        // These reads should be ignored.
+        builder.addFrag("frag_secondary", sequenceIndex, 150, false).setNotPrimaryAlignmentFlag(true);
+        builder.addFrag("frag_supplementary", sequenceIndex, 150, false).setSupplementaryAlignmentFlag(true);
+        builder.addFrag("frag_qc_failure", sequenceIndex, 150, false).setReadFailsVendorQualityCheckFlag(true);
+
+        final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
+        samFile.deleteOnExit();
+
+        final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
+        for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
+        samWriter.close();
+
+        // Create an interval list with one ribosomal interval.
+        final Interval rRnaInterval = new Interval(sequence, 300, 520, true, "rRNA");
+        final IntervalList rRnaIntervalList = new IntervalList(builder.getHeader());
+        rRnaIntervalList.add(rRnaInterval);
+        final File rRnaIntervalsFile = File.createTempFile("tmp.rRna.", ".interval_list");
+        rRnaIntervalsFile.deleteOnExit();
+        rRnaIntervalList.write(rRnaIntervalsFile);
+
+        // Generate the metrics.
+        final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+        metricsFile.deleteOnExit();
+
+        final String[] args = new String[] {
+                "INPUT=" +               samFile.getAbsolutePath(),
+                "OUTPUT=" +              metricsFile.getAbsolutePath(),
+                "REF_FLAT=" +            getRefFlatFile(sequence).getAbsolutePath(),
+                "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
+                "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
+                "IGNORE_SEQUENCE=" + ignoredSequence
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
+        output.read(new FileReader(metricsFile));
+
+        final RnaSeqMetrics metrics = output.getMetrics().get(0);
+        Assert.assertEquals(metrics.PF_ALIGNED_BASES, 900);
+        Assert.assertEquals(metrics.PF_BASES, 950);
+        Assert.assertEquals(metrics.RIBOSOMAL_BASES.longValue(), 0L);
+        Assert.assertEquals(metrics.CODING_BASES, 471);
+        Assert.assertEquals(metrics.UTR_BASES, 125);
+        Assert.assertEquals(metrics.INTRONIC_BASES, 98);
+        Assert.assertEquals(metrics.INTERGENIC_BASES, 206);
+        Assert.assertEquals(metrics.CORRECT_STRAND_READS, 7);
+        Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 6);
+        Assert.assertEquals(metrics.IGNORED_READS, 0);
+        Assert.assertEquals(metrics.NUM_R1_TRANSCRIPT_STRAND_READS, 4);
+        Assert.assertEquals(metrics.NUM_R2_TRANSCRIPT_STRAND_READS, 2);
+        Assert.assertEquals(metrics.NUM_UNEXPLAINED_READS, 3);
+        Assert.assertEquals(metrics.PCT_R1_TRANSCRIPT_STRAND_READS, 0.666667);
+        Assert.assertEquals(metrics.PCT_R2_TRANSCRIPT_STRAND_READS, 0.333333);
+    }
 
     public File getRefFlatFile(String sequence) throws Exception {
         // Create a refFlat file with a single gene containing two exons, one of which is overlapped by the
@@ -242,5 +344,4 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
 
         return refFlatFile;
     }
-
 }
