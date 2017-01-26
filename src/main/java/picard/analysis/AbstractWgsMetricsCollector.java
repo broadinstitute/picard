@@ -118,7 +118,7 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
 
     /**
      * Accumulates the data from AbstractLocusInfo in inner structures
-     *  @param info <code>AbstractLocusInfo</code> with aligned to reference position reads
+     * @param info <code>AbstractLocusInfo</code> with aligned to reference position reads
      * @param ref  <code>ReferenceSequence</code>
      * @param referenceBaseN true if current the value of reference base represents a no call
      */
@@ -126,7 +126,6 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
 
     /**
      * Adds collected metrics and depth histogram to file
-     *
      * @param file MetricsFile for result of collector's work
      * @param dupeFilter         counting filter for duplicate reads
      * @param mapqFilter         counting filter for mapping quality
@@ -154,7 +153,7 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
         return getHistogram(highQualityDepthHistogramArray, "coverage", "high_quality_coverage_count");
     }
 
-    protected Histogram<Integer> getUnfilteredDepthHistogram(){
+    protected Histogram<Integer> getUnfilteredDepthHistogram() {
         return getHistogram(unfilteredDepthHistogramArray, "coverage", "unfiltered_coverage_count");
     }
 
@@ -244,7 +243,6 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
     }
 
     private static class ReadNamesCollectionFactoryImpl implements ReadNamesCollectionFactory {
-
         @Override
         public ReadNamesCollection createCollection() {
             return new ReadNamesCollectionImpl();
@@ -252,7 +250,6 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
     }
 
     private static class ReadNamesCollectionImpl implements ReadNamesCollection {
-
         private Map<String, Set<? extends AbstractRecordAndOffset>> readNames;
         private final Set<AbstractRecordAndOffset> dummySet = new HashSet<>();
 

@@ -240,5 +240,4 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
             return (highQualityDepthHistogram.isEmpty() || highQualityDepthHistogramNonZero.isEmpty());
         }
     }
-
 }

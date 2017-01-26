@@ -120,7 +120,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     @Option(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
     public int SAMPLE_SIZE=10000;
 
-    @Option(doc = "If true, fast algorithm is used")
+    @Option(doc = "If true, fast algorithm is used.")
     public boolean USE_FAST_ALGORITHM = false;
 
     @Option(doc = "Average read length in the file. Default is 150.", optional = true)
