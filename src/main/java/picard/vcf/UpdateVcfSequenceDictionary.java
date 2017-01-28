@@ -36,6 +36,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -43,6 +44,8 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 
 /**
  * Takes a VCF file and a Sequence Dictionary (from a variety of file types) and updates the Sequence Dictionary in VCF.
@@ -56,7 +59,7 @@ import java.io.File;
         programGroup = VcfOrBcf.class
 )
 public class UpdateVcfSequenceDictionary extends CommandLineProgram {
-     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF")
     public File INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF to be written.")
@@ -89,7 +92,13 @@ public class UpdateVcfSequenceDictionary extends CommandLineProgram {
         if (CREATE_INDEX)
             builder.setOption(Options.INDEX_ON_THE_FLY);
 
-        final VariantContextWriter vcfWriter = builder.setOutputFile(OUTPUT).build();
+        try {
+            builder.setOutputStream(new FileOutputStream(OUTPUT));
+        } catch (final FileNotFoundException ex ) {
+            throw new PicardException("Could not open " + OUTPUT.getAbsolutePath() + ": " + ex.getMessage(), ex);
+        }
+
+        final VariantContextWriter vcfWriter = builder.build();
         fileHeader.setSequenceDictionary(samSequenceDictionary);
         vcfWriter.writeHeader(fileHeader);
 
