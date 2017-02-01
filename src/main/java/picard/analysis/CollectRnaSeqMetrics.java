@@ -135,6 +135,15 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     }
 
     @Override
+    protected String[] customCommandLineValidation() {
+        // No ribosomal intervals file and rRNA fragment percentage = 0
+        if ( RIBOSOMAL_INTERVALS == null && RRNA_FRAGMENT_PERCENTAGE == 0 ) {
+            throw new PicardException("Must use a RIBOSOMAL_INTERVALS file if RRNA_FRAGMENT_PERCENTAGE = 0.0");
+        }
+        return super.customCommandLineValidation();
+    }
+
+    @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
 
         if (CHART_OUTPUT != null) IOUtil.assertFileIsWritable(CHART_OUTPUT);
@@ -143,7 +152,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
 
         final Long ribosomalBasesInitialValue = RIBOSOMAL_INTERVALS != null ? 0L : null;
-        final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = RnaSeqMetricsCollector.makeOverlapDetector(samFile, header, RIBOSOMAL_INTERVALS);
+        final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = RnaSeqMetricsCollector.makeOverlapDetector(samFile, header, RIBOSOMAL_INTERVALS, LOG);
 
         final HashSet<Integer> ignoredSequenceIndices = RnaSeqMetricsCollector.makeIgnoredSequenceIndicesSet(header, IGNORE_SEQUENCE);
 
