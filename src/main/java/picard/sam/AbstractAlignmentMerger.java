@@ -632,7 +632,7 @@ public abstract class AbstractAlignmentMerger {
                 unaligned.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
                 unaligned.setCigar(null);
                 unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
-                unaligned.setAttribute("NM", null);
+                unaligned.setAttribute(SAMTag.NM.name(), null);
             }
 
             unaligned.setReadUnmappedFlag(true);
