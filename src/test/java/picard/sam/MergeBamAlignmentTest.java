@@ -1697,7 +1697,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     public Object[][]  UnmappedReadStrategiesProvider() {
         return new Object[][] {
                 {AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE, "contam.expected.NO_CHANGE.sam"},
-                {null,                                                          "contam.expected.NO_CHANGE.sam"},
+                {null,                                                        "contam.expected.NO_CHANGE.sam"},
                 {AbstractAlignmentMerger.UnmappingReadStrategy.COPY_TO_TAG,   "contam.expected.COPY_TO_TAG.sam"},
                 {AbstractAlignmentMerger.UnmappingReadStrategy.MOVE_TO_TAG,   "contam.expected.MOVE_TO_TAG.sam"}
         };
@@ -1717,7 +1717,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true, refFasta, mergedSam,
-                null, null, null, null, true, null, strategy);
+                null, null, null, null, true, SAMFileHeader.SortOrder.coordinate, strategy);
 
         assertSamValid(mergedSam);
         IOUtil.assertFilesEqual(expectedSam, mergedSam);

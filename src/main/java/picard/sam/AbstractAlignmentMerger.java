@@ -632,6 +632,7 @@ public abstract class AbstractAlignmentMerger {
                 unaligned.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
                 unaligned.setCigar(null);
                 unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+                unaligned.setAttribute(SAMTag.NM.name(), null);
             }
 
             unaligned.setReadUnmappedFlag(true);
@@ -659,7 +660,14 @@ public abstract class AbstractAlignmentMerger {
                 ((Integer) rec.getAlignmentStart()).toString(),
                 rec.getCigarString(),
                 ((Integer) rec.getMappingQuality()).toString(),
-                rec.getStringAttribute(SAMTag.NM.name()))+";";
+                getStringOfNullable(rec.getIntegerAttribute(SAMTag.NM.name()))) + ";";
+    }
+
+    //returns the toString() of its input or an empty string if null.
+    static private String getStringOfNullable(final Object obj) {
+        return Optional.ofNullable(obj)
+                .map(Object::toString)
+                .orElse("");
     }
 
     /**
