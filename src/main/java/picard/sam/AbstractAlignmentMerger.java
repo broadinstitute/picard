@@ -660,7 +660,14 @@ public abstract class AbstractAlignmentMerger {
                 ((Integer) rec.getAlignmentStart()).toString(),
                 rec.getCigarString(),
                 ((Integer) rec.getMappingQuality()).toString(),
-                Optional.ofNullable(rec.getIntegerAttribute(SAMTag.NM.name())).map(o->o.toString()).orElse(""))+";";
+                getStringOfNullable(rec.getIntegerAttribute(SAMTag.NM.name()))) + ";";
+    }
+
+    //returns the toString() of its input or an empty string if null.
+    static private String getStringOfNullable(final Object obj) {
+        return Optional.ofNullable(obj)
+                .map(Object::toString)
+                .orElse("");
     }
 
     /**

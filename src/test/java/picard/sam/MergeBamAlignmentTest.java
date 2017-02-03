@@ -1697,7 +1697,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     public Object[][]  UnmappedReadStrategiesProvider() {
         return new Object[][] {
                 {AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE, "contam.expected.NO_CHANGE.sam"},
-                {null,                                                          "contam.expected.NO_CHANGE.sam"},
+                {null,                                                        "contam.expected.NO_CHANGE.sam"},
                 {AbstractAlignmentMerger.UnmappingReadStrategy.COPY_TO_TAG,   "contam.expected.COPY_TO_TAG.sam"},
                 {AbstractAlignmentMerger.UnmappingReadStrategy.MOVE_TO_TAG,   "contam.expected.MOVE_TO_TAG.sam"}
         };
