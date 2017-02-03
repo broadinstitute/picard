@@ -1717,7 +1717,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true, refFasta, mergedSam,
-                null, null, null, null, true, null, strategy);
+                null, null, null, null, true, SAMFileHeader.SortOrder.coordinate, strategy);
 
         assertSamValid(mergedSam);
         IOUtil.assertFilesEqual(expectedSam, mergedSam);

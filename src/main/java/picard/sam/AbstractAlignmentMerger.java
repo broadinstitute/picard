@@ -659,7 +659,7 @@ public abstract class AbstractAlignmentMerger {
                 ((Integer) rec.getAlignmentStart()).toString(),
                 rec.getCigarString(),
                 ((Integer) rec.getMappingQuality()).toString(),
-                rec.getStringAttribute(SAMTag.NM.name()))+";";
+                Optional.ofNullable(rec.getIntegerAttribute(SAMTag.NM.name())).map(o->o.toString()).orElse(""))+";";
     }
 
     /**
