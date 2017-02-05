@@ -32,52 +32,99 @@ public class MergeableMetricBaseTest {
 
     class TestMergeableMetric extends MergeableMetricBase {
         @MergeByAdding
-        Integer boxedInt = 1;
+        public Integer boxedInt = 1;
         @MergeByAdding
-        int unboxedInt = 2;
+        public int unboxedInt = 2;
 
         @MergeByAdding
-        Double boxedDouble = 3D;
+        public Double boxedDouble = 3D;
         @MergeByAdding
-        double unboxedDouble = 4D;
+        public double unboxedDouble = 4D;
 
         @MergeByAdding
-        Long boxedLong = 5L;
+        public Long boxedLong = 5L;
         @MergeByAdding
-        long unboxedLong = 6L;
+        public long unboxedLong = 6L;
 
         @MergeByAdding
-        Float boxedFloat = 7F;
+        public Float boxedFloat = 7F;
         @MergeByAdding
-        float unboxedFloat = 8F;
+        public float unboxedFloat = 8F;
 
         @MergeByAdding
-        Short boxedShort = 9;
+        public Short boxedShort = 9;
         @MergeByAdding
-        short unboxedShort = 10;
+        public short unboxedShort = 10;
 
         @MergeByAdding
-        Byte boxedByte = 11;
+        public Byte boxedByte = 11;
         @MergeByAdding
-        byte unboxedByte = 12;
-
-        @MergeByAssertEquals
-        String mustBeEqualString = "hello";
+        public byte unboxedByte = 12;
 
         @MergeByAssertEquals
-        Double mustBeEqualDouble = 0.5;
+        public String mustBeEqualString = "hello";
 
         @MergeByAssertEquals
-        boolean mustBeEqualUnboxedBoolean = false;
+        public Double mustBeEqualDouble = 0.5;
+
+        @MergeByAssertEquals
+        public boolean mustBeEqualUnboxedBoolean = false;
+
+        @MergeByAdding
+        protected Integer protectedIntBase = 1;
+
+        @MergeByAdding
+        private Integer privateIntBase = 1;
 
         @NoMergingIsDerived
-        double ratioIntValues;
+        protected double ratioIntValues;
 
         @Override
         public void calculateDerivedFields() {
             ratioIntValues = boxedInt / (double) unboxedInt;
         }
     }
+
+     class TestMergeableMetricWithRestrictedMembers extends TestMergeableMetric {
+
+        @MergeByAdding
+        private Integer privateIntDerived = 1;
+
+        @MergeByAdding
+        protected Integer protectedIntDerived = 1;
+
+        @MergeByAssertEquals
+        private String privateString = "hi!";
+
+        @Override
+        public void calculateDerivedFields() {}
+    }
+
+    @Test
+    public void testMergingWithRestrictedMembers() {
+        final TestMergeableMetricWithRestrictedMembers metric1 = new TestMergeableMetricWithRestrictedMembers(), metric2 = new TestMergeableMetricWithRestrictedMembers();
+        metric1.merge(metric2);
+
+        Assert.assertEquals(metric1.boxedInt, (Integer) 2);
+        Assert.assertEquals(metric1.unboxedInt, 4);
+        Assert.assertEquals(metric1.privateIntDerived, (Integer) 2);
+        Assert.assertEquals(metric1.protectedIntDerived, (Integer) 2);
+        Assert.assertEquals(metric1.protectedIntBase, (Integer) 2);
+        Assert.assertEquals(((TestMergeableMetric)metric1).privateIntBase, (Integer) 2);
+        Assert.assertEquals(metric1.privateString, "hi!");
+    }
+
+    @Test
+    public void testMergingWithRestrictedMembersUsingBaseClass() {
+        final MergeableMetricBase metric1 = new TestMergeableMetricWithRestrictedMembers(), metric2 = new TestMergeableMetricWithRestrictedMembers();
+        metric1.merge(metric2);
+
+        Assert.assertEquals(((TestMergeableMetricWithRestrictedMembers)metric1).boxedInt, (Integer) 2);
+        Assert.assertEquals(((TestMergeableMetricWithRestrictedMembers)metric1).unboxedInt, 4);
+        Assert.assertEquals(((TestMergeableMetricWithRestrictedMembers)metric1).privateIntDerived, (Integer) 2);
+        Assert.assertEquals(((TestMergeableMetricWithRestrictedMembers)metric1).privateString, "hi!");
+    }
+
 
     @Test
     public void testMerging() {
@@ -158,13 +205,16 @@ public class MergeableMetricBaseTest {
         metric1.merge(metric2);
     }
 
-    private class TestMergeableMericIllegal extends MergeableMetricBase {
+    private class TestMergeableMetricIllegal extends MergeableMetricBase {
         Integer undecorated = 0;
+
+        @Override
+        public void calculateDerivedFields() {}
     }
 
     @Test(expectedExceptions = IllegalStateException.class)
     public void testIllegalClass() {
-        final TestMergeableMericIllegal illegal1 = new TestMergeableMericIllegal(), illegal2 = new TestMergeableMericIllegal();
+        final TestMergeableMetricIllegal illegal1 = new TestMergeableMetricIllegal(), illegal2 = new TestMergeableMetricIllegal();
 
         illegal1.merge(illegal2);
     }
@@ -193,9 +243,9 @@ public class MergeableMetricBaseTest {
     @Test
     public void TestCanMerge() {
         final TestMergeableMetric instance1 = new TestMergeableMetric();
-        instance1.unboxedInt=1;
+        instance1.unboxedInt = 1;
         final TestDerivedMergableMetric instance2 = new TestDerivedMergableMetric();
-        instance2.unboxedInt=2;
+        instance2.unboxedInt = 2;
 
         instance1.merge(instance2);
         Assert.assertEquals(instance1.unboxedInt, 3);

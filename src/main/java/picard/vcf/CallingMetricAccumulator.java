@@ -76,10 +76,12 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
                 final VariantCallingDetailMetrics collapsed = new VariantCallingDetailMetrics();
                 VariantCallingDetailMetrics.foldInto(collapsed, sampleDetails);
                 collapsedDetails.add(collapsed);
+                collapsed.calculateDerivedFields();
             });
 
             final VariantCallingSummaryMetrics collapsedSummary = new VariantCallingSummaryMetrics();
             VariantCallingSummaryMetrics.foldInto(collapsedSummary, summaries);
+            collapsedSummary.calculateDerivedFields();
 
             return new Result(collapsedSummary, collapsedDetails);
         }
@@ -157,9 +159,9 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
 
     public Result result() {
         final Collection<VariantCallingDetailMetrics> values = sampleMetricsMap.values();
-        values.forEach(CollectVariantCallingMetrics.VariantCallingDetailMetrics::updateDerivedValuesInPlace);
+        values.forEach(CollectVariantCallingMetrics.VariantCallingDetailMetrics::calculateDerivedFields);
 
-        summaryMetric.updateDerivedValuesInPlace();
+        summaryMetric.calculateDerivedFields();
         return new Result(summaryMetric, values);
     }
 
