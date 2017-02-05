@@ -219,9 +219,9 @@ abstract public class MergeableMetricBase extends MetricBase {
     }
 
     private static List<Field> getAllFields(Class clazz){
-        List<Field> fields = new ArrayList<>();
+        final List<Field> fields = new ArrayList<>();
         fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
-        Class superClass = clazz.getSuperclass();
+        final Class superClass = clazz.getSuperclass();
 
         if (superClass != null) fields.addAll(getAllFields(superClass));
 
