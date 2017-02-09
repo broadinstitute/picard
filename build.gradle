@@ -224,10 +224,16 @@ task documentStandardOptions(type: JavaExec) {
     outputs.file standardOptionsFile
  }
 
-task createMetricsDoc(dependsOn: classes, type: Javadoc) << {
+task createMetricsDoc(dependsOn: classes, type: Javadoc) {
+    doFirst {
+        htmlDirInc.mkdirs()
+    }
+    
     source = sourceSets.main.allJava
     classpath = sourceSets.main.runtimeClasspath
-    destinationDir = htmlDirInc
+    outputs.dir(htmlDirInc)
+
+    options.destinationDirectory = htmlDirInc
     options.doclet = 'picard.util.MetricsDoclet'
     options.docletpath = sourceSets.main.runtimeClasspath.asType(List)
 }
