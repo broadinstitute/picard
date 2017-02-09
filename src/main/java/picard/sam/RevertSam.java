@@ -213,6 +213,9 @@ public class RevertSam extends CommandLineProgram {
         final Map<String, File> outputMap;
         final Map<String, SAMFileHeader> headerMap;
         if (OUTPUT_BY_READGROUP) {
+            if (inHeader.getReadGroups().isEmpty()) {
+                throw new PicardException(INPUT + " does not contain Read Groups");
+            }
 
             final String defaultExtension;
             if (OUTPUT_BY_READGROUP_FILE_FORMAT==FileType.dynamic) {

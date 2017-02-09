@@ -177,7 +177,7 @@ public abstract class CommandLineProgram {
         SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
 
         for (final File f : TMP_DIR) {
-            // Intentially not checking the return values, because it may be that the program does not
+            // Intentionally not checking the return values, because it may be that the program does not
             // need a tmp_dir. If this fails, the problem will be discovered downstream.
             if (!f.exists()) f.mkdirs();
             f.setReadable(true, false);
