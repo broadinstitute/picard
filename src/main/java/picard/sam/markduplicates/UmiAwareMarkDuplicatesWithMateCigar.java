@@ -69,8 +69,9 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
     @Option(shortName = "MAX_EDIT_DISTANCE_TO_JOIN", doc = "Largest edit distance that UMIs must have in order to be considered as coming from distinct source molecules.", optional = true)
     public int MAX_EDIT_DISTANCE_TO_JOIN = 1;
 
-    @Option(shortName = "UMI_METRICS", doc = "UMI Metrics", optional = true)
-    public File UMI_METRICS_FILE = null;
+    // The UMI_METRICS file provides various statistical measurements collected about the UMIs during deduplication.
+    @Option(shortName = "UMI_METRICS", doc = "UMI Metrics")
+    public File UMI_METRICS_FILE;
 
     @Option(shortName = "UMI_TAG_NAME", doc = "Tag name to use for UMI", optional = true)
     public String UMI_TAG_NAME = "RX";
@@ -89,15 +90,16 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
 
     @Override
     protected int doWork() {
+        // Before we do anything, make sure the UMI_METRICS_FILE can be written to.
+        IOUtil.assertFileIsWritable(UMI_METRICS_FILE);
+
         // Perform Mark Duplicates work
         int retval=super.doWork();
 
         // Write metrics specific to UMIs
-        if(UMI_METRICS_FILE != null) {
-            MetricsFile<UmiMetrics, Double> metricsFile = getMetricsFile();
-            metricsFile.addMetric(metrics);
-            metricsFile.write(UMI_METRICS_FILE);
-        }
+        MetricsFile<UmiMetrics, Double> metricsFile = getMetricsFile();
+        metricsFile.addMetric(metrics);
+        metricsFile.write(UMI_METRICS_FILE);
         return retval;
     }
 

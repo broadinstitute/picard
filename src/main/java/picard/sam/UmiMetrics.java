@@ -49,23 +49,31 @@ public class UmiMetrics extends MetricBase {
     // Number of duplicate sets found after taking UMIs into account
     public long DUPLICATE_SETS_WITH_UMI = 0;
 
-    // This is a measure of entropy (in base 4) to indicate the amount of
-    // information (given as effective bases) provided by each observed UMI
-    public double EFFECTIVE_LENGTH_OF_OBSERVED_UMIS = 0;
+    // Entropy (in base 4) of the observed UMI sequences, indicating the
+    // effective number of bases in the UMIs.  If this is significantly
+    // smaller than UMI_LENGTH, it indicates that the UMIs are not
+    // distributed uniformly.
+    public double OBSERVED_UMI_ENTROPY = 0;
 
-    public double EFFECTIVE_LENGTH_OF_INFERRED_UMIS = 0;
+    // Entropy (in base 4) of the inferred UMI sequences, indicating the
+    // effective number of bases in the inferred UMIs.  If this is significantly
+    // smaller than UMI_LENGTH, it indicates that the UMIs are not
+    // distributed uniformly.
+    public double INFERRED_UMI_ENTROPY = 0;
 
     // Estimation of Phred scaled quality scores for UMIs
-    public double ESTIMATED_BASE_QUALITY_OF_UMIS;
+    public double UMI_BASE_QUALITIES;
 
-    // MLE estimation of reads that will be falsely labeled as being part of a duplicate set due to UMI collisions
-    public double EXPECTED_READS_WITH_UMI_COLLISION;
+    // MLE estimation of reads that will be falsely labeled as being part of a duplicate set due to UMI collisions.
+    // This estimate is computed over every duplicate set, and effectively accounts for the distribution of duplicate
+    // set sizes.
+    public double UMI_COLLISION_EST;
 
     // Phred scale of MLE estimate of collision rate
     public double UMI_COLLISION_Q;
 
     public void estimateBaseQualities(final int observedUmiBases) {
-        ESTIMATED_BASE_QUALITY_OF_UMIS = -10.0*Math.log10((double) OBSERVED_BASE_ERRORS / (double) observedUmiBases);
+        UMI_BASE_QUALITIES = -10.0*Math.log10((double) OBSERVED_BASE_ERRORS / (double) observedUmiBases);
     }
 
     public UmiMetrics() {}
@@ -81,10 +89,10 @@ public class UmiMetrics extends MetricBase {
         OBSERVED_BASE_ERRORS = observedBaseErrors;
         DUPLICATE_SETS_WITHOUT_UMI = duplicateSetsWithoutUmi;
         DUPLICATE_SETS_WITH_UMI = duplicateSetsWithUmi;
-        EFFECTIVE_LENGTH_OF_INFERRED_UMIS = effectiveLengthOfInferredUmis;
-        EFFECTIVE_LENGTH_OF_OBSERVED_UMIS = effectiveLengthOfObservedUmis;
-        ESTIMATED_BASE_QUALITY_OF_UMIS = estimatedBaseQualityOfUmis;
-        EXPECTED_READS_WITH_UMI_COLLISION = expectedUmiCollisions;
+        INFERRED_UMI_ENTROPY = effectiveLengthOfInferredUmis;
+        OBSERVED_UMI_ENTROPY = effectiveLengthOfObservedUmis;
+        UMI_BASE_QUALITIES = estimatedBaseQualityOfUmis;
+        UMI_COLLISION_EST = expectedUmiCollisions;
         UMI_COLLISION_Q = umiCollisionQ;
     }
 }

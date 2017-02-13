@@ -243,7 +243,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
         UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
         tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
 
-        for(int i = 0;i < umis.size();i++) {
+        for( int i = 0;i < umis.size();i++ ) {
             tester.addMatePairWithUmi(umis.get(i), assignedUmi.get(i), isDuplicate.get(i), isDuplicate.get(i));
         }
         tester.setExpectedAssignedUmis(assignedUmi);

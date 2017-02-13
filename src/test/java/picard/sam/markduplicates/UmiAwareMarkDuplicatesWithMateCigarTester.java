@@ -48,7 +48,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
     private int readNameCounter = 0;
     private List<String> expectedAssignedUmis;
     private UmiMetrics expectedMetrics;
-    private File umiMetricsFile;
+    private File umiMetricsFile = new File(getOutputDir(), "umi_metrics.txt");
 
     // This tag is only used for testing, it indicates what we expect to see in the inferred UMI tag.
     private final String expectedUmiTag = "RE";
@@ -57,11 +57,11 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
     // AbstractMarkDuplicatesCommandLineProgramTester.  Since those tests use
     // reads that don't have UMIs we enable the ALLOW_MISSING_UMIS option.
     UmiAwareMarkDuplicatesWithMateCigarTester() {
+        addArg("UMI_METRICS_FILE=" + umiMetricsFile);
         addArg("ALLOW_MISSING_UMIS=" + true);
     }
 
     UmiAwareMarkDuplicatesWithMateCigarTester(final boolean allowMissingUmis) {
-        umiMetricsFile = new File(getOutputDir(), "umi_metrics.txt");
         addArg("UMI_METRICS_FILE=" + umiMetricsFile);
 
         if (allowMissingUmis) {
@@ -174,7 +174,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
         if(expectedMetrics != null) {
             // Check the values written to metrics.txt against our input expectations
             final MetricsFile<UmiMetrics, Comparable<?>> metricsOutput = new MetricsFile<UmiMetrics, Comparable<?>>();
-            try{
+            try {
                 metricsOutput.read(new FileReader(umiMetricsFile));
             }
             catch (final FileNotFoundException ex) {
@@ -188,10 +188,10 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
             Assert.assertEquals(observedMetrics.INFERRED_UNIQUE_UMIS, expectedMetrics.INFERRED_UNIQUE_UMIS, "INFERRED_UNIQUE_UMIS does not match expected");
             Assert.assertEquals(observedMetrics.OBSERVED_BASE_ERRORS, expectedMetrics.OBSERVED_BASE_ERRORS, "OBSERVED_BASE_ERRORS does not match expected");
             Assert.assertEquals(observedMetrics.DUPLICATE_SETS_WITHOUT_UMI, expectedMetrics.DUPLICATE_SETS_WITHOUT_UMI, "DUPLICATE_SETS_WITHOUT_UMI does not match expected");
-            Assert.assertEquals(observedMetrics.EFFECTIVE_LENGTH_OF_INFERRED_UMIS, expectedMetrics.EFFECTIVE_LENGTH_OF_INFERRED_UMIS, tolerance, "EFFECTIVE_LENGTH_OF_INFERRED_UMIS does not match expected");
-            Assert.assertEquals(observedMetrics.EFFECTIVE_LENGTH_OF_OBSERVED_UMIS, expectedMetrics.EFFECTIVE_LENGTH_OF_OBSERVED_UMIS, tolerance, "EFFECTIVE_LENGTH_OF_OBSERVED_UMIS does not match expected");
-            Assert.assertEquals(observedMetrics.ESTIMATED_BASE_QUALITY_OF_UMIS, expectedMetrics.ESTIMATED_BASE_QUALITY_OF_UMIS, tolerance, "ESTIMATED_BASE_QUALITY_OF_UMIS does not match expected");
-            Assert.assertEquals(observedMetrics.EXPECTED_READS_WITH_UMI_COLLISION, expectedMetrics.EXPECTED_READS_WITH_UMI_COLLISION, tolerance, "EXPECTED_READS_WITH_UMI_COLLISION does not match expected");
+            Assert.assertEquals(observedMetrics.INFERRED_UMI_ENTROPY, expectedMetrics.INFERRED_UMI_ENTROPY, tolerance, "INFERRED_UMI_ENTROPY does not match expected");
+            Assert.assertEquals(observedMetrics.OBSERVED_UMI_ENTROPY, expectedMetrics.OBSERVED_UMI_ENTROPY, tolerance, "OBSERVED_UMI_ENTROPY does not match expected");
+            Assert.assertEquals(observedMetrics.UMI_BASE_QUALITIES, expectedMetrics.UMI_BASE_QUALITIES, tolerance, "UMI_BASE_QUALITIES does not match expected");
+            Assert.assertEquals(observedMetrics.UMI_COLLISION_EST, expectedMetrics.UMI_COLLISION_EST, tolerance, "UMI_COLLISION_EST does not match expected");
             Assert.assertEquals(observedMetrics.UMI_COLLISION_Q, expectedMetrics.UMI_COLLISION_Q, tolerance, "UMI_COLLISION_Q does not match expected");
         }
 
