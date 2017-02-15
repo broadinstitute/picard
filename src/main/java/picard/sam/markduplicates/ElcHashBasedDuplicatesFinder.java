@@ -40,15 +40,24 @@ import static picard.sam.markduplicates.EstimateLibraryComplexity.PairedReadSequ
  */
 class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
 
-    // We split each read on several parts, each part represent set of nucleotides,
-    // which behind each other on numberOfHashesInGroup.
+    // We split the bases of each read into interspersed parts, so that each part spans the entire length of the read.
+    // e.g. breaking a read of length 12 into 4 parts would be as follows:
     // f. i.:
     // 1 2 3 4 1 2 3 4 1 2 3 4
     // A C A T T A C G G A T T
-    private int numberOfHashesInGroup = -1; //initial value
-    private int minReadLenInGroup = Integer.MAX_VALUE; //initial value
 
-    private Map<Integer, List<PairedReadSequence>> readsByHashInGroup;
+    // number of parts we split reads in
+    // -1 because we want to find biggest number of hashes in this group
+    // calculated formula : ((minReadLength - minIdenticalBases) * maxDiffRate) + 1
+    // when minReadLength = Math.min(Math.min(prs.read1.length, prs.read2.length), maxReadLength)
+    private int numberOfHashesInGroup = -1;
+
+    // minimal read length in group, this variable necessary for splitting reads on part,
+    // see EstimateLibraryComplexity.PairedReadSequence.getHashes()
+    // initial value Integer.MAX_VALUE
+    private int minReadLenInGroup = Integer.MAX_VALUE;
+
+    private final Map<Integer, List<PairedReadSequence>> readsByHashInGroup;
 
     ElcHashBasedDuplicatesFinder(double maxDiffRate, int maxReadLength, int minIdenticalBases,
                                  OpticalDuplicateFinder opticalDuplicateFinder) {
@@ -181,9 +190,9 @@ class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
         int errors = 0;
         final int minReadLength = minLength(read1, read2);
 
-        for (int k = 0; k < numberOfHashesInGroup; ++k) {
-            if (hashes1[k] != hashes2[k]) {
-                errors += compareHashes(read1, read2, k);
+        for (int hashNumber = 0; hashNumber < numberOfHashesInGroup; ++hashNumber) {
+            if (hashes1[hashNumber] != hashes2[hashNumber]) {
+                errors += compareHashes(read1, read2, hashNumber);
                 if (errors > maxErrors) {
                     return errors;
                 }
@@ -202,13 +211,15 @@ class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
      *
      * @return errors number for current part of the read
      */
-    private int compareHashes(byte[] read1, byte[] read2, int k) {
+    private int compareHashes(byte[] read1, byte[] read2, int hashNumber) {
         int errors = 0;
-        int position = minIdenticalBases + k;
+        //shift position corresponding to hash we inspect
+        int position = minIdenticalBases + hashNumber;
         while (position < minReadLenInGroup) {
             if (read1[position] != read2[position]) {
                 errors++;
             }
+            // shift position to next base in the hash
             position += numberOfHashesInGroup;
         }
         return errors;
