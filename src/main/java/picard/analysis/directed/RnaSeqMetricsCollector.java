@@ -380,10 +380,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
 
                     fivePrimeSkews.increment(fivePrimeCoverage / mean);
                     threePrimeSkews.increment(threePrimeCoverage / mean);
-                    final double fiveToThree = (Math.abs(((double)0.0) - threePrimeCoverage) >  (double).000001)
-                            ? fivePrimeCoverage / threePrimeCoverage
-                            : (double)0.0;
-                    fiveToThreeSkews.increment(fiveToThree);
+                    fiveToThreeSkews.increment(MathUtil.divide(fivePrimeCoverage, threePrimeCoverage));
                 }
 
                 // Calculate normalized coverage vs. normalized position
