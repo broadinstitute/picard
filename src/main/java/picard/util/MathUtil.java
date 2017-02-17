@@ -112,6 +112,18 @@ final public class MathUtil {
         return bd.doubleValue();
     }
 
+    /**
+     * Divide two Doubles but return 0.0 if the denominator is 0
+     * @param numerator dividend
+     * @param denominator divisor
+     * @return numerator/denominator unless denominator is 0, in which case returns 0
+     */
+    public static double divide(final double numerator, final double denominator) {
+        return Math.abs(0.0 - denominator) >  0.000001
+                ? numerator / denominator
+                : 0.0;
+    }
+
     /** Returns the largest value stored in the array. */
     public static double max(final double[] nums) {
         return nums[indexOfMax(nums)];
