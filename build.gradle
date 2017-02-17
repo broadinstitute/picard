@@ -47,7 +47,7 @@ jacoco {
     toolVersion = "0.7.5.201505241946"
 }
 
-final htsjdkVersion = System.getProperty('htsjdk.version', '2.8.0')
+final htsjdkVersion = System.getProperty('htsjdk.version', '2.9.0')
 
 dependencies {
     compile 'com.google.guava:guava:15.0'
