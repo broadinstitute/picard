@@ -25,19 +25,12 @@
 package picard.vcf.filter;
 
 import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.JavascriptVariantFilter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFFilterHeaderLine;
-import htsjdk.variant.vcf.VCFFormatHeaderLine;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.*;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
@@ -102,6 +95,9 @@ public class FilterVcf extends CommandLineProgram {
         new FilterVcf().instanceMainWithExit(args);
     }
 
+    final private Log log = Log.getInstance(FilterVcf.class);
+    final private ProgressLogger progress = new ProgressLogger(log, 100_000, "Processed", "Variants");
+
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
@@ -146,7 +142,9 @@ public class FilterVcf extends CommandLineProgram {
             out.writeHeader(in.getFileHeader());
 
             while (iterator.hasNext()) {
-                out.add(iterator.next());
+                final VariantContext vc = iterator.next();
+                progress.record(vc.getContig(), vc.getStart());
+                out.add(vc);
             }
             return 0;
         } finally {
