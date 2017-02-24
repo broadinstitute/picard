@@ -29,12 +29,15 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.annotation.RefFlatReader.RefFlatColumns;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
 
 public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
@@ -110,6 +113,65 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.NUM_UNEXPLAINED_READS, 2);
         Assert.assertEquals(metrics.PCT_R1_TRANSCRIPT_STRAND_READS, 0.333333);
         Assert.assertEquals(metrics.PCT_R2_TRANSCRIPT_STRAND_READS, 0.666667);
+    }
+
+    @DataProvider(name = "rRnaIntervalsFiles")
+    public static Object[][] rRnaIntervalsFiles() throws IOException {
+        return new Object[][] {
+                {null},
+                {File.createTempFile("tmp.rRna.", ".interval_list")}
+        };
+    }
+
+    @Test(dataProvider = "rRnaIntervalsFiles")
+    public void testNoIntevalsNoFragPercentage(final File rRnaIntervalsFile) throws Exception {
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
+
+        // Add a header but no intervals
+        if ( rRnaIntervalsFile != null  ) {
+            final IntervalList rRnaIntervalList = new IntervalList(builder.getHeader());
+            rRnaIntervalList.write(rRnaIntervalsFile);
+            rRnaIntervalsFile.deleteOnExit();
+        }
+
+        // Create some alignments
+        final String sequence = "chr1";
+        final String ignoredSequence = "chrM";
+
+        // Set seed so that strandedness is consistent among runs.
+        builder.setRandomSeed(0);
+        final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
+        builder.addPair("pair1", sequenceIndex, 45, 475);
+        builder.addFrag("ignoredFrag", builder.getHeader().getSequenceIndex(ignoredSequence), 1, false);
+
+        final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
+        samFile.deleteOnExit();
+
+        final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
+        for (final SAMRecord rec : builder.getRecords()) samWriter.addAlignment(rec);
+        samWriter.close();
+
+        // Generate the metrics.
+        final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+        metricsFile.deleteOnExit();
+
+        final String rRnaIntervalsPath = rRnaIntervalsFile != null ? rRnaIntervalsFile.getAbsolutePath() : null;
+        final String[] args = new String[]{
+                "INPUT=" + samFile.getAbsolutePath(),
+                "OUTPUT=" + metricsFile.getAbsolutePath(),
+                "REF_FLAT=" + getRefFlatFile(sequence).getAbsolutePath(),
+                "RIBOSOMAL_INTERVALS=" + rRnaIntervalsPath,
+                "RRNA_FRAGMENT_PERCENTAGE=" + 0.0,
+                "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
+                "IGNORE_SEQUENCE=" + ignoredSequence
+        };
+        try {
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+        } catch(final Exception e) {
+            if (rRnaIntervalsFile != null) {
+                Assert.assertEquals(e.getCause().getClass(), PicardException.class);
+            }
+        }
     }
 
     @Test

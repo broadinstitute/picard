@@ -6,6 +6,7 @@ import htsjdk.samtools.util.CoordMath;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
@@ -60,12 +61,15 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         return new PerUnitRnaSeqMetricsCollector(sample, library, readGroup, ribosomalInitialValue);
     }
 
-    public static OverlapDetector<Interval> makeOverlapDetector(final File samFile, final SAMFileHeader header, final File ribosomalIntervalsFile) {
+    public static OverlapDetector<Interval> makeOverlapDetector(final File samFile, final SAMFileHeader header, final File ribosomalIntervalsFile, final Log log) {
 
-        OverlapDetector<Interval> ribosomalSequenceOverlapDetector = new OverlapDetector<Interval>(0, 0);
+        final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = new OverlapDetector<Interval>(0, 0);
         if (ribosomalIntervalsFile != null) {
 
             final IntervalList ribosomalIntervals = IntervalList.fromFile(ribosomalIntervalsFile);
+            if (ribosomalIntervals.size() == 0) {
+                log.warn("The RIBOSOMAL_INTERVALS file, " + ribosomalIntervalsFile.getAbsolutePath() + " does not contain intervals");
+            }
             try {
                 SequenceUtil.assertSequenceDictionariesEqual(header.getSequenceDictionary(), ribosomalIntervals.getHeader().getSequenceDictionary());
             } catch (SequenceUtil.SequenceListsDifferException e) {
