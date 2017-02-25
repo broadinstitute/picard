@@ -97,7 +97,7 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
             "marking has been overly aggressive and coverage is low.")
     public boolean ALLOW_DUPLICATE_READS = false;
 
-    @Option(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.",mutex = {"CLUSTER_OUTPUT"})
+    @Option(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.")
     public boolean OUTPUT_ERRORS_ONLY = false;
 
     @Option(doc = "The rate at which a heterozygous genotype in a normal sample turns into a homozygous (via loss of heterozygosity) " +
