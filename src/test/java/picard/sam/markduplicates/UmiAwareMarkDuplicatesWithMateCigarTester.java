@@ -171,7 +171,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
             }
         }
 
-        if(expectedMetrics != null) {
+        if (expectedMetrics != null) {
             // Check the values written to metrics.txt against our input expectations
             final MetricsFile<UmiMetrics, Comparable<?>> metricsOutput = new MetricsFile<UmiMetrics, Comparable<?>>();
             try {
