@@ -147,6 +147,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
 
             progress.record(rec);
 
+
             // See if we need to terminate early?
             if (stopAfter > 0 && progress.getCount() >= stopAfter) {
                 break;
