@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The Broad Institute
+ * Copyright (c) 2014-2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,19 +25,12 @@
 package picard.vcf.filter;
 
 import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.JavascriptVariantFilter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFFilterHeaderLine;
-import htsjdk.variant.vcf.VCFFormatHeaderLine;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.*;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
@@ -84,14 +77,14 @@ public class FilterVcf extends CommandLineProgram {
 
     @Option(doc="The minimum QD value to accept or otherwise filter out the variant.")
     public double MIN_QD = 0;
-    
-	@Option(shortName = "JS", doc = "Filters a VCF file with a javascript expression interpreted by the java javascript engine. "
-	        + " The script puts the following variables in the script context: "
-	        + " 'variant' a VariantContext ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/variantcontext/VariantContext.html ) and "
-	        + " 'header' a VCFHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/vcf/VCFHeader.html )."
-	        + " Last value of the script should be a boolean to tell whether we should accept or reject the record.",
-	        optional = true)
-	public File JAVASCRIPT_FILE = null;
+
+    @Option(shortName = "JS", doc = "Filters a VCF file with a javascript expression interpreted by the java javascript engine. "
+            + " The script puts the following variables in the script context: "
+            + " 'variant' a VariantContext ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/variantcontext/VariantContext.html ) and "
+            + " 'header' a VCFHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/vcf/VCFHeader.html )."
+            + " Last value of the script should be a boolean to tell whether we should accept or reject the record.",
+            optional = true)
+    public File JAVASCRIPT_FILE = null;
 
 
     /** Constructor to default to having index creation on. */
@@ -101,6 +94,9 @@ public class FilterVcf extends CommandLineProgram {
     public static void main(final String[] args) {
         new FilterVcf().instanceMainWithExit(args);
     }
+
+    final private Log log = Log.getInstance(FilterVcf.class);
+    final private ProgressLogger progress = new ProgressLogger(log, 100_000, "Processed", "Variants");
 
     @Override
     protected int doWork() {
@@ -123,7 +119,6 @@ public class FilterVcf extends CommandLineProgram {
                 }
             }
             final List<GenotypeFilter> genotypeFilters = CollectionUtil.makeList(new GenotypeQualityFilter(MIN_GQ), new DepthFilter(MIN_DP));
-            @SuppressWarnings("resource")
             final FilterApplyingVariantIterator iterator = new FilterApplyingVariantIterator(in.iterator(), variantFilters, genotypeFilters);
 
             final VCFHeader header = in.getFileHeader();
@@ -147,7 +142,9 @@ public class FilterVcf extends CommandLineProgram {
             out.writeHeader(in.getFileHeader());
 
             while (iterator.hasNext()) {
-                out.add(iterator.next());
+                final VariantContext vc = iterator.next();
+                progress.record(vc.getContig(), vc.getStart());
+                out.add(vc);
             }
             return 0;
         } finally {
