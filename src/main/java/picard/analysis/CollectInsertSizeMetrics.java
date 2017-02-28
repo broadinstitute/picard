@@ -161,7 +161,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
         else  {
             file.write(OUTPUT);
 
-            final int rResult;
+            /*final int rResult;
             if(HISTOGRAM_WIDTH == null) {
                 rResult = RExecutor.executeFromClasspath(
                     Histogram_R_SCRIPT,
@@ -180,7 +180,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 
             if (rResult != 0) {
                 throw new PicardException("R script " + Histogram_R_SCRIPT + " failed with return code " + rResult);
-            }
+            }*/
         }
     }
 }

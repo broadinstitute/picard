@@ -172,7 +172,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         collector.addAllLevelsToFile(file);
         file.write(OUTPUT);
 
-        boolean atLeastOneHistogram = false;
+        /*boolean atLeastOneHistogram = false;
         for (final Histogram<Integer> histo : file.getAllHistograms()) {
             atLeastOneHistogram = atLeastOneHistogram || !histo.isEmpty();
         }
@@ -187,7 +187,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
             if (rResult != 0) {
                 throw new PicardException("Problem invoking R to generate plot.");
             }
-        }
+        }*/
     }
 
 }

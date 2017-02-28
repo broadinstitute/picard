@@ -126,17 +126,24 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
 
         final ProgressLogger progress = new ProgressLogger(log);
 
+        long readTime = 0;
+        long intReadTime, proccessTime = 0, intProccessTime;
+        long beforeFor = System.nanoTime();
         for (final SAMRecord rec : in) {
             final ReferenceSequence ref;
+            intReadTime = System.nanoTime();
             if (walker == null || rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
                 ref = null;
             } else {
                 ref = walker.get(rec.getReferenceIndex());
             }
+            readTime += intReadTime - System.nanoTime();
 
+            intProccessTime = System.nanoTime();
             for (final SinglePassSamProgram program : programs) {
                 program.acceptRead(rec, ref);
             }
+            proccessTime += intProccessTime - System.nanoTime();
 
             progress.record(rec);
 
@@ -151,8 +158,12 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             }
         }
 
+        //System.out.print(readTime);
         CloserUtil.close(in);
 
+        System.out.print("Read Time: " + readTime/1000000);
+        System.out.print("Proccess Time: " + proccessTime/1000000);
+        System.out.print("For: " + (System.nanoTime() - beforeFor)/1000000);
         for (final SinglePassSamProgram program : programs) {
             program.finish();
         }
