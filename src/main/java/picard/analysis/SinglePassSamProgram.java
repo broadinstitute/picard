@@ -146,8 +146,6 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             proccessTime += intProccessTime - System.nanoTime();
 
             progress.record(rec);
-
-
             // See if we need to terminate early?
             if (stopAfter > 0 && progress.getCount() >= stopAfter) {
                 break;
