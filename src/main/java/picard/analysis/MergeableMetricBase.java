@@ -128,7 +128,7 @@ abstract public class MergeableMetricBase extends MetricBase {
      * @param many a Collection of MergeableMetricBase
      */
     public MergeableMetricBase merge(final Collection<? extends MergeableMetricBase> many) {
-        many.parallelStream().forEach(this::merge);
+        many.stream().forEach(this::merge);
         calculateDerivedFields();
         return this;
     }
