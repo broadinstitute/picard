@@ -74,7 +74,10 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
      */
     @Override
     protected final int doWork() {
+        long startDoWork = System.nanoTime();
         makeItSo(INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, STOP_AFTER, Arrays.asList(this));
+        long endDoWork = System.nanoTime();
+        System.out.println("Time doWork:" + (endDoWork - startDoWork));
         return 0;
     }
 
@@ -126,24 +129,26 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
 
         final ProgressLogger progress = new ProgressLogger(log);
 
-        long readTime = 0;
-        long intReadTime, proccessTime = 0, intProccessTime;
+
+        long startFor, endFor = 0, startWalkerTime, walkerTime = 0, startProcessTime, processTime = 0;
         long beforeFor = System.nanoTime();
         for (final SAMRecord rec : in) {
             final ReferenceSequence ref;
-            intReadTime = System.nanoTime();
+
+            startFor = System.nanoTime();
+            startWalkerTime = System.nanoTime();
             if (walker == null || rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
                 ref = null;
             } else {
                 ref = walker.get(rec.getReferenceIndex());
             }
-            readTime += intReadTime - System.nanoTime();
+            walkerTime += System.nanoTime() - startWalkerTime;
 
-            intProccessTime = System.nanoTime();
+            startProcessTime = System.nanoTime();
             for (final SinglePassSamProgram program : programs) {
                 program.acceptRead(rec, ref);
             }
-            proccessTime += intProccessTime - System.nanoTime();
+            processTime += System.nanoTime() - startProcessTime;
 
             progress.record(rec);
             // See if we need to terminate early?
@@ -155,14 +160,19 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             if (!anyUseNoRefReads && rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
                 break;
             }
+            endFor += System.nanoTime() - startFor;
         }
 
-        //System.out.print(readTime);
+        long afterFor = System.nanoTime();
+
         CloserUtil.close(in);
 
-        System.out.print("Read Time: " + readTime/1000000);
-        System.out.print("Proccess Time: " + proccessTime/1000000);
-        System.out.print("For: " + (System.nanoTime() - beforeFor)/1000000);
+        System.out.print("Inside For: " + endFor);
+        System.out.print("Walker Time: " + walkerTime);
+        System.out.print("Process Time: " + processTime);
+        System.out.print("Read Time Seva: " + (afterFor - beforeFor - endFor));
+        System.out.print("For: " + (afterFor - beforeFor));
+
         for (final SinglePassSamProgram program : programs) {
             program.finish();
         }
