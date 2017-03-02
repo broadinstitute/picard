@@ -88,6 +88,9 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
     @Option(doc = ReadStructure.PARAMETER_DOC + "\nIf not given, will use the RunInfo.xml in the run directory.", shortName = "RS", optional = true)
     public ReadStructure READ_STRUCTURE;
 
+    @Option(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.illumina_lane_metrics.EXT). None if null", optional=true)
+    public String FILE_EXTENSION = null;
+
     @Override
     protected int doWork() {
         final MetricsFile<MetricBase, Comparable<?>> laneMetricsFile = this.getMetricsFile();
@@ -115,7 +118,7 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
             }
         }
 
-        IlluminaLaneMetricsCollector.collectLaneMetrics(RUN_DIRECTORY, OUTPUT_DIRECTORY, OUTPUT_PREFIX, laneMetricsFile, phasingMetricsFile, READ_STRUCTURE);
+        IlluminaLaneMetricsCollector.collectLaneMetrics(RUN_DIRECTORY, OUTPUT_DIRECTORY, OUTPUT_PREFIX, laneMetricsFile, phasingMetricsFile, READ_STRUCTURE, FILE_EXTENSION == null ? "" : FILE_EXTENSION);
         return 0;
     }
 
@@ -146,22 +149,24 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
         public static void collectLaneMetrics(final File runDirectory, final File outputDirectory, final String outputPrefix,
                                               final MetricsFile<MetricBase, Comparable<?>> laneMetricsFile,
                                               final MetricsFile<MetricBase, Comparable<?>> phasingMetricsFile,
-                                              final ReadStructure readStructure) {
+                                              final ReadStructure readStructure, final String fileExtension) {
             final Map<Integer, ? extends Collection<Tile>> laneTiles = readLaneTiles(runDirectory, readStructure);
-            writeLaneMetrics(laneTiles, outputDirectory, outputPrefix, laneMetricsFile);
-            writePhasingMetrics(laneTiles, outputDirectory, outputPrefix, phasingMetricsFile);
+            writeLaneMetrics(laneTiles, outputDirectory, outputPrefix, laneMetricsFile, fileExtension);
+            writePhasingMetrics(laneTiles, outputDirectory, outputPrefix, phasingMetricsFile, fileExtension);
         }
 
         public static File writePhasingMetrics(final Map<Integer, ? extends Collection<Tile>> laneTiles, final File outputDirectory,
-                                               final String outputPrefix, final MetricsFile<MetricBase, Comparable<?>> phasingMetricsFile) {
+                                               final String outputPrefix, final MetricsFile<MetricBase, Comparable<?>> phasingMetricsFile,
+                                               final String fileExtension) {
             laneTiles.entrySet().stream().forEach(entry -> IlluminaPhasingMetrics.getPhasingMetricsForTiles(entry.getKey().longValue(),
                     entry.getValue()).forEach(phasingMetricsFile::addMetric));
 
-            return writeMetrics(phasingMetricsFile, outputDirectory, outputPrefix, IlluminaPhasingMetrics.getExtension());
+            return writeMetrics(phasingMetricsFile, outputDirectory, outputPrefix, IlluminaPhasingMetrics.getExtension() + fileExtension);
         }
 
         public static File writeLaneMetrics(final Map<Integer, ? extends Collection<Tile>> laneTiles, final File outputDirectory,
-                                            final String outputPrefix, final MetricsFile<MetricBase, Comparable<?>> laneMetricsFile) {
+                                            final String outputPrefix, final MetricsFile<MetricBase, Comparable<?>> laneMetricsFile,
+                                            final String fileExtension) {
             laneTiles.entrySet().stream().forEach(entry -> {
                 final IlluminaLaneMetrics laneMetric = new IlluminaLaneMetrics();
                 laneMetric.LANE = entry.getKey().longValue();
@@ -169,7 +174,7 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
                 laneMetricsFile.addMetric(laneMetric);
             });
 
-            return writeMetrics(laneMetricsFile, outputDirectory, outputPrefix, IlluminaLaneMetrics.getExtension());
+            return writeMetrics(laneMetricsFile, outputDirectory, outputPrefix, IlluminaLaneMetrics.getExtension() + fileExtension);
         }
 
         private static File writeMetrics(final MetricsFile<MetricBase, Comparable<?>> metricsFile, final File outputDirectory,
