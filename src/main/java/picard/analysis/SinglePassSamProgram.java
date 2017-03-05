@@ -161,6 +161,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         };
 
         for (final SAMRecord rec : in) {
+
             final ReferenceSequence ref;
             if (walker == null || rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
                 ref = null;
