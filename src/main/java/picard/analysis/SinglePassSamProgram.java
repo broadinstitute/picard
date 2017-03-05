@@ -138,7 +138,6 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         int Max_Size = 1000;
         ArrayList<SAMRecordAndReference> pairs = new ArrayList<>();
         BlockingQueue<ArrayList<SAMRecordAndReference>> queue = new LinkedBlockingQueue<>();
-        //BlockingQueue<SAMRecordAndReference> queue = new LinkedBlockingQueue<>();
         ExecutorService service = Executors.newSingleThreadExecutor();
 
         /*Runnable task = new Runnable(){
@@ -155,26 +154,6 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                     e.printStackTrace();
                 }
             }
-        };
-
-        Runnable taskEnd = new Runnable(){
-            @Override
-            public void run() {
-                try {
-                    ArrayList<SAMRecordAndReference> pairsQueue = queue.take();
-                    for (SAMRecordAndReference pair : pairsQueue) {
-                        for (final SinglePassSamProgram program : programs) {
-                            program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
-                        }
-                    }
-
-                    for (final SinglePassSamProgram program : programs){
-                        program.finish();
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
         };*/
 
         for (final SAMRecord rec : in) {
@@ -186,13 +165,8 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                 ref = walker.get(rec.getReferenceIndex());
             }
 
-            /*for (final SinglePassSamProgram program : programs) {
-                program.acceptRead(rec, ref);
-            }*/
-
-            //queue.add(new SAMRecordAndReference(rec, ref));
             pairs.add(new SAMRecordAndReference(rec, ref));
-            //ArrayList<SAMRecordAndReference> pairsInQueue = queue.take();
+
             if (pairs.size() >= Max_Size) {
 
                 try {
@@ -201,9 +175,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                     e.printStackTrace();
                 }
 
-                //List<Future> futures = new ArrayList<>(programs.size());
                 for (final SinglePassSamProgram program : programs) {
-                    //Future future = service.submit(() -> {
                     service.execute(new Runnable() {
                         @Override
                         public void run() {
@@ -218,22 +190,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                             }
                         }
                     });
-
-                    //futures.add(future);
                 }
-
-                /*for (Future f : futures) {
-                    try {
-                        f.get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
-                    }
-                }*/
-                //list_rec.clear();
-                //list_ref.clear();
-                //service.execute(task);
-                pairs = new ArrayList<>();
-                //pairs.clear();
             }
 
             progress.record(rec);
@@ -249,39 +206,16 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         }
 
         if (pairs.size() > 0) {
-            //List<Future> futures = new ArrayList<>(programs.size());
+
             final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
-            /*for (final SinglePassSamProgram program : programs) {
-                Future future = service.submit(() -> {
-                    for (SAMRecordAndReference pair : pairsTmp)
-                        program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
-                });
-                futures.add(future);*/
+
             for (SinglePassSamProgram program : programs){
                 for (SAMRecordAndReference pair : pairsTmp){
                     program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
                 }
             }
 
-            /*for (Future f : futures) {
-                try {
-                    f.get();
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                }
-            }*/
-            //list_rec.clear();
-            //list_ref.clear();
-            pairs = new ArrayList<>();
         }
-
-        /*if (pairs.size() > 0){
-            System.out.println('1');
-            final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
-            queue.add(pairsTmp);
-            service.execute(taskEnd);
-            //pairs = new ArrayList<>();
-        }*/
 
         service.shutdown();
         try {
