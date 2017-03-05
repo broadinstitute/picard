@@ -138,7 +138,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
 
         long beforeFor = System.nanoTime();
 
-        int Max_Size = 1000;
+        int Max_Size = 10000;
         ArrayList<SAMRecordAndReference> pairs = new ArrayList<>();
         BlockingQueue<ArrayList<SAMRecordAndReference>> queue = new LinkedBlockingQueue<>();
         //BlockingQueue<SAMRecordAndReference> queue = new LinkedBlockingQueue<>();
@@ -178,8 +178,8 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             if (pairs.size() > Max_Size) {
                 final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
                 queue.add(pairsTmp);
-                pairs = new ArrayList<SAMRecordAndReference>();
-
+                pairs = new ArrayList<>();
+                //pairs.clear();
                 service.submit(task);
             }
 
