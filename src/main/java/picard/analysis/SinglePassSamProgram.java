@@ -144,7 +144,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         //BlockingQueue<SAMRecordAndReference> queue = new LinkedBlockingQueue<>();
         ExecutorService service = Executors.newSingleThreadExecutor();
 
-        Runnable task = new Runnable() {
+        Runnable task = new Runnable(){
             @Override
             public void run() {
                 try {
