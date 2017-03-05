@@ -171,6 +171,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
 
                 try {
                     queue.put(pairs);
+                    pairs = new ArrayList<>();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -182,7 +183,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                             final ArrayList<SAMRecordAndReference> pairsTmp;
                             try {
                                 pairsTmp = queue.take();
-                                for (SAMRecordAndReference pair : pairsTmp){
+                                for (final SAMRecordAndReference pair : pairsTmp){
                                     program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
                                 }
                             } catch (InterruptedException e) {
@@ -206,15 +207,13 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         }
 
         if (pairs.size() > 0) {
-
             final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
 
-            for (SinglePassSamProgram program : programs){
+            for (final SinglePassSamProgram program : programs){
                 for (SAMRecordAndReference pair : pairsTmp){
                     program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
                 }
             }
-
         }
 
         service.shutdown();
