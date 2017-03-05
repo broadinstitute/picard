@@ -75,7 +75,8 @@ public class RExecutor {
         command[1] = scriptFile.getAbsolutePath();
         System.arraycopy(arguments, 0, command, 2, arguments.length);
         LOG.info(String.format("Executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
-        return ProcessExecutor.execute(command);
+        //ProcessExecutor.execute(command);
+        return 1;
     }
 
     /**
