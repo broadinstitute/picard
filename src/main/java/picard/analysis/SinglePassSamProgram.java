@@ -201,7 +201,6 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             service.submit(task);
             progress.record(pairsTmp.get(pairsTmp.size() - 1).getSamRecord());
         }
-
         service.shutdown();
 
         long afterFor = System.nanoTime();
