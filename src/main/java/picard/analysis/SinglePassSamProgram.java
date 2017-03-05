@@ -201,7 +201,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                     e.printStackTrace();
                 }
 
-                List<Future> futures = new ArrayList<>(programs.size());
+                //List<Future> futures = new ArrayList<>(programs.size());
                 for (final SinglePassSamProgram program : programs) {
                     //Future future = service.submit(() -> {
                     service.execute(new Runnable() {
@@ -295,9 +295,9 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         CloserUtil.close(in);
         System.out.println("For: " + (afterFor - beforeFor));
 
-        /*for (final SinglePassSamProgram program : programs) {
+        for (final SinglePassSamProgram program : programs) {
             program.finish();
-        }*/
+        }
     }
 
     /** Can be overriden and set to false if the section of unmapped reads at the end of the file isn't needed. */
