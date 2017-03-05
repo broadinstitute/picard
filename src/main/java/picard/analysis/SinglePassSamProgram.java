@@ -176,23 +176,24 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                     e.printStackTrace();
                 }
 
-                for (final SinglePassSamProgram program : programs) {
                     service.execute(new Runnable() {
                         @Override
                         public void run() {
-                            final ArrayList<SAMRecordAndReference> pairsTmp;
-                            try {
-                                pairsTmp = queue.take();
-                                for (final SAMRecordAndReference pair : pairsTmp){
-                                    program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
+                            for (final SinglePassSamProgram program : programs) {
+                                final ArrayList<SAMRecordAndReference> pairsTmp;
+
+                                try {
+                                    pairsTmp = queue.take();
+                                    for (final SAMRecordAndReference pair : pairsTmp){
+                                        program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
+                                    }
+                                    }catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
                             }
-                        }
                     });
                 }
-            }
 
             progress.record(rec);
             // See if we need to terminate early?
