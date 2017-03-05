@@ -206,6 +206,13 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             }
         }
 
+        service.shutdown();
+        try {
+            service.awaitTermination(10, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         if (pairs.size() > 0) {
             final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
 
@@ -216,12 +223,6 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             }
         }
 
-        service.shutdown();
-        try {
-            service.awaitTermination(10, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         long afterFor = System.nanoTime();
 
