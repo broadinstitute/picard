@@ -45,10 +45,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.metrics.SAMRecordAndReference;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -138,13 +135,13 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
 
         long beforeFor = System.nanoTime();
 
-        int Max_Size = 10000;
+        int Max_Size = 1000;
         ArrayList<SAMRecordAndReference> pairs = new ArrayList<>();
         BlockingQueue<ArrayList<SAMRecordAndReference>> queue = new LinkedBlockingQueue<>();
         //BlockingQueue<SAMRecordAndReference> queue = new LinkedBlockingQueue<>();
         ExecutorService service = Executors.newSingleThreadExecutor();
 
-        Runnable task = new Runnable(){
+        /*Runnable task = new Runnable(){
             @Override
             public void run() {
                 try {
@@ -159,6 +156,26 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                 }
             }
         };
+
+        Runnable taskEnd = new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    ArrayList<SAMRecordAndReference> pairsQueue = queue.take();
+                    for (SAMRecordAndReference pair : pairsQueue) {
+                        for (final SinglePassSamProgram program : programs) {
+                            program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
+                        }
+                    }
+
+                    for (final SinglePassSamProgram program : programs){
+                        program.finish();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };*/
 
         for (final SAMRecord rec : in) {
 
@@ -176,12 +193,47 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             //queue.add(new SAMRecordAndReference(rec, ref));
             pairs.add(new SAMRecordAndReference(rec, ref));
             //ArrayList<SAMRecordAndReference> pairsInQueue = queue.take();
-            if (pairs.size() > Max_Size) {
-                final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
-                queue.add(pairsTmp);
+            if (pairs.size() >= Max_Size) {
+
+                try {
+                    queue.put(pairs);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                List<Future> futures = new ArrayList<>(programs.size());
+                for (final SinglePassSamProgram program : programs) {
+                    //Future future = service.submit(() -> {
+                    service.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            final ArrayList<SAMRecordAndReference> pairsTmp;
+                            try {
+                                pairsTmp = queue.take();
+                                for (SAMRecordAndReference pair : pairsTmp){
+                                    program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
+                                }
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+
+                    //futures.add(future);
+                }
+
+                /*for (Future f : futures) {
+                    try {
+                        f.get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                }*/
+                //list_rec.clear();
+                //list_ref.clear();
+                //service.execute(task);
                 pairs = new ArrayList<>();
                 //pairs.clear();
-                service.submit(task);
             }
 
             progress.record(rec);
@@ -196,22 +248,52 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             }
         }
 
-        if (pairs.size() > 0){
-            ArrayList<SAMRecordAndReference> pairsTmp = pairs;
-            queue.add(pairsTmp);
-            service.submit(task);
-            progress.record(pairsTmp.get(pairsTmp.size() - 1).getSamRecord());
+        if (pairs.size() > 0) {
+            List<Future> futures = new ArrayList<>(programs.size());
+            final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
+            for (final SinglePassSamProgram program : programs) {
+                Future future = service.submit(() -> {
+                    for (SAMRecordAndReference pair : pairsTmp)
+                        program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
+                });
+                futures.add(future);
+            }
+
+            for (Future f : futures) {
+                try {
+                    f.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
+            //list_rec.clear();
+            //list_ref.clear();
+            pairs = new ArrayList<>();
         }
+
+        /*if (pairs.size() > 0){
+            System.out.println('1');
+            final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
+            queue.add(pairsTmp);
+            service.execute(taskEnd);
+            //pairs = new ArrayList<>();
+        }*/
+
         service.shutdown();
+        try {
+            service.awaitTermination(10, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         long afterFor = System.nanoTime();
 
         CloserUtil.close(in);
         System.out.println("For: " + (afterFor - beforeFor));
 
-        for (final SinglePassSamProgram program : programs) {
+        /*for (final SinglePassSamProgram program : programs) {
             program.finish();
-        }
+        }*/
     }
 
     /** Can be overriden and set to false if the section of unmapped reads at the end of the file isn't needed. */
