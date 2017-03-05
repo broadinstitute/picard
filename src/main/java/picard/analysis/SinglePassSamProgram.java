@@ -139,6 +139,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         ArrayList<SAMRecordAndReference> pairs = new ArrayList<>();
         BlockingQueue<ArrayList<SAMRecordAndReference>> queue = new LinkedBlockingQueue<>();
         ExecutorService service = Executors.newSingleThreadExecutor();
+        final Semaphore sem = new Semaphore(6);
 
         /*Runnable task = new Runnable(){
             @Override
@@ -176,6 +177,8 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                     e.printStackTrace();
                 }
 
+                try {
+                    sem.acquire();
                     service.execute(new Runnable() {
                         @Override
                         public void run() {
@@ -184,15 +187,21 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
 
                                 try {
                                     pairsTmp = queue.take();
-                                    for (final SAMRecordAndReference pair : pairsTmp){
+                                    for (final SAMRecordAndReference pair : pairsTmp) {
                                         program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
                                     }
-                                    }catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
                                 }
                             }
+                            sem.release();
+                        }
                     });
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+
                 }
 
             progress.record(rec);
