@@ -249,23 +249,27 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         }
 
         if (pairs.size() > 0) {
-            List<Future> futures = new ArrayList<>(programs.size());
+            //List<Future> futures = new ArrayList<>(programs.size());
             final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
-            for (final SinglePassSamProgram program : programs) {
+            /*for (final SinglePassSamProgram program : programs) {
                 Future future = service.submit(() -> {
                     for (SAMRecordAndReference pair : pairsTmp)
                         program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
                 });
-                futures.add(future);
+                futures.add(future);*/
+            for (SinglePassSamProgram program : programs){
+                for (SAMRecordAndReference pair : pairsTmp){
+                    program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
+                }
             }
 
-            for (Future f : futures) {
+            /*for (Future f : futures) {
                 try {
                     f.get();
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
-            }
+            }*/
             //list_rec.clear();
             //list_ref.clear();
             pairs = new ArrayList<>();
