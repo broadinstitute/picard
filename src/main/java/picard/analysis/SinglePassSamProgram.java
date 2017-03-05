@@ -36,6 +36,8 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
+import jdk.nashorn.internal.ir.Block;
+import org.apache.commons.compress.archivers.ar.ArArchiveEntry;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
@@ -71,12 +73,6 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
     public long STOP_AFTER = 0;
 
     private static final Log log = Log.getInstance(SinglePassSamProgram.class);
-
-    //private static int Max_Size = 1000;
-
-    //private static ArrayList<SAMRecordAndReference> pairs = new ArrayList<>(Max_Size);
-
-    //private static ExecutorService service = Executors.newSingleThreadExecutor();
 
     /**
      * Final implementation of doWork() that checks and loads the input and optionally reference
@@ -134,7 +130,9 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         for (final SinglePassSamProgram program : programs) {
             program.setup(in.getFileHeader(), input);
             anyUseNoRefReads = anyUseNoRefReads || program.usesNoRefReads();
+            //final boolean anyUseNoRefReads = false || program.usesNoRefReads();
         }
+        final boolean anyUseNoRefReadsTmp = anyUseNoRefReads;
 
         final ProgressLogger progress = new ProgressLogger(log);
 
@@ -142,13 +140,28 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
 
         int Max_Size = 1000;
         ArrayList<SAMRecordAndReference> pairs = new ArrayList<>();
-        //BlockingQueue<ArrayList<SAMRecordAndReference>> queue = new LinkedBlockingQueue<>();
+        BlockingQueue<ArrayList<SAMRecordAndReference>> queue = new LinkedBlockingQueue<>();
         //BlockingQueue<SAMRecordAndReference> queue = new LinkedBlockingQueue<>();
         ExecutorService service = Executors.newSingleThreadExecutor();
 
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ArrayList<SAMRecordAndReference> pairsQueue = queue.take();
+                    for (SAMRecordAndReference pair : pairsQueue) {
+                        for (final SinglePassSamProgram program : programs) {
+                            program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
         for (final SAMRecord rec : in) {
             final ReferenceSequence ref;
-
             if (walker == null || rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
                 ref = null;
             } else {
@@ -161,19 +174,13 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
 
             //queue.add(new SAMRecordAndReference(rec, ref));
             pairs.add(new SAMRecordAndReference(rec, ref));
+            //ArrayList<SAMRecordAndReference> pairsInQueue = queue.take();
             if (pairs.size() > Max_Size) {
                 final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
-                service.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (SAMRecordAndReference pair : pairsTmp){
-                            for (final SinglePassSamProgram program : programs) {
-                                program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
-                            }
-                        }
-                    }
-                });
-                pairs.clear();
+                queue.add(pairsTmp);
+                pairs = new ArrayList<SAMRecordAndReference>();
+
+                service.submit(task);
             }
 
             progress.record(rec);
@@ -183,24 +190,16 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             }
 
             // And see if we're into the unmapped reads at the end
-            if (!anyUseNoRefReads && rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+            if (!anyUseNoRefReadsTmp && rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
                 break;
             }
         }
-        if (pairs.size() > 0)
-        {
-            System.out.println("ost");
-            service.submit(new Runnable() {
-                @Override
-                public void run() {
-                    for (SAMRecordAndReference pair : pairs){
-                        for (final SinglePassSamProgram program : programs) {
-                            program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
-                        }
-                    }
-                }
-            });
-            pairs.clear();
+
+        if (pairs.size() > 0){
+            ArrayList<SAMRecordAndReference> pairsTmp = pairs;
+            queue.add(pairsTmp);
+            service.submit(task);
+            progress.record(pairsTmp.get(pairsTmp.size() - 1).getSamRecord());
         }
 
         service.shutdown();
@@ -230,24 +229,5 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
 
     /** Should be implemented by subclasses to do one-time finalization work. */
     protected abstract void finish();
-
-    private static void addToPairs(SAMRecordAndReference recordAndReference){
-        //pairs.add(recordAndReference);
-    }
-
-    /*private static synchronized void toThread(Collection<SinglePassSamProgram> programs){
-        final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
-        pairs = new ArrayList<>();
-        service.execute(new Runnable() {
-            @Override
-            public void run() {
-                for (SAMRecordAndReference pair : pairsTmp){
-                    for (final SinglePassSamProgram program : programs) {
-                        program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
-                    }
-                }
-            }
-        });
-    }*/
 
 }
