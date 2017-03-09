@@ -585,7 +585,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
                             // we do not want to increment the base quality histogram for bases that will eventually get thrown out by the coverage cap
                             if (unfilteredCoverageByTarget.get(target).getDepths()[targetOffset] <= coverageCap){
-                                baseQHistogramArray[baseQualities[offset]]++;
+                                baseQHistogramArray[qual]++;
                             }
                         }
                     }
