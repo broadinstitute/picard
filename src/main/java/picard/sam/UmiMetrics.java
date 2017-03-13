@@ -38,45 +38,49 @@ public class UmiMetrics extends MetricBase {
     private Histogram<String> inferredUmis = new Histogram<>();
     private int observedUmiBases = 0;
 
-    // Number of bases in each UMI
+    /** Number of bases in each UMI */
     public int UMI_LENGTH;
 
-    // Number of different UMI sequences observed
+    /** Number of different UMI sequences observed */
     public long OBSERVED_UNIQUE_UMIS = 0;
 
-    // Number of different inferred UMI sequences derived
+    /** Number of different inferred UMI sequences derived */
     public long INFERRED_UNIQUE_UMIS = 0;
 
-    // Number of errors inferred by comparing the observed and inferred UMIs
+    /** Number of errors inferred by comparing the observed and inferred UMIs */
     public long OBSERVED_BASE_ERRORS = 0;
 
-    // Number of duplicate sets found before taking UMIs into account
+    /** Number of duplicate sets found before taking UMIs into account */
     public long DUPLICATE_SETS_WITHOUT_UMI = 0;
 
-    // Number of duplicate sets found after taking UMIs into account
+    /** Number of duplicate sets found after taking UMIs into account */
     public long DUPLICATE_SETS_WITH_UMI = 0;
 
-    // Entropy (in base 4) of the observed UMI sequences, indicating the
-    // effective number of bases in the UMIs.  If this is significantly
-    // smaller than UMI_LENGTH, it indicates that the UMIs are not
-    // distributed uniformly.
+    /**
+     * Entropy (in base 4) of the observed UMI sequences, indicating the
+     * effective number of bases in the UMIs.  If this is significantly
+     * smaller than UMI_LENGTH, it indicates that the UMIs are not
+     * distributed uniformly.
+     */
     public double OBSERVED_UMI_ENTROPY = 0;
 
-    // Entropy (in base 4) of the inferred UMI sequences, indicating the
-    // effective number of bases in the inferred UMIs.  If this is significantly
-    // smaller than UMI_LENGTH, it indicates that the UMIs are not
-    // distributed uniformly.
+    /** Entropy (in base 4) of the inferred UMI sequences, indicating the
+     * effective number of bases in the inferred UMIs.  If this is significantly
+     * smaller than UMI_LENGTH, it indicates that the UMIs are not
+     * distributed uniformly.
+     */
     public double INFERRED_UMI_ENTROPY = 0;
 
-    // Estimation of Phred scaled quality scores for UMIs
+    /** Estimation of Phred scaled quality scores for UMIs */
     public double UMI_BASE_QUALITIES;
 
-    // MLE estimation of reads that will be falsely labeled as being part of a duplicate set due to UMI collisions.
-    // This estimate is computed over every duplicate set, and effectively accounts for the distribution of duplicate
-    // set sizes.
+    /** MLE estimation of reads that will be falsely labeled as being part of a duplicate set due to UMI collisions.
+     * This estimate is computed over every duplicate set, and effectively accounts for the distribution of duplicate
+     * set sizes.  This is an experimental metric, and should be used with caution.
+     */
     public double UMI_COLLISION_EST;
 
-    // Phred scale of MLE estimate of collision rate
+    /** Phred scale of MLE estimate of collision rate.  This is an experimental metric. */
     public double UMI_COLLISION_Q;
 
     public void estimateBaseQualities(final int observedUmiBases) {
