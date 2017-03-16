@@ -165,10 +165,15 @@ public class SamToFastq extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-        final Map<String, SAMRecord> firstSeenMates = new HashMap<String, SAMRecord>();
+        final Map<String, SAMRecord> firstSeenMates = new HashMap<>();
         final FastqWriterFactory factory = new FastqWriterFactory();
         factory.setCreateMd5(CREATE_MD5_FILE);
         final Map<SAMReadGroupRecord, FastqWriters> writers = generateWriters(reader.getFileHeader().getReadGroups(), factory);
+        if (writers.isEmpty()) {
+            final String msgBase = INPUT + " does not contain Read Groups";
+            final String msg = OUTPUT_PER_RG ? msgBase + ", consider not using the OUTPUT_PER_RG option" : msgBase;
+            throw new PicardException(msg);
+        }
 
         final ProgressLogger progress = new ProgressLogger(log);
         for (final SAMRecord currentRecord : reader) {
@@ -209,7 +214,7 @@ public class SamToFastq extends CommandLineProgram {
         CloserUtil.close(reader);
 
         // Close all the fastq writers being careful to close each one only once!
-        for (final FastqWriters writerMapping : new HashSet<FastqWriters>(writers.values())) {
+        for (final FastqWriters writerMapping : new HashSet<>(writers.values())) {
             writerMapping.closeAll();
         }
 
@@ -227,7 +232,7 @@ public class SamToFastq extends CommandLineProgram {
     private Map<SAMReadGroupRecord, FastqWriters> generateWriters(final List<SAMReadGroupRecord> samReadGroupRecords,
                                                                   final FastqWriterFactory factory) {
 
-        final Map<SAMReadGroupRecord, FastqWriters> writerMap = new HashMap<SAMReadGroupRecord, FastqWriters>();
+        final Map<SAMReadGroupRecord, FastqWriters> writerMap = new HashMap<>();
 
         final FastqWriters fastqWriters;
         if (!OUTPUT_PER_RG) {
@@ -244,7 +249,7 @@ public class SamToFastq extends CommandLineProgram {
                 secondOfPairWriter = null;
             }
 
-            /** Prepare the writer that will accept unpaired reads.  If we're emitting a single fastq - and assuming single-ended reads -
+            /* Prepare the writer that will accept unpaired reads.  If we're emitting a single fastq - and assuming single-ended reads -
              * then this is simply that one fastq writer.  Otherwise, if we're doing paired-end, we emit to a third new writer, since
              * the other two fastqs are accepting only paired end reads. */
             final FastqWriter unpairedWriter = UNPAIRED_FASTQ == null ? firstOfPairWriter : factory.newWriter(UNPAIRED_FASTQ);
