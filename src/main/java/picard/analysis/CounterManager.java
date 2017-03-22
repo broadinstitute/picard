@@ -70,7 +70,7 @@ public class CounterManager {
     /**
      * Method added for use in unit tests
      *
-     * @return offset from the reference sequence, that is represented by index 0 of <code>Counter</code> arrays.
+     * @return offset from the reference sequence, that is represented by index 0 of {@link picard.analysis.CounterManager.Counter} arrays.
      */
     int getOffset() {
         return offset;
@@ -79,7 +79,7 @@ public class CounterManager {
     /**
      * Method added for use in unit tests
      *
-     * @param offset from the reference sequence, that will be represented by index 0 of <code>Counter</code> arrays.
+     * @param offset from the reference sequence, that will be represented by index 0 of {@link picard.analysis.CounterManager.Counter} arrays.
      */
     void setOffset(int offset) {
         this.offset = offset;
@@ -87,13 +87,13 @@ public class CounterManager {
 
     /**
      * Method checks that new locus position is not out of bounds of Counter arrays and there is enough
-     * space in them to hold information on at least one more read of length <code>readLength</code>.
+     * space in them to hold information on at least one more read of length {@link this#readLength}.
      * If there is no free space, but there is accumulated information in Counter arrays after new locus position
      * that we may need, the arrays are rebased, so that 0 index of arrays represents new locus position.
      * In other case, we just clear the arrays.
      *
      * @param locusPosition position in the reference sequence,
-     *                      that will be represented by index 0 of <code>Counter</code> arrays.
+     *                      that will be represented by index 0 of {@link picard.analysis.CounterManager.Counter} arrays.
      */
     public void checkOutOfBounds(int locusPosition) {
         if (locusPosition - offset + readLength >= arrayLength) {
@@ -110,13 +110,17 @@ public class CounterManager {
      * Rebases inner Counter arrays so that 0 index of array represents the new locus position
      *
      * @param locusPosition position in the reference sequence,
-     *                      that will be represented by index 0 of <code>Counter</code> arrays.
+     *                      that will be represented by index 0 of {@link picard.analysis.CounterManager.Counter} arrays.
      */
     private void rebase(int locusPosition) {
+        if (locusPosition < offset) {
+            throw new IllegalArgumentException("Position in the reference sequence is lesser than offset.");
+        }
         for (Counter counter : arrays) {
-            int[] array = counter.array;
-            System.arraycopy(array, locusPosition - offset, array, 0, arrayLength - locusPosition + offset);
-            Arrays.fill(array, arrayLength - locusPosition + offset, arrayLength, 0);
+            final int[] array = counter.array;
+            final int skipLength = locusPosition - offset;
+            System.arraycopy(array, skipLength, array, 0, arrayLength - skipLength);
+            Arrays.fill(array, arrayLength - skipLength, arrayLength, 0);
         }
         offset = locusPosition;
     }
@@ -126,7 +130,7 @@ public class CounterManager {
      */
     public void clear() {
         for (Counter counter : arrays) {
-            int[] array = counter.array;
+            final int[] array = counter.array;
             Arrays.fill(array, 0);
         }
         offset = 0;
@@ -135,24 +139,24 @@ public class CounterManager {
     /**
      * Creates a new Counter object and adds it to the list of managed Counters.
      *
-     * @return <code>Counter</code>, that will be managed by current <code>CounterManager</code>
+     * @return {@link picard.analysis.CounterManager.Counter}, that will be managed by current {@link picard.analysis.CounterManager}
      */
     public Counter newCounter() {
-        Counter counter = new Counter(arrayLength);
+        final Counter counter = new Counter(arrayLength);
         arrays.add(counter);
         return counter;
     }
 
     /**
-     * Class represents an integer array with methods to increment and get the values form it with respect
-     * to offset of outer <code>CounterManager</code>.
+     * Class represents an integer array with methods to increment and get the values from it with respect
+     * to offset of outer {@link picard.analysis.CounterManager}.
      */
     public class Counter {
 
         /**
          * Inner array to store accumulated values
          */
-        private int[] array;
+        private final int[] array;
 
         /**
          * @param arrayLength length of the inner array
@@ -166,7 +170,7 @@ public class CounterManager {
          *
          * @param index in the reference sequence
          */
-        public void inc(int index) {
+        public void increment(int index) {
             checkIndex(index);
             array[index - offset]++;
         }
@@ -182,7 +186,8 @@ public class CounterManager {
 
         private void checkIndex(int index) {
             if ((index - offset) < 0 || (index - offset) >= array.length) {
-                throw new ArrayIndexOutOfBoundsException("The requested index is out of counter bounds.");
+                throw new ArrayIndexOutOfBoundsException("The requested index " + index + " is out of counter bounds. " +
+                        "Possible cause of exception can be wrong READ_LENGTH parameter (much smaller than actual read length)");
             }
         }
     }

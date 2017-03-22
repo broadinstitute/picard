@@ -33,7 +33,11 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
-import static picard.analysis.CollectWgsMetricsTestUtils.*;
+import static picard.analysis.CollectWgsMetricsTestUtils.createIntervalList;
+import static picard.analysis.CollectWgsMetricsTestUtils.createReadEndsIterator;
+import static picard.analysis.CollectWgsMetricsTestUtils.exampleSamOneRead;
+import static picard.analysis.CollectWgsMetricsTestUtils.getReferenceSequenceFileWalker;
+import static picard.analysis.CollectWgsMetricsTestUtils.createReferenceSequenceFile;
 
 public class WgsMetricsProcessorImplTest {
     private ProgressLogger progress;
@@ -79,5 +83,4 @@ public class WgsMetricsProcessorImplTest {
         wgsMetricsProcessor.processFile();
         assertEquals(15, collector.counter);
     }
-
 }

@@ -30,16 +30,9 @@ import htsjdk.samtools.util.AbstractLocusInfo;
 import htsjdk.samtools.util.AbstractRecordAndOffset;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.QualityUtil;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.filter.CountingFilter;
 import picard.filter.CountingPairedFilter;
-import picard.util.MathUtil;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Class for collecting data on reference coverage, base qualities and excluded bases from one AbstractLocusInfo object for
@@ -96,7 +89,6 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
      */
     protected long counter = 0;
 
-    ReadNamesCollectionFactory collectionFactory = new ReadNamesCollectionFactoryImpl();
     /**
      * Creates a collector and initializes the inner data structures
      *
@@ -118,8 +110,8 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
 
     /**
      * Accumulates the data from AbstractLocusInfo in inner structures
-     * @param info <code>AbstractLocusInfo</code> with aligned to reference position reads
-     * @param ref  <code>ReferenceSequence</code>
+     * @param info {@link htsjdk.samtools.util.AbstractLocusInfo} with aligned to reference position reads
+     * @param ref  {@link htsjdk.samtools.reference.ReferenceSequence}
      * @param referenceBaseN true if current the value of reference base represents a no call
      */
     public abstract void addInfo(final AbstractLocusInfo<T> info, final ReferenceSequence ref, boolean referenceBaseN);
@@ -223,68 +215,5 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
     boolean isReferenceBaseN(final int position, final ReferenceSequence ref) {
         final byte base = ref.getBases()[position - 1];
         return SequenceUtil.isNoCall(base);
-    }
-
-    public void setCollectionFactory(ReadNamesCollectionFactory collectionFactory) {
-        this.collectionFactory = collectionFactory;
-    }
-
-    interface ReadNamesCollection {
-        boolean add(String readName);
-        Set<? extends AbstractRecordAndOffset> put(String readName, Set<? extends AbstractRecordAndOffset> recordsAndOffsetsForName);
-        Set<? extends AbstractRecordAndOffset> get(String readName);
-        Set<? extends AbstractRecordAndOffset> remove(String readName);
-        int size();
-        void clear();
-    }
-
-    interface ReadNamesCollectionFactory {
-        ReadNamesCollection createCollection();
-    }
-
-    private static class ReadNamesCollectionFactoryImpl implements ReadNamesCollectionFactory {
-        @Override
-        public ReadNamesCollection createCollection() {
-            return new ReadNamesCollectionImpl();
-        }
-    }
-
-    private static class ReadNamesCollectionImpl implements ReadNamesCollection {
-        private Map<String, Set<? extends AbstractRecordAndOffset>> readNames;
-        private final Set<AbstractRecordAndOffset> dummySet = new HashSet<>();
-
-        ReadNamesCollectionImpl() {
-            this.readNames = new HashMap<>();
-        }
-
-        @Override
-        public boolean add(String readName) {
-            return readNames.put(readName, dummySet) == null;
-        }
-
-        @Override
-        public Set<? extends AbstractRecordAndOffset> put(String readName, Set<? extends AbstractRecordAndOffset> recordsAndOffsetsForName) {
-            return readNames.put(readName, recordsAndOffsetsForName);
-        }
-
-        @Override
-        public Set<? extends AbstractRecordAndOffset> get(String readName) {
-            return readNames.get(readName);
-        }
-
-        @Override
-        public Set<? extends AbstractRecordAndOffset> remove(String readName) {
-            return readNames.remove(readName);
-        }
-
-        @Override
-        public int size() {
-            return readNames.size();
-        }
-
-        @Override
-        public void clear() {
-            readNames.clear();
-        }
     }
 }

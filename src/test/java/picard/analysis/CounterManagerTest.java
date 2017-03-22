@@ -24,16 +24,16 @@ public class CounterManagerTest {
         testCounter = testCounterManager.newCounter();
 
         for (int i = 0; i < arrayLength; i++) {
-            testCounter.inc(i + OFFSET);
-            secondCounter.inc(i + OFFSET);
+            testCounter.increment(i + OFFSET);
+            secondCounter.increment(i + OFFSET);
         }
-        testCounter.inc(OFFSET);
-        secondCounter.inc(OFFSET);
+        testCounter.increment(OFFSET);
+        secondCounter.increment(OFFSET);
     }
 
     @Test
     public void testCounterInc() {
-        Assert.assertEquals(2, testCounter.get(OFFSET), "Test method inc:");
+        Assert.assertEquals(2, testCounter.get(OFFSET), "Test method increment:");
     }
 
     @Test
@@ -72,7 +72,7 @@ public class CounterManagerTest {
         testCounterManager.setOffset(0);
         CounterManager.Counter counter = testCounterManager.newCounter();
         for (int i=0; i<10; i++){
-            counter.inc(1);
+            counter.increment(1);
         }
         int[] testArray = new int[arrayLength];
         for (int i = 0; i< arrayLength; i++){
@@ -85,7 +85,7 @@ public class CounterManagerTest {
 
     @Test(expectedExceptions = IndexOutOfBoundsException.class)
     public void testForWrongIndexInInc(){
-        testCounter.inc(40);
+        testCounter.increment(40);
     }
 
     @Test(expectedExceptions = IndexOutOfBoundsException.class)

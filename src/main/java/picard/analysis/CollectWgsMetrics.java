@@ -47,10 +47,8 @@ import picard.util.MathUtil;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.LongStream;
 
 import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
@@ -582,11 +580,11 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     }
 
     /**
-     * Creates <code>AbstractLocusIterator</code> implementation according to <code>USE_FAST_ALGORITHM</code> value.
+     * Creates {@link htsjdk.samtools.util.AbstractLocusIterator} implementation according to {@link this#USE_FAST_ALGORITHM} value.
      *
-     * @param in inner <code>SAMReader</code>
-     * @return if <code>USE_FAST_ALGORITHM</code> is enabled, returns <code>EdgeReadIterator</code> implementation,
-     * otherwise default algorithm is used and <code>SamLocusIterator</code> is returned.
+     * @param in inner {@link htsjdk.samtools.SamReader}
+     * @return if {@link this#USE_FAST_ALGORITHM} is enabled, returns {@link htsjdk.samtools.util.EdgeReadIterator} implementation,
+     * otherwise default algorithm is used and {@link htsjdk.samtools.util.SamLocusIterator} is returned.
      */
     protected AbstractLocusIterator getLocusIterator(final SamReader in) {
         if (USE_FAST_ALGORITHM) {
@@ -600,12 +598,12 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     }
 
     /**
-     * Creates <code>AbstractWgsMetricsCollector</code> implementation according to <code>USE_FAST_ALGORITHM</code> value.
+     * Creates {@link picard.analysis.AbstractWgsMetricsCollector} implementation according to {@link this#USE_FAST_ALGORITHM} value.
      *
      * @param coverageCap the maximum depth/coverage to consider.
      * @param intervals the intervals over which metrics are collected.
-     * @return if <code>USE_FAST_ALGORITHM</code> is enabled, returns <code>FastWgsMetricsCollector</code> implementation,
-     * otherwise default algorithm is used and <code>WgsMetricsCollector</code> is returned.
+     * @return if {@link this#USE_FAST_ALGORITHM} is enabled, returns {@link picard.analysis.FastWgsMetricsCollector} implementation,
+     * otherwise default algorithm is used and {@link picard.analysis.CollectWgsMetrics.WgsMetricsCollector} is returned.
      */
     protected AbstractWgsMetricsCollector getCollector(final int coverageCap, final IntervalList intervals) {
         return USE_FAST_ALGORITHM ? new FastWgsMetricsCollector(this, coverageCap, intervals) :

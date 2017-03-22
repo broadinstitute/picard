@@ -27,8 +27,11 @@ package picard.analysis;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.*;
-import picard.PicardException;
+import htsjdk.samtools.util.AbstractLocusInfo;
+import htsjdk.samtools.util.AbstractLocusIterator;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.Log;
 import picard.filter.CountingFilter;
 import picard.filter.CountingPairedFilter;
 
@@ -36,7 +39,7 @@ import java.util.Arrays;
 import java.util.stream.LongStream;
 
 /**
- * Implementation of <code>WgsMetricsProcessor</code> that gets input data from a given iterator
+ * Implementation of {@link picard.analysis.WgsMetricsProcessor} that gets input data from a given iterator
  * and processes it with a help of collector
  * @author Mariia_Zueva@epam.com, EPAM Systems, Inc. <www.epam.com>
  */
@@ -61,9 +64,9 @@ public class WgsMetricsProcessorImpl<T extends AbstractRecordAndOffset> implemen
     private final Log log = Log.getInstance(WgsMetricsProcessorImpl.class);
 
     /**
-     * @param iterator  input <code>AbstractLocusIterator</code>
+     * @param iterator  input {@link htsjdk.samtools.util.AbstractLocusIterator}
      * @param refWalker over processed reference file
-     * @param collector input <code>AbstractWgsMetricsCollector</code>
+     * @param collector input {@link picard.analysis.AbstractWgsMetricsCollector}
      * @param progress  logger
      */
     public WgsMetricsProcessorImpl(AbstractLocusIterator<T, AbstractLocusInfo<T>> iterator,
@@ -99,7 +102,7 @@ public class WgsMetricsProcessorImpl<T extends AbstractRecordAndOffset> implemen
             collector.setCounter(counter);
         }
         // check that we added the same number of bases to the raw coverage histogram and the base quality histograms
-        final long sumBaseQ= Arrays.stream(collector.unfilteredBaseQHistogramArray).sum();
+        final long sumBaseQ = Arrays.stream(collector.unfilteredBaseQHistogramArray).sum();
         final long sumDepthHisto = LongStream.rangeClosed(0, collector.coverageCap).map(i -> (i * collector.unfilteredDepthHistogramArray[(int) i])).sum();
         if (sumBaseQ != sumDepthHisto) {
             log.error("Coverage and baseQ distributions contain different amount of bases!");

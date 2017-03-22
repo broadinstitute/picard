@@ -26,22 +26,25 @@ package picard.analysis;
 
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.AbstractLocusInfo;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
 import htsjdk.samtools.util.EdgingRecordAndOffset;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SequenceUtil;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.HashMap;
 
 /**
  * Class represents fast algorithm for collecting data from <code>AbstractLocusInfo</code>
- * with a list of aligned <code>EdgingRecordAndOffset</code> objects. According to the algorithm
- * we receive only two <code>EdgingRecordAndOffset</code> objects for each alignment block of a read:
- * one for the start of block and one for the end. When meeting a <code>EdgingRecordAndOffset</code>
- * with type <code>BEGIN</code>, all information from the alignment block is accumulated in the collector,
+ * with a list of aligned {@link htsjdk.samtools.util.EdgingRecordAndOffset} objects. According to the algorithm
+ * we receive only two {@link htsjdk.samtools.util.EdgingRecordAndOffset} objects for each alignment block of a read:
+ * one for the start of block and one for the end. When meeting a {@link htsjdk.samtools.util.EdgingRecordAndOffset}
+ * with type {@link htsjdk.samtools.util.EdgingRecordAndOffset.Type#BEGIN}, all information from the alignment block is accumulated in the collector,
  * read name is added to a map holding the names of processed reads for detecting overlapping positions.
- * When meeting a <code>EdgingRecordAndOffset</code> with type <code>END</code>,
+ * When meeting a {@link htsjdk.samtools.util.EdgingRecordAndOffset} with type {@link htsjdk.samtools.util.EdgingRecordAndOffset.Type#END},
  * the read name is removed from the map with names of processed reads.
  * @author Mariia_Zueva@epam.com, EPAM Systems, Inc. <www.epam.com>
  */
@@ -54,7 +57,7 @@ public class FastWgsMetricsCollector extends AbstractWgsMetricsCollector<EdgingR
     private int previousSequenceIndex;
 
     /**
-     * Manager for <code>pileupSize</code> Counter.
+     * Manager for {@link this#pileupSize} Counter.
      */
     private final CounterManager counterManager;
     /**
@@ -70,11 +73,11 @@ public class FastWgsMetricsCollector extends AbstractWgsMetricsCollector<EdgingR
     /**
      * Map, holding information on currently processed reads, that possibly have overlapping regions.
      */
-    private ReadNamesCollection readsNames;
+    private Map<String, Set<? extends AbstractRecordAndOffset>> readsNames;
 
     /**
-     * Determines the size of created <code>Counter</code> objects. The bigger <code>Counter</code> objects
-     * are created, the less rebasing in <code>Counter</code> will occur.
+     * Determines the size of created {@link picard.analysis.CounterManager.Counter} objects. The bigger {@link picard.analysis.CounterManager.Counter} objects
+     * are created, the less rebasing in {@link picard.analysis.CounterManager.Counter} will occur.
      */
     private final int ARRAY_SIZE_PER_READ_LENGTH = 2000;
 
@@ -133,7 +136,7 @@ public class FastWgsMetricsCollector extends AbstractWgsMetricsCollector<EdgingR
             } else {
                 if (unfilteredDepthSize.get(index) < coverageCap) {
                     unfilteredBaseQHistogramArray[quality]++;
-                    unfilteredDepthSize.inc(index);
+                    unfilteredDepthSize.increment(index);
                 }
                 if (quality < collectWgsMetrics.MINIMUM_BASE_QUALITY || SequenceUtil.isNoCall(bases[i + record.getOffset()])){
                     basesExcludedByBaseq++;
@@ -142,7 +145,7 @@ public class FastWgsMetricsCollector extends AbstractWgsMetricsCollector<EdgingR
                     if (recordsAndOffsetsForName.size() - bsq > 0) {
                         basesExcludedByOverlap++;
                     } else {
-                        pileupSize.inc(index);
+                        pileupSize.increment(index);
                     }
                 }
             }
@@ -162,14 +165,14 @@ public class FastWgsMetricsCollector extends AbstractWgsMetricsCollector<EdgingR
     }
 
     /**
-     * Prepares the accumulator objects to process a new <code>AbstractLocusInfo</code>.
+     * Prepares the accumulator objects to process a new {@link htsjdk.samtools.util.AbstractLocusInfo}.
      * If we switch to a new sequence, all accumulators are cleared.
      *
-     * @param info the next <code>AbstractLocusInfo</code> to process
+     * @param info the next {@link htsjdk.samtools.util.AbstractLocusInfo} to process
      */
     private void prepareCollector(AbstractLocusInfo<EdgingRecordAndOffset> info) {
         if (readsNames == null) {
-            readsNames = collectionFactory.createCollection();
+            readsNames = new HashMap<>();
         }
         if (previousSequenceIndex != info.getSequenceIndex()) {
             readsNames.clear();

@@ -11,7 +11,10 @@ import htsjdk.samtools.util.EdgingRecordAndOffset;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
-import static picard.analysis.CollectWgsMetricsTestUtils.*;
+import static picard.analysis.CollectWgsMetricsTestUtils.createIntervalList;
+import static picard.analysis.CollectWgsMetricsTestUtils.createReadEndsIterator;
+import static picard.analysis.CollectWgsMetricsTestUtils.exampleSamTwoReads;
+
 
 public class FastWgsMetricsCollectorTest {
     private byte[] highQualities = {30, 30, 30 ,30, 30, 30, 30, 30, 30, 30, 50, 50, 50 ,50, 50, 50, 50, 50, 50, 60, 60, 60, 70 ,70, 70, 80, 80, 90, 90, 90};
