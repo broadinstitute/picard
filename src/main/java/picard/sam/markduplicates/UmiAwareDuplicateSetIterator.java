@@ -38,10 +38,13 @@ import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.DuplicateSetIterator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.Histogram;
 import picard.PicardException;
 import picard.sam.UmiMetrics;
 
 import java.util.*;
+
+import static htsjdk.samtools.util.StringUtil.hammingDistance;
 
 /**
  * UmiAwareDuplicateSetIterator is an iterator that wraps a duplicate set iterator
@@ -59,7 +62,9 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
     private boolean isOpen = false;
     private UmiMetrics metrics;
     private boolean haveWeSeenFirstRead = false;
-    private double expectedCollisions = 0;
+    private Histogram<String> observedUmis = new Histogram<>();
+    private Histogram<String> inferredUmis = new Histogram<>();
+    private long observedUmiBases = 0;
 
     /**
      * Creates a UMI aware duplicate set iterator
@@ -88,7 +93,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
         wrappedIterator.close();
 
         if (metrics.UMI_LENGTH > 0) {
-            metrics.calculateDerivedFields();
+            metrics.calculateDerivedFields(observedUmis, inferredUmis, observedUmiBases);
         }
     }
 
@@ -151,11 +156,17 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
                             throw new PicardException("UMIs of differing lengths were found.");
                         }
                     }
-                    metrics.updateUmiRecordMetrics(currentUmi, inferredUmi);
+//                    metrics.updateUmiRecordMetrics(currentUmi, inferredUmi);
+                    metrics.OBSERVED_BASE_ERRORS += hammingDistance(currentUmi, inferredUmi);
+                    observedUmiBases += currentUmi.length();
+                    observedUmis.increment(currentUmi);
+                    inferredUmis.increment(inferredUmi);
                 }
             }
         }
-        metrics.updateDuplicateSetMetrics(maxEditDistanceToJoin, duplicateSets.size());
+
+        metrics.DUPLICATE_SETS_WITH_UMI += duplicateSets.size();
+        metrics.DUPLICATE_SETS_WITHOUT_UMI++;
 
         nextSetsIterator = duplicateSets.iterator();
     }

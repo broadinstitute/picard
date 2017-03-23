@@ -26,6 +26,7 @@ package picard.sam.markduplicates;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import htsjdk.samtools.util.QualityUtil;
 import picard.PicardException;
 import picard.sam.UmiMetrics;
 
@@ -174,15 +175,11 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
         // effectiveLength4_1 is the effective UMI length observing 5 UMIs where 3 are the same and the other two are
         // unique
         double effectiveLength3_1_1 = -(3./5.)*Math.log(3./5.)/Math.log(4.) -2*(1./5.)*Math.log(1./5.)/Math.log(4.);
-        // estimatedBaseQualityk_n is the phred scaled base quality score where k of n bases are incorrect
-        double estimatedBaseQuality1_20 = -10*Math.log10(1./20.);
-        double estimatedBaseQuality3_20 = -10*Math.log10(3./20.);
 
-        // expectedCollisionsi_j_k where edit distance to join is i, duplicate sets is k and UMI length is k.
-        double expectedCollisions1_2_4 = 13./64.;
-        double expectedCollisions0_16_2 = (1. - Math.pow(1. - 1./16., 15))*16.*2.;
-        double collisionQ1_2_4 = -10*Math.log10(expectedCollisions1_2_4/2.0);
-        double collisionQ0_16_2 = -10*Math.log10(expectedCollisions0_16_2/16.0);
+        // estimatedBaseQualityk_n is the phred scaled base quality score where k of n bases are incorrect
+        double estimatedBaseQuality1_20 = QualityUtil.getPhredScoreFromErrorProbability(1./20.);
+        double estimatedBaseQuality3_20 = QualityUtil.getPhredScoreFromErrorProbability(3./20.);
+
         return new Object[][]{{
                 // Test basic error correction using edit distance of 1
                 Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAT"}), // Observed UMI
@@ -197,9 +194,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                                4,                        // DUPLICATE_SETS_WITH_UMI
                                effectiveLength4_1,       // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
                                effectiveLength3_1_1,     // EFECTIVE_LENGTH_OF_OBSERVED_UMIS
-                               estimatedBaseQuality1_20, // ESTIMATED_BASE_QUALITY_OF_UMIS
-                               expectedCollisions1_2_4,  // EXPECTED_READS_WITH_UMI_COLLISION
-                               collisionQ1_2_4)          // UMI_COLLISION_Q
+                               estimatedBaseQuality1_20) // ESTIMATED_BASE_QUALITY_OF_UMIS
         }, {
                 // Test basic error correction using edit distance of 2
                 Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAT"}),
@@ -214,9 +209,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                                2,                        // DUPLICATE_SETS_WITH_UMI
                                0.0,                      // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
                                effectiveLength3_1_1,     // EFECTIVE_LENGTH_OF_OBSERVED_UMIS
-                               estimatedBaseQuality3_20, // ESTIMATED_BASE_QUALITY_OF_UMIS
-                               0,                        // EXPECTED_READS_WITH_UMI_COLLISION
-                               Double.NaN)               // UMI_COLLISION_Q
+                               estimatedBaseQuality3_20) // ESTIMATED_BASE_QUALITY_OF_UMIS
         }, {
                 // Test maximum entropy (EFFECTIVE_LENGTH_OF_INFERRED_UMIS)
                 Arrays.asList(new String[]{"AA", "AT", "AC", "AG", "TA", "TT", "TC", "TG", "CA", "CT", "CC", "CG", "GA", "GT", "GC", "GG"}),
@@ -231,9 +224,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                                16,                        // DUPLICATE_SETS_WITH_UMI
                                2.0,                       // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
                                2,                         // EFECTIVE_LENGTH_OF_OBSERVED_UMIS
-                               Double.NaN,                // ESTIMATED_BASE_QUALITY_OF_UMIS
-                               expectedCollisions0_16_2,  // EXPECTED_READS_WITH_UMI_COLLISION
-                               collisionQ0_16_2)          // UMI_COLLISION_Q
+                               -1)                        // ESTIMATED_BASE_QUALITY_OF_UMIS
         }};
     }
 
