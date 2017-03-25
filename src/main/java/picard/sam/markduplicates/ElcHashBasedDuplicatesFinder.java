@@ -40,13 +40,29 @@ import static picard.sam.markduplicates.EstimateLibraryComplexity.PairedReadSequ
  */
 class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
 
-    // We split each read on several parts and each part has length hashLength.
-    // hashLength = (min read length) / (number of errors + 1)
-    private int hashLength = Integer.MAX_VALUE;
+    // We split the bases of each read into interspersed parts, so that each part spans the entire length of the read.
+    // e.g. breaking a read of length 12 into 4 parts would be as follows:
+    // f. i.:
+    // 1 2 3 4 1 2 3 4 1 2 3 4
+    // A C A T T A C G G A T T
+
+    // number of parts we split reads in
+    // -1 because we want to find biggest number of hashes in this group
+    // calculated formula : ((minReadLength - minIdenticalBases) * maxDiffRate) + 1
+    // when minReadLength = Math.min(Math.min(prs.read1.length, prs.read2.length), maxReadLength)
+    private int numberOfHashesInGroup = -1;
+
+    // minimal read length in group, this variable necessary for splitting reads on part,
+    // see EstimateLibraryComplexity.PairedReadSequence.getHashes()
+    // initial value Integer.MAX_VALUE
+    private int minReadLenInGroup = Integer.MAX_VALUE;
+
+    private final Map<Integer, List<PairedReadSequence>> readsByHashInGroup;
 
     ElcHashBasedDuplicatesFinder(double maxDiffRate, int maxReadLength, int minIdenticalBases,
                                  OpticalDuplicateFinder opticalDuplicateFinder) {
         super(maxDiffRate, maxReadLength, minIdenticalBases, opticalDuplicateFinder);
+        readsByHashInGroup = new HashMap<>();
     }
 
     @Override
@@ -58,23 +74,34 @@ class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
         populateDupCandidates(sequences);
 
         //Duplicate set to filter the treated PairedReadSequences out
-        Set<PairedReadSequence> dupSet = new HashSet<>();
+        final Set<PairedReadSequence> dupSet = new HashSet<>();
+
         for (PairedReadSequence lhs : sequences) {
             if (dupSet.contains(lhs)) continue;
-
             final List<PairedReadSequence> dupes = new ArrayList<>();
-
-            for (PairedReadSequence rhs : lhs.dupCandidates) {
+            for (PairedReadSequence rhs : getSimilarReads(lhs)) {
                 if (dupSet.contains(rhs)) continue;
-
                 if (isDuplicate(lhs, rhs)) {
                     dupes.add(rhs);
                 }
             }
-
             dupSet.addAll(dupes);
             fillHistogram(duplicationHisto, opticalHisto, lhs, dupes);
         }
+    }
+
+    private Set<PairedReadSequence> getSimilarReads(final PairedReadSequence pattern) {
+        final Set<PairedReadSequence> toCheck = new HashSet<>();
+        for (int[] hashesForRead: new int[][]{pattern.hashes1, pattern.hashes2}) {
+            for (int hash : hashesForRead) {
+                List<PairedReadSequence> readsWithSameHash = readsByHashInGroup.get(hash);
+                // if size == 1, then this list contains only pattern read
+                if (readsWithSameHash.size() > 1) {
+                    toCheck.addAll(readsWithSameHash);
+                }
+            }
+        }
+        return toCheck;
     }
 
     /**
@@ -83,29 +110,18 @@ class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
      */
     private void populateDupCandidates(List<PairedReadSequence> seqs) {
         // Contains hash value as a key and PairedReadSequences match this key as a value
-        Map<Integer, List<PairedReadSequence>> readsByHash = new HashMap<>();
+        readsByHashInGroup.clear();
 
-        // Iterate over all PairedReadSequence and split in sets according to the hash value 
+        // Iterate over all PairedReadSequence and split in sets according to the hash value
         // in a certain position
         for (PairedReadSequence prs : seqs) {
             int[][] readHashValues = {prs.hashes1, prs.hashes2};
             for (int[] readHashValue : readHashValues) {
                 for (int key : readHashValue) {
-                    List<PairedReadSequence> dupCandidates = readsByHash.get(key);
-
-                    if (dupCandidates == null) {
-                        dupCandidates = new ArrayList<>();
-                        readsByHash.put(key, dupCandidates);
-                    }
+                    final List<PairedReadSequence> dupCandidates
+                            = readsByHashInGroup.computeIfAbsent(key, k -> new ArrayList<>());
                     dupCandidates.add(prs);
                 }
-            }
-        }
-
-        // Fill for each PairedReadSequence a set of possible duplicates
-        for (List<PairedReadSequence> dupCandidates : readsByHash.values()) {
-            for (PairedReadSequence prs : dupCandidates) {
-                prs.dupCandidates.addAll(dupCandidates);
             }
         }
     }
@@ -115,35 +131,28 @@ class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
      */
     private void fillHashValues(List<PairedReadSequence> sequences) {
         for (PairedReadSequence prs : sequences) {
-            prs.initHashes(maxReadLength, hashLength, minIdenticalBases);
+            prs.initHashes(numberOfHashesInGroup, minIdenticalBases, minReadLenInGroup);
         }
     }
 
     /**
-     * Calculate hash length based on minReadLength and hashNumber
+     * Calculate hash length based on minReadLength and numberOfHashesInGroup
      */
     private void initHashLength(List<PairedReadSequence> sequences) {
-        if (sequences == null || sequences.isEmpty()) {
-            return;
-        }
         for (PairedReadSequence prs : sequences) {
-            int minReadLength = Math.min(
-                    Math.min(prs.read1.length, prs.read2.length) - minIdenticalBases,
-                    maxReadLength - minIdenticalBases
-            );
+            int minReadLength = Math.min(Math.min(prs.read1.length, prs.read2.length), maxReadLength);
 
-            //if read.length % shingle.length != 0, we have tail of the read which is not included in the hashValues,
-            // and we need extra hash value to get prs.hashValues.length = (number of errors) + 1
-            int hashNumber = (int) (minReadLength * maxDiffRate) + 1;
-            int currentHashLength = minReadLength / hashNumber;
-            if (hashLength > currentHashLength) {
-                hashLength = currentHashLength;
+            //search maximum number of hashes (if length of reads is similar number of hashes will be similar too)
+            int numberOfHashes = (int) ((minReadLength - minIdenticalBases) * maxDiffRate) + 1;
+            if (numberOfHashes > numberOfHashesInGroup) {
+                numberOfHashesInGroup = numberOfHashes;
+            }
+
+            //search minimum length of read for calculating hashes value
+            if (minReadLenInGroup > minReadLength) {
+                minReadLenInGroup = minReadLength;
             }
         }
-    }
-
-    private int getReadOffset(int k) {
-        return k * hashLength + minIdenticalBases;
     }
 
     private boolean isDuplicate(final PairedReadSequence lhs, final PairedReadSequence rhs) {
@@ -174,26 +183,24 @@ class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
 
         return errors <= maxErrors;
     }
-
     /**
      * Compare hashes and if they are similar we compare bases corresponding to the hashes.
      */
     private int compareReadToRead(byte[] read1, int[] hashes1, byte[] read2, int[] hashes2, int maxErrors) {
         int errors = 0;
         final int minReadLength = minLength(read1, read2);
-        int minHashesLength = Math.min(hashes1.length, hashes2.length);
 
-        for (int k = 0; k < minHashesLength; ++k) {
-            if (hashes1[k] != hashes2[k]) {
-                errors += compareHashes(read1, read2, getReadOffset(k), getReadOffset((k + 1)));
+        for (int hashNumber = 0; hashNumber < numberOfHashesInGroup; ++hashNumber) {
+            if (hashes1[hashNumber] != hashes2[hashNumber]) {
+                errors += compareHashes(read1, read2, hashNumber);
                 if (errors > maxErrors) {
                     return errors;
                 }
             }
         }
 
-        if (minReadLength > getReadOffset(minHashesLength)) {
-            errors += compareHashes(read1, read2, getReadOffset(minHashesLength), minReadLength);
+        if (minReadLength > minReadLenInGroup) {
+            errors += compareTails(read1, read2, minReadLenInGroup, minReadLength);
         }
 
         return errors;
@@ -204,7 +211,26 @@ class ElcHashBasedDuplicatesFinder extends ElcDuplicatesFinder {
      *
      * @return errors number for current part of the read
      */
-    private int compareHashes(byte[] read1, byte[] read2, int start, int stop) {
+    private int compareHashes(byte[] read1, byte[] read2, int hashNumber) {
+        int errors = 0;
+        //shift position corresponding to hash we inspect
+        int position = minIdenticalBases + hashNumber;
+        while (position < minReadLenInGroup) {
+            if (read1[position] != read2[position]) {
+                errors++;
+            }
+            // shift position to next base in the hash
+            position += numberOfHashesInGroup;
+        }
+        return errors;
+    }
+
+    /**
+     * Compare bases corresponding to the hashes.
+     *
+     * @return errors number for current part of the read
+     */
+    private int compareTails(byte[] read1, byte[] read2, int start, int stop) {
         int errors = 0;
         for (int i = start; i < stop; ++i) {
             if (read1[i] != read2[i]) {

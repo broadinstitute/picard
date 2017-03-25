@@ -190,9 +190,6 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         int[] hashes1;
         int[] hashes2;
 
-        // Possible candidates for this PairedReadSequence
-        Set<PairedReadSequence> dupCandidates;
-
         public static int getSizeInBytes() {
             // rough guess at memory footprint, summary size of all fields
             return 16 + 4 + (2 * 4) + 1 + 2 * (24 + 8 + NUMBER_BASES_IN_READ) + 2 + (2 * (24 + 8)) + 8 + 4;
@@ -210,26 +207,31 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
             return new PairedReadCodec();
         }
 
-        void initHashes(int maxReadLength, int hashLength, int skippedBases) {
-            dupCandidates = new HashSet<>();
-            hashes1 = getHashes(read1, maxReadLength, hashLength, skippedBases);
-            hashes2 = getHashes(read2, maxReadLength, hashLength, skippedBases);
+        void initHashes(int numberOfHashes, int skippedBases, int minReadLength) {
+            hashes1 = getHashes(read1, numberOfHashes, skippedBases, minReadLength);
+            hashes2 = getHashes(read2, numberOfHashes, skippedBases, minReadLength);
         }
 
-        // Split read by (MAX_DIFF_RATE * read.length + 1) parts and hash each part
-        private int[] getHashes(byte[] read, int maxReadLength, int hashLength, int skippedBases) {
-            int maxLengthWithoutHead = maxReadLength - skippedBases;
-            int hashNum = (Math.min(read.length - skippedBases, maxLengthWithoutHead)) /
-                    hashLength;
-            int[] hashValues = new int[hashNum];
-            for (int i = 0; i < hashNum; ++i) {
-                int st = skippedBases + i * hashLength;
-                int end = st + hashLength;
-
-                // use custom hash to avoid using System.arraycopy
+        // Split read by numberOfHashes parts and hash each part
+        // For instance:
+        //        0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
+        // read = A C G T A C G T A C G  T  A  C  G  T  A  C  G  T
+        // numberOfHashes = 5
+        // skippedBases = 1
+        // minReadLength = 15
+        // So, method returns hashValues with 5 hash value
+        // first value calculated from read[1], read[6], read[11]
+        // second value calculated from read[2], read[7], read[12]
+        // etc.
+        // chars from 16 to 19 position is a tail, see compareTails() in ElcHashBasedDuplicatesFinder
+        private int[] getHashes(byte[] read, int numberOfHashes, int skippedBases, int minReadLength) {
+            final int[] hashValues = new int[numberOfHashes];
+            for (int i = 0; i < numberOfHashes; ++i) {
                 hashValues[i] = 1;
-                for (int j = st; j < end; ++j) {
-                    hashValues[i] = 31 * hashValues[i] + read[j];
+                int position = skippedBases + i;
+                while (position < minReadLength) {
+                    hashValues[i] = 31 * hashValues[i] + read[position];
+                    position += numberOfHashes;
                 }
             }
             return hashValues;
