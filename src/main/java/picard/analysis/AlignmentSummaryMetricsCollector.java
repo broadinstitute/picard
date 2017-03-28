@@ -298,28 +298,20 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
                         for (int i=0; i<length && refIndex+i<refLength; ++i) {
                             final int readBaseIndex = readIndex + i;
-                            boolean mismatch = !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex+i]);
-                            boolean bisulfiteBase = false;
-                            if (mismatch && isBisulfiteSequenced &&
-                                    record.getReadNegativeStrandFlag() &&
-                                    (refBases[refIndex + i] == 'G' || refBases[refIndex + i] == 'g') &&
-                                    (readBases[readBaseIndex] == 'A' || readBases[readBaseIndex] == 'a')
-                                    || ((!record.getReadNegativeStrandFlag()) &&
-                                    (refBases[refIndex + i] == 'C' || refBases[refIndex + i] == 'c') &&
-                                    (readBases[readBaseIndex] == 'T') || readBases[readBaseIndex] == 't')) {
+                            boolean mismatch = !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex + i]);
+                            final boolean biSulfateMatch = isBisulfiteSequenced && SequenceUtil.bisulfiteBasesEqual(record.getReadNegativeStrandFlag(), readBases[readBaseIndex], refBases[readBaseIndex]);
 
-                                bisulfiteBase = true;
-                                mismatch = false;
-                            }
+                            final boolean biSulfiteBase = mismatch && biSulfateMatch;
+                            mismatch = mismatch && !biSulfateMatch;
 
-                            if(mismatch) mismatchCount++;
+                            if (mismatch) mismatchCount++;
 
                             metrics.PF_ALIGNED_BASES++;
-                            if(!bisulfiteBase) nonBisulfiteAlignedBases++;
+                            if (!biSulfiteBase) nonBisulfiteAlignedBases++;
 
                             if (highQualityMapping) {
                                 metrics.PF_HQ_ALIGNED_BASES++;
-                                if (!bisulfiteBase) hqNonBisulfiteAlignedBases++;
+                                if (!biSulfiteBase) hqNonBisulfiteAlignedBases++;
                                 if (qualities[readBaseIndex] >= BASE_QUALITY_THRESHOLD) metrics.PF_HQ_ALIGNED_Q20_BASES++;
                                 if (mismatch) hqMismatchCount++;
                             }
