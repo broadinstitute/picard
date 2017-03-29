@@ -38,9 +38,7 @@ import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.DuplicateSetIterator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.Histogram;
 import picard.PicardException;
-import picard.sam.UmiMetrics;
 
 import java.util.*;
 
@@ -62,8 +60,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
     private boolean isOpen = false;
     private UmiMetrics metrics;
     private boolean haveWeSeenFirstRead = false;
-    private Histogram<String> observedUmis = new Histogram<>();
-    private Histogram<String> inferredUmis = new Histogram<>();
+
     private long observedUmiBases = 0;
 
     /**
@@ -93,7 +90,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
         wrappedIterator.close();
 
         if (metrics.UMI_LENGTH > 0) {
-            metrics.calculateDerivedFields(observedUmis, inferredUmis, observedUmiBases);
+            metrics.calculateDerivedFields(observedUmiBases);
         }
     }
 
@@ -156,17 +153,19 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
                             throw new PicardException("UMIs of differing lengths were found.");
                         }
                     }
-//                    metrics.updateUmiRecordMetrics(currentUmi, inferredUmi);
+
+                    // Update UMI metrics associated with each record
                     metrics.OBSERVED_BASE_ERRORS += hammingDistance(currentUmi, inferredUmi);
                     observedUmiBases += currentUmi.length();
-                    observedUmis.increment(currentUmi);
-                    inferredUmis.increment(inferredUmi);
+                    metrics.observedUmis.increment(currentUmi);
+                    metrics.inferredUmis.increment(inferredUmi);
                 }
             }
         }
 
+        // Update UMI metrics associated with each duplicate set
         metrics.DUPLICATE_SETS_WITH_UMI += duplicateSets.size();
-        metrics.DUPLICATE_SETS_WITHOUT_UMI++;
+        metrics.DUPLICATE_SETS_IGNORING_UMI++;
 
         nextSetsIterator = duplicateSets.iterator();
     }

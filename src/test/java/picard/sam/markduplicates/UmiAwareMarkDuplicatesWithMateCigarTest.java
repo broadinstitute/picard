@@ -28,7 +28,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import htsjdk.samtools.util.QualityUtil;
 import picard.PicardException;
-import picard.sam.UmiMetrics;
 
 import java.util.*;
 

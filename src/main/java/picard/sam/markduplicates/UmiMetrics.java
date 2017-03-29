@@ -22,20 +22,22 @@
  * THE SOFTWARE.
  */
 
-package picard.sam;
+package picard.sam.markduplicates;
 
 import java.util.stream.Collectors;
-import com.google.common.math.LongMath;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.QualityUtil;
-import static htsjdk.samtools.util.StringUtil.hammingDistance;
+import picard.util.MathUtil;
 
 /**
  * Metrics that are calculated during the process of marking duplicates
  * within a stream of SAMRecords using the UmiAwareDuplicateSetIterator.
  */
 public class UmiMetrics extends MetricBase {
+    Histogram<String> observedUmis = new Histogram<>();
+    Histogram<String> inferredUmis = new Histogram<>();
+
     /** Number of bases in each UMI */
     public int UMI_LENGTH;
 
@@ -49,7 +51,7 @@ public class UmiMetrics extends MetricBase {
     public long OBSERVED_BASE_ERRORS = 0;
 
     /** Number of duplicate sets found before taking UMIs into account */
-    public long DUPLICATE_SETS_WITHOUT_UMI = 0;
+    public long DUPLICATE_SETS_IGNORING_UMI = 0;
 
     /** Number of duplicate sets found after taking UMIs into account */
     public long DUPLICATE_SETS_WITH_UMI = 0;
@@ -82,14 +84,14 @@ public class UmiMetrics extends MetricBase {
         OBSERVED_UNIQUE_UMIS = observedUniqueUmis;
         INFERRED_UNIQUE_UMIS = inferredUniqueUmis;
         OBSERVED_BASE_ERRORS = observedBaseErrors;
-        DUPLICATE_SETS_WITHOUT_UMI = duplicateSetsWithoutUmi;
+        DUPLICATE_SETS_IGNORING_UMI = duplicateSetsWithoutUmi;
         DUPLICATE_SETS_WITH_UMI = duplicateSetsWithUmi;
         INFERRED_UMI_ENTROPY = effectiveLengthOfInferredUmis;
         OBSERVED_UMI_ENTROPY = effectiveLengthOfObservedUmis;
         UMI_BASE_QUALITIES = estimatedBaseQualityOfUmis;
     }
 
-    public void calculateDerivedFields(final Histogram<String> observedUmis, Histogram<String> inferredUmis, long observedUmiBases) {
+    public void calculateDerivedFields(long observedUmiBases) {
         OBSERVED_UNIQUE_UMIS = observedUmis.size();
         INFERRED_UNIQUE_UMIS = inferredUmis.size();
 
@@ -106,7 +108,7 @@ public class UmiMetrics extends MetricBase {
         // of the effective number of DNA bases.  If we used log(2.0)
         // our result would be in bits.
         double entropyBase4 = observations.values().stream().collect(Collectors.summingDouble(
-                v -> -v.getValue() / totalObservations * Math.log(v.getValue() / totalObservations))) / Math.log(4.0);
+                v -> -v.getValue() / totalObservations * Math.log(v.getValue() / totalObservations))) / MathUtil.LOG_4_BASE_E;
         return entropyBase4;
     }
 }

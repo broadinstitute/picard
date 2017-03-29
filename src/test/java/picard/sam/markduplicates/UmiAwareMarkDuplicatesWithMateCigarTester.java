@@ -30,7 +30,6 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
-import picard.sam.UmiMetrics;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -187,7 +186,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
             Assert.assertEquals(observedMetrics.OBSERVED_UNIQUE_UMIS, expectedMetrics.OBSERVED_UNIQUE_UMIS, "OBSERVED_UNIQUE_UMIS does not match expected");
             Assert.assertEquals(observedMetrics.INFERRED_UNIQUE_UMIS, expectedMetrics.INFERRED_UNIQUE_UMIS, "INFERRED_UNIQUE_UMIS does not match expected");
             Assert.assertEquals(observedMetrics.OBSERVED_BASE_ERRORS, expectedMetrics.OBSERVED_BASE_ERRORS, "OBSERVED_BASE_ERRORS does not match expected");
-            Assert.assertEquals(observedMetrics.DUPLICATE_SETS_WITHOUT_UMI, expectedMetrics.DUPLICATE_SETS_WITHOUT_UMI, "DUPLICATE_SETS_WITHOUT_UMI does not match expected");
+            Assert.assertEquals(observedMetrics.DUPLICATE_SETS_IGNORING_UMI, expectedMetrics.DUPLICATE_SETS_IGNORING_UMI, "DUPLICATE_SETS_WITHOUT_UMI does not match expected");
             Assert.assertEquals(observedMetrics.INFERRED_UMI_ENTROPY, expectedMetrics.INFERRED_UMI_ENTROPY, tolerance, "INFERRED_UMI_ENTROPY does not match expected");
             Assert.assertEquals(observedMetrics.OBSERVED_UMI_ENTROPY, expectedMetrics.OBSERVED_UMI_ENTROPY, tolerance, "OBSERVED_UMI_ENTROPY does not match expected");
             Assert.assertEquals(observedMetrics.UMI_BASE_QUALITIES, expectedMetrics.UMI_BASE_QUALITIES, tolerance, "UMI_BASE_QUALITIES does not match expected");
