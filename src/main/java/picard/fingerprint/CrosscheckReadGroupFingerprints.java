@@ -35,18 +35,20 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Fingerprinting;
-import picard.util.GraphUtils;
 
-import java.io.File;
-import java.io.OutputStreamWriter;
-import java.util.*;
+import java.io.*;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toSet;
-import static picard.fingerprint.CrosscheckMetric.FingerprintResult.*;
 import static picard.fingerprint.CrosscheckMetric.FingerprintResult;
+import static picard.fingerprint.CrosscheckMetric.FingerprintResult.*;
 
 /**
  * Program to check that all (read-)groups within the set of input files appear to come from the same
@@ -69,6 +71,11 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
             doc = "Optional output file to write metrics to. Default is to write to stdout.")
     public File OUTPUT;
+
+    @Option(shortName = "MO", optional = true,
+            doc = "Optional output file to write matrix of LOD scores to. This is less informative than the metrics output and only contains \"headling\" LOD score." +
+                    "It is however sometimes easier to use visually.")
+    public File MATRIX_OUTPUT=null;
 
     @Option(shortName="H", doc="The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
 	    "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
@@ -117,12 +124,17 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
     // the rate at which we expect a given genotype to change for an individual (exceedingly small)
     final static private double GENOTYPING_ERROR_RATE = 1e-6;
 
+    private double[][] crosscheckMatrix=null;
+    private final List<String> matrixKeys = new ArrayList<>();
+
     @Override
     protected int doWork() {
         // Check inputs
         INPUT.forEach(IOUtil::assertFileIsReadable);
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
         if (OUTPUT != null) IOUtil.assertFileIsWritable(OUTPUT);
+        if (MATRIX_OUTPUT != null) IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
+
 
         final HaplotypeMap map = new HaplotypeMap(HAPLOTYPE_MAP);
         final FingerprintChecker checker = new FingerprintChecker(map);
@@ -156,6 +168,10 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
             metricsFile.write(new OutputStreamWriter(System.out));
         }
 
+        if (MATRIX_OUTPUT != null) {
+            writeMatrix();
+        }
+
 
         if (numUnexpected > 0) {
             log.warn("At least two read groups did not relate as expected.");
@@ -163,6 +179,38 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
         } else {
             log.info("All read groups related as expected.");
             return 0;
+        }
+    }
+
+    private void writeMatrix() {
+
+        final NumberFormat format =  NumberFormat.getInstance();
+        format.setMaximumFractionDigits(4);
+
+        try (final OutputStream stream = new FileOutputStream(MATRIX_OUTPUT);
+             final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(stream))) {
+
+            // write the type by which the roll-up happened in the top left corner of the matrix
+            writer.write(CROSSCHECK_BY.name());
+
+            // write the nams of the keys as the first row
+            for (int i = 0; i < crosscheckMatrix.length; i++) {
+                writer.write('\t' + matrixKeys.get(i));
+            }
+            writer.newLine();
+
+
+            for (int i = 0; i < crosscheckMatrix.length; i++) {
+                // write the key in the first column
+                writer.write(matrixKeys.get(i));
+                // and then write all the values
+                for (int j = 0; j < crosscheckMatrix.length; j++) {
+                    writer.write('\t' + format.format(crosscheckMatrix[i][j]));
+                }
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -229,21 +277,29 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
 
                         }));
 
-        return crossCheckFingerprints(fingerprintsByGroup, type, metrics);
+        if (MATRIX_OUTPUT!=null) {
+           crosscheckMatrix = new double [fingerprintsByGroup.size()][];
+            for(int i =0 ; i< fingerprintsByGroup.size(); i++){
+                crosscheckMatrix[i] = new double[fingerprintsByGroup.size()];
+            }
+        }
+        return crossCheckFingerprints(fingerprintsByGroup, type, metrics, by);
     }
 
     /**
      * Method that pairwise checks every pair of read groups and reports a LOD score for the two read groups
      * coming from the same sample.
      */
-    private int crossCheckFingerprints(final Map<FingerprintIdDetails, Fingerprint> fingerprints, final CrosscheckMetric.DataType type, final List<CrosscheckMetric> metrics) {
+    private int crossCheckFingerprints(final Map<FingerprintIdDetails, Fingerprint> fingerprints, final CrosscheckMetric.DataType type, final List<CrosscheckMetric> metrics, Function<FingerprintIdDetails, String> by) {
         int unexpectedResults = 0;
 
         final List<FingerprintIdDetails> fingerprintIdDetails = new ArrayList<>(fingerprints.keySet());
 
         for (int i = 0; i < fingerprintIdDetails.size(); i++) {
             final FingerprintIdDetails lhsRg = fingerprintIdDetails.get(i);
-            for (int j = i + 1; j < fingerprintIdDetails.size(); j++) {
+            matrixKeys.add(by.apply(lhsRg));
+
+            for (int j = i ; j < fingerprintIdDetails.size(); j++) {
                 final FingerprintIdDetails rhsRg = fingerprintIdDetails.get(j);
                 final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsRg.sample.equals(rhsRg.sample);
 
@@ -255,6 +311,10 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
                     metrics.add(getMatchDetails(result, results, lhsRg, rhsRg, type));
                 }
                 if (result != INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
+                if (crosscheckMatrix != null) {
+                    crosscheckMatrix[i][j] = results.getLOD();
+                    crosscheckMatrix[j][i] = results.getLOD();
+                }
             }
         }
 

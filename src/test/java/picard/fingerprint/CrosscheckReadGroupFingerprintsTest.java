@@ -6,6 +6,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.util.TabbedTextFileWithHeaderParser;
 import picard.vcf.SamTestUtils;
 
 import java.io.File;
@@ -15,7 +16,6 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static picard.fingerprint.FingerprintIdDetails.multipleValuesString;
 
@@ -74,18 +74,18 @@ public class CrosscheckReadGroupFingerprintsTest {
     @DataProvider(name = "bamFilesRGs")
     public Object[][] bamFilesRGs() {
         return new Object[][] {
-                {NA12891_r1, NA12891_r2, false, 0, (NA12891_r1_RGs + NA12891_r2_RGs) * (NA12891_r1_RGs + NA12891_r2_RGs - 1) / 2},
-                {NA12891_r1, NA12892_r1, false, 0, (NA12891_r1_RGs + NA12892_r1_RGs) * (NA12891_r1_RGs + NA12892_r1_RGs - 1) / 2},
-                {NA12891_r1, NA12892_r2, false, 0, (NA12891_r1_RGs + NA12892_r2_RGs) * (NA12891_r1_RGs + NA12892_r2_RGs - 1) / 2},
-                {NA12892_r1, NA12892_r2, false, 0, (NA12892_r1_RGs + NA12892_r2_RGs) * (NA12892_r1_RGs + NA12892_r2_RGs - 1) / 2},
-                {NA12892_r2, NA12891_r2, false, 0, (NA12892_r2_RGs + NA12891_r2_RGs) * (NA12892_r2_RGs + NA12891_r2_RGs - 1) / 2},
-                {NA12892_r2, NA12891_r1, false, 0, (NA12892_r2_RGs + NA12891_r1_RGs) * (NA12892_r2_RGs + NA12891_r1_RGs - 1) / 2},
-                {NA12891_r1, NA12891_r2, true,  0, (NA12891_r1_RGs + NA12891_r2_RGs) * (NA12891_r1_RGs + NA12891_r2_RGs - 1) / 2},
-                {NA12891_r1, NA12892_r1, true,  1, (NA12891_r1_RGs + NA12892_r1_RGs) * (NA12891_r1_RGs + NA12892_r1_RGs - 1) / 2},
-                {NA12891_r1, NA12892_r2, true,  1, (NA12891_r1_RGs + NA12892_r2_RGs) * (NA12891_r1_RGs + NA12892_r2_RGs - 1) / 2},
-                {NA12892_r1, NA12892_r2, true,  0, (NA12892_r1_RGs + NA12892_r2_RGs) * (NA12892_r1_RGs + NA12892_r2_RGs - 1) / 2},
-                {NA12892_r2, NA12891_r2, true,  1, (NA12892_r2_RGs + NA12891_r2_RGs) * (NA12892_r2_RGs + NA12891_r2_RGs - 1) / 2},
-                {NA12892_r2, NA12891_r1, true,  1, (NA12892_r2_RGs + NA12891_r1_RGs) * (NA12892_r2_RGs + NA12891_r1_RGs - 1) / 2}
+                {NA12891_r1, NA12891_r2, false, 0, (NA12891_r1_RGs + NA12891_r2_RGs) * (NA12891_r1_RGs + NA12891_r2_RGs + 1) / 2},
+                {NA12891_r1, NA12892_r1, false, 0, (NA12891_r1_RGs + NA12892_r1_RGs) * (NA12891_r1_RGs + NA12892_r1_RGs + 1) / 2},
+                {NA12891_r1, NA12892_r2, false, 0, (NA12891_r1_RGs + NA12892_r2_RGs) * (NA12891_r1_RGs + NA12892_r2_RGs + 1) / 2},
+                {NA12892_r1, NA12892_r2, false, 0, (NA12892_r1_RGs + NA12892_r2_RGs) * (NA12892_r1_RGs + NA12892_r2_RGs + 1) / 2},
+                {NA12892_r2, NA12891_r2, false, 0, (NA12892_r2_RGs + NA12891_r2_RGs) * (NA12892_r2_RGs + NA12891_r2_RGs + 1) / 2},
+                {NA12892_r2, NA12891_r1, false, 0, (NA12892_r2_RGs + NA12891_r1_RGs) * (NA12892_r2_RGs + NA12891_r1_RGs + 1) / 2},
+                {NA12891_r1, NA12891_r2, true,  0, (NA12891_r1_RGs + NA12891_r2_RGs) * (NA12891_r1_RGs + NA12891_r2_RGs + 1) / 2},
+                {NA12891_r1, NA12892_r1, true,  1, (NA12891_r1_RGs + NA12892_r1_RGs) * (NA12891_r1_RGs + NA12892_r1_RGs + 1) / 2},
+                {NA12891_r1, NA12892_r2, true,  1, (NA12891_r1_RGs + NA12892_r2_RGs) * (NA12891_r1_RGs + NA12892_r2_RGs + 1) / 2},
+                {NA12892_r1, NA12892_r2, true,  0, (NA12892_r1_RGs + NA12892_r2_RGs) * (NA12892_r1_RGs + NA12892_r2_RGs + 1) / 2},
+                {NA12892_r2, NA12891_r2, true,  1, (NA12892_r2_RGs + NA12891_r2_RGs) * (NA12892_r2_RGs + NA12891_r2_RGs + 1) / 2},
+                {NA12892_r2, NA12891_r1, true,  1, (NA12892_r2_RGs + NA12891_r1_RGs) * (NA12892_r2_RGs + NA12891_r1_RGs + 1) / 2}
         };
     }
 
@@ -140,7 +140,7 @@ public class CrosscheckReadGroupFingerprintsTest {
                     "CROSSCHECK_BY=LIBRARY"
             };
             final int nLibs = 5;
-            doTest(args, metrics, 1, nLibs * (nLibs - 1) / 2, CrosscheckMetric.DataType.LIBRARY);
+            doTest(args, metrics, 1, nLibs * (nLibs + 1) / 2, CrosscheckMetric.DataType.LIBRARY);
         }
 
         File cluster = File.createTempFile("Fingerprinting", "NA1291.LB.crosscheck_cluster_metrics");
@@ -172,8 +172,8 @@ public class CrosscheckReadGroupFingerprintsTest {
                 .sorted()
                 .collect(Collectors.toList());
 
-        Assert.assertEquals(collect.get(0), (Long)1L);
-        Assert.assertEquals(collect.get(1), (Long)3L);
+        Assert.assertEquals(collect.get(0), (Long)3L); // 2*3/2
+        Assert.assertEquals(collect.get(1), (Long)6L); // 3*4/2
 
     }
 
@@ -190,7 +190,8 @@ public class CrosscheckReadGroupFingerprintsTest {
                 "LOD_THRESHOLD=" + -1.0,
                 "CROSSCHECK_BY=LIBRARY"
         };
-        doTest(args, metrics, expectedRetVal, 1, CrosscheckMetric.DataType.LIBRARY);
+        final int numLibs=2;
+        doTest(args, metrics, expectedRetVal, numLibs * (numLibs + 1) / 2, CrosscheckMetric.DataType.LIBRARY);
     }
 
 
@@ -223,21 +224,21 @@ public class CrosscheckReadGroupFingerprintsTest {
                 "CROSSCHECK_BY=FILE"
         };
 
-        doTest(args, metrics, expectedRetVal, 1, CrosscheckMetric.DataType.FILE);
+        doTest(args, metrics, expectedRetVal, 2 * 3 / 2, CrosscheckMetric.DataType.FILE);
 
     }
 
     @DataProvider(name = "bamFilesSMs")
     public Object[][] bamFilesSMs() {
 
-        return new Object[][]{
+        return new Object[][] {
                 {NA12891_r1, NA12891_r2,               0, 1},
                 {NA12891_r1, NA12892_r1,               0, 2},
                 {NA12892_r2, NA12891_r2,               0, 2},
                 {NA12892_r2, NA12891_named_NA12892_r1, 0, 1}, // no error since only one sample in aggregate
-                {NA12891_r2, NA12891_named_NA12892_r1, 1, 2}, //unexpected match
+                {NA12891_r2, NA12891_named_NA12892_r1, 1, 2}, // unexpected match
                 {NA12892_r1, NA12891_named_NA12892_r1, 0, 1}, // no error since only one sample in aggregate
-                {NA12891_r1, NA12891_named_NA12892_r1, 1, 2}, //unexpected match
+                {NA12891_r1, NA12891_named_NA12892_r1, 1, 2}, // unexpected match
         };
     }
 
@@ -246,15 +247,23 @@ public class CrosscheckReadGroupFingerprintsTest {
         File metrics = File.createTempFile("Fingerprinting", "NA1291.SM.crosscheck_metrics");
         metrics.deleteOnExit();
 
+        File matrix = File.createTempFile("Fingerprinting", "NA1291.SM.matrix");
+        matrix.deleteOnExit();
+
         final String[] args = new String[]{
                 "INPUT=" + file1.getAbsolutePath(),
                 "INPUT=" + file2.getAbsolutePath(),
                 "OUTPUT=" + metrics.getAbsolutePath(),
+                "MATRIX_OUTPUT=" + matrix.getAbsolutePath(),
                 "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP,
                 "LOD_THRESHOLD=" + -1.0,
                 "CROSSCHECK_BY=SAMPLE"
         };
-        doTest(args, metrics, expectedRetVal, numberOfSamples * (numberOfSamples - 1) / 2, CrosscheckMetric.DataType.SAMPLE);
+        doTest(args, metrics, expectedRetVal, numberOfSamples * (numberOfSamples + 1) / 2, CrosscheckMetric.DataType.SAMPLE);
+
+        TabbedTextFileWithHeaderParser matrixParser = new TabbedTextFileWithHeaderParser(matrix);
+        Assert.assertEquals(matrixParser.columnLabelsList().size(), numberOfSamples + 1 );
+
     }
 
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType) throws IOException {
