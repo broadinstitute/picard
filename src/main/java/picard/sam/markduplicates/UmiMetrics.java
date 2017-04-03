@@ -107,9 +107,11 @@ public class UmiMetrics extends MetricBase {
         // Convert to log base 4 so that the entropy is now a measure
         // of the effective number of DNA bases.  If we used log(2.0)
         // our result would be in bits.
-        double entropyBase4 = observations.values().stream().collect(Collectors.summingDouble(
-                v -> -v.getValue() / totalObservations * Math.log(v.getValue() / totalObservations))) / MathUtil.LOG_4_BASE_E;
-        return entropyBase4;
+        double entropyBaseE = observations.values().stream().collect(Collectors.summingDouble(
+                v -> {double p = v.getValue() / totalObservations;
+                        return -p * Math.log(p);}));
+
+        return entropyBaseE / MathUtil.LOG_4_BASE_E;
     }
 }
 
