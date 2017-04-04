@@ -24,14 +24,18 @@
 
 package picard.fingerprint;
 
-import picard.PicardException;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.FormatUtil;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMTextHeaderCodec;
-import htsjdk.samtools.util.StringLineReader;
+import htsjdk.samtools.util.*;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFConstants;
+import htsjdk.variant.vcf.VCFFileReader;
+//import htsjdk.variant.vcf.VCFUtils;
+import htsjdk.variant.vcf.VCFUtils;
+import picard.PicardException;
+import picard.vcf.VcfUtils;
 
 import java.io.*;
 import java.util.*;
@@ -44,18 +48,109 @@ import java.util.*;
  * @author Tim Fennell / Kathleen Tibbetts
  */
 public class HaplotypeMap {
-    private final List<HaplotypeBlock> haplotypeBlocks = new ArrayList<HaplotypeBlock>();
-    private final Map<Snp, HaplotypeBlock> haplotypesBySnp = new HashMap<Snp, HaplotypeBlock>();
-    private final Map<String, HaplotypeBlock> haplotypesBySnpName = new HashMap<String, HaplotypeBlock>();
-    private final Map<String, HaplotypeBlock> haplotypesBySnpLocus = new HashMap<String, HaplotypeBlock>();
-    private final Map<String,Snp> snpsByPosition = new HashMap<String,Snp>();
+    private final List<HaplotypeBlock> haplotypeBlocks = new ArrayList<>();
+    private final Map<Snp, HaplotypeBlock> haplotypesBySnp = new HashMap<>();
+    private final Map<String, HaplotypeBlock> haplotypesBySnpName = new HashMap<>();
+    private final Map<String, HaplotypeBlock> haplotypesBySnpLocus = new HashMap<>();
+    private final Map<String,Snp> snpsByPosition = new HashMap<>();
     private IntervalList intervals;
-    private final SAMFileHeader header;
+    private SAMFileHeader header;
 
     /**
      * Constructs a HaplotypeMap from the provided file.
      */
-    public HaplotypeMap(final File file) {
+
+    private void fromVcf(final File file) {
+        try ( final VCFFileReader reader = new VCFFileReader(file)) {
+
+            final SAMSequenceDictionary dict = reader.getFileHeader().getSequenceDictionary();
+
+            if (dict == null || dict.getSequences().isEmpty()) {
+                throw new IllegalStateException("Haplotype map VCF file must contain header: " + file.getAbsolutePath());
+            }
+
+            header = new SAMFileHeader(dict);
+
+            final Map<String, HaplotypeBlock> anchorToHaplotype = new HashMap<>();
+
+            for (final VariantContext vc : reader) {
+
+                if (vc.getNSamples() >= 1) {
+                    throw new IllegalStateException("Haplotype map VCF file must contain at most one sample: " + file.getAbsolutePath());
+                }
+
+                final Genotype gc = vc.getGenotype(0); // may be null
+
+                if (vc.getAlternateAlleles().size() != 1) {
+                    throw new IllegalStateException("Haplotype map VCF file must contain exactly one alternate allele per site: " + vc.toString());
+                }
+
+                if (!vc.isSNP()) {
+                    throw new IllegalStateException("Haplotype map VCF file must contain only SNPs: " + vc.toString());
+                }
+
+                if (!vc.hasAttribute(VCFConstants.ALLELE_FREQUENCY_KEY)) {
+                    throw new IllegalStateException("Haplotype map VCF Variants must have an '"+ VCFConstants.ALLELE_FREQUENCY_KEY + "' INFO field: " + vc.toString());
+                }
+
+                if (gc != null && gc.isPhased() && !gc.hasExtendedAttribute(VCFConstants.PHASE_SET_KEY)) {
+                    throw new IllegalStateException("Haplotype map VCF Variants' genotypes that are phased must have a PhaseSet ("+VCFConstants.PHASE_SET_KEY+")" + vc.toString());
+                }
+
+                if (gc != null && gc.isPhased() && !gc.isHet()) {
+                    throw new IllegalStateException("Haplotype map VCF Variants' genotypes that are phased must have a HET genotype" + vc.toString());
+                }
+
+                // Then parse them out
+                final String chrom = vc.getContig();
+                final int pos = vc.getStart();
+                final String name = vc.getID();
+
+                final byte ref = vc.getReference().getBases()[0];
+                final byte var = vc.getAlternateAllele(0).getBases()[0];
+
+                final double temp_maf = vc.getAttributeAsDouble(VCFConstants.ALLELE_FREQUENCY_KEY, 0D);
+                final boolean swapped = gc != null && gc.getAnyAttribute(VCFConstants.GENOTYPE_KEY).equals("1|0");
+
+                final byte major, minor;
+                final double maf;
+
+                if (swapped) {
+                    major = var;
+                    minor = ref;
+                    maf = 1 - temp_maf;
+                } else {
+                    major = ref;
+                    minor = var;
+                    maf = temp_maf;
+                }
+
+                final String anchor = anchorFromVc(vc);
+
+                // If it's the anchor snp, start the haplotype
+                if (!anchorToHaplotype.containsKey(anchor)) {
+                    final HaplotypeBlock newBlock = new HaplotypeBlock(maf);
+                    addHaplotype(newBlock);
+                    anchorToHaplotype.put(name, newBlock);
+                }
+                final HaplotypeBlock block = anchorToHaplotype.get(anchor);
+                block.addSnp(new Snp(name, chrom, pos, major, minor, maf, null));
+            }
+        }
+    }
+
+    static private String anchorFromVc(final VariantContext vc) {
+        final Genotype genotype = vc.getGenotype(0);
+
+        if (genotype == null) {
+           return "Synthetic_"+vc.getContig()+"_"+vc.getStart();
+        } else {
+           return "PhaseSet_"+vc.getContig()+"_"+genotype.getExtendedAttribute(VCFConstants.PHASE_SET_KEY);
+        }
+    }
+
+    private void fromHaplotypeDatabase(final File file) {
+
         BufferedReader in = null;
         try {
             in = new BufferedReader(new InputStreamReader(IOUtil.openFileForReading(file)));
@@ -66,8 +161,7 @@ public class HaplotypeMap {
             while ((line = in.readLine()) != null) {
                 if (line.startsWith("@")) {
                     builder.append(line).append('\n');
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -76,13 +170,12 @@ public class HaplotypeMap {
                 throw new IllegalStateException("Haplotype map file must contain header: " + file.getAbsolutePath());
             }
 
-            this.header = new SAMTextHeaderCodec().decode(new StringLineReader(builder.toString()), "BufferedReader");
-            this.intervals = new IntervalList(header);
+            final SAMFileHeader header = new SAMTextHeaderCodec().decode(new StringLineReader(builder.toString()), "BufferedReader");
 
             // Then read in the file
             final FormatUtil format = new FormatUtil();
-            final List<HaplotypeMapFileEntry> entries = new ArrayList<HaplotypeMapFileEntry>();
-            final Map<String, HaplotypeBlock> anchorToHaplotype = new HashMap<String, HaplotypeBlock>();
+            final List<HaplotypeMapFileEntry> entries = new ArrayList<>();
+            final Map<String, HaplotypeBlock> anchorToHaplotype = new HashMap<>();
 
             do {
                 if (line.trim().isEmpty()) continue; // skip over blank lines
@@ -92,21 +185,21 @@ public class HaplotypeMap {
                 final String[] fields = line.split("\\t");
                 if (fields.length < 6 || fields.length > 8) {
                     throw new PicardException("Invalid haplotype map record contains " +
-                                              fields.length + " fields: " + line);
+                            fields.length + " fields: " + line);
                 }
 
                 // Then parse them out
                 final String chrom = fields[0];
                 final int pos = format.parseInt(fields[1]);
                 final String name = fields[2];
-                final byte major =  (byte)fields[3].charAt(0);
-                final byte minor =  (byte)fields[4].charAt(0);
+                final byte major = (byte) fields[3].charAt(0);
+                final byte minor = (byte) fields[4].charAt(0);
                 final double maf = format.parseDouble(fields[5]);
                 final String anchor = fields.length > 6 ? fields[6] : null;
                 final String fpPanels = fields.length > 7 ? fields[7] : null;
                 List<String> panels = null;
                 if (fpPanels != null) {
-                    panels = new ArrayList<String>();
+                    panels = new ArrayList<>();
                     for (final String panel : fpPanels.split(",")) {
                         panels.add(panel);
                     }
@@ -117,9 +210,8 @@ public class HaplotypeMap {
                     final HaplotypeBlock type = new HaplotypeBlock(maf);
                     type.addSnp(new Snp(name, chrom, pos, major, minor, maf, panels));
                     anchorToHaplotype.put(name, type);
-                }
-                else {  // Otherwise save it for later
-                    final HaplotypeMapFileEntry entry = new HaplotypeMapFileEntry(
+                } else {  // Otherwise save it for later
+                    final HaplotypeMapFileEntry entry = makeHaplotypeMapFileEntry(
                             chrom, pos, name, major, minor, maf, anchor, panels);
                     entries.add(entry);
                 }
@@ -135,23 +227,29 @@ public class HaplotypeMap {
                 }
 
                 block.addSnp(new Snp(entry.snpName, entry.chromosome, entry.position,
-                                 entry.majorAllele, entry.minorAllele,
-                                 entry.minorAlleleFrequency, entry.panels));
+                        entry.majorAllele, entry.minorAllele,
+                        entry.minorAlleleFrequency, entry.panels));
             }
 
             // And add them all
             for (final HaplotypeBlock block : anchorToHaplotype.values()) {
                 addHaplotype(block);
             }
-        }
-        catch (IOException ioe) {
+        } catch (IOException ioe) {
             throw new PicardException("Error parsing haplotype map.", ioe);
-        }
-        finally {
+        } finally {
             if (in != null) {
-                try { in.close(); } catch (Exception e) { /* do nothing */ }
+                try {
+                    in.close();
+                } catch (Exception e) { /* do nothing */ }
             }
         }
+    }
+
+    private HaplotypeMapFileEntry makeHaplotypeMapFileEntry(final String chrom, final int pos, final String name,
+                                                            final byte major, final byte minor, final double maf,
+                                                            final String anchorSnp, final List<String> fingerprintPanels) {
+        return new HaplotypeMapFileEntry(chrom, pos, name, major, minor, maf, anchorSnp, fingerprintPanels);
     }
 
     /** Constructs an empty HaplotypeMap using the provided SAMFileHeader's sequence dictionary. */
@@ -159,6 +257,15 @@ public class HaplotypeMap {
         this.header = header;
         this.intervals = new IntervalList(header);
     }
+
+    public HaplotypeMap(final File file) {
+        if(VcfUtils.isVariantFile(file)){
+            fromVcf(file);
+        } else {
+            fromHaplotypeDatabase(file);
+        }
+    }
+
 
     /**
      * Adds a HaplotypeBlock to the map and updates all the relevant caches/indices.
@@ -246,10 +353,10 @@ public class HaplotypeMap {
             out.write("#CHROMOSOME\tPOSITION\tNAME\tMAJOR_ALLELE\tMINOR_ALLELE\tMAF\tANCHOR_SNP\tPANELS");
             out.newLine();
 
-            final List<HaplotypeMapFileEntry> entries = new ArrayList<HaplotypeMapFileEntry>();
+            final List<HaplotypeMapFileEntry> entries = new ArrayList<>();
             for (final HaplotypeBlock block : this.getHaplotypes()) {
                 String anchor = null;
-                final SortedSet<Snp> snps = new TreeSet<Snp>(block.getSnps());
+                final SortedSet<Snp> snps = new TreeSet<>(block.getSnps());
 
                 for (final Snp snp : snps) {
                     entries.add(new HaplotypeMapFileEntry(snp.getChrom(), snp.getPos(), snp.getName(),
@@ -282,7 +389,7 @@ public class HaplotypeMap {
             out.close();
         }
         catch (IOException ioe) {
-            throw new PicardException("Error writing out maplotype map to file: " + file.getAbsolutePath(), ioe);
+            throw new PicardException("Error writing out haplotype map to file: " + file.getAbsolutePath(), ioe);
         }
     }
 
@@ -311,7 +418,7 @@ public class HaplotypeMap {
             this.anchorSnp = anchorSnp;
 
             // Always sort the list of panels so they are in a predictable order
-            this.panels = new ArrayList<String>();
+            this.panels = new ArrayList<>();
             if (fingerprintPanels != null) {
                 this.panels.addAll(fingerprintPanels);
                 Collections.sort(this.panels);

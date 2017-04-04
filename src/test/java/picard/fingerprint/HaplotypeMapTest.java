@@ -46,7 +46,6 @@ public class HaplotypeMapTest {
         HaplotypeMap map = new HaplotypeMap(TEST_MAP);
         Assert.assertEquals(map.getHaplotypes().size(), 23, "Wrong number of haplotypes returned.");
         Assert.assertEquals(map.getAllSnps().size(), 26, "Wrong number of snps returned.");
-
     }
 
     @Test
