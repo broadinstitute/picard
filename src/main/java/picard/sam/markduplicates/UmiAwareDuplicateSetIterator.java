@@ -90,7 +90,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
         wrappedIterator.close();
 
         if (metrics.UMI_LENGTH > 0) {
-            metrics.calculateDerivedFields(observedUmiBases);
+            metrics.calculateDerivedFields();
         }
     }
 
@@ -157,8 +157,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
                     // Update UMI metrics associated with each record
                     metrics.OBSERVED_BASE_ERRORS += hammingDistance(currentUmi, inferredUmi);
                     observedUmiBases += currentUmi.length();
-                    metrics.observedUmis.increment(currentUmi);
-                    metrics.inferredUmis.increment(inferredUmi);
+                    metrics.addUmiObservation(currentUmi, inferredUmi);
                 }
             }
         }

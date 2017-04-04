@@ -35,8 +35,9 @@ import picard.util.MathUtil;
  * within a stream of SAMRecords using the UmiAwareDuplicateSetIterator.
  */
 public class UmiMetrics extends MetricBase {
-    Histogram<String> observedUmis = new Histogram<>();
-    Histogram<String> inferredUmis = new Histogram<>();
+    private final Histogram<String> observedUmis = new Histogram<>();
+    private final Histogram<String> inferredUmis = new Histogram<>();
+    private long observedUmiBases = 0;
 
     /** Number of bases in each UMI */
     public int UMI_LENGTH;
@@ -91,7 +92,7 @@ public class UmiMetrics extends MetricBase {
         UMI_BASE_QUALITIES = estimatedBaseQualityOfUmis;
     }
 
-    public void calculateDerivedFields(long observedUmiBases) {
+    public void calculateDerivedFields() {
         OBSERVED_UNIQUE_UMIS = observedUmis.size();
         INFERRED_UNIQUE_UMIS = inferredUmis.size();
 
@@ -99,6 +100,17 @@ public class UmiMetrics extends MetricBase {
         INFERRED_UMI_ENTROPY = effectiveNumberOfBases(inferredUmis);
 
         UMI_BASE_QUALITIES = QualityUtil.getPhredScoreFromErrorProbability((double) OBSERVED_BASE_ERRORS / (double) observedUmiBases);
+    }
+
+    /**
+     * Add an observation of a UMI to the metrics
+     * @param observedUmi String containing the observed UMI
+     * @param inferredUmi String containing the UMI inferred after error correcting the observed UMI
+     */
+    public void addUmiObservation(String observedUmi, String inferredUmi) {
+        observedUmis.increment(observedUmi);
+        inferredUmis.increment(inferredUmi);
+        observedUmiBases += observedUmi.length();
     }
 
     private double effectiveNumberOfBases(Histogram<?> observations) {
