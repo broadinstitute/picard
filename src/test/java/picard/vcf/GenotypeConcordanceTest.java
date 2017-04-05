@@ -559,4 +559,17 @@ public class GenotypeConcordanceTest {
         truthReader.close();
         callReader.close();
     }
+
+    @Test
+    public void testNoCallVariants() {
+        final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
+        genotypeConcordance.TRUTH_VCF = new File(TEST_DATA_PATH, "mini.vcf");
+        genotypeConcordance.TRUTH_SAMPLE = "NA20801";
+        genotypeConcordance.CALL_VCF = new File(TEST_DATA_PATH, "mini.vcf");
+        genotypeConcordance.CALL_SAMPLE = "NA19920";
+        genotypeConcordance.OUTPUT = new File(OUTPUT_DATA_PATH, "TwoNoCalls");
+        genotypeConcordance.OUTPUT_VCF = true;
+
+        Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
+    }
 }

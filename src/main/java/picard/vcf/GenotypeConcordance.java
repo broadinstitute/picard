@@ -432,9 +432,18 @@ public class GenotypeConcordance extends CommandLineProgram {
             final List<Allele> truthAlleles = alleles.truthAlleles();
             final List<Allele> callAlleles  = alleles.callAlleles();
 
+            // Get the alleles present at this site for both samples to use for the output variant context.
+            final Set<Allele> siteAlleles = new HashSet<>();
+            if (truthContext != null) {
+                siteAlleles.addAll(truthContext.getAlleles());
+            }
+            if (callContext != null) {
+                siteAlleles.addAll(callContext.getAlleles());
+            }
+
             // Initialize the variant context builder
             final VariantContext initialContext = (callContext == null) ? truthContext : callContext;
-            builder = new VariantContextBuilder(initialContext.getSource(), initialContext.getContig(), initialContext.getStart(), initialContext.getEnd(), Collections.emptyList());
+            builder = new VariantContextBuilder(initialContext.getSource(), initialContext.getContig(), initialContext.getStart(), initialContext.getEnd(), siteAlleles);
             builder.computeEndFromAlleles(allAlleles, initialContext.getStart());
             builder.log10PError(initialContext.getLog10PError());
 
@@ -443,7 +452,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             addToGenotypes(genotypes, callContext, CALL_SAMPLE, OUTPUT_VCF_CALL_SAMPLE_NAME, allAlleles, callAlleles, false);
 
             // set the alleles and genotypes
-            builder.alleles(alleles.allAlleles).genotypes(genotypes);
+            builder.genotypes(genotypes);
 
             // set the concordance state attribute
             final TruthAndCallStates state = GenotypeConcordance.determineState(truthContext, TRUTH_SAMPLE, callContext, CALL_SAMPLE, MIN_GQ, MIN_DP);
