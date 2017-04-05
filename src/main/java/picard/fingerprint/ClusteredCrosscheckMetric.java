@@ -39,6 +39,8 @@ public class ClusteredCrosscheckMetric extends CrosscheckMetric {
     // be excluded, or given an error-indicating CLUSTER value (perhaps MIN_VALUE?).
     public Integer CLUSTER;
 
+    public Integer CLUSTER_SIZE;
+
     public ClusteredCrosscheckMetric() {
         super();
     }

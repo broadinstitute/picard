@@ -49,9 +49,9 @@ import java.util.stream.Collectors;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        usage = "Clusters the results from a CrosscheckReadGroupFingerprints into groups that are connected according" +
+        usage = "Clusters the results from a CrosscheckFingerprints into groups that are connected according" +
                 "to a large enough LOD score.",
-        usageShort = "Clusters the results of a CrosscheckReadGroupFingerprints run by LOD score.",
+        usageShort = "Clusters the results of a CrosscheckFingerprints run by LOD score.",
         programGroup = Fingerprinting.class
 )
 public class ClusterCrosscheckMetrics extends CommandLineProgram {
@@ -122,12 +122,12 @@ public class ClusterCrosscheckMetrics extends CommandLineProgram {
                             .map(metric -> {
                                 final ClusteredCrosscheckMetric clusteredCrosscheckMetric = new ClusteredCrosscheckMetric(metric);
                                 clusteredCrosscheckMetric.CLUSTER = cluster.getKey();
+                                clusteredCrosscheckMetric.CLUSTER_SIZE = cluster.getValue().size();
+
                                 return clusteredCrosscheckMetric;
                             })
                             .collect(Collectors.toSet()));
         }
-
         return clusteredMetrics;
     }
-
 }

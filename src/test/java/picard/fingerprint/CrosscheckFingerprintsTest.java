@@ -22,7 +22,7 @@ import static picard.fingerprint.FingerprintIdDetails.multipleValuesString;
 /**
  * Tests for CrosscheckReadgroupFingerprints
  */
-public class CrosscheckReadGroupFingerprintsTest {
+public class CrosscheckFingerprintsTest {
 
     private final static File TEST_DIR = new File("testdata/picard/fingerprint/");
     private final static File HAPLOTYPE_MAP = new File(TEST_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
@@ -272,7 +272,7 @@ public class CrosscheckReadGroupFingerprintsTest {
 
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType, final boolean expectAllMatch) throws IOException {
        
-        final CrosscheckReadGroupFingerprints crossChecker = new CrosscheckReadGroupFingerprints();
+        final CrosscheckFingerprints crossChecker = new CrosscheckFingerprints();
         Assert.assertEquals(crossChecker.instanceMain(args), expectedRetVal);
 
         final MetricsFile<CrosscheckMetric, Comparable<?>> metricsOutput = new MetricsFile<>();

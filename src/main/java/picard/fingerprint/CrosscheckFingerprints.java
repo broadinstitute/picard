@@ -62,7 +62,7 @@ import static picard.fingerprint.CrosscheckMetric.FingerprintResult.*;
         usageShort = "Checks if all (read-)groups appear to come from the same individual.",
         programGroup = Fingerprinting.class
 )
-public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
+public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more input files (or lists of files) to compare fingerprints for.")
@@ -119,7 +119,7 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
     @Option(doc = "When one or more mismatches between groups is detected, exit with this value instead of 0.")
     public int EXIT_CODE_WHEN_MISMATCH = 1;
 
-    private final Log log = Log.getInstance(CrosscheckReadGroupFingerprints.class);
+    private final Log log = Log.getInstance(CrosscheckFingerprints.class);
 
     // the rate at which we expect a given genotype to change for an individual (exceedingly small)
     final static private double GENOTYPING_ERROR_RATE = 1e-6;
