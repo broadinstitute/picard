@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import static picard.fingerprint.FingerprintIdDetails.multipleValuesString;
 
 /**
- * Tests for CrosscheckReadgroupFingerprints
+ * Tests for CrosscheckFingerprints
  */
 public class CrosscheckFingerprintsTest {
 
