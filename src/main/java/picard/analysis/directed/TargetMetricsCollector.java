@@ -538,7 +538,13 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 final int numOverlappingBasesToClip = SAMUtils.getNumOverlappingAlignedBasesToClip(record);
                 rec = SAMUtils.clipOverlappingAlignedBases(record, numOverlappingBasesToClip, noSideEffects);
                 metrics.PCT_EXC_OVERLAP += numOverlappingBasesToClip;
-            } else rec = record;
+
+                // If clipping resulted in the read becoming unmapped (because all bases were clipped), return here
+                if (rec.getReadUnmappedFlag()) return;
+            }
+            else {
+                rec = record;
+            }
 
             // Find the target overlaps
             final Set<Interval> coveredTargets = new HashSet<>();

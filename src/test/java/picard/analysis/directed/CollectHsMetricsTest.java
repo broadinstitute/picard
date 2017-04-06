@@ -32,7 +32,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
                 // test that read 2 (with mapping quality 1) is filtered out with minimum mapping quality 2
                 {TEST_DIR + "/lowmapq.sam",     intervals, 2, 0, true,  2, 202, 0,   0.0, 0.505, 0.0,   1000},
                 // test that we clip overlapping bases
-                {TEST_DIR + "/overlapping.sam", intervals, 0, 0, true,  2, 202, 0,   0.5, 0.505, 0.505, 1000},
+                {TEST_DIR + "/overlapping.sam", intervals, 0, 0, true,  2, 202, 0,   0.5, 0.505, 0, 1000},
                 // test that we do not clip overlapping bases
                 {TEST_DIR + "/overlapping.sam", intervals, 0, 0, false, 2, 202, 0,   0.0, 0.505, 0.505, 1000},
                 // A read 10 base pairs long. two intervals: one maps identically to the read, other does not overlap at all
