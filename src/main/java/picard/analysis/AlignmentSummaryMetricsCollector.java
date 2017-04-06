@@ -301,12 +301,12 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                             boolean mismatch = !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex+i]);
                             boolean bisulfiteBase = false;
                             if (mismatch && isBisulfiteSequenced &&
-                                    record.getReadNegativeStrandFlag() &&
+                                   ( record.getReadNegativeStrandFlag() &&
                                     (refBases[refIndex + i] == 'G' || refBases[refIndex + i] == 'g') &&
                                     (readBases[readBaseIndex] == 'A' || readBases[readBaseIndex] == 'a')
                                     || ((!record.getReadNegativeStrandFlag()) &&
                                     (refBases[refIndex + i] == 'C' || refBases[refIndex + i] == 'c') &&
-                                    (readBases[readBaseIndex] == 'T') || readBases[readBaseIndex] == 't')) {
+                                    (readBases[readBaseIndex] == 'T') || readBases[readBaseIndex] == 't'))) {
 
                                 bisulfiteBase = true;
                                 mismatch = false;
