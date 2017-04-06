@@ -51,15 +51,25 @@ import static picard.fingerprint.CrosscheckMetric.FingerprintResult;
 import static picard.fingerprint.CrosscheckMetric.FingerprintResult.*;
 
 /**
- * Program to check that all (read-)groups within the set of input files appear to come from the same
- * individual. Can be used to cross-check libraries, samples, or files.
+ * Program to check that all fingerprints within the set of input files appear to come from the same
+ * individual. Can be used to cross-check readgroups, libraries, samples, or files.
+ * Operates on bams/sams and vcfs.
  *
  * @author Tim Fennell
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        usage = "Checks if all (read-)groups within a set of files appear to come from the same individual.",
-        usageShort = "Checks if all (read-)groups appear to come from the same individual.",
+        usage = "Checks if all fingerprints within a set of files appear to come from the same individual." +
+                "The fingerprints are calculated initialy at the readgroup level (if present) but can be" +
+                "\"rolled-up\" by libarary, sample or file, to increase power and provide results at the " +
+                "desired resolution. Regular output is in a \"Moltenized\" format, one row per comparison, " +
+                "In this format the output will include the LOD score and also tumor-aware LOD score which can " +
+                "help assess identity even in the presence of a severe LOH sample with high purity." +
+                "A matrix output is also availalble to facilitate visual inspection of crosscheck results." +
+                "\n" +
+                "A separate CLP, ClusterCrosscheckMetrics, can cluster the results as a connected graph" +
+                "according to LOD greater than a threshold. ",
+        usageShort = "Checks if all fingerprints appear to come from the same individual.",
         programGroup = Fingerprinting.class
 )
 public class CrosscheckFingerprints extends CommandLineProgram {

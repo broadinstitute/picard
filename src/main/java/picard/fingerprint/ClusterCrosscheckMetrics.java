@@ -98,7 +98,7 @@ public class ClusterCrosscheckMetrics extends CommandLineProgram {
 
         final Map<String, Integer> clusters = graph.cluster();
 
-        //invert map...get map from group integer to list of group_value
+        // invert map...get map from group integer to list of group_value
         final Map<Integer, Set<String>> collection = clusters.entrySet().stream()
                 .collect(Collectors.groupingBy(Map.Entry::getValue))
                 .entrySet()
