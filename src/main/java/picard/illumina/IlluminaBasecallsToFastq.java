@@ -150,12 +150,9 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             mutex = {"OUTPUT_PREFIX"})
     public File MULTIPLEX_PARAMS;
 
-    @Option(doc = "Which adapters to look for in the read.")
-    public List<IlluminaUtil.IlluminaAdapterPair> ADAPTERS_TO_CHECK = new ArrayList<>(
-            Arrays.asList(IlluminaUtil.IlluminaAdapterPair.INDEXED,
-                    IlluminaUtil.IlluminaAdapterPair.DUAL_INDEXED,
-                    IlluminaUtil.IlluminaAdapterPair.NEXTERA_V2,
-                    IlluminaUtil.IlluminaAdapterPair.FLUIDIGM));
+    @Deprecated
+    @Option(doc = "Deprecated (No longer used). Which adapters to look for in the read.")
+    public List<IlluminaUtil.IlluminaAdapterPair> ADAPTERS_TO_CHECK = null;
 
     @Option(doc = "The number of threads to run in parallel. If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0, then the number of cores used will" +
@@ -232,6 +229,10 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
 
         if (READ_NAME_FORMAT == ReadNameFormat.CASAVA_1_8 && FLOWCELL_BARCODE == null) {
             errors.add("FLOWCELL_BARCODE is required when using Casava1.8-style read name headers.");
+        }
+
+        if (ADAPTERS_TO_CHECK != null) {
+            log.warn("ADAPTERS_TO_CHECK is not used");
         }
         
         if (errors.isEmpty()) {
