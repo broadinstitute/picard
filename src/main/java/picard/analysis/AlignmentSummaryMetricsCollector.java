@@ -299,19 +299,19 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                         for (int i=0; i<length && refIndex+i<refLength; ++i) {
                             final int readBaseIndex = readIndex + i;
                             boolean mismatch = !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex + i]);
-                            final boolean biSulfateMatch = isBisulfiteSequenced && SequenceUtil.bisulfiteBasesEqual(record.getReadNegativeStrandFlag(), readBases[readBaseIndex], refBases[readBaseIndex]);
+                            final boolean bisulfiteMatch = isBisulfiteSequenced && SequenceUtil.bisulfiteBasesEqual(record.getReadNegativeStrandFlag(), readBases[readBaseIndex], refBases[readBaseIndex]);
 
-                            final boolean biSulfiteBase = mismatch && biSulfateMatch;
-                            mismatch = mismatch && !biSulfateMatch;
+                            final boolean bisulfiteBase = mismatch && bisulfiteMatch;
+                            mismatch = mismatch && !bisulfiteMatch;
 
                             if (mismatch) mismatchCount++;
 
                             metrics.PF_ALIGNED_BASES++;
-                            if (!biSulfiteBase) nonBisulfiteAlignedBases++;
+                            if (!bisulfiteBase) nonBisulfiteAlignedBases++;
 
                             if (highQualityMapping) {
                                 metrics.PF_HQ_ALIGNED_BASES++;
-                                if (!biSulfiteBase) hqNonBisulfiteAlignedBases++;
+                                if (!bisulfiteBase) hqNonBisulfiteAlignedBases++;
                                 if (qualities[readBaseIndex] >= BASE_QUALITY_THRESHOLD) metrics.PF_HQ_ALIGNED_Q20_BASES++;
                                 if (mismatch) hqMismatchCount++;
                             }
