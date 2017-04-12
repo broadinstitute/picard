@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010 The Broad Institute
+ * Copyright (c) 2010-2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,6 @@ package picard.fingerprint;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMTextHeaderCodec;
-import htsjdk.samtools.reference.FastaSequenceFile;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
@@ -50,9 +49,10 @@ import java.util.*;
  * to make it easy to query the correct HaplotypeBlock or Snp by snp names, positions etc. Also has the
  * ability to read and write itself to and from files.
  *
- * @author Tim Fennell / Kathleen Tibbetts
+ * @author Tim Fennell / Kathleen Tibbetts / Yossi Farjoun
  */
 public class HaplotypeMap {
+    public static final String HET_GENOTYPE_FOR_PHASING = "HetGenotypeForPhasing";
     private final List<HaplotypeBlock> haplotypeBlocks = new ArrayList<>();
     private final Map<Snp, HaplotypeBlock> haplotypesBySnp = new HashMap<>();
     private final Map<String, HaplotypeBlock> haplotypesBySnpName = new HashMap<>();
@@ -265,7 +265,7 @@ public class HaplotypeMap {
     }
 
     public HaplotypeMap(final File file) {
-        if(VcfUtils.isVariantFile(file)){
+        if (VcfUtils.isVariantFile(file)){
             fromVcf(file);
         } else {
             fromHaplotypeDatabase(file);
@@ -358,23 +358,29 @@ public class HaplotypeMap {
                 .setReferenceDictionary(ref.getSequenceDictionary())
                 .build()) {
 
-            final VCFHeader vcfHeader = new VCFHeader();
+            final VCFHeader vcfHeader = new VCFHeader(
+                    VCFUtils.withUpdatedContigsAsLines(Collections.emptySet(), refFile, header.getSequenceDictionary(), false),
+                    Collections.singleton(HET_GENOTYPE_FOR_PHASING));
 
-            vcfHeader.setSequenceDictionary(header.getSequenceDictionary());
+            VCFUtils.withUpdatedContigsAsLines(Collections.emptySet(), refFile, header.getSequenceDictionary(), false);
+
             vcfHeader.addMetaDataLine(new VCFHeaderLine(VCFHeaderVersion.VCF4_2.getFormatString(), VCFHeaderVersion.VCF4_2.getVersionString()));
             vcfHeader.addMetaDataLine(new VCFInfoHeaderLine(VCFConstants.ALLELE_FREQUENCY_KEY, VCFHeaderLineCount.A, VCFHeaderLineType.Float, "Allele Frequency, for each ALT allele, in the same order as listed"));
             vcfHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_KEY, 1, VCFHeaderLineType.String, "Genotype"));
             vcfHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.PHASE_SET_KEY, 1, VCFHeaderLineType.String, "Phase-set identifier for phased genotypes."));
+            vcfHeader.addMetaDataLine(new VCFHeaderLine(VCFHeader.SOURCE_KEY,"HaplotypeMap::writeAsVcf"));
+            vcfHeader.addMetaDataLine(new VCFHeaderLine("reference","HaplotypeMap::writeAsVcf"));
+
 
           //  vcfHeader.addMetaDataLine(new VCFHeaderLine());
             writer.writeHeader(vcfHeader);
-            for (final VariantContext vc : this.asVcf(ref)) {
-                writer.add(vc);
-            }
+            final LinkedList<VariantContext> variants = new LinkedList<>(this.asVcf(ref));
+            variants.sort(vcfHeader.getVCFRecordComparator());
+            variants.forEach(writer::add);
         }
     }
 
-    public Iterable<VariantContext> asVcf(final ReferenceSequenceFile ref) {
+    public Collection<VariantContext> asVcf(final ReferenceSequenceFile ref) {
 
         final List<VariantContext> entries = new ArrayList<>();
         final SortedSet<Snp> snps = new TreeSet<>(getAllSnps());
@@ -392,12 +398,13 @@ public class HaplotypeMap {
         }
 
         for (final HaplotypeBlock block : this.getHaplotypes()) {
-            Integer anchorPos = null;
+            Snp anchorSnp=null;
             final SortedSet<Snp> blocksSnps = new TreeSet<>(block.getSnps());
 
-            for (final Snp snp : snps) {
-                if (anchorPos == null) {
-                    anchorPos = snp.getPos();
+            for (final Snp snp : blocksSnps) {
+
+                if (anchorSnp == null) {
+                    anchorSnp = snp;
                 }
 
                 final String alleleString = snp.getAlleleString();
@@ -414,7 +421,7 @@ public class HaplotypeMap {
                         .alleles(reference, alternate)
                         .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, maf)
                         .id(snp.getName());
-                GenotypeBuilder genotypeBuilder = new GenotypeBuilder("HetGenotypeForPhasing");
+                GenotypeBuilder genotypeBuilder = new GenotypeBuilder(HET_GENOTYPE_FOR_PHASING);
 
                 if (blocksSnps.size() > 1 && swap) {
                     genotypeBuilder.alleles(Arrays.asList(builder.getAlleles().get(1), builder.getAlleles().get(0)));
@@ -424,7 +431,7 @@ public class HaplotypeMap {
 
                 if (blocksSnps.size() > 1) {
                     genotypeBuilder.phased(true);
-                    genotypeBuilder.attribute(VCFConstants.PHASE_SET_KEY, anchorPos);
+                    genotypeBuilder.attribute(VCFConstants.PHASE_SET_KEY, anchorSnp.getPos());
                 }
                 builder.genotypes(genotypeBuilder.make());
 
