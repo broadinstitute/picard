@@ -298,24 +298,16 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
                         for (int i=0; i<length && refIndex+i<refLength; ++i) {
                             final int readBaseIndex = readIndex + i;
-                            boolean mismatch = !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex+i]);
-                            boolean bisulfiteBase = false;
-                            if (mismatch && isBisulfiteSequenced &&
-                                    record.getReadNegativeStrandFlag() &&
-                                    (refBases[refIndex + i] == 'G' || refBases[refIndex + i] == 'g') &&
-                                    (readBases[readBaseIndex] == 'A' || readBases[readBaseIndex] == 'a')
-                                    || ((!record.getReadNegativeStrandFlag()) &&
-                                    (refBases[refIndex + i] == 'C' || refBases[refIndex + i] == 'c') &&
-                                    (readBases[readBaseIndex] == 'T') || readBases[readBaseIndex] == 't')) {
+                            boolean mismatch = !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex + i]);
+                            final boolean bisulfiteMatch = isBisulfiteSequenced && SequenceUtil.bisulfiteBasesEqual(record.getReadNegativeStrandFlag(), readBases[readBaseIndex], refBases[readBaseIndex]);
 
-                                bisulfiteBase = true;
-                                mismatch = false;
-                            }
+                            final boolean bisulfiteBase = mismatch && bisulfiteMatch;
+                            mismatch = mismatch && !bisulfiteMatch;
 
-                            if(mismatch) mismatchCount++;
+                            if (mismatch) mismatchCount++;
 
                             metrics.PF_ALIGNED_BASES++;
-                            if(!bisulfiteBase) nonBisulfiteAlignedBases++;
+                            if (!bisulfiteBase) nonBisulfiteAlignedBases++;
 
                             if (highQualityMapping) {
                                 metrics.PF_HQ_ALIGNED_BASES++;
