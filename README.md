@@ -14,7 +14,7 @@ As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last ver
 
 * First, clone the repo:
 ```
-    git clone git@github.com:broadinstitute/picard.git
+    git clone https://github.com/broadinstitute/picard.git
     cd picard/
 ```
 
