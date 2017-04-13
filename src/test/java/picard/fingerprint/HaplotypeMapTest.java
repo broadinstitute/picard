@@ -135,7 +135,7 @@ public class HaplotypeMapTest {
         Assert.assertEquals(first.getContig(), "chr1", "Wrong chromosome on first snp: " + first);
         Assert.assertEquals(first.getID(), "snp1", "Wrong name on first snp: " + first);
         Assert.assertEquals(first.getGenotype(0).getExtendedAttribute(VCFConstants.PHASE_SET_KEY), Integer.toString(first.getStart()), "anchor snp should have PS equal to its position " + first);
-        Assert.assertEquals(first.getAttributeAsDouble(VCFConstants.ALLELE_FREQUENCY_KEY, 0D), 0.15);
+        Assert.assertEquals(first.getAttributeAsDouble(VCFConstants.ALLELE_FREQUENCY_KEY, 0D), 1 - 0.15); // because it's swapped w.r.t the reference
 
         final VariantContext second = iter.next();
         Assert.assertEquals(second.getContig(), "chr1", "Wrong chromosome on second snp: " + second);
