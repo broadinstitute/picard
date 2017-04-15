@@ -29,14 +29,14 @@ import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import org.broadinstitute.barclay.argparser.Argument;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Illumina;
 import picard.illumina.parser.ReadDescriptor;
@@ -60,8 +60,8 @@ import java.util.stream.Collectors;
  */
 
 @CommandLineProgramProperties(
-        usage = CollectIlluminaLaneMetrics.USAGE_SUMMARY + CollectIlluminaLaneMetrics.USAGE_DETAILS,
-        usageShort = CollectIlluminaLaneMetrics.USAGE_SUMMARY,
+        summary = CollectIlluminaLaneMetrics.USAGE_SUMMARY + CollectIlluminaLaneMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectIlluminaLaneMetrics.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
 public class CollectIlluminaLaneMetrics extends CommandLineProgram {
@@ -83,22 +83,22 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
             "for a complete description of the metrics produced by this tool.</p>" +
             "<hr />"
     ;
-    @Option(doc = "The Illumina run directory of the run for which the lane metrics are to be generated")
+    @Argument(doc = "The Illumina run directory of the run for which the lane metrics are to be generated")
     public File RUN_DIRECTORY;
 
-    @Option(doc = "The directory to which the output file will be written")
+    @Argument(doc = "The directory to which the output file will be written")
     public File OUTPUT_DIRECTORY;
 
-    @Option(doc = "The prefix to be prepended to the file name of the output file; an appropriate suffix will be applied", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc = "The prefix to be prepended to the file name of the output file; an appropriate suffix will be applied", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public String OUTPUT_PREFIX;
 
-    @Option(doc = ReadStructure.PARAMETER_DOC + "\nIf not given, will use the RunInfo.xml in the run directory.", shortName = "RS", optional = true)
+    @Argument(doc = ReadStructure.PARAMETER_DOC + "\nIf not given, will use the RunInfo.xml in the run directory.", shortName = "RS", optional = true)
     public ReadStructure READ_STRUCTURE;
 
-    @Option(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.illumina_lane_metrics.EXT). None if null", optional=true)
+    @Argument(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.illumina_lane_metrics.EXT). None if null", optional=true)
     public String FILE_EXTENSION = null;
 
-    @Option(doc = "Boolean the determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory.", optional = true)
+    @Argument(doc = "Boolean the determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory.", optional = true)
     public boolean IS_NOVASEQ = false;
 
     @Override

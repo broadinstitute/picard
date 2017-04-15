@@ -29,8 +29,8 @@ import htsjdk.samtools.BAMIndexMetaData;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -45,8 +45,8 @@ import java.io.File;
  * @author Martha Borkan
  */
 @CommandLineProgramProperties(
-        usage = BamIndexStats.USAGE_SUMMARY + BamIndexStats.USAGE_DETAILS,
-        usageShort = BamIndexStats.USAGE_SUMMARY,
+        summary = BamIndexStats.USAGE_SUMMARY + BamIndexStats.USAGE_DETAILS,
+        oneLineSummary = BamIndexStats.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class BamIndexStats extends CommandLineProgram {
@@ -64,7 +64,7 @@ public class BamIndexStats extends CommandLineProgram {
             "<hr />"       ;
     private static final Log log = Log.getInstance(BamIndexStats.class);
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
+    @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="A BAM file to process.")
     public File INPUT;
 

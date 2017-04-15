@@ -33,9 +33,9 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
@@ -52,8 +52,8 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = MeanQualityByCycle.USAGE_SUMMARY + MeanQualityByCycle.USAGE_DETAILS,
-        usageShort = MeanQualityByCycle.USAGE_SUMMARY,
+        summary = MeanQualityByCycle.USAGE_SUMMARY + MeanQualityByCycle.USAGE_DETAILS,
+        oneLineSummary = MeanQualityByCycle.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class MeanQualityByCycle extends SinglePassSamProgram {
@@ -74,13 +74,13 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             "      CHART=mean_qual_by_cycle.pdf" +
             "</pre>" +
             "<hr />";
-    @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
+    @Argument(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 
-    @Option(doc="If set to true, calculate mean quality over aligned reads only.")
+    @Argument(doc="If set to true, calculate mean quality over aligned reads only.")
     public boolean ALIGNED_READS_ONLY = false;
 
-    @Option(doc="If set to true calculate mean quality over PF reads only.")
+    @Argument(doc="If set to true calculate mean quality over PF reads only.")
     public boolean PF_READS_ONLY = false;
 
     private final HistogramGenerator q  = new HistogramGenerator(false);

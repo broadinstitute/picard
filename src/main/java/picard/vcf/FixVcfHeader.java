@@ -42,10 +42,10 @@ import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
@@ -62,8 +62,8 @@ import java.util.Set;
  * @author Nils Homer
  */
 @CommandLineProgramProperties(
-        usage = FixVcfHeader.USAGE_SUMMARY + FixVcfHeader.USAGE_DETAILS,
-        usageShort = FixVcfHeader.USAGE_SUMMARY,
+        summary = FixVcfHeader.USAGE_SUMMARY + FixVcfHeader.USAGE_DETAILS,
+        oneLineSummary = FixVcfHeader.USAGE_SUMMARY,
         programGroup = VcfOrBcf.class
 )
 public class FixVcfHeader extends CommandLineProgram {
@@ -87,19 +87,19 @@ public class FixVcfHeader extends CommandLineProgram {
             "     O=fixed.vcf \\<br />" +
             "</pre>" +
             "<hr />";
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input VCF/BCF file.")
+    @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input VCF/BCF file.")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output VCF/BCF file.")
+    @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output VCF/BCF file.")
     public File OUTPUT;
 
-    @Option(shortName="N", doc="Check only the first N records when searching for missing INFO and FORMAT fields.", optional=true)
+    @Argument(shortName="N", doc="Check only the first N records when searching for missing INFO and FORMAT fields.", optional=true)
     public int CHECK_FIRST_N_RECORDS = -1;
 
-    @Option(shortName="H", doc="The replacement VCF header.", optional=true)
+    @Argument(shortName="H", doc="The replacement VCF header.", optional=true)
     public File HEADER = null;
 
-    @Option(doc="Enforce that the samples are the same (and in the same order) when replacing the VCF header.", optional=true)
+    @Argument(doc="Enforce that the samples are the same (and in the same order) when replacing the VCF header.", optional=true)
     public boolean ENFORCE_SAME_SAMPLES = true;
 
     private final Log log = Log.getInstance(FixVcfHeader.class);

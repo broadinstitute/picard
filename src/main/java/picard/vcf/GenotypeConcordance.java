@@ -32,10 +32,10 @@ import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.*;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 import picard.vcf.GenotypeConcordanceStates.CallState;
@@ -60,8 +60,8 @@ import static picard.vcf.GenotypeConcordanceStateCodes.*;
  * @author George Grant
  */
 @CommandLineProgramProperties(
-        usage = GenotypeConcordance.USAGE_SUMMARY + GenotypeConcordance.USAGE_DETAILS,
-        usageShort =  GenotypeConcordance.USAGE_SUMMARY,
+        summary = GenotypeConcordance.USAGE_SUMMARY + GenotypeConcordance.USAGE_DETAILS,
+        oneLineSummary =  GenotypeConcordance.USAGE_SUMMARY,
         programGroup = VcfOrBcf.class
 )
 public class GenotypeConcordance extends CommandLineProgram {
@@ -115,44 +115,44 @@ public class GenotypeConcordance extends CommandLineProgram {
             "</ul>" +
             "<hr />"
             ;
-    @Option(shortName = "TV", doc="The VCF containing the truth sample")
+    @Argument(shortName = "TV", doc="The VCF containing the truth sample")
     public File TRUTH_VCF;
 
-    @Option(shortName = "CV", doc="The VCF containing the call sample")
+    @Argument(shortName = "CV", doc="The VCF containing the call sample")
     public File CALL_VCF;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for the two metrics files that are to be written." +
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for the two metrics files that are to be written." +
             " Resulting files will be <OUTPUT>" + SUMMARY_METRICS_FILE_EXTENSION + " and <OUTPUT>" + DETAILED_METRICS_FILE_EXTENSION + ".")
     public File OUTPUT;
 
-    @Option(doc = "Output a VCF annotated with concordance information.")
+    @Argument(doc = "Output a VCF annotated with concordance information.")
     public boolean OUTPUT_VCF = false;
 
-    @Option(shortName = "TS", doc="The name of the truth sample within the truth VCF. Not required if only one sample exists.", optional = true)
+    @Argument(shortName = "TS", doc="The name of the truth sample within the truth VCF. Not required if only one sample exists.", optional = true)
     public String TRUTH_SAMPLE = null;
 
-    @Option(shortName = "CS", doc="The name of the call sample within the call VCF. Not required if only one sample exists.", optional = true)
+    @Argument(shortName = "CS", doc="The name of the call sample within the call VCF. Not required if only one sample exists.", optional = true)
     public String CALL_SAMPLE = null;
 
-    @Option(doc="One or more interval list files that will be used to limit the genotype concordance.  Note - if intervals are specified, the VCF files must be indexed.")
+    @Argument(doc="One or more interval list files that will be used to limit the genotype concordance.  Note - if intervals are specified, the VCF files must be indexed.", optional = true)
     public List<File> INTERVALS;
 
-    @Option(doc="If true, multiple interval lists will be intersected. If false multiple lists will be unioned.")
+    @Argument(doc="If true, multiple interval lists will be intersected. If false multiple lists will be unioned.")
     public boolean INTERSECT_INTERVALS = true;
 
-    @Option(doc="Genotypes below this genotype quality will have genotypes classified as LowGq.")
+    @Argument(doc="Genotypes below this genotype quality will have genotypes classified as LowGq.")
     public int MIN_GQ = 0;
 
-    @Option(doc="Genotypes below this depth will have genotypes classified as LowDp.")
+    @Argument(doc="Genotypes below this depth will have genotypes classified as LowDp.")
     public int MIN_DP = 0;
 
-    @Option(doc="If true, output all rows in detailed statistics even when count == 0.  When false only output rows with non-zero counts.")
+    @Argument(doc="If true, output all rows in detailed statistics even when count == 0.  When false only output rows with non-zero counts.")
     public boolean OUTPUT_ALL_ROWS = false;
 
-    @Option(doc="If true, use the VCF index, else iterate over the entire VCF.", optional = true)
+    @Argument(doc="If true, use the VCF index, else iterate over the entire VCF.", optional = true)
     public boolean USE_VCF_INDEX = false;
 
-    @Option(shortName = "MISSING_HOM", doc="Default is false, which follows the GA4GH Scheme. If true, missing sites in the truth set will be " +
+    @Argument(shortName = "MISSING_HOM", doc="Default is false, which follows the GA4GH Scheme. If true, missing sites in the truth set will be " +
             "treated as HOM_REF sites and sites missing in both the truth and call sets will be true negatives. Useful when hom ref sites are left out of the truth set. " +
             "This flag can only be used with a high confidence interval list.")
     public boolean MISSING_SITES_HOM_REF = false;

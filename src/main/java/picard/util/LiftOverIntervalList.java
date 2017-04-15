@@ -30,9 +30,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Intervals;
 
@@ -43,8 +43,8 @@ import java.util.List;
  * @author alecw@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = LiftOverIntervalList.USAGE_SUMMARY + LiftOverIntervalList.USAGE_DETAILS,
-        usageShort = LiftOverIntervalList.USAGE_SUMMARY,
+        summary = LiftOverIntervalList.USAGE_SUMMARY + LiftOverIntervalList.USAGE_DETAILS,
+        oneLineSummary = LiftOverIntervalList.USAGE_SUMMARY,
         programGroup = Intervals.class
 )
 public class LiftOverIntervalList extends CommandLineProgram {
@@ -65,20 +65,20 @@ public class LiftOverIntervalList extends CommandLineProgram {
             "<hr />";
     private static final Log LOG = Log.getInstance(LiftOverIntervalList.class);
 
-    @Option(doc = "Interval list to be lifted over.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "Interval list to be lifted over.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Option(doc = "Where to write lifted-over interval list.", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc = "Where to write lifted-over interval list.", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    @Option(doc = "Sequence dictionary to write into the output interval list.",
+    @Argument(doc = "Sequence dictionary to write into the output interval list.",
             shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME)
     public File SEQUENCE_DICTIONARY;
 
-    @Option(doc = "Chain file that guides LiftOver.")
+    @Argument(doc = "Chain file that guides LiftOver.")
     public File CHAIN;
 
-    @Option(doc = "Minimum percentage of bases in each input interval that must map to output interval.")
+    @Argument(doc = "Minimum percentage of bases in each input interval that must map to output interval.")
     public double MIN_LIFTOVER_PCT = LiftOver.DEFAULT_LIFTOVER_MINMATCH;
 
     public static void main(final String[] argv) {

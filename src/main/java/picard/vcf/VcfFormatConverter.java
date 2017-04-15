@@ -37,10 +37,10 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
@@ -52,8 +52,8 @@ import java.io.File;
  * @author jgentry@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = VcfFormatConverter.USAGE_SUMMARY + VcfFormatConverter.USAGE_DETAILS,
-        usageShort = VcfFormatConverter.USAGE_SUMMARY,
+        summary = VcfFormatConverter.USAGE_SUMMARY + VcfFormatConverter.USAGE_DETAILS,
+        oneLineSummary = VcfFormatConverter.USAGE_SUMMARY,
         programGroup = VcfOrBcf.class
 )
 public class VcfFormatConverter extends CommandLineProgram {
@@ -73,13 +73,13 @@ public class VcfFormatConverter extends CommandLineProgram {
     // The following attributes define the command-line arguments
     public static final Log LOG = Log.getInstance(VcfFormatConverter.class);
 
-    @Option(doc="The BCF or VCF input file.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc="The BCF or VCF input file.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Option(doc="The BCF or VCF output file name.", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc="The BCF or VCF output file name.", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-	@Option(doc="Fail if an index is not available for the input VCF/BCF")
+	@Argument(doc="Fail if an index is not available for the input VCF/BCF")
 	public Boolean REQUIRE_INDEX = true;
 
     public static void main(final String[] argv) {

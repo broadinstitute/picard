@@ -31,8 +31,8 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Fingerprinting;
 
@@ -59,7 +59,7 @@ import static picard.fingerprint.CrosscheckMetric.FingerprintResult.*;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        usage = "Checks if all fingerprints within a set of files appear to come from the same individual. " +
+        summary = "Checks if all fingerprints within a set of files appear to come from the same individual. " +
                 "The fingerprints are calculated initially at the readgroup level (if present) but can be " +
                 "\"rolled-up\" by library, sample or file, to increase power and provide results at the " +
                 "desired resolution. Regular output is in a \"Moltenized\" format, one row per comparison. " +
@@ -69,30 +69,30 @@ import static picard.fingerprint.CrosscheckMetric.FingerprintResult.*;
                 "\n" +
                 "A separate CLP, ClusterCrosscheckMetrics, can cluster the results as a connected graph " +
                 "according to LOD greater than a threshold. ",
-        usageShort = "Checks if all fingerprints appear to come from the same individual.",
+        oneLineSummary = "Checks if all fingerprints appear to come from the same individual.",
         programGroup = Fingerprinting.class
 )
 public class CrosscheckFingerprints extends CommandLineProgram {
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more input files (or lists of files) to compare fingerprints for.")
     public List<File> INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
             doc = "Optional output file to write metrics to. Default is to write to stdout.")
     public File OUTPUT = null;
 
-    @Option(shortName = "MO", optional = true,
+    @Argument(shortName = "MO", optional = true,
             doc = "Optional output file to write matrix of LOD scores to. This is less informative than the metrics output " +
                     "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity). " +
                     "It is however sometimes easier to use visually.")
     public File MATRIX_OUTPUT = null;
 
-    @Option(shortName = "H", doc = "The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
+    @Argument(shortName = "H", doc = "The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
             "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
     public File HAPLOTYPE_MAP;
 
-    @Option(shortName = "LOD",
+    @Argument(shortName = "LOD",
             doc = "If any two groups (with the same sample name) match with a LOD score lower than the threshold " +
                     "the program will exit with a non-zero code to indicate error." +
                     " Program will also exit with an error if it finds two groups with different sample name that " +
@@ -104,35 +104,35 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     "the groups are from the sample individual. ")
     public double LOD_THRESHOLD = 0;
 
-    @Option(doc = "Specificies which data-type should be used as the basic comparison unit. Fingerprints from readgroups can " +
+    @Argument(doc = "Specificies which data-type should be used as the basic comparison unit. Fingerprints from readgroups can " +
             "be \"rolled-up\" to the LIBRARY, SAMPLE, or FILE level before being compared." +
             " Fingerprints from VCF can be be compared by SAMPLE or FILE.")
     public CrosscheckMetric.DataType CROSSCHECK_BY = CrosscheckMetric.DataType.READGROUP;
 
-    @Option(doc = "The number of threads to use to process files and generate Fingerprints.")
+    @Argument(doc = "The number of threads to use to process files and generate Fingerprints.")
     public int NUM_THREADS = 1;
 
-    @Option(doc = "Allow the use of duplicate reads in performing the comparison. Can be useful when duplicate " +
+    @Argument(doc = "Allow the use of duplicate reads in performing the comparison. Can be useful when duplicate " +
             "marking has been overly aggressive and coverage is low.")
     public boolean ALLOW_DUPLICATE_READS = false;
 
-    @Option(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from " +
+    @Argument(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from " +
             "the expected sample.")
     public double GENOTYPING_ERROR_RATE = 0.01;
 
-    @Option(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.")
+    @Argument(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.")
     public boolean OUTPUT_ERRORS_ONLY = false;
 
-    @Option(doc = "The rate at which a heterozygous genotype in a normal sample turns into a homozygous (via loss of heterozygosity) " +
+    @Argument(doc = "The rate at which a heterozygous genotype in a normal sample turns into a homozygous (via loss of heterozygosity) " +
             "in the tumor (model assumes independent events, so this needs to be larger than reality).", optional = true)
     public double LOSS_OF_HET_RATE = 0.5;
 
-    @Option(doc = "Expect all groups' fingerprints to match, irrespective of their sample names.  By default (with this value set to " +
+    @Argument(doc = "Expect all groups' fingerprints to match, irrespective of their sample names.  By default (with this value set to " +
             "false), groups (readgroups, libraries, files, or samples) with different sample names are expected to mismatch, and those with the " +
             "same sample name are expected to match. ")
     public boolean EXPECT_ALL_GROUPS_TO_MATCH = false;
 
-    @Option(doc = "When one or more mismatches between groups is detected, exit with this value instead of 0.")
+    @Argument(doc = "When one or more mismatches between groups is detected, exit with this value instead of 0.")
     public int EXIT_CODE_WHEN_MISMATCH = 1;
 
     private final Log log = Log.getInstance(CrosscheckFingerprints.class);

@@ -34,8 +34,8 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -45,8 +45,8 @@ import java.io.File;
  * @author alecw@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = SortSam.USAGE_SUMMARY + SortSam.USAGE_DETAILS,
-        usageShort = SortSam.USAGE_SUMMARY,
+        summary = SortSam.USAGE_SUMMARY + SortSam.USAGE_DETAILS,
+        oneLineSummary = SortSam.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class SortSam extends CommandLineProgram {
@@ -70,13 +70,13 @@ public class SortSam extends CommandLineProgram {
             "</pre>" +
 
             "<hr />";
-    @Option(doc = "The BAM or SAM file to sort.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "The BAM or SAM file to sort.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Option(doc = "The sorted BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc = "The sorted BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    @Option(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc = "Sort order of output file")
+    @Argument(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc = "Sort order of output file")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
     private final Log log = Log.getInstance(SortSam.class);

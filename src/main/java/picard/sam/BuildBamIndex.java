@@ -35,9 +35,9 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -50,8 +50,8 @@ import java.net.URL;
  * @author Martha Borkan
  */
 @CommandLineProgramProperties(
-        usage = BuildBamIndex.USAGE_SUMMARY + BuildBamIndex.USAGE_DETAILS,
-        usageShort = BuildBamIndex.USAGE_SUMMARY,
+        summary = BuildBamIndex.USAGE_SUMMARY + BuildBamIndex.USAGE_DETAILS,
+        oneLineSummary = BuildBamIndex.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class BuildBamIndex extends CommandLineProgram {
@@ -67,14 +67,14 @@ public class BuildBamIndex extends CommandLineProgram {
             "<hr />";
     private static final Log log = Log.getInstance(BuildBamIndex.class);
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "A BAM file or GA4GH URL to process. Must be sorted in coordinate order.")
     public String INPUT;
 
     URL inputUrl = null;   // INPUT as URL
     File inputFile = null; // INPUT as File, if it can't be interpreted as a valid URL
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.\n" +
                     "If INPUT is a URL and OUTPUT is unspecified, defaults to a file in the current directory.", optional = true)
     public File OUTPUT;

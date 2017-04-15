@@ -34,8 +34,8 @@ import htsjdk.samtools.SecondaryOrSupplementarySkippingIterator;
 import htsjdk.samtools.util.CloserUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.PositionalArguments;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.PositionalArguments;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
@@ -50,8 +50,8 @@ import java.util.Map;
  * @author alecw@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = CompareSAMs.USAGE_SUMMARY + CompareSAMs.USAGE_DETAILS,
-        usageShort = CompareSAMs.USAGE_SUMMARY,
+        summary = CompareSAMs.USAGE_SUMMARY + CompareSAMs.USAGE_DETAILS,
+        oneLineSummary = CompareSAMs.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class CompareSAMs extends CommandLineProgram {

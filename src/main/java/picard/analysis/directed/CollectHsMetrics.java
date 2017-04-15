@@ -28,9 +28,9 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.analysis.MetricAccumulationLevel;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 
 import java.io.File;
@@ -47,8 +47,8 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = CollectHsMetrics.USAGE_SUMMARY + CollectHsMetrics.USAGE_DETAILS,
-        usageShort = CollectHsMetrics.USAGE_SUMMARY,
+        summary = CollectHsMetrics.USAGE_SUMMARY + CollectHsMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectHsMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectHsMetrics extends CollectTargetedMetrics<HsMetrics, HsMetricCollector> {
@@ -90,20 +90,18 @@ static final String USAGE_DETAILS = "This tool takes a SAM/BAM file input and co
 "<hr />"
 ;
 
-    @Option(shortName = "BI", doc = "An interval list file that contains the locations of the baits used.", minElements=1)
+    @Argument(shortName = "BI", doc = "An interval list file that contains the locations of the baits used.", minElements=1)
     public List<File> BAIT_INTERVALS;
 
-    @Option(shortName = "N", doc = "Bait set name. If not provided it is inferred from the filename of the bait intervals.", optional = true)
+    @Argument(shortName = "N", doc = "Bait set name. If not provided it is inferred from the filename of the bait intervals.", optional = true)
     public String BAIT_SET_NAME;
 
-    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
-    public int MINIMUM_MAPPING_QUALITY = 20;
-
-    @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.", overridable = true)
-    public int MINIMUM_BASE_QUALITY = 20;
-
-    @Option(doc = "True if we are to clip overlapping reads, false otherwise.", optional=true, overridable = true)
-    public boolean CLIP_OVERLAPPING_READS = true;
+    public CollectHsMetrics() {
+        // Override inherited default values
+        MINIMUM_MAPPING_QUALITY = 20;
+        MINIMUM_BASE_QUALITY = 20;
+        CLIP_OVERLAPPING_READS = true;
+    }
 
     @Override
     protected IntervalList getProbeIntervals() {

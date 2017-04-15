@@ -24,9 +24,9 @@
 
 package picard.sam.markduplicates;
 
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.SamOrBam;
 import picard.sam.DuplicationMetrics;
 import htsjdk.samtools.ReservedTagConstants;
@@ -51,8 +51,8 @@ import java.util.*;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = MarkDuplicates.USAGE_SUMMARY + MarkDuplicates.USAGE_DETAILS,
-        usageShort = MarkDuplicates.USAGE_SUMMARY,
+        summary = MarkDuplicates.USAGE_SUMMARY + MarkDuplicates.USAGE_DETAILS,
+        oneLineSummary = MarkDuplicates.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
@@ -139,30 +139,30 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      * If more than this many sequences in SAM file, don't spill to disk because there will not
      * be enough file handles.
      */
-    @Option(shortName = "MAX_SEQS",
+    @Argument(shortName = "MAX_SEQS",
             doc = "This option is obsolete. ReadEnds will always be spilled to disk.")
     public int MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP = 50000;
 
-    @Option(shortName = "MAX_FILE_HANDLES",
+    @Argument(shortName = "MAX_FILE_HANDLES",
             doc = "Maximum number of file handles to keep open when spilling read ends to disk. " +
                     "Set this number a little lower than the per-process maximum number of file that may be open. " +
                     "This number can be found by executing the 'ulimit -n' command on a Unix system.")
     public int MAX_FILE_HANDLES_FOR_READ_ENDS_MAP = 8000;
 
-    @Option(doc = "This number, plus the maximum RAM available to the JVM, determine the memory footprint used by " +
+    @Argument(doc = "This number, plus the maximum RAM available to the JVM, determine the memory footprint used by " +
             "some of the sorting collections.  If you are running out of memory, try reducing this number.")
     public double SORTING_COLLECTION_SIZE_RATIO = 0.25;
 
-    @Option(doc = "Barcode SAM tag (ex. BC for 10X Genomics)", optional = true)
+    @Argument(doc = "Barcode SAM tag (ex. BC for 10X Genomics)", optional = true)
     public String BARCODE_TAG = null;
 
-    @Option(doc = "Read one barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
+    @Argument(doc = "Read one barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
     public String READ_ONE_BARCODE_TAG = null;
 
-    @Option(doc = "Read two barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
+    @Argument(doc = "Read two barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
     public String READ_TWO_BARCODE_TAG = null;
 
-    @Option(doc = "If a read appears in a duplicate set, add two tags. The first tag, DUPLICATE_SET_SIZE_TAG (DS), " +
+    @Argument(doc = "If a read appears in a duplicate set, add two tags. The first tag, DUPLICATE_SET_SIZE_TAG (DS), " +
             "indicates the size of the duplicate set. The smallest possible DS value is 2 which occurs when two " +
             "reads map to the same portion of the reference only one of which is marked as duplicate. The second " +
             "tag, DUPLICATE_SET_INDEX_TAG (DI), represents a unique identifier for the duplicate set to which the " +
@@ -170,12 +170,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             "of the duplicate set.", optional = true)
     public boolean TAG_DUPLICATE_SET_MEMBERS = false;
 
-    @Option(doc = "If true remove 'optical' duplicates and other duplicates that appear to have arisen from the " +
+    @Argument(doc = "If true remove 'optical' duplicates and other duplicates that appear to have arisen from the " +
             "sequencing process instead of the library preparation process, even if REMOVE_DUPLICATES is false. " +
             "If REMOVE_DUPLICATES is true, all duplicates are removed and this option is ignored.")
     public boolean REMOVE_SEQUENCING_DUPLICATES = false;
 
-    @Option(doc= "Determines how duplicate types are recorded in the DT optional attribute.")
+    @Argument(doc= "Determines how duplicate types are recorded in the DT optional attribute.")
     public DuplicateTaggingPolicy TAGGING_POLICY = DuplicateTaggingPolicy.DontTag;
 
     private SortingCollection<ReadEndsForMarkDuplicates> pairSort;
@@ -650,7 +650,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         int entryOverhead;
         if (TAG_DUPLICATE_SET_MEMBERS) {
             // Memory requirements for RepresentativeReadIndexer:
-            // three int entries + overhead: (3 * 4) + 4 = 16 bytes 
+            // three int entries + overhead: (3 * 4) + 4 = 16 bytes
             entryOverhead = 16;
         }
         else {

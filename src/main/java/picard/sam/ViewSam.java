@@ -37,10 +37,10 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -57,8 +57,8 @@ import java.util.List;
  * @author tfennell@broad.mit.edu
  */
 @CommandLineProgramProperties(
-        usage = "Prints a SAM or BAM file to the screen.",
-        usageShort = "Prints a SAM or BAM file to the screen",
+        summary = "Prints a SAM or BAM file to the screen.",
+        oneLineSummary = "Prints a SAM or BAM file to the screen",
         programGroup = SamOrBam.class
 )
 public class ViewSam extends CommandLineProgram {
@@ -67,22 +67,22 @@ public class ViewSam extends CommandLineProgram {
     public static enum PfStatus {PF, NonPF, All}
 
     public final String USAGE = getStandardUsagePreamble() + "Prints a SAM or BAM file to the screen.";
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The SAM or BAM file or GA4GH url to view.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The SAM or BAM file or GA4GH url to view.")
     public String INPUT;
 
-    @Option(doc = "Print out all reads, just the aligned reads or just the unaligned reads.")
+    @Argument(doc = "Print out all reads, just the aligned reads or just the unaligned reads.")
     public AlignmentStatus ALIGNMENT_STATUS = AlignmentStatus.All;
 
-    @Option(doc = "Print out all reads, just the PF reads or just the non-PF reads.")
+    @Argument(doc = "Print out all reads, just the PF reads or just the non-PF reads.")
     public PfStatus PF_STATUS = PfStatus.All;
 
-    @Option(doc="Print the SAM header only.", optional = true)
+    @Argument(doc="Print the SAM header only.", optional = true)
     public boolean HEADER_ONLY = false;
 
-    @Option(doc="Print the alignment records only.", optional = true)
+    @Argument(doc="Print the alignment records only.", optional = true)
     public boolean RECORDS_ONLY = false;
 
-    @Option(doc = "An intervals file used to restrict what records are output.", optional = true)
+    @Argument(doc = "An intervals file used to restrict what records are output.", optional = true)
     public File INTERVAL_LIST;
 
     public static void main(final String[] args) {

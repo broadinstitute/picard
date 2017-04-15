@@ -10,10 +10,10 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
@@ -33,17 +33,17 @@ import java.util.TreeSet;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Gathers multiple VCF files from a scatter operation into a single VCF file. Input files " +
+        summary = "Gathers multiple VCF files from a scatter operation into a single VCF file. Input files " +
                 "must be supplied in genomic order and must not have events at overlapping positions.",
-        usageShort = "Gathers multiple VCF files from a scatter operation into a single VCF file",
+        oneLineSummary = "Gathers multiple VCF files from a scatter operation into a single VCF file",
         programGroup = VcfOrBcf.class
 )
 public class GatherVcfs extends CommandLineProgram {
 
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,  doc="Input VCF file(s).")
+    @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,  doc="Input VCF file(s).")
 	public List<File> INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output VCF file.")
+    @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output VCF file.")
 	public File OUTPUT;
 
     private static final Log log = Log.getInstance(GatherVcfs.class);

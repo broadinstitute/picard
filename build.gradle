@@ -49,14 +49,23 @@ jacoco {
 
 final htsjdkVersion = System.getProperty('htsjdk.version', '2.10.1')
 
+// Get the jdk files we need to run javaDoc. We need to use these during compile, testCompile,
+// test execution, and gatkDoc generation, but we don't want them as part of the runtime
+// classpath and we don't want to redistribute them in the uber jar.
+final javadocJDKFiles = files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs())
+
 dependencies {
     compile('com.intel.gkl:gkl:0.5.3') {
         exclude module: 'htsjdk'
     }
     compile 'com.google.guava:guava:15.0'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
-    //tools dependency for doclet requires sdk devel
-    compile(files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs()))
+    compile 'org.broadinstitute:barclay:1.1.0'
+
+    // javadoc utilities; compile/test only to prevent redistribution of sdk jars
+    compileOnly(javadocJDKFiles)
+    testCompile(javadocJDKFiles)
+
     testCompile 'org.testng:testng:6.9.10'
     testCompile 'org.apache.commons:commons-lang3:3.6'
 }
@@ -80,9 +89,29 @@ group = 'com.github.broadinstitute'
 
 defaultTasks 'all'
 
-task all(dependsOn: ['jar', 'distZip', 'documentAll', 'shadowJar', 'currentJar'])
+task all(dependsOn: ['jar', 'distZip', 'javadoc', 'shadowJar', 'barclayShadowJar', 'currentJar'])
 
-jar {
+// Source file names for the picard command line properties file. We select and include only one of
+// these two files in each jar, renamed to "picardCmdLine.properties", depending on which parser we
+// want enabled.
+final String legacySourcePropertyFile = 'legacyParserProperties.properties'
+final String barclaySourcePropertyFile = 'barclayParserProperties.properties'
+
+// Target name/location for the picard command line properties file; one of the above source
+// files will be included at this path/location for runtime access
+final String picardTargetPropertiesPath = 'picard'
+final String picardTargetPropertyFile = 'picardCmdLine.properties'
+
+sourceSets {
+    // no need to include these in the jar files; the correct one is selected by the build to control Barclay
+    main {
+        resources {
+            exclude ('properties.templates/**')
+        }
+    }
+}
+
+tasks.withType(Jar){
     manifest {
         attributes 'Main-Class': 'picard.cmdline.PicardCommandLine',
                 'Implementation-Title': 'Picard',
@@ -90,11 +119,54 @@ jar {
                 'Implementation-Version': version
     }
 }
-// This is a hack to disable the java 8 default javadoc lint until we fix the html formatting
-if (JavaVersion.current().isJava8Compatible()) {
-    tasks.withType(Javadoc) {
-        options.addStringOption('Xdoclint:none', '-quiet')
+
+jar {
+    from('src/main/resources/properties.templates') {
+        // for the default jar, we want the properties file that enables the picard parser
+        include legacySourcePropertyFile
+        into picardTargetPropertiesPath
+        rename { String fileName ->
+            fileName.replace(legacySourcePropertyFile, picardTargetPropertyFile)
+        }
     }
+}
+
+tasks.withType(Javadoc) {
+    // do this for all javadoc tasks, including gatkDoc
+    options.addStringOption('Xdoclint:none')
+}
+
+javadoc {
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+// Generate Picard Online Doc
+task picardDoc(type: Javadoc, dependsOn: ['cleanPicardDoc', classes]) {
+    final File picardDocDir = new File("build/docs/picarddoc")
+    doFirst {
+        // make sure the output folder exists or we can create it
+        if (!picardDocDir.exists() && !picardDocDir.mkdirs()) {
+            throw new GradleException(String.format("Failure creating folder (%s) for picardDocDir doc output in task (%s)",
+                    picardDocDir.getAbsolutePath(),
+                    it.name));
+        }
+    }
+    source = sourceSets.main.allJava
+
+    // The gatkDoc process instantiates any documented feature classes, so to run it we need the entire
+    // runtime classpath, as well as jdk javadoc files such as tools.jar, where com.sun.javadoc lives.
+    classpath = sourceSets.main.runtimeClasspath + javadocJDKFiles
+    options.docletpath = classpath.asType(List)
+    options.doclet = "picard.util.help.PicardHelpDoclet"
+
+    outputs.dir(picardDocDir)
+    options.destinationDirectory(picardDocDir)
+
+    options.addStringOption("settings-dir", "src/main/resources/picard/helpTemplates/");
+    options.addStringOption("output-file-extension", "html")
+    options.addStringOption("absolute-version", getVersion())
+    options.addStringOption("build-timestamp", new Date().format("dd-mm-yyyy hh:mm:ss"))
+    options.addStringOption("verbose")
 }
 
 task currentJar(type: Copy){
@@ -105,6 +177,48 @@ task currentJar(type: Copy){
 
 shadowJar {
     finalizedBy currentJar
+    from('src/main/resources/properties.templates') {
+        // for the default jar, we want the properties file that enables the picard parser
+        include legacySourcePropertyFile
+        into picardTargetPropertiesPath
+        rename { String fileName ->
+            fileName.replace(legacySourcePropertyFile, picardTargetPropertyFile)
+        }
+    }
+}
+
+// Create picardBarclay.jar, which is a identical to picard.jar, but contains a .properties
+// file that tells Picard to use the Barclay command line parser instead of the Picard
+// command line parser.
+//
+task barclayShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar)  {
+    configurations = [project.configurations.runtime]
+    from project.sourceSets.main.output
+    from('src/main/resources/properties.templates') {
+        // for the default jar, we want the properties file that enables the picard parser
+        include barclaySourcePropertyFile
+        into picardTargetPropertiesPath
+        rename { String fileName ->
+            fileName.replace(barclaySourcePropertyFile, picardTargetPropertyFile)
+        }
+    }
+    archiveName 'picardBarclay.jar'
+}
+
+// Run the tests using the legacy parser only. Assumes that test code is written using
+// legacy command line parser syntax.
+task legacyTest(type: Test)
+
+// Run the tests using the Barclay command line parser (useLegacyParser=false), which requires
+// conversion of test command lines from Picard-style command line syntax to Barclay-style syntax.
+task barclayTest(type: Test) {
+    systemProperty 'picard.convertCommandLine', 'true'
+    systemProperty 'picard.useLegacyParser', 'false'
+}
+
+// Run tests using both the legacy and barclay command line parsers.
+test {
+    dependsOn barclayTest
 }
 
 tasks.withType(Test) {
@@ -157,104 +271,12 @@ tasks.withType(Test) {
     }
 }
 
-ext.htmlDir = new File("build/docs/html")
-ext.htmlDirInc = new File(htmlDir, "_includes")
-ext.commandClasses = ["picard.sam.AddCommentsToBam", "picard.sam.AddOrReplaceReadGroups", "picard.util.BaitDesigner", "picard.fastq.BamToBfq",
-                          "picard.sam.BamIndexStats", "picard.util.BedToIntervalList", "picard.sam.BuildBamIndex",
-                          "picard.sam.CalculateReadGroupChecksum", "picard.sam.CleanSam", "picard.analysis.CollectAlignmentSummaryMetrics",
-                          "picard.analysis.CollectBaseDistributionByCycle", "picard.analysis.CollectGcBiasMetrics", "picard.illumina.quality.CollectHiSeqXPfFailMetrics",
-                          "picard.analysis.directed.CollectHsMetrics", "picard.illumina.CollectIlluminaBasecallingMetrics", "picard.illumina.CollectIlluminaLaneMetrics",
-                          "picard.analysis.CollectInsertSizeMetrics", "picard.analysis.CollectJumpingLibraryMetrics", "picard.analysis.CollectMultipleMetrics",
-                          "picard.analysis.CollectOxoGMetrics", "picard.analysis.CollectQualityYieldMetrics", "picard.analysis.CollectRawWgsMetrics",
-                          "picard.analysis.directed.CollectTargetedPcrMetrics", "picard.analysis.CollectRnaSeqMetrics", "picard.analysis.CollectRrbsMetrics",
-                          "picard.analysis.artifacts.CollectSequencingArtifactMetrics", "picard.vcf.CollectVariantCallingMetrics", "picard.analysis.CollectWgsMetrics",
-                          "picard.analysis.CollectWgsMetricsWithNonZeroCoverage", "picard.analysis.CompareMetrics", "picard.sam.CompareSAMs",
-                          "picard.analysis.artifacts.ConvertSequencingArtifactToOxoG", "picard.sam.CreateSequenceDictionary", "picard.sam.DownsampleSam",
-                          "picard.illumina.ExtractIlluminaBarcodes", "picard.sam.markduplicates.EstimateLibraryComplexity", "picard.sam.FastqToSam", "picard.util.FifoBuffer",
-                          "picard.vcf.MendelianViolations.FindMendelianViolations","picard.fingerprint.CrosscheckFingerprints", "picard.fingerprint.ClusterCrosscheckMetrics", "picard.fingerprint.CheckFingerprint",
-                          "picard.sam.FilterSamReads", "picard.vcf.filter.FilterVcf", "picard.sam.FixMateInformation", "picard.sam.GatherBamFiles", "picard.vcf.GatherVcfs",
-                          "picard.vcf.GenotypeConcordance", "picard.illumina.IlluminaBasecallsToFastq", "picard.illumina.IlluminaBasecallsToSam", "picard.illumina.CheckIlluminaDirectory",
-                          "picard.sam.CheckTerminatorBlock", "picard.util.IntervalListTools", "picard.util.LiftOverIntervalList", "picard.vcf.LiftoverVcf", "picard.vcf.MakeSitesOnlyVcf",
-                          "picard.sam.markduplicates.MarkDuplicates", "picard.sam.markduplicates.MarkDuplicatesWithMateCigar", "picard.analysis.MeanQualityByCycle",
-                          "picard.sam.MergeBamAlignment", "picard.sam.MergeSamFiles", "picard.vcf.MergeVcfs", "picard.reference.NormalizeFasta", "picard.sam.PositionBasedDownsampleSam",
-                          "picard.reference.ExtractSequences", "picard.analysis.QualityScoreDistribution", "picard.vcf.RenameSampleInVcf", "picard.sam.ReorderSam",
-                          "picard.sam.ReplaceSamHeader", "picard.sam.RevertSam", "picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar", "picard.sam.SamFormatConverter",
-                          "picard.sam.SamToFastq", "picard.util.ScatterIntervalsByNs", "picard.sam.SetNmMdAndUqTags",
-                          "picard.sam.SortSam", "picard.vcf.SortVcf", "picard.sam.SplitSamByLibrary", "picard.sam.markduplicates.UmiAwareMarkDuplicatesWithMateCigar",
-                          "picard.vcf.UpdateVcfSequenceDictionary", "picard.vcf.VcfFormatConverter", "picard.illumina.MarkIlluminaAdapters", "picard.vcf.SplitVcfs",
-                          "picard.sam.ValidateSamFile", "picard.sam.ViewSam", "picard.vcf.VcfToIntervalList"]
-
-//generate documentation
-
-task documentAll(dependsOn: ['documentCommands', 'createMetricsDoc', 'documentStandardOptions']){
-  doFirst{
-    htmlDirInc.mkdirs()
-  }
-}
-
-task documentCommands  {
-    def previousDocTask = null
-    def usageFile = new File(htmlDirInc, "command-line-usage.html")
-    def sidebarFile = new File(htmlDirInc, "command-line-sidebar.html")
-
-    commandClasses.each { mainClass ->
-       task "document_${mainClass}"(type: JavaExec) {
-           main ='picard.cmdline.CreateHtmlDocForProgram'
-           classpath = sourceSets.main.runtimeClasspath
-           args mainClass
-           def outputFile = new File(htmlDirInc, mainClass.substring(mainClass.lastIndexOf(".") + 1) + ".html")
-           doFirst {
-                htmlDirInc.mkdirs()
-                standardOutput = new FileOutputStream(outputFile)
-            }
-           outputs.file outputFile
-
-           if (previousDocTask != null) delegate.dependsOn previousDocTask
-           previousDocTask = delegate
-           documentCommands.dependsOn(delegate)
-           doLast {
-             usageFile.append("{% include ${mainClass.substring(mainClass.lastIndexOf(".") + 1) + ".html"} %}")
-             usageFile.append(System.getProperty("line.separator"))
-             sidebarFile.append("<li><a href=\"command-line-overview.html#${mainClass.substring(mainClass.lastIndexOf(".") + 1)}\">${mainClass.substring(mainClass.lastIndexOf(".") + 1)}</a>")
-             sidebarFile.append(System.getProperty("line.separator"))
-           }
-        }
-    }
-    outputs.dir htmlDirInc
-}
-
-task documentStandardOptions(type: JavaExec) {
-    main = 'picard.cmdline.CreateHtmlDocForStandardOptions'
-    classpath = sourceSets.main.runtimeClasspath
-    def standardOptionsFile = new File(htmlDirInc, "standard-options.html")
-    doFirst{
-      htmlDirInc.mkdirs()
-      standardOutput = new FileOutputStream(standardOptionsFile)
-    }
-    outputs.file standardOptionsFile
- }
-
-task createMetricsDoc(dependsOn: classes, type: Javadoc) {
-    doFirst {
-        htmlDirInc.mkdirs()
-    }
-
-    source = sourceSets.main.allJava
-    classpath = sourceSets.main.runtimeClasspath
-    outputs.dir(htmlDirInc)
-
-    options.destinationDirectory = htmlDirInc
-    options.doclet = 'picard.util.MetricsDoclet'
-    options.docletpath = sourceSets.main.runtimeClasspath.asType(List)
-}
-//end generate documentation
-
 task wrapper(type: Wrapper) {
     description = "Regenerate the gradle wrapper"
     gradleVersion = '3.1'
 }
 
-task javadocJar(type: Jar, dependsOn: documentAll) {
+task javadocJar(type: Jar) {
     classifier = 'javadoc'
     from 'build/docs/javadoc'
 }
@@ -332,26 +354,4 @@ uploadArchives {
     doFirst {
         System.out.println("Uploading version $version")
     }
-}
-
-//update static web docs
-task copyJavadoc(dependsOn: 'javadoc', type: Copy) {
-    from 'build/docs/javadoc'
-    into "$htmlDir/javadoc"
-}
-
-task updateGhPages(dependsOn: ['copyJavadoc', 'documentAll']){
-  outputs.dir htmlDir
-}
-
-updateGhPages.finalizedBy publishGhPages
-
-githubPages {
-  repoUri = 'git@github.com:broadinstitute/picard.git'
-  targetBranch = 'gh-pages'
-  deleteExistingFiles = false
-  pages {
-    from htmlDir
-    into '.'
-  }
 }

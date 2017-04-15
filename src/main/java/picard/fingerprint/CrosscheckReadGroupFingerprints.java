@@ -25,8 +25,8 @@
 
 package picard.fingerprint;
 
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Fingerprinting;
 
 import java.io.File;
@@ -42,23 +42,23 @@ import java.util.List;
  * @deprecated 6/6/2017 Use {@link CrosscheckFingerprints} instead.
  */
 @CommandLineProgramProperties(
-        usage = "DEPRECATED: USE CrosscheckFingerprints. Checks if all read groups within a set of BAM files appear to come from the same individual",
-        usageShort = "DEPRECATED: USE CrosscheckFingerprints. Checks if all read groups appear to come from the same individual.",
+        summary = "DEPRECATED: USE CrosscheckFingerprints. Checks if all read groups within a set of BAM files appear to come from the same individual",
+        oneLineSummary = "DEPRECATED: USE CrosscheckFingerprints. Checks if all read groups appear to come from the same individual.",
         programGroup = Fingerprinting.class
 )
 @Deprecated
 public class CrosscheckReadGroupFingerprints extends CrosscheckFingerprints {
 
 
-    @Option(doc = "Instead of producing the normal comparison of read-groups, roll fingerprints up to the sample level " +
+    @Argument(doc = "Instead of producing the normal comparison of read-groups, roll fingerprints up to the sample level " +
             "and print out a sample x sample matrix with LOD scores.")
     public boolean CROSSCHECK_SAMPLES = false;
 
-    @Option(doc = "Instead of producing the normal comparison of read-groups, roll fingerprints up to the library level " +
+    @Argument(doc = "Instead of producing the normal comparison of read-groups, roll fingerprints up to the library level " +
             "and print out a library x library matrix with LOD scores.")
     public boolean CROSSCHECK_LIBRARIES = false;
 
-    @Option(doc = "Expect all read groups' fingerprints to match, irrespective of their sample names.  By default (with this value set to " +
+    @Argument(doc = "Expect all read groups' fingerprints to match, irrespective of their sample names.  By default (with this value set to " +
             "false), read groups with different sample names are expected to mismatch, and those with the same sample name are expected " +
             "to match.", mutex = {"EXPECT_ALL_GROUPS_TO_MATCH"})
     public boolean EXPECT_ALL_READ_GROUPS_TO_MATCH = false;
@@ -108,4 +108,3 @@ public class CrosscheckReadGroupFingerprints extends CrosscheckFingerprints {
         return super.doWork();
     }
 }
-     

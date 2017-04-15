@@ -29,8 +29,8 @@ import htsjdk.samtools.DuplicateSetIterator;
 import htsjdk.samtools.SAMRecordDuplicateComparator;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.*;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Alpha;
 
 import java.io.File;
@@ -49,8 +49,8 @@ import java.io.File;
  * @author fleharty
  */
 @CommandLineProgramProperties(
-        usage = UmiAwareMarkDuplicatesWithMateCigar.USAGE_SUMMARY + UmiAwareMarkDuplicatesWithMateCigar.USAGE_DETAILS,
-        usageShort = UmiAwareMarkDuplicatesWithMateCigar.USAGE_SUMMARY,
+        summary = UmiAwareMarkDuplicatesWithMateCigar.USAGE_SUMMARY + UmiAwareMarkDuplicatesWithMateCigar.USAGE_DETAILS,
+        oneLineSummary = UmiAwareMarkDuplicatesWithMateCigar.USAGE_SUMMARY,
         programGroup = Alpha.class
 )
 public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWithMateCigar {
@@ -65,23 +65,23 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
             "<p>This tool is NOT intended to be used on data without UMIs; for marking duplicates in non-UMI data, see MarkDuplicates or " +
             "MarkDuplicatesWithMateCigar. Mixed data (where some reads have UMIs and others do not) is not supported.</p>";
 
-    @Option(shortName = "MAX_EDIT_DISTANCE_TO_JOIN", doc = "Largest edit distance that UMIs must have in order to be considered as coming from distinct source molecules.", optional = true)
+    @Argument(shortName = "MAX_EDIT_DISTANCE_TO_JOIN", doc = "Largest edit distance that UMIs must have in order to be considered as coming from distinct source molecules.", optional = true)
     public int MAX_EDIT_DISTANCE_TO_JOIN = 1;
 
     // The UMI_METRICS file provides various statistical measurements collected about the UMIs during deduplication.
-    @Option(shortName = "UMI_METRICS", doc = "UMI Metrics")
+    @Argument(shortName = "UMI_METRICS", doc = "UMI Metrics")
     public File UMI_METRICS_FILE;
 
-    @Option(shortName = "UMI_TAG_NAME", doc = "Tag name to use for UMI", optional = true)
+    @Argument(shortName = "UMI_TAG_NAME", doc = "Tag name to use for UMI", optional = true)
     public String UMI_TAG_NAME = "RX";
 
-    @Option(shortName = "ASSIGNED_UMI_TAG", doc = "Tag name to use for assigned UMI", optional = true)
+    @Argument(shortName = "ASSIGNED_UMI_TAG", doc = "Tag name to use for assigned UMI", optional = true)
     public String ASSIGNED_UMI_TAG = "MI";
 
     // Since we inherit from SimpleMarkDuplicatesWithMateCigar, it is useful for us to also inherit the tests
     // which do not contain UMIs.  By default, we don't allow for missing UMIs, but for the inherited tests
     // we allow for missing UMIs.
-    @Option(doc = "FOR TESTING ONLY: allow for missing UMIs if data doesn't have UMIs. This option is intended to be used ONLY for testing the code. Use MarkDuplicatesWithMateCigar if data has no UMIs. Mixed data (where some reads have UMIs and others do not) is not supported.", optional = true)
+    @Argument(doc = "FOR TESTING ONLY: allow for missing UMIs if data doesn't have UMIs. This option is intended to be used ONLY for testing the code. Use MarkDuplicatesWithMateCigar if data has no UMIs. Mixed data (where some reads have UMIs and others do not) is not supported.", optional = true)
     public boolean ALLOW_MISSING_UMIS = false;
 
     private final Log log = Log.getInstance(UmiAwareMarkDuplicatesWithMateCigar.class);

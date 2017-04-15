@@ -37,10 +37,12 @@ import htsjdk.samtools.util.Md5CalculatingOutputStream;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.Fasta;
 import picard.cmdline.StandardOptionDefinitions;
 
@@ -57,9 +59,10 @@ import java.util.Set;
  * Create a SAM/BAM file from a fasta containing reference sequence. The output SAM file contains a header but no
  * SAMRecords, and the header contains only sequence records.
  */
+@DocumentedFeature
 @CommandLineProgramProperties(
-        usage = CreateSequenceDictionary.USAGE_SUMMARY + CreateSequenceDictionary.USAGE_DETAILS,
-        usageShort = CreateSequenceDictionary.USAGE_SUMMARY,
+        summary = CreateSequenceDictionary.USAGE_SUMMARY + CreateSequenceDictionary.USAGE_DETAILS,
+        oneLineSummary = CreateSequenceDictionary.USAGE_SUMMARY,
         programGroup = Fasta.class
 )
 public class CreateSequenceDictionary extends CommandLineProgram {
@@ -82,28 +85,25 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     private static final Log logger = Log.getInstance(CreateSequenceDictionary.class);
 
-    @Option(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
-    public File REFERENCE;
-
-    @Option(doc = "Output SAM file containing only the sequence dictionary. By default it will use the base name of the input reference with the .dict extension",
+    @Argument(doc = "Output SAM file containing only the sequence dictionary. By default it will use the base name of the input reference with the .dict extension",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
-    @Option(shortName = "AS", doc = "Put into AS field of sequence dictionary entry if supplied", optional = true)
+    @Argument(shortName = "AS", doc = "Put into AS field of sequence dictionary entry if supplied", optional = true)
     public String GENOME_ASSEMBLY;
 
-    @Option(shortName = "UR", doc = "Put into UR field of sequence dictionary entry.  If not supplied, input reference file is used",
+    @Argument(shortName = "UR", doc = "Put into UR field of sequence dictionary entry.  If not supplied, input reference file is used",
             optional = true)
     public String URI;
 
-    @Option(shortName = "SP", doc = "Put into SP field of sequence dictionary entry", optional = true)
+    @Argument(shortName = "SP", doc = "Put into SP field of sequence dictionary entry", optional = true)
     public String SPECIES;
 
-    @Option(doc = "Make sequence name the first word from the > line in the fasta file.  " +
+    @Argument(doc = "Make sequence name the first word from the > line in the fasta file.  " +
             "By default the entire contents of the > line is used, excluding leading and trailing whitespace.")
     public boolean TRUNCATE_NAMES_AT_WHITESPACE = true;
 
-    @Option(doc = "Stop after writing this many sequences.  For testing.")
+    @Argument(doc = "Stop after writing this many sequences.  For testing.")
     public int NUM_SEQUENCES = Integer.MAX_VALUE;
 
     private final MessageDigest md5;
@@ -147,13 +147,31 @@ public class CreateSequenceDictionary extends CommandLineProgram {
      */
     protected String[] customCommandLineValidation() {
         if (URI == null) {
-            URI = "file:" + REFERENCE.getAbsolutePath();
+            URI = "file:" + referenceSequence.getReferenceFile().getAbsolutePath();
         }
         if (OUTPUT == null) {
-            OUTPUT = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(REFERENCE);
+            OUTPUT = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(referenceSequence.getReferenceFile());
             logger.info("Output dictionary will be written in ", OUTPUT);
         }
-        return null;
+        return super.customCommandLineValidation();
+    }
+
+    // return a custom argument collection because this tool uses the argument name
+    // "REFERENCE" instead of "REFERENCE_SEQUENCE"
+    @Override
+    protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
+        return new CreateSeqDictReferenceArgumentCollection();
+    }
+
+    @DocumentedFeature
+    public static class CreateSeqDictReferenceArgumentCollection implements ReferenceArgumentCollection {
+        @Argument(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
+        public File REFERENCE;
+
+        @Override
+        public File getReferenceFile() {
+            return REFERENCE;
+        };
     }
 
     /**
@@ -172,7 +190,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         final SortingCollection<String> sequenceNames = makeSortingCollection();
         try (BufferedWriter writer = makeWriter()) {
             final ReferenceSequenceFile refSeqFile = ReferenceSequenceFileFactory.
-                    getReferenceSequenceFile(REFERENCE, TRUNCATE_NAMES_AT_WHITESPACE);
+                    getReferenceSequenceFile(REFERENCE_SEQUENCE, TRUNCATE_NAMES_AT_WHITESPACE);
             SAMSequenceDictionaryCodec samDictCodec = new SAMSequenceDictionaryCodec(writer);
 
             samDictCodec.encodeHeaderLine(false);

@@ -27,9 +27,9 @@ import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 import picard.illumina.parser.BaseIlluminaDataProvider;
@@ -58,8 +58,8 @@ import java.util.concurrent.TimeUnit;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        usage = CollectHiSeqXPfFailMetrics.USAGE_SUMMARY + CollectHiSeqXPfFailMetrics.USAGE_DETAILS,
-        usageShort = CollectHiSeqXPfFailMetrics.USAGE_SUMMARY,
+        summary = CollectHiSeqXPfFailMetrics.USAGE_SUMMARY + CollectHiSeqXPfFailMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectHiSeqXPfFailMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 
@@ -125,25 +125,25 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
             "metrics for comprehensive explanations of the outputs produced by this tool." +
             "<hr />";
 
-    @Option(doc = "The Illumina basecalls directory. ", shortName = "B")
+    @Argument(doc = "The Illumina basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for metrics file. Resulting file will be" +
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for metrics file. Resulting file will be" +
             " <OUTPUT>" + summaryMetricsExtension, optional = false)
     public File OUTPUT;
 
-    @Option(shortName = "P", doc = "The fraction of (non-PF) reads for which to output explicit classification. Output file will be <OUTPUT>" + detailedMetricsExtension + " (if PROB_EXPLICIT_READS != 0)", optional = true)
+    @Argument(shortName = "P", doc = "The fraction of (non-PF) reads for which to output explicit classification. Output file will be <OUTPUT>" + detailedMetricsExtension + " (if PROB_EXPLICIT_READS != 0)", optional = true)
     public double PROB_EXPLICIT_READS = 0;
 
-    @Option(doc = "Lane number.", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
+    @Argument(doc = "Lane number.", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Option(shortName = "NP", doc = "Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
+    @Argument(shortName = "NP", doc = "Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
             "the number available on the machine less NUM_PROCESSORS.", optional = true)
     public int NUM_PROCESSORS = 1;
 
-    @Option(doc = "Number of cycles to look at. At time of writing PF status gets determined at cycle 24 so numbers greater than this will yield strange results. " +
+    @Argument(doc = "Number of cycles to look at. At time of writing PF status gets determined at cycle 24 so numbers greater than this will yield strange results. " +
             "In addition, PF status is currently determined at cycle 24, so running this with any other value is neither tested nor recommended.", optional = true)
     public int N_CYCLES = 24;
 

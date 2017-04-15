@@ -35,10 +35,10 @@ import htsjdk.samtools.util.ReferenceSequenceMask;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.samtools.util.WholeGenomeReferenceSequenceMask;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Fasta;
 
@@ -50,8 +50,8 @@ import java.io.IOException;
  * A tool to count the number of non-N bases in a fasta file
  */
 @CommandLineProgramProperties(
-        usage = NonNFastaSize.USAGE_SUMMARY + NonNFastaSize.USAGE_DETAILS,
-        usageShort = NonNFastaSize.USAGE_SUMMARY,
+        summary = NonNFastaSize.USAGE_SUMMARY + NonNFastaSize.USAGE_DETAILS,
+        oneLineSummary = NonNFastaSize.USAGE_SUMMARY,
         programGroup = Fasta.class
 )
 public class NonNFastaSize extends CommandLineProgram {
@@ -67,13 +67,13 @@ public class NonNFastaSize extends CommandLineProgram {
             "</pre>" +
             "<hr />"
             ;
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input FASTA file.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input FASTA file.")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output file in which to record the count.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output file in which to record the count.")
     public File OUTPUT;
 
-    @Option(shortName = "INTERVALS", doc = "An interval list file that contains the locations of the positions to assess.  If not provided, the entire reference will be used", optional = true)
+    @Argument(shortName = "INTERVALS", doc = "An interval list file that contains the locations of the positions to assess.  If not provided, the entire reference will be used", optional = true)
     public File INTERVALS = null;
 
     public static void main(final String[] args) {

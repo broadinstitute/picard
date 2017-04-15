@@ -26,11 +26,8 @@ package picard.analysis;
 
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IntervalList;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Metrics;
-
-import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
 /**
  * Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing
@@ -40,8 +37,8 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
  * @author farjoun
  */
 @CommandLineProgramProperties(
-        usage = CollectRawWgsMetrics.USAGE_SUMMARY + CollectRawWgsMetrics.USAGE_DETAILS,
-        usageShort = CollectRawWgsMetrics.USAGE_SUMMARY,
+        summary = CollectRawWgsMetrics.USAGE_SUMMARY + CollectRawWgsMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectRawWgsMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectRawWgsMetrics extends CollectWgsMetrics{
@@ -75,17 +72,14 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
             "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics'>" +
             "the WgsMetrics documentation</a> for detailed explanations of the output metrics." +
             "<hr />";
-    @Option(shortName=MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc="Minimum mapping quality for a read to contribute coverage.")
-    public int MINIMUM_MAPPING_QUALITY = 0;
 
-    @Option(shortName="Q", doc="Minimum base quality for a base to contribute coverage.")
-    public int MINIMUM_BASE_QUALITY = 3;
-
-    @Option(shortName="CAP", doc="Treat bases with coverage exceeding this value as if they had coverage at this value.")
-    public int COVERAGE_CAP = 100000;
-
-    @Option(doc="At positions with coverage exceeding this value, completely ignore reads that accumulate beyond this value (so that they will not be considered for PCT_EXC_CAPPED).  Used to keep memory consumption in check, but could create bias if set too low")
-    public int LOCUS_ACCUMULATION_CAP = 200000;
+    public CollectRawWgsMetrics() {
+        //Override default values inherited from CollectWgsMetrics
+        MINIMUM_MAPPING_QUALITY = 0;
+        MINIMUM_BASE_QUALITY = 3;
+        COVERAGE_CAP = 100000;
+        LOCUS_ACCUMULATION_CAP = 200000;
+    }
 
     // rename the class so that in the metric file it is annotated differently.
     public static class RawWgsMetrics extends WgsMetrics {

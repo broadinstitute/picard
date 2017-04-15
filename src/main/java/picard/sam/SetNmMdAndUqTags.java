@@ -34,9 +34,9 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -47,8 +47,8 @@ import java.util.stream.StreamSupport;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        usage = SetNmMdAndUqTags.USAGE_SUMMARY + SetNmMdAndUqTags.USAGE_DETAILS,
-        usageShort = SetNmMdAndUqTags.USAGE_SUMMARY,
+        summary = SetNmMdAndUqTags.USAGE_SUMMARY + SetNmMdAndUqTags.USAGE_DETAILS,
+        oneLineSummary = SetNmMdAndUqTags.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class SetNmMdAndUqTags extends CommandLineProgram {
@@ -64,21 +64,19 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
             "      O=fixed.bam \\<br />"+
             "</pre>" +
             "<hr />";
-    @Option(doc = "The BAM or SAM file to fix.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "The BAM or SAM file to fix.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Option(doc = "The fixed BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc = "The fixed BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    @Option(doc = "Whether the file contains bisulfite sequence (used when calculating the NM tag).")
+    @Argument(doc = "Whether the file contains bisulfite sequence (used when calculating the NM tag).")
     public boolean IS_BISULFITE_SEQUENCE = false;
 
     @Override
-    protected String[] customCommandLineValidation() {
-        if (REFERENCE_SEQUENCE == null) {
-            return new String[]{"Must have a non-null REFERENCE_SEQUENCE"};
-        }
-        return super.customCommandLineValidation();
+    protected boolean requiresReference() {
+        return true;
+
     }
 
     private final Log log = Log.getInstance(SetNmMdAndUqTags.class);

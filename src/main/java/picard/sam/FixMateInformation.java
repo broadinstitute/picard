@@ -46,8 +46,8 @@ import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -64,8 +64,8 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = FixMateInformation.USAGE_SUMMARY + FixMateInformation.USAGE_DETAILS,
-        usageShort = FixMateInformation.USAGE_SUMMARY,
+        summary = FixMateInformation.USAGE_SUMMARY + FixMateInformation.USAGE_DETAILS,
+        oneLineSummary = FixMateInformation.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class FixMateInformation extends CommandLineProgram {
@@ -82,25 +82,25 @@ public class FixMateInformation extends CommandLineProgram {
             "      O=fixed_mate.bam" +
             "</pre> " +
             "<hr />";
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input file to check and fix.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input file to check and fix.")
     public List<File> INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
             doc = "The output file to write to. If no output file is supplied, the input file is overwritten.")
     public File OUTPUT;
 
-    @Option(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, optional = true,
+    @Argument(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, optional = true,
             doc = "Optional sort order if the OUTPUT file should be sorted differently than the INPUT file.")
     public SortOrder SORT_ORDER;
 
-    @Option(doc = "If true, assume that the input file is queryname sorted, even if the header says otherwise.",
+    @Argument(doc = "If true, assume that the input file is queryname sorted, even if the header says otherwise.",
             shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = false;
 
-    @Option(shortName = "MC", optional = true, doc = "Adds the mate CIGAR tag (MC) if true, does not if false.")
+    @Argument(shortName = "MC", optional = true, doc = "Adds the mate CIGAR tag (MC) if true, does not if false.")
     public Boolean ADD_MATE_CIGAR = true;
 
-    @Option(doc = "If true, ignore missing mates, otherwise will throw an exception when missing mates are found.", optional = true)
+    @Argument(doc = "If true, ignore missing mates, otherwise will throw an exception when missing mates are found.", optional = true)
     public Boolean IGNORE_MISSING_MATES = true;
 
     private static final Log log = Log.getInstance(FixMateInformation.class);
