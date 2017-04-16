@@ -93,7 +93,7 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
         IOUtil.assertFileIsWritable(UMI_METRICS_FILE);
 
         // Perform Mark Duplicates work
-        int retval=super.doWork();
+        int retval = super.doWork();
 
         // Write metrics specific to UMIs
         MetricsFile<UmiMetrics, Double> metricsFile = getMetricsFile();

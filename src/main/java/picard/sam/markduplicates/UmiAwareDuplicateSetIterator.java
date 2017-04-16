@@ -66,7 +66,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
     /**
      * Creates a UMI aware duplicate set iterator
      *
-     * @param wrappedIterator       UMI aware duplicate set iterator is a wrapper
+     * @param wrappedIterator       Iterator of DuplicatesSets to use and break-up by UMI.
      * @param maxEditDistanceToJoin The edit distance between UMIs that will be used to union UMIs into groups
      * @param umiTag                The tag used in the bam file that designates the UMI
      * @param assignedUmiTag        The tag in the bam file that designates the assigned UMI
@@ -88,10 +88,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
     public void close() {
         isOpen = false;
         wrappedIterator.close();
-
-        if (metrics.UMI_LENGTH > 0) {
-            metrics.calculateDerivedFields();
-        }
+        metrics.calculateDerivedFields();
     }
 
     @Override
@@ -144,12 +141,13 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
                 String currentUmi = rec.getStringAttribute(umiTag);
 
                 if (currentUmi != null) {
-                    // All UMIs should be the same length
+                    // All UMIs should be the same length, the code presently does not support variable length UMIs
+                    // TODO: Add support for variable length UMIs
                     if (!haveWeSeenFirstRead) {
-                        metrics.UMI_LENGTH = currentUmi.length();
+                        metrics.MEAN_UMI_LENGTH = currentUmi.length();
                         haveWeSeenFirstRead = true;
                     } else {
-                        if (metrics.UMI_LENGTH != currentUmi.length()) {
+                        if (metrics.MEAN_UMI_LENGTH != currentUmi.length()) {
                             throw new PicardException("UMIs of differing lengths were found.");
                         }
                     }

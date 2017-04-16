@@ -40,7 +40,7 @@ public class UmiMetrics extends MetricBase {
     private long observedUmiBases = 0;
 
     /** Number of bases in each UMI */
-    public int UMI_LENGTH;
+    public double MEAN_UMI_LENGTH = 0.0;
 
     /** Number of different UMI sequences observed */
     public long OBSERVED_UNIQUE_UMIS = 0;
@@ -73,15 +73,15 @@ public class UmiMetrics extends MetricBase {
     public double INFERRED_UMI_ENTROPY = 0;
 
     /** Estimation of Phred scaled quality scores for UMIs */
-    public double UMI_BASE_QUALITIES;
+    public double UMI_BASE_QUALITIES = 0.0;
 
     public UmiMetrics() {}
 
-    public UmiMetrics(final int length, final int observedUniqueUmis, final int inferredUniqueUmis,
+    public UmiMetrics(final double length, final int observedUniqueUmis, final int inferredUniqueUmis,
                       final int observedBaseErrors, final int duplicateSetsWithoutUmi,
                       final int duplicateSetsWithUmi, final double effectiveLengthOfInferredUmis,
                       final double effectiveLengthOfObservedUmis, final double estimatedBaseQualityOfUmis) {
-        UMI_LENGTH = length;
+        MEAN_UMI_LENGTH = length;
         OBSERVED_UNIQUE_UMIS = observedUniqueUmis;
         INFERRED_UNIQUE_UMIS = inferredUniqueUmis;
         OBSERVED_BASE_ERRORS = observedBaseErrors;

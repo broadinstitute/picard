@@ -185,7 +185,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                 Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAA"}), // Expected inferred UMI
                 Arrays.asList(new Boolean[]{false, true, false, true, true}), // Should it be marked as duplicate?
                 1, // Edit Distance to Join
-                new UmiMetrics(4,                        // UMI_LENGTH
+                new UmiMetrics(4.0,                      // MEAN_UMI_LENGTH
                                3,                        // OBSERVED_UNIQUE_UMIS
                                2,                        // INFERRED_UNIQUE_UMIS
                                2,                        // OBSERVED_BASE_ERRORS (Note: This is 2 rather than 1 because we are using paired end reads)
@@ -200,7 +200,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                 Arrays.asList(new String[]{"AAAA", "AAAA", "AAAA", "AAAA", "AAAA"}),
                 Arrays.asList(new Boolean[]{false, true, true, true, true}),
                 2,
-                new UmiMetrics(4,                        // UMI_LENGTH
+                new UmiMetrics(4.0,                      // MEAN_UMI_LENGTH
                                3,                        // OBSERVED_UNIQUE_UMIS
                                1,                        // INFERRED_UNIQUE_UMIS
                                6,                        // OBSERVED_BASE_ERRORS
@@ -215,12 +215,12 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                 Arrays.asList(new String[]{"AA", "AT", "AC", "AG", "TA", "TT", "TC", "TG", "CA", "CT", "CC", "CG", "GA", "GT", "GC", "GG"}),
                 Arrays.asList(new Boolean[]{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false}),
                 0,
-                new UmiMetrics(2,                         // UMI_LENGTH
+                new UmiMetrics(2.0,                       // MEAN_UMI_LENGTH
                                16,                        // OBSERVED_UNIQUE_UMIS
                                16,                        // INFERRED_UNIQUE_UMIS
                                0,                         // OBSERVED_BASE_ERRORS
                                2,                         // DUPLICATE_SETS_WITHOUT_UMI
-                               16,                        // DUPLICATE_SETS_WITH_UMI
+                               32,                        // DUPLICATE_SETS_WITH_UMI
                                2.0,                       // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
                                2,                         // EFECTIVE_LENGTH_OF_OBSERVED_UMIS
                                -1)                        // ESTIMATED_BASE_QUALITY_OF_UMIS
