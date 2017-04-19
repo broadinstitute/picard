@@ -27,12 +27,16 @@ import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CollectionUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.util.List;
+
+import static picard.util.IlluminaUtil.IlluminaAdapterPair.*;
 
 
 /**
@@ -52,21 +56,27 @@ public class IlluminaBasecallsToSamAdapterClippingTest extends CommandLineProgra
      * Run IlluminaBasecallsToSam on a few test cases, and verify that results agree with hand-checked expectation.
      */
     @Test(dataProvider="data")
-    public void testBasic(final String LANE, final String readStructure) throws Exception {
+    public void testBasic(final String LANE, final String readStructure,
+                          final String fivePrimerAdapter, final String threePrimerAdapter,
+                          final int expectedNumClippedRecords) throws Exception {
         // Create the SAM file from Gerald output
         final File samFile = File.createTempFile("." + LANE + ".illuminaBasecallsToSam", ".sam");
         samFile.deleteOnExit();
-        final String[] illuminaArgv = {
-                "BASECALLS_DIR=" + TEST_DATA_DIR,
+        final List<String> illuminaArgv = CollectionUtil.makeList("BASECALLS_DIR=" + TEST_DATA_DIR,
                 "LANE=" + LANE,
                 "RUN_BARCODE=" + RUN_BARCODE,
                 "READ_STRUCTURE=" + readStructure,
                 "OUTPUT=" + samFile,
                 "ALIAS=" + ALIAS
-        };
+        );
+        if (fivePrimerAdapter != null) {
+            illuminaArgv.addAll(CollectionUtil.makeList(
+                "ADAPTERS_TO_CHECK=null",
+                "FIVE_PRIME_ADAPTER=" + fivePrimerAdapter,
+                "THREE_PRIME_ADAPTER=" + threePrimerAdapter
+            ));
+        }
         Assert.assertEquals(runPicardCommandLine(illuminaArgv), 0);
-
-        System.out.println ("Ouput Sam file is in " + samFile.getAbsolutePath());
 
         // Read the file and confirm it contains what is expected
         final SamReader samReader = SamReaderFactory.makeDefault().open(samFile);
@@ -83,6 +93,10 @@ public class IlluminaBasecallsToSamAdapterClippingTest extends CommandLineProgra
                 }
             }
         }
+
+        // Check the total number of clipped records
+        Assert.assertEquals(count, expectedNumClippedRecords);
+
         samReader.close();
         samFile.delete();
     }
@@ -90,10 +104,29 @@ public class IlluminaBasecallsToSamAdapterClippingTest extends CommandLineProgra
     @DataProvider(name="data")
     private Object[][] getIlluminaBasecallsToSamTestData(){
         return new Object[][] {
-                {"1", "125T125T"},
-                {"2", "125T125T"},
+                // Use the default set of adapters
+                {"1", "125T125T", null,                             null,                            32},
+                {"2", "125T125T", null,                             null,                            108},
+
+                // Use adapters that don't match
+                {"1", "125T125T", "ACGTACGTACGTACGT",               "ACGTACGTACGTACGT",              0},
+                {"2", "125T125T", "ACGTACGTACGTACGT",               "ACGTACGTACGTACGT",              0},
+
+                // Add just the "nextera v2" adapters, which should not match
+                {"1", "125T125T", NEXTERA_V2.get5PrimeAdapter(),    NEXTERA_V2.get3PrimeAdapter(),   0},
+                {"2", "125T125T", NEXTERA_V2.get5PrimeAdapter(),    NEXTERA_V2.get3PrimeAdapter(),   0},
+
+                // Add just the "fludigm" adapters, which should not match
+                {"1", "125T125T", FLUIDIGM.get5PrimeAdapter(),      FLUIDIGM.get3PrimeAdapter(),     0},
+                {"2", "125T125T", FLUIDIGM.get5PrimeAdapter(),      FLUIDIGM.get3PrimeAdapter(),     0},
+
+                // Add just the "dual indexed" adapters, which should match
+                {"1", "125T125T", DUAL_INDEXED.get5PrimeAdapter(),  DUAL_INDEXED.get3PrimeAdapter(), 32},
+                {"2", "125T125T", DUAL_INDEXED.get5PrimeAdapter(),  DUAL_INDEXED.get3PrimeAdapter(), 108},
+
+                // Add just the "indexed" adapters, which should match
+                {"1", "125T125T", INDEXED.get5PrimeAdapter(),       INDEXED.get3PrimeAdapter(),      32},
+                {"2", "125T125T", INDEXED.get5PrimeAdapter(),       INDEXED.get3PrimeAdapter(),      108}
         };
     }
-
-
 }
