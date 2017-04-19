@@ -133,6 +133,9 @@ public class SamToFastq extends CommandLineProgram {
             "If the original read is shorter than CLIPPING_MIN_LENGTH then the original read length will be maintained.")
     public int CLIPPING_MIN_LENGTH = 0;
 
+    @Option(shortName = "GZIP", doc = "Compress output FASTQ files using gzip and append a .gz extension to the file names.", optional = false)
+    public Boolean COMPRESS_OUTPUTS = false;
+
     @Option(shortName = "R1_TRIM", doc = "The number of bases to trim from the beginning of read 1.")
     public int READ1_TRIM = 0;
 
@@ -286,6 +289,9 @@ public class SamToFastq extends CommandLineProgram {
         fileName = IOUtil.makeFileNameSafe(fileName);
         if (preExtSuffix != null) fileName += preExtSuffix;
         fileName += ".fastq";
+        if (COMPRESS_OUTPUTS) {
+            fileName += ".gz";
+        }
 
         final File result = (OUTPUT_DIR != null)
                 ? new File(OUTPUT_DIR, fileName)
