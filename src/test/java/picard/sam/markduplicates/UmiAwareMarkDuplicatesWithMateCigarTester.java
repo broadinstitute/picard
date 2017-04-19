@@ -27,9 +27,13 @@ package picard.sam.markduplicates;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.List;
 
 /**
@@ -42,6 +46,8 @@ import java.util.List;
 public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDuplicatesCommandLineProgramTester {
     private int readNameCounter = 0;
     private List<String> expectedAssignedUmis;
+    private UmiMetrics expectedMetrics;
+    private File umiMetricsFile = new File(getOutputDir(), "umi_metrics.txt");
 
     // This tag is only used for testing, it indicates what we expect to see in the inferred UMI tag.
     private final String expectedUmiTag = "RE";
@@ -50,10 +56,13 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
     // AbstractMarkDuplicatesCommandLineProgramTester.  Since those tests use
     // reads that don't have UMIs we enable the ALLOW_MISSING_UMIS option.
     UmiAwareMarkDuplicatesWithMateCigarTester() {
+        addArg("UMI_METRICS_FILE=" + umiMetricsFile);
         addArg("ALLOW_MISSING_UMIS=" + true);
     }
 
     UmiAwareMarkDuplicatesWithMateCigarTester(final boolean allowMissingUmis) {
+        addArg("UMI_METRICS_FILE=" + umiMetricsFile);
+
         if (allowMissingUmis) {
             addArg("ALLOW_MISSING_UMIS=" + true);
         }
@@ -146,6 +155,11 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
         return this;
     }
 
+    UmiAwareMarkDuplicatesWithMateCigarTester setExpectedMetrics(final UmiMetrics expectedMetrics) {
+        this.expectedMetrics = expectedMetrics;
+        return this;
+    }
+
     @Override
     public void test() {
         final SamReader reader = SamReaderFactory.makeDefault().open(getOutput());
@@ -155,6 +169,30 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
                 Assert.assertEquals(record.getAttribute("MI"), record.getAttribute(expectedUmiTag));
             }
         }
+
+        if (expectedMetrics != null) {
+            // Check the values written to metrics.txt against our input expectations
+            final MetricsFile<UmiMetrics, Comparable<?>> metricsOutput = new MetricsFile<UmiMetrics, Comparable<?>>();
+            try {
+                metricsOutput.read(new FileReader(umiMetricsFile));
+            }
+            catch (final FileNotFoundException ex) {
+                System.err.println("Metrics file not found: " + ex);
+            }
+            double tolerance = 1e-6;
+            Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
+            final UmiMetrics observedMetrics = metricsOutput.getMetrics().get(0);
+            Assert.assertEquals(observedMetrics.MEAN_UMI_LENGTH, expectedMetrics.MEAN_UMI_LENGTH, "UMI_LENGTH does not match expected");
+            Assert.assertEquals(observedMetrics.OBSERVED_UNIQUE_UMIS, expectedMetrics.OBSERVED_UNIQUE_UMIS, "OBSERVED_UNIQUE_UMIS does not match expected");
+            Assert.assertEquals(observedMetrics.INFERRED_UNIQUE_UMIS, expectedMetrics.INFERRED_UNIQUE_UMIS, "INFERRED_UNIQUE_UMIS does not match expected");
+            Assert.assertEquals(observedMetrics.OBSERVED_BASE_ERRORS, expectedMetrics.OBSERVED_BASE_ERRORS, "OBSERVED_BASE_ERRORS does not match expected");
+            Assert.assertEquals(observedMetrics.DUPLICATE_SETS_IGNORING_UMI, expectedMetrics.DUPLICATE_SETS_IGNORING_UMI, "DUPLICATE_SETS_IGNORING_UMI does not match expected");
+            Assert.assertEquals(observedMetrics.DUPLICATE_SETS_WITH_UMI, expectedMetrics.DUPLICATE_SETS_WITH_UMI, "DUPLICATE_SETS_WITH_UMI does not match expected");
+            Assert.assertEquals(observedMetrics.INFERRED_UMI_ENTROPY, expectedMetrics.INFERRED_UMI_ENTROPY, tolerance, "INFERRED_UMI_ENTROPY does not match expected");
+            Assert.assertEquals(observedMetrics.OBSERVED_UMI_ENTROPY, expectedMetrics.OBSERVED_UMI_ENTROPY, tolerance, "OBSERVED_UMI_ENTROPY does not match expected");
+            Assert.assertEquals(observedMetrics.UMI_BASE_QUALITIES, expectedMetrics.UMI_BASE_QUALITIES, tolerance, "UMI_BASE_QUALITIES does not match expected");
+        }
+
         // Also do tests from AbstractMarkDuplicatesCommandLineProgramTester
         super.test();
     }

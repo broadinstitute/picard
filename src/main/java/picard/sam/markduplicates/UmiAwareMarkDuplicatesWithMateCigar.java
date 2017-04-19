@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +27,13 @@ package picard.sam.markduplicates;
 import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.DuplicateSetIterator;
 import htsjdk.samtools.SAMRecordDuplicateComparator;
+import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.*;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Alpha;
+
+import java.io.File;
 
 /**
  * This is a simple tool to mark duplicates making use of UMIs in the reads.
@@ -65,6 +68,10 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
     @Option(shortName = "MAX_EDIT_DISTANCE_TO_JOIN", doc = "Largest edit distance that UMIs must have in order to be considered as coming from distinct source molecules.", optional = true)
     public int MAX_EDIT_DISTANCE_TO_JOIN = 1;
 
+    // The UMI_METRICS file provides various statistical measurements collected about the UMIs during deduplication.
+    @Option(shortName = "UMI_METRICS", doc = "UMI Metrics")
+    public File UMI_METRICS_FILE;
+
     @Option(shortName = "UMI_TAG_NAME", doc = "Tag name to use for UMI", optional = true)
     public String UMI_TAG_NAME = "RX";
 
@@ -78,6 +85,22 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
     public boolean ALLOW_MISSING_UMIS = false;
 
     private final Log log = Log.getInstance(UmiAwareMarkDuplicatesWithMateCigar.class);
+    private UmiMetrics metrics = new UmiMetrics();
+
+    @Override
+    protected int doWork() {
+        // Before we do anything, make sure the UMI_METRICS_FILE can be written to.
+        IOUtil.assertFileIsWritable(UMI_METRICS_FILE);
+
+        // Perform Mark Duplicates work
+        int retval = super.doWork();
+
+        // Write metrics specific to UMIs
+        MetricsFile<UmiMetrics, Double> metricsFile = getMetricsFile();
+        metricsFile.addMetric(metrics);
+        metricsFile.write(UMI_METRICS_FILE);
+        return retval;
+    }
 
     @Override
     protected CloseableIterator<DuplicateSet> getDuplicateSetIterator(final SamHeaderAndIterator headerAndIterator, final SAMRecordDuplicateComparator comparator) {
@@ -85,6 +108,6 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
                     new DuplicateSetIterator(headerAndIterator.iterator,
                     headerAndIterator.header,
                     false,
-                    comparator), MAX_EDIT_DISTANCE_TO_JOIN, UMI_TAG_NAME, ASSIGNED_UMI_TAG, ALLOW_MISSING_UMIS);
+                    comparator), MAX_EDIT_DISTANCE_TO_JOIN, UMI_TAG_NAME, ASSIGNED_UMI_TAG, ALLOW_MISSING_UMIS, metrics);
     }
 }

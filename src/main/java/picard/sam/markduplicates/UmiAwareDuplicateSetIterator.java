@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,10 +36,13 @@ package picard.sam.markduplicates;
 
 import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.DuplicateSetIterator;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.CloseableIterator;
 import picard.PicardException;
 
 import java.util.*;
+
+import static htsjdk.samtools.util.StringUtil.hammingDistance;
 
 /**
  * UmiAwareDuplicateSetIterator is an iterator that wraps a duplicate set iterator
@@ -55,22 +58,28 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
     private final String inferredUmiTag;
     private final boolean allowMissingUmis;
     private boolean isOpen = false;
+    private UmiMetrics metrics;
+    private boolean haveWeSeenFirstRead = false;
+
+    private long observedUmiBases = 0;
 
     /**
      * Creates a UMI aware duplicate set iterator
      *
-     * @param wrappedIterator UMI aware duplicate set iterator is a wrapper
+     * @param wrappedIterator       Iterator of DuplicatesSets to use and break-up by UMI.
      * @param maxEditDistanceToJoin The edit distance between UMIs that will be used to union UMIs into groups
-     * @param umiTag The tag used in the bam file that designates the UMI
-     * @param assignedUmiTag The tag in the bam file that designates the assigned UMI
+     * @param umiTag                The tag used in the bam file that designates the UMI
+     * @param assignedUmiTag        The tag in the bam file that designates the assigned UMI
      */
     UmiAwareDuplicateSetIterator(final DuplicateSetIterator wrappedIterator, final int maxEditDistanceToJoin,
-                                 final String umiTag, final String assignedUmiTag, final boolean allowMissingUmis) {
+                                 final String umiTag, final String assignedUmiTag, final boolean allowMissingUmis,
+                                 final UmiMetrics metrics) {
         this.wrappedIterator = wrappedIterator;
         this.maxEditDistanceToJoin = maxEditDistanceToJoin;
         this.umiTag = umiTag;
         this.inferredUmiTag = assignedUmiTag;
         this.allowMissingUmis = allowMissingUmis;
+        this.metrics = metrics;
         isOpen = true;
         nextSetsIterator = Collections.emptyIterator();
     }
@@ -79,18 +88,17 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
     public void close() {
         isOpen = false;
         wrappedIterator.close();
+        metrics.calculateDerivedFields();
     }
 
     @Override
     public boolean hasNext() {
-        if(!isOpen) {
+        if (!isOpen) {
             return false;
-        }
-        else {
-            if(nextSetsIterator.hasNext() || wrappedIterator.hasNext()) {
+        } else {
+            if (nextSetsIterator.hasNext() || wrappedIterator.hasNext()) {
                 return true;
-            }
-            else {
+            } else {
                 isOpen = false;
                 return false;
             }
@@ -119,6 +127,43 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
         }
 
         final UmiGraph umiGraph = new UmiGraph(set, umiTag, inferredUmiTag, allowMissingUmis);
-        nextSetsIterator = umiGraph.joinUmisIntoDuplicateSets(maxEditDistanceToJoin).iterator();
+
+        List<DuplicateSet> duplicateSets = umiGraph.joinUmisIntoDuplicateSets(maxEditDistanceToJoin);
+
+        // Collect statistics on numbers of observed and inferred UMIs
+        // and total numbers of observed and inferred UMIs
+        for (DuplicateSet ds : duplicateSets) {
+            List<SAMRecord> records = ds.getRecords();
+            SAMRecord representativeRead = ds.getRepresentative();
+            String inferredUmi = representativeRead.getStringAttribute(inferredUmiTag);
+
+            for (SAMRecord rec : records) {
+                String currentUmi = rec.getStringAttribute(umiTag);
+
+                if (currentUmi != null) {
+                    // All UMIs should be the same length, the code presently does not support variable length UMIs
+                    // TODO: Add support for variable length UMIs
+                    if (!haveWeSeenFirstRead) {
+                        metrics.MEAN_UMI_LENGTH = currentUmi.length();
+                        haveWeSeenFirstRead = true;
+                    } else {
+                        if (metrics.MEAN_UMI_LENGTH != currentUmi.length()) {
+                            throw new PicardException("UMIs of differing lengths were found.");
+                        }
+                    }
+
+                    // Update UMI metrics associated with each record
+                    metrics.OBSERVED_BASE_ERRORS += hammingDistance(currentUmi, inferredUmi);
+                    observedUmiBases += currentUmi.length();
+                    metrics.addUmiObservation(currentUmi, inferredUmi);
+                }
+            }
+        }
+
+        // Update UMI metrics associated with each duplicate set
+        metrics.DUPLICATE_SETS_WITH_UMI += duplicateSets.size();
+        metrics.DUPLICATE_SETS_IGNORING_UMI++;
+
+        nextSetsIterator = duplicateSets.iterator();
     }
 }
