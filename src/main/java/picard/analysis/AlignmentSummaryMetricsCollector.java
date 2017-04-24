@@ -207,7 +207,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     if(doRefMetrics) {
                         if (metrics.PF_READS > 0)         metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
                         if (metrics.PF_READS_ALIGNED > 0) metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS / (double) metrics.PF_READS_ALIGNED;
-                        if (metrics.PF_READS_ALIGNED > 0) metrics.PCT_READS_IMPROPER_PAIRS = (double) metrics.PF_READS_IMPROPER_PAIRS / (double) metrics.PF_READS_ALIGNED;
+                        if (metrics.PF_READS_ALIGNED > 0) metrics.PCT_PF_READS_IMPROPER_PAIRS = (double) metrics.PF_READS_IMPROPER_PAIRS / (double) metrics.PF_READS_ALIGNED;
                         if (metrics.PF_READS_ALIGNED > 0) metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
                         if (this.chimerasDenominator > 0) metrics.PCT_CHIMERAS = this.chimeras / (double) this.chimerasDenominator;
 

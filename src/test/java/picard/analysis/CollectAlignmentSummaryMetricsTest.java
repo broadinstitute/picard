@@ -76,7 +76,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                     Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 19.0);
                     Assert.assertEquals(metrics.PF_READS_ALIGNED, 3);
                     Assert.assertEquals(metrics.PF_READS_IMPROPER_PAIRS, 1);
-                    Assert.assertEquals(metrics.PCT_READS_IMPROPER_PAIRS, 0.333333 /* 1/3 */);
+                    Assert.assertEquals(metrics.PCT_PF_READS_IMPROPER_PAIRS, 0.333333 /* 1/3 */);
                     Assert.assertEquals(metrics.PF_ALIGNED_BASES, 303);
                     Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*58D/303D*/0.191419);
                     Assert.assertEquals(metrics.BAD_CYCLES, 19);
@@ -90,7 +90,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                     Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
                     Assert.assertEquals(metrics.PF_READS_ALIGNED, 7);
                     Assert.assertEquals(metrics.PF_READS_IMPROPER_PAIRS, 5);
-                    Assert.assertEquals(metrics.PCT_READS_IMPROPER_PAIRS, 0.714286 /* 5/7 */);
+                    Assert.assertEquals(metrics.PCT_PF_READS_IMPROPER_PAIRS, 0.714286 /* 5/7 */);
                     Assert.assertEquals(metrics.PF_ALIGNED_BASES, 707);
                     Assert.assertEquals(metrics.PCT_READS_ALIGNED_IN_PAIRS, 0.285714 /* 2D/7 */);
                     Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*19D/707D*/0.026874);
@@ -105,7 +105,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                     Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
                     Assert.assertEquals(metrics.PF_READS_ALIGNED, 10);
                     Assert.assertEquals(metrics.PF_READS_IMPROPER_PAIRS, 6);
-                    Assert.assertEquals(metrics.PCT_READS_IMPROPER_PAIRS, 0.6 /* 6/10 */);
+                    Assert.assertEquals(metrics.PCT_PF_READS_IMPROPER_PAIRS, 0.6 /* 6/10 */);
                     Assert.assertEquals(metrics.PF_ALIGNED_BASES, 1010);
                     Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*77D/1010D*/0.076238);
                     Assert.assertEquals(metrics.BAD_CYCLES, 22);
