@@ -197,16 +197,12 @@ public class TheoreticalSensitivityTest {
     @DataProvider(name = "hetSensDataProvider")
     public Object[][] hetSensDataProvider() {
         final File wgsMetricsFile = new File(TEST_DIR, "test_Solexa-332667.wgs_metrics");
-        final File hsMetricsFile = new File(TEST_DIR, "test_NexPond-359781.hsMetrics");
         final File targetedMetricsFile = new File(TEST_DIR, "test_25103070136.targeted_pcr_metrics");
-        final File wgsSampledMetricsFile = new File(TEST_DIR, "test_Solexa-316269_sampled.wgs_metrics");
 
         //These magic numbers come from a separate implementation of the code in R.
         return new Object[][] {
                 {0.897_342_54, wgsMetricsFile},
-                {0.967_707_04, hsMetricsFile},
-                {0.956_186_66, targetedMetricsFile},
-                {0.995_084_32, wgsSampledMetricsFile}
+                {0.956_186_66, targetedMetricsFile}
         };
     }
 

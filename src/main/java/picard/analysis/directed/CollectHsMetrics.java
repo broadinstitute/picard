@@ -126,7 +126,7 @@ static final String USAGE_DETAILS = "This tool takes a SAM/BAM file input and co
 
     /** Stock main method. */
     public static void main(final String[] argv) {
-        System.exit(new CalculateHsMetrics().instanceMain(argv));
+        System.exit(new CollectHsMetrics().instanceMain(argv));
     }
 
     @Override
