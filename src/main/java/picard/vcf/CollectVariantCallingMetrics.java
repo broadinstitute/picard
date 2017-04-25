@@ -267,6 +267,18 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         public double HET_HOMVAR_RATIO;
 
         /**
+         * The percentage of variants in a particular sample that have a GQ score of 0.
+         */
+        @NoMergingIsDerived
+        public double PCT_GQ0_VARIANTS;
+
+        /**
+         * The total number of variants in a particular sample that have a GQ score of 0.
+         */
+        @MergeByAdding
+        public long TOTAL_GQ0_VARIANTS;
+
+        /**
          * Hidden fields not propagated to the metrics file.
          */
         @MergeByAdding
@@ -281,6 +293,8 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
             super.calculateDerivedFields();
             // Divide by zero should be OK -- NaN should get propagated to metrics file.
             HET_HOMVAR_RATIO = numHets / (double) numHomVar;
+
+            PCT_GQ0_VARIANTS = TOTAL_GQ0_VARIANTS / (double) (numHets + numHomVar);
         }
     }
 }

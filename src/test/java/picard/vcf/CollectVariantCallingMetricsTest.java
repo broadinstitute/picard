@@ -92,6 +92,8 @@ public class CollectVariantCallingMetricsTest {
         final List<CollectVariantCallingMetrics.VariantCallingDetailMetrics> detailMetrics = detail.getMetrics();
         detail.getMetrics().stream().filter(metrics -> metrics.SAMPLE_ALIAS.equals("HG00160")).forEach(metrics -> {
             Assert.assertEquals(metrics.HET_HOMVAR_RATIO, 0.72549, 0.0001);
+            Assert.assertEquals(metrics.TOTAL_GQ0_VARIANTS, 2);
+            Assert.assertEquals(metrics.PCT_GQ0_VARIANTS, 0.022727);
             Assert.assertEquals(metrics.TOTAL_SNPS, 81);
             Assert.assertEquals(metrics.NUM_IN_DB_SNP, 44);
             Assert.assertEquals(metrics.NOVEL_SNPS, 37);
