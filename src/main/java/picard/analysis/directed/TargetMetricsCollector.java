@@ -637,6 +637,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             // the number of bases we counted towards the depth histogram plus those that got thrown out by the coverage cap
             long totalCoverage = 0;
 
+            // the maximum depth at any target base
+            long maxDepth = 0;
+
             // The "how many target bases at at-least X" calculations.
             // downstream code relies on this array being sorted in ascending order
             final int[] targetBasesDepth = {0, 1, 2, 10, 20, 30, 40, 50, 100};
@@ -657,6 +660,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 for (final int depth : c.getDepths()) {
                     totalCoverage += depth;
                     highQualityCoverageHistogramArray[Math.min(depth, coverageCap)]++;
+                    maxDepth = Math.max(maxDepth, depth);
 
                     // Add to the "how many target bases at at-least X" calculations.
                     for (int i = 0; i < targetBasesDepth.length; i++) {
@@ -677,6 +681,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             // we do this instead of highQualityDepthHistogram.getMean() because the histogram imposes a coverage cap
             metrics.MEAN_TARGET_COVERAGE = (double) totalCoverage / metrics.TARGET_TERRITORY;
             metrics.MEDIAN_TARGET_COVERAGE = highQualityDepthHistogram.getMedian();
+            metrics.MAX_TARGET_COVERAGE = maxDepth;
 
             // compute the coverage value such that 80% of target bases have better coverage than it i.e. 20th percentile
             // this roughly measures how much we must sequence extra such that 80% of target bases have coverage at least as deep as the current mean coverage
@@ -1007,6 +1012,9 @@ class TargetMetrics extends MultilevelMetrics {
 
     /** The median coverage of targets. */
     public double MEDIAN_TARGET_COVERAGE;
+
+    /** The maximum coverage of reads that mapped to target regions of an experiment. */
+    public long MAX_TARGET_COVERAGE;
 
     /** The fraction of targets that did not reach coverage=1 over any base. */
     public double ZERO_CVG_TARGETS_PCT;
