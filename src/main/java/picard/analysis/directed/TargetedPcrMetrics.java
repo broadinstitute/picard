@@ -93,6 +93,9 @@ public class TargetedPcrMetrics extends MultilevelMetrics {
     /** The median coverage of reads that mapped to target regions of an experiment. */
     public double MEDIAN_TARGET_COVERAGE;
 
+    /** The maximum coverage of reads that mapped to target regions of an experiment. */
+    public long MAX_TARGET_COVERAGE;
+
     /** The fold by which the amplicon region has been amplified above genomic background. */
     public double FOLD_ENRICHMENT;
 
