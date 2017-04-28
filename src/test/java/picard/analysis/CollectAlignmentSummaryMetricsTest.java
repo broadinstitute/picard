@@ -134,32 +134,32 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.TOTAL_READS, 1);
                 Assert.assertEquals(metrics.PF_READS, 1);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_BASES, 101);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 20.0);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 21.0);
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 101);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, 20D/100D);
-                Assert.assertEquals(metrics.BAD_CYCLES, 20);
-                Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(20/(double)100));
+                Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.212121 /*21D/99D*/);
+                Assert.assertEquals(metrics.BAD_CYCLES, 21);
+                Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(21/(double)99));
                 break;
             case SECOND_OF_PAIR:
                 // Three no-calls, two potentially methylated bases
                 Assert.assertEquals(metrics.TOTAL_READS, 1);
                 Assert.assertEquals(metrics.PF_READS, 1);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_BASES, 101);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 4.0);
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 101);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*3D/99D*/0.030303);
-                Assert.assertEquals(metrics.BAD_CYCLES, 3);
-                Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(3/(double)99));
+                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*4D/99D*/0.040404);
+                Assert.assertEquals(metrics.BAD_CYCLES, 4);
+                Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(4/(double)99));
                 break;
             case PAIR:
                 Assert.assertEquals(metrics.TOTAL_READS, 2);
                 Assert.assertEquals(metrics.PF_READS, 2);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_BASES, 202);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 11.5);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 12.5D);
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 202);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*23D/199D*/0.115578);
-                Assert.assertEquals(metrics.BAD_CYCLES, 23);
-                Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(23/(double)199));
+                Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.126263);// 25D/198D
+                Assert.assertEquals(metrics.BAD_CYCLES, 25);
+                Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(25/(double)198));
                 break;
             case UNPAIRED:
             default:
@@ -168,6 +168,67 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         }
     }
 
+    @Test
+    public void testBisulfiteButNot() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_bisulfite_test.sam");
+        final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
+        final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
+        outfile.deleteOnExit();
+        final String[] args = new String[] {
+                "INPUT="  + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+                "IS_BISULFITE_SEQUENCED=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final NumberFormat format =  NumberFormat.getInstance();
+        format.setMaximumFractionDigits(4);
+
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
+        output.read(new FileReader(outfile));
+
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.MEAN_READ_LENGTH, 101.0);
+            switch (metrics.CATEGORY) {
+                case FIRST_OF_PAIR:
+                    // 19 no-calls, one potentially methylated base, one mismatch at a potentially methylated base
+                    Assert.assertEquals(metrics.TOTAL_READS, 1);
+                    Assert.assertEquals(metrics.PF_READS, 1);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_BASES, 101);
+                    Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 23.0);
+                    Assert.assertEquals(metrics.PF_ALIGNED_BASES, 101);
+                    Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.227723 /*23D/101D*/);
+                    Assert.assertEquals(metrics.BAD_CYCLES, 23);
+                    Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(23/(double)101));
+                    break;
+                case SECOND_OF_PAIR:
+                    // Three no-calls, two potentially methylated bases
+                    Assert.assertEquals(metrics.TOTAL_READS, 1);
+                    Assert.assertEquals(metrics.PF_READS, 1);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_BASES, 101);
+                    Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 6.0);
+                    Assert.assertEquals(metrics.PF_ALIGNED_BASES, 101);
+                    Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*6D/101D*/0.059406);
+                    Assert.assertEquals(metrics.BAD_CYCLES, 6);
+                    Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(6/(double)101));
+                    break;
+                case PAIR:
+                    Assert.assertEquals(metrics.TOTAL_READS, 2);
+                    Assert.assertEquals(metrics.PF_READS, 2);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_BASES, 202);
+                    Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 14.5D);
+                    Assert.assertEquals(metrics.PF_ALIGNED_BASES, 202);
+                    Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.143564);// 29D/202D
+                    Assert.assertEquals(metrics.BAD_CYCLES, 29);
+                    Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(29/(double)202));
+                    break;
+                case UNPAIRED:
+                default:
+                    Assert.fail("Data does not contain this category: " + metrics.CATEGORY);
+            }
+        }
+    }
 
     @Test
     public void testNoReference() throws IOException {

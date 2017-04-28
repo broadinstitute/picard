@@ -25,33 +25,31 @@ package picard.vcf;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.*;
 import htsjdk.tribble.Tribble;
-import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.variantcontext.*;
+import htsjdk.variant.variantcontext.writer.Options;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.*;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
-import picard.vcf.GenotypeConcordanceStates.*;
+import picard.vcf.GenotypeConcordanceStates.CallState;
+import picard.vcf.GenotypeConcordanceStates.ContingencyState;
+import picard.vcf.GenotypeConcordanceStates.TruthAndCallStates;
+import picard.vcf.GenotypeConcordanceStates.TruthState;
 import picard.vcf.PairedVariantSubContextIterator.VcfTuple;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static htsjdk.variant.variantcontext.VariantContext.Type.*;
+import static htsjdk.variant.vcf.VCFConstants.MISSING_VALUE_v4;
+import static picard.vcf.GenotypeConcordanceStateCodes.*;
 
 /**
  * Calculates the concordance between genotype data for two samples in two different VCFs - one being considered the truth (or reference)
@@ -109,6 +107,12 @@ public class GenotypeConcordance extends CommandLineProgram {
             "<li>TN - True negatives are correctly called reference sites</li>" +
             "<li>Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) has been validated </li> "     +
             "</ul>"+
+            "" +
+            "<h4>VCF Output:</h4>" +
+            "<ul>" +
+            "<li>The concordance state will be stored in the \"CONC_ST\" tag in the INFO field.</li>" +
+            "<li>The truth sample name will be \"truth\" and call sample name will be \"call\".</li>" +
+            "</ul>" +
             "<hr />"
             ;
     @Option(shortName = "TV", doc="The VCF containing the truth sample")
@@ -118,14 +122,17 @@ public class GenotypeConcordance extends CommandLineProgram {
     public File CALL_VCF;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for the two metrics files that are to be written." +
-            " Resulting files will be <OUTPUT>" + SUMMARY_METRICS_FILE_EXTENSION + "  and <OUTPUT>" + DETAILED_METRICS_FILE_EXTENSION + ".")
+            " Resulting files will be <OUTPUT>" + SUMMARY_METRICS_FILE_EXTENSION + " and <OUTPUT>" + DETAILED_METRICS_FILE_EXTENSION + ".")
     public File OUTPUT;
 
-    @Option(shortName = "TS", doc="The name of the truth sample within the truth VCF")
-    public String TRUTH_SAMPLE;
+    @Option(doc = "Output a VCF annotated with concordance information.")
+    public boolean OUTPUT_VCF = false;
 
-    @Option(shortName = "CS", doc="The name of the call sample within the call VCF")
-    public String CALL_SAMPLE;
+    @Option(shortName = "TS", doc="The name of the truth sample within the truth VCF. Not required if only one sample exists.", optional = true)
+    public String TRUTH_SAMPLE = null;
+
+    @Option(shortName = "CS", doc="The name of the call sample within the call VCF. Not required if only one sample exists.", optional = true)
+    public String CALL_SAMPLE = null;
 
     @Option(doc="One or more interval list files that will be used to limit the genotype concordance.  Note - if intervals are specified, the VCF files must be indexed.")
     public List<File> INTERVALS;
@@ -153,9 +160,10 @@ public class GenotypeConcordance extends CommandLineProgram {
     private final Log log = Log.getInstance(GenotypeConcordance.class);
     private final ProgressLogger progress = new ProgressLogger(log, 10000, "checked", "variants");
 
-    public static final String SUMMARY_METRICS_FILE_EXTENSION = ".genotype_concordance_summary_metrics";
-    public static final String DETAILED_METRICS_FILE_EXTENSION = ".genotype_concordance_detail_metrics";
+    public static final String SUMMARY_METRICS_FILE_EXTENSION     = ".genotype_concordance_summary_metrics";
+    public static final String DETAILED_METRICS_FILE_EXTENSION    = ".genotype_concordance_detail_metrics";
     public static final String CONTINGENCY_METRICS_FILE_EXTENSION = ".genotype_concordance_contingency_metrics";
+    public static final String OUTPUT_VCF_FILE_EXTENSION          = ".genotype_concordance.vcf.gz";
 
     protected GenotypeConcordanceCounts snpCounter;
     public GenotypeConcordanceCounts getSnpCounter() { return snpCounter; }
@@ -163,9 +171,10 @@ public class GenotypeConcordance extends CommandLineProgram {
     protected GenotypeConcordanceCounts indelCounter;
     public GenotypeConcordanceCounts getIndelCounter() { return indelCounter; }
 
-    // TODO: add optimization if the samples are in the same file
-    // TODO: add option for auto-detect pairs based on same sample name
-    // TODO: allow multiple sample-pairs in one pass
+    public static final String CONTINGENCY_STATE_TAG = "CONC_ST";
+    public static final VCFHeaderLine CONTINGENCY_STATE_HEADER_LINE = new VCFInfoHeaderLine(CONTINGENCY_STATE_TAG, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "The genotype concordance contingency state(s)");
+    public static final String OUTPUT_VCF_TRUTH_SAMPLE_NAME = "truth";
+    public static final String OUTPUT_VCF_CALL_SAMPLE_NAME = "call";
 
     public static void main(final String[] args) {
         new GenotypeConcordance().instanceMainWithExit(args);
@@ -216,12 +225,15 @@ public class GenotypeConcordance extends CommandLineProgram {
     }
 
     @Override protected int doWork() {
-        final File summaryMetricsFile = new File(OUTPUT + SUMMARY_METRICS_FILE_EXTENSION);
-        final File detailedMetricsFile = new File(OUTPUT + DETAILED_METRICS_FILE_EXTENSION);
+        final File summaryMetricsFile     = new File(OUTPUT + SUMMARY_METRICS_FILE_EXTENSION);
+        final File detailedMetricsFile    = new File(OUTPUT + DETAILED_METRICS_FILE_EXTENSION);
         final File contingencyMetricsFile = new File(OUTPUT + CONTINGENCY_METRICS_FILE_EXTENSION);
         IOUtil.assertFileIsWritable(summaryMetricsFile);
         IOUtil.assertFileIsWritable(detailedMetricsFile);
         IOUtil.assertFileIsWritable(contingencyMetricsFile);
+
+        final GenotypeConcordanceSchemeFactory schemeFactory = new GenotypeConcordanceSchemeFactory();
+        final GenotypeConcordanceScheme scheme = schemeFactory.getScheme(MISSING_SITES_HOM_REF);
 
         final boolean usingIntervals = this.INTERVALS != null && !this.INTERVALS.isEmpty();
         IntervalList intervals = null;
@@ -249,6 +261,20 @@ public class GenotypeConcordance extends CommandLineProgram {
         final VCFFileReader truthReader = new VCFFileReader(TRUTH_VCF, USE_VCF_INDEX);
         final VCFFileReader callReader = new VCFFileReader(CALL_VCF, USE_VCF_INDEX);
 
+        if (TRUTH_SAMPLE == null) {
+            if (truthReader.getFileHeader().getNGenotypeSamples() > 1) {
+                throw new PicardException("TRUTH_SAMPLE is required when the TRUTH_VCF has more than one sample");
+            }
+            TRUTH_SAMPLE = truthReader.getFileHeader().getGenotypeSamples().get(0);
+        }
+
+        if (CALL_SAMPLE == null) {
+            if (callReader.getFileHeader().getNGenotypeSamples() > 1) {
+                throw new PicardException("CALL_SAMPLE is required when the CALL_VCF has more than one sample");
+            }
+            CALL_SAMPLE = callReader.getFileHeader().getGenotypeSamples().get(0);
+        }
+
         // Check that the samples actually exist in the files!
         if (!truthReader.getFileHeader().getGenotypeSamples().contains(TRUTH_SAMPLE)) {
             throw new PicardException("File " + TRUTH_VCF.getAbsolutePath() + " does not contain genotypes for sample " + TRUTH_SAMPLE);
@@ -259,6 +285,8 @@ public class GenotypeConcordance extends CommandLineProgram {
 
         // Verify that both VCFs have the same Sequence Dictionary
         SequenceUtil.assertSequenceDictionariesEqual(truthReader.getFileHeader().getSequenceDictionary(), callReader.getFileHeader().getSequenceDictionary());
+
+        final Optional<VariantContextWriter> writer = getVariantContextWriter(truthReader, callReader);
 
         if (usingIntervals) {
             // If using intervals, verify that the sequence dictionaries agree with those of the VCFs
@@ -301,6 +329,9 @@ public class GenotypeConcordance extends CommandLineProgram {
                 unClassifiedStatesMap.put(condition, count);
             }
 
+            // write to the output VCF
+            writer.ifPresent(w -> writeVcfTuple(tuple, w, scheme));
+
             //final VariantContext variantContextForLogging = tuple.leftVariantContext.orElseGet(tuple.rightVariantContext::get); // FIXME
             final VariantContext variantContextForLogging = tuple.leftVariantContext.isPresent() ? tuple.leftVariantContext.get() : tuple.rightVariantContext.get();
             progress.record(variantContextForLogging.getContig(), variantContextForLogging.getStart());
@@ -341,7 +372,130 @@ public class GenotypeConcordance extends CommandLineProgram {
             log.info("Uncovered truth/call Variant Context Type Counts: " + condition + " " + unClassifiedStatesMap.get(condition));
         }
 
+        CloserUtil.close(callReader);
+        CloserUtil.close(truthReader);
+        writer.ifPresent(VariantContextWriter::close);
+
         return 0;
+    }
+
+    /** Gets the variant context writer if the output VCF is to be written, otherwise empty. */
+    private Optional<VariantContextWriter> getVariantContextWriter(final VCFFileReader truthReader, final VCFFileReader callReader) {
+        if (OUTPUT_VCF) {
+            final File outputVcfFile = new File(OUTPUT + OUTPUT_VCF_FILE_EXTENSION);
+            final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
+                    .setOutputFile(outputVcfFile)
+                    .setReferenceDictionary(callReader.getFileHeader().getSequenceDictionary())
+                    .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
+                    .setOption(Options.INDEX_ON_THE_FLY);
+            final VariantContextWriter writer = builder.build();
+
+            // create the output header
+            final List<String> sampleNames = Arrays.asList(OUTPUT_VCF_CALL_SAMPLE_NAME, OUTPUT_VCF_TRUTH_SAMPLE_NAME);
+            final Set<VCFHeaderLine> headerLines = new HashSet<>();
+            headerLines.addAll(callReader.getFileHeader().getMetaDataInInputOrder());
+            headerLines.addAll(truthReader.getFileHeader().getMetaDataInInputOrder());
+            headerLines.add(CONTINGENCY_STATE_HEADER_LINE);
+            writer.writeHeader(new VCFHeader(headerLines, sampleNames));
+            return Optional.of(writer);
+        }
+        else {
+            return Optional.empty();
+        }
+    }
+
+    private void writeVcfTuple(final VcfTuple tuple, final VariantContextWriter writer, final GenotypeConcordanceScheme scheme) {
+        VariantContext truthContext = null, callContext = null;
+        final List<Genotype> genotypes = new ArrayList<>(2);
+
+        // get the variant contexts and initialize the output variant context builder
+        if (tuple.leftVariantContext.isPresent()) {
+            truthContext = tuple.leftVariantContext.get();
+        }
+        if (tuple.rightVariantContext.isPresent()) {
+            callContext = tuple.rightVariantContext.get();
+        }
+
+        // Get the alleles for each genotype.  No alleles will be extracted for a genotype if the genotype is
+        // mixed, filtered, or missing.
+        final Alleles alleles = normalizeAlleles(truthContext, TRUTH_SAMPLE, callContext, CALL_SAMPLE);
+
+        // There will be no alleles if both genotypes are one of mixed, filtered, or missing.  Do not output any
+        // variant context in this case.
+        if (!alleles.allAlleles.isEmpty()) {
+            if (truthContext == null && callContext == null) {
+                throw new IllegalStateException("Both truth and call contexts are null!");
+            }
+
+            final VariantContextBuilder builder;
+            final List<Allele> allAlleles   = alleles.asList();
+            final List<Allele> truthAlleles = alleles.truthAlleles();
+            final List<Allele> callAlleles  = alleles.callAlleles();
+
+            // Get the alleles present at this site for both samples to use for the output variant context.
+            final Set<Allele> siteAlleles = new HashSet<>();
+            if (truthContext != null) {
+                siteAlleles.addAll(truthContext.getAlleles());
+            }
+            if (callContext != null) {
+                siteAlleles.addAll(callContext.getAlleles());
+            }
+
+            // Initialize the variant context builder
+            final VariantContext initialContext = (callContext == null) ? truthContext : callContext;
+            builder = new VariantContextBuilder(initialContext.getSource(), initialContext.getContig(), initialContext.getStart(), initialContext.getEnd(), siteAlleles);
+            builder.computeEndFromAlleles(allAlleles, initialContext.getStart());
+            builder.log10PError(initialContext.getLog10PError());
+
+            // Add the genotypes
+            addToGenotypes(genotypes, truthContext, TRUTH_SAMPLE, OUTPUT_VCF_TRUTH_SAMPLE_NAME, allAlleles, truthAlleles, MISSING_SITES_HOM_REF);
+            addToGenotypes(genotypes, callContext, CALL_SAMPLE, OUTPUT_VCF_CALL_SAMPLE_NAME, allAlleles, callAlleles, false);
+
+            // set the alleles and genotypes
+            builder.genotypes(genotypes);
+
+            // set the concordance state attribute
+            final TruthAndCallStates state = GenotypeConcordance.determineState(truthContext, TRUTH_SAMPLE, callContext, CALL_SAMPLE, MIN_GQ, MIN_DP);
+            final ContingencyState[] stateArray = scheme.getConcordanceStateArray(state.truthState, state.callState);
+            builder.attribute(CONTINGENCY_STATE_TAG, Arrays.asList(stateArray));
+
+            // write it
+            writer.add(builder.make());
+        }
+    }
+
+    /** Adds a new genotype to the provided list of genotypes.  If the given variant context is null or has no alleles
+     * (ex. a no-call), then add a no-call, otherwise make a copy of the genotype for the sample with the input
+     * sample name within the provided context.  In the former case, if missingSitesHomRef is true, a homozygous
+     * reference genotype is created instead of a no-call.  In the latter case, the new genotype will have the output
+     * sample name. */
+    private void addToGenotypes(final List<Genotype> genotypes,
+                                final VariantContext ctx,
+                                final String inputSampleName,
+                                final String outputSampleName,
+                                final List<Allele> allAlleles,
+                                final List<Allele> ctxAlleles,
+                                final boolean missingSitesHomRef) {
+        if (ctx != null && !ctxAlleles.isEmpty()) {
+            final Genotype genotype = ctx.getGenotype(inputSampleName);
+            final GenotypeBuilder genotypeBuilder = new GenotypeBuilder(genotype);
+            genotypeBuilder.name(outputSampleName);
+            genotypeBuilder.alleles(ctxAlleles);
+            if (!genotype.hasAnyAttribute(VCFConstants.GENOTYPE_KEY)) {
+                genotypeBuilder.attribute(VCFConstants.GENOTYPE_KEY, MISSING_VALUE_v4);
+            }
+            genotypes.add(genotypeBuilder.make());
+        }
+        else {
+            final GenotypeBuilder genotypeBuilder = new GenotypeBuilder(outputSampleName);
+            if (missingSitesHomRef) {
+                genotypeBuilder.alleles(Arrays.asList(allAlleles.get(0), allAlleles.get(0)));
+            }
+            else {
+                genotypeBuilder.alleles(Arrays.asList(Allele.NO_CALL, Allele.NO_CALL));
+            }
+            genotypes.add(genotypeBuilder.make());
+        }
     }
 
     public static boolean classifyVariants(final Optional<VariantContext> truthContext,
@@ -457,6 +611,213 @@ public class GenotypeConcordance extends CommandLineProgram {
         }
     }
 
+    /** A simple structure to return the results of getAlleles.  NB: truthAllele1/2 and callAllele1/2 may be null if
+     * no first or second allele was present respectively. */
+    protected static class Alleles {
+        public final OrderedSet<String> allAlleles;
+        public final String truthAllele1;
+        public final String truthAllele2;
+        public final String callAllele1;
+        public final String callAllele2;
+
+        public Alleles(final OrderedSet<String> allAlleles,
+                       final String truthAllele1,
+                       final String truthAllele2,
+                       final String callAllele1,
+                       final String callAllele2) {
+
+            if (truthAllele1 == null && truthAllele2 != null) {
+                throw new IllegalStateException("truthAllele2 should be null if truthAllele1 is null.");
+            }
+            if (callAllele1 == null && callAllele2 != null) {
+                throw new IllegalStateException("callAllele2 should be null if callAllele1 is null.");
+            }
+
+            this.allAlleles   = allAlleles;
+            this.truthAllele1 = (truthAllele1 == null) ? null : this.allAlleles.get(allAlleles.indexOf(truthAllele1));
+            this.truthAllele2 = (truthAllele2 == null) ? null : this.allAlleles.get(allAlleles.indexOf(truthAllele2));
+            this.callAllele1  = (callAllele1 == null) ? null : this.allAlleles.get(allAlleles.indexOf(callAllele1));
+            this.callAllele2  = (callAllele2 == null) ? null : this.allAlleles.get(allAlleles.indexOf(callAllele2));
+        }
+
+        public List<Allele> asList() {
+            if (allAlleles.isEmpty()) {
+                return Collections.emptyList();
+            }
+            else {
+                final List<Allele> alleles = new ArrayList<>(this.allAlleles.size());
+                for (int idx = 0; idx < this.allAlleles.size(); idx++) {
+                    alleles.add(Allele.create(this.allAlleles.get(idx), idx == 0));
+                }
+                return alleles;
+            }
+        }
+
+        public List<Allele> truthAlleles() {
+            if (allAlleles.isEmpty() || this.truthAllele1 == null) {
+                return Collections.emptyList();
+            }
+            else {
+                final Allele truthAllele1 = Allele.create(this.truthAllele1, this.allAlleles.indexOf(this.truthAllele1) == 0);
+                final Allele truthAllele2 = Allele.create(this.truthAllele2, this.allAlleles.indexOf(this.truthAllele2) == 0);
+                return Arrays.asList(truthAllele1, truthAllele2);
+            }
+        }
+
+        public List<Allele> callAlleles() {
+            if (allAlleles.isEmpty() || this.callAllele1 == null) {
+                return Collections.emptyList();
+            }
+            else {
+                final Allele callAllele1 = Allele.create(this.callAllele1, this.allAlleles.indexOf(this.callAllele1) == 0);
+                final Allele callAllele2 = Allele.create(this.callAllele2, this.allAlleles.indexOf(this.callAllele2) == 0);
+                return Arrays.asList(callAllele1, callAllele2);
+            }
+        }
+    }
+
+    /** Inserts the given string into the destination string at the given index.  If the index is past the end of the
+     * destination string, the given string is appended to the destination.
+     */
+    static String spliceOrAppendString(final String destination, final String toInsert, final int insertIdx) {
+        if (insertIdx <= destination.length()) {
+            return destination.substring(0, insertIdx) + toInsert + destination.substring(insertIdx);
+        }
+        else {
+            return destination + toInsert;
+        }
+    }
+
+    /** Gets the alleles for the truth and call genotypes.  In particular, this handles the case where indels can have different
+     * reference alleles. */
+    final protected static Alleles normalizeAlleles(final VariantContext truthContext,
+                                                    final String truthSample,
+                                                    final VariantContext callContext,
+                                                    final String callSample) {
+
+        final Genotype truthGenotype, callGenotype;
+
+        if (truthContext == null || truthContext.isMixed() || truthContext.isFiltered()) truthGenotype = null;
+        else truthGenotype = truthContext.getGenotype(truthSample);
+
+        if (callContext == null || callContext.isMixed() || callContext.isFiltered()) callGenotype = null;
+        else callGenotype = callContext.getGenotype(callSample);
+
+        // initialize the reference
+        String truthRef = (truthGenotype != null) ? truthContext.getReference().getBaseString() : null;
+        String callRef  = (callGenotype != null) ? callContext.getReference().getBaseString() : null;
+
+        String truthAllele1 = null;
+        String truthAllele2 = null;
+        if (null != truthGenotype) {
+            if (truthGenotype.getAlleles().size() != 2) {
+                throw new IllegalStateException("Genotype for Variant Context: " + truthContext + " does not have exactly 2 alleles");
+            }
+            truthAllele1 = truthGenotype.getAllele(0).getBaseString();
+            truthAllele2 = truthGenotype.getAllele(1).getBaseString();
+        }
+
+        String callAllele1 = null;
+        String callAllele2 = null;
+        if (null != callGenotype) {
+            if (callGenotype.getAlleles().size() != 2) {
+                throw new IllegalStateException("Genotype for Variant Context: " + callContext + " does not have exactly 2 alleles");
+            }
+            callAllele1 = callGenotype.getAllele(0).getBaseString();
+            callAllele2 = callGenotype.getAllele(1).getBaseString();
+        }
+
+        if ((truthRef != null && callRef != null) && (!truthRef.equals(callRef))) {
+            // We must handle different representations for indels based on their reference alleles.  For example:
+            // - Deletion:  TCAA*/T versus TCAACAA*/TCAA
+            // - Insertion: TCAA*/TCAAGG versus TCAACAA*/TCAACAAGG
+            // We do the following:
+            // 1. Verify that the shorter reference allele is a prefix of the longer reference allele.
+            // 2. Add the extra reference bases to the variant allele.
+            // 3. Update the shorter reference allele to be the longer reference allele.
+            if (truthRef.length() < callRef.length()) {
+                // Truth reference is shorter than call reference
+                final String suffix = getStringSuffix(callRef, truthRef, "Ref alleles mismatch between: " + truthContext + " and " + callContext);
+                final int insertIdx = truthRef.length();
+                truthAllele1 = spliceOrAppendString(truthAllele1, suffix, insertIdx);
+                truthAllele2 = spliceOrAppendString(truthAllele2, suffix, insertIdx);
+                truthRef = truthRef + suffix;
+
+            }
+            else if (truthRef.length() > callRef.length()) {
+                // call reference is shorter than truth:
+                final String suffix = getStringSuffix(truthRef, callRef, "Ref alleles mismatch between: " + truthContext + " and " + callContext);
+                final int insertIdx = callRef.length();
+                callAllele1 = spliceOrAppendString(callAllele1, suffix, insertIdx);
+                callAllele2 = spliceOrAppendString(callAllele2, suffix, insertIdx);
+                callRef = callRef + suffix;
+            }
+            else {
+                // Same length - so they must just disagree...
+                throw new IllegalStateException("Ref alleles mismatch between: " + truthContext + " and " + callContext);
+            }
+        }
+
+        final OrderedSet<String> allAlleles = new OrderedSet<String>();
+
+        if (truthGenotype != null || callGenotype != null) {
+            // Store the refAllele as the first (0th index) allele in allAlleles (only can do if at least one genotype is non-null)
+            allAlleles.smartAdd(truthGenotype == null ? callRef : truthRef); // zeroth allele;
+        }
+
+        if (null != truthGenotype) {
+            allAlleles.smartAdd(truthAllele1);
+            allAlleles.smartAdd(truthAllele2);
+        }
+
+        /**
+         *  if either of the call alleles is in allAlleles, with index > 1, we need to make sure that allele has index 1.
+         *  this is because of the following situations:
+         *
+         *      REF TRUTH   CALL-GT TRUTH-STATE     CALL-STATE
+         *      A   C/G     C/A     HET_VAR1_VAR2   HET_REF_VAR1
+         *      A   G/C     C/A     HET_VAR1_VAR2   HET_REF_VAR1
+         *      A   G/C     G/A     HET_VAR1_VAR2   HET_REF_VAR1
+         *      A   G/C     G/A     HET_VAR1_VAR2   HET_REF_VAR1
+         *
+         *  so, in effect, the order of the alleles in the TRUTH doesn't determine the assignment of allele to Var1 and Var2,
+         *  only once the call is known can this assignment be made.
+         */
+
+        if (null != callGenotype) {
+            if (allAlleles.indexOf(callAllele1) > 1 || allAlleles.indexOf(callAllele2) > 1) {
+                allAlleles.remove(2);
+                allAlleles.remove(1);
+                allAlleles.smartAdd(truthAllele2);
+                allAlleles.smartAdd(truthAllele1);
+            }
+
+            allAlleles.smartAdd(callAllele1);
+            allAlleles.smartAdd(callAllele2);
+        }
+
+        return new Alleles(allAlleles, truthAllele1, truthAllele2, callAllele1, callAllele2);
+    }
+
+    private static GenotypeConcordanceStateCodes getStateCode(final VariantContext ctx, final String sample, final int minGq, final int minDp) {
+        // Site level checks
+        // Added potential to include missing sites as hom ref.
+        if (ctx == null) return MISSING_CODE;
+        else if (ctx.isMixed()) return IS_MIXED_CODE;
+        else if (ctx.isFiltered()) return VC_FILTERED_CODE;
+        else {
+            // Genotype level checks
+            final Genotype genotype = ctx.getGenotype(sample);
+            if (genotype.isNoCall())           return NO_CALL_CODE;
+            else if (genotype.isFiltered())    return GT_FILTERED_CODE;
+            else if ((genotype.getGQ() != -1) && (genotype.getGQ() < minGq)) return LOW_GQ_CODE;
+            else if ((genotype.getDP() != -1) && (genotype.getDP() < minDp)) return LOW_DP_CODE;
+                // Note.  Genotype.isMixed means that it is called on one chromosome and NOT on the other
+            else if ((genotype.isMixed())) return NO_CALL_CODE;
+        }
+        return null;
+    }
+
     /**
      * A method to determine the truth and call states for a pair of variant contexts representing truth and call.
      * A variety of variant and genotype-level checks are first used to determine if either of the the variant contexts
@@ -480,131 +841,26 @@ public class GenotypeConcordance extends CommandLineProgram {
 
         // TODO: what about getPloidy()
 
-        Genotype truthGenotype = null, callGenotype = null;
-
-        // Site level checks
-        // Added potential to include missing sites as hom ref..
-        if (truthContext == null) truthState = TruthState.MISSING;
-        else if (truthContext.isMixed()) truthState = TruthState.IS_MIXED;
-        else if (truthContext.isFiltered()) truthState = TruthState.VC_FILTERED;
-        else {
-            // Genotype level checks
-            truthGenotype = truthContext.getGenotype(truthSample);
-            if (truthGenotype.isNoCall())           truthState = TruthState.NO_CALL;
-            else if (truthGenotype.isFiltered())    truthState = TruthState.GT_FILTERED;
-            else if ((truthGenotype.getGQ() != -1) && (truthGenotype.getGQ() < minGq)) truthState = TruthState.LOW_GQ;
-            else if ((truthGenotype.getDP() != -1) && (truthGenotype.getDP() < minDp)) truthState = TruthState.LOW_DP;
-            // Note.  Genotype.isMixed means that it is called on one chromosome and NOT on the other
-            else if ((truthGenotype.isMixed())) truthState = TruthState.NO_CALL;
+        // Get truth and call states if they are filtered or are not going to be compared (ex. depth is less than minDP).
+        final GenotypeConcordanceStateCodes truthStateCode = getStateCode(truthContext, truthSample, minGq, minDp);
+        if (null != truthStateCode) {
+            truthState = GenotypeConcordanceStates.truthMap.get(truthStateCode.ordinal());
+        }
+        final GenotypeConcordanceStateCodes callStateCode = getStateCode(callContext, callSample, minGq, minDp);
+        if (null != callStateCode) {
+            callState = GenotypeConcordanceStates.callMap.get(callStateCode.ordinal());
         }
 
-        // Site level checks
-        if (callContext == null) callState = CallState.MISSING;
-        else if (callContext.isMixed()) callState = CallState.IS_MIXED;
-        else if (callContext.isFiltered()) callState = CallState.VC_FILTERED;
-        else {
-            // Genotype level checks
-            callGenotype = callContext.getGenotype(callSample);
-            if (callGenotype.isNoCall())           callState = CallState.NO_CALL;
-            else if (callGenotype.isFiltered())    callState = CallState.GT_FILTERED;
-            else if ((callGenotype.getGQ() != -1) && (callGenotype.getGQ() < minGq)) callState = CallState.LOW_GQ;
-            else if ((callGenotype.getDP() != -1) && (callGenotype.getDP() < minDp)) callState = CallState.LOW_DP;
-                // Note.  Genotype.isMixed means that it is called on one chromosome and NOT on the other
-            else if ((callGenotype.isMixed())) callState = CallState.NO_CALL;
-        }
-
-        // initialize the reference
-        String truthRef = (truthContext != null) ? truthContext.getReference().getBaseString() : null;
-        String callRef  = (callContext != null) ?  callContext.getReference().getBaseString() : null;
-
-        String truthAllele1 = null;
-        String truthAllele2 = null;
-        if (null == truthState) {
-            // Truth State not yet determined - will need to use truth genotypes below
-            if (truthGenotype.getAlleles().size() != 2) {
-                throw new IllegalStateException("Genotype for Variant Context: " + truthContext + " does not have exactly 2 alleles");
-            }
-            truthAllele1 = truthGenotype.getAllele(0).getBaseString();
-            truthAllele2 = truthGenotype.getAllele(1).getBaseString();
-        }
-
-        String callAllele1 = null;
-        String callAllele2 = null;
-        if (null == callState) {
-            if (callGenotype.getAlleles().size() != 2) {
-                throw new IllegalStateException("Genotype for Variant Context: " + callContext + " does not have exactly 2 alleles");
-            }
-            callAllele1 = callGenotype.getAllele(0).getBaseString();
-            callAllele2 = callGenotype.getAllele(1).getBaseString();
-        }
-
-        if ((truthRef != null && callRef != null) && (!truthRef.equals(callRef))) {
-            // This is for dealing with indel conditions, where we can have truth being TCAA*/T, call being TCAACAA*/TCAA (*=ref)
-            // So, we want to verify that both refs start with the shorter substring of the two
-            // and then we want to pad the shorter's ref and alleles, so that TCAA*/T becomes TCAACAA*/TCAA (i.e. tacking on the CAA)
-            if (truthRef.length() < callRef.length()) {
-                // Truth reference is shorter than call reference
-                final String suffix = getStringSuffix(callRef, truthRef, "Ref alleles mismatch between: " + truthContext + " and " + callContext);
-                truthRef = truthRef + suffix;
-                if (null == truthState) {
-                    truthAllele1 = truthGenotype.getAllele(0).getBaseString() + suffix;
-                    truthAllele2 = truthGenotype.getAllele(1).getBaseString() + suffix;
-                }
-            }
-            else if (truthRef.length() > callRef.length()) {
-                // call reference is shorter than truth:
-                final String suffix = getStringSuffix(truthRef, callRef, "Ref alleles mismatch between: " + truthContext + " and " + callContext);
-                callRef = callRef + suffix;
-                if (null == callState) {
-                    callAllele1 = callGenotype.getAllele(0).getBaseString() + suffix;
-                    callAllele2 = callGenotype.getAllele(1).getBaseString() + suffix;
-                }
-            }
-            else {
-                // Same length - so they must just disagree...
-                throw new IllegalStateException("Ref alleles mismatch between: " + truthContext + " and " + callContext);
-            }
-        }
-
-        final OrderedSet<String> allAlleles = new OrderedSet<String>();
-
-        if (truthContext != null || callContext != null) {
-            // Store the refAllele as the first (0th index) allele in allAlleles (only can do if at least one context is non-null)
-            allAlleles.smartAdd(truthContext == null ? callRef : truthRef); // zeroth allele;
-        }
-
-        if (null == truthState) {
-            // If truthState is not null, it has not yet been determined, and the truthContext has genotypes (i.e. the alleles are valid)
-            allAlleles.smartAdd(truthAllele1);
-            allAlleles.smartAdd(truthAllele2);
-        }
-
-        /**
-         *  if either of the call alleles is in allAlleles, with index > 1, we need to make sure that allele has index 1.
-         *  this is because of the following situations:
-         *
-         *      REF TRUTH   CALL-GT TRUTH-STATE     CALL-STATE
-         *      A   C/G     C/A     HET_VAR1_VAR2   HET_REF_VAR1
-         *      A   G/C     C/A     HET_VAR1_VAR2   HET_REF_VAR1
-         *      A   G/C     G/A     HET_VAR1_VAR2   HET_REF_VAR1
-         *      A   G/C     G/A     HET_VAR1_VAR2   HET_REF_VAR1
-         *
-         *  so, in effect, the order of the alleles in the TRUTH doesn't determine the assignment of allele to Var1 and Var2,
-         *  only once the call is known can this assignment be made.
-         */
-
-        if (null == callState) {
-            // If callState is not null, it has not yet been determined, and the callContext has genotypes (i.e. the alleles are valid)
-            if (allAlleles.indexOf(callAllele1) > 1 || allAlleles.indexOf(callAllele2) > 1) {
-                allAlleles.remove(2);
-                allAlleles.remove(1);
-                allAlleles.smartAdd(truthAllele2);
-                allAlleles.smartAdd(truthAllele1);
-            }
-
-            allAlleles.smartAdd(callAllele1);
-            allAlleles.smartAdd(callAllele2);
-        }
+        final Alleles alleles = normalizeAlleles(
+                truthState == null ? truthContext : null,
+                truthSample,
+                callState == null ? callContext : null,
+                callSample);
+        final OrderedSet<String> allAlleles = alleles.allAlleles;
+        final String truthAllele1           = alleles.truthAllele1;
+        final String truthAllele2           = alleles.truthAllele2;
+        final String callAllele1            = alleles.callAllele1;
+        final String callAllele2            = alleles.callAllele2;
 
         // Truth
         if (null == truthState) {
@@ -630,7 +886,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             }
 
             if (null == callState) {
-                throw new IllegalStateException("This should never happen...  Could not classify the call variant: " + callGenotype);
+                throw new IllegalStateException("This should never happen...  Could not classify the call variant: " + callContext.getGenotype(callSample));
             }
         }
 

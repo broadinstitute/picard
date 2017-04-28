@@ -47,7 +47,7 @@ public class VariantContextComparatorTest {
 	private static List<String> getOrderedContigList(final VariantContext... variantContexts) {
 		final LinkedHashSet<String> contigs = new LinkedHashSet<String>();
 		for (final VariantContext context : variantContexts) {
-			contigs.add(context.getChr());
+			contigs.add(context.getContig());
 		}
 		return new ArrayList<String>(contigs);
 	}

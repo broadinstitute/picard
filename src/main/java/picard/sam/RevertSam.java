@@ -32,12 +32,11 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
-import htsjdk.samtools.SAMRecordUtil;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.FastqQualityFormat;
@@ -108,6 +107,7 @@ public class RevertSam extends CommandLineProgram {
             "</pre>" +
             "Will output a BAM/SAM file per read group. By default, all outputs will be in BAM format. " +
             "However, outputs will be in SAM format if the input path ends with '.sam', or CRAM format if it ends with '.cram'." +
+            " This behaviour can be overriden with OUTPUT_BY_READGROUP_FILE_FORMAT option."+
             "<hr />";
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")
     public File INPUT;
@@ -120,6 +120,10 @@ public class RevertSam extends CommandLineProgram {
 
     @Option(shortName = "OBR", doc = "When true, outputs each read group in a separate file.")
     public boolean OUTPUT_BY_READGROUP = false;
+
+    public static enum FileType {sam, bam, cram,dynamic}
+    @Option(shortName = "OBRFF", doc = "When using OUTPUT_BY_READGROUP, the output file format can be set to a certain format." )
+    public FileType  OUTPUT_BY_READGROUP_FILE_FORMAT=FileType.dynamic;
 
     @Option(shortName = "SO", doc = "The sort order to create the reverted output file with.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
@@ -178,7 +182,7 @@ public class RevertSam extends CommandLineProgram {
      */
     @Override
     protected String[] customCommandLineValidation() {
-        final List<String> errors = new ArrayList<String>();
+        final List<String> errors = new ArrayList<>();
         ValidationUtil.validateSanitizeSortOrder(SANITIZE, SORT_ORDER, errors);
         ValidationUtil.validateOutputParams(OUTPUT_BY_READGROUP, OUTPUT, OUTPUT_MAP, errors);
 
@@ -209,7 +213,17 @@ public class RevertSam extends CommandLineProgram {
         final Map<String, File> outputMap;
         final Map<String, SAMFileHeader> headerMap;
         if (OUTPUT_BY_READGROUP) {
-            final String defaultExtension = getDefaultExtension(INPUT.toString());
+            if (inHeader.getReadGroups().isEmpty()) {
+                throw new PicardException(INPUT + " does not contain Read Groups");
+            }
+
+            final String defaultExtension;
+            if (OUTPUT_BY_READGROUP_FILE_FORMAT==FileType.dynamic) {
+                defaultExtension = getDefaultExtension(INPUT.toString());
+            } else {
+                defaultExtension = "." + OUTPUT_BY_READGROUP_FILE_FORMAT.toString();
+            }
+
             outputMap = createOutputMap(OUTPUT_MAP, OUTPUT, defaultExtension, inHeader.getReadGroups());
             ValidationUtil.assertAllReadGroupsMapped(outputMap, inHeader.getReadGroups());
             headerMap = createHeaderMap(inHeader, SORT_ORDER, REMOVE_ALIGNMENT_INFORMATION);
@@ -308,7 +322,7 @@ public class RevertSam extends CommandLineProgram {
 
         if (REMOVE_ALIGNMENT_INFORMATION) {
             if (rec.getReadNegativeStrandFlag()) {
-                SAMRecordUtil.reverseComplement(rec);
+                rec.reverseComplement(true);
                 rec.setReadNegativeStrandFlag(false);
             }
 
@@ -404,7 +418,7 @@ public class RevertSam extends CommandLineProgram {
      * remaining returns an empty list.
      */
     private List<SAMRecord> fetchByReadName(final PeekableIterator<SAMRecord> iterator) {
-        final List<SAMRecord> out = new ArrayList<SAMRecord>();
+        final List<SAMRecord> out = new ArrayList<>();
 
         if (iterator.hasNext()) {
             final SAMRecord first = iterator.next();
@@ -442,7 +456,7 @@ public class RevertSam extends CommandLineProgram {
     }
 
     private static Map<String, File> createOutputMapFromFile(final File outputMapFile) {
-        final Map<String, File> outputMap = new HashMap<String, File>();
+        final Map<String, File> outputMap = new HashMap<>();
         final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(outputMapFile);
         for (final TabbedTextFileWithHeaderParser.Row row : parser) {
             final String id = row.getField("READ_GROUP_ID");
@@ -455,7 +469,7 @@ public class RevertSam extends CommandLineProgram {
     }
 
     private static Map<String, File> createOutputMap(final List<SAMReadGroupRecord> readGroups, final File outputDir, final String extension) {
-        final Map<String, File> outputMap = new HashMap<String, File>();
+        final Map<String, File> outputMap = new HashMap<>();
         for (final SAMReadGroupRecord readGroup : readGroups) {
             final String id = readGroup.getId();
             final String fileName = id + extension;
@@ -470,7 +484,7 @@ public class RevertSam extends CommandLineProgram {
             final SortOrder sortOrder,
             final boolean removeAlignmentInformation) {
         
-        final Map<String, SAMFileHeader> headerMap = new HashMap<String, SAMFileHeader>();
+        final Map<String, SAMFileHeader> headerMap = new HashMap<>();
         for (final SAMReadGroupRecord readGroup : inHeader.getReadGroups()) {
             final SAMFileHeader header = createOutHeader(inHeader, sortOrder, removeAlignmentInformation);
             header.addReadGroup(readGroup);
@@ -500,7 +514,7 @@ public class RevertSam extends CommandLineProgram {
             final File input,
             final boolean restoreOriginalQualities) {
 
-        final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<SAMReadGroupRecord, FastqQualityFormat>();
+        final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<>();
 
         // Figure out the quality score encoding scheme for each read group.
         for (final SAMReadGroupRecord rg : inHeader.getReadGroups()) {
@@ -514,7 +528,7 @@ public class RevertSam extends CommandLineProgram {
                     throw new UnsupportedOperationException();
                 }
             };
-            readGroupToFormat.put(rg, QualityEncodingDetector.detect(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, new FilteringIterator(reader.iterator(), filter), restoreOriginalQualities));
+            readGroupToFormat.put(rg, QualityEncodingDetector.detect(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, new FilteringSamIterator(reader.iterator(), filter), restoreOriginalQualities));
             CloserUtil.close(reader);
         }
         for (final SAMReadGroupRecord r : readGroupToFormat.keySet()) {
@@ -532,7 +546,7 @@ public class RevertSam extends CommandLineProgram {
      * and a single writer used when OUTPUT_BY_READGROUP=false.
      */
     private static class RevertSamWriter {
-        private final Map<String, SAMFileWriter> writerMap = new HashMap<String, SAMFileWriter>();
+        private final Map<String, SAMFileWriter> writerMap = new HashMap<>();
         private final SAMFileWriter singleWriter;
         private final boolean outputByReadGroup;
 
@@ -573,9 +587,7 @@ public class RevertSam extends CommandLineProgram {
 
         void close() {
             if (outputByReadGroup) {
-                for (final SAMFileWriter writer : writerMap.values()) {
-                    writer.close();
-                }
+                writerMap.values().forEach(SAMFileWriter::close);
             } else {
                 singleWriter.close();
             }
@@ -587,7 +599,7 @@ public class RevertSam extends CommandLineProgram {
      * and a single sorter used when OUTPUT_BY_READGROUP=false.
      */
     private static class RevertSamSorter {
-        private final Map<String, SortingCollection<SAMRecord>> sorterMap = new HashMap<String, SortingCollection<SAMRecord>>();
+        private final Map<String, SortingCollection<SAMRecord>> sorterMap = new HashMap<>();
         private final SortingCollection<SAMRecord> singleSorter;
         private final boolean outputByReadGroup;
 
@@ -622,14 +634,14 @@ public class RevertSam extends CommandLineProgram {
         }
 
         List<PeekableIterator<SAMRecord>> iterators() {
-            final List<PeekableIterator<SAMRecord>> iterators = new ArrayList<PeekableIterator<SAMRecord>>();
+            final List<PeekableIterator<SAMRecord>> iterators = new ArrayList<>();
             if (outputByReadGroup) {
                 for (final SortingCollection<SAMRecord> sorter : sorterMap.values()) {
-                    final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(sorter.iterator());
+                    final PeekableIterator<SAMRecord> iterator = new PeekableIterator<>(sorter.iterator());
                     iterators.add(iterator);
                 }
             } else {
-                final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(singleSorter.iterator());
+                final PeekableIterator<SAMRecord> iterator = new PeekableIterator<>(singleSorter.iterator());
                 iterators.add(iterator);
             }
             return iterators;

@@ -24,6 +24,8 @@
 
 package picard.analysis.replicates;
 
+import picard.analysis.MergeableMetricBase;
+
 /**
  * A class to store information relevant for biological rate estimation
  *

@@ -2,7 +2,6 @@ package picard.analysis.directed;
 
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
@@ -24,6 +23,8 @@ import picard.metrics.MultilevelMetrics;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
+
+import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
 /**
  * <p>Both CollectTargetedPCRMetrics and CollectHsSelection share virtually identical program structures except
@@ -82,7 +83,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
             "considered 'near probe' and included in percent selected.")
     public int NEAR_DISTANCE = TargetedPcrMetricsCollector.NEAR_PROBE_DISTANCE_DEFAULT;
 
-    @Option(shortName = "MQ", doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
     public int MINIMUM_MAPPING_QUALITY = 1;
 
     @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.", overridable = true)

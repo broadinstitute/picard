@@ -34,11 +34,14 @@ import picard.metrics.MultilevelMetrics;
 public class GcBiasSummaryMetrics extends MultilevelMetrics {
     public String ACCUMULATION_LEVEL;
 
+    /** This option is used to mark including or excluding duplicates. */
+    public String READS_USED;
+
     /** The window size on the genome used to calculate the GC of the sequence. */
     public int WINDOW_SIZE;
 
     /** The total number of clusters that were seen in the gc bias calculation. */
-    public int TOTAL_CLUSTERS;
+    public long TOTAL_CLUSTERS;
 
     /** The total number of aligned reads used to compute the gc bias metrics. */
     public long ALIGNED_READS;

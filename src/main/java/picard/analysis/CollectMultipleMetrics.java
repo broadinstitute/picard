@@ -61,7 +61,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     static final String USAGE_DETAILS ="This 'meta-metrics' tool runs one or more of the metrics collection modules at the same" +
             " time to cut down on the time spent reading in data from input files. Available modules include " +
             "CollectAlignmentSummaryMetrics, CollectInsertSizeMetrics, QualityScoreDistribution,  MeanQualityByCycle, " +
-            "and CollectBaseDistributionByCycle.  The tool produces outputs of '.pdf' and '.txt' files for each module, except for the " +
+            "CollectBaseDistributionByCycle, CollectGcBiasMetrics, RnaSeqMetrics, CollectSequencingArtifactMetrics, and CollectQualityYieldMetrics. " +
+            "The tool produces outputs of '.pdf' and '.txt' files for each module, except for the " +
             "CollectAlignmentSummaryMetrics module, which outputs only a '.txt' file. Output files are named by specifying a base name " +
             "(without any file extensions).<br /><br />" +
             "" +
@@ -88,8 +89,13 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             "</pre>" +
             "<hr />";
     public static interface ProgramInterface {
+        /** By default, this method calls the {@link #makeInstance(String, String, File, File, Set, File, File)} method without 'includeUnpaired' parameter. */
+        default  SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference,
+                                                   final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals, final boolean includeUnpaired) {
+            return makeInstance(outbase, outext, input, reference, metricAccumulationLevel, dbSnp, intervals);
+        }
         SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference,
-            final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals);
+                                          final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals);
         public boolean needsReferenceSequence();
         public boolean supportsMetricAccumulationLevel();
     }
@@ -235,6 +241,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 program.MINIMUM_GENOME_FRACTION = 1.0E-5;
                 program.IS_BISULFITE_SEQUENCED = false;
                 program.ASSUME_SORTED = false;
+                program.ALSO_IGNORE_DUPLICATES = false;
 
                 //GC_Bias actually uses the class-level REFERENCE_SEQUENCE variable.
                 program.REFERENCE_SEQUENCE = reference;
@@ -275,11 +282,16 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             public boolean supportsMetricAccumulationLevel() { return false; }
             @Override
             public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+                return makeInstance(outbase, outext, input, reference, metricAccumulationLevel, dbSnp, intervals, false);
+            }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals, final boolean includeUnpaired) {
                 final CollectSequencingArtifactMetrics program = new CollectSequencingArtifactMetrics();
                 program.OUTPUT = new File(outbase);
                 program.FILE_EXTENSION = outext;
                 program.DB_SNP = dbSnp;
                 program.INTERVALS = intervals;
+                program.INCLUDE_UNPAIRED = includeUnpaired;
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -342,9 +354,12 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     public File INTERVALS;
 
     @Option(doc = "VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis " +
-            "by some PROGRAMs, PROGRAMS whose CLP doesn't allow for this argument will quetly ignore it.", optional = true)
+            "by some PROGRAMs; PROGRAMs whose CLP doesn't allow for this argument will quietly ignore it.", optional = true)
     public File DB_SNP;
 
+    @Option(shortName = "UNPAIRED", doc = "Include unpaired reads in CollectSequencingArtifactMetrics. If set to true then all paired reads will be included as well - " +
+            "MINIMUM_INSERT_SIZE and MAXIMUM_INSERT_SIZE will be ignored in CollectSequencingArtifactMetrics.")
+    public boolean INCLUDE_UNPAIRED = false;
     /**
      * Contents of PROGRAM set is transferred to this set during command-line validation, so that an outside
      * developer can invoke this class programmatically and provide alternative Programs to run by calling
@@ -395,7 +410,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
 
             final String outext = (null != FILE_EXTENSION) ? FILE_EXTENSION : ""; // Add a file extension if desired
-            final SinglePassSamProgram instance = program.makeInstance(OUTPUT, outext, INPUT, REFERENCE_SEQUENCE, METRIC_ACCUMULATION_LEVEL, DB_SNP, INTERVALS);
+            final SinglePassSamProgram instance = program.makeInstance(OUTPUT, outext, INPUT, REFERENCE_SEQUENCE, METRIC_ACCUMULATION_LEVEL, DB_SNP, INTERVALS, INCLUDE_UNPAIRED);
 
             // Generally programs should not be accessing these directly but it might make things smoother
             // to just set them anyway

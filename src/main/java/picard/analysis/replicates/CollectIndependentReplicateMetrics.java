@@ -74,6 +74,8 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
+
 /**
  * A CLP that, given a BAM and a VCF with genotypes of the same sample, estimates the rate of independent replication of reads within the bam.
  * That is, it estimates the fraction of the reads which look like duplicates (in the MarkDuplicates sense of the word) but are actually
@@ -124,7 +126,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
     @Option(shortName = "GQ", doc = "minimal value for the GQ field in the VCF to use variant site.", optional = true)
     public Integer MINIMUM_GQ = 90;
 
-    @Option(shortName = "MQ", doc = "minimal value for the mapping quality of the reads to be used in the estimation.", optional = true)
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "minimal value for the mapping quality of the reads to be used in the estimation.", optional = true)
     public Integer MINIMUM_MQ = 40;
 
     @Option(shortName = "BQ", doc = "minimal value for the base quality of a base to be used in the estimation.", optional = true)

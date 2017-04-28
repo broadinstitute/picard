@@ -198,7 +198,9 @@ public class TheoreticalSensitivity {
         final double[] normalizedHistogram = new double[histogram.size()];
 
         for (int i = 0; i < histogram.size(); i++) {
-            normalizedHistogram[i] = histogram.get(i).getValue() / histogramSumOfValues;
+            if (histogram.get(i) != null) {
+                normalizedHistogram[i] = histogram.get(i).getValue() / histogramSumOfValues;
+            }
         }
         return normalizedHistogram;
     }

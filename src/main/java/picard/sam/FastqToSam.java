@@ -32,7 +32,6 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
-import htsjdk.samtools.fastq.FastqConstants;
 import htsjdk.samtools.fastq.FastqConstants.FastqExtensions;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
@@ -42,6 +41,7 @@ import htsjdk.samtools.util.Iso8601Date;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.QualityEncodingDetector;
+import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
@@ -145,7 +145,8 @@ public class FastqToSam extends CommandLineProgram {
     @Option(doc="Maximum quality allowed in the input fastq.  An exception will be thrown if a quality is greater than this value.")
     public int MAX_Q = SAMUtils.MAX_PHRED_SCORE;
 
-    @Option(doc="If true and this is an unpaired fastq any occurrence of '/1' will be removed from the end of a read name.")
+    @Deprecated
+    @Option(doc="Deprecated (No longer used). If true and this is an unpaired fastq any occurrence of '/1' or '/2' will be removed from the end of a read name.")
     public Boolean STRIP_UNPAIRED_MATE_NUMBER = false;
 
     @Option(doc="Allow (and ignore) empty lines")
@@ -314,7 +315,7 @@ public class FastqToSam extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(LOG);
         for ( ; freader.hasNext()  ; readCount++) {
             final FastqRecord frec = freader.next();
-            final SAMRecord srec = createSamRecord(writer.getFileHeader(), getReadName(frec.getReadHeader(), false) , frec, false) ;
+            final SAMRecord srec = createSamRecord(writer.getFileHeader(), SequenceUtil.getSamReadNameFromFastqHeader(frec.getReadHeader()) , frec, false) ;
             srec.setReadPairedFlag(false);
             writer.addAlignment(srec);
             progress.record(srec);
@@ -331,8 +332,8 @@ public class FastqToSam extends CommandLineProgram {
             final FastqRecord frec1 = freader1.next();
             final FastqRecord frec2 = freader2.next();
 
-            final String frec1Name = getReadName(frec1.getReadHeader(), true);
-            final String frec2Name = getReadName(frec2.getReadHeader(), true);
+            final String frec1Name = SequenceUtil.getSamReadNameFromFastqHeader(frec1.getReadHeader());
+            final String frec2Name = SequenceUtil.getSamReadNameFromFastqHeader(frec2.getReadHeader());
             final String baseName = getBaseName(frec1Name, frec2Name, freader1, freader2);
 
             final SAMRecord srec1 = createSamRecord(writer.getFileHeader(), baseName, frec1, true) ;
@@ -485,22 +486,6 @@ public class FastqToSam extends CommandLineProgram {
     /** Little utility to give error messages corresponding to line numbers in the input files. */
     private String error(final FastqReader freader, final String str) {
         return str +" at line "+freader.getLineNumber() +" in file "+freader.getFile().getAbsolutePath();
-    }
-
-    // Read names cannot contain blanks
-    private String getReadName(final String fastqHeader, final boolean paired) {
-        final int idx = fastqHeader.indexOf(' ');
-        String readName = (idx == -1) ? fastqHeader : fastqHeader.substring(0,idx);
-
-        // NOTE: the while loop isn't necessarily the most efficient way to handle this but we don't
-        // expect this to ever happen more than once, just trapping pathological cases
-        while (STRIP_UNPAIRED_MATE_NUMBER && !paired && (readName.endsWith("/1") || readName.endsWith("/2"))) {
-            // If this is an unpaired run we want to make sure that "/1" isn't tacked on the end of the read name,
-            // as this can cause problems down the road in MergeBamAlignment
-            readName = readName.substring(0, readName.length() - 2);
-        }
-
-        return readName;
     }
 
     @Override

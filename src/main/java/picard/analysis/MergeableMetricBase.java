@@ -20,8 +20,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
-package picard.analysis.replicates;
+package picard.analysis;
 
 import htsjdk.samtools.metrics.MetricBase;
 
@@ -31,6 +32,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * An extension of MetricBase that knows how to merge-by-adding fields that are appropriately annotated. It also provides an interface
@@ -42,19 +47,34 @@ import java.lang.reflect.Field;
  *
  * @author Yossi Farjoun
  */
-public class MergeableMetricBase extends MetricBase {
+abstract public class MergeableMetricBase extends MetricBase {
 
+    /** Metrics whose values can be merged by adding. */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
     protected @interface MergeByAdding {}
 
+    /** Metrics whose values should be equal when merging. */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
     protected @interface MergeByAssertEquals {}
 
+    /** Metrics that are not merged, but are subsequently derived from other metrics, for example by
+     * {@link #calculateDerivedFields()}. */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
     protected @interface NoMergingIsDerived {}
+
+    /** Metrics that are merged manually in the {@link #merge(MergeableMetricBase)} ()}. Typically these metrics need
+     * access to both metrics being merged. */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    protected @interface MergingIsManual {}
+
+    /** Metrics that are not merged. */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    protected @interface NoMergingKeepsValue {}
 
     /** checks if this instance can be merged with another
      *
@@ -75,9 +95,9 @@ public class MergeableMetricBase extends MetricBase {
 
                 final Annotation[] equalAnnotations = field.getAnnotationsByType(MergeByAssertEquals.class);
                 if (equalAnnotations.length != 0) {
-                    if (!field.get(this).equals(field.get(other))) {
-                        return false;
-                    }
+                    if (field.get(this) == null) return true;
+                    if (field.get(other) == null) return true;
+                    if (!field.get(this).equals(field.get(other))) return false;
                 }
             }
         } catch (final Exception e) {
@@ -94,13 +114,23 @@ public class MergeableMetricBase extends MetricBase {
      */
     public boolean mergeIfCan(final MergeableMetricBase other) {
 
-        if(canMerge(other)) {
+        if (canMerge(other)) {
             merge(other);
             return true;
-        }
-        else {
+        } else {
             return false;
         }
+    }
+
+    /**
+     * for a collection of MergeableMetricBase, merge them all into "this" one.
+     *
+     * @param many a Collection of MergeableMetricBase
+     */
+    public MergeableMetricBase merge(final Collection<? extends MergeableMetricBase> many) {
+        many.stream().forEach(this::merge);
+        calculateDerivedFields();
+        return this;
     }
 
     /**
@@ -108,19 +138,23 @@ public class MergeableMetricBase extends MetricBase {
      *
      * @param other metric to merge into this one.
      */
-    public void merge(final MergeableMetricBase other) {
+    public MergeableMetricBase merge(final MergeableMetricBase other) {
 
-        for (final Field field : this.getClass().getDeclaredFields()) {
-            if(field.isSynthetic()) continue;
+        for (final Field field : getAllFields(this.getClass())) {
+            if (field.isSynthetic()) continue;
 
             if (field.getAnnotationsByType(MergeByAdding.class).length +
                     field.getAnnotationsByType(MergeByAssertEquals.class).length +
-                    field.getAnnotationsByType(NoMergingIsDerived.class).length == 0) {
+                    field.getAnnotationsByType(NoMergingIsDerived.class).length +
+                    field.getAnnotationsByType(MergingIsManual.class).length +
+                    field.getAnnotationsByType(NoMergingKeepsValue.class).length == 0) {
                 throw new IllegalStateException("All fields of this class must be annotated with @MergeByAdding, @NoMergingIsDerived, or @MergeByAssertEquals. " +
                         "Field " + field.getName() + " isn't annotated.");
             }
 
             final Annotation[] summableAnnotations = field.getAnnotationsByType(MergeByAdding.class);
+            field.setAccessible(true);
+
             if (summableAnnotations.length != 0) {
                 try {
                     if (field.getType() == Integer.class) {
@@ -170,7 +204,9 @@ public class MergeableMetricBase extends MetricBase {
             final Annotation[] equalAnnotations = field.getAnnotationsByType(MergeByAssertEquals.class);
             if (equalAnnotations.length != 0) {
                 try {
-                    if (!field.get(this).equals(field.get(other))) {
+                    if (field.get(this) == null) {
+                        field.set(this, field.get(other));
+                    } else if (field.get(other) != null && !field.get(this).equals(field.get(other))) {
                         throw new IllegalStateException("Field " + field.getName() +
                                 " is annotated as @MergeByAssertEquals, but found two different values: " + field.get(this) + " & " + field.get(other));
                     }
@@ -179,11 +215,22 @@ public class MergeableMetricBase extends MetricBase {
                 }
             }
         }
+        return this;
+    }
+
+    private static List<Field> getAllFields(Class clazz){
+        final List<Field> fields = new ArrayList<>();
+        fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+        final Class superClass = clazz.getSuperclass();
+
+        if (superClass != null) fields.addAll(getAllFields(superClass));
+
+        return fields;
     }
 
     /**
      * placeholder method that will calculate the derived fields from the other ones. classes that are derived from non-trivial base classes
      * should consider calling super.calculateDerivedFields() as well.
      */
-     public void calculateDerivedFields(){}
+    public void calculateDerivedFields() {}
 }

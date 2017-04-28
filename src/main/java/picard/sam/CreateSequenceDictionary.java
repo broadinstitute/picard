@@ -23,14 +23,19 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceDictionaryCodec;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
+import htsjdk.samtools.util.AsciiWriter;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.Md5CalculatingOutputStream;
+import htsjdk.samtools.util.RuntimeIOException;
+import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
@@ -39,7 +44,7 @@ import picard.cmdline.Option;
 import picard.cmdline.programgroups.Fasta;
 import picard.cmdline.StandardOptionDefinitions;
 
-import java.io.File;
+import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -49,7 +54,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Create a SAM/BAM file from a fasta containing reference sequence.  The output SAM file contains a header but no
+ * Create a SAM/BAM file from a fasta containing reference sequence. The output SAM file contains a header but no
  * SAMRecords, and the header contains only sequence records.
  */
 @CommandLineProgramProperties(
@@ -75,11 +80,13 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             "<hr />";
     // The following attributes define the command-line arguments
 
+    private static final Log logger = Log.getInstance(CreateSequenceDictionary.class);
+
     @Option(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
     public File REFERENCE;
 
-    @Option(doc = "Output SAM or BAM file containing only the sequence dictionary",
-            shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Option(doc = "Output SAM file containing only the sequence dictionary. By default it will use the base name of the input reference with the .dict extension",
+            shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
     @Option(doc = "Put into AS field of sequence dictionary entry if supplied", optional = true)
@@ -114,11 +121,37 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     }
 
     /**
+     * Read all the sequences from the given reference file, and convert into SAMSequenceRecords
+     * @param referenceFile fasta or fasta.gz
+     * @return SAMSequenceRecords containing info from the fasta, plus from cmd-line arguments.
+     */
+    @Deprecated
+    public SAMSequenceDictionary makeSequenceDictionary(final File referenceFile) {
+        final ReferenceSequenceFile refSeqFile =
+                ReferenceSequenceFileFactory.getReferenceSequenceFile(referenceFile, TRUNCATE_NAMES_AT_WHITESPACE);
+        ReferenceSequence refSeq;
+        final List<SAMSequenceRecord> ret = new ArrayList<>();
+        final Set<String> sequenceNames = new HashSet<>();
+        for (int numSequences = 0; numSequences < NUM_SEQUENCES && (refSeq = refSeqFile.nextSequence()) != null; ++numSequences) {
+            if (sequenceNames.contains(refSeq.getName())) {
+                throw new PicardException("Sequence name appears more than once in reference: " + refSeq.getName());
+            }
+            sequenceNames.add(refSeq.getName());
+            ret.add(makeSequenceRecord(refSeq));
+        }
+        return new SAMSequenceDictionary(ret);
+    }
+
+    /**
      * Use reference filename to create URI to go into header if URI was not passed on cmd line.
      */
     protected String[] customCommandLineValidation() {
         if (URI == null) {
             URI = "file:" + REFERENCE.getAbsolutePath();
+        }
+        if (OUTPUT == null) {
+            OUTPUT = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(REFERENCE);
+            logger.info("Output dictionary will be written in ", OUTPUT);
         }
         return null;
     }
@@ -134,33 +167,55 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             throw new PicardException(OUTPUT.getAbsolutePath() +
                     " already exists.  Delete this file and try again, or specify a different output file.");
         }
-        final SAMSequenceDictionary sequences = makeSequenceDictionary(REFERENCE);
-        final SAMFileHeader samHeader = new SAMFileHeader();
-        samHeader.setSequenceDictionary(sequences);
-        final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(samHeader, false, OUTPUT);
-        samWriter.close();
+
+        // SortingCollection is used to check uniqueness of sequence names
+        final SortingCollection<String> sequenceNames = makeSortingCollection();
+        try (BufferedWriter writer = makeWriter()) {
+            final ReferenceSequenceFile refSeqFile = ReferenceSequenceFileFactory.
+                    getReferenceSequenceFile(REFERENCE, TRUNCATE_NAMES_AT_WHITESPACE);
+            SAMSequenceDictionaryCodec samDictCodec = new SAMSequenceDictionaryCodec(writer);
+
+            samDictCodec.encodeHeaderLine(false);
+            // read reference sequence one by one and write its metadata
+            for (ReferenceSequence refSeq = refSeqFile.nextSequence(); refSeq != null; refSeq = refSeqFile.nextSequence()) {
+                final SAMSequenceRecord samSequenceRecord = makeSequenceRecord(refSeq);
+                samDictCodec.encodeSequenceRecord(samSequenceRecord);
+                sequenceNames.add(refSeq.getName());
+            }
+        } catch (FileNotFoundException e) {
+            throw new PicardException("File " + OUTPUT.getAbsolutePath() + " not found");
+        } catch (IOException e) {
+            throw new PicardException("Can't write to or close output file " + OUTPUT.getAbsolutePath());
+        }
+
+        // check uniqueness of sequences names
+        final CloseableIterator<String> iterator = sequenceNames.iterator();
+
+        if(!iterator.hasNext()) return 0;
+
+        String current = iterator.next();
+        while (iterator.hasNext()) {
+            final String next = iterator.next();
+            if (current.equals(next)) {
+                OUTPUT.delete();
+                throw new PicardException("Sequence name " + current +
+                        " appears more than once in reference file");
+            }
+            current = next;
+        }
         return 0;
     }
 
-    /**
-     * Read all the sequences from the given reference file, and convert into SAMSequenceRecords
-     * @param referenceFile fasta or fasta.gz
-     * @return SAMSequenceRecords containing info from the fasta, plus from cmd-line arguments.
-     */
-    public SAMSequenceDictionary makeSequenceDictionary(final File referenceFile) {
-        final ReferenceSequenceFile refSeqFile =
-                ReferenceSequenceFileFactory.getReferenceSequenceFile(referenceFile, TRUNCATE_NAMES_AT_WHITESPACE);
-        ReferenceSequence refSeq;
-        final List<SAMSequenceRecord> ret = new ArrayList<SAMSequenceRecord>();
-        final Set<String> sequenceNames = new HashSet<String>();
-        for (int numSequences = 0; numSequences < NUM_SEQUENCES && (refSeq = refSeqFile.nextSequence()) != null; ++numSequences) {
-            if (sequenceNames.contains(refSeq.getName())) {
-                throw new PicardException("Sequence name appears more than once in reference: " + refSeq.getName());
-            }
-            sequenceNames.add(refSeq.getName());
-            ret.add(makeSequenceRecord(refSeq));
-        }
-        return new SAMSequenceDictionary(ret);
+    private BufferedWriter makeWriter() throws FileNotFoundException {
+        return new BufferedWriter(
+                new AsciiWriter(this.CREATE_MD5_FILE ?
+                        new Md5CalculatingOutputStream(
+                                new FileOutputStream(OUTPUT, false),
+                                new File(OUTPUT.getAbsolutePath() + ".md5")
+                        )
+                        : new FileOutputStream(OUTPUT)
+                )
+        );
     }
 
     /**
@@ -195,5 +250,55 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             s = zeros.substring(0, 32 - s.length()) + s;
         }
         return s;
+    }
+
+    private SortingCollection<String> makeSortingCollection() {
+        final String name = getClass().getSimpleName();
+        final File tmpDir = IOUtil.createTempDir(name, null);
+        tmpDir.deleteOnExit();
+        // 256 byte for one name, and 1/10 part of all memory for this, rough estimate
+        long maxNamesInRam = Runtime.getRuntime().maxMemory() / 256 / 10;
+        return SortingCollection.newInstance(
+                String.class,
+                new StringCodec(),
+                String::compareTo,
+                (int) Math.min(maxNamesInRam, Integer.MAX_VALUE),
+                tmpDir
+        );
+    }
+
+    private static class StringCodec implements SortingCollection.Codec<String> {
+        private DataInputStream dis;
+        private DataOutputStream dos;
+
+        public StringCodec clone() {
+            return new StringCodec();
+        }
+
+        public void setOutputStream(final OutputStream os) {
+            dos = new DataOutputStream(os);
+        }
+
+        public void setInputStream(final InputStream is) {
+            dis = new DataInputStream(is);
+        }
+
+        public void encode(final String str) {
+            try {
+                dos.writeUTF(str);
+            } catch (IOException e) {
+                throw new RuntimeIOException(e);
+            }
+        }
+
+        public String decode() {
+            try {
+                return dis.readUTF();
+            } catch (EOFException e) {
+                return null;
+            } catch (IOException e) {
+                throw new PicardException("Exception reading sequence name from temporary file.", e);
+            }
+        }
     }
 }

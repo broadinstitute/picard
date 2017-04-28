@@ -24,59 +24,81 @@
 
 package picard.sam;
 
-import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.util.Histogram;
+import picard.analysis.MergeableMetricBase;
 
 /**
  * Metrics that are calculated during the process of marking duplicates
  * within a stream of SAMRecords.
  */
-public class DuplicationMetrics extends MetricBase {
+public class DuplicationMetrics extends MergeableMetricBase {
     /** The library on which the duplicate marking was performed. */
+    @MergeByAssertEquals
     public String LIBRARY;
 
     /**
      * The number of mapped reads examined which did not have a mapped mate pair,
      * either because the read is unpaired, or the read is paired to an unmapped mate.
      */
+    @MergeByAdding
     public long UNPAIRED_READS_EXAMINED;
 
     /** The number of mapped read pairs examined. (Primary, non-supplemental) */
+    @MergeByAdding
     public long READ_PAIRS_EXAMINED;
 
     /** The number of reads that were either secondary or supplementary */
+    @MergeByAdding
     public long SECONDARY_OR_SUPPLEMENTARY_RDS;
 
     /** The total number of unmapped reads examined. (Primary, non-supplemental) */
+    @MergeByAdding
     public long UNMAPPED_READS;
 
     /** The number of fragments that were marked as duplicates. */
+    @MergeByAdding
     public long UNPAIRED_READ_DUPLICATES;
 
     /** The number of read pairs that were marked as duplicates. */
+    @MergeByAdding
     public long READ_PAIR_DUPLICATES;
 
     /**
      * The number of read pairs duplicates that were caused by optical duplication.
      * Value is always < READ_PAIR_DUPLICATES, which counts all duplicates regardless of source.
      */
+    @MergeByAdding
     public long READ_PAIR_OPTICAL_DUPLICATES;
 
     /** The fraction of mapped sequence that is marked as duplicate. */
+    @NoMergingIsDerived
     public Double PERCENT_DUPLICATION;
 
     /** The estimated number of unique molecules in the library based on PE duplication. */
+    @NoMergingIsDerived
     public Long ESTIMATED_LIBRARY_SIZE;
 
     /**
      * Fills in the ESTIMATED_LIBRARY_SIZE based on the paired read data examined where
      * possible and the PERCENT_DUPLICATION.
      */
-    public void calculateDerivedMetrics() {
+    @Override
+    public void calculateDerivedFields() {
         this.ESTIMATED_LIBRARY_SIZE = estimateLibrarySize(this.READ_PAIRS_EXAMINED - this.READ_PAIR_OPTICAL_DUPLICATES,
-                                                          this.READ_PAIRS_EXAMINED - this.READ_PAIR_DUPLICATES);
+                this.READ_PAIRS_EXAMINED - this.READ_PAIR_DUPLICATES);
 
         PERCENT_DUPLICATION = (UNPAIRED_READ_DUPLICATES + READ_PAIR_DUPLICATES *2) /(double) (UNPAIRED_READS_EXAMINED + READ_PAIRS_EXAMINED *2);
+    }
+
+    /**
+     * Fills in the ESTIMATED_LIBRARY_SIZE based on the paired read data examined where
+     * possible and the PERCENT_DUPLICATION.
+     *
+     * Deprecated, use {@link #calculateDerivedFields()} instead.
+     */
+    @Deprecated
+    public void calculateDerivedMetrics() {
+        this.calculateDerivedFields();
     }
 
     /**
@@ -149,7 +171,7 @@ public class DuplicationMetrics extends MetricBase {
     public Histogram<Double> calculateRoiHistogram() {
         if (ESTIMATED_LIBRARY_SIZE == null) {
             try {
-                calculateDerivedMetrics();
+                calculateDerivedFields();
                 if (ESTIMATED_LIBRARY_SIZE == null) return null;
             }
             catch (IllegalStateException ise) { return null; }
@@ -171,7 +193,7 @@ public class DuplicationMetrics extends MetricBase {
         DuplicationMetrics m = new DuplicationMetrics();
         m.READ_PAIRS_EXAMINED  = Integer.parseInt(args[0]);
         m.READ_PAIR_DUPLICATES = Integer.parseInt(args[1]);
-        m.calculateDerivedMetrics();
+        m.calculateDerivedFields();
         System.out.println("Percent Duplication: " + m.PERCENT_DUPLICATION);
         System.out.println("Est. Library Size  : " + m.ESTIMATED_LIBRARY_SIZE);
         System.out.println();
@@ -180,27 +202,5 @@ public class DuplicationMetrics extends MetricBase {
         for (Histogram.Bin<Double> bin : m.calculateRoiHistogram().values()) {
             System.out.println(bin.getId() + "\t" + bin.getValue());
         }
-
-//        DuplicationMetrics m = new DuplicationMetrics();
-//        m.READ_PAIRS_EXAMINED  = Long.parseLong(args[0]);
-//        m.READ_PAIR_DUPLICATES = Long.parseLong(args[1]);
-//        final long UNIQUE_READ_PAIRS = m.READ_PAIRS_EXAMINED - m.READ_PAIR_DUPLICATES;
-//        final double xCoverage = Double.parseDouble(args[2]);
-//        final double uniqueXCoverage = xCoverage * ((double) UNIQUE_READ_PAIRS / (double) m.READ_PAIRS_EXAMINED);
-//        final double oneOverCoverage = 1 / xCoverage;
-//
-//        m.calculateDerivedMetrics();
-//        System.out.println("Percent Duplication: " + m.PERCENT_DUPLICATION);
-//        System.out.println("Est. Library Size  : " + m.ESTIMATED_LIBRARY_SIZE);
-//        System.out.println();
-//
-//
-//        System.out.println("Coverage\tUnique Coverage\tDuplication");
-//        for (double d = oneOverCoverage; (int) (d*xCoverage)<=50; d+=oneOverCoverage) {
-//            double coverage = d * xCoverage;
-//            double uniqueCoverage = uniqueXCoverage * m.estimateRoi(m.ESTIMATED_LIBRARY_SIZE, d, m.READ_PAIRS_EXAMINED, UNIQUE_READ_PAIRS);
-//            double duplication = (coverage - uniqueCoverage) / coverage;
-//            System.out.println(coverage + "\t" + uniqueCoverage + "\t" + duplication);
-//        }
     }
 }

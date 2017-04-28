@@ -44,7 +44,6 @@ import picard.cmdline.Option;
 import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.illumina.parser.ReadStructure;
-import picard.illumina.parser.ReadType;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.util.IlluminaUtil;
 import picard.util.IlluminaUtil.IlluminaAdapterPair;
@@ -55,7 +54,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -236,7 +234,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public boolean INCLUDE_NON_PF_READS = true;
 
     @Option(doc="Whether to ignore reads whose barcodes are not found in LIBRARY_PARAMS.  Useful when outputting " +
-            "BAMs for only a subset of the barcodes in a lane.", shortName="INGORE_UNEXPECTED")
+            "BAMs for only a subset of the barcodes in a lane.", shortName="IGNORE_UNEXPECTED")
     public boolean IGNORE_UNEXPECTED_BARCODES = false;
 
     @Option(doc="The tag to use to store any molecular indexes.  If more than one molecular index is found, they will be concatenated and stored here.", optional=true)

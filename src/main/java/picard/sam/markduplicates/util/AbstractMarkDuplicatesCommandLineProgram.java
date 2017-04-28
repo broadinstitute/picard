@@ -36,7 +36,6 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
@@ -176,7 +175,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
                     metrics.READ_PAIR_OPTICAL_DUPLICATES = (long) bin.getValue();
                 }
             }
-            metrics.calculateDerivedMetrics();
+            metrics.calculateDerivedFields();
             file.addMetric(metrics);
         }
 

@@ -26,15 +26,10 @@ package picard.analysis;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
@@ -156,10 +151,10 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
     public static class QualityYieldMetrics extends MetricBase {
 
         /** The total number of reads in the input file */
-        public int TOTAL_READS = 0;
+        public long TOTAL_READS = 0;
 
         /** The number of reads that are PF - pass filter */
-        public int PF_READS = 0;
+        public long PF_READS = 0;
 
         /** The average read length of all the reads (will be fixed for a lane) */
         public int READ_LENGTH = 0;

@@ -11,7 +11,6 @@ import picard.analysis.MetricAccumulationLevel;
 import picard.metrics.MultiLevelCollector;
 import picard.metrics.PerUnitMetricCollector;
 
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -149,7 +148,7 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                         double low = median;
                         double high = median;
 
-                        while (low >= histogram.getMin() || high <= histogram.getMax()) {
+                        while (low >= histogram.getMin()-1 || high <= histogram.getMax()+1) {
                             final Histogram.Bin<Integer> lowBin = histogram.get((int) low);
                             if (lowBin != null) covered += lowBin.getValue();
 

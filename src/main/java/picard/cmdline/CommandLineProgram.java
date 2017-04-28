@@ -36,13 +36,10 @@ import htsjdk.samtools.util.BlockCompressedOutputStream;
 import htsjdk.samtools.util.BlockCompressedStreamConstants;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.zip.DeflaterFactory;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 
 import java.io.File;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -180,7 +177,7 @@ public abstract class CommandLineProgram {
         SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
 
         for (final File f : TMP_DIR) {
-            // Intentially not checking the return values, because it may be that the program does not
+            // Intentionally not checking the return values, because it may be that the program does not
             // need a tmp_dir. If this fails, the problem will be discovered downstream.
             if (!f.exists()) f.mkdirs();
             f.setReadable(true, false);

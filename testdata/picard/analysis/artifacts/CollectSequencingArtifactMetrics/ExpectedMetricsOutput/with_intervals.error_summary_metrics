@@ -1,0 +1,15 @@
+## htsjdk.samtools.metrics.StringHeader
+# picard.analysis.artifacts.SummarizeErrors INPUT=with_intervals.pre_adapter_detail_metrics OUTPUT=with_intervals.error_summary_metrics    VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false GA4GH_CLIENT_SECRETS=client_secrets.json
+## htsjdk.samtools.metrics.StringHeader
+# Started on: Mon Oct 24 14:14:02 EDT 2016
+
+## METRICS CLASS	picard.analysis.artifacts.ErrorSummaryMetrics
+REF_BASE	ALT_BASE	SUBSTITUTION	REF_COUNT	ALT_COUNT	SUBSTITUTION_RATE
+A	C	A>C	62	0	0
+A	G	A>G	62	0	0
+A	T	A>T	62	0	0
+C	A	C>A	40	4	0.090909
+C	G	C>G	40	0	0
+C	T	C>T	40	32	0.444444
+
+

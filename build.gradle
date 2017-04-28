@@ -1,5 +1,6 @@
+import org.gradle.internal.os.OperatingSystem
+
 import javax.tools.ToolProvider
-import org.ajoberstar.grgit.*
 
 buildscript {
     repositories {
@@ -25,6 +26,9 @@ mainClassName = "picard.cmdline.PicardCommandLine"
 repositories {
     mavenLocal()
     mavenCentral()
+    maven {
+        url "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/" //for htsjdk snapshots
+    }
 }
 
 jacocoTestReport {
@@ -43,9 +47,11 @@ jacoco {
     toolVersion = "0.7.5.201505241946"
 }
 
+final htsjdkVersion = System.getProperty('htsjdk.version', '2.9.0')
+
 dependencies {
     compile 'com.google.guava:guava:15.0'
-    compile ('com.github.samtools:htsjdk:2.5.0')
+    compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     //tools dependency for doclet requires sdk devel
     compile(files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs()))
     testCompile 'org.testng:testng:6.9.10'
@@ -63,7 +69,7 @@ group = 'com.github.broadinstitute'
 
 defaultTasks 'all'
 
-task all(dependsOn: ['jar', 'distZip', 'documentAll'])
+task all(dependsOn: ['jar', 'distZip', 'documentAll', 'shadowJar', 'currentJar'])
 
 jar {
     manifest {
@@ -73,14 +79,21 @@ jar {
                 'Implementation-Version': version
     }
 }
-
-import org.gradle.internal.os.OperatingSystem;
-
 // This is a hack to disable the java 8 default javadoc lint until we fix the html formatting
 if (JavaVersion.current().isJava8Compatible()) {
     tasks.withType(Javadoc) {
         options.addStringOption('Xdoclint:none', '-quiet')
     }
+}
+
+task currentJar(type: Copy){
+    from shadowJar
+    into new File(buildDir, "libs")
+    rename { string -> "picard.jar"}
+}
+
+shadowJar {
+    finalizedBy currentJar
 }
 
 tasks.withType(Test) {
@@ -148,6 +161,7 @@ ext.commandClasses = ["picard.sam.AddCommentsToBam", "picard.sam.AddOrReplaceRea
                           "picard.analysis.CollectWgsMetricsWithNonZeroCoverage", "picard.analysis.CompareMetrics", "picard.sam.CompareSAMs",
                           "picard.analysis.artifacts.ConvertSequencingArtifactToOxoG", "picard.sam.CreateSequenceDictionary", "picard.sam.DownsampleSam",
                           "picard.illumina.ExtractIlluminaBarcodes", "picard.sam.markduplicates.EstimateLibraryComplexity", "picard.sam.FastqToSam", "picard.util.FifoBuffer",
+                          "picard.vcf.MendelianViolations.FindMendelianViolations",
                           "picard.sam.FilterSamReads", "picard.vcf.filter.FilterVcf", "picard.sam.FixMateInformation", "picard.sam.GatherBamFiles", "picard.vcf.GatherVcfs",
                           "picard.vcf.GenotypeConcordance", "picard.illumina.IlluminaBasecallsToFastq", "picard.illumina.IlluminaBasecallsToSam", "picard.illumina.CheckIlluminaDirectory",
                           "picard.sam.CheckTerminatorBlock", "picard.util.IntervalListTools", "picard.util.LiftOverIntervalList", "picard.vcf.LiftoverVcf", "picard.vcf.MakeSitesOnlyVcf",
@@ -155,7 +169,8 @@ ext.commandClasses = ["picard.sam.AddCommentsToBam", "picard.sam.AddOrReplaceRea
                           "picard.sam.MergeBamAlignment", "picard.sam.MergeSamFiles", "picard.vcf.MergeVcfs", "picard.reference.NormalizeFasta", "picard.sam.PositionBasedDownsampleSam",
                           "picard.reference.ExtractSequences", "picard.analysis.QualityScoreDistribution", "picard.vcf.RenameSampleInVcf", "picard.sam.ReorderSam",
                           "picard.sam.ReplaceSamHeader", "picard.sam.RevertSam", "picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar", "picard.sam.SamFormatConverter",
-                          "picard.sam.SamToFastq", "picard.util.ScatterIntervalsByNs", "picard.sam.SortSam", "picard.vcf.SortVcf", "picard.sam.SplitSamByLibrary",
+                          "picard.sam.SamToFastq", "picard.util.ScatterIntervalsByNs", "picard.sam.SetNmMdAndUqTags",
+                          "picard.sam.SortSam", "picard.vcf.SortVcf", "picard.sam.SplitSamByLibrary", "picard.sam.markduplicates.UmiAwareMarkDuplicatesWithMateCigar",
                           "picard.vcf.UpdateVcfSequenceDictionary", "picard.vcf.VcfFormatConverter", "picard.illumina.MarkIlluminaAdapters", "picard.vcf.SplitVcfs",
                           "picard.sam.ValidateSamFile", "picard.sam.ViewSam", "picard.vcf.VcfToIntervalList"]
 
@@ -209,10 +224,16 @@ task documentStandardOptions(type: JavaExec) {
     outputs.file standardOptionsFile
  }
 
-task createMetricsDoc(dependsOn: classes, type: Javadoc) << {
+task createMetricsDoc(dependsOn: classes, type: Javadoc) {
+    doFirst {
+        htmlDirInc.mkdirs()
+    }
+    
     source = sourceSets.main.allJava
     classpath = sourceSets.main.runtimeClasspath
-    destinationDir = htmlDirInc
+    outputs.dir(htmlDirInc)
+
+    options.destinationDirectory = htmlDirInc
     options.doclet = 'picard.util.MetricsDoclet'
     options.docletpath = sourceSets.main.runtimeClasspath.asType(List)
 }
@@ -220,7 +241,7 @@ task createMetricsDoc(dependsOn: classes, type: Javadoc) << {
 
 task wrapper(type: Wrapper) {
     description = "Regenerate the gradle wrapper"
-    gradleVersion = '2.13'
+    gradleVersion = '3.1'
 }
 
 task javadocJar(type: Jar, dependsOn: documentAll) {

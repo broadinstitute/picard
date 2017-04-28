@@ -4,37 +4,28 @@ import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.filter.AggregateFilter;
-import htsjdk.samtools.filter.AlignedFilter;
-import htsjdk.samtools.filter.DuplicateReadFilter;
-import htsjdk.samtools.filter.FailsVendorReadQualityFilter;
-import htsjdk.samtools.filter.InsertSizeFilter;
-import htsjdk.samtools.filter.MappingQualityFilter;
-import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
-import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.filter.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.IntervalListReferenceSequenceMask;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
 import picard.PicardException;
 import picard.analysis.SinglePassSamProgram;
+import picard.analysis.artifacts.SequencingArtifactMetrics.BaitBiasDetailMetrics;
+import picard.analysis.artifacts.SequencingArtifactMetrics.BaitBiasSummaryMetrics;
+import picard.analysis.artifacts.SequencingArtifactMetrics.PreAdapterDetailMetrics;
+import picard.analysis.artifacts.SequencingArtifactMetrics.PreAdapterSummaryMetrics;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.DbSnpBitSetUtil;
-import picard.analysis.artifacts.SequencingArtifactMetrics.*;
+import picard.util.VariantType;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static htsjdk.samtools.util.CodeUtil.getOrElse;
+import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
 /**
  * Quantify substitution errors caused by mismatched base pairings during various
@@ -105,7 +96,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
     @Option(shortName = "Q", doc = "The minimum base quality score for a base to be included in analysis.")
     public int MINIMUM_QUALITY_SCORE = 20;
 
-    @Option(shortName = "MQ", doc = "The minimum mapping quality score for a base to be included in analysis.")
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "The minimum mapping quality score for a base to be included in analysis.")
     public int MINIMUM_MAPPING_QUALITY = 30;
 
     @Option(shortName = "MIN_INS", doc = "The minimum insert size for a read to be included in analysis.")
@@ -117,6 +108,12 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
     @Option(shortName = "UNPAIRED", doc = "Include unpaired reads. If set to true then all paired reads will be included as well - " +
             "MINIMUM_INSERT_SIZE and MAXIMUM_INSERT_SIZE will be ignored.")
     public boolean INCLUDE_UNPAIRED = false;
+
+    @Option(shortName = "DUPES", doc = "Include duplicate reads. If set to true then all reads flagged as duplicates will be included as well.")
+    public boolean INCLUDE_DUPLICATES = false;
+
+    @Option(shortName = "NON_PF", doc = "Whether or not to include non-PF reads.")
+    public boolean INCLUDE_NON_PF_READS = false;
 
     @Option(shortName = "TANDEM", doc = "Set to true if mate pairs are being sequenced from the same strand, " +
             "i.e. they're expected to face the same direction.")
@@ -142,6 +139,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
     private File preAdapterDetailsOut;
     private File baitBiasSummaryOut;
     private File baitBiasDetailsOut;
+    private File errorSummaryFile;
 
     private IntervalListReferenceSequenceMask intervalMask;
     private DbSnpBitSetUtil dbSnpMask;
@@ -154,9 +152,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
     private final Set<String> libraries = new HashSet<String>();
     private final Map<String, ArtifactCounter> artifactCounters = new HashMap<String, ArtifactCounter>();
 
-    public static void main(final String[] args) {
-        new CollectSequencingArtifactMetrics().instanceMainWithExit(args);
-    }
+    private static final Log log = Log.getInstance(CollectSequencingArtifactMetrics.class);
 
     @Override
     protected String[] customCommandLineValidation() {
@@ -176,6 +172,8 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
             messages.add("MAXIMUM_INSERT_SIZE cannot be less than MINIMUM_INSERT_SIZE unless set to 0");
         }
 
+        if (REFERENCE_SEQUENCE == null) messages.add("REFERENCE_SEQUENCE must be provided.");
+
         return messages.isEmpty() ? null : messages.toArray(new String[messages.size()]);
     }
 
@@ -184,13 +182,10 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
         final String outext = (null != FILE_EXTENSION) ? FILE_EXTENSION : ""; // Add a file extension if desired
         preAdapterSummaryOut = new File(OUTPUT + SequencingArtifactMetrics.PRE_ADAPTER_SUMMARY_EXT + outext);
         preAdapterDetailsOut = new File(OUTPUT + SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT + outext);
-        baitBiasSummaryOut = new File(OUTPUT + SequencingArtifactMetrics.BAIT_BIAS_SUMMARY_EXT + outext);
-        baitBiasDetailsOut = new File(OUTPUT + SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT + outext);
-
-        IOUtil.assertFileIsWritable(preAdapterSummaryOut);
-        IOUtil.assertFileIsWritable(preAdapterDetailsOut);
-        IOUtil.assertFileIsWritable(baitBiasSummaryOut);
-        IOUtil.assertFileIsWritable(baitBiasDetailsOut);
+        baitBiasSummaryOut   = new File(OUTPUT + SequencingArtifactMetrics.BAIT_BIAS_SUMMARY_EXT + outext);
+        baitBiasDetailsOut   = new File(OUTPUT + SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT + outext);
+        errorSummaryFile     = new File(OUTPUT + SequencingArtifactMetrics.ERROR_SUMMARY_EXT + outext);
+        IOUtil.assertFilesAreWritable(Arrays.asList(preAdapterSummaryOut, preAdapterDetailsOut, baitBiasSummaryOut, baitBiasDetailsOut, errorSummaryFile));
 
         for (final SAMReadGroupRecord rec : header.getReadGroups()) {
             samples.add(getOrElse(rec.getSample(), UNKNOWN_SAMPLE));
@@ -199,19 +194,25 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
 
         if (INTERVALS != null) {
             IOUtil.assertFileIsReadable(INTERVALS);
-            intervalMask = new IntervalListReferenceSequenceMask(IntervalList.fromFile(INTERVALS).uniqued());
-        }
 
-        if (DB_SNP != null) {
+            final IntervalList intervalList = IntervalList.fromFile(INTERVALS).uniqued();
+            intervalMask = new IntervalListReferenceSequenceMask(intervalList);
+
+            if (DB_SNP != null) {
+                IOUtil.assertFileIsReadable(DB_SNP);
+                dbSnpMask = new DbSnpBitSetUtil(DB_SNP, header.getSequenceDictionary(), EnumSet.noneOf(VariantType.class), intervalList, Optional.of(log));
+            }
+        }
+        else if (DB_SNP != null) {
             IOUtil.assertFileIsReadable(DB_SNP);
-            dbSnpMask = new DbSnpBitSetUtil(DB_SNP, header.getSequenceDictionary());
+            dbSnpMask = new DbSnpBitSetUtil(DB_SNP, header.getSequenceDictionary(), EnumSet.noneOf(VariantType.class), null, Optional.of(log));
         }
 
         // set record-level filters
         final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
-        filters.add(new FailsVendorReadQualityFilter());
+        if (!INCLUDE_NON_PF_READS) filters.add(new FailsVendorReadQualityFilter());
         filters.add(new NotPrimaryAlignmentFilter());
-        filters.add(new DuplicateReadFilter());
+        if (!INCLUDE_DUPLICATES) filters.add(new DuplicateReadFilter());
         filters.add(new AlignedFilter(true)); // discard unmapped reads
         filters.add(new MappingQualityFilter(MINIMUM_MAPPING_QUALITY));
         if (!INCLUDE_UNPAIRED) {
@@ -308,6 +309,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
         final MetricsFile<PreAdapterDetailMetrics, Integer> preAdapterDetailMetricsFile = getMetricsFile();
         final MetricsFile<BaitBiasSummaryMetrics, Integer> baitBiasSummaryMetricsFile = getMetricsFile();
         final MetricsFile<BaitBiasDetailMetrics, Integer> baitBiasDetailMetricsFile = getMetricsFile();
+        final MetricsFile<ErrorSummaryMetrics,?> errorSummaryMetricsFile = getMetricsFile();
 
         for (final ArtifactCounter counter : artifactCounters.values()) {
             // build metrics
@@ -327,13 +329,42 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
                     baitBiasDetailMetricsFile.addMetric(baitBiasDetailMetrics);
                 }
             }
-
         }
 
         preAdapterDetailMetricsFile.write(preAdapterDetailsOut);
         preAdapterSummaryMetricsFile.write(preAdapterSummaryOut);
         baitBiasDetailMetricsFile.write(baitBiasDetailsOut);
         baitBiasSummaryMetricsFile.write(baitBiasSummaryOut);
+
+        // Calculate the summary error rates - it's CRITICAL that the other files are written out
+        // first as this code modifies the pre-adapter detail metrics!
+        if (!preAdapterDetailMetricsFile.getMetrics().isEmpty()) {
+            final List<PreAdapterDetailMetrics> in = preAdapterDetailMetricsFile.getMetrics();
+            in.forEach(m -> {
+                if (m.REF_BASE == 'G' || m.REF_BASE == 'T') {
+                    m.REF_BASE = (char) SequenceUtil.complement((byte) m.REF_BASE);
+                    m.ALT_BASE = (char) SequenceUtil.complement((byte) m.ALT_BASE);
+                }
+            });
+
+            // Group the metrics by error type
+            final Map<String,List<PreAdapterDetailMetrics>> byError =
+                    in.stream().collect(Collectors.groupingBy(m -> m.REF_BASE + ">" + m.ALT_BASE));
+
+            for (final String error : new TreeSet<>(byError.keySet())) {
+                final List<PreAdapterDetailMetrics> ms = byError.get(error);
+                final ErrorSummaryMetrics summary = new ErrorSummaryMetrics();
+                summary.REF_BASE = ms.get(0).REF_BASE;
+                summary.ALT_BASE = ms.get(0).ALT_BASE;
+                summary.SUBSTITUTION = error;
+                summary.REF_COUNT = ms.stream().mapToLong(m -> m.PRO_REF_BASES + m.CON_REF_BASES).sum();
+                summary.ALT_COUNT = ms.stream().mapToLong(m -> m.PRO_ALT_BASES + m.CON_ALT_BASES).sum();
+                summary.calculateDerivedFields();
+                errorSummaryMetricsFile.addMetric(summary);
+            }
+        }
+
+        errorSummaryMetricsFile.write(errorSummaryFile);
     }
 
     @Override

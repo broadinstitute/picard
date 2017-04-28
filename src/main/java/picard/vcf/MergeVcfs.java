@@ -71,7 +71,7 @@ import java.util.List;
 )
 public class MergeVcfs extends CommandLineProgram {
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files File format is determined by file extension.", minElements=1)
+    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files (File format is determined by file extension), or a file having a '.list' suffix containing the path to the files.", minElements=1)
     public List<File> INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The merged VCF or BCF file. File format is determined by file extension.")
@@ -94,6 +94,7 @@ public class MergeVcfs extends CommandLineProgram {
     protected int doWork() {
         final ProgressLogger progress = new ProgressLogger(log, 10000);
         final List<String> sampleList = new ArrayList<String>();
+        INPUT = IOUtil.unrollFiles(INPUT, IOUtil.VCF_EXTENSIONS);
         final Collection<CloseableIterator<VariantContext>> iteratorCollection = new ArrayList<CloseableIterator<VariantContext>>(INPUT.size());
         final Collection<VCFHeader> headers = new HashSet<VCFHeader>(INPUT.size());
 
@@ -150,7 +151,7 @@ public class MergeVcfs extends CommandLineProgram {
         while (mergingIterator.hasNext()) {
             final VariantContext context = mergingIterator.next();
             writer.add(context);
-            progress.record(context.getChr(), context.getStart());
+            progress.record(context.getContig(), context.getStart());
         }
 
         CloserUtil.close(mergingIterator);

@@ -60,6 +60,7 @@ import java.util.Set;
 import static htsjdk.samtools.util.CodeUtil.getOrElse;
 import static htsjdk.samtools.util.SequenceUtil.generateAllKmers;
 import static java.lang.Math.log10;
+import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
 /**
  * Class for trying to quantify the CpCG->CpCA error rate.
@@ -117,7 +118,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
             doc = "The minimum base quality score for a base to be included in analysis.")
     public int MINIMUM_QUALITY_SCORE = 20;
 
-    @Option(shortName = "MQ",
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME,
             doc = "The minimum mapping quality score for a base to be included in analysis.")
     public int MINIMUM_MAPPING_QUALITY = 30;
 
@@ -128,6 +129,9 @@ public class CollectOxoGMetrics extends CommandLineProgram {
     @Option(shortName = "MAX_INS",
             doc = "The maximum insert size for a read to be included in analysis. Set of 0 to allow unpaired reads.")
     public int MAXIMUM_INSERT_SIZE = 600;
+
+    @Option(shortName = "NON_PF", doc = "Whether or not to include non-PF reads.")
+    public boolean INCLUDE_NON_PF_READS = true;
 
     @Option(doc = "When available, use original quality scores for filtering.")
     public boolean USE_OQ = true;
@@ -283,6 +287,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
         }
         iterator.setEmitUncoveredLoci(false);
         iterator.setMappingQualityScoreCutoff(MINIMUM_MAPPING_QUALITY);
+        iterator.setIncludeNonPfReads(INCLUDE_NON_PF_READS);
 
         final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
         filters.add(new NotPrimaryAlignmentFilter());
@@ -463,7 +468,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
             final Counts counts = new Counts();
             final byte altBase = (refBase == 'C') ? (byte) 'A' : (byte) 'T';
 
-            for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndPositions()) {
+            for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
                 final byte qual;
                 final SAMRecord samrec = rec.getRecord();
 

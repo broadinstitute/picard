@@ -42,7 +42,6 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
 import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;
@@ -119,7 +118,7 @@ public class VcfFormatConverter extends CommandLineProgram {
 	    while (iterator.hasNext()) {
 		    final VariantContext context = iterator.next();
             writer.add(context);
-            progress.record(context.getChr(), context.getStart());
+            progress.record(context.getContig(), context.getStart());
         }
 
 	    CloserUtil.close(iterator);

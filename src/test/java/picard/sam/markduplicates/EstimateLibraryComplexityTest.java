@@ -26,6 +26,7 @@ package picard.sam.markduplicates;
 
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.DuplicationMetrics;
@@ -39,6 +40,46 @@ public class EstimateLibraryComplexityTest extends CommandLineProgramTest {
 
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/EstimateLibraryComplexity");
 
+    @DataProvider(name = "testSimpleDuplicate")
+    public Object[][] createDataTestSimpleDuplicate() {
+        return new Object[][]{
+                {"dupes.sam", 2, 2},
+                {"big_dupes.sam", 12, 500}
+        };
+    }
+
+    @DataProvider(name = "testMaxDiffRate")
+    public Object[][] createDataTestMaxDiffRate() {
+        return new Object[][]{
+                {"dupes.sam", 0, 2},
+                {"big_dupes.sam", 8, 500}
+        };
+    }
+
+    @DataProvider(name = "testSimpleDuplicateWithMaxReadLength")
+    public Object[][] createDataTestSimpleDuplicateWithMaxReadLength() {
+        return new Object[][]{
+                {"dupes.sam", 2, 2},
+                {"big_dupes.sam", 512, 500}
+        };
+    }
+
+    @DataProvider(name = "testDefaultMinGroupCount")
+    public Object[][] createDataTestDefaultMinGroupCount() {
+        return new Object[][]{
+                {"dupes.sam", 0, 0},
+                {"big_dupes.sam", 8, 497}
+        };
+    }
+
+    @DataProvider(name = "testSimpleDuplicatesWithSecondaryAndSupplementaryRecords")
+    public Object[][] createDataTestSimpleDuplicatesWithSecondaryAndSupplementaryRecords() {
+        return new Object[][]{
+                {"dupes_with_sos.sam", 2, 2},
+                {"big_dupes_with_sos.sam", 12, 500}
+        };
+    }
+
     public String getCommandLineProgramName() {
         return EstimateLibraryComplexity.class.getSimpleName();
     }
@@ -47,15 +88,17 @@ public class EstimateLibraryComplexityTest extends CommandLineProgramTest {
         final List<DuplicationMetrics> metricsList = MetricsFile.readBeans(output);
         Assert.assertEquals(metricsList.size(), 1);
         final DuplicationMetrics metrics = metricsList.get(0);
-        Assert.assertEquals(metrics.READ_PAIR_DUPLICATES*2 + metrics.UNPAIRED_READ_DUPLICATES, numDuplicates);
+        Assert.assertEquals(metrics.READ_PAIR_DUPLICATES * 2 + metrics.UNPAIRED_READ_DUPLICATES, numDuplicates);
         Assert.assertEquals(metrics.READ_PAIRS_EXAMINED, numReadPairsExamined);
     }
 
-    /** Finds duplicates as expected. */
-    @Test
-    public void testSimpleDuplicate() throws IOException {
-        final File input = new File(TEST_DATA_DIR, "dupes.sam");
-        final File output = File.createTempFile("estimateLibraryComplexity",".els_metrics");
+    /**
+     * Finds duplicates as expected.
+     */
+    @Test(dataProvider = "testSimpleDuplicate")
+    public void testSimpleDuplicate(final String testName, final int numDuplicates, final int numReadPairsExamined) throws IOException {
+        final File input = new File(TEST_DATA_DIR, testName);
+        final File output = File.createTempFile("estimateLibraryComplexity", ".els_metrics");
         output.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
@@ -64,14 +107,16 @@ public class EstimateLibraryComplexityTest extends CommandLineProgramTest {
         args.add("MIN_GROUP_COUNT=1");
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        examineMetricsFile(output, 2, 2);
+        examineMetricsFile(output, numDuplicates, numReadPairsExamined);
     }
 
-    /** Finds duplicates as expected ignoring secondary and supplementary records. */
-    @Test
-    public void testSimpleDuplicatesWithSecondaryAndSupplementaryRecords() throws IOException {
-        final File input = new File(TEST_DATA_DIR, "dupes_with_sos.sam");
-        final File output = File.createTempFile("estimateLibraryComplexity",".els_metrics");
+    /**
+     * Finds duplicates as expected ignoring secondary and supplementary records.
+     */
+    @Test(dataProvider = "testSimpleDuplicatesWithSecondaryAndSupplementaryRecords")
+    public void testSimpleDuplicatesWithSecondaryAndSupplementaryRecords(final String testName, final int numDuplicates, final int numReadPairsExamined) throws IOException {
+        final File input = new File(TEST_DATA_DIR, testName);
+        final File output = File.createTempFile("estimateLibraryComplexity", ".els_metrics");
         output.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
@@ -80,14 +125,16 @@ public class EstimateLibraryComplexityTest extends CommandLineProgramTest {
         args.add("MIN_GROUP_COUNT=1");
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        examineMetricsFile(output, 2, 2);
+        examineMetricsFile(output, numDuplicates, numReadPairsExamined);
     }
 
-    /** Does not find duplicates since the difference rate was too high across the entire read */
-    @Test
-    public void testMaxDiffRate() throws IOException {
-        final File input = new File(TEST_DATA_DIR, "dupes.sam");
-        final File output = File.createTempFile("estimateLibraryComplexity",".els_metrics");
+    /**
+     * Does not find duplicates since the difference rate was too high across the entire read
+     */
+    @Test(dataProvider = "testMaxDiffRate")
+    public void testMaxDiffRate(final String testName, final int numDuplicates, final int numReadPairsExamined) throws IOException {
+        final File input = new File(TEST_DATA_DIR, testName);
+        final File output = File.createTempFile("estimateLibraryComplexity", ".els_metrics");
         output.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
@@ -97,14 +144,16 @@ public class EstimateLibraryComplexityTest extends CommandLineProgramTest {
         args.add("MIN_GROUP_COUNT=1");
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        examineMetricsFile(output, 0, 2);
+        examineMetricsFile(output, numDuplicates, numReadPairsExamined);
     }
 
-    /** Finds duplicates since the we examine only the fist ten bases. */
-    @Test
-    public void testSimpleDuplicateWithMaxReadLength() throws IOException {
-        final File input = new File(TEST_DATA_DIR, "dupes.sam");
-        final File output = File.createTempFile("estimateLibraryComplexity",".els_metrics");
+    /**
+     * Finds duplicates since the we examine only the fist ten bases.
+     */
+    @Test(dataProvider = "testSimpleDuplicateWithMaxReadLength")
+    public void testSimpleDuplicateWithMaxReadLength(final String testName, final int numDuplicates, final int numReadPairsExamined) throws IOException {
+        final File input = new File(TEST_DATA_DIR, testName);
+        final File output = File.createTempFile("estimateLibraryComplexity", ".els_metrics");
         output.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
@@ -115,16 +164,17 @@ public class EstimateLibraryComplexityTest extends CommandLineProgramTest {
         args.add("MAX_READ_LENGTH=10");
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        examineMetricsFile(output, 2, 2);
+        examineMetricsFile(output, numDuplicates, numReadPairsExamined);
     }
 
-    /** Does not find any duplicates since there was only one group of duplicates of size one.  Also
+    /**
+     * Does not find any duplicates since there was only one group of duplicates of size one.  Also
      * there are no reads examined due to this filtering step.
      */
-    @Test
-    public void testDefaultMinGroupCount() throws IOException {
-        final File input = new File(TEST_DATA_DIR, "dupes.sam");
-        final File output = File.createTempFile("estimateLibraryComplexity",".els_metrics");
+    @Test(dataProvider = "testDefaultMinGroupCount")
+    public void testDefaultMinGroupCount(final String testName, final int numDuplicates, final int numReadPairsExamined) throws IOException {
+        final File input = new File(TEST_DATA_DIR, testName);
+        final File output = File.createTempFile("estimateLibraryComplexity", ".els_metrics");
         output.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
@@ -132,6 +182,6 @@ public class EstimateLibraryComplexityTest extends CommandLineProgramTest {
         args.add("OUTPUT=" + output.getAbsolutePath());
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        examineMetricsFile(output, 0, 0); // no read pairs examined!!!
+        examineMetricsFile(output, numDuplicates, numReadPairsExamined); // no read pairs examined!!!
     }
 }

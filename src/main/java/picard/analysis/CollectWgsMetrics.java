@@ -24,22 +24,16 @@
 package picard.analysis;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SecondaryAlignmentFilter;
-import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.QualityUtil;
-import htsjdk.samtools.util.SamLocusIterator;
-import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.*;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -53,9 +47,12 @@ import picard.util.MathUtil;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+
+import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
 /**
  * Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing experiments.
@@ -96,7 +93,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "The reference sequence fasta aligned to.")
     public File REFERENCE_SEQUENCE;
 
-    @Option(shortName = "MQ", doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
     public int MINIMUM_MAPPING_QUALITY = 20;
 
     @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage. N bases will be treated as having a base quality " +
@@ -134,72 +131,291 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     private static final double LOG_ODDS_THRESHOLD = 3.0;
 
     /** Metrics for evaluating the performance of whole genome sequencing experiments. */
-    public static class WgsMetrics extends MetricBase {
+    public static class WgsMetrics extends MergeableMetricBase {
+
+        /** The intervals over which this metric was computed. */
+        @MergingIsManual
+        protected IntervalList intervals;
+
+        /** Count of sites with a given depth of coverage. Excludes bases with quality below MINIMUM_BASE_QUALITY (default 20) */
+        @MergingIsManual
+        protected final Histogram<Integer> highQualityDepthHistogram;
+
+        /** Count of sites with a given depth of coverage. Includes all but quality 2 bases */
+        @MergingIsManual
+        protected final Histogram<Integer> unfilteredDepthHistogram;
+
+        /** The count of bases observed with a given base quality. */
+        @MergingIsManual
+        protected final Histogram<Integer> unfilteredBaseQHistogram;
+
+        /** The maximum depth/coverage to consider. */
+        @MergeByAssertEquals
+        protected final int coverageCap;
+
+        /** The sample size used for theoretical het sensitivity. */
+        @NoMergingKeepsValue
+        protected final int theoreticalHetSensitivitySampleSize;
+
+        /**
+         * Create an instance of this metric that is not mergeable.
+         */
+        public WgsMetrics() {
+            intervals                           = null;
+            highQualityDepthHistogram           = null;
+            unfilteredDepthHistogram            = null;
+            unfilteredBaseQHistogram            = null;
+            theoreticalHetSensitivitySampleSize = -1;
+            coverageCap                         = -1;
+        }
+
+        /**
+         * Create an instance of this metric that is mergeable.
+         *
+         * @param highQualityDepthHistogram the count of genomic positions observed for each observed depth. Excludes bases with quality below MINIMUM_BASE_QUALITY.
+         * @param unfilteredDepthHistogram the depth histogram that includes all but quality 2 bases.
+         * @param pctExcludedByMapq the fraction of aligned bases that were filtered out because they were in reads with low mapping quality.
+         * @param pctExcludedByDupes the fraction of aligned bases that were filtered out because they were in reads marked as duplicates.
+         * @param pctExcludedByPairing the fraction of bases that were filtered out because they were in reads without a mapped mate pair.
+         * @param pctExcludedByBaseq the fraction of aligned bases that were filtered out because they were of low base quality.
+         * @param pctExcludedByOverlap the fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads.
+         * @param pctExcludedByCapping the fraction of aligned bases that were filtered out because they would have raised coverage above the capped value.
+         * @param pctExcludeTotal the fraction of bases excluded across all filters.
+         * @param coverageCap Treat positions with coverage exceeding this value as if they had coverage at this value.
+         * @param unfilteredBaseQHistogram the count of bases observed with a given quality. Includes all but quality 2 bases.
+         * @param theoreticalHetSensitivitySampleSize the sample size used for theoretical het sensitivity sampling.
+         */
+        public WgsMetrics(final IntervalList intervals,
+                          final Histogram<Integer> highQualityDepthHistogram,
+                          final Histogram<Integer> unfilteredDepthHistogram,
+                          final double pctExcludedByMapq,
+                          final double pctExcludedByDupes,
+                          final double pctExcludedByPairing,
+                          final double pctExcludedByBaseq,
+                          final double pctExcludedByOverlap,
+                          final double pctExcludedByCapping,
+                          final double pctExcludeTotal,
+                          final int coverageCap,
+                          final Histogram<Integer> unfilteredBaseQHistogram,
+                          final int theoreticalHetSensitivitySampleSize) {
+            this.intervals      = intervals.uniqued();
+            this.highQualityDepthHistogram = highQualityDepthHistogram;
+            this.unfilteredDepthHistogram = unfilteredDepthHistogram;
+            this.unfilteredBaseQHistogram = unfilteredBaseQHistogram;
+            this.coverageCap    = coverageCap;
+            this.theoreticalHetSensitivitySampleSize = theoreticalHetSensitivitySampleSize;
+
+            PCT_EXC_MAPQ     = pctExcludedByMapq;
+            PCT_EXC_DUPE     = pctExcludedByDupes;
+            PCT_EXC_UNPAIRED = pctExcludedByPairing;
+            PCT_EXC_BASEQ    = pctExcludedByBaseq;
+            PCT_EXC_OVERLAP  = pctExcludedByOverlap;
+            PCT_EXC_CAPPED   = pctExcludedByCapping;
+            PCT_EXC_TOTAL    = pctExcludeTotal;
+
+            calculateDerivedFields();
+        }
 
         /** The number of non-N bases in the genome reference over which coverage will be evaluated. */
+        @NoMergingIsDerived
         public long GENOME_TERRITORY;
         /** The mean coverage in bases of the genome territory, after all filters are applied. */
+        @NoMergingIsDerived
         public double MEAN_COVERAGE;
         /** The standard deviation of coverage of the genome after all filters are applied. */
+        @NoMergingIsDerived
         public double SD_COVERAGE;
         /** The median coverage in bases of the genome territory, after all filters are applied. */
+        @NoMergingIsDerived
         public double MEDIAN_COVERAGE;
         /** The median absolute deviation of coverage of the genome after all filters are applied. */
+        @NoMergingIsDerived
         public double MAD_COVERAGE;
 
         /** The fraction of aligned bases that were filtered out because they were in reads with low mapping quality (default is < 20). */
+        @NoMergingIsDerived
         public double PCT_EXC_MAPQ;
         /** The fraction of aligned bases that were filtered out because they were in reads marked as duplicates. */
+        @NoMergingIsDerived
         public double PCT_EXC_DUPE;
         /** The fraction of aligned bases that were filtered out because they were in reads without a mapped mate pair. */
+        @NoMergingIsDerived
         public double PCT_EXC_UNPAIRED;
         /** The fraction of aligned bases that were filtered out because they were of low base quality (default is < 20). */
+        @NoMergingIsDerived
         public double PCT_EXC_BASEQ;
         /** The fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads. */
+        @NoMergingIsDerived
         public double PCT_EXC_OVERLAP;
         /** The fraction of aligned bases that were filtered out because they would have raised coverage above the capped value (default cap = 250x). */
+        @NoMergingIsDerived
         public double PCT_EXC_CAPPED;
         /** The total fraction of aligned bases excluded due to all filters. */
+        @NoMergingIsDerived
         public double PCT_EXC_TOTAL;
 
         /** The fraction of bases that attained at least 1X sequence coverage in post-filtering bases. */
-        public double PCT_1X;
+         @NoMergingIsDerived
+         public double PCT_1X;
         /** The fraction of bases that attained at least 5X sequence coverage in post-filtering bases. */
-        public double PCT_5X;
+         @NoMergingIsDerived
+         public double PCT_5X;
         /** The fraction of bases that attained at least 10X sequence coverage in post-filtering bases. */
-        public double PCT_10X;
+         @NoMergingIsDerived
+         public double PCT_10X;
         /** The fraction of bases that attained at least 15X sequence coverage in post-filtering bases. */
-        public double PCT_15X;
+         @NoMergingIsDerived
+         public double PCT_15X;
         /** The fraction of bases that attained at least 20X sequence coverage in post-filtering bases. */
-        public double PCT_20X;
+         @NoMergingIsDerived
+         public double PCT_20X;
         /** The fraction of bases that attained at least 25X sequence coverage in post-filtering bases. */
-        public double PCT_25X;
+         @NoMergingIsDerived
+         public double PCT_25X;
         /** The fraction of bases that attained at least 30X sequence coverage in post-filtering bases. */
-        public double PCT_30X;
+         @NoMergingIsDerived
+         public double PCT_30X;
         /** The fraction of bases that attained at least 40X sequence coverage in post-filtering bases. */
-        public double PCT_40X;
+         @NoMergingIsDerived
+         public double PCT_40X;
         /** The fraction of bases that attained at least 50X sequence coverage in post-filtering bases. */
-        public double PCT_50X;
+         @NoMergingIsDerived
+         public double PCT_50X;
         /** The fraction of bases that attained at least 60X sequence coverage in post-filtering bases. */
-        public double PCT_60X;
+         @NoMergingIsDerived
+         public double PCT_60X;
         /** The fraction of bases that attained at least 70X sequence coverage in post-filtering bases. */
-        public double PCT_70X;
+         @NoMergingIsDerived
+         public double PCT_70X;
         /** The fraction of bases that attained at least 80X sequence coverage in post-filtering bases. */
-        public double PCT_80X;
+         @NoMergingIsDerived
+         public double PCT_80X;
         /** The fraction of bases that attained at least 90X sequence coverage in post-filtering bases. */
-        public double PCT_90X;
+         @NoMergingIsDerived
+         public double PCT_90X;
         /** The fraction of bases that attained at least 100X sequence coverage in post-filtering bases. */
-        public double PCT_100X;
+         @NoMergingIsDerived
+         public double PCT_100X;
 
         /** The theoretical HET SNP sensitivity. */
+        @NoMergingIsDerived
         public double HET_SNP_SENSITIVITY;
 
         /** The Phred Scaled Q Score of the theoretical HET SNP sensitivity. */
+        @NoMergingIsDerived
         public double HET_SNP_Q;
+
+        /**
+         * Merges the various PCT_EXC_* metrics.
+         * @param other metric to merge into this one.
+         *
+         * @return result of merging, also known as "this"
+         */
+        @Override
+        public MergeableMetricBase merge(final MergeableMetricBase other) {
+            final WgsMetrics otherMetric = (WgsMetrics) other;
+
+            if (highQualityDepthHistogram == null || otherMetric.highQualityDepthHistogram == null ||
+                    unfilteredDepthHistogram == null || otherMetric.unfilteredDepthHistogram == null) {
+                throw new PicardException("Depth histogram is required when deriving metrics.");
+            }
+
+            // Union the intervals over which bases are called.  They should have no overlaps!
+            // NB: interval lists are already uniqued.
+            final long genomeTerritory = this.intervals.getBaseCount() + otherMetric.intervals.getBaseCount();
+            this.intervals.addall(otherMetric.intervals.getIntervals());
+            this.intervals = this.intervals.uniqued();
+            if (this.intervals.getBaseCount() != genomeTerritory) {
+                throw new PicardException("Trying to merge WgsMetrics calculated on intervals that overlap.");
+            }
+
+            // NB:
+            // Since: PCT_EXC_TOTAL     = (totalWithExcludes - thisMetricTotal) / totalWithExcludes;
+            // Thus:  totalWithExcludes = total / (1 - PCT_EXC_TOTAL)
+            // Proof: Exercise is left to the reader.
+            final long thisMetricTotal        = (long) highQualityDepthHistogram.getSum();
+            final long otherMetricTotal       = (long) otherMetric.highQualityDepthHistogram.getSum();
+            final long total                  = thisMetricTotal + otherMetricTotal;
+            final long thisTotalWithExcludes  = (long) (thisMetricTotal / (1.0 - PCT_EXC_TOTAL));
+            final long otherTotalWithExcludes = (long) (otherMetricTotal / (1.0 - otherMetric.PCT_EXC_TOTAL));
+            final double totalWithExcludes    = thisTotalWithExcludes + otherTotalWithExcludes;
+
+            if (0 < totalWithExcludes) {
+                PCT_EXC_DUPE     = (PCT_EXC_DUPE * thisTotalWithExcludes + otherMetric.PCT_EXC_DUPE * otherTotalWithExcludes) / totalWithExcludes;
+                PCT_EXC_MAPQ     = (PCT_EXC_MAPQ * thisTotalWithExcludes + otherMetric.PCT_EXC_MAPQ * otherTotalWithExcludes) / totalWithExcludes;
+                PCT_EXC_UNPAIRED = (PCT_EXC_UNPAIRED * thisTotalWithExcludes + otherMetric.PCT_EXC_UNPAIRED * otherTotalWithExcludes) / totalWithExcludes;
+                PCT_EXC_BASEQ    = (PCT_EXC_BASEQ * thisTotalWithExcludes + otherMetric.PCT_EXC_BASEQ * otherTotalWithExcludes) / totalWithExcludes;
+                PCT_EXC_OVERLAP  = (PCT_EXC_OVERLAP * thisTotalWithExcludes + otherMetric.PCT_EXC_OVERLAP * otherTotalWithExcludes) / totalWithExcludes;
+                PCT_EXC_CAPPED   = (PCT_EXC_CAPPED * thisTotalWithExcludes + otherMetric.PCT_EXC_CAPPED * otherTotalWithExcludes) / totalWithExcludes;
+                PCT_EXC_TOTAL    = (totalWithExcludes - total) / totalWithExcludes;
+            }
+
+            // do any merging that are dictated by the annotations.
+            super.merge(other);
+
+            // merge the histograms
+            highQualityDepthHistogram.addHistogram(otherMetric.highQualityDepthHistogram);
+            unfilteredDepthHistogram.addHistogram(otherMetric.unfilteredDepthHistogram);
+            if (unfilteredBaseQHistogram != null && otherMetric.unfilteredBaseQHistogram != null)
+                unfilteredBaseQHistogram.addHistogram(otherMetric.unfilteredBaseQHistogram);
+            return this;
+        }
+
+        @Override
+        public void calculateDerivedFields() {
+            if (highQualityDepthHistogram == null || unfilteredDepthHistogram == null) throw new PicardException("Depth histogram is required when deriving metrics.");
+            if (unfilteredBaseQHistogram != null && theoreticalHetSensitivitySampleSize <= 0) {
+                throw new PicardException("Sample size is required when a baseQ histogram is given when deriving metrics.");
+            }
+
+            final long[] depthHistogramArray = new long[coverageCap+1];
+
+            for (final Histogram.Bin<Integer> bin : highQualityDepthHistogram.values()) {
+                final int depth = Math.min((int) bin.getIdValue(), coverageCap);
+                depthHistogramArray[depth] += bin.getValue();
+            }
+
+            GENOME_TERRITORY = (long) highQualityDepthHistogram.getSumOfValues();
+            MEAN_COVERAGE    = highQualityDepthHistogram.getMean();
+            SD_COVERAGE      = highQualityDepthHistogram.getStandardDeviation();
+            MEDIAN_COVERAGE  = highQualityDepthHistogram.getMedian();
+            MAD_COVERAGE     = highQualityDepthHistogram.getMedianAbsoluteDeviation();
+
+            PCT_1X    = MathUtil.sum(depthHistogramArray, 1, depthHistogramArray.length)   / (double) GENOME_TERRITORY;
+            PCT_5X    = MathUtil.sum(depthHistogramArray, 5, depthHistogramArray.length)   / (double) GENOME_TERRITORY;
+            PCT_10X   = MathUtil.sum(depthHistogramArray, 10, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+            PCT_15X   = MathUtil.sum(depthHistogramArray, 15, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+            PCT_20X   = MathUtil.sum(depthHistogramArray, 20, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+            PCT_25X   = MathUtil.sum(depthHistogramArray, 25, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+            PCT_30X   = MathUtil.sum(depthHistogramArray, 30, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+            PCT_40X   = MathUtil.sum(depthHistogramArray, 40, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+            PCT_50X   = MathUtil.sum(depthHistogramArray, 50, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+            PCT_60X   = MathUtil.sum(depthHistogramArray, 60, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+            PCT_70X   = MathUtil.sum(depthHistogramArray, 70, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+            PCT_80X   = MathUtil.sum(depthHistogramArray, 80, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+            PCT_90X   = MathUtil.sum(depthHistogramArray, 90, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+            PCT_100X  = MathUtil.sum(depthHistogramArray, 100, depthHistogramArray.length) / (double) GENOME_TERRITORY;
+
+            // Get Theoretical Het SNP Sensitivity
+            if (unfilteredBaseQHistogram != null && unfilteredDepthHistogram != null) {
+                final double[] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(unfilteredDepthHistogram);
+                final double[] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(unfilteredBaseQHistogram);
+                HET_SNP_SENSITIVITY = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, LOG_ODDS_THRESHOLD);
+                HET_SNP_Q = QualityUtil.getPhredScoreFromErrorProbability((1 - HET_SNP_SENSITIVITY));
+            }
+        }
     }
 
     public static void main(final String[] args) {
         new CollectWgsMetrics().instanceMainWithExit(args);
+    }
+
+    /** Gets the SamReader from which records will be examined.  This will also set the header so that it is available in
+     *  */
+    protected SamReader getSamReader() {
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        this.header        = in.getFileHeader();
+        return in;
     }
 
     @Override
@@ -220,13 +436,12 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         // Setup all the inputs
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Processed", "loci");
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        final SamReader in = getSamReader();
         final SamLocusIterator iterator = getLocusIterator(in);
-        this.header = in.getFileHeader();
 
         final List<SamRecordFilter> filters = new ArrayList<>();
-        final CountingFilter dupeFilter = new CountingDuplicateFilter();
         final CountingFilter mapqFilter = new CountingMapQFilter(MINIMUM_MAPPING_QUALITY);
+        final CountingFilter dupeFilter = new CountingDuplicateFilter();
         final CountingPairedFilter pairFilter = new CountingPairedFilter();
         // The order in which filters are added matters!
         filters.add(new SecondaryAlignmentFilter()); // Not a counting filter because we never want to count reads twice
@@ -242,7 +457,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         iterator.setIncludeNonPfReads(false);
         iterator.setMaxReadsToAccumulatePerLocus(LOCUS_ACCUMULATION_CAP);
 
-        final WgsMetricsCollector collector = getCollector(COVERAGE_CAP);
+        final WgsMetricsCollector collector = getCollector(COVERAGE_CAP, getIntervalsToExamine());
 
         final boolean usingStopAfter = STOP_AFTER > 0;
         final long stopAfter = STOP_AFTER - 1;
@@ -258,13 +473,19 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             if (SequenceUtil.isNoCall(base)) continue;
 
             // add to the collector
-            collector.addInfo(info, ref);
+            collector.addInfo(info);
 
             // Record progress and perhaps stop
             progress.record(info.getSequenceName(), info.getPosition());
             if (usingStopAfter && ++counter > stopAfter) break;
         }
 
+        // check that we added the same number of bases to the raw coverage histogram and the base quality histograms
+        final long sumBaseQ= Arrays.stream(collector.unfilteredBaseQHistogramArray).sum();
+        final long sumDepthHisto = LongStream.rangeClosed(0, collector.coverageCap).map(i -> (i * collector.unfilteredDepthHistogramArray[(int) i])).sum();
+        if (sumBaseQ != sumDepthHisto) {
+            log.error("Coverage and baseQ distributions contain different amount of bases!");
+        }
 
         final MetricsFile<WgsMetrics, Integer> out = getMetricsFile();
         collector.addToMetricsFile(out, INCLUDE_BQ_HISTOGRAM, dupeFilter, mapqFilter, pairFilter);
@@ -273,13 +494,99 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         return 0;
     }
 
+    /** Gets the intervals over which we will calculate metrics. */
+    protected IntervalList getIntervalsToExamine() {
+        final IntervalList intervals;
+        if (INTERVALS != null) {
+            IOUtil.assertFileIsReadable(INTERVALS);
+            intervals = IntervalList.fromFile(INTERVALS);
+        } else {
+            intervals = new IntervalList(this.header);
+            for (final SAMSequenceRecord rec : this.header.getSequenceDictionary().getSequences()) {
+                final Interval interval = new Interval(rec.getSequenceName(), 1, rec.getSequenceLength());
+                intervals.add(interval);
+            }
+        }
+        return intervals;
+    }
+
+    /** This method should only be called after {@link this.getSamReader()} is called. */
     protected SAMFileHeader getSamFileHeader() {
+        if (this.header == null) throw new IllegalStateException("getSamFileHeader() was called but this.header is null");
         return this.header;
     }
 
-    protected WgsMetrics generateWgsMetrics() {
-        return new WgsMetrics();
+
+    protected WgsMetrics generateWgsMetrics(final IntervalList intervals,
+                                            final Histogram<Integer> highQualityDepthHistogram,
+                                            final Histogram<Integer> unfilteredDepthHistogram,
+                                            final double pctExcludedByMapq,
+                                            final double pctExcludedByDupes,
+                                            final double pctExcludedByPairing,
+                                            final double pctExcludedByBaseq,
+                                            final double pctExcludedByOverlap,
+                                            final double pctExcludedByCapping,
+                                            final double pctTotal,
+                                            final int coverageCap,
+                                            final Histogram<Integer> unfilteredBaseQHistogram,
+                                            final int theoreticalHetSensitivitySampleSize) {
+        return new WgsMetrics(
+                intervals,
+                highQualityDepthHistogram,
+                unfilteredDepthHistogram,
+                pctExcludedByMapq,
+                pctExcludedByDupes,
+                pctExcludedByPairing,
+                pctExcludedByBaseq,
+                pctExcludedByOverlap,
+                pctExcludedByCapping,
+                pctTotal,
+                coverageCap,
+                unfilteredBaseQHistogram,
+                theoreticalHetSensitivitySampleSize
+        );
     }
+
+    private WgsMetrics generateWgsMetrics(final IntervalList intervals,
+                                          final Histogram<Integer> highQualityDepthHistogram,
+                                          final Histogram<Integer> unfilteredDepthHistogram,
+                                          final long basesExcludedByMapq,
+                                          final long basesExcludedByDupes,
+                                          final long basesExcludedByPairing,
+                                          final long basesExcludedByBaseq,
+                                          final long basesExcludedByOverlap,
+                                          final long basesExcludedByCapping,
+                                          final int coverageCap,
+                                          final Histogram<Integer> unfilteredBaseQHistogram,
+                                          final int theoreticalHetSensitivitySampleSize) {
+        final double total = highQualityDepthHistogram.getSum();
+        final double totalWithExcludes = total + basesExcludedByDupes + basesExcludedByMapq + basesExcludedByPairing + basesExcludedByBaseq + basesExcludedByOverlap + basesExcludedByCapping;
+
+        final double pctExcludedByMapq    = totalWithExcludes == 0 ? 0 : basesExcludedByMapq         / totalWithExcludes;
+        final double pctExcludedByDupes   = totalWithExcludes == 0 ? 0 : basesExcludedByDupes        / totalWithExcludes;
+        final double pctExcludedByPairing = totalWithExcludes == 0 ? 0 : basesExcludedByPairing      / totalWithExcludes;
+        final double pctExcludedByBaseq   = totalWithExcludes == 0 ? 0 : basesExcludedByBaseq        / totalWithExcludes;
+        final double pctExcludedByOverlap = totalWithExcludes == 0 ? 0 : basesExcludedByOverlap      / totalWithExcludes;
+        final double pctExcludedByCapping = totalWithExcludes == 0 ? 0 : basesExcludedByCapping      / totalWithExcludes;
+        final double pctTotal             = totalWithExcludes == 0 ? 0 : (totalWithExcludes - total) / totalWithExcludes;
+
+        return generateWgsMetrics(
+                intervals,
+                highQualityDepthHistogram,
+                unfilteredDepthHistogram,
+                pctExcludedByMapq,
+                pctExcludedByDupes,
+                pctExcludedByPairing,
+                pctExcludedByBaseq,
+                pctExcludedByOverlap,
+                pctExcludedByCapping,
+                pctTotal,
+                coverageCap,
+                unfilteredBaseQHistogram,
+                theoreticalHetSensitivitySampleSize
+        );
+    }
+
 
     /**
      * If INTERVALS is specified, this will count bases beyond the interval list when the read overlaps the intervals and extends beyond the
@@ -293,46 +600,70 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         return (INTERVALS != null) ? new SamLocusIterator(in, IntervalList.fromFile(INTERVALS)) : new SamLocusIterator(in);
     }
 
-    protected WgsMetricsCollector getCollector(final int coverageCap) {
-        return new WgsMetricsCollector(coverageCap);
+    /**
+     * @param coverageCap the maximum depth/coverage to consider.
+     * @param intervals the intervals over which metrics are collected.
+     * @return
+     */
+    protected WgsMetricsCollector getCollector(final int coverageCap, final IntervalList intervals) {
+        return new WgsMetricsCollector(coverageCap, intervals);
     }
 
     protected class WgsMetricsCollector {
 
-        protected final long[] depthHistogramArray;
-        private   final long[] baseQHistogramArray;
+        // Count of sites with a given depth of coverage. Includes all but quality 2 bases.
+        // We draw depths from this histogram when we calculate the theoretical het sensitivity.
+        protected final long[] unfilteredDepthHistogramArray;
+
+        // Count of bases observed with a given base quality. Includes all but quality 2 bases.
+        // We draw bases from this histogram when we calculate the theoretical het sensitivity.
+        protected final long[] unfilteredBaseQHistogramArray;
+
+        // Count of sites with a given depth of coverage. Excludes bases with quality below MINIMUM_BASE_QUALITY (default 20).
+        protected final long[] highQualityDepthHistogramArray;
 
         private long basesExcludedByBaseq = 0;
         private long basesExcludedByOverlap = 0;
         private long basesExcludedByCapping = 0;
+        protected final IntervalList intervals;
         protected final int coverageCap;
 
-        public WgsMetricsCollector(final int coverageCap) {
-            depthHistogramArray = new long[coverageCap + 1];
-            baseQHistogramArray = new long[Byte.MAX_VALUE];
-            this.coverageCap = coverageCap;
+        public WgsMetricsCollector(final int coverageCap, final IntervalList intervals) {
+            unfilteredDepthHistogramArray = new long[coverageCap + 1];
+            highQualityDepthHistogramArray = new long[coverageCap + 1];
+            unfilteredBaseQHistogramArray = new long[Byte.MAX_VALUE];
+            this.coverageCap    = coverageCap;
+            this.intervals      = intervals;
         }
 
-        public void addInfo(final SamLocusIterator.LocusInfo info, final ReferenceSequence ref) {
+        public void addInfo(final SamLocusIterator.LocusInfo info) {
 
             // Figure out the coverage while not counting overlapping reads twice, and excluding various things
-            final HashSet<String> readNames = new HashSet<>(info.getRecordAndPositions().size());
+            final HashSet<String> readNames = new HashSet<>(info.getRecordAndOffsets().size());
             int pileupSize = 0;
-            for (final SamLocusIterator.RecordAndOffset recs : info.getRecordAndPositions()) {
+            int unfilteredDepth = 0;
+
+            for (final SamLocusIterator.RecordAndOffset recs : info.getRecordAndOffsets()) {
+                if (recs.getBaseQuality() <= 2) { ++basesExcludedByBaseq;   continue; }
+
+                // we add to the base quality histogram any bases that have quality > 2
+                // the raw depth may exceed the coverageCap before the high-quality depth does. So stop counting once we reach the coverage cap.
+                if (unfilteredDepth < coverageCap) {
+                    unfilteredBaseQHistogramArray[recs.getRecord().getBaseQualities()[recs.getOffset()]]++;
+                    unfilteredDepth++;
+                }
 
                 if (recs.getBaseQuality() < MINIMUM_BASE_QUALITY ||
                         SequenceUtil.isNoCall(recs.getReadBase()))                  { ++basesExcludedByBaseq;   continue; }
                 if (!readNames.add(recs.getRecord().getReadName()))                 { ++basesExcludedByOverlap; continue; }
 
                 pileupSize++;
-                if (pileupSize <= coverageCap) {
-                    baseQHistogramArray[recs.getRecord().getBaseQualities()[recs.getOffset()]]++;
-                }
             }
 
-            final int depth = Math.min(pileupSize, coverageCap);
-            if (depth < pileupSize) basesExcludedByCapping += pileupSize - coverageCap;
-            depthHistogramArray[depth]++;
+            final int highQualityDepth = Math.min(pileupSize, coverageCap);
+            if (highQualityDepth < pileupSize) basesExcludedByCapping += pileupSize - coverageCap;
+            highQualityDepthHistogramArray[highQualityDepth]++;
+            unfilteredDepthHistogramArray[unfilteredDepth]++;
         }
 
         public void addToMetricsFile(final MetricsFile<WgsMetrics, Integer> file,
@@ -340,39 +671,33 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                                      final CountingFilter dupeFilter,
                                      final CountingFilter mapqFilter,
                                      final CountingPairedFilter pairFilter) {
-            addMetricsToFile(file, dupeFilter, mapqFilter, pairFilter);
-
-            if (includeBQHistogram) {
-                addBaseQHistogram(file);
-            }
-        }
-
-        protected void addBaseQHistogram(final MetricsFile<WgsMetrics, Integer> file) {
-            file.addHistogram(getBaseQHistogram());
-        }
-
-        protected void addMetricsToFile(final MetricsFile<WgsMetrics, Integer> file,
-                                      final CountingFilter dupeFilter,
-                                      final CountingFilter mapqFilter,
-                                      final CountingPairedFilter pairFilter) {
-            // get the depth histogram and metrics
-            final Histogram<Integer> depthHistogram = getDepthHistogram();
-            final WgsMetrics metrics = getMetrics(depthHistogram, dupeFilter, mapqFilter, pairFilter);
+            final WgsMetrics metrics = getMetrics(dupeFilter, mapqFilter, pairFilter);
 
             // add them to the file
             file.addMetric(metrics);
-            file.addHistogram(depthHistogram);
+            file.addHistogram(getHighQualityDepthHistogram());
+            if (includeBQHistogram) addBaseQHistogram(file);
+
+
         }
 
-        protected Histogram<Integer> getDepthHistogram() {
-            return getHistogram(depthHistogramArray,"coverage", "count");
+        protected void addBaseQHistogram(final MetricsFile<WgsMetrics, Integer> file) {
+            file.addHistogram(getUnfilteredBaseQHistogram());
         }
 
-        protected Histogram<Integer> getBaseQHistogram() {
-            return getHistogram(baseQHistogramArray, "value", "baseq_count");
+        protected Histogram<Integer> getHighQualityDepthHistogram() {
+            return getHistogram(highQualityDepthHistogramArray, "coverage", "high_quality_coverage_count");
         }
 
-        private Histogram<Integer> getHistogram(final long[] array, final String binLabel, final String valueLabel) {
+        protected Histogram<Integer> getUnfilteredDepthHistogram(){
+            return getHistogram(unfilteredDepthHistogramArray, "coverage", "unfiltered_coverage_count");
+        }
+
+        protected Histogram<Integer> getUnfilteredBaseQHistogram() {
+            return getHistogram(unfilteredBaseQHistogramArray, "baseq", "unfiltered_baseq_count");
+        }
+
+        protected Histogram<Integer> getHistogram(final long[] array, final String binLabel, final String valueLabel) {
             final Histogram<Integer> histogram = new Histogram<>(binLabel, valueLabel);
             for (int i = 0; i < array.length; ++i) {
                 histogram.increment(i, array[i]);
@@ -380,57 +705,26 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             return histogram;
         }
 
-        protected WgsMetrics getMetrics(final Histogram<Integer> depthHistogram,
-                                      final CountingFilter dupeFilter,
-                                      final CountingFilter mapqFilter,
-                                      final CountingPairedFilter pairFilter) {
-
-            // the base q het histogram
-
-            final WgsMetrics metrics = generateWgsMetrics();
-            metrics.GENOME_TERRITORY = (long) depthHistogram.getSumOfValues();
-            metrics.MEAN_COVERAGE    = depthHistogram.getMean();
-            metrics.SD_COVERAGE      = depthHistogram.getStandardDeviation();
-            metrics.MEDIAN_COVERAGE  = depthHistogram.getMedian();
-            metrics.MAD_COVERAGE     = depthHistogram.getMedianAbsoluteDeviation();
-
-            final long basesExcludedByDupes   = getBasesExcludedBy(dupeFilter);
-            final long basesExcludedByMapq    = getBasesExcludedBy(mapqFilter);
-            final long basesExcludedByPairing = getBasesExcludedBy(pairFilter);
-            final double total                = depthHistogram.getSum();
-            final double totalWithExcludes    = total + basesExcludedByDupes + basesExcludedByMapq + basesExcludedByPairing + basesExcludedByBaseq + basesExcludedByOverlap + basesExcludedByCapping;
-
-            metrics.PCT_EXC_DUPE     = basesExcludedByDupes / totalWithExcludes;
-            metrics.PCT_EXC_MAPQ     = basesExcludedByMapq / totalWithExcludes;
-            metrics.PCT_EXC_UNPAIRED = basesExcludedByPairing / totalWithExcludes;
-            metrics.PCT_EXC_BASEQ    = basesExcludedByBaseq   / totalWithExcludes;
-            metrics.PCT_EXC_OVERLAP  = basesExcludedByOverlap / totalWithExcludes;
-            metrics.PCT_EXC_CAPPED   = basesExcludedByCapping / totalWithExcludes;
-            metrics.PCT_EXC_TOTAL    = (totalWithExcludes - total) / totalWithExcludes;
-
-            metrics.PCT_1X    = MathUtil.sum(depthHistogramArray, 1, depthHistogramArray.length)   / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_5X    = MathUtil.sum(depthHistogramArray, 5, depthHistogramArray.length)   / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_10X   = MathUtil.sum(depthHistogramArray, 10, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_15X   = MathUtil.sum(depthHistogramArray, 15, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_20X   = MathUtil.sum(depthHistogramArray, 20, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_25X   = MathUtil.sum(depthHistogramArray, 25, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_30X   = MathUtil.sum(depthHistogramArray, 30, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_40X   = MathUtil.sum(depthHistogramArray, 40, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_50X   = MathUtil.sum(depthHistogramArray, 50, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_60X   = MathUtil.sum(depthHistogramArray, 60, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_70X   = MathUtil.sum(depthHistogramArray, 70, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_80X   = MathUtil.sum(depthHistogramArray, 80, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_90X   = MathUtil.sum(depthHistogramArray, 90, depthHistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-            metrics.PCT_100X  = MathUtil.sum(depthHistogramArray, 100, depthHistogramArray.length) / (double) metrics.GENOME_TERRITORY;
-
-            // Get Theoretical Het SNP Sensitivity
-            final double[] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
-            final double[] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(getBaseQHistogram());
-            metrics.HET_SNP_SENSITIVITY = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, SAMPLE_SIZE, LOG_ODDS_THRESHOLD);
-            metrics.HET_SNP_Q = QualityUtil.getPhredScoreFromErrorProbability((1 - metrics.HET_SNP_SENSITIVITY));
-
-            return metrics;
+        protected WgsMetrics getMetrics(final CountingFilter dupeFilter,
+                                        final CountingFilter mapqFilter,
+                                        final CountingPairedFilter pairFilter) {
+            return generateWgsMetrics(
+                    this.intervals,
+                    getHighQualityDepthHistogram(),
+                    getUnfilteredDepthHistogram(),
+                    getBasesExcludedBy(mapqFilter),
+                    getBasesExcludedBy(dupeFilter),
+                    getBasesExcludedBy(pairFilter),
+                    basesExcludedByBaseq,
+                    basesExcludedByOverlap,
+                    basesExcludedByCapping,
+                    coverageCap,
+                    getUnfilteredBaseQHistogram(),
+                    SAMPLE_SIZE
+            );
         }
+
+
     }
 }
 

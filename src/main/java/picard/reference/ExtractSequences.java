@@ -98,7 +98,7 @@ public class ExtractSequences extends CommandLineProgram {
         final BufferedWriter out = IOUtil.openFileForBufferedWriting(OUTPUT);
 
         for (final Interval interval : intervals) {
-            final ReferenceSequence seq = ref.getSubsequenceAt(interval.getSequence(), interval.getStart(), interval.getEnd());
+            final ReferenceSequence seq = ref.getSubsequenceAt(interval.getContig(), interval.getStart(), interval.getEnd());
             final byte[] bases = seq.getBases();
             if (interval.isNegativeStrand()) SequenceUtil.reverseComplement(bases);
 

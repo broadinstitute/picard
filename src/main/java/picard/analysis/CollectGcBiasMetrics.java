@@ -133,6 +133,10 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
     @Option(shortName = "LEVEL", doc = "The level(s) at which to accumulate metrics.")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
+    @Option(shortName = "ALSO_IGNORE_DUPLICATES", doc = "Use to get additional results without duplicates. This option " +
+            "allows to gain two plots per level at the same time: one is the usual one and the other excludes duplicates.")
+    public boolean ALSO_IGNORE_DUPLICATES = false;
+
     // Calculates GcBiasMetrics for all METRIC_ACCUMULATION_LEVELs provided
     private GcBiasMetricsCollector multiCollector;
 
@@ -162,7 +166,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
         final int[] windowsByGc = GcBiasUtils.calculateRefWindowsByGc(BINS, REFERENCE_SEQUENCE, SCAN_WINDOW_SIZE);
 
         //Delegate actual collection to GcBiasMetricCollector
-        multiCollector = new GcBiasMetricsCollector(METRIC_ACCUMULATION_LEVEL, windowsByGc, header.getReadGroups(), SCAN_WINDOW_SIZE, IS_BISULFITE_SEQUENCED);
+        multiCollector = new GcBiasMetricsCollector(METRIC_ACCUMULATION_LEVEL, windowsByGc, header.getReadGroups(), SCAN_WINDOW_SIZE, IS_BISULFITE_SEQUENCED, ALSO_IGNORE_DUPLICATES);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -179,14 +183,18 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
     @Override
     protected void finish() {
         multiCollector.finish();
+        writeResultsToFiles();
+    }
+
+    private void writeResultsToFiles() {
         final MetricsFile<GcBiasMetrics, Integer> file = getMetricsFile();
         final MetricsFile<GcBiasDetailMetrics, ?> detailMetricsFile = getMetricsFile();
         final MetricsFile<GcBiasSummaryMetrics, ?> summaryMetricsFile = getMetricsFile();
         multiCollector.addAllLevelsToFile(file);
         final List<GcBiasMetrics> gcBiasMetricsList = file.getMetrics();
-        for(final GcBiasMetrics gcbm : gcBiasMetricsList){
+        for (final GcBiasMetrics gcbm : gcBiasMetricsList) {
             final List<GcBiasDetailMetrics> gcDetailList = gcbm.DETAILS.getMetrics();
-            for(final GcBiasDetailMetrics d : gcDetailList) {
+            for (final GcBiasDetailMetrics d : gcDetailList) {
                 detailMetricsFile.addMetric(d);
             }
             summaryMetricsFile.addMetric(gcbm.SUMMARY);

@@ -1,0 +1,168 @@
+##fileformat=VCFv4.2
+##ApplyRecalibration="analysis_type=ApplyRecalibration input_file=[] read_buffer_size=null phone_home=NO_ET gatk_key=/humgen/gsa-hpprojects/GATK/data/gatk_user_keys/gsamembers_broadinstitute.org.key read_filter=[] intervals=null excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/humgen/gsa-hpprojects/GATK/bundle/current/b37/human_g1k_v37.fasta nonDeterministicRandomSeed=false downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=1000 baq=OFF baqGapOpenPenalty=40.0 performanceLog=null useOriginalQualities=false BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 defaultBaseQualities=-1 validation_strictness=SILENT remove_program_records=false keep_program_records=false unsafe=null num_threads=1 num_cpu_threads=null num_io_threads=null num_bam_file_handles=null read_group_black_list=null pedigree=[] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false logging_level=INFO log_to_file=null help=false input=[(RodBinding name=input source=/broad/hptmp/ami/tmp/CEUTrio_UG_Both_WG/CEUTrio.HiSeq.WGS.b37.listindel.unfiltered.vcf)] recal_file=(RodBinding name=recal_file source=/broad/hptmp/ami/tmp/CEUTrio_UG_Both_WG/CEUTrio.HiSeq.WGS.b37.listindel.recal) tranches_file=/broad/hptmp/ami/tmp/CEUTrio_UG_Both_WG/CEUTrio.HiSeq.WGS.b37.listindel.tranches out=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub no_cmdline_in_header=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub sites_only=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub bcf=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub ts_filter_level=95.0 ignore_filter=null mode=INDEL filter_mismatching_base_and_quals=false"
+##CombineVariants="analysis_type=CombineVariants input_file=[] read_buffer_size=null phone_home=STANDARD gatk_key=null read_filter=[] intervals=null excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/humgen/gsa-hpprojects/GATK/bundle/current/b37/human_g1k_v37.fasta nonDeterministicRandomSeed=false downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=1000 baq=OFF baqGapOpenPenalty=40.0 performanceLog=null useOriginalQualities=false BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 defaultBaseQualities=-1 validation_strictness=SILENT remove_program_records=false keep_program_records=false unsafe=null num_threads=1 num_cpu_threads=null num_io_threads=null num_bam_file_handles=null read_group_black_list=null pedigree=[] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false logging_level=INFO log_to_file=null help=false variant=[(RodBinding name=variant source=CEUTrio.HiSeq.WGS.b37.listsnp.recalibrated.filtered.vcf), (RodBinding name=variant2 source=CEUTrio.HiSeq.WGS.b37.listindel.recalibrated.filtered.vcf)] out=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub no_cmdline_in_header=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub sites_only=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub bcf=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub genotypemergeoption=UNSORTED filteredrecordsmergetype=KEEP_IF_ANY_UNFILTERED multipleallelesmergetype=BY_TYPE rod_priority_list=null printComplexMerges=false filteredAreUncalled=false minimalVCF=false setKey=set assumeIdenticalSamples=true minimumN=1 suppressCommandLineHeader=false mergeInfoWithMaxAC=false filter_mismatching_base_and_quals=false"
+##FILTER=<ID=LowQual,Description="Low quality">
+##FILTER=<ID=VQSRTrancheINDEL99.00to99.90,Description="Truth sensitivity tranche level for INDEL model at VQS Lod: -4.1718 <= x < -0.8611">
+##FILTER=<ID=VQSRTrancheINDEL99.90to100.00+,Description="Truth sensitivity tranche level for INDEL model at VQS Lod < -727.2136">
+##FILTER=<ID=VQSRTrancheINDEL99.90to100.00,Description="Truth sensitivity tranche level for INDEL model at VQS Lod: -727.2136 <= x < -4.1718">
+##FILTER=<ID=VQSRTrancheSNP99.00to99.90,Description="Truth sensitivity tranche level for SNP model at VQS Lod: -25.4561 <= x < 3.2489">
+##FILTER=<ID=VQSRTrancheSNP99.90to100.00+,Description="Truth sensitivity tranche level for SNP model at VQS Lod < -38672.7015">
+##FILTER=<ID=VQSRTrancheSNP99.90to100.00,Description="Truth sensitivity tranche level for SNP model at VQS Lod: -38672.7015 <= x < -25.4561">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification">
+##FORMAT=<ID=TP,Number=1,Type=Integer,Description="Phred score of the genotype combination and phase given that the genotypes are correct">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=BaseQRankSum,Number=1,Type=Float,Description="Z-score from Wilcoxon rank sum test of Alt Vs. Ref base qualities">
+##INFO=<ID=CONC_ST,Number=.,Type=String,Description="The genotype concordance contingency state(s)">
+##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP Membership">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth; some reads may have been filtered">
+##INFO=<ID=DS,Number=0,Type=Flag,Description="Were any of the samples downsampled?">
+##INFO=<ID=Dels,Number=1,Type=Float,Description="Fraction of Reads Containing Spanning Deletions">
+##INFO=<ID=END,Number=1,Type=Integer,Description="Stop position of the interval">
+##INFO=<ID=FS,Number=1,Type=Float,Description="Phred-scaled p-value using Fisher's exact test to detect strand bias">
+##INFO=<ID=HaplotypeScore,Number=1,Type=Float,Description="Consistency of the site with at most two segregating haplotypes">
+##INFO=<ID=InbreedingCoeff,Number=1,Type=Float,Description="Inbreeding coefficient as estimated from the genotype likelihoods per-sample when compared against the Hardy-Weinberg expectation">
+##INFO=<ID=MLEAC,Number=A,Type=Integer,Description="Maximum likelihood expectation (MLE) for the allele counts (not necessarily the same as the AC), for each ALT allele, in the same order as listed">
+##INFO=<ID=MLEAF,Number=A,Type=Float,Description="Maximum likelihood expectation (MLE) for the allele frequency (not necessarily the same as the AF), for each ALT allele, in the same order as listed">
+##INFO=<ID=MQ,Number=1,Type=Float,Description="RMS Mapping Quality">
+##INFO=<ID=MQ0,Number=1,Type=Integer,Description="Total Mapping Quality Zero Reads">
+##INFO=<ID=MQRankSum,Number=1,Type=Float,Description="Z-score From Wilcoxon rank sum test of Alt vs. Ref read mapping qualities">
+##INFO=<ID=QD,Number=1,Type=Float,Description="Variant Confidence/Quality by Depth">
+##INFO=<ID=RPA,Number=.,Type=Integer,Description="Number of times tandem repeat unit is repeated, for each allele (including reference)">
+##INFO=<ID=RU,Number=1,Type=String,Description="Tandem repeat unit (bases)">
+##INFO=<ID=ReadPosRankSum,Number=1,Type=Float,Description="Z-score from Wilcoxon rank sum test of Alt vs. Ref read position bias">
+##INFO=<ID=SB,Number=1,Type=Float,Description="Strand Bias">
+##INFO=<ID=STR,Number=0,Type=Flag,Description="Variant is a short tandem repeat">
+##INFO=<ID=VQSLOD,Number=1,Type=Float,Description="Log odds ratio of being a true variant versus being false under the trained gaussian mixture model">
+##INFO=<ID=culprit,Number=1,Type=String,Description="The annotation which was the worst performing in the Gaussian mixture model, likely the reason why the variant was filtered out">
+##INFO=<ID=set,Number=1,Type=String,Description="Source VCF for the merged record in CombineVariants">
+##PhaseByTransmission="analysis_type=PhaseByTransmission input_file=[] read_buffer_size=null phone_home=STANDARD gatk_key=null read_filter=[] intervals=null excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/humgen/gsa-hpprojects/GATK/bundle/current/b37/human_g1k_v37.fasta nonDeterministicRandomSeed=false downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=1000 baq=OFF baqGapOpenPenalty=40.0 performanceLog=null useOriginalQualities=false BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 defaultBaseQualities=-1 validation_strictness=SILENT remove_program_records=false keep_program_records=false unsafe=null num_threads=1 num_cpu_threads=null num_io_threads=null num_bam_file_handles=null read_group_black_list=null pedigree=[/broad/hptmp/ami/tmp/CEUTrio.ped] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false logging_level=INFO log_to_file=null help=false variant=(RodBinding name=variant source=/broad/hptmp/ami/tmp/CEUTrio_UG_Both_WG/CEUTrio.HiSeq.WGS.b37.snps_and_indels.recalibrated.filtered.vcf) DeNovoPrior=1.0E-8 FatherAlleleFirst=false out=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub no_cmdline_in_header=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub sites_only=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub bcf=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub filter_mismatching_base_and_quals=false"
+##UnifiedGenotyper="analysis_type=UnifiedGenotyper input_file=[/humgen/gsa-hpprojects/NA12878Collection/bams/CEUTrio.HiSeq.WGS.b37.list] read_buffer_size=null phone_home=NO_ET gatk_key=/humgen/gsa-hpprojects/GATK/data/gatk_user_keys/gsamembers_broadinstitute.org.key read_filter=[] intervals=[/broad/hptmp/ami/tmp/queueScatterGather/.qlog/CEUTrio.indelcall-sg/temp_020_of_300/scatter.intervals] excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/humgen/gsa-hpprojects/GATK/bundle/current/b37/human_g1k_v37.fasta nonDeterministicRandomSeed=false downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=250 baq=OFF baqGapOpenPenalty=40.0 performanceLog=null useOriginalQualities=false BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 defaultBaseQualities=-1 validation_strictness=SILENT remove_program_records=false keep_program_records=false unsafe=null num_threads=2 num_cpu_threads=null num_io_threads=null num_bam_file_handles=null read_group_black_list=null pedigree=[] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false logging_level=INFO log_to_file=null help=false genotype_likelihoods_model=INDEL p_nonref_model=EXACT pcr_error_rate=1.0E-4 noSLOD=false annotateNDA=false min_base_quality_score=17 max_deletion_fraction=0.05 cap_max_alternate_alleles_for_indels=false min_indel_count_for_genotyping=5 min_indel_fraction_per_sample=0.25 indel_heterozygosity=1.25E-4 indelGapContinuationPenalty=10 indelGapOpenPenalty=45 indelHaplotypeSize=80 noBandedIndel=false indelDebug=false ignoreSNPAlleles=false allReadsSP=false ignoreLaneInfo=false reference_sample_calls=(RodBinding name= source=UNBOUND) reference_sample_name=null sample_ploidy=2 min_quality_score=1 max_quality_score=40 site_quality_prior=20 min_power_threshold_for_calling=0.95 min_reference_depth=100 exclude_filtered_reference_sites=false heterozygosity=0.0010 genotyping_mode=DISCOVERY output_mode=EMIT_VARIANTS_ONLY standard_min_confidence_threshold_for_calling=30.0 standard_min_confidence_threshold_for_emitting=30.0 alleles=(RodBinding name= source=UNBOUND) max_alternate_alleles=3 dbsnp=(RodBinding name=dbsnp source=/humgen/gsa-hpprojects/GATK/bundle/current/b37/dbsnp_135.b37.vcf) comp=[] out=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub no_cmdline_in_header=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub sites_only=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub bcf=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub debug_file=null metrics_file=null annotation=[] excludeAnnotation=[] filter_mismatching_base_and_quals=false"
+##contig=<ID=1,length=249250621,assembly=b37>
+##contig=<ID=2,length=243199373,assembly=b37>
+##contig=<ID=3,length=198022430,assembly=b37>
+##contig=<ID=4,length=191154276,assembly=b37>
+##contig=<ID=5,length=180915260,assembly=b37>
+##contig=<ID=6,length=171115067,assembly=b37>
+##contig=<ID=7,length=159138663,assembly=b37>
+##contig=<ID=8,length=146364022,assembly=b37>
+##contig=<ID=9,length=141213431,assembly=b37>
+##contig=<ID=10,length=135534747,assembly=b37>
+##contig=<ID=11,length=135006516,assembly=b37>
+##contig=<ID=12,length=133851895,assembly=b37>
+##contig=<ID=13,length=115169878,assembly=b37>
+##contig=<ID=14,length=107349540,assembly=b37>
+##contig=<ID=15,length=102531392,assembly=b37>
+##contig=<ID=16,length=90354753,assembly=b37>
+##contig=<ID=17,length=81195210,assembly=b37>
+##contig=<ID=18,length=78077248,assembly=b37>
+##contig=<ID=19,length=59128983,assembly=b37>
+##contig=<ID=20,length=63025520,assembly=b37>
+##contig=<ID=21,length=48129895,assembly=b37>
+##contig=<ID=22,length=51304566,assembly=b37>
+##contig=<ID=X,length=155270560,assembly=b37>
+##contig=<ID=Y,length=59373566,assembly=b37>
+##contig=<ID=MT,length=16569,assembly=b37>
+##contig=<ID=GL000207.1,length=4262,assembly=b37>
+##contig=<ID=GL000226.1,length=15008,assembly=b37>
+##contig=<ID=GL000229.1,length=19913,assembly=b37>
+##contig=<ID=GL000231.1,length=27386,assembly=b37>
+##contig=<ID=GL000210.1,length=27682,assembly=b37>
+##contig=<ID=GL000239.1,length=33824,assembly=b37>
+##contig=<ID=GL000235.1,length=34474,assembly=b37>
+##contig=<ID=GL000201.1,length=36148,assembly=b37>
+##contig=<ID=GL000247.1,length=36422,assembly=b37>
+##contig=<ID=GL000245.1,length=36651,assembly=b37>
+##contig=<ID=GL000197.1,length=37175,assembly=b37>
+##contig=<ID=GL000203.1,length=37498,assembly=b37>
+##contig=<ID=GL000246.1,length=38154,assembly=b37>
+##contig=<ID=GL000249.1,length=38502,assembly=b37>
+##contig=<ID=GL000196.1,length=38914,assembly=b37>
+##contig=<ID=GL000248.1,length=39786,assembly=b37>
+##contig=<ID=GL000244.1,length=39929,assembly=b37>
+##contig=<ID=GL000238.1,length=39939,assembly=b37>
+##contig=<ID=GL000202.1,length=40103,assembly=b37>
+##contig=<ID=GL000234.1,length=40531,assembly=b37>
+##contig=<ID=GL000232.1,length=40652,assembly=b37>
+##contig=<ID=GL000206.1,length=41001,assembly=b37>
+##contig=<ID=GL000240.1,length=41933,assembly=b37>
+##contig=<ID=GL000236.1,length=41934,assembly=b37>
+##contig=<ID=GL000241.1,length=42152,assembly=b37>
+##contig=<ID=GL000243.1,length=43341,assembly=b37>
+##contig=<ID=GL000242.1,length=43523,assembly=b37>
+##contig=<ID=GL000230.1,length=43691,assembly=b37>
+##contig=<ID=GL000237.1,length=45867,assembly=b37>
+##contig=<ID=GL000233.1,length=45941,assembly=b37>
+##contig=<ID=GL000204.1,length=81310,assembly=b37>
+##contig=<ID=GL000198.1,length=90085,assembly=b37>
+##contig=<ID=GL000208.1,length=92689,assembly=b37>
+##contig=<ID=GL000191.1,length=106433,assembly=b37>
+##contig=<ID=GL000227.1,length=128374,assembly=b37>
+##contig=<ID=GL000228.1,length=129120,assembly=b37>
+##contig=<ID=GL000214.1,length=137718,assembly=b37>
+##contig=<ID=GL000221.1,length=155397,assembly=b37>
+##contig=<ID=GL000209.1,length=159169,assembly=b37>
+##contig=<ID=GL000218.1,length=161147,assembly=b37>
+##contig=<ID=GL000220.1,length=161802,assembly=b37>
+##contig=<ID=GL000213.1,length=164239,assembly=b37>
+##contig=<ID=GL000211.1,length=166566,assembly=b37>
+##contig=<ID=GL000199.1,length=169874,assembly=b37>
+##contig=<ID=GL000217.1,length=172149,assembly=b37>
+##contig=<ID=GL000216.1,length=172294,assembly=b37>
+##contig=<ID=GL000215.1,length=172545,assembly=b37>
+##contig=<ID=GL000205.1,length=174588,assembly=b37>
+##contig=<ID=GL000219.1,length=179198,assembly=b37>
+##contig=<ID=GL000224.1,length=179693,assembly=b37>
+##contig=<ID=GL000223.1,length=180455,assembly=b37>
+##contig=<ID=GL000195.1,length=182896,assembly=b37>
+##contig=<ID=GL000212.1,length=186858,assembly=b37>
+##contig=<ID=GL000222.1,length=186861,assembly=b37>
+##contig=<ID=GL000200.1,length=187035,assembly=b37>
+##contig=<ID=GL000193.1,length=189789,assembly=b37>
+##contig=<ID=GL000194.1,length=191469,assembly=b37>
+##contig=<ID=GL000225.1,length=211173,assembly=b37>
+##contig=<ID=GL000192.1,length=547496,assembly=b37>
+##reference=file:///humgen/gsa-hpprojects/GATK/bundle/current/b37/human_g1k_v37.fasta
+##source=PhaseByTransmission
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	call	truth
+1	25154033	.	GT	G	743.25	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	0/1:60,12:82:67:292,0,67:18	0/1:60,12:82:67:292,0,67:18
+1	36900350	.	C	CA	137.53	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	0/1:35,7:44:41:70,0,41:9	0/1:35,7:44:41:70,0,41:9
+1	120811174	.	C	CA	74.77	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:47,5:9:11:53,11,0:3	1|1:47,5:9:11:53,11,0:3
+1	235750933	.	GA	G	679.19	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	1|0:12,0:12:6:110,0,6:6	1|0:12,0:12:6:110,0,6:6
+2	75490647	.	T	TGG	1000.21	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:33,35:76:57:976,57,0:56	1|1:33,35:76:57:976,57,0:56
+2	107234623	.	GTA	G	7569	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	0|1:46,30:76:99:1290,0,2120:127	0|1:46,30:76:99:1290,0,2120:127
+2	133338909	.	CT	C	2103.21	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:17,39:59:61:837,61,0:60	1|1:17,39:59:61:837,61,0:60
+2	218911764	.	TA	T	229.22	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	0/1:56,5:65:99:101,0,313:70	0/1:56,5:65:99:101,0,313:70
+3	37334187	.	G	.	1235.20	.	CONC_ST=TN	GT:AD:DP:GQ:PL:TP	0|0:83,0:83:99:0,244,4702:127	0|0:83,0:83:99:0,244,4702:127
+3	118367863	.	TAGATAGATTA	T	12039	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:13,57:71:99:4299,164,0:127	1|1:13,57:71:99:4299,164,0:127
+3	168108331	.	TA	T	51.36	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	0/1:46,5:53:16:16,0,313:15	0/1:46,5:53:16:16,0,313:15
+4	92648168	.	A	ATTTG	7717	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	1|0:45,35:80:99:2213,0,2213:127	1|0:45,35:80:99:2213,0,2213:127
+4	114869733	.	A	AT	2798.22	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	0/1:47,41:89:99:994,0,1219:127	0/1:47,41:89:99:994,0,1219:127
+4	152029268	.	CT	C	358.22	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	1|0:50,15:75:99:301,0,225:38	1|0:50,15:75:99:301,0,225:38
+6	31390139	.	T	TA	2159.22	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	0|1:51,37:89:99:1076,0,1364:127	0|1:51,37:89:99:1076,0,1364:127
+6	63303894	.	T	TC	7366	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:0,89:89:99:3885,265,0:127	1|1:0,89:89:99:3885,265,0:127
+6	100462085	.	G	GT	5284	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:8,79:94:99:2218,200,0:127	1|1:8,79:94:99:2218,200,0:127
+6	169196022	.	T	TG	229.23	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	1|0:19,10:15:78:78,0,88:27	1|0:19,10:15:78:78,0,88:27
+7	20767781	.	TA	T	2754.21	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	1|0:59,45:107:99:923,0,795:116	1|0:59,45:107:99:923,0,795:116
+7	134269995	.	G	GA	2917.20	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	1|0:51,33:84:99:916,0,1151:127	1|0:51,33:84:99:916,0,1151:127
+8	30862954	.	C	CA	3883	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:21,76:105:99:1980,179,0:91	1|1:21,76:105:99:1980,179,0:91
+9	9066127	.	ATATT	A	4412	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	1|0:41,36:79:99:2129,0,2123:127	1|0:41,36:79:99:2129,0,2123:127
+9	118670009	.	CT	C	5633	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:6,71:78:99:2079,216,0:120	1|1:6,71:78:99:2079,216,0:120
+10	46605359	.	CT	.	883.20	.	CONC_ST=TN	GT:AD:DP:GQ:PL:TP	0|0:33,0:32:90:0,90,1016:25	0|0:33,0:32:90:0,90,1016:25
+11	3839556	.	CA	C	803.10	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	0/1:35,17:55:32:329,0,32:3	0/1:35,17:55:32:329,0,32:3
+11	96559202	.	C	CAA	373.24	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	1|0:20,8:32:24:111,0,24:22	1|0:20,8:32:24:111,0,24:22
+14	28032147	.	AT	A	9959	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:2,86:91:99:3493,259,0:127	1|1:2,86:91:99:3493,259,0:127
+14	77813103	.	G	GT	328.58	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	1|0:51,1:53:18:105,0,18:6	1|0:51,1:53:18:105,0,18:6
+15	32615218	.	G	GA	82.61	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:41,19:3:9:88,9,0:5	1|1:41,19:3:9:88,9,0:5
+15	83241984	.	AT	A	1748.21	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	0|1:41,27:72:99:434,0,434:118	0|1:41,27:72:99:434,0,434:118
+16	19633462	.	C	CT	239.23	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	1|0:61,0:63:45:70,0,45:24	1|0:61,0:63:45:70,0,45:24
+16	77418810	.	T	TG	7389	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:8,84:93:99:3558,264,0:127	1|1:8,84:93:99:3558,264,0:127
+17	75679403	.	TGTG	T	1024.22	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	1|0:29,19:58:99:711,0,1547:127	1|0:29,19:58:99:711,0,1547:127
+18	30361151	.	T	TTG	9768	.	CONC_ST=TP	GT:AD:DP:GQ:PL:TP	1|1:7,80:86:99:3686,241,0:127	1|1:7,80:86:99:3686,241,0:127
+18	59836086	.	A	AT	575.46	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	0/1:52,29:86:11:309,0,11:9	0/1:52,29:86:11:309,0,11:9
+X	23948720	.	C	CA	535.35	.	CONC_ST=TP,TN	GT:AD:DP:GQ:PL:TP	0/1:37,27:68:62:391,0,62:13	0/1:37,27:68:62:391,0,62:13

@@ -2,7 +2,6 @@ package picard.util;
 
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
-import picard.PicardException;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

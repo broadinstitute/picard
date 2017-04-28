@@ -40,7 +40,6 @@ import picard.cmdline.CommandLineProgramTest;
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -250,7 +249,7 @@ public class RevertSamTest extends CommandLineProgramTest {
 
             for (final SAMRecord.SAMTagAndValue attr : rec.getAttributes()) {
                 if (removeAlignmentInfo || (!attr.tag.equals("PG") && !attr.tag.equals("NM")
-                        && !attr.tag.equals("MQ"))) {
+                        && !attr.tag.equals(SAMTag.MQ.toString()))) {
                     Assert.assertFalse(reverter.ATTRIBUTE_TO_CLEAR.contains(attr.tag),
                             attr.tag + " should have been cleared.");
                 }
@@ -275,7 +274,6 @@ public class RevertSamTest extends CommandLineProgramTest {
 
         final File output = File.createTempFile("bad", ".sam");
         output.deleteOnExit();
-        final RevertSam reverter = new RevertSam();
         final String args[] = new String[2 + (sample != null ? 1 : 0) + (library != null ? 1 : 0)];
         int index = 0;
         args[index++] = "INPUT=" + sampleLibraryOverrideSam;
@@ -304,7 +302,6 @@ public class RevertSamTest extends CommandLineProgramTest {
         final File outputDir = Files.createTempDirectory("picardRevertSamTest").toFile();
         outputDir.deleteOnExit();
 
-        final RevertSam reverter = new RevertSam();
         final String args[] = new String[4];
         int index = 0;
         args[index++] = "INPUT=" + basicSamToRevert;
@@ -445,5 +442,15 @@ public class RevertSamTest extends CommandLineProgramTest {
         Assert.assertEquals(RevertSam.getDefaultExtension("this.is.a.cram"), ".cram");
         Assert.assertEquals(RevertSam.getDefaultExtension("this.is.a.bam"), ".bam");
         Assert.assertEquals(RevertSam.getDefaultExtension("foo"), ".bam");
+    }
+
+    @Test(expectedExceptions = PicardException.class)
+    public void testNoRgInfo() {
+        final String [] args = new String[]{
+                "I=testdata/picard/sam/bam2fastq/paired/bad/missing-rg-info.sam",
+                "OUTPUT_BY_READGROUP=true",
+                "O=."
+        };
+        runPicardCommandLine(args);
     }
 }

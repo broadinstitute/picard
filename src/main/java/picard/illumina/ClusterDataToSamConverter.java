@@ -72,9 +72,10 @@ public class ClusterDataToSamConverter implements
     // TODO: - https://github.com/broadinstitute/picard/issues/287
     // TODO: - HTS-spec issue: https://github.com/samtools/hts-specs/issues/109
     // TODO: - https://github.com/samtools/hts-specs/pull/119
-    private String molecularIndexTag          = "RX";
-    private String molecularIndexQualityTag   = "QX";
-    private List<String> tagPerMolecularIndex = Collections.emptyList();
+    private String molecularIndexTag             = "RX";
+    private String molecularIndexQualityTag      = "QX";
+    private final String molecularIndexDelimiter = "-";
+    private List<String> tagPerMolecularIndex    = Collections.emptyList();
 
     /**
      * Constructor
@@ -178,10 +179,10 @@ public class ClusterDataToSamConverter implements
 
         if (!molecularIndexes.isEmpty()) {
             if (!this.molecularIndexTag.isEmpty()) {
-                sam.setAttribute(this.molecularIndexTag, String.join("", molecularIndexes));
+                sam.setAttribute(this.molecularIndexTag, String.join(molecularIndexDelimiter, molecularIndexes));
             }
             if (!this.molecularIndexQualityTag.isEmpty()) {
-                sam.setAttribute(this.molecularIndexQualityTag, String.join("", molecularIndexQualities));
+                sam.setAttribute(this.molecularIndexQualityTag, String.join(molecularIndexDelimiter, molecularIndexQualities));
             }
             if (!this.tagPerMolecularIndex.isEmpty()) {
                 if (tagPerMolecularIndex.size() != molecularIndexes.size()) {

@@ -86,10 +86,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             "duplicate.  To do this, a new tag called the duplicate type (DT) tag was recently added as an optional output in  " +
             "the 'optional field' section of a SAM/BAM file.  Invoking the TAGGING_POLICY option," +
             " you can instruct the program to mark all the duplicates (All), only the optical duplicates (OpticalOnly), or no " +
-            "duplicates (DontTag).  This tool uses the READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options as the primary " +
-            "methods to identify and differentiate duplicate types. The records within the output of a SAM/BAM file will have values " +
-            "for the 'DT' tag (depending on the invoked TAGGING_POLICY), as either library/PCR-generated duplicates (LB), or " +
-            "sequencing-platform artifact duplicates (SQ).</p> "+
+            "duplicates (DontTag).  The records within the output of a SAM/BAM file will have values for the 'DT' tag (depending on the invoked " +
+            "TAGGING_POLICY), as either library/PCR-generated duplicates (LB), or sequencing-platform artifact duplicates (SQ).  " +
+            "This tool uses the READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options as the primary methods to identify " +
+            "and differentiate duplicate types.  Set READ_NAME_REGEX to null to skip optical duplicate detection, e.g. for RNA-seq " +
+            "or other data where duplicate sets are extremely large and estimating library complexity is not an aim.  " +
+            "Note that without optical duplicate counts, library size estimation will be inaccurate.</p> "+
 
             "<p>MarkDuplicates also produces a metrics file indicating the numbers of duplicates for both single- and paired-end reads.</p>  "+
 

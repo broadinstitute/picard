@@ -81,11 +81,56 @@ public class CollectWgsMetricsFromSampledSites extends CollectWgsMetrics {
     }
 
     // rename the class so that in the metric file it is annotated differently.
-    public static class SampledWgsMetrics extends WgsMetrics {}
+    public static class SampledWgsMetrics extends WgsMetrics {
+        public SampledWgsMetrics() {
+            super();
+        }
+
+        public SampledWgsMetrics(final IntervalList intervals,
+                                 final Histogram<Integer> highQualityDepthHistogram,
+                                 final Histogram<Integer> unfilteredDepthHistogram,
+                                 final double pctExcludedByMapq,
+                                 final double pctExcludedByDupes,
+                                 final double pctExcludedByPairing,
+                                 final double pctExcludedByBaseq,
+                                 final double pctExcludedByOverlap,
+                                 final double pctExcludedByCapping,
+                                 final double pctTotal,
+                                 final int coverageCap,
+                                 final Histogram<Integer> unfilteredBaseQHistogram,
+                                 final int sampleSize) {
+            super(intervals, highQualityDepthHistogram, unfilteredDepthHistogram, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
+                    pctExcludedByOverlap, pctExcludedByCapping, pctTotal, coverageCap, unfilteredBaseQHistogram, sampleSize);
+        }
+    }
 
     @Override
-    protected WgsMetrics generateWgsMetrics() {
-        return new SampledWgsMetrics();
-    }
-}
+    protected WgsMetrics generateWgsMetrics(final IntervalList intervals,
+                                            final Histogram<Integer> highQualityDepthHistogram,
+                                            final Histogram<Integer> unfilteredDepthHistogram,
+                                            final double pctExcludedByMapq,
+                                            final double pctExcludedByDupes,
+                                            final double pctExcludedByPairing,
+                                            final double pctExcludedByBaseq,
+                                            final double pctExcludedByOverlap,
+                                            final double pctExcludedByCapping,
+                                            final double pctTotal,
+                                            final int coverageCap,
+                                            final Histogram<Integer> unfilteredBaseQHistogram,
+                                            final int sampleSize) {
+        return new SampledWgsMetrics(
+                intervals,
+                highQualityDepthHistogram,
+                unfilteredDepthHistogram,
+                pctExcludedByMapq,
+                pctExcludedByDupes,
+                pctExcludedByPairing,
+                pctExcludedByBaseq,
+                pctExcludedByOverlap,
+                pctExcludedByCapping,
+                pctTotal,
+                coverageCap,
+                unfilteredBaseQHistogram,
+                sampleSize);
+    }}
 

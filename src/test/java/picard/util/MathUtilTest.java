@@ -83,4 +83,18 @@ public class MathUtilTest {
             Assert.assertEquals(actual[i], expected[i],"Array differ at position " +i);
         }
     }
+
+    @Test(dataProvider = "divideDoubleTestCases")
+    public void testDivideDouble (final double numerator, final double denominator, final double expected) {
+        Assert.assertEquals(MathUtil.divide(numerator, denominator), expected);
+    }
+
+    @DataProvider
+    public Object[][] divideDoubleTestCases() {
+        return new Object[][] {
+                new Object[] {15.0, 3.0, 5.0},
+                new Object[] {15.0, 0.0, 0.0}
+        };
+    }
+
 }

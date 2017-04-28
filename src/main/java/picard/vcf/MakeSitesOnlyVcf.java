@@ -91,7 +91,7 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
 		    final VariantContext full = iterator.next();
             final VariantContext site = subsetToSamplesWithOriginalAnnotations(full, SAMPLE);
             writer.add(site);
-            progress.record(site.getChr(), site.getStart());
+            progress.record(site.getContig(), site.getStart());
         }
 
 	    CloserUtil.close(iterator);

@@ -8,6 +8,7 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.Histogram;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
@@ -15,6 +16,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
+import picard.util.TestNGUtil;
 
 import java.io.File;
 import java.io.FileReader;
@@ -23,11 +25,18 @@ import java.util.Random;
 
 public class CollectTargetedMetricsTest extends CommandLineProgramTest {
     private final static File TEST_DIR = new File("testdata/picard/sam/CollectGcBiasMetrics/");
-    private final File dict = new File(TEST_DIR, "Mheader.dict");
+
+    private final File dict = new File("testdata/picard/quality/chrM.reference.dict");
     private File tempSamFile;
+    private File tempSamFileIndex;
     private File outfile;
     private File perTargetOutfile;
     private final static int LENGTH = 99;
+
+    final String referenceFile = "testdata/picard/quality/chrM.reference.fasta";
+    final String emptyIntervals = "testdata/picard/quality/chrM.empty.interval_list";
+    final String singleIntervals = "testdata/picard/quality/chrM.single.interval_list";
+
 
     private final static String sample = "TestSample1";
     private final static String readGroupId = "TestReadGroup1";
@@ -47,9 +56,11 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
         //Create Sam Files
         tempSamFile = File.createTempFile("CollectTargetedMetrics", ".bam", TEST_DIR);
+        tempSamFileIndex = new File(tempSamFile.toString().replaceAll("\\.bam$",".bai"));
         final File tempSamFileUnsorted = File.createTempFile("CollectTargetedMetrics", ".bam", TEST_DIR);
         tempSamFileUnsorted.deleteOnExit();
         tempSamFile.deleteOnExit();
+        tempSamFileIndex.deleteOnExit();
         final SAMFileHeader header = new SAMFileHeader();
 
         //Check that dictionary file is readable and then set header dictionary
@@ -115,9 +126,6 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
     @DataProvider(name = "targetedIntervalDataProvider")
     public Object[][] targetedIntervalDataProvider() {
-        final String referenceFile = "testdata/picard/quality/chrM.reference.fasta";
-        final String emptyIntervals = "testdata/picard/quality/chrM.empty.interval_list";
-        final String singleIntervals = "testdata/picard/quality/chrM.single.interval_list";
 
         return new Object[][] {
                 {tempSamFile, outfile, perTargetOutfile, referenceFile, singleIntervals, 1000},
@@ -142,7 +150,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<TargetedPcrMetrics, Comparable<?>> output = new MetricsFile<TargetedPcrMetrics, Comparable<?>>();
+        final MetricsFile<TargetedPcrMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
         for (final TargetedPcrMetrics metrics : output.getMetrics()) {
@@ -150,4 +158,40 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
             Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, .997972, .02);
         }
     }
+
+
+    @Test()
+    public void testRawBqDistributionWithSoftClips() throws IOException {
+        final String input="testdata/picard/quality/chrMReadsWithClips.sam";
+
+        final File outFile = File.createTempFile("test", ".TargetedMetrics_Coverage");
+        outFile.deleteOnExit();
+
+        final String[] args = new String[] {
+                "TARGET_INTERVALS=" + singleIntervals,
+                "INPUT=" + input,
+                "OUTPUT=" + outFile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + referenceFile,
+                "LEVEL=ALL_READS",
+                "AMPLICON_INTERVALS=" + singleIntervals,
+                "SAMPLE_SIZE=" + 0
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<TargetedPcrMetrics, Comparable<Integer>> output = new MetricsFile<>();
+        output.read(new FileReader(outFile));
+
+        Assert.assertEquals(output.getMetrics().size(), 1);
+
+        for (final TargetedPcrMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.TOTAL_READS, 2);
+        }
+        Assert.assertEquals(output.getNumHistograms(), 2);
+        final Histogram<Comparable<Integer>> histogram = output.getAllHistograms().get(1);
+        Assert.assertTrue(TestNGUtil.compareDoubleWithAccuracy(histogram.getSumOfValues(), 62,0.01));
+        Assert.assertTrue(TestNGUtil.compareDoubleWithAccuracy(histogram.get(32).getValue(), 52D, 0.01));
+        Assert.assertTrue(TestNGUtil.compareDoubleWithAccuracy(histogram.get(33).getValue(), 10D, 0.01));
+    }
+
 }

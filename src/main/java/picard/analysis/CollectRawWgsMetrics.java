@@ -24,9 +24,13 @@
 
 package picard.analysis;
 
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IntervalList;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
+
+import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
 /**
  * Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing
@@ -71,7 +75,7 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
             "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics'>" +
             "the WgsMetrics documentation</a> for detailed explanations of the output metrics." +
             "<hr />";
-    @Option(shortName="MQ", doc="Minimum mapping quality for a read to contribute coverage.")
+    @Option(shortName=MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc="Minimum mapping quality for a read to contribute coverage.")
     public int MINIMUM_MAPPING_QUALITY = 0;
 
     @Option(shortName="Q", doc="Minimum base quality for a base to contribute coverage.")
@@ -84,11 +88,57 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
     public int LOCUS_ACCUMULATION_CAP = 200000;
 
     // rename the class so that in the metric file it is annotated differently.
-    public static class RawWgsMetrics extends WgsMetrics {}
+    public static class RawWgsMetrics extends WgsMetrics {
+        public RawWgsMetrics() {
+            super();
+        }
+
+        public RawWgsMetrics(final IntervalList intervals,
+                             final Histogram<Integer> highQualityDepthHistogram,
+                             final Histogram<Integer> unfilteredDepthHistogram,
+                             final double pctExcludedByMapq,
+                             final double pctExcludedByDupes,
+                             final double pctExcludedByPairing,
+                             final double pctExcludedByBaseq,
+                             final double pctExcludedByOverlap,
+                             final double pctExcludedByCapping,
+                             final double pctTotal,
+                             final int coverageCap,
+                             final Histogram<Integer> unfilteredBaseQHistogram,
+                             final int sampleSize) {
+            super(intervals, highQualityDepthHistogram, unfilteredDepthHistogram, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
+                    pctExcludedByOverlap, pctExcludedByCapping, pctTotal, coverageCap, unfilteredBaseQHistogram, sampleSize);
+        }
+    }
 
     @Override
-    protected WgsMetrics generateWgsMetrics() {
-        return new RawWgsMetrics();
+    protected WgsMetrics generateWgsMetrics(final IntervalList intervals,
+                                            final Histogram<Integer> highQualityDepthHistogram,
+                                            final Histogram<Integer> unfilteredDepthHistogram,
+                                            final double pctExcludedByMapq,
+                                            final double pctExcludedByDupes,
+                                            final double pctExcludedByPairing,
+                                            final double pctExcludedByBaseq,
+                                            final double pctExcludedByOverlap,
+                                            final double pctExcludedByCapping,
+                                            final double pctTotal,
+                                            final int coverageCap,
+                                            final Histogram<Integer> unfilteredBaseQHistogram,
+                                            final int sampleSize) {
+        return new RawWgsMetrics(
+                intervals,
+                highQualityDepthHistogram,
+                unfilteredDepthHistogram,
+                pctExcludedByMapq,
+                pctExcludedByDupes,
+                pctExcludedByPairing,
+                pctExcludedByBaseq,
+                pctExcludedByOverlap,
+                pctExcludedByCapping,
+                pctTotal,
+                coverageCap,
+                unfilteredBaseQHistogram,
+                sampleSize);
     }
 
 }

@@ -2,10 +2,8 @@ package picard.vcf;
 
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.FastGenotype;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
-import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import org.testng.Assert;
@@ -15,9 +13,6 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-
-import static org.testng.Assert.*;
 
 /**
  * Created by farjoun on 12/26/15.
