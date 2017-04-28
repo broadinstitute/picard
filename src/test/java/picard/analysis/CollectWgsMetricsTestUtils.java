@@ -26,10 +26,24 @@ package picard.analysis;
 
 
 import htsjdk.samtools.*;
+import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.filter.SecondaryAlignmentFilter;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.util.AbstractLocusIterator;
+import htsjdk.samtools.util.EdgeReadIterator;
+import htsjdk.samtools.util.IntervalList;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import picard.filter.CountingDuplicateFilter;
+import picard.filter.CountingFilter;
+import picard.filter.CountingMapQFilter;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.IntStream;
 
 
@@ -38,6 +52,14 @@ import java.util.stream.IntStream;
  */
 
 public class CollectWgsMetricsTestUtils {
+
+    private static final String sqHeaderLN20 = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:20\n";
+    private static final String s1 = "3851612\t16\tchrM\t1\t255\t3M2D10M\t*\t0\t0\tACCTACGTTCAAT\tDDDDDDDDDDDDD\n";
+    private static final String sqHeaderLN100 = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:100\n";
+    private static final String s2 = "3851612\t16\tchrM\t2\t255\t10M1D5M\t*\t0\t0\tCCTACGTTCAATATT\tDDDDDDDDDDDDDDD\n";
+    static final String exampleSamOneRead = sqHeaderLN20+s1;
+    static final String exampleSamTwoReads = sqHeaderLN100+s1+s2;
+
     protected static SAMRecordSetBuilder createTestSAMBuilder(final File reference,
                                                               final String readGroupId,
                                                               final String sample,
@@ -94,6 +116,97 @@ public class CollectWgsMetricsTestUtils {
         final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, samFile);
         setBuilder.forEach(writer::addAlignment);
         writer.close();
+    }
+
+    static IntervalList createIntervalList() {
+        return new IntervalList(new SAMFileHeader());
+    }
+
+    static AbstractLocusIterator createReadEndsIterator(String exampleSam){
+        final List<SamRecordFilter> filters = new ArrayList<>();
+        final CountingFilter dupeFilter = new CountingDuplicateFilter();
+        final CountingFilter mapqFilter = new CountingMapQFilter(0);
+        filters.add(new SecondaryAlignmentFilter()); // Not a counting filter because we never want to count reads twice
+        filters.add(mapqFilter);
+        filters.add(dupeFilter);
+        SamReader samReader = createSamReader(exampleSam);
+        AbstractLocusIterator iterator =  new EdgeReadIterator(samReader);
+        iterator.setSamFilters(filters);
+        iterator.setMappingQualityScoreCutoff(0); // Handled separately because we want to count bases
+        iterator.setIncludeNonPfReads(false);
+        return iterator;
+    }
+
+    static SamReader createSamReader(String samExample) {
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(samExample.getBytes());
+        return SamReaderFactory.makeDefault().open(SamInputResource.of(inputStream));
+    }
+
+    static ReferenceSequenceFileWalker getReferenceSequenceFileWalker(String referenceString){
+        ReferenceSequenceFile referenceSequenceFile = createReferenceSequenceFile(referenceString);
+        return new ReferenceSequenceFileWalker(referenceSequenceFile);
+    }
+
+    static ReferenceSequenceFileWalker getReferenceSequenceFileWalker(){
+        String referenceString = ">ref\nACCTACGTTCAATATTCTTC";
+        return getReferenceSequenceFileWalker(referenceString);
+    }
+
+    static ReferenceSequenceFile createReferenceSequenceFile(String referenceString) {
+        final SAMSequenceRecord record = new SAMSequenceRecord("ref", referenceString.length());
+        final SAMSequenceDictionary dictionary = new SAMSequenceDictionary();
+        dictionary.addSequence(record);
+        return new ReferenceSequenceFile() {
+
+            boolean done = false;
+            @Override
+            public SAMSequenceDictionary getSequenceDictionary() {
+                return dictionary;
+            }
+
+            @Override
+            public ReferenceSequence nextSequence() {
+                if (!done) {
+                    done = true;
+                    return getSequence(record.getSequenceName());
+                }
+                return null;
+            }
+
+            @Override
+            public void reset() {
+                done=false;
+            }
+
+            @Override
+            public boolean isIndexed() {
+                return false;
+            }
+
+            @Override
+            public ReferenceSequence getSequence(String contig) {
+                if (contig.equals(record.getSequenceName())) {
+                    return new ReferenceSequence(record.getSequenceName(), 0, referenceString.getBytes());
+                } else {
+                    return null;
+                }
+            }
+
+            @Override
+            public ReferenceSequence getSubsequenceAt(String contig, long start, long stop) {
+                return null;
+            }
+
+            @Override
+            public String toString() {
+                return null;
+            }
+
+            @Override
+            public void close() throws IOException {
+
+            }
+        };
     }
 
     // call main (from IDE for example) to createTestSAM(), which creates a test SAM file

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The Broad Institute
+ * Copyright (c) 2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,119 +24,55 @@
 
 package picard.sam.markduplicates;
 
-import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
-import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.FormatUtil;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.sam.DuplicationMetrics;
-import picard.sam.testers.SamFileTester;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * This class is an extension of SamFileTester used to test AbstractMarkDuplicatesCommandLineProgram's with SAM files generated on the fly.
- * This performs the underlying tests defined by classes such as AbstractMarkDuplicatesCommandLineProgramTest.
+ * This class is an extension of AbstractMarkDuplicatesCommandLineProgramTester used to test MarkDuplicatesWithMateCigar with SAM files generated on the fly.
+ * This performs the underlying tests defined by classes such as see AbstractMarkDuplicatesCommandLineProgramTest and MarkDuplicatesWithMateCigarTest.
+ * @author hogstrom@broadinstitute.org
  */
-abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends SamFileTester {
+public class MarkDuplicatesTagRepresentativeReadIndexTester extends AbstractMarkDuplicatesCommandLineProgramTester {
 
-    final File metricsFile;
-    final DuplicationMetrics expectedMetrics;
+    final public Map<Integer, Integer> expectedRepresentativeIndexMap = new HashMap<>();
+    final public Map<String, Integer> expectedSetSizeMap = new HashMap<>();
+    public boolean testRepresentativeReads = false;
+    public MarkDuplicatesTagRepresentativeReadIndexTester() {
 
-    public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder) {
-        this(duplicateScoringStrategy, sortOrder, true);
-    }
-
-    public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder, boolean recordNeedSorting) {
-        super(50, true, SAMRecordSetBuilder.DEFAULT_CHROMOSOME_LENGTH, duplicateScoringStrategy, sortOrder, recordNeedSorting);
-
-        expectedMetrics = new DuplicationMetrics();
-        expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES = 0;
-
-        metricsFile = new File(getOutputDir(), "metrics.txt");
-        addArg("METRICS_FILE=" + metricsFile);
-        addArg("DUPLICATE_SCORING_STRATEGY=" + duplicateScoringStrategy.name());
-    }
-
-    public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy) {
-        this(duplicateScoringStrategy, SAMFileHeader.SortOrder.coordinate);
-    }
-
-    public AbstractMarkDuplicatesCommandLineProgramTester() {
-        this(SAMRecordSetBuilder.DEFAULT_DUPLICATE_SCORING_STRATEGY);
+        addArg("TAGGING_POLICY=All");
+        addArg("TAG_DUPLICATE_SET_MEMBERS=true");
     }
 
     @Override
-    public String getCommandLineProgramName() { return getProgram().getClass().getSimpleName(); }
-
-    /**
-     * Fill in expected duplication metrics directly from the input records given to this tester
-     */
-    public void updateExpectedDuplicationMetrics() {
-
-        final FormatUtil formatter = new FormatUtil();
-
-        final CloseableIterator<SAMRecord> inputRecordIterator = this.getRecordIterator();
-        while (inputRecordIterator.hasNext()) {
-            final SAMRecord record = inputRecordIterator.next();
-            if (record.isSecondaryOrSupplementary()) {
-                ++expectedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
-            } else {
-                final String key = samRecordToDuplicatesFlagsKey(record);
-                if (!this.duplicateFlags.containsKey(key)) {
-                    System.err.println("DOES NOT CONTAIN KEY: " + key);
-                }
-                final boolean isDuplicate = this.duplicateFlags.get(key);
-
-                // First bring the simple metricsFile up to date
-                if (record.getReadUnmappedFlag()) {
-                    ++expectedMetrics.UNMAPPED_READS;
-                } else if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
-                    ++expectedMetrics.UNPAIRED_READS_EXAMINED;
-                    if (isDuplicate) ++expectedMetrics.UNPAIRED_READ_DUPLICATES;
-                } else {
-                    ++expectedMetrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
-                    if (isDuplicate) ++expectedMetrics.READ_PAIR_DUPLICATES; // will need to be divided by 2 at the end
-                }
-            }
-        }
-        expectedMetrics.READ_PAIR_DUPLICATES = expectedMetrics.READ_PAIR_DUPLICATES / 2;
-        expectedMetrics.READ_PAIRS_EXAMINED = expectedMetrics.READ_PAIRS_EXAMINED / 2;
-        expectedMetrics.calculateDerivedFields();
-
-        // Have to run this Double value through the same format/parsing operations as during a file write/read
-        expectedMetrics.PERCENT_DUPLICATION = formatter.parseDouble(formatter.format(expectedMetrics.PERCENT_DUPLICATION));
-    }
-
-    public void setExpectedOpticalDuplicate(final int expectedOpticalDuplicatePairs) {
-        expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES = expectedOpticalDuplicatePairs;
-    }
+    protected CommandLineProgram getProgram() { return new MarkDuplicates(); }
 
     @Override
     public void test() {
         try {
             updateExpectedDuplicationMetrics();
-
             // Read the output and check the duplicate flag
             int outputRecords = 0;
+            int indexInFile = 0;
             final SamReader reader = SamReaderFactory.makeDefault().open(getOutput());
             for (final SAMRecord record : reader) {
                 outputRecords++;
+
                 final String key = samRecordToDuplicatesFlagsKey(record);
-                if (!this.duplicateFlags.containsKey(key)) {
-                    System.err.println("DOES NOT CONTAIN KEY: " + key);
-                }
-                Assert.assertTrue(this.duplicateFlags.containsKey(key));
+                Assert.assertTrue(this.duplicateFlags.containsKey(key),"DOES NOT CONTAIN KEY: " + key);
                 final boolean value = this.duplicateFlags.get(key);
                 this.duplicateFlags.remove(key);
                 if (value != record.getDuplicateReadFlag()) {
@@ -144,6 +80,13 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                     System.err.print(record.getSAMString());
                 }
                 Assert.assertEquals(record.getDuplicateReadFlag(), value);
+                if (testRepresentativeReads) {
+                    if (expectedRepresentativeIndexMap.containsKey(indexInFile) && expectedSetSizeMap.containsKey(record.getReadName())){
+                        Assert.assertEquals(record.getAttribute("DI"), expectedRepresentativeIndexMap.get(indexInFile));
+                        Assert.assertEquals(record.getAttribute("DS"), expectedSetSizeMap.get(record.getReadName()));
+                    }
+                }
+                indexInFile+=1;
             }
             CloserUtil.close(reader);
 
@@ -151,13 +94,15 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
             Assert.assertEquals(outputRecords, this.getNumberOfRecords(), ("saw " + outputRecords + " output records, vs. " + this.getNumberOfRecords() + " input records"));
 
             // Check the values written to metrics.txt against our input expectations
-            final MetricsFile<DuplicationMetrics, Comparable<?>> metricsOutput = new MetricsFile<DuplicationMetrics, Comparable<?>>();
+            final MetricsFile<DuplicationMetrics, Comparable<?>> metricsOutput = new MetricsFile<>();
             try{
                 metricsOutput.read(new FileReader(metricsFile));
             }
             catch (final FileNotFoundException ex) {
-                System.err.println("Metrics file not found: " + ex);
+                throw new PicardException("Metrics file not found: " + ex);
             }
+            final List<DuplicationMetrics> g = metricsOutput.getMetrics();
+            // expect getMetrics to return a collection with a single duplicateMetrics object
             Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
             final DuplicationMetrics observedMetrics = metricsOutput.getMetrics().get(0);
             Assert.assertEquals(observedMetrics.UNPAIRED_READS_EXAMINED, expectedMetrics.UNPAIRED_READS_EXAMINED, "UNPAIRED_READS_EXAMINED does not match expected");
@@ -174,5 +119,4 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
         }
     }
 
-    abstract protected CommandLineProgram getProgram();
 }

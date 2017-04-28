@@ -89,7 +89,7 @@ public class ClusterDataToSamConverter implements
     public ClusterDataToSamConverter(final String runBarcode,
                                      final String readGroupId,
                                      final ReadStructure readStructure,
-                                     final List<IlluminaUtil.IlluminaAdapterPair> adapters) {
+                                     final List<AdapterPair> adapters) {
         this.readGroupId = readGroupId;
         
         this.readNameEncoder = new IlluminaReadNameEncoder(runBarcode);

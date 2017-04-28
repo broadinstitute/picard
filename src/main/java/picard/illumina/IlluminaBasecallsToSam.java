@@ -45,6 +45,7 @@ import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.util.AdapterPair;
 import picard.util.IlluminaUtil;
 import picard.util.IlluminaUtil.IlluminaAdapterPair;
 import picard.util.TabbedTextFileWithHeaderParser;
@@ -201,6 +202,12 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                     IlluminaAdapterPair.NEXTERA_V2,
                     IlluminaAdapterPair.FLUIDIGM));
 
+    @Option(doc = "For specifying adapters other than standard Illumina", optional = true)
+    public String FIVE_PRIME_ADAPTER;
+
+    @Option(doc = "For specifying adapters other than standard Illumina", optional = true)
+    public String THREE_PRIME_ADAPTER;
+
     @Option(doc = "The number of threads to run in parallel. If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0, then the number of cores used will" +
             " be the number available on the machine less NUM_PROCESSORS.")
@@ -289,12 +296,19 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         log.info("DONE_READING STRUCTURE IS " + readStructure.toString());
 
+        // Combine any adapters and custom adapter pairs from the command line into an array for use in clipping
+        final List<AdapterPair> adapters = new ArrayList<>();
+        adapters.addAll(ADAPTERS_TO_CHECK);
+        if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
+            adapters.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
+        }
+
         /**
          * Be sure to pass the outputReadStructure to ClusterDataToSamConverter, which reflects the structure of the output cluster
          * data which may be different from the input read structure (specifically if there are skips).
          */
         final ClusterDataToSamConverter converter = new ClusterDataToSamConverter(RUN_BARCODE, READ_GROUP_ID,
-                basecallsConverter.getFactory().getOutputReadStructure(), ADAPTERS_TO_CHECK)
+                basecallsConverter.getFactory().getOutputReadStructure(), adapters)
                 .withMolecularIndexTag(MOLECULAR_INDEX_TAG)
                 .withMolecularIndexQualityTag(MOLECULAR_INDEX_BASE_QUALITY_TAG)
                 .withTagPerMolecularIndex(TAG_PER_MOLECULAR_INDEX);
@@ -490,6 +504,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         if (!TAG_PER_MOLECULAR_INDEX.isEmpty() && TAG_PER_MOLECULAR_INDEX.size() != readStructure.molecularBarcode.length()) {
             messages.add("The number of tags given in TAG_PER_MOLECULAR_INDEX does not match the number of molecular indexes in READ_STRUCTURE");
+        }
+
+        if ((FIVE_PRIME_ADAPTER == null) != (THREE_PRIME_ADAPTER == null)) {
+            messages.add("THREE_PRIME_ADAPTER and FIVE_PRIME_ADAPTER must either both be null or both be set.");
         }
 
         if (messages.isEmpty()) {

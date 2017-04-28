@@ -41,6 +41,10 @@ final public class MathUtil {
     /** The double value closest to 1 while still being less than 1. */
     public static final double MAX_PROB_BELOW_ONE = 0.9999999999999999d;
 
+    /** Constant to convert between the natural base e and 4.0.  Useful for
+     * entropy calculations on DNA. */
+    public static final double LOG_4_BASE_E = Math.log(4.0);
+
     /**
      *  this function mimics the behavior of log_1p but resulting in log _base 10_ of (1+x) instead of natural log of 1+x
      */
