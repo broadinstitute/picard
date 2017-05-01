@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-class BaseBclReader {
+public class BaseBclReader {
     private static final byte BASE_MASK = 0x0003;
     private static final byte[] BASE_LOOKUP = new byte[]{'A', 'C', 'G', 'T'};
     final InputStream[] streams;
@@ -52,15 +52,11 @@ class BaseBclReader {
         this.numClustersPerCycle = new int[cycles];
     }
 
-    int getNumCycles() {
-        return cycles;
-    }
-
     int getNumClusters() {
         return numClustersPerCycle[0];
     }
 
-    InputStream open(final File file, final boolean seekable, final boolean isGzip, final boolean isBgzf) throws IOException {
+    InputStream open(final File file, final boolean seekable, final boolean isGzip, final boolean isBgzf) {
         final String filePath = file.getAbsolutePath();
 
         try {
@@ -112,7 +108,7 @@ class BaseBclReader {
         }
     }
 
-    class CycleData {
+    public class CycleData {
         final short version;
         final int headerSize;
 
@@ -120,14 +116,13 @@ class BaseBclReader {
         final byte bitsPerQualityScore;
         final int numberOfBins;
         final byte[] qualityBins;
-
         final int numTiles;
-        final TileData[] tileInfo;
+        final TileData tileInfo;
         final boolean pfExcluded;
 
         CycleData(final short version, final int headerSize, final byte bitsPerBasecall,
                   final byte bitsPerQualityScore, final int numberOfBins, final byte[] qualityBins,
-                  final int numTiles, final TileData[] tileInfo, final boolean pfExcluded) {
+                  final int numTiles, final TileData tileInfo, final boolean pfExcluded) {
             this.version = version;
             this.headerSize = headerSize;
             this.bitsPerBasecall = bitsPerBasecall;
@@ -139,22 +134,34 @@ class BaseBclReader {
             this.pfExcluded = pfExcluded;
         }
 
-
+        public TileData getTileInfo() {
+            return tileInfo;
+        }
     }
 
 
-    class TileData {
+    public class TileData {
         final int tileNum;
         final int numClustersInTile;
         final int uncompressedBlockSize;
         final int compressedBlockSize;
+        final long filePosition;
 
         TileData(final int tileNum, final int numClustersInTile, final int uncompressedBlockSize,
-                 final int compressedBlockSize) {
+                 final int compressedBlockSize, long filePosition) {
             this.tileNum = tileNum;
             this.numClustersInTile = numClustersInTile;
             this.uncompressedBlockSize = uncompressedBlockSize;
             this.compressedBlockSize = compressedBlockSize;
+            this.filePosition = filePosition;
+        }
+
+        public int getCompressedBlockSize() {
+            return compressedBlockSize;
+        }
+
+        public int getNumClustersInTile() {
+            return numClustersInTile;
         }
     }
 }

@@ -32,8 +32,8 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
+import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
-import picard.illumina.parser.IlluminaDataProvider;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.ReadData;
@@ -294,7 +294,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         private final PFFailSummaryMetric summaryMetric;
         final Collection<PFFailDetailedMetric> detailedMetrics;
         private Exception exception = null;
-        private final IlluminaDataProvider provider;
+        private final BaseIlluminaDataProvider provider;
         final private double pWriteDetailed;
         final private Random random = new Random();
 

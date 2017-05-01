@@ -53,7 +53,7 @@ public class IlluminaDataProviderTest {
             final String testName, final int size,
             final Map<Integer, ClusterData> readNoToClusterData,
             final int seekAfterFirstRead, final int seekTestDataReadOffset,
-            final IlluminaDataProvider dataProvider)
+            final BaseIlluminaDataProvider dataProvider)
             throws Exception {
 
         int count = 0;
@@ -116,7 +116,7 @@ public class IlluminaDataProviderTest {
 
     public void runBarcodeParsingTest(final IlluminaDataProviderFactory factory) {
         int total = 0;
-        final IlluminaDataProvider dataProvider = factory.makeDataProvider();
+        final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider();
         while (dataProvider.hasNext()) {
             final ClusterData cluster = dataProvider.next();
             final String matchedBarcode = cluster.getMatchedBarcode();
@@ -197,7 +197,7 @@ public class IlluminaDataProviderTest {
 
         final Map<Integer, ClusterData> readNoToClusterData = BinTdUtil.clusterData(lane, tiles, illuminaConfigStr, dts);
         final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, new ReadStructure(illuminaConfigStr), bclQualityEvaluationStrategy, dts);
-        final IlluminaDataProvider dataProvider = factory.makeDataProvider();
+        final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider();
 
         runTest(testName, size, readNoToClusterData, seekAfterFirstRead, seekTestDataReadOffset, dataProvider);
     }

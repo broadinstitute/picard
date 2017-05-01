@@ -8,22 +8,33 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.Illumina;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.OutputMapping;
 import picard.illumina.parser.ParameterizedFileUtil;
 import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
+import picard.illumina.parser.readers.BaseBclReader;
+import picard.illumina.parser.readers.CbclReader;
+import picard.illumina.parser.readers.LocsFileReader;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static picard.illumina.BasecallsConverter.TILE_NUMBER_COMPARATOR;
+import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
+import static picard.illumina.parser.NewIlluminaDataProvider.fileToTile;
 
 /**
  * Program to check a lane of an Illumina output directory.  This program checks that files exist, are non-zero in length, for every tile/cycle and
@@ -40,7 +51,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             "and are reasonably sized for every tile and cycle.  Reasonably sized means non-zero sized for files that exist per tile and " +
             "equal size for binary files that exist per cycle or per tile. If DATA_TYPES {Position, BaseCalls, QualityScores, PF," +
             " or Barcodes} are not specified, then the default data types used by IlluminaBasecallsToSam are used.  " +
-            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.</p>"     +
+            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.</p>" +
             "" +
             "<h4>Usage example:</h4> " +
             "<pre>" +
@@ -50,8 +61,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             "      LANES=1 \\<br />" +
             "      DATA_TYPES=BaseCalls " +
             "</pre>" +
-            "<hr />"
-    ;
+            "<hr />";
     private static final Log log = Log.getInstance(CheckIlluminaDirectory.class);
 
     // The following attributes define the command-line arguments
@@ -90,6 +100,9 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             optional = true)
     public Boolean LINK_LOCS = false;
 
+    @Option(doc = "Use the new converter. Defaults to false", optional = true)
+    public boolean USE_NEW_CONVERTER = false;
+
     /**
      * Required main method implementation.
      */
@@ -113,30 +126,86 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         log.info("Expected cycles: " + StringUtil.intValuesToString(expectedCycles));
 
         for (final Integer lane : LANES) {
-            IlluminaFileUtil fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
-            final List<Integer> expectedTiles = fileUtil.getExpectedTiles();
-            if (!TILE_NUMBERS.isEmpty()) {
-                expectedTiles.retainAll(TILE_NUMBERS);
-            }
+            if (USE_NEW_CONVERTER) {
+                List<Integer> tiles = new ArrayList<>();
 
-            if (LINK_LOCS) {
-                createLocFileSymlinks(fileUtil, lane);
-                //we need to create a new file util because it stores a cache to the files it found on
-                //construction and this doesn't inclue the recently created symlinks
-                fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
-            }
+                File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(lane));
 
-            log.info("Checking lane " + lane);
-            log.info("Expected tiles: " + StringUtil.join(", ", expectedTiles));
+                File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
 
-            final int numFailures = verifyLane(fileUtil, expectedTiles, expectedCycles, DATA_TYPES, FAKE_FILES);
+                //check all bcls/cbcls
+                List<File> cbcls = new ArrayList<>();
+                Arrays.asList(cycleDirs)
+                        .forEach(cycleDir -> cbcls.addAll(
+                                Arrays.asList(IOUtil.getFilesMatchingRegexp(
+                                        cycleDir, "^" + IlluminaFileUtil.longLaneStr(lane) + "_(\\d{1,5}).cbcl$"))));
+                IOUtil.assertFilesAreReadable(cbcls);
 
-            if (numFailures > 0) {
-                log.info("Lane " + lane + " FAILED " + " Total Errors: " + numFailures);
-                failingLanes.add(lane);
-                totalFailures += numFailures;
+                //check all pf filter files
+                Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
+                        ParameterizedFileUtil.makeLaneTileRegex(".filter", lane)));
+                File[] filterFiles = getTiledFiles(laneDir, laneTileRegex);
+                for (File filterFile : filterFiles) {
+                    Matcher tileMatcher = laneTileRegex.matcher(filterFile.getName());
+                    if (tileMatcher.matches()) {
+                        tiles.add(Integer.valueOf(tileMatcher.group(1)));
+                    }
+                }
+                IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
+                tiles.sort(TILE_NUMBER_COMPARATOR);
+
+                //check s.locs
+                File locsFile = new File(BASECALLS_DIR.getParentFile(), "s.locs");
+                LocsFileReader locsFileReader = new LocsFileReader(locsFile);
+                List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
+                while (locsFileReader.hasNext()) {
+                    locs.add(locsFileReader.next());
+                }
+
+                Map<Integer, File> filterFileMap = new HashMap<>();
+                for (File filterFile : filterFiles) {
+                    filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
+                }
+
+                CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tiles.get(0), locs, true);
+
+                reader.getAllTiles().forEach((key, value) -> {
+                    List<File> fileForCycle = reader.getFilesForCycle(key);
+                    final long totalFilesSize = fileForCycle.stream().mapToLong(file -> file.length() - reader.getHeaderSize()).sum();
+                    final long expectedFileSize = value.stream().mapToLong(BaseBclReader.TileData::getCompressedBlockSize).sum();
+
+                    if (expectedFileSize != totalFilesSize) {
+                        throw new PicardException(String.format("File %s is not the expected size of %d instead it is %d",
+                                fileForCycle, expectedFileSize, totalFilesSize));
+                    }
+                });
+
             } else {
-                log.info("Lane " + lane + " SUCCEEDED ");
+                IlluminaFileUtil fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
+                final List<Integer> expectedTiles = fileUtil.getExpectedTiles();
+                if (!TILE_NUMBERS.isEmpty()) {
+                    expectedTiles.retainAll(TILE_NUMBERS);
+                }
+
+                if (LINK_LOCS) {
+                    createLocFileSymlinks(fileUtil, lane);
+                    //we need to create a new file util because it stores a cache to the files it found on
+                    //construction and this doesn't inclue the recently created symlinks
+                    fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
+                }
+
+                log.info("Checking lane " + lane);
+                log.info("Expected tiles: " + StringUtil.join(", ", expectedTiles));
+
+                final int numFailures = verifyLane(fileUtil, expectedTiles, expectedCycles, DATA_TYPES, FAKE_FILES);
+
+                if (numFailures > 0) {
+                    log.info("Lane " + lane + " FAILED " + " Total Errors: " + numFailures);
+                    failingLanes.add(lane);
+                    totalFailures += numFailures;
+                } else {
+                    log.info("Lane " + lane + " SUCCEEDED ");
+                }
             }
         }
 

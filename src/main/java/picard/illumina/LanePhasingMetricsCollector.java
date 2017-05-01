@@ -24,12 +24,11 @@
 
 package picard.illumina;
 
+import htsjdk.samtools.util.CollectionUtil;
 import picard.illumina.parser.Tile;
 import picard.illumina.parser.TileTemplateRead;
 import picard.util.MathUtil;
-import htsjdk.samtools.util.CollectionUtil;
 
-import java.lang.Float;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -43,7 +42,7 @@ public class LanePhasingMetricsCollector {
     /** Constructor takes a lane's collection of Tiles and calculates the median phasing/prephasing for the
      * first and second (if available) reads
      */
-    public LanePhasingMetricsCollector(final Collection<Tile> laneTiles) {
+    public LanePhasingMetricsCollector(final Collection<Tile> laneTiles, boolean usePercentage) {
         final Map<TileTemplateRead, Float> medianPhasingMap = new TreeMap<TileTemplateRead, Float>();
         final Map<TileTemplateRead, Float> medianPrePhasingMap = new TreeMap<TileTemplateRead, Float>();
 
@@ -60,8 +59,13 @@ public class LanePhasingMetricsCollector {
 
         // Calculate the medians for the collected data
         for (final TileTemplateRead tileTemplateRead : phasingValues.keySet()) {
-            medianPhasingMap.put(tileTemplateRead, medianPercentage(phasingValues.get(tileTemplateRead)));
-            medianPrePhasingMap.put(tileTemplateRead, medianPercentage(prePhasingValues.get(tileTemplateRead)));
+            if (usePercentage) {
+                medianPhasingMap.put(tileTemplateRead, medianPercentage(phasingValues.get(tileTemplateRead)));
+                medianPrePhasingMap.put(tileTemplateRead, medianPercentage(prePhasingValues.get(tileTemplateRead)));
+            } else {
+                medianPhasingMap.put(tileTemplateRead, median(phasingValues.get(tileTemplateRead)));
+                medianPrePhasingMap.put(tileTemplateRead, median(prePhasingValues.get(tileTemplateRead)));
+            }
         }
 
         this.medianPhasingMap = Collections.unmodifiableMap(medianPhasingMap);
@@ -77,12 +81,16 @@ public class LanePhasingMetricsCollector {
     }
 
     private static float medianPercentage(final Collection<Float> phaseValues) {
+        return median(phaseValues) * 100;
+    }
+
+    private static float median(final Collection<Float> phaseValues) {
         final double[] values = new double[phaseValues.size()];
         int i = 0;
         for (Float phaseValue : phaseValues) {
             values[i] = (double)phaseValue;
             i++;
         }
-        return (float)MathUtil.median(values) * 100;
+        return (float) MathUtil.median(values);
     }
 }

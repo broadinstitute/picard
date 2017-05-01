@@ -26,21 +26,24 @@ package picard.illumina.parser;
 
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IterableAdapter;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
-import picard.illumina.CollectIlluminaLaneMetrics;
+import picard.illumina.parser.readers.EmpiricalPhasingMetricsOutReader;
 import picard.illumina.parser.readers.TileMetricsOutReader;
 import picard.illumina.parser.readers.TileMetricsOutReader.IlluminaTileMetrics;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -51,33 +54,76 @@ import java.util.stream.Collectors;
  * @author mccowan
  */
 public class TileMetricsUtil {
-    /** The path to the directory containing the tile metrics file relative to the basecalling directory. */
+
+    private static final Log log = Log.getInstance(TileMetricsUtil.class);
+
+    public static String CYCLE_TWENTY_FIVE_NAME = "C25.1";
+    /**
+     * The path to the directory containing the tile metrics file relative to the basecalling directory.
+     */
     public static String INTEROP_SUBDIRECTORY_NAME = "InterOp";
-    
-    /** The expected name of the tile metrics output file. */
+
+    /**
+     * The expected name of the tile metrics output file.
+     */
     public static String TILE_METRICS_OUT_FILE_NAME = "TileMetricsOut.bin";
 
     private final static Log LOG = Log.getInstance(TileMetricsUtil.class);
 
-    /** Returns the path to the TileMetrics file given the basecalling directory. */
-    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory) {
-        return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME), TILE_METRICS_OUT_FILE_NAME);
+    /**
+     * Returns the path to the TileMetrics file given the basecalling directory.
+     */
+    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, boolean isNovaSeq) {
+        if (isNovaSeq) {
+            return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME + File.separator + CYCLE_TWENTY_FIVE_NAME), TILE_METRICS_OUT_FILE_NAME);
+        } else {
+            return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME), TILE_METRICS_OUT_FILE_NAME);
+        }
     }
-    
+
+    public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile,
+                                                    final Map<Integer, File> phasingMetricsFiles,
+                                                    final ReadStructure readStructure,
+                                                    final ValidationStringency validationStringency)
+            throws FileNotFoundException {
+        TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader
+                (tileMetricsOutFile, 3);
+        final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
+        final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
+        final Collection<Tile> tiles = new LinkedList<>();
+        for (final Map.Entry<String, ? extends Collection<IlluminaTileMetrics>> entry : locationToMetricsMap.entrySet()) {
+            final Collection<IlluminaTileMetrics> tileRecords = entry.getValue();
+
+            final IlluminaTileMetrics record = CollectionUtil.getSoleElement(tileRecords);
+
+            //only create for cluster records
+            if (record.isClusterRecord()) {
+                // Snag the phasing data for each read in the read structure. For both types of phasing values, this is the median of all of the individual values seen
+                final Collection<TilePhasingValue> tilePhasingValues = getTilePhasingValues(record.getLaneTileCode(),
+                        phasingMetricsFiles, readStructure, validationStringency);
+
+                tiles.add(new Tile(record.getLaneNumber(), record.getTileNumber(), tileMetricsIterator.getDensity(), record.getMetricValue(),
+                        tilePhasingValues.toArray(new TilePhasingValue[tilePhasingValues.size()])));
+            }
+        }
+
+        return Collections.unmodifiableCollection(tiles);
+    }
+
     /**
      * Returns an unmodifiable collection of tile data read from the provided file. For each tile we will extract:
-     *     - lane number
-     *     - tile number
-     *     - density
-     *     - cluster ID
-     *     - Phasing & Prephasing for first template read (if available)
-     *     - Phasing & Prephasing for second template read (if available)
+     * - lane number
+     * - tile number
+     * - density
+     * - cluster ID
+     * - Phasing & Prephasing for first template read (if available)
+     * - Phasing & Prephasing for second template read (if available)
      */
     public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile, final ReadStructure readStructure,
                                                     final ValidationStringency validationStringency) throws FileNotFoundException {
         // Get the tile metrics lines from TileMetricsOut, keeping only the last value for any Lane/Tile/Code combination
         final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(new TileMetricsOutReader
-                (tileMetricsOutFile));
+                (tileMetricsOutFile, 2));
 
         // Collect the tiles by lane & tile, and then collect the metrics by lane
         final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
@@ -100,13 +146,86 @@ public class TileMetricsUtil {
             final Collection<TilePhasingValue> tilePhasingValues = getTilePhasingValues(codeMetricsMap, readStructure, validationStringency);
 
             tiles.add(new Tile(densityRecord.getLaneNumber(), densityRecord.getTileNumber(), densityRecord.getMetricValue(), clusterRecord.getMetricValue(),
-                tilePhasingValues.toArray(new TilePhasingValue[tilePhasingValues.size()])));
+                    tilePhasingValues.toArray(new TilePhasingValue[tilePhasingValues.size()])));
         }
 
         return Collections.unmodifiableCollection(tiles);
     }
 
-    /** Pulls out the phasing & prephasing value for the template reads and returns a collection of TilePhasingValues representing these */
+    private static Collection<TilePhasingValue> getTilePhasingValues(TileMetricsOutReader.IlluminaLaneTileCode tileCode,
+                                                                     Map<Integer, File> phasingMetricFiles,
+                                                                     final ReadStructure readStructure,
+                                                                     final ValidationStringency validationStringency) {
+        final Collection<TilePhasingValue> tilePhasingValues = new ArrayList<>();
+        int totalCycleCount = 0;
+
+        boolean isFirstRead = true;
+
+        int readNum = 0;
+        for (int outputLength : readStructure.readLengths) {
+            ReadDescriptor descriptor = readStructure.descriptors.get(readNum++);
+            if (descriptor.type == ReadType.Template) {
+                final TileTemplateRead tileTemplateRead = isFirstRead ? TileTemplateRead.FIRST : TileTemplateRead.SECOND;
+
+                List<Float> cycleNumWithData = new ArrayList<>();
+                Map<Integer, Map<Integer, List<Float>>> phasing = new HashMap<>();
+                Map<Integer, Map<Integer, List<Float>>> prePhasing = new HashMap<>();
+                for (int cycle = 0; cycle < outputLength; cycle++) {
+                    File phasingData = phasingMetricFiles.get(totalCycleCount + 1);
+                    if (phasingData != null) {
+                        cycleNumWithData.add((float) (cycle + 1));
+                        EmpiricalPhasingMetricsOutReader reader = new EmpiricalPhasingMetricsOutReader(phasingData);
+
+                        while (reader.hasNext()) {
+                            EmpiricalPhasingMetricsOutReader.IlluminaPhasingMetrics phasingMetrics = reader.next();
+
+                            TileMetricsOutReader.IlluminaLaneTileCode laneTileCode = phasingMetrics.getLaneTileCode();
+                            int tileNumber = laneTileCode.getTileNumber();
+                            if (laneTileCode.getLaneNumber() != tileCode.getLaneNumber()
+                                    || tileNumber != tileCode.getTileNumber()) {
+                                continue;
+                            }
+
+                            if (!phasing.containsKey(tileNumber)) {
+                                phasing.put(tileNumber, new HashMap<>());
+                                prePhasing.put(tileNumber, new HashMap<>());
+                            }
+                            int laneNumber = laneTileCode.getLaneNumber();
+                            if (!phasing.get(tileNumber).containsKey(laneNumber)) {
+                                phasing.get(tileNumber).put(laneNumber, new ArrayList<>());
+                                prePhasing.get(tileNumber).put(laneNumber, new ArrayList<>());
+                            }
+                            phasing.get(tileNumber).get(laneNumber).add(phasingMetrics.getPhasingWeight());
+                            prePhasing.get(tileNumber).get(laneNumber).add(phasingMetrics.getPrephasingWeight());
+                        }
+                    }
+
+                    totalCycleCount++;
+                }
+
+                phasing.forEach((tileNum, lanePhasingMetrics) -> {
+                    Map<Integer, List<Float>> lanePrePhasingMetrics = prePhasing.get(tileNum);
+                    lanePhasingMetrics.forEach((laneNum, phasingMetrics) -> {
+                        List<Float> prephasingMetrics = lanePrePhasingMetrics.get(laneNum);
+                        float[] phasingSlopeAndOffset = computeLinearFit(cycleNumWithData.toArray(new Float[0]), phasingMetrics.toArray(new Float[0]), phasingMetrics.size());
+                        float[] prePhasingSlopeAndOffset = computeLinearFit(cycleNumWithData.toArray(new Float[0]), prephasingMetrics.toArray(new Float[0]), phasingMetrics.size());
+                        TilePhasingValue value = new TilePhasingValue(tileTemplateRead, phasingSlopeAndOffset[0], prePhasingSlopeAndOffset[0]);
+                        tilePhasingValues.add(value);
+                    });
+                });
+
+                isFirstRead = false;
+            } else {
+                totalCycleCount += outputLength;
+            }
+        }
+
+        return tilePhasingValues;
+    }
+
+    /**
+     * Pulls out the phasing & prephasing value for the template reads and returns a collection of TilePhasingValues representing these
+     */
     private static Collection<TilePhasingValue> getTilePhasingValues(final Map<Integer, ? extends Collection<IlluminaTileMetrics>> codeMetricsMap, final ReadStructure readStructure, final ValidationStringency validationStringency) {
         boolean isFirstRead = true;
         final Collection<TilePhasingValue> tilePhasingValues = new ArrayList<>();
@@ -138,7 +257,7 @@ public class TileMetricsUtil {
                     } else {
                         throw new PicardException(message);
                     }
-                    phasingValue    = 0;
+                    phasingValue = 0;
                     prePhasingValue = 0;
                 }
 
@@ -150,7 +269,9 @@ public class TileMetricsUtil {
         return tilePhasingValues;
     }
 
-    /** According to Illumina, for every lane/tile/code combination they will only use the last value. Filter out the previous values */
+    /**
+     * According to Illumina, for every lane/tile/code combination they will only use the last value. Filter out the previous values
+     */
     private static Collection<IlluminaTileMetrics> determineLastValueForLaneTileMetricsCode(final Iterator<IlluminaTileMetrics>
                                                                                                     tileMetricsIterator) {
         final Map<TileMetricsOutReader.IlluminaLaneTileCode, IlluminaTileMetrics> filteredTileMetrics = new HashMap<>();
@@ -175,4 +296,90 @@ public class TileMetricsUtil {
         return tileMetrics.stream().collect(Collectors.groupingBy(TileMetricsUtil::renderMetricLocationKey));
     }
 
+    public static Map<Integer, File> renderPhasingMetricsFilesFromBasecallingDirectory(File illuminaRunDirectory) {
+        File[] cycleDirs = IOUtil.getFilesMatchingRegexp(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME),
+                IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
+
+        Map<Integer, File> phasingMetrics = new HashMap<>();
+        Arrays.asList(cycleDirs)
+                .forEach(cycleDir -> {
+                    File[] filesMatchingRegexp = IOUtil.getFilesMatchingRegexp(
+                            cycleDir, "EmpiricalPhasingMetricsOut.bin");
+                    if (filesMatchingRegexp.length > 0) {
+                        phasingMetrics.put(PerTilePerCycleFileUtil.getCycleFromDir(cycleDir),
+                                filesMatchingRegexp[0]);
+                    }
+                });
+        return phasingMetrics;
+    }
+
+    /*line fit for phasing weights
+    /** Compute the best fit line (slope + offset) given the points defined by (x_values[i], y_values[i])
+     *
+     * @param x_values X-values of the list of points
+     * @param y_values Y-values of the list of points
+     * @param slope slope of the best fit line (calculated by this function)
+     * @param offset offset of the best fit line (calculated by this function)
+     * @param sample_count number of weights to use for fitting
+     * @return true if linear fit could be computed, false if not
+
+    bool compute_linear_fit(const std::vector<float>& x_values, const std::vector<float>& y_values, float& slope, float& offset, size_t sample_count=0)
+    {
+        if(sample_count==0 || sample_count > x_values.size()) sample_count = x_values.size();
+        if (x_values.size() <= 1 || x_values.size() != y_values.size())
+        {
+            //TODO: throw error?
+            return false;
+        }
+        float sx = 0; // Sum(x)
+        float sy = 0; // Sum(y)
+        float sxx = 0; // Sum(x*x)
+        float sxy = 0; // Sum(x*y)
+        for (size_t i = 0; i < sample_count; i++)
+        {
+            sx += x_values[i];
+            sy += y_values[i];
+            sxy += x_values[i] * y_values[i];
+            sxx += x_values[i] * x_values[i];
+        }
+        const float denominator = sample_count * sxx - sx * sx;
+        if (denominator > std::numeric_limits<float>::epsilon())
+        {
+            slope = (sample_count * sxy - sx * sy) / denominator;
+            offset = (sy * sxx - sx * sxy) / denominator;
+            return true;
+        }
+        return false;
+    }*/
+
+    private static float[] computeLinearFit(Float[] xValues, Float[] yValues, int sampleCount) {
+        if (sampleCount == 0 || sampleCount > xValues.length) sampleCount = xValues.length;
+        if (xValues.length <= 1 || xValues.length != yValues.length) {
+            throw new PicardException("Can not compute linear fit.");
+        }
+
+        float sumX = 0;
+        float sumY = 0;
+        float sumXX = 0;
+        float sumXY = 0;
+
+        //returns
+        float slope = 0f;
+        float offset = 0f;
+
+        for (int i = 0; i < sampleCount; i++) {
+            sumX += xValues[i];
+            sumY += yValues[i];
+            sumXY += xValues[i] * yValues[i];
+            sumXX += xValues[i] * xValues[i];
+        }
+
+        float denominator = sampleCount * sumXX - sumX * sumX;
+
+        if (denominator > Math.ulp(denominator)) {
+            slope = (sampleCount * sumXY - sumX * sumY) / denominator;
+            offset = (sumY * sumXX - sumX * sumXY) / denominator;
+        }
+        return new float[]{slope, offset};
+    }
 }
