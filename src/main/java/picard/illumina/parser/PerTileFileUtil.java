@@ -5,7 +5,6 @@ import picard.illumina.parser.fakers.FileFaker;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,9 +21,9 @@ public class PerTileFileUtil extends ParameterizedFileUtil {
         super(true, extension, base, faker, lane, skipEmptyFiles);
         this.fileMap = getTiledFiles(base, matchPattern);
         if (!fileMap.isEmpty()) {
-            this.tiles = Collections.unmodifiableList(new ArrayList<Integer>(this.fileMap.keySet()));
+            this.tiles = new ArrayList<>(this.fileMap.keySet());
         } else {
-            this.tiles = new ArrayList<Integer>();
+            this.tiles = new ArrayList<>();
         }
     }
 

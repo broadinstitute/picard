@@ -151,7 +151,7 @@ public abstract class ParameterizedFileUtil {
     /**
      * The period separator is expected in the file extension, since some do not start with it
      */
-    private String escapePeriods(final String preEscaped) {
+    public static String escapePeriods(final String preEscaped) {
         return preEscaped
                 .replaceAll("\\.", "\\."); //In the first one the \\ is inside a regex in the second it's NOT
     }

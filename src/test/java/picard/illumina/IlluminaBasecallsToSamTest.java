@@ -52,6 +52,8 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/sams");
     private static final File TEST_DATA_DIR_WITH_4M_INDEX = new File("testdata/picard/illumina/25T8B25T/sams_with_4M");
     private static final File TEST_DATA_DIR_WITH_4M4M_INDEX = new File("testdata/picard/illumina/25T8B25T/sams_with_4M4M");
+    private static final File TEST_DATA_DIR_WITH_CBCLS = new File("testdata/picard/illumina/125T8B8B125T_cbcl/Data/Intensities/BaseCalls");
+    private static final File DUAL_CBCL_TEST_DATA_DIR = new File("testdata/picard/illumina/125T8B8B125T_cbcl/sams");
 
     public String getCommandLineProgramName() {
         return IlluminaBasecallsToSam.class.getSimpleName();
@@ -252,6 +254,54 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         runStandardTest(1, "dualBarcode.", "barcode_double.params", 1, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
     }
 
+    @Test
+    public void testCbclConvert() throws Exception {
+        runNewConverterTest(1, "dualBarcode.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR);
+    }
+
+    private void runNewConverterTest(final int lane, final String jobName, final String libraryParamsFile,
+                                     final int concatNColumnFields, final String readStructure, final File baseCallsDir,
+                                     final File testDataDir) throws Exception {
+        final File outputDir = File.createTempFile(jobName, ".dir");
+        outputDir.delete();
+        outputDir.mkdir();
+        outputDir.deleteOnExit();
+        // Create barcode.params with output files in the temp directory
+        final File libraryParams = new File(outputDir, libraryParamsFile);
+        libraryParams.deleteOnExit();
+        final List<File> samFiles = new ArrayList<File>();
+        final LineReader reader = new BufferedLineReader(new FileInputStream(new File(testDataDir, libraryParamsFile)));
+        final PrintWriter writer = new PrintWriter(libraryParams);
+        final String header = reader.readLine();
+        writer.println(header + "\tOUTPUT");
+        while (true) {
+            final String line = reader.readLine();
+            if (line == null) {
+                break;
+            }
+            final String[] fields = line.split("\t");
+            final File outputSam = new File(outputDir, StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)) + ".sam");
+            outputSam.deleteOnExit();
+            samFiles.add(outputSam);
+            writer.println(line + "\t" + outputSam);
+        }
+        writer.close();
+        reader.close();
+
+        Assert.assertEquals(runPicardCommandLine(new String[]{
+                "BASECALLS_DIR=" + baseCallsDir,
+                "LANE=" + lane,
+                "RUN_BARCODE=HiMom",
+                "READ_STRUCTURE=" + readStructure,
+                "LIBRARY_PARAMS=" + libraryParams,
+                "USE_NEW_CONVERTER=true"
+        }), 0);
+
+        for (final File outputSam : samFiles) {
+            IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
+        }
+        TestUtil.recursiveDelete(outputDir);
+    }
     /**
      * Ensures that a run missing a barcode from the parameters file throws an error.
      * 
