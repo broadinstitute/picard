@@ -179,6 +179,9 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
         updateSummaryMetric(metric, genotype, vc, hasSingletonSample);
 
         if (genotype != null && !vc.isFiltered()) {
+            if (genotype.getGQ() == 0) {
+                ++metric.TOTAL_GQ0_VARIANTS;
+            }
             if (genotype.isHet()) {
                 ++metric.numHets;
             } else if (genotype.isHomVar()) {
