@@ -84,7 +84,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 "MIR548A3	NR_030330	chr8	-	104484368	104484465	104484465	104484465	1	104484368,	104484465," +
 "</pre>" +
 
-"<pNote: Metrics labeled as percentages are actually expressed as fractions!</p>"+
+"<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>"+
 "<h4>Usage example:</h4>"+
 "<pre>" +
 "java -jar picard.jar CollectRnaSeqMetrics \\<br />" +
