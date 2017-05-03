@@ -4,6 +4,7 @@
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>MAX_EDIT_DISTANCE_TO_JOIN (Integer)</td><td>Largest edit distance that UMIs must have in order to be considered as coming from distinct source molecules.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>UMI_METRICS_FILE (File)</td><td>UMI Metrics  Required. </td></tr>
 <tr><td>UMI_TAG_NAME (String)</td><td>Tag name to use for UMI  Default value: RX. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>ASSIGNED_UMI_TAG (String)</td><td>Tag name to use for assigned UMI  Default value: MI. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>ALLOW_MISSING_UMIS (Boolean)</td><td>FOR TESTING ONLY: allow for missing UMIs if data doesn't have UMIs. This option is intended to be used ONLY for testing the code. Use MarkDuplicatesWithMateCigar if data has no UMIs. Mixed data (where some reads have UMIs and others do not) is not supported.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
@@ -13,6 +14,7 @@
 <tr><td>BARCODE_TAG (String)</td><td>Barcode SAM tag (ex. BC for 10X Genomics)  Default value: null. </td></tr>
 <tr><td>READ_ONE_BARCODE_TAG (String)</td><td>Read one barcode SAM tag (ex. BX for 10X Genomics)  Default value: null. </td></tr>
 <tr><td>READ_TWO_BARCODE_TAG (String)</td><td>Read two barcode SAM tag (ex. BX for 10X Genomics)  Default value: null. </td></tr>
+<tr><td>TAG_DUPLICATE_SET_MEMBERS (Boolean)</td><td>If a read appears in a duplicate set, add two tags. The first tag, DUPLICATE_SET_SIZE_TAG (DS), indicates the size of the duplicate set. The smallest possible DS value is 2 which occurs when two reads map to the same portion of the reference only one of which is marked as duplicate. The second tag, DUPLICATE_SET_INDEX_TAG (DI), represents a unique identifier for the duplicate set to which the record belongs. This identifier is the index-in-file of the representative read that was selected out of the duplicate set.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>REMOVE_SEQUENCING_DUPLICATES (Boolean)</td><td>If true remove 'optical' duplicates and other duplicates that appear to have arisen from the sequencing process instead of the library preparation process, even if REMOVE_DUPLICATES is false. If REMOVE_DUPLICATES is true, all duplicates are removed and this option is ignored.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>TAGGING_POLICY (DuplicateTaggingPolicy)</td><td>Determines how duplicate types are recorded in the DT optional attribute.  Default value: DontTag. This option can be set to 'null' to clear the default value. Possible values: {DontTag, OpticalOnly, All} </td></tr>
 <tr><td>INPUT (String)</td><td>One or more input SAM or BAM files to analyze. Must be coordinate sorted.  Default value: null. This option may be specified 0 or more times. </td></tr>
