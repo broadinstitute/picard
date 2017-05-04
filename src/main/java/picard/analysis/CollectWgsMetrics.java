@@ -126,8 +126,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
 
     @Option(doc = "An interval list file that contains the positions to restrict the assessment. Please note that " +
             "all bases of reads that overlap these intervals will be considered, even if some of those bases extend beyond the boundaries of " +
-            "the interval. The ideal use case for this argument is to use it to restrict the calculation to a subset of (whole) contigs. To " +
-            "restrict the calculation just to individual positions without overlap, please see CollectWgsMetricsFromSampledSites.",
+            "the interval. The ideal use case for this argument is to use it to restrict the calculation to a subset of (whole) contigs.",
             optional = true, overridable = true)
     public File INTERVALS = null;
 

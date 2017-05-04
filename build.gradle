@@ -149,7 +149,7 @@ tasks.withType(Test) {
 ext.htmlDir = new File("build/docs/html")
 ext.htmlDirInc = new File(htmlDir, "_includes")
 ext.commandClasses = ["picard.sam.AddCommentsToBam", "picard.sam.AddOrReplaceReadGroups", "picard.util.BaitDesigner", "picard.fastq.BamToBfq",
-                          "picard.sam.BamIndexStats", "picard.util.BedToIntervalList", "picard.sam.BuildBamIndex", "picard.analysis.directed.CalculateHsMetrics",
+                          "picard.sam.BamIndexStats", "picard.util.BedToIntervalList", "picard.sam.BuildBamIndex",
                           "picard.sam.CalculateReadGroupChecksum", "picard.sam.CleanSam", "picard.analysis.CollectAlignmentSummaryMetrics",
                           "picard.analysis.CollectBaseDistributionByCycle", "picard.analysis.CollectGcBiasMetrics", "picard.illumina.quality.CollectHiSeqXPfFailMetrics",
                           "picard.analysis.directed.CollectHsMetrics", "picard.illumina.CollectIlluminaBasecallingMetrics", "picard.illumina.CollectIlluminaLaneMetrics",
@@ -157,7 +157,6 @@ ext.commandClasses = ["picard.sam.AddCommentsToBam", "picard.sam.AddOrReplaceRea
                           "picard.analysis.CollectOxoGMetrics", "picard.analysis.CollectQualityYieldMetrics", "picard.analysis.CollectRawWgsMetrics",
                           "picard.analysis.directed.CollectTargetedPcrMetrics", "picard.analysis.CollectRnaSeqMetrics", "picard.analysis.CollectRrbsMetrics",
                           "picard.analysis.artifacts.CollectSequencingArtifactMetrics", "picard.vcf.CollectVariantCallingMetrics", "picard.analysis.CollectWgsMetrics",
-                          "picard.analysis.CollectWgsMetricsFromQuerySorted", "picard.analysis.CollectWgsMetricsFromSampledSites",
                           "picard.analysis.CollectWgsMetricsWithNonZeroCoverage", "picard.analysis.CompareMetrics", "picard.sam.CompareSAMs",
                           "picard.analysis.artifacts.ConvertSequencingArtifactToOxoG", "picard.sam.CreateSequenceDictionary", "picard.sam.DownsampleSam",
                           "picard.illumina.ExtractIlluminaBarcodes", "picard.sam.markduplicates.EstimateLibraryComplexity", "picard.sam.FastqToSam", "picard.util.FifoBuffer",
