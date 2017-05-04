@@ -25,6 +25,7 @@
 package picard.vcf;
 
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.metrics.StringHeader;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.variantcontext.Allele;
@@ -100,6 +101,8 @@ public class GenotypeConcordanceTest {
 
     private static final String NORMALIZE_ALLELES_TRUTH = "normalize_alleles_truth.vcf";
     private static final String NORMALIZE_ALLELES_CALL = "normalize_alleles_call.vcf";
+    private static final String NORMALIZE_NO_CALLS_TRUTH = "normalize_no_calls_truth.vcf";
+    private static final String NORMALIZE_NO_CALLS_CALL = "normalize_no_calls_call.vcf";
 
     @AfterClass
     public void tearDown() {
@@ -571,5 +574,37 @@ public class GenotypeConcordanceTest {
         genotypeConcordance.OUTPUT_VCF = true;
 
         Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
+    }
+
+    @Test
+    public void testNormalizeAllelesForWritingVCF() throws FileNotFoundException {
+        final File truthVcfPath             = new File(TEST_DATA_PATH.getAbsolutePath(), NORMALIZE_NO_CALLS_TRUTH);
+        final File callVcfPath              = new File(TEST_DATA_PATH.getAbsolutePath(), NORMALIZE_NO_CALLS_CALL);
+        final File outputBaseFileName       = new File(OUTPUT_DATA_PATH, "MultipleRefAlleles");
+        final File outputContingencyMetrics = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
+        outputContingencyMetrics.deleteOnExit();
+
+        final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
+        genotypeConcordance.TRUTH_VCF = truthVcfPath;
+        genotypeConcordance.TRUTH_SAMPLE = "truth";
+        genotypeConcordance.CALL_VCF = callVcfPath;
+        genotypeConcordance.CALL_SAMPLE = "truth";
+        genotypeConcordance.OUTPUT = new File(OUTPUT_DATA_PATH, "MultipleRefAlleles");
+        genotypeConcordance.OUTPUT_VCF = true;
+
+        Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
+
+        final MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>> output = new MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>>();
+        output.read(new FileReader(outputContingencyMetrics));
+
+        for (final GenotypeConcordanceContingencyMetrics metrics : output.getMetrics()) {
+            if(metrics.VARIANT_TYPE == VariantContext.Type.INDEL){
+                Assert.assertEquals(metrics.TP_COUNT, 3);
+                Assert.assertEquals(metrics.TN_COUNT, 3);
+                Assert.assertEquals(metrics.FP_COUNT, 0);
+                Assert.assertEquals(metrics.FN_COUNT, 0);
+                Assert.assertEquals(metrics.EMPTY_COUNT, 2);
+            }
+        }
     }
 }
