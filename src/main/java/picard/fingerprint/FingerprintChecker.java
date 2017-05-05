@@ -137,15 +137,24 @@ public class FingerprintChecker {
 
         final Map<String, Fingerprint> fingerprints = new HashMap<>();
         Set<String> samples = null;
-        if (specificSample != null) {
-            samples = new HashSet<>();
-            samples.add(specificSample);
-        }
 
-        while (iterator.hasNext()) {
+        for( final VariantContext ctx : reader) {
             // Setup the sample names set if needed
-            final VariantContext ctx = iterator.next();
-            if (samples == null) samples = ctx.getSampleNames();
+
+            if (samples == null) {
+                if (specificSample != null) {
+                    samples = new HashSet<>();
+                    samples.add(specificSample);
+                } else {
+                    samples = ctx.getSampleNames();
+                    if (samples == null) {
+                        log.warn("No samples found in file " + fingerprintFile + ". Skipping file.");
+                        return Collections.emptyMap();
+                    }
+                }
+
+                samples.forEach(s -> fingerprints.put(s, new Fingerprint(s, fingerprintFile, null)));
+            }
 
             if (isUsableSnp(ctx)) {
                 final HaplotypeBlock h = this.haplotypes.getHaplotype(ctx.getContig(), ctx.getStart());
@@ -170,12 +179,7 @@ public class FingerprintChecker {
                 }
 
                 for (final String sample : samples) {
-                    Fingerprint fp = fingerprints.get(sample);
-                    // Find or construct the fingerprint for this sample
-                    if (fp == null) {
-                        fp = new Fingerprint(sample, fingerprintFile, null);
-                        fingerprints.put(sample, fp);
-                    }
+                    final Fingerprint fp = fingerprints.get(sample);
 
                     //PLs are preferred over GTs
                     //TODO: this code is replicated in various places (ReconstructTriosFromVCF for example). Needs refactoring.
@@ -338,7 +342,7 @@ public class FingerprintChecker {
             final HaplotypeBlock haplotypeBlock = this.haplotypes.getHaplotype(info.getSequenceName(), info.getPosition());
             final Snp snp = this.haplotypes.getSnp(info.getSequenceName(), info.getPosition());
 
-            for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
+            for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndPositions()) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
                 if (rg == null) {
                     final PicardException e = new PicardException("Found read with no readgroup: " + rec.getRecord().getReadName() + " in file: " + samFile);
@@ -417,7 +421,7 @@ public class FingerprintChecker {
             final Snp snp = this.haplotypes.getSnp(info.getSequenceName(), info.getPosition());
 
             // randomly select locusMaxReads elements from the list
-            final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = randomSublist(info.getRecordAndOffsets(), locusMaxReads);
+            final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = randomSublist(info.getRecordAndPositions(), locusMaxReads);
 
             for (final SamLocusIterator.RecordAndOffset rec : recordAndOffsetList) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
