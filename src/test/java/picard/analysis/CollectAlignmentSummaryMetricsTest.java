@@ -60,48 +60,59 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
-        
+
+        Assert.assertEquals(output.getMetrics().size(), 3);
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.MEAN_READ_LENGTH, 101.0);
             switch (metrics.CATEGORY) {
-            case FIRST_OF_PAIR:
-                Assert.assertEquals(metrics.TOTAL_READS, 9);
-                Assert.assertEquals(metrics.PF_READS, 7);
-                Assert.assertEquals(metrics.PF_NOISE_READS, 1);
-                Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 3);
-                Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 59);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 19.0);
-                Assert.assertEquals(metrics.PF_ALIGNED_BASES, 303);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*58D/303D*/0.191419);
-                Assert.assertEquals(metrics.BAD_CYCLES, 19);
-                break;
-            case SECOND_OF_PAIR:
-                Assert.assertEquals(metrics.TOTAL_READS, 9);
-                Assert.assertEquals(metrics.PF_READS, 9);
-                Assert.assertEquals(metrics.PF_NOISE_READS, 1);
-                Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 7);
-                Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 239);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
-                Assert.assertEquals(metrics.PF_ALIGNED_BASES, 707);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*19D/707D*/0.026874);
-                Assert.assertEquals(metrics.BAD_CYCLES, 3);
-                break;
-            case PAIR:
-                Assert.assertEquals(metrics.TOTAL_READS, 18);
-                Assert.assertEquals(metrics.PF_READS, 16);
-                Assert.assertEquals(metrics.PF_NOISE_READS, 2);
-                Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 10);
-                Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 298);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
-                Assert.assertEquals(metrics.PF_ALIGNED_BASES, 1010);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*77D/1010D*/0.076238);
-                Assert.assertEquals(metrics.BAD_CYCLES, 22);
-                break;
-            case UNPAIRED:
-            default:
-                Assert.fail("Data does not contain this category: " + metrics.CATEGORY);
+                case FIRST_OF_PAIR:
+                    Assert.assertEquals(metrics.TOTAL_READS, 9);
+                    Assert.assertEquals(metrics.PF_READS, 7);
+                    Assert.assertEquals(metrics.PF_NOISE_READS, 1);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 3);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 59);
+                    Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 19.0);
+                    Assert.assertEquals(metrics.PF_READS_ALIGNED, 3);
+                    Assert.assertEquals(metrics.PF_READS_IMPROPER_PAIRS, 1);
+                    Assert.assertEquals(metrics.PCT_PF_READS_IMPROPER_PAIRS, 0.333333 /* 1/3 */);
+                    Assert.assertEquals(metrics.PF_ALIGNED_BASES, 303);
+                    Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*58D/303D*/0.191419);
+                    Assert.assertEquals(metrics.BAD_CYCLES, 19);
+                    break;
+                case SECOND_OF_PAIR:
+                    Assert.assertEquals(metrics.TOTAL_READS, 9);
+                    Assert.assertEquals(metrics.PF_READS, 9);
+                    Assert.assertEquals(metrics.PF_NOISE_READS, 1);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 7);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 239);
+                    Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
+                    Assert.assertEquals(metrics.PF_READS_ALIGNED, 7);
+                    Assert.assertEquals(metrics.PF_READS_IMPROPER_PAIRS, 5);
+                    Assert.assertEquals(metrics.PCT_PF_READS_IMPROPER_PAIRS, 0.714286 /* 5/7 */);
+                    Assert.assertEquals(metrics.PF_ALIGNED_BASES, 707);
+                    Assert.assertEquals(metrics.PCT_READS_ALIGNED_IN_PAIRS, 0.285714 /* 2D/7 */);
+                    Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*19D/707D*/0.026874);
+                    Assert.assertEquals(metrics.BAD_CYCLES, 3);
+                    break;
+                case PAIR:
+                    Assert.assertEquals(metrics.TOTAL_READS, 18);
+                    Assert.assertEquals(metrics.PF_READS, 16);
+                    Assert.assertEquals(metrics.PF_NOISE_READS, 2);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 10);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 298);
+                    Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
+                    Assert.assertEquals(metrics.PF_READS_ALIGNED, 10);
+                    Assert.assertEquals(metrics.PF_READS_IMPROPER_PAIRS, 6);
+                    Assert.assertEquals(metrics.PCT_PF_READS_IMPROPER_PAIRS, 0.6 /* 6/10 */);
+                    Assert.assertEquals(metrics.PF_ALIGNED_BASES, 1010);
+                    Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*77D/1010D*/0.076238);
+                    Assert.assertEquals(metrics.BAD_CYCLES, 22);
+                    break;
+                case UNPAIRED:
+                default:
+                    Assert.fail("Data does not contain this category: " + metrics.CATEGORY);
             }
         }
     }
@@ -123,7 +134,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         final NumberFormat format =  NumberFormat.getInstance();
         format.setMaximumFractionDigits(4);
 
-        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
@@ -241,7 +252,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
@@ -298,7 +309,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
             // test that it doesn't blow up
@@ -320,7 +331,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
@@ -581,7 +592,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
