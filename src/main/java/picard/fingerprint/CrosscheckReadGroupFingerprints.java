@@ -62,7 +62,8 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
             doc="Optional output file to write metrics to. Default is to write to stdout.")
     public File OUTPUT;
 
-    @Option(shortName="H", doc="The file of haplotype data to use to pick SNPs to fingerprint")
+    @Option(shortName="H", doc="File that maps SNPs to blocks in high LD. See " +
+	    "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
     public File HAPLOTYPE_MAP;
 
     @Option(shortName="LOD",
