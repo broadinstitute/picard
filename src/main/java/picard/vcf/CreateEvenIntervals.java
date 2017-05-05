@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,8 +44,7 @@ import java.util.*;
  */
 @CommandLineProgramProperties(
         usage = "Traverses one or more gVCF files in order to generate a list of intervals that have approximately " +
-                "the same number of non-reference positions in all of them.  Assumes files contain sequence dictionaries " +
-                "(and that they are all the same).",
+                "the same number of non-reference positions in all of them.  Assumes files contain sequence dictionaries.",
         usageShort = "Creates even interval list from one or more gVCF files",
         programGroup = VcfOrBcf.class
 )
@@ -86,10 +85,14 @@ public class CreateEvenIntervals extends CommandLineProgram {
             log.info("Searching through gvcf file #" + ++fileCount);
 
             // initialize if this is the first time through
-            if (recordSets.isEmpty()) {
+            if (intervals == null) {
                 dictionary = fileReader.getFileHeader().getSequenceDictionary();
                 initializeRecordSets(recordSets, dictionary);
                 intervals = initializeIntervalList(dictionary);
+            }
+            // otherwise, confirm that this VCF contains the same sequence dictionary
+            else {
+                dictionary.assertSameDictionary(fileReader.getFileHeader().getSequenceDictionary());
             }
 
             markRecords(recordSets, fileReader.iterator());
