@@ -72,11 +72,19 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 "<p>The sequence input must be a valid SAM/BAM file containing RNAseq data aligned by an RNAseq-aware genome aligner such a "+
 "<a href='http://github.com/alexdobin/STAR'>STAR</a> or <a href='http://ccb.jhu.edu/software/tophat/index.shtml'>TopHat</a>. "+
 "The tool also requires a REF_FLAT file, a tab-delimited file containing information about the location of RNA transcripts, "+
-"exon start and stop sites, etc. For more information on the REF_FLAT format, see the following "+
-"<a href='http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat'>description</a>.  "+
-"Build-specific REF_FLAT files can be obtained <a href='http://hgdownload.cse.ucsc.edu/goldenPath/'>here</a>.</p>"+
+"exon start and stop sites, etc. For an example refFlat file for GRCh38, see refFlat.txt.gz at "+
+"<a href='http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database'>http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database</a>.  "+
+"The first five lines of the tab-limited text file appear as follows.</p>"+
 
-"<pNote: Metrics labeled as percentages are actually expressed as fractions!</p>"+
+"<pre>" +
+"DDX11L1	NR_046018	chr1	+	11873	14409	14409	14409	3	11873,12612,13220,	12227,12721,14409," +
+"WASH7P	NR_024540	chr1	-	14361	29370	29370	29370	11	14361,14969,15795,16606,16857,17232,17605,17914,18267,24737,29320,	14829,15038,15947,16765,17055,17368,17742,18061,18366,24891,29370," +
+"DLGAP2-AS1	NR_103863	chr8_KI270926v1_alt	-	33083	35050	35050	35050	3	33083,33761,35028,	33281,33899,35050," +
+"MIR570	NR_030296	chr3	+	195699400	195699497	195699497	195699497	1	195699400,	195699497," +
+"MIR548A3	NR_030330	chr8	-	104484368	104484465	104484465	104484465	1	104484368,	104484465," +
+"</pre>" +
+
+"<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>"+
 "<h4>Usage example:</h4>"+
 "<pre>" +
 "java -jar picard.jar CollectRnaSeqMetrics \\<br />" +
