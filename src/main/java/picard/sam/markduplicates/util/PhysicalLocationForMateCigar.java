@@ -60,7 +60,13 @@ public class PhysicalLocationForMateCigar extends PhysicalLocationShort {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof PhysicalLocationForMateCigar) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null) {
+            return false;
+        }
+        if (this.getClass() == other.getClass()) {
             int cmp;
             PhysicalLocationForMateCigar loc = (PhysicalLocationForMateCigar) other;
             cmp = getLibraryId() - loc.getLibraryId();

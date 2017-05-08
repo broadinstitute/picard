@@ -359,7 +359,16 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 
         @Override
         public boolean equals(final Object o) {
-            return o instanceof Tile && this.getNumber() == ((Tile) o).getNumber();
+            if (this == o) {
+                return true;
+            }
+            if (o == null) {
+                return false;
+            }
+            if (this.getClass() == o.getClass()) {
+                return this.getNumber() == ((Tile) o).getNumber();
+            }
+            return false;
         }
 
         @Override

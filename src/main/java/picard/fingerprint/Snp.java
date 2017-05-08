@@ -103,7 +103,16 @@ public class Snp implements Comparable<Snp> {
 
     @Override
     public boolean equals(final Object o) {
-        return (this == o) || ((o instanceof Snp) && compareTo((Snp) o) == 0);
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (this.getClass() == o.getClass()) {
+            return compareTo((Snp) o) == 0;   
+        }
+        return false;
     }
 
     @Override

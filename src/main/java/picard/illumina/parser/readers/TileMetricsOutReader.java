@@ -108,7 +108,13 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
 
         @Override
         public boolean equals(final Object o) {
-            if (o instanceof IlluminaTileMetrics) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null) {
+                return false;
+            }
+            if (this.getClass() == o.getClass()) {
                 final IlluminaTileMetrics that = (IlluminaTileMetrics) o;
                 return laneTileCode == that.laneTileCode && metricValue == that.metricValue; // Identical tile data should render exactly the same float.
             } else {
@@ -148,7 +154,13 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
 
         @Override
         public boolean equals(final Object o) {
-            if (o instanceof IlluminaLaneTileCode) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null) {
+                return false;
+            }
+            if (this.getClass() == o.getClass()) {
                 final IlluminaLaneTileCode that = (IlluminaLaneTileCode) o;
                 return laneNumber == that.laneNumber && tileNumber == that.tileNumber && metricCode == that.metricCode;
             } else {
