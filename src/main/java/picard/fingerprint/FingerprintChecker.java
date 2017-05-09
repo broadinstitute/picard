@@ -341,13 +341,13 @@ public class FingerprintChecker {
             for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
                 if (rg == null) {
-                    final PicardException e = new PicardException("Found read with no readgroup: " + rec.getRecord().getReadName());
+                    final PicardException e = new PicardException("Found read with no readgroup: " + rec.getRecord().getReadName() + " in file: " + samFile);
                     log.error(e);
                     throw e;
                 }
                 final FingerprintIdDetails details = new FingerprintIdDetails(rg, samFile.getAbsolutePath());
                 if (!fingerprintsByReadGroup.containsKey(details)) {
-                    final PicardException e = new PicardException("Unknown read group: " + rg);
+                    final PicardException e = new PicardException("Unknown read group: " + rg + " in file: " + samFile);
                     log.error(e);
                     throw e;
                 } else {
