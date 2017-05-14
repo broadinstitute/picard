@@ -24,6 +24,7 @@
 
 package picard.fingerprint;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -342,7 +343,7 @@ public class FingerprintChecker {
             final HaplotypeBlock haplotypeBlock = this.haplotypes.getHaplotype(info.getSequenceName(), info.getPosition());
             final Snp snp = this.haplotypes.getSnp(info.getSequenceName(), info.getPosition());
 
-            for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndPositions()) {
+            for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
                 if (rg == null) {
                     final PicardException e = new PicardException("Found read with no readgroup: " + rec.getRecord().getReadName() + " in file: " + samFile);
@@ -474,13 +475,6 @@ public class FingerprintChecker {
         return shortList;
     }
 
-
-    @Deprecated
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFiles(final Collection<File> files, final int threads,
-                                                                   final int waitTime, final TimeUnit waitTimeUnit) {
-        return fingerprintFiles(files,  threads, waitTime, waitTimeUnit);
-    }
-
         /**
          * Fingerprints one or more SAM/BAM/VCF files at all available loci within the haplotype map, using multiple threads
          * to speed up the processing.
@@ -490,12 +484,14 @@ public class FingerprintChecker {
 
         // Generate fingerprints from each file
         final AtomicInteger filesRead = new AtomicInteger(0);
-        final ExecutorService executor = Executors.newFixedThreadPool(threads);
+        final ExecutorService executor = Executors.newFixedThreadPool(threads, new ThreadFactoryBuilder().setDaemon(true).build());
         final IntervalList intervals = this.haplotypes.getIntervalList();
         final Map<FingerprintIdDetails, Fingerprint> retval = new ConcurrentHashMap<>();
 
+        final Map<Future<?>, File> futures = new HashMap<>(files.size());
+
         for (final File f : files) {
-            executor.submit(() -> {
+            futures.put(executor.submit(() -> {
                 try {
                     if (CheckFingerprint.isBamOrSamFile(f)) {
                         retval.putAll(fingerprintSamFile(f, intervals));
@@ -510,11 +506,21 @@ public class FingerprintChecker {
                     log.warn("Exception thrown in thread:" + e.getMessage());
                     throw e;
                 }
-            });
+            }), f);
         }
+
         executor.shutdown();
         try { executor.awaitTermination(waitTime, waitTimeUnit); }
         catch (final InterruptedException ie) { log.warn(ie, "Interrupted while waiting for executor to terminate."); }
+
+        for (final Map.Entry<Future<?>, File> futureFileEntry : futures.entrySet()) {
+           try {
+                futureFileEntry.getKey().get();
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Failed to fingerprint on file: " + futureFileEntry.getValue());
+                throw new RuntimeException(e);
+            }
+        }
 
         return retval;
     }

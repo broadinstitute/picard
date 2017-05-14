@@ -9,6 +9,7 @@ import picard.vcf.VcfTestUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by farjoun on 8/27/15.
@@ -121,6 +122,14 @@ public class FingerprintCheckerTest {
         Map<FingerprintIdDetails, Fingerprint> fp1=fpChecker.fingerprintVcf(vcfFile);
 
         Assert.assertFalse(fp1.isEmpty());
+    }
+
+
+    @Test(expectedExceptions = RuntimeException.class)
+    public void testTerminateOnBadFile(){
+        final FingerprintChecker fpChecker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        final File badSam= new File(TEST_DATA_DIR,"aligned_queryname_sorted.sam");
+        fpChecker.fingerprintFiles(Collections.singletonList(badSam), 1, 1, TimeUnit.DAYS);
     }
 
 }
