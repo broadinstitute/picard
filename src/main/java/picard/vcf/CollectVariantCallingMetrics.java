@@ -136,75 +136,75 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
 
     /** A collection of metrics relating to snps and indels within a variant-calling file (VCF). */
     public static class VariantCallingSummaryMetrics extends MergeableMetricBase {
-        /** The number of high confidence SNPs calls (i.e. non-reference genotypes) that were examined */
+        /** The number of passing bi-allelic SNPs calls (i.e. non-reference genotypes) that were examined */
         @MergeByAdding
         public long TOTAL_SNPS;
 
-        /** The number of high confidence SNPs found in dbSNP */
+        /** The number of passing bi-allelic SNPs found in dbSNP */
         @MergeByAdding
         public long NUM_IN_DB_SNP;
 
-        /** The number of high confidence SNPS called that were not found in dbSNP */
+        /** The number of passing bi-allelic SNPS called that were not found in dbSNP */
         @MergeByAdding
         public long NOVEL_SNPS;
 
-        /** The number of SNPs that are also filtered */
+        /** The number of SNPs that are filtered */
         @MergeByAdding
         public long FILTERED_SNPS;
 
-        /** The fraction of high confidence SNPs in dbSNP */
+        /** The fraction of passing bi-allelic SNPs in dbSNP */
         @NoMergingIsDerived
         public float PCT_DBSNP;
 
-        /** The Transition/Transversion ratio of the SNP calls made at dbSNP sites */
+        /** The Transition/Transversion ratio of the passing bi-allelic SNP calls made at dbSNP sites */
         @NoMergingIsDerived
         public double DBSNP_TITV;
 
-        /** The Transition/Transversion ratio of the SNP calls made at non-dbSNP sites */
+        /** The Transition/Transversion ratio of the passing bi-allelic SNP calls made at non-dbSNP sites */
         @NoMergingIsDerived
         public double NOVEL_TITV;
 
-        /** The number of high confidence Indel calls that were examined */
+        /** The number of passing indel calls that were examined */
         @MergeByAdding
         public long TOTAL_INDELS;
 
-        /** The number of high confidence Indels called that were not found in dbSNP */
+        /** The number of passing indels called that were not found in dbSNP */
         @MergeByAdding
         public long NOVEL_INDELS;
 
-        /** The number of indels that are also filtered */
+        /** The number of indels that are filtered */
         @MergeByAdding
         public long FILTERED_INDELS;
 
-        /** The fraction of high confidence Indels in dbSNP */
+        /** The fraction of passing indels in dbSNP */
         @NoMergingIsDerived
         public float PCT_DBSNP_INDELS;
 
-        /** The number of high confidence Indels found in dbSNP */
+        /** The number of passing indels found in dbSNP */
         @MergeByAdding
         public long NUM_IN_DB_SNP_INDELS;
 
-        /** The Insertion/Deletion ratio of the Indel calls made at dbSNP sites */
+        /** The Insertion/Deletion ratio of the indel calls made at dbSNP sites */
         @NoMergingIsDerived
         public double DBSNP_INS_DEL_RATIO;
 
-        /** The Insertion/Deletion ratio of the Indel calls made at non-dbSNP sites */
+        /** The Insertion/Deletion ratio of the indel calls made at non-dbSNP sites */
         @NoMergingIsDerived
         public double NOVEL_INS_DEL_RATIO;
 
-        /** The number of high confidence multiallelic SNP calls that were examined */
+        /** The number of passing multi-allelic SNP calls that were examined */
         @MergeByAdding
         public double TOTAL_MULTIALLELIC_SNPS;
 
-        /** The number of high confidence multiallelic SNPs found in dbSNP */
+        /** The number of passing multi-allelic SNPs found in dbSNP */
         @MergeByAdding
         public double NUM_IN_DB_SNP_MULTIALLELIC;
 
-        /** The number of high confidence complex Indel calls that were examined */
+        /** The number of passing complex indel calls that were examined */
         @MergeByAdding
         public double TOTAL_COMPLEX_INDELS;
 
-        /** The number of high confidence complex Indels found in dbSNP */
+        /** The number of passing complex indels found in dbSNP */
         @MergeByAdding
         public double NUM_IN_DB_SNP_COMPLEX_INDELS;
 
@@ -249,9 +249,33 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
                 this.NOVEL_INS_DEL_RATIO = this.novelInsertions / (double) this.novelDeletions;
         }
 
+        public void calculateFromDerivedFields(final long totalHetDepth) {
+            dbSnpTransversions = invertFromRatio(NUM_IN_DB_SNP, DBSNP_TITV);
+            dbSnpTransitions = NUM_IN_DB_SNP - dbSnpTransversions;
+            novelTransversions = invertFromRatio(NOVEL_SNPS, NOVEL_TITV);
+            novelTransitions = NOVEL_SNPS - novelTransversions;
+            dbSnpDeletions = invertFromRatio(NUM_IN_DB_SNP_INDELS, DBSNP_INS_DEL_RATIO);
+            dbSnpInsertions = NUM_IN_DB_SNP_INDELS - dbSnpDeletions;
+            novelDeletions = invertFromRatio(NOVEL_INDELS, NOVEL_INS_DEL_RATIO);
+            novelInsertions = NOVEL_INDELS - novelDeletions;
+            refAlleleObs = Double.isNaN(SNP_REFERENCE_BIAS) ? 0L : Math.round(totalHetDepth * SNP_REFERENCE_BIAS);
+            altAlleleObs = totalHetDepth - refAlleleObs;
+        }
+
         public static <T extends VariantCallingSummaryMetrics> void foldInto(final T target, final Collection<T> metrics) {
             metrics.forEach(target::merge);
         }
+    }
+
+    /**
+     * Given the ratio (X/Y) and the sum (X+Y), returns Y.
+     *
+     * @param sum X+Y
+     * @param ratio X/Y
+     * @return Y as a long
+     */
+    private static long invertFromRatio(final long sum, final Double ratio) {
+        return ratio.isNaN() ? 0L : Math.round(sum / (ratio + 1.0));
     }
 
     /** A collection of metrics relating to snps and indels within a variant-calling file (VCF) for a given sample. */
@@ -279,6 +303,12 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         public long TOTAL_GQ0_VARIANTS;
 
         /**
+         * total number of reads (from AD field) for passing bi-allelic SNP hets for this sample
+         */
+        @NoMergingIsDerived
+        public long TOTAL_HET_DEPTH;
+
+        /**
          * Hidden fields not propagated to the metrics file.
          */
         @MergeByAdding
@@ -293,8 +323,15 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
             super.calculateDerivedFields();
             // Divide by zero should be OK -- NaN should get propagated to metrics file.
             HET_HOMVAR_RATIO = numHets / (double) numHomVar;
-
             PCT_GQ0_VARIANTS = TOTAL_GQ0_VARIANTS / (double) (numHets + numHomVar);
+            TOTAL_HET_DEPTH = refAlleleObs + altAlleleObs;
+        }
+
+        public void calculateFromDerivedFields() {
+            numHomVar = invertFromRatio(TOTAL_SNPS, HET_HOMVAR_RATIO);
+            numHets = TOTAL_SNPS - numHomVar;
+        
+            calculateFromDerivedFields(TOTAL_HET_DEPTH);
         }
     }
 }
