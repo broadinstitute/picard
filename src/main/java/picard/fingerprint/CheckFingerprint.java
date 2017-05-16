@@ -103,7 +103,8 @@ public class CheckFingerprint extends CommandLineProgram {
             "(VCF or BAM read group header) will be used.")
     public String EXPECTED_SAMPLE_ALIAS;
 
-    @Option(shortName="H", doc = "A file of haplotype information produced by the CheckFingerprint program.")
+    @Option(shortName="H", doc = "The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +          
+            "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
     public File HAPLOTYPE_MAP;
 
     @Option(shortName="LOD", doc = "When counting haplotypes checked and matching, count only haplotypes " +
