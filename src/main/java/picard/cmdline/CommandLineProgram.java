@@ -42,10 +42,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import java.io.File;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Abstract class to facilitate writing command-line programs.
@@ -262,10 +259,17 @@ public abstract class CommandLineProgram {
         }
         final String[] customErrorMessages = customCommandLineValidation();
         if (customErrorMessages != null) {
-            for (final String msg : customErrorMessages) {
-                System.err.println(msg);
-            }
             commandLineParser.usage(System.err, false);
+            if (customErrorMessages.length > 0) {
+                System.err.println(String.join("", Collections.nCopies(80, "#")));
+                System.err.println();
+            }
+            for (final String msg : customErrorMessages) {
+                System.err.println("Error: " + msg + "\n");
+            }
+            if (customErrorMessages.length > 0) {
+                System.err.println(String.join("", Collections.nCopies(80, "#")));
+            }
             return false;
         }
         return true;
