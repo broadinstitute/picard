@@ -55,7 +55,7 @@ public class SplitSamByLibraryTest {
         Assert.assertEquals(splitter.doWork(), 0, "SAM file split should have succeeded but didn't.");
 
         File f = new File("unknown.sam");
-        Assert.assertTrue(f.exists(), "uknown.sam should exist but doesn't");
+        Assert.assertTrue(f.exists(), "unknown.sam should exist but doesn't");
         Assert.assertEquals(countReads(f), 2, "unknown.sam has the wrong number of reads");
         f.delete();
 
@@ -83,7 +83,7 @@ public class SplitSamByLibraryTest {
 
         // The unknown file should exist and have two reads
         File f = new File("unknown.sam");
-        Assert.assertFalse(f.exists(), "uknown.sam should not exist but does");
+        Assert.assertFalse(f.exists(), "unknown.sam should not exist but does");
         if (f.exists()) f.delete();
 
         f = new File("lib-1.sam");
