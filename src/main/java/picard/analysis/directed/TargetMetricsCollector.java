@@ -908,9 +908,11 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /** Gets the coverage depths as an array of ints. */
         public int[] getDepths() { return this.depths; }
 
-        public int getTotal() {
-            int total = 0;
-            for (int i=0; i<depths.length; ++i) total += depths[i];
+        public long getTotal() {
+            long total = 0;
+            for (int i=0; i<depths.length; ++i) {
+                total += (total < Long.MAX_VALUE - depths[i]) ? depths[i] : Long.MAX_VALUE - total;
+            }
             return total;
         }
 
