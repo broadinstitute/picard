@@ -880,8 +880,13 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         /** Adds a single point of depth at the desired offset into the coverage array. */
         public void addBase(final int offset) {
-            if (offset >= 0 && offset < this.depths.length && this.depths[offset] < Integer.MAX_VALUE) {
-                this.depths[offset] += 1;
+            addBase(offset, 1);
+        }
+
+        /** Adds some depth at the desired offset into the coverage array. */
+        public void addBase(final int offset, final int depth) {
+            if (offset >= 0 && offset < this.depths.length && this.depths[offset] < Integer.MAX_VALUE - depth) {
+                this.depths[offset] += depth;
             }
         }
 
