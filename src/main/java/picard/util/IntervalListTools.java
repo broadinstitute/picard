@@ -3,11 +3,7 @@ package picard.util;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.vcf.VCFFileReader;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
@@ -147,6 +143,12 @@ public class IntervalListTools extends CommandLineProgram {
             @Override
             IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
                 return IntervalList.difference(list1, list2);
+            }
+        },
+        OVERLAPS("Find only intervals in INPUT that have any overlap with SECOND_INPUT") {
+            @Override
+            IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
+                return IntervalList.overlaps(list1, list2);
             }
         };
 
