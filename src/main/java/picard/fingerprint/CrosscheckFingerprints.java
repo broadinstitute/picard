@@ -150,7 +150,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final FingerprintChecker checker = new FingerprintChecker(map);
 
         checker.setAllowDuplicateReads(ALLOW_DUPLICATE_READS);
-
+        checker.setValidationStringency(VALIDATION_STRINGENCY);
+        
         log.info("Done checking input files, moving onto fingerprinting files.");
 
         final List<String> extensions = new ArrayList<>();
