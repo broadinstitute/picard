@@ -9,6 +9,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.Interval;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
@@ -194,4 +195,13 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         Assert.assertTrue(TestNGUtil.compareDoubleWithAccuracy(histogram.get(33).getValue(), 10D, 0.01));
     }
 
+    @Test
+    public void testCoverageGetTotalOverflow() {
+        final Interval interval = new Interval("chr1", 1, 2);
+        final TargetMetricsCollector.Coverage coverage = new TargetMetricsCollector.Coverage(interval, 0);
+        for (int offset = 0; offset <= interval.length(); offset++) {
+            coverage.addBase(offset, Integer.MAX_VALUE - 1);
+        }
+        Assert.assertEquals((long)coverage.getTotal(), 2 * (long)(Integer.MAX_VALUE - 1));
+    }
 }

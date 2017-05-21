@@ -880,8 +880,13 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         /** Adds a single point of depth at the desired offset into the coverage array. */
         public void addBase(final int offset) {
-            if (offset >= 0 && offset < this.depths.length && this.depths[offset] < Integer.MAX_VALUE) {
-                this.depths[offset] += 1;
+            addBase(offset, 1);
+        }
+
+        /** Adds some depth at the desired offset into the coverage array. */
+        public void addBase(final int offset, final int depth) {
+            if (offset >= 0 && offset < this.depths.length && this.depths[offset] < Integer.MAX_VALUE - depth) {
+                this.depths[offset] += depth;
             }
         }
 
@@ -903,9 +908,11 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /** Gets the coverage depths as an array of ints. */
         public int[] getDepths() { return this.depths; }
 
-        public int getTotal() {
-            int total = 0;
-            for (int i=0; i<depths.length; ++i) total += depths[i];
+        public long getTotal() {
+            long total = 0;
+            for (int i=0; i<depths.length; ++i) {
+                total += (total < Long.MAX_VALUE - depths[i]) ? depths[i] : Long.MAX_VALUE - total;
+            }
             return total;
         }
 
