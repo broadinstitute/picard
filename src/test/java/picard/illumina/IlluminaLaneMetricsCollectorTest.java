@@ -1,17 +1,23 @@
 package picard.illumina;
 
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.IOUtil;
+import picard.PicardException;
 import picard.illumina.parser.ReadStructure;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.io.File;import java.lang.Exception;import java.lang.Object;import java.lang.String;
+import java.io.File;
+import java.io.IOException;
+import java.lang.Exception;import java.lang.Object;import java.lang.String;
+import java.nio.file.Files;
 import java.util.Arrays;
 
 /** @author mccowan */
 public class IlluminaLaneMetricsCollectorTest {
     final static File TEST_DIRECTORY = new File("testdata/picard/illumina/IlluminaLaneMetricsCollectorTest");
     final static File TILE_RUN_DIRECTORY = new File(TEST_DIRECTORY, "tileRuns");
+    final static File TEST_MISSING_PHASING_DIRECTORY = new File(TEST_DIRECTORY, "missing_phasing");
 
     private static File buildOutputFile(final File directory, final String prefix, final String extension) {
         return new File(directory, String.format("%s.%s", prefix, extension));
@@ -56,9 +62,9 @@ public class IlluminaLaneMetricsCollectorTest {
             if (useReadStructure) clp.READ_STRUCTURE = readStructure;
             clp.doWork();
 
-            final File phasingMetricsPhile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaPhasingMetrics.getExtension());
-            final File canonicalPhasingPhile = buildOutputFile(runDirectory, testRun, IlluminaPhasingMetrics.getExtension());
-            IOUtil.assertFilesEqual(canonicalPhasingPhile, phasingMetricsPhile);
+            final File phasingMetricsFile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaPhasingMetrics.getExtension());
+            final File canonicalPhasingFile = buildOutputFile(runDirectory, testRun, IlluminaPhasingMetrics.getExtension());
+            IOUtil.assertFilesEqual(canonicalPhasingFile, phasingMetricsFile);
 
             final File laneMetricsFile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaLaneMetrics.getExtension());
             final File canonicalLaneFile = buildOutputFile(runDirectory, testRun, IlluminaLaneMetrics.getExtension());
@@ -76,5 +82,55 @@ public class IlluminaLaneMetricsCollectorTest {
                 {"H7H7RADXX", new ReadStructure("101T8B8B101T")},
                 {"A67HY", new ReadStructure("8B8B")}
         };
+    }
+
+    /** Ensures that an exception is thrown when we encounter a tile without phasing/pre-phasing metrics. */
+    @Test(expectedExceptions = PicardException.class)
+    public void testMissingPhasingValuesStrict() {
+        final ReadStructure readStructure = new ReadStructure("151T8B8B151T");
+        for (final boolean useReadStructure : Arrays.asList(true, false)) {
+            final File runDirectory = TEST_MISSING_PHASING_DIRECTORY;
+            final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
+            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
+            clp.RUN_DIRECTORY = runDirectory;
+            clp.OUTPUT_PREFIX = "test";
+            clp.VALIDATION_STRINGENCY = ValidationStringency.STRICT;
+            if (useReadStructure) clp.READ_STRUCTURE = readStructure;
+            clp.doWork();
+
+            final File phasingMetricsFile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaPhasingMetrics.getExtension());
+            final File canonicalPhasingFile = buildOutputFile(runDirectory, runDirectory.getName(), IlluminaPhasingMetrics.getExtension());
+            IOUtil.assertFilesEqual(canonicalPhasingFile, phasingMetricsFile);
+
+            final File laneMetricsFile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaLaneMetrics.getExtension());
+            final File canonicalLaneFile = buildOutputFile(runDirectory, runDirectory.getName(), IlluminaLaneMetrics.getExtension());
+            IOUtil.assertFilesEqual(canonicalLaneFile, laneMetricsFile);
+            IOUtil.deleteDirectoryTree(clp.OUTPUT_DIRECTORY);
+        }
+    }
+
+    /** Silently continue if we encounter a tile without phasing/pre-phasing metrics. */
+    @Test
+    public void testMissingPhasingValuesSilent() throws IOException {
+        final ReadStructure readStructure = new ReadStructure("151T8B8B151T");
+        for (final boolean useReadStructure : Arrays.asList(true, false)) {
+            final File runDirectory = TEST_MISSING_PHASING_DIRECTORY;
+            final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
+            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
+            clp.RUN_DIRECTORY = runDirectory;
+            clp.OUTPUT_PREFIX = "test";
+            clp.VALIDATION_STRINGENCY = ValidationStringency.SILENT;
+            if (useReadStructure) clp.READ_STRUCTURE = readStructure;
+            clp.doWork();
+
+            final File phasingMetricsFile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaPhasingMetrics.getExtension());
+            final File canonicalPhasingFile = buildOutputFile(runDirectory, runDirectory.getName(), IlluminaPhasingMetrics.getExtension());
+            IOUtil.assertFilesEqual(canonicalPhasingFile, phasingMetricsFile);
+
+            final File laneMetricsFile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaLaneMetrics.getExtension());
+            final File canonicalLaneFile = buildOutputFile(runDirectory, runDirectory.getName(), IlluminaLaneMetrics.getExtension());
+            IOUtil.assertFilesEqual(canonicalLaneFile, laneMetricsFile);
+            IOUtil.deleteDirectoryTree(clp.OUTPUT_DIRECTORY);
+        }
     }
 }

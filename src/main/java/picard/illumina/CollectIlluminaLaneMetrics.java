@@ -24,6 +24,7 @@
 
 package picard.illumina;
 
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
@@ -118,7 +119,7 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
             }
         }
 
-        IlluminaLaneMetricsCollector.collectLaneMetrics(RUN_DIRECTORY, OUTPUT_DIRECTORY, OUTPUT_PREFIX, laneMetricsFile, phasingMetricsFile, READ_STRUCTURE, FILE_EXTENSION == null ? "" : FILE_EXTENSION);
+        IlluminaLaneMetricsCollector.collectLaneMetrics(RUN_DIRECTORY, OUTPUT_DIRECTORY, OUTPUT_PREFIX, laneMetricsFile, phasingMetricsFile, READ_STRUCTURE, FILE_EXTENSION == null ? "" : FILE_EXTENSION, VALIDATION_STRINGENCY);
         return 0;
     }
 
@@ -134,10 +135,13 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
         private final static Log LOG = Log.getInstance(IlluminaLaneMetricsCollector.class);
 
         /** Returns a partitioned collection of lane number to Tile objects from the provided basecall directory. */
-        public static Map<Integer, ? extends Collection<Tile>> readLaneTiles(final File illuminaRunDirectory, final ReadStructure readStructure) {
+        public static Map<Integer, ? extends Collection<Tile>> readLaneTiles(final File illuminaRunDirectory, final ReadStructure readStructure, final ValidationStringency validationStringency) {
             final Collection<Tile> tiles;
             try {
-                tiles = TileMetricsUtil.parseTileMetrics(TileMetricsUtil.renderTileMetricsFileFromBasecallingDirectory(illuminaRunDirectory), readStructure);
+                tiles = TileMetricsUtil.parseTileMetrics(TileMetricsUtil.renderTileMetricsFileFromBasecallingDirectory(illuminaRunDirectory),
+                        readStructure,
+                        validationStringency
+                        );
             } catch (final FileNotFoundException e) {
                 throw new PicardException("Unable to open laneMetrics file.", e);
             }
@@ -149,8 +153,9 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
         public static void collectLaneMetrics(final File runDirectory, final File outputDirectory, final String outputPrefix,
                                               final MetricsFile<MetricBase, Comparable<?>> laneMetricsFile,
                                               final MetricsFile<MetricBase, Comparable<?>> phasingMetricsFile,
-                                              final ReadStructure readStructure, final String fileExtension) {
-            final Map<Integer, ? extends Collection<Tile>> laneTiles = readLaneTiles(runDirectory, readStructure);
+                                              final ReadStructure readStructure, final String fileExtension,
+                                              final ValidationStringency validationStringency) {
+            final Map<Integer, ? extends Collection<Tile>> laneTiles = readLaneTiles(runDirectory, readStructure, validationStringency);
             writeLaneMetrics(laneTiles, outputDirectory, outputPrefix, laneMetricsFile, fileExtension);
             writePhasingMetrics(laneTiles, outputDirectory, outputPrefix, phasingMetricsFile, fileExtension);
         }
@@ -189,10 +194,10 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
             double area = 0;
             double clusters = 0;
             for (final Tile tile : tiles) {
-                area += (tile.getClusterCount() / tile.getClusterDensity());
+                if (tile.getClusterDensity() > 0) area += (tile.getClusterCount() / tile.getClusterDensity());
                 clusters += tile.getClusterCount();
             }
-            return clusters / area;
+            return (area > 0) ? clusters / area : 0.0;
         }
     }
 }
