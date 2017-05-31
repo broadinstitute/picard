@@ -100,43 +100,42 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
 
     @Test
     public void testSingleEndWithBarcodeAtStart() throws Exception {
-        final MetricsFile<BarcodeMetric, Integer> metricsFile = runIt(1, "8B25T");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "8B25T");
         Assert.assertEquals(metricsFile.getMetrics().get(11).PERFECT_MATCHES, 1);
     }
 
     @Test
     public void testSingleEndWithBarcodeAtStartAndMolecularIndicies() throws Exception {
-        final MetricsFile<BarcodeMetric, Integer> metricsFile = runIt(1, "8B4M21T");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "8B4M21T");
         Assert.assertEquals(metricsFile.getMetrics().get(11).PERFECT_MATCHES, 1);
     }
 
     @Test
     public void testSingleEndWithBarcodeAtEnd() throws Exception {
-        final MetricsFile<BarcodeMetric, Integer> metricsFile = runIt(1, "25T8B");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "25T8B");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 5);
     }
 
     @Test
     public void testSingleEndWithBarcodeAtEndAndMolecularIndicies() throws Exception {
-        final MetricsFile<BarcodeMetric, Integer> metricsFile = runIt(1, "4M21T8B");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "4M21T8B");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 5);
     }
 
     @Test
     public void testPairedEndWithBarcodeOnFirstEnd() throws Exception {
-        final MetricsFile<BarcodeMetric, Integer> metricsFile = runIt(1, "25T8B25T");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "25T8B25T");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 5);
     }
 
     @Test
     public void testPairedEndWithBarcodeAndMolecularIndicies() throws Exception {
-        final MetricsFile<BarcodeMetric, Integer> metricsFile = runIt(1, "4M21T8B21T4M");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "4M21T8B21T4M");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 5);
     }
-
     @Test
     public void testPairedEndWithBarcodeOnSecondEnd() throws Exception {
-        final MetricsFile<BarcodeMetric, Integer> metricsFile = runIt(1, "25T25T8B");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "25T25T8B");
         Assert.assertEquals(metricsFile.getMetrics().get(12).PERFECT_MATCHES, 1);
     }
 
@@ -174,19 +173,18 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
      * * inexact match within threshold to TGACCA
      * * inexact match not within threshold to TGACCA
      * * inexact match where the next match is too close to ACAGTG
-     *
      * @throws Exception
      */
     @Test
     public void testBarcodeMatching() throws Exception {
         final int lane = 1;
         final int barcodePosition = 26;
-        final MetricsFile<BarcodeMetric, Integer> metricsFile = runIt(lane, "25T8B25T");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(lane, "25T8B25T");
 
-        BarcodeMetric metricOne = null;
-        BarcodeMetric metricTwo = null;
-        BarcodeMetric metricNoMatch = null;
-        for (final BarcodeMetric metric : metricsFile.getMetrics()) {
+        ExtractIlluminaBarcodes.BarcodeMetric metricOne = null;
+        ExtractIlluminaBarcodes.BarcodeMetric metricTwo = null;
+        ExtractIlluminaBarcodes.BarcodeMetric metricNoMatch = null;
+        for (final ExtractIlluminaBarcodes.BarcodeMetric metric : metricsFile.getMetrics()) {
             if (metric.BARCODE.equals(BARCODES[0])) {
                 metricOne = metric;
             } else if (metric.BARCODE.equals(BARCODES[2])) {
@@ -251,14 +249,14 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        final MetricsFile<BarcodeMetric, Integer> result = new MetricsFile<>();
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer>();
         result.read(new FileReader(metricsFile));
         Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, 1, "Got wrong number of perfect matches");
         Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, 0, "Got wrong number of one-mismatch matches");
     }
 
     /**
-     * Testing the quality thresholding. Looking at a single barcode (ACAGTG) with a min quality of 25 and no mismatches
+     *  Testing the quality thresholding. Looking at a single barcode (ACAGTG) with a min quality of 25 and no mismatches
      */
     @Test(dataProvider = "qualityBarcodeData")
     public void testQualityBarcodes(final int quality,
@@ -278,7 +276,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        final MetricsFile<BarcodeMetric, Integer> result = new MetricsFile<>();
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer>();
         result.read(new FileReader(metricsFile));
         Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, perfectMatches, "Got wrong number of perfect matches for test: '" + testName + "'");
         Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, oneMismatch, "Got wrong number of one-mismatch matches for test: '" + testName + "'");
@@ -292,7 +290,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         };
     }
 
-    private void testParsing(final IlluminaDataProviderFactory factory, final ReadStructure readStructure, final BarcodeMetric metricACAGTG, final int barcodePosition) {
+    private void testParsing(final IlluminaDataProviderFactory factory, final ReadStructure readStructure, final ExtractIlluminaBarcodes.BarcodeMetric metricACAGTG, final int barcodePosition) {
 
         int numReads = 0;
 
@@ -311,7 +309,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         dataProvider.close();
     }
 
-    private MetricsFile<BarcodeMetric, Integer> runIt(final int lane, final String readStructure)
+    private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runIt(final int lane, final String readStructure)
             throws Exception {
         final File metricsFile = File.createTempFile("eib.", ".metrics");
         metricsFile.deleteOnExit();
@@ -328,11 +326,11 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         return runIt(args, metricsFile);
     }
 
-    private MetricsFile<BarcodeMetric, Integer> runIt(final List<String> args, final File metricsFile) throws Exception {
+    private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runIt(final List<String> args, final File metricsFile) throws Exception {
         // Generate _barcode.txt files and metrics file.
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<BarcodeMetric, Integer> retval = new MetricsFile<>();
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> retval = new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer>();
         retval.read(new FileReader(metricsFile));
         return retval;
     }
