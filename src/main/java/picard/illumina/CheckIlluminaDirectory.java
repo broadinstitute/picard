@@ -51,7 +51,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             "and are reasonably sized for every tile and cycle.  Reasonably sized means non-zero sized for files that exist per tile and " +
             "equal size for binary files that exist per cycle or per tile. If DATA_TYPES {Position, BaseCalls, QualityScores, PF," +
             " or Barcodes} are not specified, then the default data types used by IlluminaBasecallsToSam are used.  " +
-            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.</p>"     +
+            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.</p>" +
             "" +
             "<h4>Usage example:</h4> " +
             "<pre>" +
@@ -61,8 +61,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             "      LANES=1 \\<br />" +
             "      DATA_TYPES=BaseCalls " +
             "</pre>" +
-            "<hr />"
-    ;
+            "<hr />";
     private static final Log log = Log.getInstance(CheckIlluminaDirectory.class);
 
     // The following attributes define the command-line arguments
@@ -168,22 +167,24 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                     filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
                 }
 
-                cbcls.forEach(cbcl -> {
-                    final long[] expectedFileSize = {0};
-                    tiles.forEach(tileNum -> {
-                        log.info("Checking tile " + tileNum);
-                        CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tileNum,
-                                locs, true);
-                        expectedFileSize[0] += reader.getHeaderSize();
-                        BaseBclReader.CycleData[] cycleData = reader.getCycleData();
-                        for (BaseBclReader.CycleData cycle : cycleData) {
-                            expectedFileSize[0] += cycle.getTileInfo().getCompressedBlockSize();
+                tiles.forEach(tileNum -> {
+                    final long[] expectedFileSize = new long[readStructure.totalCycles];
+
+                    CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tileNum, locs, true);
+                    for (int i = 0; i < expectedFileSize.length; i++) {
+                        expectedFileSize[i] += reader.getHeaderSize();
+                    }
+                    BaseBclReader.CycleData[] cycleData = reader.getCycleData();
+                    for (int i = 0; i < expectedFileSize.length; i++) {
+                        expectedFileSize[i] += cycleData[i].getTileInfo().getCompressedBlockSize();
+                    }
+                    for (int i = 0; i < expectedFileSize.length; i++) {
+                        File cbcl = cbcls.get(i);
+                        if (cbcl.length() != expectedFileSize[0]) {
+                            throw new PicardException(
+                                    String.format("File %s is not the expected size of %d instead it is %d",
+                                            cbcl.getAbsolutePath(), expectedFileSize[0], cbcl.length()));
                         }
-                    });
-                    if (cbcl.length() != expectedFileSize[0]) {
-                        throw new PicardException(
-                                String.format("File %s is not the expected size of %d instead it is %d",
-                                        cbcl.getAbsolutePath(), expectedFileSize[0], cbcl.length()));
                     }
                 });
 
