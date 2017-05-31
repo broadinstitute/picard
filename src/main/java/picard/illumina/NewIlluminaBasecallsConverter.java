@@ -176,7 +176,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
     }
 
-    private File[] getTiledFiles(File baseDirectory, Pattern pattern) {
+    public static File[] getTiledFiles(File baseDirectory, Pattern pattern) {
         return IOUtil.getFilesMatchingRegexp(baseDirectory, pattern);
     }
 

@@ -70,11 +70,11 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
 
     private CbclData queue = null;
     private Iterator<AbstractIlluminaPositionFileReader.PositionInfo> positionInfoIterator;
-
     private final CycleData[] cycleData;
     private final Map<Integer, File> filterFileMap;
     private final Map<Integer, boolean[]> cachedFilter = new HashMap<>();
     private final Map<Integer, Map<Integer, File>> surfaceToTileToCbclMap;
+    private int headerSize;
 
     private static final int INITIAL_HEADER_SIZE = 6;
     private static final Log log = Log.getInstance(CbclReader.class);
@@ -115,7 +115,7 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
                     }
 
                     short version = byteBuffer.getShort();
-                    int headerSize = byteBuffer.getInt();
+                    headerSize = byteBuffer.getInt();
 
                     final ByteBuffer headerBuffer = ByteBuffer.allocate(headerSize - INITIAL_HEADER_SIZE);
                     headerBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -366,5 +366,13 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
             cachedTile[totalCycleCount] = unNibbledByteArray;
         }
         cachedTilePosition[totalCycleCount] = 0;
+    }
+
+    public CycleData[] getCycleData() {
+        return cycleData;
+    }
+
+    public int getHeaderSize() {
+        return headerSize;
     }
 }

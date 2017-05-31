@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-class BaseBclReader {
+public class BaseBclReader {
     private static final byte BASE_MASK = 0x0003;
     private static final byte[] BASE_LOOKUP = new byte[]{'A', 'C', 'G', 'T'};
     final InputStream[] streams;
@@ -108,7 +108,7 @@ class BaseBclReader {
         }
     }
 
-    class CycleData {
+    public class CycleData {
         final short version;
         final int headerSize;
 
@@ -116,7 +116,6 @@ class BaseBclReader {
         final byte bitsPerQualityScore;
         final int numberOfBins;
         final byte[] qualityBins;
-
         final int numTiles;
         final TileData tileInfo;
         final boolean pfExcluded;
@@ -134,10 +133,14 @@ class BaseBclReader {
             this.tileInfo = tileInfo;
             this.pfExcluded = pfExcluded;
         }
+
+        public TileData getTileInfo() {
+            return tileInfo;
+        }
     }
 
 
-    class TileData {
+    public class TileData {
         final int tileNum;
         final int numClustersInTile;
         final int uncompressedBlockSize;
@@ -151,6 +154,14 @@ class BaseBclReader {
             this.uncompressedBlockSize = uncompressedBlockSize;
             this.compressedBlockSize = compressedBlockSize;
             this.filePosition = filePosition;
+        }
+
+        public int getCompressedBlockSize() {
+            return compressedBlockSize;
+        }
+
+        public int getNumClustersInTile() {
+            return numClustersInTile;
         }
     }
 }

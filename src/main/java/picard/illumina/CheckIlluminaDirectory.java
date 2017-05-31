@@ -8,22 +8,33 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.Illumina;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.OutputMapping;
 import picard.illumina.parser.ParameterizedFileUtil;
 import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
+import picard.illumina.parser.readers.BaseBclReader;
+import picard.illumina.parser.readers.CbclReader;
+import picard.illumina.parser.readers.LocsFileReader;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static picard.illumina.BasecallsConverter.TILE_NUMBER_COMPARATOR;
+import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
+import static picard.illumina.parser.NewIlluminaDataProvider.fileToTile;
 
 /**
  * Program to check a lane of an Illumina output directory.  This program checks that files exist, are non-zero in length, for every tile/cycle and
@@ -90,6 +101,8 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             optional = true)
     public Boolean LINK_LOCS = false;
 
+    public Boolean USE_NEW_CONVERTER = false;
+
     /**
      * Required main method implementation.
      */
@@ -113,30 +126,90 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         log.info("Expected cycles: " + StringUtil.intValuesToString(expectedCycles));
 
         for (final Integer lane : LANES) {
-            IlluminaFileUtil fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
-            final List<Integer> expectedTiles = fileUtil.getExpectedTiles();
-            if (!TILE_NUMBERS.isEmpty()) {
-                expectedTiles.retainAll(TILE_NUMBERS);
-            }
+            if (USE_NEW_CONVERTER) {
+                List<Integer> tiles = new ArrayList<>();
 
-            if (LINK_LOCS) {
-                createLocFileSymlinks(fileUtil, lane);
-                //we need to create a new file util because it stores a cache to the files it found on
-                //construction and this doesn't inclue the recently created symlinks
-                fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
-            }
+                File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(lane));
 
-            log.info("Checking lane " + lane);
-            log.info("Expected tiles: " + StringUtil.join(", ", expectedTiles));
+                File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
 
-            final int numFailures = verifyLane(fileUtil, expectedTiles, expectedCycles, DATA_TYPES, FAKE_FILES);
+                //check all bcls/cbcls
+                List<File> cbcls = new ArrayList<>();
+                Arrays.asList(cycleDirs)
+                        .forEach(cycleDir -> cbcls.addAll(
+                                Arrays.asList(IOUtil.getFilesMatchingRegexp(
+                                        cycleDir, "^" + IlluminaFileUtil.longLaneStr(lane) + "_(\\d{1,5}).cbcl$"))));
+                IOUtil.assertFilesAreReadable(cbcls);
 
-            if (numFailures > 0) {
-                log.info("Lane " + lane + " FAILED " + " Total Errors: " + numFailures);
-                failingLanes.add(lane);
-                totalFailures += numFailures;
+                //check all pf filter files
+                Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
+                        ParameterizedFileUtil.makeLaneTileRegex(".filter", lane)));
+                File[] filterFiles = getTiledFiles(laneDir, laneTileRegex);
+                for (File filterFile : filterFiles) {
+                    Matcher tileMatcher = laneTileRegex.matcher(filterFile.getName());
+                    if (tileMatcher.matches()) {
+                        tiles.add(Integer.valueOf(tileMatcher.group(1)));
+                    }
+                }
+                IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
+                tiles.sort(TILE_NUMBER_COMPARATOR);
+
+                //check s.locs
+                File locsFile = new File(BASECALLS_DIR.getParentFile(), "s.locs");
+                LocsFileReader locsFileReader = new LocsFileReader(locsFile);
+                List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
+                while (locsFileReader.hasNext()) {
+                    locs.add(locsFileReader.next());
+                }
+
+                Map<Integer, File> filterFileMap = new HashMap<>();
+                for (File filterFile : filterFiles) {
+                    filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
+                }
+
+                cbcls.forEach(cbcl -> {
+                    final long[] expectedFileSize = {0};
+                    tiles.forEach(tileNum -> {
+                        CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tileNum, locs);
+                        expectedFileSize[0] += reader.getHeaderSize();
+                        BaseBclReader.CycleData[] cycleData = reader.getCycleData();
+                        for (BaseBclReader.CycleData cycle : cycleData) {
+                            expectedFileSize[0] += cycle.getTileInfo().getCompressedBlockSize();
+                        }
+                    });
+                    if (cbcl.length() != expectedFileSize[0]) {
+                        throw new PicardException(
+                                String.format("File %s is not the expected size of %d instead it is %d",
+                                        cbcl.getAbsolutePath(), expectedFileSize[0], cbcl.length()));
+                    }
+                });
+
             } else {
-                log.info("Lane " + lane + " SUCCEEDED ");
+                IlluminaFileUtil fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
+                final List<Integer> expectedTiles = fileUtil.getExpectedTiles();
+                if (!TILE_NUMBERS.isEmpty()) {
+                    expectedTiles.retainAll(TILE_NUMBERS);
+                }
+
+                if (LINK_LOCS) {
+                    createLocFileSymlinks(fileUtil, lane);
+                    //we need to create a new file util because it stores a cache to the files it found on
+                    //construction and this doesn't inclue the recently created symlinks
+                    fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
+                }
+
+                log.info("Checking lane " + lane);
+                log.info("Expected tiles: " + StringUtil.join(", ", expectedTiles));
+
+                final int numFailures = verifyLane(fileUtil, expectedTiles, expectedCycles, DATA_TYPES, FAKE_FILES);
+
+                if (numFailures > 0) {
+                    log.info("Lane " + lane + " FAILED " + " Total Errors: " + numFailures);
+                    failingLanes.add(lane);
+                    totalFailures += numFailures;
+                } else {
+                    log.info("Lane " + lane + " SUCCEEDED ");
+                }
             }
         }
 

@@ -106,7 +106,7 @@ public class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
         return cluster;
     }
 
-    private Integer fileToTile(final String fileName) {
+    public static Integer fileToTile(final String fileName) {
         final Matcher matcher = Pattern.compile("^s_\\d+_(\\d{1,5}).+").matcher(fileName);
         if (!matcher.matches()) {
             return null;
