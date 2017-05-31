@@ -101,7 +101,8 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             optional = true)
     public Boolean LINK_LOCS = false;
 
-    public Boolean USE_NEW_CONVERTER = false;
+    @Option(doc = "Use the new converter", optional = true)
+    public boolean USE_NEW_CONVERTER = false;
 
     /**
      * Required main method implementation.
