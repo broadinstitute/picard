@@ -171,7 +171,9 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 cbcls.forEach(cbcl -> {
                     final long[] expectedFileSize = {0};
                     tiles.forEach(tileNum -> {
-                        CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tileNum, locs);
+                        log.info("Checking tile " + tileNum);
+                        CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tileNum,
+                                locs, true);
                         expectedFileSize[0] += reader.getHeaderSize();
                         BaseBclReader.CycleData[] cycleData = reader.getCycleData();
                         for (BaseBclReader.CycleData cycle : cycleData) {

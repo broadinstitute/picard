@@ -79,18 +79,20 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
     private static final int INITIAL_HEADER_SIZE = 6;
     private static final Log log = Log.getInstance(CbclReader.class);
 
-    public CbclReader(final List<File> cbcls, final Map<Integer, File> filterFileMap, final int[] outputLengths, int tileNum, List<AbstractIlluminaPositionFileReader.PositionInfo> locs) {
+    public CbclReader(final List<File> cbcls, final Map<Integer, File> filterFileMap, final int[] outputLengths,
+                      int tileNum, List<AbstractIlluminaPositionFileReader.PositionInfo> locs, boolean headerOnly) {
         super(outputLengths);
         surfaceToTileToCbclMap = sortCbcls(cbcls);
         this.filterFileMap = filterFileMap;
         cycleData = new CycleData[cycles];
         cachedTile = new byte[cycles][];
         cachedTilePosition = new int[cycles];
-        readSurfaceTile(tileNum, locs);
+        readSurfaceTile(tileNum, locs, headerOnly);
         close();
     }
 
-    private void readSurfaceTile(int tileNum, List<AbstractIlluminaPositionFileReader.PositionInfo> locs) {
+    private void readSurfaceTile(int tileNum, List<AbstractIlluminaPositionFileReader.PositionInfo> locs,
+                                 boolean headerOnly) {
         log.info("Processing tile " + tileNum);
         try {
             for (Map.Entry<Integer, Map<Integer, File>> entry : surfaceToTileToCbclMap.entrySet()) {
@@ -169,6 +171,9 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
                     headerBuffer.clear();
                 }
             }
+
+            if (headerOnly) return;
+
             int totalCycleCount = 0;
 
             if (cycleData[totalCycleCount].tileInfo == null) {

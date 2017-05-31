@@ -33,7 +33,8 @@ public class CbclReaderTest {
         LocsFileReader locsFileReader = new LocsFileReader(new File("testdata/picard/illumina/readerTests/s_1_6.locs"));
         List<AbstractIlluminaPositionFileReader.PositionInfo> locs = locsFileReader.toList();
 
-        final CbclReader reader = new CbclReader(Arrays.asList(PASSING_CBCL_C99_1, PASSING_CBCL_C100_1), filters, new int[]{2}, 1101, locs);
+        final CbclReader reader = new CbclReader(Arrays.asList(PASSING_CBCL_C99_1, PASSING_CBCL_C100_1),
+                filters, new int[]{2}, 1101, locs, false);
 
         int i = 0;
         while (reader.hasNext()) {

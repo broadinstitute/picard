@@ -56,7 +56,7 @@ public class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
         for (File filterFile : filterFiles) {
             filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
         }
-        this.reader = new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(), tileNum, locs);
+        this.reader = new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(), tileNum, locs, false);
         this.outputReadStructure = outputMapping.getOutputReadStructure();
 
         this.noMatchMetric = noMatchMetric;
