@@ -45,6 +45,7 @@ import picard.cmdline.programgroups.Illumina;
 import picard.fastq.Casava18ReadNameEncoder;
 import picard.fastq.IlluminaReadNameEncoder;
 import picard.fastq.ReadNameEncoder;
+import picard.illumina.ExtractIlluminaBarcodes.BarcodeMetric;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.ReadData;
 import picard.illumina.parser.ReadStructure;

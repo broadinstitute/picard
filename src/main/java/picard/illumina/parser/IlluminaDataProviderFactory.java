@@ -27,7 +27,7 @@ package picard.illumina.parser;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
-import picard.illumina.BarcodeMetric;
+import picard.illumina.ExtractIlluminaBarcodes.BarcodeMetric;
 import picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;

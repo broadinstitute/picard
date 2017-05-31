@@ -1,7 +1,7 @@
 package picard.illumina.parser;
 
-import picard.illumina.BarcodeMatch;
-import picard.illumina.BarcodeMetric;
+import picard.illumina.ExtractIlluminaBarcodes;
+import picard.illumina.ExtractIlluminaBarcodes.BarcodeMetric;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.CbclReader;
 
@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static picard.illumina.ExtractIlluminaBarcodes.PerTileBarcodeExtractor.findBestBarcodeAndUpdateMetrics;
 
 /**
  * Parse cbcls Illumina Basecall files, and use them the to populate
@@ -96,7 +98,7 @@ public class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
         }
 
 
-        final BarcodeMatch match = BarcodeMatch.findBestBarcodeAndUpdateMetrics(barcodeSubsequences, qualityScores,
+        final ExtractIlluminaBarcodes.PerTileBarcodeExtractor.BarcodeMatch match = findBestBarcodeAndUpdateMetrics(barcodeSubsequences, qualityScores,
                 true, barcodeMetricMap, noMatchMetric, maxNoCalls, maxMismatches,
                 minMismatchDelta, minimumBaseQuality);
 

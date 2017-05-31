@@ -23,9 +23,11 @@
  */
 package picard.illumina;
 
+import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
@@ -446,6 +448,130 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         barcodesParser.close();
     }
 
+    /**
+     * Metrics produced by the ExtractIlluminaBarcodes program that is used to parse data in
+     * the basecalls directory and determine to which barcode each read should be assigned.
+     */
+    public static class BarcodeMetric extends MetricBase {
+        /**
+         * The barcode (from the set of expected barcodes) for which the following metrics apply.
+         * Note that the "symbolic" barcode of NNNNNN is used to report metrics for all reads that
+         * do not match a barcode.
+         */
+        public String BARCODE;
+        /**
+         * The barcode name.
+         */
+        public String BARCODE_NAME = "";
+        /**
+         * The name of the library
+         */
+        public String LIBRARY_NAME = "";
+        /**
+         * The total number of reads matching the barcode.
+         */
+        public int READS = 0;
+        /**
+         * The number of PF reads matching this barcode (always less than or equal to READS).
+         */
+        public int PF_READS = 0;
+        /**
+         * The number of all reads matching this barcode that matched with 0 errors or no-calls.
+         */
+        public int PERFECT_MATCHES = 0;
+        /**
+         * The number of PF reads matching this barcode that matched with 0 errors or no-calls.
+         */
+        public int PF_PERFECT_MATCHES = 0;
+        /**
+         * The number of all reads matching this barcode that matched with 1 error or no-call.
+         */
+        public int ONE_MISMATCH_MATCHES = 0;
+        /**
+         * The number of PF reads matching this barcode that matched with 1 error or no-call.
+         */
+        public int PF_ONE_MISMATCH_MATCHES = 0;
+        /**
+         * The fraction of all reads in the lane that matched to this barcode.
+         */
+        public double PCT_MATCHES = 0d;
+        /**
+         * The rate of all reads matching this barcode to all reads matching the most prevelant barcode. For the
+         * most prevelant barcode this will be 1, for all others it will be less than 1 (except for the possible
+         * exception of when there are more orphan reads than for any other barcode, in which case the value
+         * may be arbitrarily large).  One over the lowest number in this column gives you the fold-difference
+         * in representation between barcodes.
+         */
+        public double RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT = 0d;
+        /**
+         * The fraction of PF reads in the lane that matched to this barcode.
+         */
+        public double PF_PCT_MATCHES = 0d;
+
+        /**
+         * The rate of PF reads matching this barcode to PF reads matching the most prevelant barcode. For the
+         * most prevelant barcode this will be 1, for all others it will be less than 1 (except for the possible
+         * exception of when there are more orphan reads than for any other barcode, in which case the value
+         * may be arbitrarily large).  One over the lowest number in this column gives you the fold-difference
+         * in representation of PF reads between barcodes.
+         */
+        public double PF_RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT = 0d;
+
+        /**
+         * The "normalized" matches to each barcode. This is calculated as the number of pf reads matching
+         * this barcode over the sum of all pf reads matching any barcode (excluding orphans). If all barcodes
+         * are represented equally this will be 1.
+         */
+        public double PF_NORMALIZED_MATCHES;
+
+        protected byte[][] barcodeBytes;
+
+        public BarcodeMetric(final String barcodeName, final String libraryName,
+                             final String barcodeDisplay, final String[] barcodeSeqs) {
+
+            this.BARCODE = barcodeDisplay;
+            this.BARCODE_NAME = barcodeName;
+            this.LIBRARY_NAME = libraryName;
+            this.barcodeBytes = new byte[barcodeSeqs.length][];
+            for (int i = 0; i < barcodeSeqs.length; i++) {
+                barcodeBytes[i] = htsjdk.samtools.util.StringUtil.stringToBytes(barcodeSeqs[i]);
+            }
+        }
+
+        /**
+         * This ctor is necessary for when reading metrics from file
+         */
+        public BarcodeMetric() {
+            barcodeBytes = null;
+        }
+
+        /**
+         * Creates a copy of metric initialized with only non-accumulated and non-calculated values set
+         */
+        public static BarcodeMetric copy(final BarcodeMetric metric) {
+            final BarcodeMetric result = new BarcodeMetric();
+            result.BARCODE = metric.BARCODE;
+            result.BARCODE_NAME = metric.BARCODE_NAME;
+            result.LIBRARY_NAME = metric.LIBRARY_NAME;
+            result.barcodeBytes = metric.barcodeBytes;
+            return result;
+        }
+
+        /**
+         * Adds the non-calculated
+         *
+         * @param metric
+         */
+        public void merge(final BarcodeMetric metric) {
+            this.READS += metric.READS;
+            this.PF_READS += metric.PF_READS;
+            this.PERFECT_MATCHES += metric.PERFECT_MATCHES;
+            this.PF_PERFECT_MATCHES += metric.PF_PERFECT_MATCHES;
+            this.ONE_MISMATCH_MATCHES += metric.ONE_MISMATCH_MATCHES;
+            this.PF_ONE_MISMATCH_MATCHES += metric.PF_ONE_MISMATCH_MATCHES;
+        }
+
+    }
 
     /**
      * Extracts barcodes and accumulates metrics for an entire tile.
@@ -460,6 +586,24 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         private final BaseIlluminaDataProvider provider;
         private final ReadStructure outputReadStructure;
         private final int maxNoCalls, maxMismatches, minMismatchDelta, minimumBaseQuality;
+
+        /**
+         * Utility class to hang onto data about the best match for a given barcode
+         */
+        public static class BarcodeMatch {
+            boolean matched;
+            String barcode;
+            int mismatches;
+            int mismatchesToSecondBest;
+
+            public boolean isMatched() {
+                return matched;
+            }
+
+            public String getBarcode() {
+                return barcode;
+            }
+        }
 
         /**
          * Constructor
@@ -535,17 +679,17 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                         if (usingQualityScores) qualityScores[i] = cluster.getRead(barcodeIndices[i]).getQualities();
                     }
                     final boolean passingFilter = cluster.isPf();
-                    final BarcodeMatch match = BarcodeMatch.findBestBarcodeAndUpdateMetrics(barcodeSubsequences,
-                            qualityScores, passingFilter, metrics, noMatch, maxNoCalls, maxMismatches,
+                    final BarcodeMatch match = findBestBarcodeAndUpdateMetrics(barcodeSubsequences, qualityScores,
+                            passingFilter, metrics, noMatch, maxNoCalls, maxMismatches,
                             minMismatchDelta, minimumBaseQuality);
 
-                    final String yOrN = (match.isMatched() ? "Y" : "N");
+                    final String yOrN = (match.matched ? "Y" : "N");
 
                     for (final byte[] bc : barcodeSubsequences) {
                         writer.write(StringUtil.bytesToString(bc));
                     }
-                    writer.write("\t" + yOrN + "\t" + match.getBarcode() + "\t" + String.valueOf(match.getMismatches()) +
-                            "\t" + String.valueOf(match.getMismatchesToSecondBest()));
+                    writer.write("\t" + yOrN + "\t" + match.barcode + "\t" + String.valueOf(match.mismatches) +
+                            "\t" + String.valueOf(match.mismatchesToSecondBest));
                     writer.newLine();
                 }
                 writer.close();
@@ -555,6 +699,116 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             } finally {
                 provider.close();
             }
+        }
+
+        /**
+         * Find the best barcode match for the given read sequence, and accumulate metrics
+         *
+         * @param readSubsequences portion of read containing barcode
+         * @param passingFilter    PF flag for the current read
+         * @return perfect barcode string, if there was a match within tolerance, or null if not.
+         */
+        public static BarcodeMatch findBestBarcodeAndUpdateMetrics(final byte[][] readSubsequences,
+                                                                   final byte[][] qualityScores,
+                                                                   final boolean passingFilter,
+                                                                   final Map<String, BarcodeMetric> metrics,
+                                                                   final BarcodeMetric noMatchBarcodeMetric,
+                                                                   final int maxNoCalls,
+                                                                   final int maxMismatches,
+                                                                   final int minMismatchDelta,
+                                                                   final int minimumBaseQuality) {
+            BarcodeMetric bestBarcodeMetric = null;
+            int totalBarcodeReadBases = 0;
+            int numNoCalls = 0; // NoCalls are calculated for all the barcodes combined
+
+            for (final byte[] bc : readSubsequences) {
+                totalBarcodeReadBases += bc.length;
+                for (final byte b : bc) if (SequenceUtil.isNoCall(b)) ++numNoCalls;
+            }
+
+            // PIC-506 When forcing all reads to match a single barcode, allow a read to match even if every
+            // base is a mismatch.
+            int numMismatchesInBestBarcode = totalBarcodeReadBases + 1;
+            int numMismatchesInSecondBestBarcode = totalBarcodeReadBases + 1;
+
+            for (final BarcodeMetric barcodeMetric : metrics.values()) {
+                final int numMismatches = countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
+                if (numMismatches < numMismatchesInBestBarcode) {
+                    if (bestBarcodeMetric != null) {
+                        numMismatchesInSecondBestBarcode = numMismatchesInBestBarcode;
+                    }
+                    numMismatchesInBestBarcode = numMismatches;
+                    bestBarcodeMetric = barcodeMetric;
+                } else if (numMismatches < numMismatchesInSecondBestBarcode) {
+                    numMismatchesInSecondBestBarcode = numMismatches;
+                }
+            }
+
+            final boolean matched = bestBarcodeMetric != null &&
+                    numNoCalls <= maxNoCalls &&
+                    numMismatchesInBestBarcode <= maxMismatches &&
+                    numMismatchesInSecondBestBarcode - numMismatchesInBestBarcode >= minMismatchDelta;
+
+            final BarcodeMatch match = new BarcodeMatch();
+
+            // If we have something that's not a "match" but matches one barcode
+            // slightly, we output that matching barcode in lower case
+            if (numNoCalls + numMismatchesInBestBarcode < totalBarcodeReadBases) {
+                match.mismatches = numMismatchesInBestBarcode;
+                match.mismatchesToSecondBest = numMismatchesInSecondBestBarcode;
+                match.barcode = bestBarcodeMetric.BARCODE.toLowerCase().replaceAll(IlluminaUtil.BARCODE_DELIMITER, "");
+            } else {
+                match.mismatches = totalBarcodeReadBases;
+                match.barcode = "";
+            }
+
+            if (matched) {
+                ++bestBarcodeMetric.READS;
+                if (passingFilter) {
+                    ++bestBarcodeMetric.PF_READS;
+                }
+                if (numMismatchesInBestBarcode == 0) {
+                    ++bestBarcodeMetric.PERFECT_MATCHES;
+                    if (passingFilter) {
+                        ++bestBarcodeMetric.PF_PERFECT_MATCHES;
+                    }
+                } else if (numMismatchesInBestBarcode == 1) {
+                    ++bestBarcodeMetric.ONE_MISMATCH_MATCHES;
+                    if (passingFilter) {
+                        ++bestBarcodeMetric.PF_ONE_MISMATCH_MATCHES;
+                    }
+                }
+
+                match.matched = true;
+                match.barcode = bestBarcodeMetric.BARCODE.replaceAll(IlluminaUtil.BARCODE_DELIMITER, "");
+            } else {
+                ++noMatchBarcodeMetric.READS;
+                if (passingFilter) {
+                    ++noMatchBarcodeMetric.PF_READS;
+                }
+            }
+
+            return match;
+        }
+
+        /**
+         * Compare barcode sequence to bases from read
+         *
+         * @return how many bases did not match
+         */
+        private static int countMismatches(final byte[][] barcodeBytes, final byte[][] readSubsequence, final byte[][] qualities, int minimumBaseQuality) {
+            int numMismatches = 0;
+            // Read sequence and barcode length may not be equal, so we just use the shorter of the two
+            for (int j = 0; j < barcodeBytes.length; j++) {
+                final int basesToCheck = Math.min(barcodeBytes[j].length, readSubsequence[j].length);
+                for (int i = 0; i < basesToCheck; ++i) {
+                    if (!SequenceUtil.isNoCall(readSubsequence[j][i])) {
+                        if (!SequenceUtil.basesEqual(barcodeBytes[j][i], readSubsequence[j][i])) ++numMismatches;
+                        else if (qualities != null && qualities[j][i] < minimumBaseQuality) ++numMismatches;
+                    }
+                }
+            }
+            return numMismatches;
         }
     }
 }
