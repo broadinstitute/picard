@@ -114,6 +114,10 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "marking has been overly aggressive and coverage is low.")
     public boolean ALLOW_DUPLICATE_READS = false;
 
+    @Option(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from" +
+            " the expected sample.")
+    public double GENOTYPING_ERROR_RATE = 1e-6;
+
     @Option(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.")
     public boolean OUTPUT_ERRORS_ONLY = false;
 
@@ -130,9 +134,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     public int EXIT_CODE_WHEN_MISMATCH = 1;
 
     private final Log log = Log.getInstance(CrosscheckFingerprints.class);
-
-    // the rate at which we expect a given genotype to change for an individual (exceedingly small)
-    final static private double GENOTYPING_ERROR_RATE = 1e-6;
 
     private double[][] crosscheckMatrix=null;
     private final List<String> matrixKeys = new ArrayList<>();
