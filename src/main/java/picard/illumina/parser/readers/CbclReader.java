@@ -75,6 +75,7 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
     private final Map<Integer, boolean[]> cachedFilter = new HashMap<>();
     private final Map<Integer, Map<Integer, File>> surfaceToTileToCbclMap;
     private int headerSize;
+    private Map<Integer, List<TileData>> allTiles = new HashMap<>();
 
     private static final int INITIAL_HEADER_SIZE = 6;
     private static final Log log = Log.getInstance(CbclReader.class);
@@ -87,6 +88,9 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
         cycleData = new CycleData[cycles];
         cachedTile = new byte[cycles][];
         cachedTilePosition = new int[cycles];
+        for (int i = 1; i <= cycles; i++) {
+            allTiles.put(i, new ArrayList<>());
+        }
         readSurfaceTile(tileNum, locs, headerOnly);
         close();
     }
@@ -154,8 +158,10 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
                         int numClustersInTile = headerBuffer.getInt();
                         int uncompressedBlockSize = headerBuffer.getInt();
                         int compressedBlockSize = headerBuffer.getInt();
+                        TileData tileData = new TileData(tile, numClustersInTile, uncompressedBlockSize, compressedBlockSize, filePos);
+                        allTiles.get(i + 1).add(tileData);
                         if (tile == tileNum) {
-                            tileInfo = new TileData(tile, numClustersInTile, uncompressedBlockSize, compressedBlockSize, filePos);
+                            tileInfo = tileData;
                         }
                         filePos += compressedBlockSize;
                     }
@@ -390,4 +396,9 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
         });
         return cbclFile[0];
     }
+
+    public Map<Integer, List<TileData>> getAllTiles() {
+        return allTiles;
+    }
+
 }

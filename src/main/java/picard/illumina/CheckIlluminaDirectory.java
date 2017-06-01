@@ -17,7 +17,6 @@ import picard.illumina.parser.OutputMapping;
 import picard.illumina.parser.ParameterizedFileUtil;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
-import picard.illumina.parser.readers.BaseBclReader;
 import picard.illumina.parser.readers.CbclReader;
 import picard.illumina.parser.readers.LocsFileReader;
 
@@ -166,30 +165,18 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 for (File filterFile : filterFiles) {
                     filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
                 }
-                final long[] expectedFileSize = new long[readStructure.totalCycles];
-
-                tiles.forEach(tileNum -> {
-                    CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tileNum, locs, true);
-                    for (int i = 0; i < expectedFileSize.length; i++) {
-                        expectedFileSize[i] += reader.getHeaderSize();
-                    }
-                    BaseBclReader.CycleData[] cycleData = reader.getCycleData();
-                    for (int i = 0; i < expectedFileSize.length; i++) {
-                        expectedFileSize[i] += cycleData[i].getTileInfo().getCompressedBlockSize();
-                    }
-                });
-
 
                 CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tiles.get(0), locs, true);
-                for (int i = 0; i < expectedFileSize.length; i++) {
-                    File fileForCycle = reader.getFileForCycle(i);
-                    if (expectedFileSize[i] != fileForCycle.length()) {
+
+                reader.getAllTiles().forEach((key, value) -> {
+                    File fileForCycle = reader.getFileForCycle(key);
+                    final long[] expectedFileSize = {0};
+                    value.forEach(tileData -> expectedFileSize[0] += tileData.getCompressedBlockSize());
+                    if (expectedFileSize[0] != fileForCycle.length()) {
                         throw new PicardException(String.format("File %s is not the expected size of %d instead it is %d",
-                                fileForCycle, expectedFileSize[i], fileForCycle.length()));
+                                fileForCycle, expectedFileSize[0], fileForCycle.length()));
                     }
-                }
-
-
+                });
 
             } else {
                 IlluminaFileUtil fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
