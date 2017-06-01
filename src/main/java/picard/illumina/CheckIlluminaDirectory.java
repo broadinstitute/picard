@@ -171,7 +171,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 reader.getAllTiles().forEach((key, value) -> {
                     List<File> fileForCycle = reader.getFilesForCycle(key);
                     final long[] totalFilesSize = {0};
-                    fileForCycle.forEach(file -> totalFilesSize[0] += file.length());
+                    fileForCycle.forEach(file -> totalFilesSize[0] += (file.length() - reader.getHeaderSize()));
 
                     final long[] expectedFileSize = {0};
                     value.forEach(tileData -> expectedFileSize[0] += tileData.getCompressedBlockSize());
