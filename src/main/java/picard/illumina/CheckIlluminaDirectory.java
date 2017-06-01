@@ -169,12 +169,16 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tiles.get(0), locs, true);
 
                 reader.getAllTiles().forEach((key, value) -> {
-                    File fileForCycle = reader.getFileForCycle(key);
+                    List<File> fileForCycle = reader.getFilesForCycle(key);
+                    final long[] totalFilesSize = {0};
+                    fileForCycle.forEach(file -> totalFilesSize[0] += file.length());
+
                     final long[] expectedFileSize = {0};
                     value.forEach(tileData -> expectedFileSize[0] += tileData.getCompressedBlockSize());
-                    if (expectedFileSize[0] != fileForCycle.length()) {
+
+                    if (expectedFileSize[0] != totalFilesSize[0]) {
                         throw new PicardException(String.format("File %s is not the expected size of %d instead it is %d",
-                                fileForCycle, expectedFileSize[0], fileForCycle.length()));
+                                fileForCycle, expectedFileSize[0], totalFilesSize[0]));
                     }
                 });
 

@@ -387,14 +387,14 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
         return headerSize;
     }
 
-    public File getFileForCycle(int i) {
-        final File[] cbclFile = new File[1];
+    public List<File> getFilesForCycle(int i) {
+        List<File> cbclFiles = new ArrayList<>();
         surfaceToTileToCbclMap.values().forEach(map -> {
             if (map.containsKey(i)) {
-                cbclFile[0] = map.get(i);
+                cbclFiles.add(map.get(i));
             }
         });
-        return cbclFile[0];
+        return cbclFiles;
     }
 
     public Map<Integer, List<TileData>> getAllTiles() {
