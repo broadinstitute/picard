@@ -4,16 +4,9 @@ import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.liftover.LiftOver;
+import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -33,10 +26,10 @@ import picard.cmdline.programgroups.VcfOrBcf;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * Tool for lifting over a VCF to another genome build and producing a properly header'd,
@@ -69,20 +62,20 @@ public class LiftoverVcf extends CommandLineProgram {
             "</pre>" +
             "For additional information, please see: http://genome.ucsc.edu/cgi-bin/hgLiftOver" +
             "<hr />";
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input VCF/BCF file to be lifted over.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input VCF/BCF file to be lifted over.")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output location to write the lifted over VCF/BCF to.")
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output location to write the lifted over VCF/BCF to.")
     public File OUTPUT;
 
-    @Option(shortName="C", doc="The liftover chain file. See https://genome.ucsc.edu/goldenPath/help/chain.html for a description" +
+    @Option(shortName = "C", doc = "The liftover chain file. See https://genome.ucsc.edu/goldenPath/help/chain.html for a description" +
             " of chain files.  See http://hgdownload.soe.ucsc.edu/downloads.html#terms for where to download chain files.")
     public File CHAIN;
 
-    @Option(doc="File to which to write rejected records.")
+    @Option(doc = "File to which to write rejected records.")
     public File REJECT;
 
-    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, common=false,
+    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, common = false,
             doc = "The reference sequence (fasta) for the TARGET genome build.  The fasta file must have an " +
                     "accompanying sequence dictionary (.dict file).")
     public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
@@ -104,29 +97,43 @@ public class LiftoverVcf extends CommandLineProgram {
     // When a contig used in the chain is not in the reference, exit with this value instead of 0.
     protected static int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE = 1;
 
-    /** Filter name to use when a target cannot be lifted over. */
+    /**
+     * Filter name to use when a target cannot be lifted over.
+     */
     public static final String FILTER_CANNOT_LIFTOVER_INDEL = "ReverseComplementedIndel";
 
-    /** Filter name to use when a target cannot be lifted over. */
+    /**
+     * Filter name to use when a target cannot be lifted over.
+     */
     public static final String FILTER_NO_TARGET = "NoTarget";
 
-    /** Filter name to use when a target is lifted over, but the reference allele doens't match the new reference. */
+    /**
+     * Filter name to use when a target is lifted over, but the reference allele doens't match the new reference.
+     */
     public static final String FILTER_MISMATCHING_REF_ALLELE = "MismatchedRefAllele";
 
-    /** Filters to be added to the REJECT file. */
+    /**
+     * Filters to be added to the REJECT file.
+     */
     private static final List<VCFFilterHeaderLine> FILTERS = CollectionUtil.makeList(
             new VCFFilterHeaderLine(FILTER_CANNOT_LIFTOVER_INDEL, "Indel falls into a reverse complemented region in the target genome."),
             new VCFFilterHeaderLine(FILTER_NO_TARGET, "Variant could not be lifted between genome builds."),
             new VCFFilterHeaderLine(FILTER_MISMATCHING_REF_ALLELE, "Reference allele does not match reference genome sequence after liftover.")
     );
 
-    /** Attribute used to store the name of the source contig/chromosome prior to liftover. */
+    /**
+     * Attribute used to store the name of the source contig/chromosome prior to liftover.
+     */
     public static final String ORIGINAL_CONTIG = "OriginalContig";
 
-    /** Attribute used to store the position of the variant on the source contig prior to liftover. */
+    /**
+     * Attribute used to store the position of the variant on the source contig prior to liftover.
+     */
     public static final String ORIGINAL_START = "OriginalStart";
 
-    /** Metadata to be added to the Passing file. */
+    /**
+     * Metadata to be added to the Passing file.
+     */
     private static final List<VCFInfoHeaderLine> ATTRS = CollectionUtil.makeList(
             new VCFInfoHeaderLine(ORIGINAL_CONTIG, 1, VCFHeaderLineType.String, "The name of the source contig/chromosome prior to liftover."),
             new VCFInfoHeaderLine(ORIGINAL_START, 1, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover.")
@@ -134,12 +141,8 @@ public class LiftoverVcf extends CommandLineProgram {
 
     private final Log log = Log.getInstance(LiftoverVcf.class);
 
-    // Stock main method
-    public static void main(final String[] args) {
-        new LiftoverVcf().instanceMainWithExit(args);
-    }
-
-    @Override protected int doWork() {
+    @Override
+    protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
         IOUtil.assertFileIsReadable(CHAIN);
@@ -154,12 +157,11 @@ public class LiftoverVcf extends CommandLineProgram {
 
         log.info("Loading up the target reference genome.");
         final ReferenceSequenceFileWalker walker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-        final Map<String,byte[]> refSeqs = new HashMap<String,byte[]>();
-        for (final SAMSequenceRecord rec: walker.getSequenceDictionary().getSequences()) {
-            refSeqs.put(rec.getSequenceName(), walker.get(rec.getSequenceIndex()).getBases());
+        final Map<String, ReferenceSequence> refSeqs = new HashMap<>();
+        for (final SAMSequenceRecord rec : walker.getSequenceDictionary().getSequences()) {
+            refSeqs.put(rec.getSequenceName(), walker.get(rec.getSequenceIndex()));
         }
         CloserUtil.close(walker);
-
 
         ////////////////////////////////////////////////////////////////////////
         // Setup the outputs
@@ -170,12 +172,14 @@ public class LiftoverVcf extends CommandLineProgram {
         if (WRITE_ORIGINAL_POSITION) {
             for (final VCFInfoHeaderLine line : ATTRS) outHeader.addMetaDataLine(line);
         }
-        final VariantContextWriter out = new VariantContextWriterBuilder().setOption(Options.INDEX_ON_THE_FLY)
+        final VariantContextWriter out = new VariantContextWriterBuilder()
+                .setOption(Options.INDEX_ON_THE_FLY)
                 .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
                 .setOutputFile(OUTPUT).setReferenceDictionary(walker.getSequenceDictionary()).build();
         out.writeHeader(outHeader);
 
-        final VariantContextWriter rejects = new VariantContextWriterBuilder().setOutputFile(REJECT).unsetOption(Options.INDEX_ON_THE_FLY)
+        final VariantContextWriter rejects = new VariantContextWriterBuilder().setOutputFile(REJECT)
+                .unsetOption(Options.INDEX_ON_THE_FLY)
                 .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
                 .build();
         final VCFHeader rejectHeader = new VCFHeader(in.getFileHeader());
@@ -184,7 +188,6 @@ public class LiftoverVcf extends CommandLineProgram {
             for (final VCFInfoHeaderLine line : ATTRS) rejectHeader.addMetaDataLine(line);
         }
         rejects.writeHeader(rejectHeader);
-
 
         ////////////////////////////////////////////////////////////////////////
         // Read the input VCF, lift the records over and write to the sorting
@@ -201,15 +204,16 @@ public class LiftoverVcf extends CommandLineProgram {
 
         ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
         // a mapping from original allele to reverse complemented allele
-        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<Allele, Allele>(10);
+        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(10);
 
         for (final VariantContext ctx : in) {
             ++total;
             final Interval source = new Interval(ctx.getContig(), ctx.getStart(), ctx.getEnd(), false, ctx.getContig() + ":" + ctx.getStart() + "-" + ctx.getEnd());
             final Interval target = liftOver.liftOver(source, LIFTOVER_MIN_MATCH);
 
-            // if the target is null OR (the target is reverse complemented AND the variant is an indel or mixed), then we cannot lift it over
-            if (target == null || (target.isNegativeStrand() && (ctx.isMixed() || ctx.isIndel()))) {
+            // if the target is null OR (the target is reverse complemented AND the variant is a non-biallelic indel or mixed), then we cannot lift it over
+
+            if (target == null || (target.isNegativeStrand() && (ctx.isMixed() || ctx.isIndel() && !ctx.isBiallelic()))) {
                 final String reason = (target == null) ? FILTER_NO_TARGET : FILTER_CANNOT_LIFTOVER_INDEL;
                 rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
                 failedLiftover++;
@@ -218,22 +222,30 @@ public class LiftoverVcf extends CommandLineProgram {
                 failedLiftover++;
 
                 String missingContigMessage = "Encountered a contig, " + target.getContig() + " that is not part of the target reference.";
-                if(WARN_ON_MISSING_CONTIG) {
+                if (WARN_ON_MISSING_CONTIG) {
                     log.warn(missingContigMessage);
                 } else {
                     log.error(missingContigMessage);
                     return EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE;
                 }
+            } else if ( target.isNegativeStrand() && ctx.isIndel() && ctx.isBiallelic()) {
+                final VariantContextBuilder flippedIndel=new VariantContextBuilder(flipIndel(ctx,liftOver,refSeqs.get(target.getContig())));
+
+                if (WRITE_ORIGINAL_POSITION) {
+                    flippedIndel.attribute(ORIGINAL_CONTIG, source.getContig());
+                    flippedIndel.attribute(ORIGINAL_START, source.getStart());
+                }
+                sorter.add(flippedIndel.make());
+
             } else {
                 // Fix the alleles if we went from positive to negative strand
                 reverseComplementAlleleMap.clear();
-                final List<Allele> alleles = new ArrayList<Allele>();
+                final List<Allele> alleles = new ArrayList<>();
 
                 for (final Allele oldAllele : ctx.getAlleles()) {
                     if (target.isPositiveStrand() || oldAllele.isSymbolic()) {
                         alleles.add(oldAllele);
-                    }
-                    else {
+                    } else {
                         final Allele fixedAllele = Allele.create(SequenceUtil.reverseComplement(oldAllele.getBaseString()), oldAllele.isReference());
                         alleles.add(fixedAllele);
                         reverseComplementAlleleMap.put(oldAllele, fixedAllele);
@@ -263,13 +275,12 @@ public class LiftoverVcf extends CommandLineProgram {
                 boolean mismatchesReference = false;
                 for (final Allele allele : builder.getAlleles()) {
                     if (allele.isReference()) {
-                        final byte[] ref = refSeqs.get(target.getContig());
-                        final String refString = StringUtil.bytesToString(ref, target.getStart()-1, target.length());
+                        final byte[] ref = refSeqs.get(target.getContig()).getBases();
+                        final String refString = StringUtil.bytesToString(ref, target.getStart() - 1, target.length());
 
                         if (!refString.equalsIgnoreCase(allele.getBaseString())) {
                             mismatchesReference = true;
                         }
-
                         break;
                     }
                 }
@@ -277,8 +288,7 @@ public class LiftoverVcf extends CommandLineProgram {
                 if (mismatchesReference) {
                     rejects.add(new VariantContextBuilder(ctx).filter(FILTER_MISMATCHING_REF_ALLELE).make());
                     failedAlleleCheck++;
-                }
-                else {
+                } else {
                     sorter.add(builder.make());
                 }
             }
@@ -313,21 +323,155 @@ public class LiftoverVcf extends CommandLineProgram {
         return 0;
     }
 
-    protected static GenotypesContext fixGenotypes(final GenotypesContext originals, final Map<Allele, Allele> reverseComplementAlleleMap) {
+    protected static Locatable getFlippedLocation(final VariantContext source, final LiftOver liftOver) {
+        Interval originalLocus = new Interval(source.getContig(), source.getStart() + 1, source.getEnd() + 1);
+        return liftOver.liftOver(originalLocus);
+    }
+
+    /**
+     * @param source            original variant context
+     * @param liftOver          the LiftOver object to use for flipping
+     * @param referenceSequence the reference sequence of the target
+     * @return a flipped variant-context.
+     */
+    protected static VariantContext flipIndel(final VariantContext source, final LiftOver liftOver, final ReferenceSequence referenceSequence) {
+        if (!source.isBiallelic()) return null;  //only supporting biallelic indels, for now.
+
+        final Locatable target = getFlippedLocation(source, liftOver);
+        if (target == null) return null;
+
+        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(10);
+
+        reverseComplementAlleleMap.clear();
+        final List<Allele> alleles = new ArrayList<>();
+
+        for (final Allele oldAllele : source.getAlleles()) {
+            // target.getStart is 1-based, reference bases are 0-based
+            final String alleleWithoutHead = oldAllele.getBaseString().substring(1, oldAllele.length());
+            final char refBase = (char) referenceSequence.getBases()[target.getStart() - 1];
+            final Allele fixedAllele = Allele.create(refBase + SequenceUtil.reverseComplement(alleleWithoutHead), oldAllele.isReference());
+            alleles.add(fixedAllele);
+            reverseComplementAlleleMap.put(oldAllele, fixedAllele);
+        }
+
+        VariantContextBuilder builder = new VariantContextBuilder(source.getSource(),
+                target.getContig(),
+                target.getStart(),
+                target.getEnd(),
+                alleles);
+
+        builder.id(source.getID());
+        builder.attributes(source.getAttributes());
+
+        builder.genotypes(fixGenotypes(source.getGenotypes(), reverseComplementAlleleMap));
+        builder.filters(source.getFilters());
+        builder.log10PError(source.getLog10PError());
+
+        return leftAlignVariant(builder.make(), referenceSequence);
+    }
+
+    protected static GenotypesContext fixGenotypes(final GenotypesContext originals, final Map<Allele, Allele> alleleMap) {
         // optimization: if nothing needs to be fixed then don't bother
-        if ( reverseComplementAlleleMap.isEmpty() ) {
+        if (alleleMap.isEmpty()) {
             return originals;
         }
 
         final GenotypesContext fixedGenotypes = GenotypesContext.create(originals.size());
-        for ( final Genotype genotype : originals ) {
-            final List<Allele> fixedAlleles = new ArrayList<Allele>();
-            for ( final Allele allele : genotype.getAlleles() ) {
-                final Allele fixedAllele = reverseComplementAlleleMap.containsKey(allele) ? reverseComplementAlleleMap.get(allele) : allele;
+        for (final Genotype genotype : originals) {
+            final List<Allele> fixedAlleles = new ArrayList<>();
+            for (final Allele allele : genotype.getAlleles()) {
+                final Allele fixedAllele = alleleMap.getOrDefault(allele, allele);
                 fixedAlleles.add(fixedAllele);
             }
             fixedGenotypes.add(new GenotypeBuilder(genotype).alleles(fixedAlleles).make());
         }
         return fixedGenotypes;
+    }
+
+    protected static VariantContext leftAlignVariant(final VariantContext vc, final ReferenceSequence referenceSequence) {
+        // from Adrian Tan, Gonçalo R. Abecasis and Hyun Min Kang. (2015) Unified Representation of Genetic Variants. Bioinformatics.
+
+        boolean changesInAlleles = true;
+
+        int start = vc.getStart();
+        int end = vc.getEnd();
+
+        Map<Allele, byte[]> alleleBasesMap = new HashMap<>();
+        vc.getAlleles().forEach(a -> alleleBasesMap.put(a, a.getBases()));
+
+        // 1. while changes in alleles do
+        while (changesInAlleles) {
+
+            changesInAlleles = false;
+            // 2. if alleles end with the same nucleotide then
+            if (alleleBasesMap.values().stream()
+                    .collect(Collectors.groupingBy(a -> a[a.length - 1], Collectors.toSet()))
+                    .size() == 1) {
+                // 3. truncate rightmost nucleotide of each allele
+                for (Allele allele : alleleBasesMap.keySet()) {
+                    alleleBasesMap.put(allele, truncateBase(alleleBasesMap.get(allele), true));
+                }
+                changesInAlleles = true;
+                end--;
+                // 4. end if
+            }
+
+            // 5. if there exists an empty allele then
+            if (alleleBasesMap.values().stream()
+                    .map(a -> a.length)
+                    .anyMatch(l -> l == 0)) {
+                // 6. extend alleles 1 nucleotide to the left
+                for (Allele allele : alleleBasesMap.keySet()) {
+                    // the first -1 for zero-base (getBases) versus 1-based (variant position)
+                    // another   -1 to get the base prior to the location of the start of the allele
+                    alleleBasesMap.put(allele, extendOneBaseLeft(alleleBasesMap.get(allele), referenceSequence.getBases()[start - 2]));
+                }
+                changesInAlleles = true;
+                start--;
+
+                // 7. end if
+            }
+        }
+
+        // 8. while leftmost nucleotide of each allele are the same and all alleles have length 2 or more do
+        while (alleleBasesMap.values().stream()
+                .allMatch(a -> a.length >= 2) &&
+
+                alleleBasesMap.values().stream()
+                        .collect(Collectors.groupingBy(a -> a[0], Collectors.toSet()))
+                        .size() == 1
+                ) {
+
+            //9. truncate the leftmost base of the alleles
+            for (Allele allele : alleleBasesMap.keySet()) {
+                alleleBasesMap.put(allele, truncateBase(alleleBasesMap.get(allele), false));
+            }
+            start++;
+        }
+
+        VariantContextBuilder builder = new VariantContextBuilder(vc);
+        builder.start(start);
+        builder.stop(end);
+
+        Map<Allele, Allele> fixedAlleleMap = alleleBasesMap.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, me -> Allele.create(me.getValue(), me.getKey().isReference())));
+        builder.alleles(fixedAlleleMap.values());
+        builder.genotypes(fixGenotypes(vc.getGenotypes(), fixedAlleleMap));
+
+        return builder.make();
+    }
+
+    private static byte[] truncateBase(byte[] allele, boolean truncateRightmost) {
+        return Arrays.copyOfRange(allele, truncateRightmost ? 0 : 1, truncateRightmost ? allele.length - 1 : allele.length);
+    }
+
+    private static byte[] extendOneBaseLeft(final byte[] bases, final byte base) {
+
+        byte[] newBases = new byte[bases.length + 1];
+
+        System.arraycopy(bases, 0, newBases, 1, bases.length);
+        newBases[0] = base;
+
+        return newBases;
     }
 }
