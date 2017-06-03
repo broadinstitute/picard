@@ -20,7 +20,8 @@ import java.util.Random;
 public class FifoBufferTest {
 
     /* Simply invokes the real test method many times with different inputs. */
-    @Test public void testFifoBuffer() throws IOException {
+    @Test
+    public void testFifoBuffer() throws IOException {
         test(1);
         test(2);
         test(3);

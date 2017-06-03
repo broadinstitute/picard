@@ -33,6 +33,7 @@ import htsjdk.samtools.BamIndexValidator.IndexValidationStringency;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
@@ -57,6 +58,7 @@ import java.util.List;
         programGroup = SamOrBam.class
 )
 public class ValidateSamFile extends CommandLineProgram {
+    private static final Log log = Log.getInstance(ValidateSamFile.class);
     static final String USAGE_SUMMARY = "Validates a SAM or BAM file.  ";
     static final String USAGE_DETAILS = "<p>This tool reports on the validity of a SAM or BAM file relative to the SAM format " +
             "specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper " +
@@ -133,75 +135,125 @@ public class ValidateSamFile extends CommandLineProgram {
         System.exit(new ValidateSamFile().instanceMain(args));
     }
 
+    /**
+     * Return types for doWork()
+     */
+    enum ReturnTypes {
+        FAILED(-1),     // failed to complete execution
+        SUCCESSFUL(0),  // ran successfully
+        WARNINGS(1),    // warnings but no errors
+        ERRORS_WARNINGS(2),      // errors and warnings
+        ERRORS(3);      // errors but no warnings
+
+        private final int value;
+
+        ReturnTypes(final int value) {
+            this.value = value;
+        }
+
+        int value() {
+            return value;
+        }
+    }
+
+    /**
+     * Do the work after command line has been parsed.
+     * 
+     * @return -1 - failed to complete execution, 0 - ran successfully without warnings or errors, 1 - warnings but no errors,
+     * 2 - errors and warnings, 3 - errors but no warnings
+     *
+     */
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        ReferenceSequenceFile reference = null;
-        if (REFERENCE_SEQUENCE != null) {
-            IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
-            reference = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
+        try {
+            IOUtil.assertFileIsReadable(INPUT);
+            ReferenceSequenceFile reference = null;
+            if (REFERENCE_SEQUENCE != null) {
+                IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
+                reference = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
 
-        }
-        final PrintWriter out;
-        if (OUTPUT != null) {
-            IOUtil.assertFileIsWritable(OUTPUT);
-            try {
-                out = new PrintWriter(OUTPUT);
-            } catch (FileNotFoundException e) {
-                // we already asserted this so we should not get here
-                throw new PicardException("Unexpected exception", e);
             }
-        } else {
-            out = new PrintWriter(System.out);
+            final PrintWriter out;
+            if (OUTPUT != null) {
+                IOUtil.assertFileIsWritable(OUTPUT);
+                try {
+                    out = new PrintWriter(OUTPUT);
+                } catch (FileNotFoundException e) {
+                    // we already asserted this so we should not get here
+                    throw new PicardException("Unexpected exception", e);
+                }
+            } else {
+                out = new PrintWriter(System.out);
+            }
+
+            boolean result;
+
+            final SamReaderFactory factory = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
+                    .validationStringency(ValidationStringency.SILENT)
+                    .enable(SamReaderFactory.Option.VALIDATE_CRC_CHECKSUMS);
+            final SamReader samReader = factory.open(INPUT);
+
+            if (samReader.type() != SamReader.Type.BAM_TYPE) VALIDATE_INDEX = false;
+
+            factory.setOption(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES, VALIDATE_INDEX);
+            factory.reapplyOptions(samReader);
+
+            final SamFileValidator validator = new SamFileValidator(out, MAX_OPEN_TEMP_FILES);
+            validator.setErrorsToIgnore(IGNORE);
+
+            if (IGNORE_WARNINGS) {
+                validator.setIgnoreWarnings(IGNORE_WARNINGS);
+            }
+            if (MODE == Mode.SUMMARY) {
+                validator.setVerbose(false, 0);
+            } else {
+                validator.setVerbose(true, MAX_OUTPUT);
+            }
+            if (IS_BISULFITE_SEQUENCED) {
+                validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
+            }
+            if (VALIDATE_INDEX) {
+                validator.setIndexValidationStringency(VALIDATE_INDEX ? IndexValidationStringency.EXHAUSTIVE : IndexValidationStringency.NONE);
+            }
+            if (IOUtil.isRegularPath(INPUT)) {
+                // Do not check termination if reading from a stream
+                validator.validateBamFileTermination(INPUT);
+            }
+
+            result = false;
+
+            switch (MODE) {
+                case SUMMARY:
+                    result = validator.validateSamFileSummary(samReader, reference);
+                    break;
+                case VERBOSE:
+                    result = validator.validateSamFileVerbose(samReader, reference);
+                    break;
+            }
+            out.flush();
+
+            if (result) {
+                return ReturnTypes.SUCCESSFUL.value();  // ran successfully with no warnings or errors
+            } else {
+                if (validator.getNumErrors() == 0) {
+                    if (validator.getNumWarnings() > 0) {
+                        return ReturnTypes.WARNINGS.value();   // warnings but no errors
+                    } else {
+                        log.error("SAM file validation fails without warnings or errors.");
+                        return ReturnTypes.FAILED.value();
+                    }
+                } else {
+                    if (validator.getNumWarnings() > 0) {
+                        return ReturnTypes.ERRORS_WARNINGS.value();   // errors and warnings
+                    } else {
+                        return ReturnTypes.ERRORS.value();  // errors but no warnings
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return ReturnTypes.FAILED.value();  // failed to complete execution
         }
-
-        boolean result;
-
-        final SamReaderFactory factory = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
-                .validationStringency(ValidationStringency.SILENT)
-                .enable(SamReaderFactory.Option.VALIDATE_CRC_CHECKSUMS);
-        final SamReader samReader = factory.open(INPUT);
-
-        if (samReader.type() != SamReader.Type.BAM_TYPE) VALIDATE_INDEX = false;
-
-        factory.setOption(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES, VALIDATE_INDEX);
-        factory.reapplyOptions(samReader);
-
-        final SamFileValidator validator = new SamFileValidator(out, MAX_OPEN_TEMP_FILES);
-        validator.setErrorsToIgnore(IGNORE);
-
-        if (IGNORE_WARNINGS) {
-            validator.setIgnoreWarnings(IGNORE_WARNINGS);
-        }
-        if (MODE == Mode.SUMMARY) {
-            validator.setVerbose(false, 0);
-        } else {
-            validator.setVerbose(true, MAX_OUTPUT);
-        }
-        if (IS_BISULFITE_SEQUENCED) {
-            validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
-        }
-        if (VALIDATE_INDEX) {
-            validator.setIndexValidationStringency(VALIDATE_INDEX ? IndexValidationStringency.EXHAUSTIVE : IndexValidationStringency.NONE);
-        }
-        if (IOUtil.isRegularPath(INPUT)) {
-            // Do not check termination if reading from a stream
-            validator.validateBamFileTermination(INPUT);
-        }
-
-        result = false;
-
-        switch (MODE) {
-            case SUMMARY:
-                result = validator.validateSamFileSummary(samReader, reference);
-                break;
-            case VERBOSE:
-                result = validator.validateSamFileVerbose(samReader, reference);
-                break;
-        }
-        out.flush();
-
-        return result ? 0 : 1;
     }
 
     @Override
