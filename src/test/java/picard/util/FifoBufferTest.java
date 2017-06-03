@@ -57,8 +57,8 @@ public class FifoBufferTest {
         }
 
         // Run the input file through the FifoBuffer and back into another file
-        final Md5CalculatingInputStream in   = new Md5CalculatingInputStream(new FileInputStream(inputFile), null);
-        final Md5CalculatingOutputStream out = new Md5CalculatingOutputStream(new FileOutputStream("/dev/null"), null);
+        final Md5CalculatingInputStream in   = new Md5CalculatingInputStream(new FileInputStream(inputFile), (File)null);
+        final Md5CalculatingOutputStream out = new Md5CalculatingOutputStream(new FileOutputStream("/dev/null"), (File)null);
         final PrintStream outStream = new PrintStream(out);
         final FifoBuffer buffer = new FifoBuffer(in, outStream);
         buffer.BUFFER_SIZE = 128 * 1024 * 1024;
