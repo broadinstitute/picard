@@ -62,7 +62,7 @@ public class TileMetricsUtil {
     /** Returns the path to the TileMetrics file given the basecalling directory. */
     public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, boolean isNovaSeq) {
         if (isNovaSeq) {
-            return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME + File.pathSeparator + CYCLE_TWENTY_FIVE_NAME), TILE_METRICS_OUT_FILE_NAME);
+            return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME + File.separator + CYCLE_TWENTY_FIVE_NAME), TILE_METRICS_OUT_FILE_NAME);
         } else {
             return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME), TILE_METRICS_OUT_FILE_NAME);
         }
