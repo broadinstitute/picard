@@ -36,14 +36,17 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
+import jdk.nashorn.internal.ir.Block;
+import org.apache.commons.compress.archivers.ar.ArArchiveEntry;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.metrics.SAMRecordAndReference;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Super class that is designed to provide some consistent structure between subclasses that
@@ -74,7 +77,10 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
      */
     @Override
     protected final int doWork() {
+        long startDoWork = System.nanoTime();
         makeItSo(INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, STOP_AFTER, Arrays.asList(this));
+        long endDoWork = System.nanoTime();
+        System.out.println("Time doWork:" + (endDoWork - startDoWork));
         return 0;
     }
 
@@ -121,12 +127,38 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         for (final SinglePassSamProgram program : programs) {
             program.setup(in.getFileHeader(), input);
             anyUseNoRefReads = anyUseNoRefReads || program.usesNoRefReads();
+            //final boolean anyUseNoRefReads = false || program.usesNoRefReads();
         }
-
+        final boolean anyUseNoRefReadsTmp = anyUseNoRefReads;
 
         final ProgressLogger progress = new ProgressLogger(log);
 
+        long beforeFor = System.nanoTime();
+
+        int Max_Size = 1000;
+        ArrayList<SAMRecordAndReference> pairs = new ArrayList<>();
+        BlockingQueue<ArrayList<SAMRecordAndReference>> queue = new LinkedBlockingQueue<>();
+        ExecutorService service = Executors.newSingleThreadExecutor();
+        final Semaphore sem = new Semaphore(6);
+
+        /*Runnable task = new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    ArrayList<SAMRecordAndReference> pairsQueue = queue.take();
+                    for (SAMRecordAndReference pair : pairsQueue) {
+                        for (final SinglePassSamProgram program : programs) {
+                            program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };*/
+
         for (final SAMRecord rec : in) {
+
             final ReferenceSequence ref;
             if (walker == null || rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
                 ref = null;
@@ -134,24 +166,78 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                 ref = walker.get(rec.getReferenceIndex());
             }
 
-            for (final SinglePassSamProgram program : programs) {
-                program.acceptRead(rec, ref);
-            }
+            pairs.add(new SAMRecordAndReference(rec, ref));
+
+            if (pairs.size() >= Max_Size) {
+
+                try {
+                    queue.put(pairs);
+                    pairs = new ArrayList<>();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    sem.acquire();
+                    service.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            for (final SinglePassSamProgram program : programs) {
+                                final ArrayList<SAMRecordAndReference> pairsTmp;
+
+                                try {
+                                    pairsTmp = queue.take();
+                                    for (final SAMRecordAndReference pair : pairsTmp) {
+                                        program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
+                                    }
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            sem.release();
+                        }
+                    });
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+
+                }
 
             progress.record(rec);
-
             // See if we need to terminate early?
             if (stopAfter > 0 && progress.getCount() >= stopAfter) {
                 break;
             }
 
             // And see if we're into the unmapped reads at the end
-            if (!anyUseNoRefReads && rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+            if (!anyUseNoRefReadsTmp && rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
                 break;
             }
         }
 
+        service.shutdown();
+        try {
+            service.awaitTermination(10, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        if (pairs.size() > 0) {
+            final ArrayList<SAMRecordAndReference> pairsTmp = pairs;
+
+            for (final SinglePassSamProgram program : programs){
+                for (SAMRecordAndReference pair : pairsTmp){
+                    program.acceptRead(pair.getSamRecord(), pair.getReferenceSequence());
+                }
+            }
+        }
+
+
+        long afterFor = System.nanoTime();
+
         CloserUtil.close(in);
+        System.out.println("For: " + (afterFor - beforeFor));
 
         for (final SinglePassSamProgram program : programs) {
             program.finish();
