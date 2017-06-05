@@ -39,14 +39,20 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Illumina;
-import picard.illumina.parser.*;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.*;
-import java.util.stream.Collectors;
+import picard.illumina.parser.ReadDescriptor;
+import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.ReadType;
+import picard.illumina.parser.Tile;
+import picard.illumina.parser.TileMetricsUtil;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Command-line wrapper around {@link IlluminaLaneMetricsCollector}.
@@ -92,6 +98,9 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
     @Option(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.illumina_lane_metrics.EXT). None if null", optional=true)
     public String FILE_EXTENSION = null;
 
+    @Option(doc = "Boolean the determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory.", optional = true)
+    public boolean IS_NOVASEQ = false;
+
     @Override
     protected int doWork() {
         final MetricsFile<MetricBase, Comparable<?>> laneMetricsFile = this.getMetricsFile();
@@ -119,7 +128,9 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
             }
         }
 
-        IlluminaLaneMetricsCollector.collectLaneMetrics(RUN_DIRECTORY, OUTPUT_DIRECTORY, OUTPUT_PREFIX, laneMetricsFile, phasingMetricsFile, READ_STRUCTURE, FILE_EXTENSION == null ? "" : FILE_EXTENSION, VALIDATION_STRINGENCY);
+        IlluminaLaneMetricsCollector.collectLaneMetrics(RUN_DIRECTORY, OUTPUT_DIRECTORY, OUTPUT_PREFIX,
+                laneMetricsFile, phasingMetricsFile,
+                READ_STRUCTURE, FILE_EXTENSION == null ? "" : FILE_EXTENSION, VALIDATION_STRINGENCY, IS_NOVASEQ);
         return 0;
     }
 
@@ -135,10 +146,13 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
         private final static Log LOG = Log.getInstance(IlluminaLaneMetricsCollector.class);
 
         /** Returns a partitioned collection of lane number to Tile objects from the provided basecall directory. */
-        public static Map<Integer, ? extends Collection<Tile>> readLaneTiles(final File illuminaRunDirectory, final ReadStructure readStructure, final ValidationStringency validationStringency) {
+        public static Map<Integer, ? extends Collection<Tile>> readLaneTiles(final File illuminaRunDirectory,
+                                                                             final ReadStructure readStructure,
+                                                                             final ValidationStringency validationStringency,
+                                                                             final boolean isNovaSeq) {
             final Collection<Tile> tiles;
             try {
-                tiles = TileMetricsUtil.parseTileMetrics(TileMetricsUtil.renderTileMetricsFileFromBasecallingDirectory(illuminaRunDirectory),
+                tiles = TileMetricsUtil.parseTileMetrics(TileMetricsUtil.renderTileMetricsFileFromBasecallingDirectory(illuminaRunDirectory, isNovaSeq),
                         readStructure,
                         validationStringency
                         );
@@ -154,8 +168,9 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
                                               final MetricsFile<MetricBase, Comparable<?>> laneMetricsFile,
                                               final MetricsFile<MetricBase, Comparable<?>> phasingMetricsFile,
                                               final ReadStructure readStructure, final String fileExtension,
-                                              final ValidationStringency validationStringency) {
-            final Map<Integer, ? extends Collection<Tile>> laneTiles = readLaneTiles(runDirectory, readStructure, validationStringency);
+                                              final ValidationStringency validationStringency,
+                                              final boolean isNovaSeq) {
+            final Map<Integer, ? extends Collection<Tile>> laneTiles = readLaneTiles(runDirectory, readStructure, validationStringency, isNovaSeq);
             writeLaneMetrics(laneTiles, outputDirectory, outputPrefix, laneMetricsFile, fileExtension);
             writePhasingMetrics(laneTiles, outputDirectory, outputPrefix, phasingMetricsFile, fileExtension);
         }

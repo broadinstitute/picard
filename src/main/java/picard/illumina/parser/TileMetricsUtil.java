@@ -29,7 +29,6 @@ import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IterableAdapter;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
-import picard.illumina.CollectIlluminaLaneMetrics;
 import picard.illumina.parser.readers.TileMetricsOutReader;
 import picard.illumina.parser.readers.TileMetricsOutReader.IlluminaTileMetrics;
 
@@ -51,6 +50,7 @@ import java.util.stream.Collectors;
  * @author mccowan
  */
 public class TileMetricsUtil {
+    public static String CYCLE_TWENTY_FIVE_NAME = "C25.1";
     /** The path to the directory containing the tile metrics file relative to the basecalling directory. */
     public static String INTEROP_SUBDIRECTORY_NAME = "InterOp";
     
@@ -60,8 +60,12 @@ public class TileMetricsUtil {
     private final static Log LOG = Log.getInstance(TileMetricsUtil.class);
 
     /** Returns the path to the TileMetrics file given the basecalling directory. */
-    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory) {
-        return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME), TILE_METRICS_OUT_FILE_NAME);
+    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, boolean isNovaSeq) {
+        if (isNovaSeq) {
+            return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME + File.pathSeparator + CYCLE_TWENTY_FIVE_NAME), TILE_METRICS_OUT_FILE_NAME);
+        } else {
+            return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME), TILE_METRICS_OUT_FILE_NAME);
+        }
     }
     
     /**
