@@ -23,6 +23,7 @@
  */
 package picard.sam.markduplicates;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
@@ -34,11 +35,12 @@ import java.io.File;
 /**
  * Tests a few hand build sam files as they are.
  */
-public class AsIsMarkDuplicatesTester {
+public class AsIsMarkDuplicatesTest {
+
+    static final File TEST_DIR = new File("testdata/picard/sam/MarkDuplicates");
 
     @DataProvider
     public Object[][] testSameUnclipped5PrimeOppositeStrandData() {
-        final File TEST_DIR = new File("testdata/picard/sam/MarkDuplicates");
         return new Object[][]{
                 new Object[]{new File(TEST_DIR, "sameUnclipped5primeEndv1.sam")},
                 new Object[]{new File(TEST_DIR, "sameUnclipped5primeEndv2.sam")},
@@ -51,12 +53,27 @@ public class AsIsMarkDuplicatesTester {
 
     @Test(dataProvider = "testSameUnclipped5PrimeOppositeStrandData")
     public void testSameUnclipped5PrimeOppositeStrand(final File input) {
+        doAsIsTest(input, null);
+    }
+
+    @Test
+    public void testUnsortedInputWithAssumeSorted() {
+        doAsIsTest(new File(TEST_DIR, "querynameGrouped.sam"), SAMFileHeader.SortOrder.queryname);
+    }
+
+    private void doAsIsTest(final File input, final SAMFileHeader.SortOrder assumeSortOrder) {
 
         final AbstractMarkDuplicatesCommandLineProgramTester tester = new BySumOfBaseQAndInOriginalOrderMDTester();
-
         final SamReader reader = SamReaderFactory.makeDefault().open(input);
+        final SAMFileHeader header = reader.getFileHeader().clone();
 
-        tester.setHeader(reader.getFileHeader());
+        if (assumeSortOrder != null) {
+            header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+            tester.addArg("ASSUME_SORT_ORDER=" + assumeSortOrder.toString());
+        }
+
+        tester.setHeader(header);
+
         reader.iterator().stream().forEach(tester::addRecord);
 
         CloserUtil.close(reader);
@@ -64,5 +81,3 @@ public class AsIsMarkDuplicatesTester {
         tester.runTest();
     }
 }
-
-
