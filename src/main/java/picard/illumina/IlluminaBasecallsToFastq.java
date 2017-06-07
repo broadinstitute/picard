@@ -58,7 +58,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -540,7 +540,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
 
         @Override
         public void setOutputStream(final OutputStream os) {
-            writer = new BasicFastqWriter(new PrintStream(os));
+            writer = new BasicFastqWriter(new PrintWriter(os));
         }
 
         @Override

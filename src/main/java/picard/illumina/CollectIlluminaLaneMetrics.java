@@ -152,15 +152,23 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
                                                                              final boolean isNovaSeq) {
             final Collection<Tile> tiles;
             try {
-                tiles = TileMetricsUtil.parseTileMetrics(TileMetricsUtil.renderTileMetricsFileFromBasecallingDirectory(illuminaRunDirectory, isNovaSeq),
-                        readStructure,
-                        validationStringency
-                        );
+                if (isNovaSeq) {
+                    tiles = TileMetricsUtil.parseTileMetrics(
+                            TileMetricsUtil.renderTileMetricsFileFromBasecallingDirectory(illuminaRunDirectory, true),
+                            TileMetricsUtil.renderPhasingMetricsFilesFromBasecallingDirectory(illuminaRunDirectory),
+                            readStructure,
+                            validationStringency);
+                } else {
+                    tiles = TileMetricsUtil.parseTileMetrics(TileMetricsUtil.renderTileMetricsFileFromBasecallingDirectory(illuminaRunDirectory, false),
+                            readStructure,
+                            validationStringency
+                    );
+                }
             } catch (final FileNotFoundException e) {
                 throw new PicardException("Unable to open laneMetrics file.", e);
             }
 
-            return tiles.stream().collect(Collectors.groupingBy(Tile::getLaneNumber));
+            return tiles.stream().filter(tile -> tile.getLaneNumber() > 0).collect(Collectors.groupingBy(Tile::getLaneNumber));
         }
 
         /** Parses the tile data from the basecall directory and writes to both the lane and phasing metrics files */
@@ -172,14 +180,14 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
                                               final boolean isNovaSeq) {
             final Map<Integer, ? extends Collection<Tile>> laneTiles = readLaneTiles(runDirectory, readStructure, validationStringency, isNovaSeq);
             writeLaneMetrics(laneTiles, outputDirectory, outputPrefix, laneMetricsFile, fileExtension);
-            writePhasingMetrics(laneTiles, outputDirectory, outputPrefix, phasingMetricsFile, fileExtension);
+            writePhasingMetrics(laneTiles, outputDirectory, outputPrefix, phasingMetricsFile, fileExtension, isNovaSeq);
         }
 
         public static File writePhasingMetrics(final Map<Integer, ? extends Collection<Tile>> laneTiles, final File outputDirectory,
                                                final String outputPrefix, final MetricsFile<MetricBase, Comparable<?>> phasingMetricsFile,
-                                               final String fileExtension) {
+                                               final String fileExtension, boolean isNovaSeq) {
             laneTiles.entrySet().stream().forEach(entry -> IlluminaPhasingMetrics.getPhasingMetricsForTiles(entry.getKey().longValue(),
-                    entry.getValue()).forEach(phasingMetricsFile::addMetric));
+                    entry.getValue(), !isNovaSeq).forEach(phasingMetricsFile::addMetric));
 
             return writeMetrics(phasingMetricsFile, outputDirectory, outputPrefix, IlluminaPhasingMetrics.getExtension() + fileExtension);
         }

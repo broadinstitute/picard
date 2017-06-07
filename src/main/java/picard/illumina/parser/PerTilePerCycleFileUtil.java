@@ -254,7 +254,7 @@ public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
         return "C" + currentCycle + ".1" + File.separator + "s_" + lane + "_" + tile + extension;
     }
 
-    private static int getCycleFromDir(final File tempCycleDir) {
+    public static int getCycleFromDir(final File tempCycleDir) {
         final String fileName = tempCycleDir.getName();
 
         final Matcher matcher = IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN.matcher(fileName);
