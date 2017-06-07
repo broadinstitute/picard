@@ -129,6 +129,15 @@ public class IlluminaUtil {
     /** Describes adapters used on each pair of strands */
     public static enum IlluminaAdapterPair implements AdapterPair {
 
+        /** The following sequences can be found in
+        https://support.illumina.com/content/dam/illumina-support/documents/documentation/chemistry_documentation/experiment-design/illumina-adapter-sequences_1000000002694-01.pdf
+        and are protected by the following copyright notice:
+
+        Oligonucleotide sequences (c) 2016 Illumina, Inc. All rights reserved. Derivative works created by
+        Illumina customers are authorized for use with Illumina instruments and products only. All other
+        uses are strictly prohibited.
+        */
+
         PAIRED_END(            "AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT",  //58 bases)
                          "AGATCGGAAGAGCGGTTCAGCAGGAATGCCGAGACCGATCTCGTATGCCGTCTTCTGCTTG"), // 61 bases
 
