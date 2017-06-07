@@ -28,6 +28,7 @@ import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
@@ -252,13 +253,22 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Override
     protected int doWork() {
         // Check the files are readable/writable
-        SAMProgramRecord prod = null;
+        final SAMProgramRecord prod;
         if (PROGRAM_RECORD_ID != null) {
             prod = new SAMProgramRecord(PROGRAM_RECORD_ID);
             prod.setProgramVersion(PROGRAM_GROUP_VERSION);
             prod.setCommandLine(PROGRAM_GROUP_COMMAND_LINE);
             prod.setProgramName(PROGRAM_GROUP_NAME);
+        } else {
+            prod = null;
         }
+
+        final SAMProgramRecord selfPG = new SAMProgramRecord("MergeBamAlignment");
+        selfPG.setProgramVersion(getVersion());
+        selfPG.setCommandLine(getCommandLine());
+        selfPG.setProgramName("Picard's MergeBamAlignment");
+
+
         // TEMPORARY FIX until internal programs all specify EXPECTED_ORIENTATIONS
         if (JUMP_SIZE != null) {
             EXPECTED_ORIENTATIONS = Collections.singletonList(SamPairUtil.PairOrientation.RF);
@@ -267,7 +277,7 @@ public class MergeBamAlignment extends CommandLineProgram {
         }
 
         final SamAlignmentMerger merger = new SamAlignmentMerger(UNMAPPED_BAM, OUTPUT,
-                REFERENCE_SEQUENCE, prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE,
+                REFERENCE_SEQUENCE, CollectionUtil.makeList(prod, selfPG), CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE,
                 ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
                 ATTRIBUTES_TO_RETAIN, ATTRIBUTES_TO_REMOVE, READ1_TRIM, READ2_TRIM,
                 READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER,

@@ -70,7 +70,7 @@ public abstract class AbstractAlignmentMerger {
     private ReferenceSequenceFileWalker refSeq = null;
     private final boolean clipAdapters;
     private final boolean bisulfiteSequence;
-    private SAMProgramRecord programRecord;
+    private List<SAMProgramRecord> programRecords;
     private final boolean alignedReadsOnly;
     private final SAMFileHeader header;
     private final List<String> attributesToRetain = new ArrayList<>();
@@ -202,7 +202,6 @@ public abstract class AbstractAlignmentMerger {
              UnmappingReadStrategy.DO_NOT_CHANGE);
     }
 
-
     /**
      * Constructor
      *
@@ -215,7 +214,7 @@ public abstract class AbstractAlignmentMerger {
      * @param bisulfiteSequence                 Whether the reads are bisulfite sequence (used when calculating the
      *                                          NM and UQ tags). Required.
      * @param alignedReadsOnly                  Whether to output only those reads that have alignment data
-     * @param programRecord                     Program record for target file SAMRecords created.
+     * @param programRecord                     ProgramRecord for target file SAMRecords created.
      * @param attributesToRetain                private attributes from the alignment record that should be
      *                                          included when merging.  This overrides the exclusion of
      *                                          attributes whose tags start with the reserved characters
@@ -237,10 +236,81 @@ public abstract class AbstractAlignmentMerger {
      * @param unmappingReadsStrategy            An enum describing how to deal with reads whose mapping information are being removed (currently this happens due to cross-species
      *                                          contamination). Ignored unless unmapContaminantReads is true.
      */
+    public AbstractAlignmentMerger(
+            final File unmappedBamFile,
+            final File targetBamFile,
+            final File referenceFasta,
+            final boolean clipAdapters,
+            final boolean bisulfiteSequence,
+            final boolean alignedReadsOnly,
+            final SAMProgramRecord programRecord,
+            final List<String> attributesToRetain,
+            final List<String> attributesToRemove,
+            final Integer read1BasesTrimmed,
+            final Integer read2BasesTrimmed,
+            final List<SamPairUtil.PairOrientation> expectedOrientations,
+            final SortOrder sortOrder,
+            final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
+            final boolean addMateCigar,
+            final boolean unmapContaminantReads,
+            final UnmappingReadStrategy unmappingReadsStrategy) {
+        this(unmappedBamFile,
+        targetBamFile,
+        referenceFasta,
+        clipAdapters,
+        bisulfiteSequence,
+        alignedReadsOnly,
+        CollectionUtil.makeList(programRecord),
+        attributesToRetain,
+        attributesToRemove,
+        read1BasesTrimmed,
+        read2BasesTrimmed,
+        expectedOrientations,
+        sortOrder,
+        primaryAlignmentSelectionStrategy,
+        addMateCigar,
+        unmapContaminantReads,
+        unmappingReadsStrategy);
+    }
+
+        /**
+         * Constructor
+         *
+         * @param unmappedBamFile                   The BAM file that was used as the input to the aligner, which will
+         *                                          include info on all the reads that did not map.  Required.
+         * @param targetBamFile                     The file to which to write the merged SAM records. Required.
+         * @param referenceFasta                    The reference sequence for the map files. Required.
+         * @param clipAdapters                      Whether adapters marked in unmapped BAM file should be marked as
+         *                                          soft clipped in the merged bam. Required.
+         * @param bisulfiteSequence                 Whether the reads are bisulfite sequence (used when calculating the
+         *                                          NM and UQ tags). Required.
+         * @param alignedReadsOnly                  Whether to output only those reads that have alignment data
+         * @param programRecords                    ProgramRecords for target file SAMRecords created.
+         * @param attributesToRetain                private attributes from the alignment record that should be
+         *                                          included when merging.  This overrides the exclusion of
+         *                                          attributes whose tags start with the reserved characters
+         *                                          of X, Y, and Z
+         * @param attributesToRemove                attributes from the alignment record that should be
+         *                                          removed when merging.  This overrides attributesToRetain if they share
+         *                                          common tags.
+         * @param read1BasesTrimmed                 The number of bases trimmed from start of read 1 prior to alignment.  Optional.
+         * @param read2BasesTrimmed                 The number of bases trimmed from start of read 2 prior to alignment.  Optional.
+         * @param expectedOrientations              A List of SamPairUtil.PairOrientations that are expected for
+         *                                          aligned pairs.  Used to determine the properPair flag.
+         * @param sortOrder                         The order in which the merged records should be output.  If null,
+         *                                          output will be coordinate-sorted
+         * @param primaryAlignmentSelectionStrategy What to do when there are multiple primary alignments, or multiple
+         *                                          alignments but none primary, for a read or read pair.
+         * @param addMateCigar                      True if we are to add or maintain the mate CIGAR (MC) tag, false if we are to remove or not include.
+         * @param unmapContaminantReads             If true, identify reads having the signature of cross-species contamination (i.e. mostly clipped bases),
+         *                                          and mark them as unmapped.
+         * @param unmappingReadsStrategy            An enum describing how to deal with reads whose mapping information are being removed (currently this happens due to cross-species
+         *                                          contamination). Ignored unless unmapContaminantReads is true.
+         */
     public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
                                    final File referenceFasta, final boolean clipAdapters,
                                    final boolean bisulfiteSequence, final boolean alignedReadsOnly,
-                                   final SAMProgramRecord programRecord, final List<String> attributesToRetain,
+                                   final List<SAMProgramRecord> programRecords, final List<String> attributesToRetain,
                                    final List<String> attributesToRemove,
                                    final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
                                    final List<SamPairUtil.PairOrientation> expectedOrientations,
@@ -266,8 +336,8 @@ public abstract class AbstractAlignmentMerger {
         this.header = new SAMFileHeader();
         this.sortOrder = sortOrder != null ? sortOrder : SortOrder.coordinate;
         header.setSortOrder(SortOrder.coordinate);
-        if (programRecord != null) {
-            setProgramRecord(programRecord);
+        if (programRecords != null) {
+            setProgramRecord(programRecords);
         }
 
         if (attributesToRetain != null) {
@@ -321,8 +391,8 @@ public abstract class AbstractAlignmentMerger {
      * and a separate chain for the unmapped reads.
      */
     private void maybeSetPgTag(final SAMRecord rec) {
-        if (this.programRecord != null) {
-            rec.setAttribute(ReservedTagConstants.PROGRAM_GROUP_ID, this.programRecord.getProgramGroupId());
+        if (this.programRecords != null) {
+            rec.setAttribute(ReservedTagConstants.PROGRAM_GROUP_ID, this.programRecords.get(programRecords.size()-1).getProgramGroupId());
         }
     }
 
@@ -351,12 +421,18 @@ public abstract class AbstractAlignmentMerger {
         // Must come after calling getQuerynameSortedAlignedRecords() in case opening the aligned records
         // sets the program group
         if (getProgramRecord() != null) {
-            for (final SAMProgramRecord pg : unmappedSam.getFileHeader().getProgramRecords()) {
-                if (pg.getId().equals(getProgramRecord().getId())) {
-                    throw new PicardException("Program Record ID already in use in unmapped BAM file.");
-                }
+            for (final SAMProgramRecord pgfromUnmapped : unmappedSam.getFileHeader().getProgramRecords()) {
+                getProgramRecord()
+                        .stream()
+                        .filter(pg -> pg.getId().equals(pgfromUnmapped.getId()))
+                        .forEach(pg -> {
+                            throw new PicardException("Program Record ID already in use in unmapped BAM file: From unmapped-'" + pgfromUnmapped +
+                                    " and to be added -" + pg + ".");
+                        });
             }
         }
+
+
 
         // If the output requested is coordinate order then run everything through a sorting collection
         // in order to have access to the records in coordinate order prior to outputting them. Otherwise
@@ -859,15 +935,18 @@ public abstract class AbstractAlignmentMerger {
         }
     }
 
-    protected SAMProgramRecord getProgramRecord() { return this.programRecord; }
+    protected List<SAMProgramRecord> getProgramRecord() { return this.programRecords; }
 
-    protected void setProgramRecord(final SAMProgramRecord pg) {
-        if (this.programRecord != null) {
+    protected void setProgramRecord(final List<SAMProgramRecord> pgs) {
+        if (this.programRecords != null) {
             throw new IllegalStateException("Cannot set program record more than once on alignment merger.");
         }
-        this.programRecord = pg;
-        this.header.addProgramRecord(pg);
-        SAMUtils.chainSAMProgramRecord(header, pg);
+
+        this.programRecords = pgs;
+        pgs.forEach(pg-> {
+            this.header.addProgramRecord(pg);
+            SAMUtils.chainSAMProgramRecord(header, pg);
+        });
     }
 
     protected boolean isReservedTag(final String tag) {

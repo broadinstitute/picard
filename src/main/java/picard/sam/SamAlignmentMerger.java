@@ -77,6 +77,94 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                 );
     }
 
+
+    /**
+     * Constructor
+     *
+     * @param unmappedBamFile                   The BAM file that was used as the input to the aligner, which will
+     *                                          include info on all the reads that did not map.  Required.
+     * @param targetBamFile                     The file to which to write the merged SAM records. Required.
+     * @param referenceFasta                    The reference sequence for the map files. Required.
+     * @param programRecord                     SAMProgramRecord for target file created.
+     * @param clipAdapters                      Whether adapters marked in unmapped BAM file should be marked as
+     *                                          soft clipped in the merged bam. Required.
+     * @param bisulfiteSequence                 Whether the reads are bisulfite sequence (used when calculating the
+     *                                          NM and UQ tags). Required.
+     * @param alignedReadsOnly                  Whether to output only those reads that have alignment data
+     * @param alignedSamFile                    The SAM file(s) with alignment information.  Optional.  If this is
+     *                                          not provided, then read1AlignedSamFile and read2AlignedSamFile must be.
+     * @param maxGaps                           The maximum number of insertions or deletions permitted in an
+     *                                          alignment.  Alignments with more than this many gaps will be ignored.
+     *                                          -1 means to allow any number of gaps.
+     * @param attributesToRetain                attributes from the alignment record that should be
+     *                                          retained when merging, overridden by attributesToRemove if they share
+     *                                          common tags.
+     * @param attributesToRemove                attributes from the alignment record that should be
+     *                                          removed when merging.  This overrides attributesToRetain if they share
+     *                                          common tags.
+     * @param read1BasesTrimmed                 The number of bases trimmed from start of read 1 prior to alignment.  Optional.
+     * @param read2BasesTrimmed                 The number of bases trimmed from start of read 2 prior to alignment.  Optional.
+     * @param read1AlignedSamFile               The alignment records for read1.  Used when the two ends of a read are
+     *                                          aligned separately.  This is optional, but must be specified if
+     *                                          alignedSamFile is not.
+     * @param read2AlignedSamFile               The alignment records for read1.  Used when the two ends of a read are
+     *                                          aligned separately.  This is optional, but must be specified if
+     *                                          alignedSamFile is not.
+     * @param expectedOrientations              A List of SamPairUtil.PairOrientations that are expected for
+     *                                          aligned pairs.  Used to determine the properPair flag.
+     * @param sortOrder                         The order in which the merged records should be output.  If null,
+     *                                          output will be coordinate-sorted
+     * @param primaryAlignmentSelectionStrategy How to handle multiple alignments for a fragment or read pair,
+     *                                          in which none are primary, or more than one is marked primary
+     * @param addMateCigar                      True if we are to add or maintain the mate CIGAR (MC) tag, false if we are to remove or not include.
+     * @param unmapContaminantReads             If true, identify reads having the signature of cross-species contamination (i.e. mostly clipped bases),
+     *                                          and mark them as unmapped.
+     * @param minUnclippedBases                 If unmapContaminantReads is set, require this many unclipped bases or else the read will be marked as contaminant.
+     * @param unmappingReadStrategy             An enum describing how to deal with reads whose mapping information are being removed (currently this happens due to cross-species
+     *                                          contamination). Ignored unless unmapContaminantReads is true.
+     * @param requiredMatchingDictionaryTags            A list of SAMSequenceRecord tags that must be equal (if present) in the aligned bam and the reference dictionary.
+     *                                          Program will issue a warning about other tags, if present in both files and are different.
+     */
+    public SamAlignmentMerger(final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
+                              final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
+                              final boolean alignedReadsOnly,
+                              final List<File> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
+                              final List<String> attributesToRemove,
+                              final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
+                              final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
+                              final List<SamPairUtil.PairOrientation> expectedOrientations,
+                              final SortOrder sortOrder,
+                              final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
+                              final boolean addMateCigar,
+                              final boolean unmapContaminantReads,
+                              final int minUnclippedBases,
+                              final UnmappingReadStrategy unmappingReadStrategy,
+                              final List<String> requiredMatchingDictionaryTags){
+        this(unmappedBamFile,
+        targetBamFile,
+        referenceFasta,
+        CollectionUtil.makeList(programRecord),
+        clipAdapters,
+        bisulfiteSequence,
+        alignedReadsOnly,
+        alignedSamFile,
+        maxGaps,
+        attributesToRetain,
+        attributesToRemove,
+        read1BasesTrimmed,
+        read2BasesTrimmed,
+        read1AlignedSamFile,
+        read2AlignedSamFile,
+        expectedOrientations,
+        sortOrder,
+        primaryAlignmentSelectionStrategy,
+        addMateCigar,
+        unmapContaminantReads,
+        minUnclippedBases,
+        unmappingReadStrategy,
+        requiredMatchingDictionaryTags);
+    }
+
         /**
          * Constructor
          *
@@ -84,7 +172,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
          *                                          include info on all the reads that did not map.  Required.
          * @param targetBamFile                     The file to which to write the merged SAM records. Required.
          * @param referenceFasta                    The reference sequence for the map files. Required.
-         * @param programRecord                     Program record for taget file SAMRecords created.
+         * @param programRecords                    SAMProgramRecords for target file created (for aligner and MergeBamAlignment, e.g.).
          * @param clipAdapters                      Whether adapters marked in unmapped BAM file should be marked as
          *                                          soft clipped in the merged bam. Required.
          * @param bisulfiteSequence                 Whether the reads are bisulfite sequence (used when calculating the
@@ -125,7 +213,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
          *                                          Program will issue a warning about other tags, if present in both files and are different.
          */
     public SamAlignmentMerger(final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
-                              final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
+                              final List<SAMProgramRecord> programRecords, final boolean clipAdapters, final boolean bisulfiteSequence,
                               final boolean alignedReadsOnly,
                               final List<File> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
                               final List<String> attributesToRemove,
@@ -141,7 +229,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                               final List<String> requiredMatchingDictionaryTags) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
-                alignedReadsOnly, programRecord, attributesToRetain, attributesToRemove, read1BasesTrimmed,
+                alignedReadsOnly, programRecords, attributesToRetain, attributesToRemove, read1BasesTrimmed,
                 read2BasesTrimmed, expectedOrientations, sortOrder, primaryAlignmentSelectionStrategy, addMateCigar,
                 unmapContaminantReads, unmappingReadStrategy);
 
@@ -217,7 +305,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                 // As we're going through and opening the aligned files, if we don't have a @PG yet
                 // and there is only a single one in the input file, use that!
                 if (getProgramRecord() == null && r.getFileHeader().getProgramRecords().size() == 1) {
-                    setProgramRecord(r.getFileHeader().getProgramRecords().iterator().next());
+                    setProgramRecord(CollectionUtil.makeList(r.getFileHeader().getProgramRecords().iterator().next()));
                 }
             }
 
@@ -245,7 +333,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             // As we're going through and opening the aligned files, if we don't have a @PG yet
             // and there is only a single one in the input file, use that!
             if (getProgramRecord() == null && header.getProgramRecords().size() == 1) {
-                setProgramRecord(header.getProgramRecords().iterator().next());
+                setProgramRecord(CollectionUtil.makeList(header.getProgramRecords().iterator().next()));
             }
         }
 
