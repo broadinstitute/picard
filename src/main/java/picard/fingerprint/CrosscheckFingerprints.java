@@ -80,15 +80,16 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
             doc = "Optional output file to write metrics to. Default is to write to stdout.")
-    public File OUTPUT;
+    public File OUTPUT = null;
 
     @Option(shortName = "MO", optional = true,
-            doc = "Optional output file to write matrix of LOD scores to. This is less informative than the metrics output and only contains \"headling\" LOD score." +
+            doc = "Optional output file to write matrix of LOD scores to. This is less informative than the metrics output " +
+                    "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity)." +
                     "It is however sometimes easier to use visually.")
-    public File MATRIX_OUTPUT=null;
+    public File MATRIX_OUTPUT = null;
 
-    @Option(shortName="H", doc="The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
-	    "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
+    @Option(shortName = "H", doc = "The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
+            "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
     public File HAPLOTYPE_MAP;
 
     @Option(shortName = "LOD",
@@ -116,7 +117,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Option(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from" +
             " the expected sample.")
-    public double GENOTYPING_ERROR_RATE = 1e-6;
+    public double GENOTYPING_ERROR_RATE = 0.01;
 
     @Option(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.")
     public boolean OUTPUT_ERRORS_ONLY = false;
