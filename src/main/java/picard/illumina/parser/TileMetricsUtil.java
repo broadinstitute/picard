@@ -87,7 +87,7 @@ public class TileMetricsUtil {
                                                     final ValidationStringency validationStringency)
             throws FileNotFoundException {
         TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader
-                (tileMetricsOutFile, 3, 15, 6);
+                (tileMetricsOutFile, 3);
         final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
         final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
         final Collection<Tile> tiles = new LinkedList<>();
@@ -123,7 +123,7 @@ public class TileMetricsUtil {
                                                     final ValidationStringency validationStringency) throws FileNotFoundException {
         // Get the tile metrics lines from TileMetricsOut, keeping only the last value for any Lane/Tile/Code combination
         final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(new TileMetricsOutReader
-                (tileMetricsOutFile, 2, 10, 2));
+                (tileMetricsOutFile, 2));
 
         // Collect the tiles by lane & tile, and then collect the metrics by lane
         final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);

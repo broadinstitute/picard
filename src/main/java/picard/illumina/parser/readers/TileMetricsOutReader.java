@@ -27,6 +27,10 @@ import java.util.NoSuchElementException;
  * byte 6-9 (float)          = metrics value, see Theory of RTA document by Illumina for definition
  */
 public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.IlluminaTileMetrics> {
+    private static final int VERSION_TWO_RECORD_SIZE = 10;
+    private static final int VERSION_TWO_HEADER_SIZE = 2;
+    private static final int VERSION_THREE_RECORD_SIZE = 15;
+    private static final int VERSION_THREE_HEADER_SIZE = 6;
     private final BinaryFileIterator<ByteBuffer> bbIterator;
     private float density;
     private int version;
@@ -36,7 +40,24 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
      * @param tileMetricsOutFile The file to read
      * @param version
      */
-    public TileMetricsOutReader(final File tileMetricsOutFile, int version, int recordSize, int headerSize) {
+    public TileMetricsOutReader(final File tileMetricsOutFile, int version) {
+
+        int headerSize;
+        int recordSize;
+
+        switch (version) {
+            case 2:
+                headerSize = VERSION_TWO_HEADER_SIZE;
+                recordSize = VERSION_TWO_RECORD_SIZE;
+                break;
+            case 3:
+                headerSize = VERSION_THREE_HEADER_SIZE;
+                recordSize = VERSION_THREE_RECORD_SIZE;
+                break;
+            default:
+                throw new PicardException("Unknown version " + version);
+        }
+
         bbIterator = MMapBackedIteratorFactory.getByteBufferIterator(headerSize, recordSize, tileMetricsOutFile);
         this.version = version;
 
