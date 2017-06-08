@@ -170,7 +170,7 @@ public class IlluminaFileUtil {
         //Used just to ensure predictable ordering
         final TreeSet<Integer> expectedTiles = new TreeSet<Integer>();
 
-        final Iterator<TileMetricsOutReader.IlluminaTileMetrics> tileMetrics = new TileMetricsOutReader(tileMetricsOut, 2);
+        final Iterator<TileMetricsOutReader.IlluminaTileMetrics> tileMetrics = new TileMetricsOutReader(tileMetricsOut, TileMetricsOutReader.TileMetricsVersion.TWO);
         while (tileMetrics.hasNext()) {
             final TileMetricsOutReader.IlluminaTileMetrics tileMetric = tileMetrics.next();
 

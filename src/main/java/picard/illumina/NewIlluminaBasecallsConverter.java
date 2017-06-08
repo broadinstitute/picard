@@ -25,6 +25,7 @@ import picard.util.IlluminaUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +53,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
     private final MetricsFile<BarcodeMetric, Integer> metrics;
     private final File metricsFile;
     private final Map<String, ThreadPoolExecutorWithExceptions> barcodeWriterThreads = new HashMap<>();
-    private final Map<Integer, List<RecordWriter>> completedWork = new HashMap<>();
+    private final Map<Integer, List<RecordWriter>> completedWork = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * @param basecallsDir             Where to read basecalls from.

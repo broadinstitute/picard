@@ -32,32 +32,16 @@ public class EmpiricalPhasingMetricsOutReader implements Iterator<EmpiricalPhasi
     }
 
     public static class IlluminaPhasingMetrics {
-        private final TileMetricsOutReader.IlluminaLaneTileCode laneTileCode;
-        private final int cycle;
-        private final float phasingWeight;
-        private final float prephasingWeight;
+        public final TileMetricsOutReader.IlluminaLaneTileCode laneTileCode;
+        public final int cycle;
+        public final float phasingWeight;
+        public final float prephasingWeight;
 
-        public IlluminaPhasingMetrics(final ByteBuffer bb) {
+        IlluminaPhasingMetrics(final ByteBuffer bb) {
             this.laneTileCode = new TileMetricsOutReader.IlluminaLaneTileCode(UnsignedTypeUtil.uShortToInt(bb.getShort()), bb.getInt(), 0);
             this.cycle = UnsignedTypeUtil.uShortToInt(bb.getShort());
             this.phasingWeight = bb.getFloat();
             this.prephasingWeight = bb.getFloat();
-        }
-
-        public float getPhasingWeight() {
-            return phasingWeight;
-        }
-
-        public float getPrephasingWeight() {
-            return prephasingWeight;
-        }
-
-        public TileMetricsOutReader.IlluminaLaneTileCode getLaneTileCode() {
-            return laneTileCode;
-        }
-
-        public int getCycle() {
-            return cycle;
         }
     }
 }

@@ -27,53 +27,32 @@ import java.util.NoSuchElementException;
  * byte 6-9 (float)          = metrics value, see Theory of RTA document by Illumina for definition
  */
 public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.IlluminaTileMetrics> {
-    private static final int VERSION_TWO_RECORD_SIZE = 10;
-    private static final int VERSION_TWO_HEADER_SIZE = 2;
-    private static final int VERSION_THREE_RECORD_SIZE = 15;
-    private static final int VERSION_THREE_HEADER_SIZE = 6;
     private final BinaryFileIterator<ByteBuffer> bbIterator;
     private float density;
-    private int version;
+    private TileMetricsVersion version;
 
     /**
      * Return a TileMetricsOutReader for the specified file
      * @param tileMetricsOutFile The file to read
-     * @param version
+     * @param version The version of the tile metrics file being parsed.
      */
-    public TileMetricsOutReader(final File tileMetricsOutFile, int version) {
+    public TileMetricsOutReader(final File tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion version) {
 
-        int headerSize;
-        int recordSize;
-
-        switch (version) {
-            case 2:
-                headerSize = VERSION_TWO_HEADER_SIZE;
-                recordSize = VERSION_TWO_RECORD_SIZE;
-                break;
-            case 3:
-                headerSize = VERSION_THREE_HEADER_SIZE;
-                recordSize = VERSION_THREE_RECORD_SIZE;
-                break;
-            default:
-                throw new PicardException("Unknown version " + version);
-        }
-
-        bbIterator = MMapBackedIteratorFactory.getByteBufferIterator(headerSize, recordSize, tileMetricsOutFile);
+        bbIterator = MMapBackedIteratorFactory.getByteBufferIterator(version.headerSize, version.recordSize, tileMetricsOutFile);
         this.version = version;
 
         final ByteBuffer header = bbIterator.getHeaderBytes();
 
-        //Get the version, should be EXPECTED_VERSION, which is 2
         final int actualVersion = UnsignedTypeUtil.uByteToInt(header.get());
-        if (actualVersion != version) {
-            throw new PicardException("TileMetricsOutReader expects the version number to be " + version + ".  Actual Version in Header( " + actualVersion + ")");
+        if (actualVersion != version.version) {
+            throw new PicardException("TileMetricsOutReader expects the version number to be " + version.version + ".  Actual Version in Header( " + actualVersion + ")");
         }
 
         final int actualRecordSize = UnsignedTypeUtil.uByteToInt(header.get());
-        if (recordSize != actualRecordSize) {
-            throw new PicardException("TileMetricsOutReader expects the record size to be " + recordSize + ".  Actual Record Size in Header( " + actualRecordSize + ")");
+        if (version.recordSize != actualRecordSize) {
+            throw new PicardException("TileMetricsOutReader expects the record size to be " + version.recordSize + ".  Actual Record Size in Header( " + actualRecordSize + ")");
         }
-        if (version == 3) {
+        if (version == TileMetricsVersion.THREE) {
             this.density = UnsignedTypeUtil.uIntToFloat(header.getInt());
         }
     }
@@ -106,8 +85,8 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
         private float metricValue2;
         private byte type;
 
-        public IlluminaTileMetrics(final ByteBuffer bb, int version) {
-            if (version == 3) {
+        public IlluminaTileMetrics(final ByteBuffer bb, TileMetricsVersion version) {
+            if (version == TileMetricsVersion.THREE) {
                 this.laneTileCode = new IlluminaLaneTileCode(UnsignedTypeUtil.uShortToInt(bb.getShort()), bb.getInt(), 0);
                 //need to dump 9 bytes
                 this.type = bb.get();
@@ -205,6 +184,21 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
             result = 31 * result + tileNumber;
             result = 31 * result + metricCode;
             return result;
+        }
+    }
+
+    public enum TileMetricsVersion {
+        TWO(2, 2, 10),
+        THREE(3, 6, 15);
+
+        private final int version;
+        private final int headerSize;
+        private final int recordSize;
+
+        TileMetricsVersion(int version, int headerSize, int recordSize) {
+            this.version = version;
+            this.headerSize = headerSize;
+            this.recordSize = recordSize;
         }
     }
 }

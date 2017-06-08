@@ -59,13 +59,8 @@ public class LanePhasingMetricsCollector {
 
         // Calculate the medians for the collected data
         for (final TileTemplateRead tileTemplateRead : phasingValues.keySet()) {
-            if (usePercentage) {
-                medianPhasingMap.put(tileTemplateRead, medianPercentage(phasingValues.get(tileTemplateRead)));
-                medianPrePhasingMap.put(tileTemplateRead, medianPercentage(prePhasingValues.get(tileTemplateRead)));
-            } else {
-                medianPhasingMap.put(tileTemplateRead, median(phasingValues.get(tileTemplateRead)));
-                medianPrePhasingMap.put(tileTemplateRead, median(prePhasingValues.get(tileTemplateRead)));
-            }
+            medianPhasingMap.put(tileTemplateRead, median(phasingValues.get(tileTemplateRead), usePercentage));
+            medianPrePhasingMap.put(tileTemplateRead, median(prePhasingValues.get(tileTemplateRead), usePercentage));
         }
 
         this.medianPhasingMap = Collections.unmodifiableMap(medianPhasingMap);
@@ -80,17 +75,16 @@ public class LanePhasingMetricsCollector {
         return medianPrePhasingMap;
     }
 
-    private static float medianPercentage(final Collection<Float> phaseValues) {
-        return median(phaseValues) * 100;
-    }
 
-    private static float median(final Collection<Float> phaseValues) {
+    private static float median(final Collection<Float> phaseValues, boolean usePercentage) {
         final double[] values = new double[phaseValues.size()];
         int i = 0;
         for (Float phaseValue : phaseValues) {
             values[i] = (double)phaseValue;
             i++;
         }
-        return (float) MathUtil.median(values);
+        float median = (float) MathUtil.median(values);
+        return usePercentage ? median * 100 : median;
     }
+
 }

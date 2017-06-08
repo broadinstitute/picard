@@ -56,8 +56,10 @@ import java.util.stream.Collectors;
 public class TileMetricsUtil {
 
     private static final Log log = Log.getInstance(TileMetricsUtil.class);
-
-    public static String CYCLE_TWENTY_FIVE_NAME = "C25.1";
+    /**
+     * The cycle directory that contain the tile metrics output. (Cycle 25 for NovaSeq)
+     */
+    public static String CYCLE_CONTAINING_TILE_METRICS = "C25.1";
     /**
      * The path to the directory containing the tile metrics file relative to the basecalling directory.
      */
@@ -75,7 +77,7 @@ public class TileMetricsUtil {
      */
     public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, boolean isNovaSeq) {
         if (isNovaSeq) {
-            return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME + File.separator + CYCLE_TWENTY_FIVE_NAME), TILE_METRICS_OUT_FILE_NAME);
+            return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME + File.separator + CYCLE_CONTAINING_TILE_METRICS), TILE_METRICS_OUT_FILE_NAME);
         } else {
             return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME), TILE_METRICS_OUT_FILE_NAME);
         }
@@ -86,8 +88,7 @@ public class TileMetricsUtil {
                                                     final ReadStructure readStructure,
                                                     final ValidationStringency validationStringency)
             throws FileNotFoundException {
-        TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader
-                (tileMetricsOutFile, 3);
+        TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
         final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
         final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
         final Collection<Tile> tiles = new LinkedList<>();
@@ -123,7 +124,7 @@ public class TileMetricsUtil {
                                                     final ValidationStringency validationStringency) throws FileNotFoundException {
         // Get the tile metrics lines from TileMetricsOut, keeping only the last value for any Lane/Tile/Code combination
         final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(new TileMetricsOutReader
-                (tileMetricsOutFile, 2));
+                (tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.TWO));
 
         // Collect the tiles by lane & tile, and then collect the metrics by lane
         final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
@@ -179,7 +180,7 @@ public class TileMetricsUtil {
                         while (reader.hasNext()) {
                             EmpiricalPhasingMetricsOutReader.IlluminaPhasingMetrics phasingMetrics = reader.next();
 
-                            TileMetricsOutReader.IlluminaLaneTileCode laneTileCode = phasingMetrics.getLaneTileCode();
+                            TileMetricsOutReader.IlluminaLaneTileCode laneTileCode = phasingMetrics.laneTileCode;
                             int tileNumber = laneTileCode.getTileNumber();
                             if (laneTileCode.getLaneNumber() != tileCode.getLaneNumber()
                                     || tileNumber != tileCode.getTileNumber()) {
@@ -195,8 +196,8 @@ public class TileMetricsUtil {
                                 phasing.get(tileNumber).put(laneNumber, new ArrayList<>());
                                 prePhasing.get(tileNumber).put(laneNumber, new ArrayList<>());
                             }
-                            phasing.get(tileNumber).get(laneNumber).add(phasingMetrics.getPhasingWeight());
-                            prePhasing.get(tileNumber).get(laneNumber).add(phasingMetrics.getPrephasingWeight());
+                            phasing.get(tileNumber).get(laneNumber).add(phasingMetrics.phasingWeight);
+                            prePhasing.get(tileNumber).get(laneNumber).add(phasingMetrics.prephasingWeight);
                         }
                     }
 
