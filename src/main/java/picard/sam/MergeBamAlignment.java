@@ -102,6 +102,9 @@ public class MergeBamAlignment extends CommandLineProgram {
             doc = "Path to the fasta file for the reference sequence.")
     public File REFERENCE_SEQUENCE;
 
+    @Option(doc = "The program group ID of MergeBamAligner itself. Set to null to avoid putting a ProgramRecord for MBA.", optional = true)
+    public String MBA_PROGRAM_RECORD_ID = "MBA.001";
+
     @Option(shortName = StandardOptionDefinitions.PROGRAM_RECORD_ID_SHORT_NAME,
             doc = "The program group ID of the aligner (if not supplied by the aligned file).",
             optional = true)
@@ -263,10 +266,15 @@ public class MergeBamAlignment extends CommandLineProgram {
             prod = null;
         }
 
-        final SAMProgramRecord selfPG = new SAMProgramRecord("MergeBamAlignment");
-        selfPG.setProgramVersion(getVersion());
-        selfPG.setCommandLine(getCommandLine());
-        selfPG.setProgramName("Picard's MergeBamAlignment");
+        final SAMProgramRecord selfPG;
+        if (MBA_PROGRAM_RECORD_ID != null) {
+            selfPG = new SAMProgramRecord(MBA_PROGRAM_RECORD_ID);
+            selfPG.setProgramVersion(getVersion());
+            selfPG.setCommandLine(getCommandLine());
+            selfPG.setProgramName("MergeBamAlignment");
+        } else {
+            selfPG = null;
+        }
 
 
         // TEMPORARY FIX until internal programs all specify EXPECTED_ORIENTATIONS
