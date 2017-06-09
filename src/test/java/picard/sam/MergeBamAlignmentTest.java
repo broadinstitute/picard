@@ -33,7 +33,7 @@ import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.testers.ValidateSamTester;
-
+import picard.sam.util.SamTestUtils;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
@@ -165,11 +165,16 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         SamReader result = SamReaderFactory.makeDefault().open(output);
         Assert.assertEquals(result.getFileHeader().getSequenceDictionary().getSequences().size(), 8,
                 "Number of sequences did not match");
-        SAMProgramRecord pg = result.getFileHeader().getProgramRecords().get(0);
-        Assert.assertEquals(pg.getProgramGroupId(), "0");
-        Assert.assertEquals(pg.getProgramVersion(), "1.0");
-        Assert.assertEquals(pg.getCommandLine(), "align!");
-        Assert.assertEquals(pg.getProgramName(), "myAligner");
+        final SAMProgramRecord pg0 = result.getFileHeader().getProgramRecords().get(0);
+        Assert.assertEquals(pg0.getProgramGroupId(), "0");
+        Assert.assertEquals(pg0.getProgramVersion(), "1.0");
+        Assert.assertEquals(pg0.getCommandLine(), "align!");
+        Assert.assertEquals(pg0.getProgramName(), "myAligner");
+
+        final SAMProgramRecord pg1 = result.getFileHeader().getProgramRecords().get(1);
+        Assert.assertEquals(pg1.getProgramGroupId(), "MBA.001");
+        Assert.assertEquals(pg1.getProgramName(), "MergeBamAlignment");
+
 
         final SAMReadGroupRecord rg = result.getFileHeader().getReadGroups().get(0);
         Assert.assertEquals(rg.getReadGroupId(), "0");
@@ -195,7 +200,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             // MIN_ADAPTER_BASES hanging off the end
             else if (sam.getReadName().equals("both_reads_align_min_adapter_bases_exceeded")) {
                 Assert.assertEquals(sam.getReferenceName(), "chr7");
-                Assert.assertTrue(sam.getCigarString().indexOf("S") == -1,
+                Assert.assertFalse(sam.getCigarString().contains("S"),
                         "Read was clipped when it should not be.");
             } else if (sam.getReadName().equals("neither_read_aligns_or_present")) {
                 Assert.assertTrue(sam.getReadUnmappedFlag(), "Read should be unmapped but isn't");
@@ -220,6 +225,12 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             Assert.assertEquals(sam.getAttribute("ai"), pos ? new int[]  {1,2,3} : new int[]  {3,2,1});
             Assert.assertEquals(sam.getAttribute("af"), pos ? new float[]{1,2,3} : new float[]{3,2,1});
         }
+    }
+
+    @Test
+    public void testMergerWithNoPG() throws Exception {
+        final File output = File.createTempFile("mergeTest", ".sam");
+        output.deleteOnExit();
 
         // Quick test to make sure the program record gets picked up from the file if not specified
         // on the command line.
@@ -230,10 +241,13 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 true, fasta, output,
                 SamPairUtil.PairOrientation.FR, null, null, null, null, null);
 
-        CloserUtil.close(result);
 
-        result = SamReaderFactory.makeDefault().open(output);
-        pg = result.getFileHeader().getProgramRecords().get(0);
+        SamReader result = SamReaderFactory.makeDefault().open(output);
+        List<SAMProgramRecord> pgs = result.getFileHeader().getProgramRecords();
+        Assert.assertEquals(pgs.size(),2);
+
+        SAMProgramRecord pg = pgs.get(0);
+
         Assert.assertEquals(pg.getProgramGroupId(), "1",
                 "Program group ID not picked up correctly from aligned BAM");
         Assert.assertEquals(pg.getProgramVersion(), "2.0",
@@ -1720,7 +1734,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 null, null, null, null, true, SAMFileHeader.SortOrder.coordinate, strategy);
 
         assertSamValid(mergedSam);
-        IOUtil.assertFilesEqual(expectedSam, mergedSam);
+        SamTestUtils.assertHeadlessSamFilesAgree(expectedSam, mergedSam);
     }
 
     @Test
@@ -1815,7 +1829,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 null, null, null, null, true, null);
 
         assertSamValid(mergedSam);
-        IOUtil.assertFilesEqual(expectedSam, mergedSam);
+        SamTestUtils.assertHeadlessSamFilesAgree(expectedSam, mergedSam);
     }
 
     @Test
@@ -1845,7 +1859,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 null, null, null, null, true, null);
 
         assertSamValid(mergedSam);
-        IOUtil.assertFilesEqual(expectedSam, mergedSam);
+        SamTestUtils.assertHeadlessSamFilesAgree(expectedSam, mergedSam);
     }
 
     @Test
@@ -1875,7 +1889,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 null, null, null, null, true, null);
 
         assertSamValid(mergedSam);
-        IOUtil.assertFilesEqual(expectedSam, mergedSam);
+        SamTestUtils.assertHeadlessSamFilesAgree(expectedSam, mergedSam);
     }
 
 
@@ -1904,7 +1918,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 null, null, null, null, true, null);
 
         assertSamValid(mergedSam);
-        IOUtil.assertFilesEqual(expectedSam, mergedSam);
+        SamTestUtils.assertHeadlessSamFilesAgree(expectedSam, mergedSam);
     }
 }
 

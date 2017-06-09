@@ -420,9 +420,9 @@ public abstract class AbstractAlignmentMerger {
         // Check that the program record we are going to insert is not already used in the unmapped SAM
         // Must come after calling getQuerynameSortedAlignedRecords() in case opening the aligned records
         // sets the program group
-        if (getProgramRecord() != null) {
+        if (getProgramRecords() != null) {
             for (final SAMProgramRecord pgfromUnmapped : unmappedSam.getFileHeader().getProgramRecords()) {
-                getProgramRecord()
+                getProgramRecords()
                         .stream()
                         .filter(pg -> pg.getId().equals(pgfromUnmapped.getId()))
                         .forEach(pg -> {
@@ -935,7 +935,7 @@ public abstract class AbstractAlignmentMerger {
         }
     }
 
-    protected List<SAMProgramRecord> getProgramRecord() { return this.programRecords; }
+    protected List<SAMProgramRecord> getProgramRecords() { return this.programRecords; }
 
     protected void setProgramRecord(final List<SAMProgramRecord> pgs) {
         if (this.programRecords != null) {

@@ -39,6 +39,7 @@ import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A command-line tool to merge BAM/SAM alignment info from a third-party aligner with the data in an
@@ -276,6 +277,11 @@ public class MergeBamAlignment extends CommandLineProgram {
             selfPG = null;
         }
 
+        final List<SAMProgramRecord> pgs = CollectionUtil.makeList(Optional.ofNullable(prod), Optional.ofNullable(selfPG))
+                .stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
 
         // TEMPORARY FIX until internal programs all specify EXPECTED_ORIENTATIONS
         if (JUMP_SIZE != null) {
@@ -285,7 +291,7 @@ public class MergeBamAlignment extends CommandLineProgram {
         }
 
         final SamAlignmentMerger merger = new SamAlignmentMerger(UNMAPPED_BAM, OUTPUT,
-                REFERENCE_SEQUENCE, CollectionUtil.makeList(prod, selfPG), CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE,
+                REFERENCE_SEQUENCE, pgs, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE,
                 ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
                 ATTRIBUTES_TO_RETAIN, ATTRIBUTES_TO_REMOVE, READ1_TRIM, READ2_TRIM,
                 READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER,

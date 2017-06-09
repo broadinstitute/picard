@@ -304,7 +304,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
                 // As we're going through and opening the aligned files, if we don't have a @PG yet
                 // and there is only a single one in the input file, use that!
-                if (getProgramRecord() == null && r.getFileHeader().getProgramRecords().size() == 1) {
+                if (getProgramRecords() == null && r.getFileHeader().getProgramRecords().size() == 1) {
                     setProgramRecord(CollectionUtil.makeList(r.getFileHeader().getProgramRecords().iterator().next()));
                 }
             }
@@ -332,7 +332,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
             // As we're going through and opening the aligned files, if we don't have a @PG yet
             // and there is only a single one in the input file, use that!
-            if (getProgramRecord() == null && header.getProgramRecords().size() == 1) {
+            if (getProgramRecords() == null && header.getProgramRecords().size() == 1) {
                 setProgramRecord(CollectionUtil.makeList(header.getProgramRecords().iterator().next()));
             }
         }
