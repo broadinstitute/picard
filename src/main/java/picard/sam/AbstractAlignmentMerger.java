@@ -365,7 +365,7 @@ public abstract class AbstractAlignmentMerger {
         if (this.sortOrder == SortOrder.coordinate) {
             final SortingCollection<SAMRecord> sorted1 = SortingCollection.newInstance(
                     SAMRecord.class, new BAMRecordCodec(header), new SAMRecordCoordinateComparator(),
-                    MAX_RECORDS_IN_RAM);
+                    this.maxRecordsInRam);
             sink = new Sink(sorted1);
         }
         else { // catches queryname and unsorted
