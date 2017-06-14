@@ -25,4 +25,8 @@ public class UnsignedTypeUtil {
     public static long uIntToLong(final int unsignedInt) {
         return unsignedInt & 0xFFFFFFFFL;
     }
+
+    public static float uIntToFloat(final int unsignedInt) {
+        return Float.intBitsToFloat(unsignedInt);
+    }
 }

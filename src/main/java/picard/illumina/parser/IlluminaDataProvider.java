@@ -27,7 +27,6 @@ package picard.illumina.parser;
 import picard.PicardException;
 
 import java.io.File;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -39,13 +38,16 @@ import java.util.Set;
  *
  * @author jburke@broadinstitute.org
  */
-public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<ClusterData> {
+public class IlluminaDataProvider extends BaseIlluminaDataProvider {
 
-    /** contains QSeqs, bcls, or other Illumina file types that will be parsed by this class */
+    /**
+     * contains QSeqs, bcls, or other Illumina file types that will be parsed by this class
+     */
     private final File basecallDirectory; //These two are for error reporting only
-    private final int lane;
 
-    /** A list of parsers (already initialized) that should output data in a format consistent with readStructure */
+    /**
+     * A list of parsers (already initialized) that should output data in a format consistent with readStructure
+     */
     private final IlluminaParser[] parsers;
 
     /**
@@ -54,12 +56,6 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
      * have specified these data types
      */
     private final IlluminaDataType[][] dataTypes;
-
-    /** Calculated once, outputReadTypes describes the type of read data for each ReadData that will be found in output ClusterData objects */
-    private final ReadType[] outputReadTypes;
-
-    /** Number of reads in each ClusterData */
-    private final int numReads;
 
     /**
      * Create an IlluminaDataProvider given a map of parsersToDataTypes for particular file formats.  Compute once the miscellaneous data for the
@@ -71,9 +67,8 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
     IlluminaDataProvider(final OutputMapping outputMapping,
                          final Map<IlluminaParser, Set<IlluminaDataType>> parsersToDataTypes,
                          final File basecallDirectory, final int lane) {
+        super(lane, outputMapping);
         this.basecallDirectory = basecallDirectory;
-        this.lane = lane;
-        numReads = outputMapping.numOutputReads();
 
         final int numParsers = parsersToDataTypes.size();
         if (numParsers == 0) {
@@ -90,11 +85,6 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
             dts.toArray(dataTypes[i++]);
         }
 
-        this.outputReadTypes = new ReadType[numReads];
-        i = 0;
-        for (final ReadDescriptor rd : outputMapping.getOutputDescriptors()) {
-            outputReadTypes[i++] = rd.type;
-        }
     }
 
     /**
@@ -162,55 +152,14 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
         return cluster;
     }
 
-    /*
-     * Methods for that transfer data from the IlluminaData objects to the current cluster
-     */
-    private void addData(final ClusterData clusterData, final PositionalData posData) {
-        clusterData.setX(posData.getXCoordinate());
-        clusterData.setY(posData.getYCoordinate());
-    }
-
-    private void addData(final ClusterData clusterData, final PfData pfData) {
-        clusterData.setPf(pfData.isPf());
-    }
-
-    private void addData(final ClusterData clusterData, final BarcodeData barcodeData) {
-        clusterData.setMatchedBarcode(barcodeData.getBarcode());
-    }
-
-    private void addReadData(final ClusterData clusterData, final int numReads, final BaseData baseData) {
-        final byte[][] bases = baseData.getBases();
-        for (int i = 0; i < numReads; i++) {
-            clusterData.getRead(i).setBases(bases[i]);
-        }
-    }
-
-    private void addReadData(final ClusterData clusterData, final int numReads, final QualityData qualityData) {
-        final byte[][] qualities = qualityData.getQualities();
-        for (int i = 0; i < numReads; i++) {
-            clusterData.getRead(i).setQualities(qualities[i]);
-        }
-    }
-
-    private void addReadData(final ClusterData clusterData, final int numReads, final RawIntensityData rawIntensityData) {
-        final FourChannelIntensityData[] fcids = rawIntensityData.getRawIntensities();
-        for (int i = 0; i < numReads; i++) {
-            clusterData.getRead(i).setRawIntensities(fcids[i]);
-        }
-    }
-
-    private void addReadData(final ClusterData clusterData, final int numReads, final NoiseData noiseData) {
-        final FourChannelIntensityData[] fcids = noiseData.getNoise();
-        for (int i = 0; i < numReads; i++) {
-            clusterData.getRead(i).setNoise(fcids[i]);
-        }
-    }
-
     public void remove() {
         throw new UnsupportedOperationException();
     }
 
-    /** Jump so that the next record returned will be from the specified tile. */
+    /**
+     * Jump so that the next record returned will be from the specified tile.
+     */
+    @Override
     public void seekToTile(final int oneBasedTileNumber) {
         for (final IlluminaParser parser : parsers) {
             parser.seekToTile(oneBasedTileNumber);
@@ -218,10 +167,6 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
     }
 
     @Override
-    public Iterator<ClusterData> iterator() {
-        return this;
-    }
-
     public void close() {
         for (final IlluminaParser parser : parsers) {
             parser.close();

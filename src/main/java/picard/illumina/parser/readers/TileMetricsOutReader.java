@@ -27,30 +27,33 @@ import java.util.NoSuchElementException;
  * byte 6-9 (float)          = metrics value, see Theory of RTA document by Illumina for definition
  */
 public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.IlluminaTileMetrics> {
-    private static final int HEADER_SIZE = 2;
-    private static final int EXPECTED_RECORD_SIZE = 10;
-    private static final int EXPECTED_VERSION = 2;
-
     private final BinaryFileIterator<ByteBuffer> bbIterator;
+    private float density;
+    private TileMetricsVersion version;
 
     /**
      * Return a TileMetricsOutReader for the specified file
      * @param tileMetricsOutFile The file to read
+     * @param version The version of the tile metrics file being parsed.
      */
-    public TileMetricsOutReader(final File tileMetricsOutFile) {
-        bbIterator = MMapBackedIteratorFactory.getByteBufferIterator(HEADER_SIZE, EXPECTED_RECORD_SIZE, tileMetricsOutFile);
+    public TileMetricsOutReader(final File tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion version) {
+
+        bbIterator = MMapBackedIteratorFactory.getByteBufferIterator(version.headerSize, version.recordSize, tileMetricsOutFile);
+        this.version = version;
 
         final ByteBuffer header = bbIterator.getHeaderBytes();
 
-        //Get the version, should be EXPECTED_VERSION, which is 2
         final int actualVersion = UnsignedTypeUtil.uByteToInt(header.get());
-        if(actualVersion != EXPECTED_VERSION) {
-            throw new PicardException("TileMetricsOutReader expects the version number to be " + EXPECTED_VERSION + ".  Actual Version in Header( " + actualVersion + ")" );
+        if (actualVersion != version.version) {
+            throw new PicardException("TileMetricsOutReader expects the version number to be " + version.version + ".  Actual Version in Header( " + actualVersion + ")");
         }
 
         final int actualRecordSize = UnsignedTypeUtil.uByteToInt(header.get());
-        if(EXPECTED_RECORD_SIZE != actualRecordSize) {
-            throw new PicardException("TileMetricsOutReader expects the record size to be " + EXPECTED_RECORD_SIZE + ".  Actual Record Size in Header( " + actualRecordSize + ")" );
+        if (version.recordSize != actualRecordSize) {
+            throw new PicardException("TileMetricsOutReader expects the record size to be " + version.recordSize + ".  Actual Record Size in Header( " + actualRecordSize + ")");
+        }
+        if (version == TileMetricsVersion.THREE) {
+            this.density = UnsignedTypeUtil.uIntToFloat(header.getInt());
         }
     }
 
@@ -62,11 +65,15 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
         if(!hasNext()) {
             throw new NoSuchElementException();
         }
-        return new IlluminaTileMetrics(bbIterator.next());
+        return new IlluminaTileMetrics(bbIterator.next(), version);
     }
 
     public void remove() {
         throw new UnsupportedOperationException();
+    }
+
+    public float getDensity() {
+        return density;
     }
 
     /**
@@ -75,10 +82,21 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
     public static class IlluminaTileMetrics {
         private final IlluminaLaneTileCode laneTileCode;
         private final float metricValue;
+        private float metricValue2;
+        private byte type;
 
-        public IlluminaTileMetrics(final ByteBuffer bb) {
-            this(UnsignedTypeUtil.uShortToInt(bb.getShort()), UnsignedTypeUtil.uShortToInt(bb.getShort()),
-                    UnsignedTypeUtil.uShortToInt(bb.getShort()), bb.getFloat());
+        public IlluminaTileMetrics(final ByteBuffer bb, TileMetricsVersion version) {
+            if (version == TileMetricsVersion.THREE) {
+                this.laneTileCode = new IlluminaLaneTileCode(UnsignedTypeUtil.uShortToInt(bb.getShort()), bb.getInt(), 0);
+                //need to dump 9 bytes
+                this.type = bb.get();
+                this.metricValue = bb.getFloat();
+                this.metricValue2 = bb.getFloat();
+            } else {
+                this.laneTileCode = new IlluminaLaneTileCode(UnsignedTypeUtil.uShortToInt(bb.getShort()), UnsignedTypeUtil.uShortToInt(bb.getShort()),
+                        UnsignedTypeUtil.uShortToInt(bb.getShort()));
+                this.metricValue = bb.getFloat();
+            }
         }
 
         public IlluminaTileMetrics(final int laneNumber, final int tileNumber, final int metricCode, final float metricValue) {
@@ -119,6 +137,10 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
         @Override
         public int hashCode() {
             return String.format("%s:%s:%s:%s", laneTileCode.getLaneNumber(), laneTileCode.getTileNumber(), laneTileCode.getMetricCode(), metricValue).hashCode(); // Slow but adequate.
+        }
+
+        public boolean isClusterRecord() {
+            return type == 't';
         }
     }
 
@@ -162,6 +184,21 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
             result = 31 * result + tileNumber;
             result = 31 * result + metricCode;
             return result;
+        }
+    }
+
+    public enum TileMetricsVersion {
+        TWO(2, 2, 10),
+        THREE(3, 6, 15);
+
+        private final int version;
+        private final int headerSize;
+        private final int recordSize;
+
+        TileMetricsVersion(int version, int headerSize, int recordSize) {
+            this.version = version;
+            this.headerSize = headerSize;
+            this.recordSize = recordSize;
         }
     }
 }

@@ -24,21 +24,26 @@
 
 package picard.illumina;
 
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.illumina.parser.ClusterData;import picard.illumina.parser.IlluminaDataProvider;import picard.illumina.parser.IlluminaDataProviderFactory;import picard.illumina.parser.IlluminaDataType;import picard.illumina.parser.ReadStructure;import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.Histogram;
+import picard.cmdline.programgroups.Illumina;
+import picard.illumina.parser.BaseIlluminaDataProvider;
+import picard.illumina.parser.ClusterData;
+import picard.illumina.parser.IlluminaDataProviderFactory;
+import picard.illumina.parser.IlluminaDataType;
+import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.util.TabbedTextFileWithHeaderParser;
-import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
-import java.lang.Comparable;import java.lang.Double;import java.lang.Exception;import java.lang.Integer;import java.lang.Math;import java.lang.Override;import java.lang.String;import java.lang.StringBuilder;import java.text.DecimalFormat;
+import java.text.DecimalFormat;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -178,7 +183,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
         unmatched_barcode = StringUtil.repeatCharNTimes('N', barcodeLength);
 
         //Initialize data provider, iterate over clusters, and collect statistics
-        final IlluminaDataProvider provider = factory.makeDataProvider();
+        final BaseIlluminaDataProvider provider = factory.makeDataProvider();
 
         while (provider.hasNext()) {
             final ClusterData cluster = provider.next();

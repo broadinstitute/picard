@@ -32,10 +32,10 @@ import htsjdk.samtools.util.StringUtil;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.Illumina;
+import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
-import picard.illumina.parser.IlluminaDataProvider;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.ReadDescriptor;
@@ -109,21 +109,20 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             "<p>For poorly matching barcodes, the order of specification of barcodes can cause arbitrary output differences.</p>" +
             "" +
             "<h4>Usage example:</h4> " +
-                "<pre>" +
-                "java -jar picard.jar ExtractIlluminaBarcodes \\<br />" +
-        "              BASECALLS_DIR=/BaseCalls/ \\<br />" +
-        "              LANE=1 \\<br />" +
+            "<pre>" +
+            "java -jar picard.jar ExtractIlluminaBarcodes \\<br />" +
+            "              BASECALLS_DIR=/BaseCalls/ \\<br />" +
+            "              LANE=1 \\<br />" +
             "          READ_STRUCTURE=25T8B25T \\<br />" +
-        "              BARCODE_FILE=barcodes.txt \\<br />" +
-        "              METRICS_FILE=metrics_output.txt " +
+            "              BARCODE_FILE=barcodes.txt \\<br />" +
+            "              METRICS_FILE=metrics_output.txt " +
             "</pre>" +
             "" +
             "Please see the ExtractIlluminaBarcodes.BarcodeMetric " +
             "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#ExtractIlluminaBarcodes.BarcodeMetric'>definitions</a> " +
             "for a complete description of the metrics produced by this tool.</p>" +
             "" +
-            "<hr />"
-    ;
+            "<hr />";
 
     // The following attributes define the command-line arguments
 
@@ -177,7 +176,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     private static final Log LOG = Log.getInstance(ExtractIlluminaBarcodes.class);
 
-    /** The read structure of the actual Illumina Run, i.e. the readStructure of the input data */
+    /**
+     * The read structure of the actual Illumina Run, i.e. the readStructure of the input data
+     */
     private ReadStructure readStructure;
 
     private IlluminaDataProviderFactory factory;
@@ -242,7 +243,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         }
         try {
             for (final PerTileBarcodeExtractor extractor : extractors) {
-                pool.submit(extractor);    
+                pool.submit(extractor);
             }
             pool.shutdown();
             // Wait a while for existing tasks to terminate
@@ -349,7 +350,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         }
     }
 
-    /** Create a barcode filename corresponding to the given tile qseq file. */
+    /**
+     * Create a barcode filename corresponding to the given tile qseq file.
+     */
     private File getBarcodeFile(final int tile) {
         return new File(OUTPUT_DIR,
                 "s_" + LANE + "_" + tileNumberFormatter.format(tile) + "_barcode.txt" + (COMPRESS_OUTPUTS ? ".gz" : ""));
@@ -359,7 +362,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
      * Validate that POSITION >= 1, and that all BARCODEs are the same length and unique
      *
      * @return null if command line is valid.  If command line is invalid, returns an array of error message
-     *         to be written to the appropriate place.
+     * to be written to the appropriate place.
      */
     @Override
     protected String[] customCommandLineValidation() {
@@ -456,23 +459,41 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * do not match a barcode.
          */
         public String BARCODE;
-        /** The barcode name. */
+        /**
+         * The barcode name.
+         */
         public String BARCODE_NAME = "";
-        /** The name of the library */
+        /**
+         * The name of the library
+         */
         public String LIBRARY_NAME = "";
-        /** The total number of reads matching the barcode. */
+        /**
+         * The total number of reads matching the barcode.
+         */
         public int READS = 0;
-        /** The number of PF reads matching this barcode (always less than or equal to READS). */
+        /**
+         * The number of PF reads matching this barcode (always less than or equal to READS).
+         */
         public int PF_READS = 0;
-        /** The number of all reads matching this barcode that matched with 0 errors or no-calls. */
+        /**
+         * The number of all reads matching this barcode that matched with 0 errors or no-calls.
+         */
         public int PERFECT_MATCHES = 0;
-        /** The number of PF reads matching this barcode that matched with 0 errors or no-calls. */
+        /**
+         * The number of PF reads matching this barcode that matched with 0 errors or no-calls.
+         */
         public int PF_PERFECT_MATCHES = 0;
-        /** The number of all reads matching this barcode that matched with 1 error or no-call. */
+        /**
+         * The number of all reads matching this barcode that matched with 1 error or no-call.
+         */
         public int ONE_MISMATCH_MATCHES = 0;
-        /** The number of PF reads matching this barcode that matched with 1 error or no-call. */
+        /**
+         * The number of PF reads matching this barcode that matched with 1 error or no-call.
+         */
         public int PF_ONE_MISMATCH_MATCHES = 0;
-        /** The fraction of all reads in the lane that matched to this barcode. */
+        /**
+         * The fraction of all reads in the lane that matched to this barcode.
+         */
         public double PCT_MATCHES = 0d;
         /**
          * The rate of all reads matching this barcode to all reads matching the most prevelant barcode. For the
@@ -482,7 +503,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * in representation between barcodes.
          */
         public double RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT = 0d;
-        /** The fraction of PF reads in the lane that matched to this barcode. */
+        /**
+         * The fraction of PF reads in the lane that matched to this barcode.
+         */
         public double PF_PCT_MATCHES = 0d;
 
         /**
@@ -515,12 +538,16 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             }
         }
 
-        /** This ctor is necessary for when reading metrics from file */
+        /**
+         * This ctor is necessary for when reading metrics from file
+         */
         public BarcodeMetric() {
             barcodeBytes = null;
         }
 
-        /** Creates a copy of metric initialized with only non-accumulated and non-calculated values set */
+        /**
+         * Creates a copy of metric initialized with only non-accumulated and non-calculated values set
+         */
         public static BarcodeMetric copy(final BarcodeMetric metric) {
             final BarcodeMetric result = new BarcodeMetric();
             result.BARCODE = metric.BARCODE;
@@ -546,24 +573,36 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     }
 
-    /** Extracts barcodes and accumulates metrics for an entire tile. */
-    private static class PerTileBarcodeExtractor implements Runnable {
+    /**
+     * Extracts barcodes and accumulates metrics for an entire tile.
+     */
+    public static class PerTileBarcodeExtractor implements Runnable {
         private final int tile;
         private final File barcodeFile;
         private final Map<String, BarcodeMetric> metrics;
         private final BarcodeMetric noMatch;
         private Exception exception = null;
         private final boolean usingQualityScores;
-        private final IlluminaDataProvider provider;
+        private final BaseIlluminaDataProvider provider;
         private final ReadStructure outputReadStructure;
         private final int maxNoCalls, maxMismatches, minMismatchDelta, minimumBaseQuality;
 
-        /** Utility class to hang onto data about the best match for a given barcode */
-        class BarcodeMatch {
+        /**
+         * Utility class to hang onto data about the best match for a given barcode
+         */
+        public static class BarcodeMatch {
             boolean matched;
             String barcode;
             int mismatches;
             int mismatchesToSecondBest;
+
+            public boolean isMatched() {
+                return matched;
+            }
+
+            public String getBarcode() {
+                return barcode;
+            }
         }
 
         /**
@@ -607,11 +646,17 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             return this.metrics;
         }
 
-        public synchronized BarcodeMetric getNoMatchMetric() { return this.noMatch; }
+        public synchronized BarcodeMetric getNoMatchMetric() {
+            return this.noMatch;
+        }
 
-        public synchronized Exception getException() { return this.exception; }
+        public synchronized Exception getException() {
+            return this.exception;
+        }
 
-        /** run method which extracts barcodes and accumulates metrics for an entire tile */
+        /**
+         * run method which extracts barcodes and accumulates metrics for an entire tile
+         */
         synchronized public void run() {
             try {
                 LOG.info("Extracting barcodes for tile " + tile);
@@ -634,7 +679,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                         if (usingQualityScores) qualityScores[i] = cluster.getRead(barcodeIndices[i]).getQualities();
                     }
                     final boolean passingFilter = cluster.isPf();
-                    final BarcodeMatch match = findBestBarcodeAndUpdateMetrics(barcodeSubsequences, qualityScores, passingFilter, metrics, noMatch);
+                    final BarcodeMatch match = findBestBarcodeAndUpdateMetrics(barcodeSubsequences, qualityScores,
+                            passingFilter, metrics, noMatch, maxNoCalls, maxMismatches,
+                            minMismatchDelta, minimumBaseQuality);
 
                     final String yOrN = (match.matched ? "Y" : "N");
 
@@ -649,8 +696,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             } catch (final Exception e) {
                 LOG.error(e, "Error processing tile ", this.tile);
                 this.exception = e;
-            }
-            finally{
+            } finally {
                 provider.close();
             }
         }
@@ -662,11 +708,15 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * @param passingFilter    PF flag for the current read
          * @return perfect barcode string, if there was a match within tolerance, or null if not.
          */
-        private BarcodeMatch findBestBarcodeAndUpdateMetrics(final byte[][] readSubsequences,
-                                                             final byte[][] qualityScores,
-                                                             final boolean passingFilter,
-                                                             final Map<String, BarcodeMetric> metrics,
-                                                             final BarcodeMetric noMatchBarcodeMetric) {
+        public static BarcodeMatch findBestBarcodeAndUpdateMetrics(final byte[][] readSubsequences,
+                                                                   final byte[][] qualityScores,
+                                                                   final boolean passingFilter,
+                                                                   final Map<String, BarcodeMetric> metrics,
+                                                                   final BarcodeMetric noMatchBarcodeMetric,
+                                                                   final int maxNoCalls,
+                                                                   final int maxMismatches,
+                                                                   final int minMismatchDelta,
+                                                                   final int minimumBaseQuality) {
             BarcodeMetric bestBarcodeMetric = null;
             int totalBarcodeReadBases = 0;
             int numNoCalls = 0; // NoCalls are calculated for all the barcodes combined
@@ -682,7 +732,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             int numMismatchesInSecondBestBarcode = totalBarcodeReadBases + 1;
 
             for (final BarcodeMetric barcodeMetric : metrics.values()) {
-                final int numMismatches = countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores);
+                final int numMismatches = countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
                 if (numMismatches < numMismatchesInBestBarcode) {
                     if (bestBarcodeMetric != null) {
                         numMismatchesInSecondBestBarcode = numMismatchesInBestBarcode;
@@ -746,7 +796,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          *
          * @return how many bases did not match
          */
-        private int countMismatches(final byte[][] barcodeBytes, final byte[][] readSubsequence, final byte[][] qualities) {
+        private static int countMismatches(final byte[][] barcodeBytes, final byte[][] readSubsequence, final byte[][] qualities, int minimumBaseQuality) {
             int numMismatches = 0;
             // Read sequence and barcode length may not be equal, so we just use the shorter of the two
             for (int j = 0; j < barcodeBytes.length; j++) {
