@@ -14,6 +14,7 @@ UNION (Like CONCATENATE but with UNIQUE and SORT implied, the result being the s
 INTERSECT (The sorted, uniqued set of all loci that are contained in all of the INPUTs.)
 SUBTRACT (Subtracts SECOND_INPUT from INPUT. The resulting loci are there in INPUT that are not in SECOND_INPUT)
 SYMDIFF (Find loci that are in INPUT or SECOND_INPUT but are not in both.)
+OVERLAPS (Find only intervals in INPUT that have any overlap with SECOND_INPUT)
 } </td></tr>
 <tr><td>SECOND_INPUT (File)</td><td>Second set of intervals for SUBTRACT and DIFFERENCE operations.  Default value: null. This option may be specified 0 or more times. </td></tr>
 <tr><td>COMMENT (String)</td><td>One or more lines of comment to add to the header of the output file.  Default value: null. This option may be specified 0 or more times. </td></tr>

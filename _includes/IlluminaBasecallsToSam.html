@@ -1,6 +1,6 @@
 <h3 id="IlluminaBasecallsToSam">IlluminaBasecallsToSam</h3>
 <section>
-<p>Transforms raw Illumina sequencing data into an unmapped SAM or BAM file.<p>The IlluminaBaseCallsToSam program collects, demultiplexes, and sorts reads across all of the tiles of a lane via barcode to produce an unmapped SAM/BAM file.  An unmapped BAM file is often referred to as a uBAM.  All barcode, sample, and library data is provided in the LIBRARY_PARAMS file.  Note, this LIBRARY_PARAMS file should be formatted according to the specifications indicated below.  The following is an example of a properly formmated LIBRARY_PARAMS file:</p>BARCODE_1	OUTPUT	SAMPLE_ALIAS	LIBRARY_NAME
+<p>Transforms raw Illumina sequencing data into an unmapped SAM or BAM file.<p>The IlluminaBaseCallsToSam program collects, demultiplexes, and sorts reads across all of the tiles of a lane via barcode to produce an unmapped SAM/BAM file.  An unmapped BAM file is often referred to as a uBAM.  All barcode, sample, and library data is provided in the LIBRARY_PARAMS file.  Note, this LIBRARY_PARAMS file should be formatted according to the specifications indicated below.  The following is an example of a properly formatted LIBRARY_PARAMS file:</p>BARCODE_1	OUTPUT	SAMPLE_ALIAS	LIBRARY_NAME
 AAAAAAAA	SA_AAAAAAAA.bam	SA_AAAAAAAA	LN_AAAAAAAA
 AAAAGAAG	SA_AAAAGAAG.bam	SA_AAAAGAAG	LN_AAAAGAAG
 AACAATGG	SA_AACAATGG.bam	SA_AACAATGG	LN_AACAATGG
@@ -43,5 +43,10 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 <tr><td>MOLECULAR_INDEX_TAG (String)</td><td>The tag to use to store any molecular indexes.  If more than one molecular index is found, they will be concatenated and stored here.  Default value: RX. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>MOLECULAR_INDEX_BASE_QUALITY_TAG (String)</td><td>The tag to use to store any molecular index base qualities.  If more than one molecular index is found, their qualities will be concatenated and stored here (.i.e. the number of "M" operators in the READ_STRUCTURE)  Default value: QX. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>TAG_PER_MOLECULAR_INDEX (String)</td><td>The list of tags to store each molecular index.  The number of tags should match the number of molecular indexes.  Default value: null. This option may be specified 0 or more times. </td></tr>
+<tr><td>USE_NEW_CONVERTER (Boolean)</td><td>Use the new converter  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>MAX_MISMATCHES (Integer)</td><td>Maximum mismatches for a barcode to be considered a match.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MIN_MISMATCH_DELTA (Integer)</td><td>Minimum difference between number of mismatches in the best and second best barcodes for a barcode to be considered a match.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MAX_NO_CALLS (Integer)</td><td>Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.  Default value: 2. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>METRICS_FILE (File)</td><td>Per-barcode and per-lane metrics written to this file.  Default value: null. </td></tr>
 </table>
 </section>
