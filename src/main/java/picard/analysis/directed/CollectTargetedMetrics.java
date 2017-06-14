@@ -80,7 +80,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     public File PER_BASE_COVERAGE;
 
     @Option(optional = true, doc= "The maximum distance between a read and the nearest probe/bait/amplicon for the read to be " +
-            "considered 'near probe' and included in percent selected.")
+            "considered 'near probe' and included in percent selected. Not applied to the target intervals.")
     public int NEAR_DISTANCE = TargetedPcrMetricsCollector.NEAR_PROBE_DISTANCE_DEFAULT;
 
     @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
