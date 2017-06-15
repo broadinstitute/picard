@@ -240,7 +240,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                         }
                     } else if(doRefMetrics) {
                         metrics.PF_READS_ALIGNED++;
-                        if (!record.getProperPairFlag()) metrics.PF_READS_IMPROPER_PAIRS++;
+                        if (record.getReadPairedFlag() && !record.getProperPairFlag()) metrics.PF_READS_IMPROPER_PAIRS++;
                         if (!record.getReadNegativeStrandFlag()) numPositiveStrand++;
                         if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
                             metrics.READS_ALIGNED_IN_PAIRS++;
