@@ -23,6 +23,8 @@
  */
 package picard.cmdline;
 
+import com.intel.gkl.compression.IntelDeflaterFactory;
+import com.intel.gkl.compression.IntelInflaterFactory;
 import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMFileWriterImpl;
@@ -32,10 +34,7 @@ import htsjdk.samtools.metrics.Header;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.metrics.StringHeader;
-import htsjdk.samtools.util.BlockCompressedOutputStream;
-import htsjdk.samtools.util.BlockCompressedStreamConstants;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 
@@ -102,6 +101,12 @@ public abstract class CommandLineProgram {
 
     @Option(doc="Google Genomics API client_secrets.json file path.", common = true)
     public String GA4GH_CLIENT_SECRETS="client_secrets.json";
+
+    @Option(shortName = "jdk_deflater", doc = "Use the JDK Deflater instead of the IntelDeflater for writing BAMs", common = true)
+    public Boolean USE_JDK_DEFLATER = false;
+
+    @Option(shortName = "jdk_inflater", doc = "Use the JDK Inflater instead of the IntelInflater for reading BAMs", common = true)
+    public Boolean USE_JDK_INFLATER = false;
     
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
 
@@ -164,17 +169,26 @@ public abstract class CommandLineProgram {
         }
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
+
         if (VALIDATION_STRINGENCY != ValidationStringency.STRICT) VariantContextWriterBuilder.setDefaultOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER);
 
         if (MAX_RECORDS_IN_RAM != null) {
             SAMFileWriterImpl.setDefaultMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         }
 
-        if (CREATE_INDEX){
+        if (CREATE_INDEX) {
             SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(true);
         }
 
         SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
+
+        if (!USE_JDK_DEFLATER) {
+            BlockCompressedOutputStream.setDefaultDeflaterFactory(new IntelDeflaterFactory());
+        }
+
+        if (!USE_JDK_INFLATER) {
+            BlockGunzipper.setDefaultInflaterFactory(new IntelInflaterFactory());
+        }
 
         for (final File f : TMP_DIR) {
             // Intentionally not checking the return values, because it may be that the program does not
@@ -190,12 +204,14 @@ public abstract class CommandLineProgram {
 
             // Output a one liner about who/where and what software/os we're running on
             try {
-            System.err.println("[" + new Date() + "] Executing as " +
-                                       System.getProperty("user.name") + "@" + InetAddress.getLocalHost().getHostName() +
-                                       " on " + System.getProperty("os.name") + " " + System.getProperty("os.version") +
-                                       " " + System.getProperty("os.arch") + "; " + System.getProperty("java.vm.name") +
-                                       " " + System.getProperty("java.runtime.version") +
-                                       "; Picard version: " + commandLineParser.getVersion());
+                final String msg = String.format(
+                    "[%s] Executing as %s@%s on %s %s %s; %s %s; Deflater: %s; Inflater: %s; Picard version: %s",
+                    new Date(), System.getProperty("user.name"), InetAddress.getLocalHost().getHostName(),
+                    System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"),
+                    System.getProperty("java.vm.name"), System.getProperty("java.runtime.version"),
+                    USE_JDK_DEFLATER ? "JdkDeflater" : "IntelDeflater", USE_JDK_INFLATER ? "JdkInflater" : "IntelInflater",
+                    commandLineParser.getVersion());
+                System.err.println(msg);
             }
             catch (Exception e) { /* Unpossible! */ }
         }
