@@ -23,14 +23,8 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.DownsamplingIteratorFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.DownsamplingIteratorFactory.Strategy;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.DownsamplingIterator;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -117,10 +111,10 @@ public class DownsampleSam extends CommandLineProgram {
         }
 
         final Random r = RANDOM_SEED == null ? new Random() : new Random(RANDOM_SEED);
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
-        final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(INPUT, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
+        final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
 
         while (iterator.hasNext()) {
             final SAMRecord rec = iterator.next();
