@@ -25,10 +25,13 @@ package picard.sam;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.DownsamplingIteratorFactory.Strategy;
+import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetrics;
+import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetricsCollector;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -94,6 +97,9 @@ public class DownsampleSam extends CommandLineProgram {
             "Higher accuracy will generally require more memory.")
     public double ACCURACY = 0.0001;
 
+    @Option(shortName = "M", doc = "The file to write metrics to (QualityYieldMetrics)")
+    public File METRICS_FILE;
+
     private final Log log = Log.getInstance(DownsampleSam.class);
 
     public static void main(final String[] args) {
@@ -115,10 +121,12 @@ public class DownsampleSam extends CommandLineProgram {
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
+        final QualityYieldMetricsCollector metricsCollector = new QualityYieldMetricsCollector(true, false, false);
 
         while (iterator.hasNext()) {
             final SAMRecord rec = iterator.next();
             out.addAlignment(rec);
+            if (METRICS_FILE != null) metricsCollector.acceptRecord(rec, null);
             progress.record(rec);
         }
 
@@ -127,6 +135,13 @@ public class DownsampleSam extends CommandLineProgram {
         final NumberFormat fmt = new DecimalFormat("0.00%");
         log.info("Finished downsampling.");
         log.info("Kept ", iterator.getAcceptedCount(), " out of ", iterator.getSeenCount(), " reads (", fmt.format(iterator.getAcceptedFraction()), ").");
+
+        if (METRICS_FILE != null) {
+            final MetricsFile<QualityYieldMetrics, Integer> metricsFile = getMetricsFile();
+            metricsCollector.finish();
+            metricsCollector.addMetricsToFile(metricsFile);
+            metricsFile.write(METRICS_FILE);
+        }
 
         return 0;
     }
