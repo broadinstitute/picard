@@ -34,7 +34,10 @@ import htsjdk.samtools.metrics.Header;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.metrics.StringHeader;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.BlockCompressedOutputStream;
+import htsjdk.samtools.util.BlockGunzipper;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 
@@ -85,7 +88,8 @@ public abstract class CommandLineProgram {
     public ValidationStringency VALIDATION_STRINGENCY = ValidationStringency.DEFAULT_STRINGENCY;
 
     @Option(doc = "Compression level for all compressed files created (e.g. BAM and GELI).", common=true)
-    public int COMPRESSION_LEVEL = 1; // The default IntelDeflater is slow at levels > 1
+    // The default IntelDeflater is slow at levels > 1
+    public int COMPRESSION_LEVEL = 1;
 
     @Option(doc = "When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.", optional=true, common=true)
     public Integer MAX_RECORDS_IN_RAM = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
@@ -102,10 +106,10 @@ public abstract class CommandLineProgram {
     @Option(doc="Google Genomics API client_secrets.json file path.", common = true)
     public String GA4GH_CLIENT_SECRETS="client_secrets.json";
 
-    @Option(shortName = "jdk_deflater", doc = "Use the JDK Deflater instead of the IntelDeflater for writing BAMs", common = true)
+    @Option(shortName = "use_jdk_deflater", doc = "Use the JDK Deflater instead of the IntelDeflater for writing BAMs", common = true)
     public Boolean USE_JDK_DEFLATER = false;
 
-    @Option(shortName = "jdk_inflater", doc = "Use the JDK Inflater instead of the IntelInflater for reading BAMs", common = true)
+    @Option(shortName = "use_jdk_inflater", doc = "Use the JDK Inflater instead of the IntelInflater for reading BAMs", common = true)
     public Boolean USE_JDK_INFLATER = false;
     
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
@@ -209,7 +213,7 @@ public abstract class CommandLineProgram {
                     new Date(), System.getProperty("user.name"), InetAddress.getLocalHost().getHostName(),
                     System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"),
                     System.getProperty("java.vm.name"), System.getProperty("java.runtime.version"),
-                    USE_JDK_DEFLATER ? "JdkDeflater" : "IntelDeflater", USE_JDK_INFLATER ? "JdkInflater" : "IntelInflater",
+                    USE_JDK_DEFLATER ? "Jdk" : "Intel", USE_JDK_INFLATER ? "Jdk" : "Intel",
                     commandLineParser.getVersion());
                 System.err.println(msg);
             }
