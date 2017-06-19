@@ -89,14 +89,14 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
-    @Option(doc = "Put into AS field of sequence dictionary entry if supplied", optional = true)
+    @Option(shortName = "AS", doc = "Put into AS field of sequence dictionary entry if supplied", optional = true)
     public String GENOME_ASSEMBLY;
 
-    @Option(doc = "Put into UR field of sequence dictionary entry.  If not supplied, input reference file is used",
+    @Option(shortName = "UR", doc = "Put into UR field of sequence dictionary entry.  If not supplied, input reference file is used",
             optional = true)
     public String URI;
 
-    @Option(doc = "Put into SP field of sequence dictionary entry", optional = true)
+    @Option(shortName = "SP", doc = "Put into SP field of sequence dictionary entry", optional = true)
     public String SPECIES;
 
     @Option(doc = "Make sequence name the first word from the > line in the fasta file.  " +
