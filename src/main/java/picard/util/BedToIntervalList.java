@@ -64,9 +64,16 @@ public class BedToIntervalList extends CommandLineProgram {
             "     -Strand - Indicates +/- strand for the interval (either + or -) <br /> " +
             "     -Interval name - (Each interval should have a unique name) " +
             "</pre>" +
-            "  <br /><br />" +
-            "This tool requires sequence dictionary file (with \".dict\" extension), which can be created from a reference sequence " +
-            "using Picard's CreateSequenceDictionary tool."+
+            "<br/>" +
+            "This tool requires sequence dictionary, provided with the SEQUENCE_DICTIONARY or SD argument. " +
+            "This argument can be any of:" +
+            "<pre>" +
+            "    - A file with .dict extension generated using Picard's CreateSequenceDictionaryTool</br>" +
+            "    - A <name>.fa or <name>.fasta file with a <name>.dict in the same directory</br>" +
+            "    - Another IntervalList that contains the dictionary to use</br>" +
+            "    - A VCF that contains #contig lines from which to generate a sequence dictionary</br>" +
+            "    - A SAM or BAM file with @SQ lines in the header from which to create a dictionary</br>" +
+            "</pre>" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar BedToIntervalList \\<br />" +
@@ -80,7 +87,8 @@ public class BedToIntervalList extends CommandLineProgram {
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input BED file")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, doc = "The sequence dictionary")
+    @Option(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME,
+            doc = "The sequence dictionary, or BAM/VCF/IntervalList from which a dictionary can be extracted.")
     public File SEQUENCE_DICTIONARY;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output Picard Interval List")
