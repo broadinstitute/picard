@@ -65,14 +65,14 @@ public class BedToIntervalList extends CommandLineProgram {
             "     -Interval name - (Each interval should have a unique name) " +
             "</pre>" +
             "<br/>" +
-            "This tool requires sequence dictionary, provided with the SEQUENCE_DICTIONARY or SD argument. " +
-            "This argument can be any of:" +
+            "This tool requires a sequence dictionary, provided with the SEQUENCE_DICTIONARY or SD argument. " +
+            "The value given to this argument can be any of the following:" +
             "<pre>" +
             "    - A file with .dict extension generated using Picard's CreateSequenceDictionaryTool</br>" +
-            "    - A <name>.fa or <name>.fasta file with a <name>.dict in the same directory</br>" +
-            "    - Another IntervalList that contains the dictionary to use</br>" +
+            "    - A reference.fa or reference.fasta file with a reference.dict in the same directory</br>" +
+            "    - Another IntervalList with @SQ lines in the header from which to generate a dictionary</br>" +
             "    - A VCF that contains #contig lines from which to generate a sequence dictionary</br>" +
-            "    - A SAM or BAM file with @SQ lines in the header from which to create a dictionary</br>" +
+            "    - A SAM or BAM file with @SQ lines in the header from which to generate a dictionary</br>" +
             "</pre>" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
