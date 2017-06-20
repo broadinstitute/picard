@@ -30,7 +30,6 @@ import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
-import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -45,7 +44,6 @@ import picard.cmdline.programgroups.Illumina;
 import picard.fastq.Casava18ReadNameEncoder;
 import picard.fastq.IlluminaReadNameEncoder;
 import picard.fastq.ReadNameEncoder;
-import picard.illumina.ExtractIlluminaBarcodes.BarcodeMetric;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.ReadData;
 import picard.illumina.parser.ReadStructure;
@@ -201,18 +199,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     @Option(doc = "Use the new converter", optional = true)
     public boolean USE_NEW_CONVERTER = false;
 
-    @Option(doc = "Maximum mismatches for a barcode to be considered a match.")
-    public int MAX_MISMATCHES = 1;
-
-    @Option(doc = "Minimum difference between number of mismatches in the best and second best barcodes for a barcode to be considered a match.")
-    public int MIN_MISMATCH_DELTA = 1;
-
-    @Option(doc = "Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.")
-    public int MAX_NO_CALLS = 2;
-
-    @Option(doc = "Per-barcode and per-lane metrics written to this file.", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME, optional = true)
-    public File METRICS_FILE;
-
     /**
      * Simple switch to control the read name format to emit.
      */
@@ -287,14 +273,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         }
         final int readsPerCluster = readStructure.templates.length() + readStructure.sampleBarcodes.length();
         if (USE_NEW_CONVERTER) {
-            if (METRICS_FILE != null) {
-                IOUtil.assertFileIsWritable(METRICS_FILE);
-            } else {
-                log.warn("No METRICS_FILE specified. Barcode metrics will not be generated.");
-            }
-
-            final MetricsFile<BarcodeMetric, Integer> metricsFile = getMetricsFile();
-
+            if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
             basecallsConverter = new NewIlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
                     sampleBarcodeFastqWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster),
                     TMP_DIR, NUM_PROCESSORS,
@@ -302,8 +281,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                     new FastqRecordsForClusterCodec(readStructure.templates.length(),
                             readStructure.sampleBarcodes.length(), readStructure.molecularBarcode.length()),
                     FastqRecordsForCluster.class, bclQualityEvaluationStrategy,
-                    this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES, MAX_NO_CALLS,
-                    MAX_MISMATCHES, MIN_MISMATCH_DELTA, MINIMUM_QUALITY, metricsFile, METRICS_FILE);
+                    this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
         } else {
             basecallsConverter = new IlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
                     sampleBarcodeFastqWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster), TMP_DIR, NUM_PROCESSORS,

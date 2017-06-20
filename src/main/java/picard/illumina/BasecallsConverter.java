@@ -133,7 +133,7 @@ abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     /**
      * A comparator for tile numbers, which are not necessarily ordered by the number's value.
      */
-    static final Comparator<Integer> TILE_NUMBER_COMPARATOR = (integer1, integer2) -> {
+    public static final Comparator<Integer> TILE_NUMBER_COMPARATOR = (integer1, integer2) -> {
         final String s1 = integer1.toString();
         final String s2 = integer2.toString();
         // Because a the tile number is followed by a colon, a tile number that

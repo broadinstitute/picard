@@ -167,7 +167,9 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                     filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
                 }
 
-                CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tiles.get(0), locs, true);
+                OutputMapping outputMapping = new OutputMapping(readStructure);
+
+                CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tiles.get(0), locs, outputMapping.getOutputCycles(), true);
 
                 reader.getAllTiles().forEach((key, value) -> {
                     List<File> fileForCycle = reader.getFilesForCycle(key);

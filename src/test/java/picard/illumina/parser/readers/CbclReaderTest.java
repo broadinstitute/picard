@@ -13,8 +13,8 @@ import java.util.Map;
 public class CbclReaderTest {
 
     public static final File TestDataDir = new File("testdata/picard/illumina/readerTests/cbcls");
-    public static final File PASSING_CBCL_C99_1 = new File(TestDataDir + "/C1.1", "L001_1.cbcl");
-    public static final File PASSING_CBCL_C100_1 = new File(TestDataDir + "/C2.1", "L001_1.cbcl");
+    public static final File PASSING_CBCL_C1_1 = new File(TestDataDir + "/C1.1", "L001_1.cbcl");
+    public static final File PASSING_CBCL_C2_1 = new File(TestDataDir + "/C2.1", "L001_1.cbcl");
     public static final File TILE_1101_FILTER = new File(TestDataDir, "tile_1101.filter");
 
     public static final char[] expectedBases = new char[]{
@@ -31,9 +31,8 @@ public class CbclReaderTest {
         filters.put(1101, TILE_1101_FILTER);
         LocsFileReader locsFileReader = new LocsFileReader(new File("testdata/picard/illumina/readerTests/s_1_6.locs"));
         List<AbstractIlluminaPositionFileReader.PositionInfo> locs = locsFileReader.toList();
-
-        final CbclReader reader = new CbclReader(Arrays.asList(PASSING_CBCL_C99_1, PASSING_CBCL_C100_1),
-                filters, new int[]{2}, 1101, locs, false);
+        final CbclReader reader = new CbclReader(Arrays.asList(PASSING_CBCL_C1_1, PASSING_CBCL_C2_1),
+                filters, new int[]{2}, 1101, locs, new int[]{1, 2}, false);
 
         int i = 0;
         while (reader.hasNext()) {
