@@ -50,6 +50,8 @@ import java.io.File;
         programGroup = Metrics.class
 )
 public class CollectQualityYieldMetrics extends SinglePassSamProgram {
+    private QualityYieldMetricsCollector collector = null;
+
     static final String USAGE_SUMMARY = "Collect metrics about reads that pass quality thresholds and Illumina-specific filters.  ";
     static final String USAGE_DETAILS = "This tool evaluates the overall quality of reads within a bam file containing one read group. " +
             "The output indicates the total numbers of bases within a read group that pass a minimum base quality score threshold and " +
@@ -87,64 +89,107 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
             "of bases if there are supplemental alignments in the input file.")
     public boolean INCLUDE_SUPPLEMENTAL_ALIGNMENTS = false;
 
-    // The metrics to be accumulated
-    private final QualityYieldMetrics metrics = new QualityYieldMetrics();
-
     /** Ensure that we get all reads regardless of alignment status. */
     @Override protected boolean usesNoRefReads() { return true; }
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
+        this.collector = new QualityYieldMetricsCollector(USE_ORIGINAL_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS);
     }
 
     @Override
     protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
-        if (!INCLUDE_SECONDARY_ALIGNMENTS    && rec.getNotPrimaryAlignmentFlag()) return;
-        if (!INCLUDE_SUPPLEMENTAL_ALIGNMENTS && rec.getSupplementaryAlignmentFlag()) return;
-
-        final int length = rec.getReadLength();
-        metrics.TOTAL_READS++;
-        metrics.TOTAL_BASES += length;
-
-        final boolean isPfRead = !rec.getReadFailsVendorQualityCheckFlag();
-        if (isPfRead) {
-            metrics.PF_READS++;
-            metrics.PF_BASES += length;
-        }
-
-        final byte[] quals;
-        if (USE_ORIGINAL_QUALITIES) {
-            byte[] tmp = rec.getOriginalBaseQualities();
-            if (tmp == null) tmp = rec.getBaseQualities();
-            quals = tmp;
-        } else {
-            quals = rec.getBaseQualities();
-        }
-
-        // add up quals, and quals >= 20
-        for (final int qual : quals) {
-            metrics.Q20_EQUIVALENT_YIELD += qual;
-            if (qual >= 20) metrics.Q20_BASES++;
-            if (qual >= 30) metrics.Q30_BASES++;
-
-            if (isPfRead) {
-                metrics.PF_Q20_EQUIVALENT_YIELD += qual;
-                if (qual >= 20) metrics.PF_Q20_BASES++;
-                if (qual >= 30) metrics.PF_Q30_BASES++;
-            }
-        }
+        this.collector.acceptRecord(rec, ref);
     }
 
     @Override
     protected void finish() {
         final MetricsFile<QualityYieldMetrics, Integer> metricsFile = getMetricsFile();
-        metrics.READ_LENGTH = metrics.TOTAL_READS == 0 ? 0 : (int) (metrics.TOTAL_BASES / metrics.TOTAL_READS);
-        metrics.Q20_EQUIVALENT_YIELD = metrics.Q20_EQUIVALENT_YIELD / 20;
-        metrics.PF_Q20_EQUIVALENT_YIELD = metrics.PF_Q20_EQUIVALENT_YIELD / 20;
-
-        metricsFile.addMetric(metrics);
+        this.collector.finish();
+        this.collector.addMetricsToFile(metricsFile);
         metricsFile.write(OUTPUT);
+    }
+
+    public static class QualityYieldMetricsCollector {
+        // If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting
+        // of bases if there are secondary alignments in the input file.
+        private final boolean useOriginalQualities;
+
+        // If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting
+        // of bases if there are secondary alignments in the input file.
+        private final boolean includeSecondaryAlignments;
+
+        // If true, include bases from supplemental alignments in metrics. Setting to true may cause double-counting
+        // of bases if there are supplemental alignments in the input file.
+        public final boolean includeSupplementalAlignments;
+
+        // The metrics to be accumulated
+        private final QualityYieldMetrics metrics = new QualityYieldMetrics();
+
+        public QualityYieldMetricsCollector(final boolean useOriginalQualities,
+                                            final boolean includeSecondaryAlignments,
+                                            final boolean includeSupplementalAlignments) {
+            this.useOriginalQualities          = useOriginalQualities;
+            this.includeSecondaryAlignments    = includeSecondaryAlignments;
+            this.includeSupplementalAlignments = includeSupplementalAlignments;
+        }
+
+        public void acceptRecord(final SAMRecord rec, final ReferenceSequence ref) {
+            if (!this.includeSecondaryAlignments    && rec.getNotPrimaryAlignmentFlag()) return;
+            if (!this.includeSupplementalAlignments && rec.getSupplementaryAlignmentFlag()) return;
+
+            final int length = rec.getReadLength();
+            metrics.TOTAL_READS++;
+            metrics.TOTAL_BASES += length;
+
+            final boolean isPfRead = !rec.getReadFailsVendorQualityCheckFlag();
+            if (isPfRead) {
+                metrics.PF_READS++;
+                metrics.PF_BASES += length;
+            }
+
+            final byte[] quals;
+            if (this.useOriginalQualities) {
+                byte[] tmp = rec.getOriginalBaseQualities();
+                if (tmp == null) tmp = rec.getBaseQualities();
+                quals = tmp;
+            } else {
+                quals = rec.getBaseQualities();
+            }
+
+            // add up quals, and quals >= 20
+            for (final int qual : quals) {
+                metrics.Q20_EQUIVALENT_YIELD += qual;
+
+                if (qual >= 30) {
+                    metrics.Q20_BASES++;
+                    metrics.Q30_BASES++;
+                } else if (qual >= 20) {
+                    metrics.Q20_BASES++;
+                }
+
+                if (isPfRead) {
+                    metrics.PF_Q20_EQUIVALENT_YIELD += qual;
+                    if (qual >= 30) {
+                        metrics.PF_Q20_BASES++;
+                        metrics.PF_Q30_BASES++;
+                    } else if (qual >= 20) {
+                        metrics.PF_Q20_BASES++;
+                    }
+                }
+            }
+        }
+
+        public void finish() {
+            metrics.READ_LENGTH             = metrics.TOTAL_READS == 0 ? 0 : (int) (metrics.TOTAL_BASES / metrics.TOTAL_READS);
+            metrics.Q20_EQUIVALENT_YIELD    = metrics.Q20_EQUIVALENT_YIELD / 20;
+            metrics.PF_Q20_EQUIVALENT_YIELD = metrics.PF_Q20_EQUIVALENT_YIELD / 20;
+        }
+
+        public void addMetricsToFile(final MetricsFile<QualityYieldMetrics, Integer> metricsFile) {
+            metricsFile.addMetric(metrics);
+        }
     }
 
     /** A set of metrics used to describe the general quality of a BAM file */
@@ -180,7 +225,7 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
         /** The sum of quality scores of all bases divided by 20 */
         public long Q20_EQUIVALENT_YIELD = 0;
 
-        /** The sum of quality scores of all bases divided by 20 */
+        /** The sum of quality scores of all bases in PF reads divided by 20 */
         public long PF_Q20_EQUIVALENT_YIELD = 0;
     }
 }
