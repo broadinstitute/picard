@@ -191,4 +191,35 @@ public class CollectVariantCallingMetricsTest {
 
         Assert.assertEquals(detailMetrics.size(), 1, "Did not parse the expected number of detail metrics.");
     }
+
+    @Test
+    public void testAllHomRefVCF() throws IOException {
+        final File dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf");
+        final File vcfFile = new File(TEST_DATA_DIR, "allHomRef.vcf");
+        final File indexedVcfFile = VcfTestUtils.createTemporaryIndexedVcfFromInput(vcfFile, "allHomRef.tmp.");
+        final File outFile = new File(TEST_DATA_DIR, "vcmetrics_allHomRef");
+        final File summaryFile = new File(outFile + ".variant_calling_summary_metrics");
+        final File detailFile = new File(outFile + ".variant_calling_detail_metrics");
+
+        outFile.deleteOnExit();
+        summaryFile.deleteOnExit();
+        detailFile.deleteOnExit();
+
+        final CollectVariantCallingMetrics program = new CollectVariantCallingMetrics();
+        program.INPUT = indexedVcfFile;
+        program.DBSNP = dbSnpFile;
+        program.OUTPUT = outFile;
+        Assert.assertEquals(program.doWork(), 0);
+
+        final MetricsFile<CollectVariantCallingMetrics.VariantCallingDetailMetrics, Comparable<?>> detail = new MetricsFile<>();
+        detail.read(new FileReader(detailFile));
+        boolean seenSampleWithOnlyHomRefs = false;
+        for (final CollectVariantCallingMetrics.VariantCallingDetailMetrics metrics : detail.getMetrics()) {
+            if (metrics.SAMPLE_ALIAS.equals("HG00116")) {
+                seenSampleWithOnlyHomRefs = true;
+                Assert.assertEquals(metrics.TOTAL_SNPS, 0);
+            }
+        }
+        Assert.assertTrue(seenSampleWithOnlyHomRefs);
+    }
 }
