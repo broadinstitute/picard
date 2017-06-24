@@ -428,10 +428,11 @@ public class LiftoverVcf extends CommandLineProgram {
     }
 
     /**
-     *    Normalizes and left alignes a {@link VariantContext}.
+     *    Normalizes and left aligns a {@link VariantContext}.
      *
      *    Based on Adrian Tan, Gonçalo R. Abecasis and Hyun Min Kang. (2015)
      *    Unified Representation of Genetic Variants. Bioinformatics.
+     *
      * @param vc the {@link VariantContext} to be normalized
      * @param referenceSequence the {@link ReferenceSequence} of the same contig as vc
      * @return a new {@link VariantContext} which represents the same variation as vc but has
