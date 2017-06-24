@@ -2,7 +2,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        usage = "Clusters the results from a CrosscheckFingerprints into groups that are connected according" +
+        usage = "Clusters the results from a CrosscheckFingerprints into groups that are connected according " +
                 "to a large enough LOD score.",
         usageShort = "Clusters the results of a CrosscheckFingerprints run by LOD score.",
         programGroup = Fingerprinting.class
@@ -71,7 +71,9 @@ public class ClusterCrosscheckMetrics extends CommandLineProgram {
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
-        MetricsFile<CrosscheckMetric, ?> metricsFile = getMetricsFile();
+        if(OUTPUT != null) IOUtil.assertFileIsWritable(OUTPUT);
+
+        final MetricsFile<CrosscheckMetric, ?> metricsFile = getMetricsFile();
 
         try {
             metricsFile.read(new FileReader(INPUT));
@@ -85,7 +87,7 @@ public class ClusterCrosscheckMetrics extends CommandLineProgram {
         return 0;
     }
 
-    private MetricsFile<ClusteredCrosscheckMetric, ?> clusterMetrics(List<CrosscheckMetric> metrics) {
+    private MetricsFile<ClusteredCrosscheckMetric, ?> clusterMetrics(final List<CrosscheckMetric> metrics) {
         final GraphUtils.Graph<String> graph = new GraphUtils.Graph<>();
         metrics.stream()
                 .filter(metric -> metric.LOD_SCORE > LOD_THRESHOLD)
@@ -109,10 +111,10 @@ public class ClusterCrosscheckMetrics extends CommandLineProgram {
                                 .map(Map.Entry::getKey)
                                 .collect(Collectors.toSet())));
 
-        MetricsFile<ClusteredCrosscheckMetric, ?> clusteredMetrics = getMetricsFile();
+        final MetricsFile<ClusteredCrosscheckMetric, ?> clusteredMetrics = getMetricsFile();
         // for each cluster, find the metrics that compare groups that are both from the cluster
         // and add them to the metrics file
-        for (Map.Entry<Integer, Set<String>> cluster : collection.entrySet()) {
+        for (final Map.Entry<Integer, Set<String>> cluster : collection.entrySet()) {
 
             clusteredMetrics.addAllMetrics(
                     metrics.stream()

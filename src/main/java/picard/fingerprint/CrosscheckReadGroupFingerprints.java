@@ -45,7 +45,7 @@ import java.util.List;
         programGroup = Fingerprinting.class
 )
 /**
- deprecated 6/6/2017
+ @deprecated 6/6/2017
  Use  {@link CrosscheckFingerprints} instead.
  */
 @Deprecated

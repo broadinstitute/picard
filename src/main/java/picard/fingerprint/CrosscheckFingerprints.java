@@ -60,9 +60,9 @@ import static picard.fingerprint.CrosscheckMetric.FingerprintResult.*;
  */
 @CommandLineProgramProperties(
         usage = "Checks if all fingerprints within a set of files appear to come from the same individual." +
-                "The fingerprints are calculated initialy at the readgroup level (if present) but can be" +
-                "\"rolled-up\" by libarary, sample or file, to increase power and provide results at the " +
-                "desired resolution. Regular output is in a \"Moltenized\" format, one row per comparison, " +
+                "The fingerprints are calculated initially at the readgroup level (if present) but can be" +
+                "\"rolled-up\" by library, sample or file, to increase power and provide results at the " +
+                "desired resolution. Regular output is in a \"Moltenized\" format, one row per comparison. " +
                 "In this format the output will include the LOD score and also tumor-aware LOD score which can " +
                 "help assess identity even in the presence of a severe LOH sample with high purity." +
                 "A matrix output is also availalble to facilitate visual inspection of crosscheck results." +
@@ -104,8 +104,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     " the groups are from the sample individual. ")
     public double LOD_THRESHOLD = 0;
 
-    @Option(doc = "Which data-type should crosscheck use as the basic comparison unit? Fingerprints from readgroups can " +
-            "be \"rolled-up\" to the library, sample, or file level before being compared.")
+    @Option(doc = "Specificies which data-type should be used as the basic comparison unit. Fingerprints from readgroups can " +
+            "be \"rolled-up\" to the LIBRARY, SAMPLE, or FILE level before being compared." +
+            " Fingerprints from VCF can be be compared by SAMPLE or FILE.")
     public CrosscheckMetric.DataType CROSSCHECK_BY = CrosscheckMetric.DataType.READGROUP;
 
     @Option(doc = "The number of threads to use to process files and generate Fingerprints.")
@@ -136,7 +137,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     private final Log log = Log.getInstance(CrosscheckFingerprints.class);
 
-    private double[][] crosscheckMatrix=null;
+    private double[][] crosscheckMatrix = null;
     private final List<String> matrixKeys = new ArrayList<>();
 
     @Override
@@ -147,13 +148,12 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         if (OUTPUT != null) IOUtil.assertFileIsWritable(OUTPUT);
         if (MATRIX_OUTPUT != null) IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
 
-
         final HaplotypeMap map = new HaplotypeMap(HAPLOTYPE_MAP);
         final FingerprintChecker checker = new FingerprintChecker(map);
 
         checker.setAllowDuplicateReads(ALLOW_DUPLICATE_READS);
         checker.setValidationStringency(VALIDATION_STRINGENCY);
-        
+
         log.info("Done checking input files, moving onto fingerprinting files.");
 
         final List<String> extensions = new ArrayList<>();
@@ -162,7 +162,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         extensions.add(IOUtil.SAM_FILE_EXTENSION);
         extensions.addAll(Arrays.asList(IOUtil.VCF_EXTENSIONS));
 
-        List<File> unrolledFiles = IOUtil.unrollFiles(INPUT, extensions.toArray(new String[extensions.size()]));
+        final List<File> unrolledFiles = IOUtil.unrollFiles(INPUT, extensions.toArray(new String[extensions.size()]));
 
         final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
 
@@ -173,7 +173,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         numUnexpected = crossCheckGrouped(fpMap, metrics, getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
 
-        MetricsFile<CrosscheckMetric, ?> metricsFile = getMetricsFile();
+        final MetricsFile<CrosscheckMetric, ?> metricsFile = getMetricsFile();
         metricsFile.addAllMetrics(metrics);
         if (OUTPUT != null) {
             metricsFile.write(OUTPUT);
@@ -184,7 +184,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         if (MATRIX_OUTPUT != null) {
             writeMatrix();
         }
-
 
         if (numUnexpected > 0) {
             log.warn("At least two read groups did not relate as expected.");
@@ -197,7 +196,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     private void writeMatrix() {
 
-        final NumberFormat format =  NumberFormat.getInstance();
+        final NumberFormat format = NumberFormat.getInstance();
         format.setMaximumFractionDigits(4);
 
         try (final OutputStream stream = new FileOutputStream(MATRIX_OUTPUT);
@@ -211,7 +210,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 writer.write('\t' + matrixKeys.get(i));
             }
             writer.newLine();
-
 
             for (int i = 0; i < crosscheckMatrix.length; i++) {
                 // write the key in the first column
@@ -228,7 +226,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     }
 
     private static Function<FingerprintIdDetails, String> getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType CROSSCHECK_BY) {
-        Function<FingerprintIdDetails, String> groupByTemp;
+        final Function<FingerprintIdDetails, String> groupByTemp;
         switch (CROSSCHECK_BY) {
             case READGROUP:
                 groupByTemp = details -> details.platformUnit;
@@ -269,13 +267,13 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                         .stream()
                         .collect(Collectors.groupingBy(entry -> by.apply(entry.getKey())));
 
-        Map<FingerprintIdDetails, Fingerprint> fingerprintsByGroup = collection.entrySet().stream()
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintsByGroup = collection.entrySet().stream()
                 .collect(Collectors.toMap(
                         entry -> {
                             // merge the keys (unequal values are eliminated by merge).
 
                             final FingerprintIdDetails finalId = new FingerprintIdDetails();
-                            entry.getValue().stream().forEach(id -> finalId.merge(id.getKey()));
+                            entry.getValue().forEach(id -> finalId.merge(id.getKey()));
                             finalId.group = entry.getKey();
                             return finalId;
 
@@ -290,9 +288,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
                         }));
 
-        if (MATRIX_OUTPUT!=null) {
-           crosscheckMatrix = new double [fingerprintsByGroup.size()][];
-            for(int i =0 ; i< fingerprintsByGroup.size(); i++){
+        if (MATRIX_OUTPUT != null) {
+            crosscheckMatrix = new double[fingerprintsByGroup.size()][];
+            for (int i = 0; i < fingerprintsByGroup.size(); i++) {
                 crosscheckMatrix[i] = new double[fingerprintsByGroup.size()];
             }
         }
@@ -312,7 +310,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             final FingerprintIdDetails lhsRg = fingerprintIdDetails.get(i);
             matrixKeys.add(by.apply(lhsRg));
 
-            for (int j = i ; j < fingerprintIdDetails.size(); j++) {
+            for (int j = i; j < fingerprintIdDetails.size(); j++) {
                 final FingerprintIdDetails rhsRg = fingerprintIdDetails.get(j);
                 final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsRg.sample.equals(rhsRg.sample);
 
@@ -350,7 +348,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                                              final CrosscheckMetric.DataType type) {
         final CrosscheckMetric metric = new CrosscheckMetric();
 
-        metric.LEFT_GROUP_VALUE  = leftPuDetails.group;
+        metric.LEFT_GROUP_VALUE = leftPuDetails.group;
         metric.RIGHT_GROUP_VALUE = rightPuDetails.group;
 
         metric.RESULT = matchResult;
@@ -376,7 +374,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         return metric;
     }
 
-    private FingerprintResult getMatchResults(boolean expectedToMatch, MatchResults results) {
+    private FingerprintResult getMatchResults(final boolean expectedToMatch, final MatchResults results) {
         if (expectedToMatch) {
             if (results.getLOD() < LOD_THRESHOLD) {
                 return UNEXPECTED_MISMATCH;
