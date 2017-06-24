@@ -236,7 +236,7 @@ public class LiftoverVcf extends CommandLineProgram {
                 if (flippedIndel == null) {
                     rejects.add(new VariantContextBuilder(ctx).filter(FILTER_CANNOT_LIFTOVER_INDEL).make());
                 } else {
-                    if (tryToAddVariant(flippedIndel,refSeq, reverseComplementAlleleMap,ctx)){
+                    if (!tryToAddVariant(flippedIndel,refSeq, reverseComplementAlleleMap,ctx)){
                         failedAlleleCheck++;
                     }
                 }
@@ -283,7 +283,7 @@ public class LiftoverVcf extends CommandLineProgram {
      *
      * @param vc new {@link VariantContext}
      * @param refSeq {@link ReferenceSequence} of new reference
-     * @param alleleMap a {@link Map<Allele,Allele>} mapping the old alleles to the new alleles (for fixing the genotypes)
+     * @param alleleMap a {@link Map} mapping the old alleles to the new alleles (for fixing the genotypes)
      * @param source the original {@link VariantContext} to use for putting the original location information into vc
      * @return true if successful, false if failed due to mismatching reference allele.
      */
@@ -291,16 +291,17 @@ public class LiftoverVcf extends CommandLineProgram {
 
         final VariantContextBuilder builder = new VariantContextBuilder(vc);
 
-        if (WRITE_ORIGINAL_POSITION) {
-            builder.attribute(ORIGINAL_CONTIG, source.getContig());
-            builder.attribute(ORIGINAL_START, source.getStart());
-        }
+
         builder.genotypes(fixGenotypes(source.getGenotypes(), alleleMap));
         builder.filters(source.getFilters());
         builder.log10PError(source.getLog10PError());
         builder.attributes(source.getAttributes());
         builder.id(source.getID());
 
+        if (WRITE_ORIGINAL_POSITION) {
+            builder.attribute(ORIGINAL_CONTIG, source.getContig());
+            builder.attribute(ORIGINAL_START, source.getStart());
+        }
 
         // Check that the reference allele still agrees with the reference sequence
         boolean mismatchesReference = false;
