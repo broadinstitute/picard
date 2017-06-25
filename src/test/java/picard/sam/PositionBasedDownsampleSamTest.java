@@ -1,5 +1,7 @@
 package picard.sam;
 
+import com.google.common.hash.BloomFilter;
+import com.google.common.hash.Funnels;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -11,6 +13,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.IOUtil;
+import org.apache.commons.compress.utils.Charsets;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -158,6 +161,76 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
         //make sure that the total number of record in the resulting file in in the ballpark:
         assertGreaterThan(countSamTotalRecord(downsampled), fraction * .8 * countSamTotalRecord(samFile));
         assertLessThan(countSamTotalRecord(downsampled), fraction * 1.2 * countSamTotalRecord(samFile));
+    }
+
+    @DataProvider(name = "RejectionProvider")
+    public Object[][] Rejection() {
+        return new Object[][] {{
+            new File(TEST_DIR.getAbsolutePath() + "/rejecttest.bam"), 0.5}, {
+            new File(TEST_DIR.getAbsolutePath() + "/rejecttest.bam"), 0.2}, };
+    }
+
+    @Test(dataProvider = "RejectionProvider")
+    public void testDownsampleWorkerWithRejection(final File samFile, final double fraction) throws IOException {
+
+        final File downsampled = File.createTempFile("PositionalDownsampleSam", ".bam", tempDir);
+        final File rejected = new File("rejected.bam");
+        final String[] args = new String[]{
+                "INPUT=" + samFile.getAbsolutePath(),
+                "OUTPUT=" + downsampled.getAbsolutePath(),
+                "FRACTION=" + fraction,
+                "REJECTED_OUTPUT=rejected.bam",
+                "CREATE_INDEX=true"
+        };
+
+        // Make sure results are successful
+        assertEquals(runPicardCommandLine(args), 0);
+
+        // Make sure that the resulting BAM is valid.
+        final ValidateSamFile validateSamFile = new ValidateSamFile();
+
+        validateSamFile.INPUT = downsampled;
+        assertEquals(validateSamFile.doWork(), 0);
+
+        // Ensure that the total number of reads in the original sam file is the sum of the number of reads in the
+        // downsampled sam and rejected sam file.
+        assertEquals(countSamTotalRecord(downsampled) + countSamTotalRecord(rejected), countSamTotalRecord(samFile));
+
+        // Ensure that the reads contained in downsampled and rejected are entirely different.
+        assertEquals(probablyDisjoint(downsampled, rejected, 0.01), true);
+
+        // Ensure that the total number of record in the resulting file in in the ballpark (a factor of two) :
+        assertGreaterThan(countSamTotalRecord(downsampled), fraction * .5 * countSamTotalRecord(samFile));
+        assertLessThan(countSamTotalRecord(downsampled), fraction * 2.0 * countSamTotalRecord(samFile));
+    }
+
+    // Compare two sam files and determine whether or not they contain a list of the same read names.
+    // If the two files have any records in common, this method will return false.
+    // However, even if the two files are in fact disjoint, there is some probability (parameterized by fpp)
+    // that this method will return false.
+    private boolean probablyDisjoint(final File samFile1, final File samFile2, final double fpp) {
+        final SamReader reader1 = SamReaderFactory.make().open(samFile1);
+        final SamReader reader2 = SamReaderFactory.make().open(samFile2);
+        assert reader1.hasIndex();
+        assert reader2.hasIndex();
+
+        long totalRecords = countSamTotalRecord(samFile1);
+
+        BloomFilter bloomFilter = BloomFilter.create(Funnels.stringFunnel(Charsets.UTF_8), (int) totalRecords, fpp / totalRecords);
+
+        // Add records from samFile1 to Bloom filter
+        for (final SAMRecord rec : reader1) {
+            bloomFilter.put(rec.getReadName());
+        }
+
+        // Check each record in samFile2 against the Bloom filter to see if it might be contained.
+        for (final SAMRecord rec: reader2) {
+            if(bloomFilter.mightContain(rec.getReadName())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private long countSamTotalRecord(final File samFile) {

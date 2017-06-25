@@ -100,6 +100,9 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM or BAM file to write.")
     public File OUTPUT;
 
+    @Option(shortName = "R", doc = "The rejected reads from downsample that are not selected for the downsampled output, SAM or BAM file to write.", optional = true)
+    public File REJECTED_OUTPUT;
+
     @Option(shortName = "F", doc = "The (approximate) fraction of reads to be kept, between 0 and 1.", optional = false)
     public Double FRACTION = null;
 
@@ -199,6 +202,11 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         header.addProgramRecord(programRecord);
 
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
+        SAMFileWriter rejectedOut = null;
+
+        if(REJECTED_OUTPUT != null) {
+            rejectedOut = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, REJECTED_OUTPUT);
+        }
 
         final CircleSelector selector = new CircleSelector(FRACTION);
 
@@ -218,15 +226,23 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
 
             final boolean keepRecord = selector.select(pos, tileCoord.get(pos.getTile()));
 
+            if (REMOVE_DUPLICATE_INFORMATION) rec.setDuplicateReadFlag(false);
             if (keepRecord) {
-                if (REMOVE_DUPLICATE_INFORMATION) rec.setDuplicateReadFlag(false);
                 out.addAlignment(rec);
                 kept++;
+            }
+            else {
+                if(REJECTED_OUTPUT != null) {
+                    rejectedOut.addAlignment(rec);
+                }
             }
             progress.record(rec);
         }
 
         out.close();
+        if(REJECTED_OUTPUT != null) {
+            rejectedOut.close();
+        }
 
         CloserUtil.close(in);
     }
