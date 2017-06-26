@@ -44,6 +44,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         return new Object[][]{
                 {"testLiftoverBiallelicIndels.vcf", 3, 0},
                 {"testLiftoverMultiallelicIndels.vcf", 0, 2},
+                {"testLiftoverFailingVariants.vcf", 0, 3},
         };
     }
 

@@ -234,15 +234,15 @@ public class LiftoverVcf extends CommandLineProgram {
 
                 final VariantContext flippedIndel = flipIndel(ctx, liftOver, refSeq);
                 if (flippedIndel == null) {
-                    rejects.add(new VariantContextBuilder(ctx).filter(FILTER_CANNOT_LIFTOVER_INDEL).make());
+                    throw new IllegalArgumentException("Unexpectedly found null VC. This should have not happened.");
                 } else {
-                    if (!tryToAddVariant(flippedIndel,refSeq, reverseComplementAlleleMap,ctx)){
+                    if (!tryToAddVariant(flippedIndel, refSeq, reverseComplementAlleleMap, ctx)){
                         failedAlleleCheck++;
                     }
                 }
             } else {
                 refSeq = refSeqs.get(target.getContig());
-                final VariantContext liftedVariant=liftSnp(ctx,target,refSeq);
+                final VariantContext liftedVariant = liftSnp(ctx, target, refSeq);
 
                 if (!tryToAddVariant(liftedVariant, refSeq, reverseComplementAlleleMap, ctx)) {
                     failedAlleleCheck++;
