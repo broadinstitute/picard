@@ -916,7 +916,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             int numMismatches = 0;
 
             for (int j = 0; j < barcodeBytes.length; j++) {
-                for (int i = 0; (i < barcodeBytes[j].length && readSubsequence[j].length <= i); ++i) {
+                for (int i = 0; (i < barcodeBytes[j].length && readSubsequence[j].length > i); ++i) {
                     if (SequenceUtil.isNoCall(readSubsequence[j][i])) {
                         continue;
                     }
