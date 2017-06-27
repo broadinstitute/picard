@@ -77,7 +77,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             "UNLESS the " +
             "individual records of the files themselves are spurious.",
             shortName = "DT", optional = true)
-    public final Set<IlluminaDataType> DATA_TYPES = new TreeSet<IlluminaDataType>();
+    public final Set<IlluminaDataType> DATA_TYPES = new TreeSet<>();
 
     @Option(doc = ReadStructure.PARAMETER_DOC + " Note:  If you want to check whether or not a future IlluminaBasecallsToSam or " +
             "ExtractIlluminaBarcodes run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs " +
@@ -94,14 +94,14 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
     @Option(doc = "A flag to determine whether or not to create fake versions of the missing files.", shortName = "F",
             optional = true)
-    public Boolean FAKE_FILES = false;
+    public final Boolean FAKE_FILES = false;
 
     @Option(doc = "A flag to create symlinks to the loc file for the X Ten for each tile.", shortName = "X",
             optional = true)
-    public Boolean LINK_LOCS = false;
+    public final Boolean LINK_LOCS = false;
 
     @Option(doc = "Use the new converter. Defaults to false", optional = true)
-    public boolean USE_NEW_CONVERTER = false;
+    public final boolean USE_NEW_CONVERTER = false;
 
     /**
      * Required main method implementation.
@@ -117,7 +117,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             DATA_TYPES.addAll(Arrays.asList(IlluminaBasecallsConverter.DATA_TYPES_NO_BARCODE));
         }
 
-        final List<Integer> failingLanes = new ArrayList<Integer>();
+        final List<Integer> failingLanes = new ArrayList<>();
         int totalFailures = 0;
 
         final int[] expectedCycles = new OutputMapping(readStructure).getOutputCycles();
@@ -127,14 +127,14 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
         for (final Integer lane : LANES) {
             if (USE_NEW_CONVERTER) {
-                List<Integer> tiles = new ArrayList<>();
+                final List<Integer> tiles = new ArrayList<>();
 
-                File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(lane));
+                final File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(lane));
 
-                File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
+                final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
 
                 //check all bcls/cbcls
-                List<File> cbcls = new ArrayList<>();
+                final List<File> cbcls = new ArrayList<>();
                 Arrays.asList(cycleDirs)
                         .forEach(cycleDir -> cbcls.addAll(
                                 Arrays.asList(IOUtil.getFilesMatchingRegexp(
@@ -142,11 +142,11 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 IOUtil.assertFilesAreReadable(cbcls);
 
                 //check all pf filter files
-                Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
+                final Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
                         ParameterizedFileUtil.makeLaneTileRegex(".filter", lane)));
-                File[] filterFiles = getTiledFiles(laneDir, laneTileRegex);
-                for (File filterFile : filterFiles) {
-                    Matcher tileMatcher = laneTileRegex.matcher(filterFile.getName());
+                final File[] filterFiles = getTiledFiles(laneDir, laneTileRegex);
+                for (final File filterFile : filterFiles) {
+                    final Matcher tileMatcher = laneTileRegex.matcher(filterFile.getName());
                     if (tileMatcher.matches()) {
                         tiles.add(Integer.valueOf(tileMatcher.group(1)));
                     }
@@ -155,24 +155,24 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 tiles.sort(TILE_NUMBER_COMPARATOR);
 
                 //check s.locs
-                File locsFile = new File(BASECALLS_DIR.getParentFile(), "s.locs");
-                LocsFileReader locsFileReader = new LocsFileReader(locsFile);
-                List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
+                final File locsFile = new File(BASECALLS_DIR.getParentFile(), "s.locs");
+                final LocsFileReader locsFileReader = new LocsFileReader(locsFile);
+                final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
                 while (locsFileReader.hasNext()) {
                     locs.add(locsFileReader.next());
                 }
 
-                Map<Integer, File> filterFileMap = new HashMap<>();
-                for (File filterFile : filterFiles) {
+                final Map<Integer, File> filterFileMap = new HashMap<>();
+                for (final File filterFile : filterFiles) {
                     filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
                 }
 
-                OutputMapping outputMapping = new OutputMapping(readStructure);
+                final OutputMapping outputMapping = new OutputMapping(readStructure);
 
-                CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tiles.get(0), locs, outputMapping.getOutputCycles(), true);
+                final CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tiles.get(0), locs, outputMapping.getOutputCycles(), true);
 
                 reader.getAllTiles().forEach((key, value) -> {
-                    List<File> fileForCycle = reader.getFilesForCycle(key);
+                    final List<File> fileForCycle = reader.getFilesForCycle(key);
                     final long totalFilesSize = fileForCycle.stream().mapToLong(file -> file.length() - reader.getHeaderSize()).sum();
                     final long expectedFileSize = value.stream().mapToLong(BaseBclReader.TileData::getCompressedBlockSize).sum();
 
@@ -293,7 +293,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 }
             }
             log.info("Could not find a format with available files for the following data types: " + StringUtil
-                    .join(", ", new ArrayList<IlluminaDataType>(unmatchedDataTypes)));
+                    .join(", ", new ArrayList<>(unmatchedDataTypes)));
             numFailures += unmatchedDataTypes.size();
         }
 
@@ -318,7 +318,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     @Override
     protected String[] customCommandLineValidation() {
         IOUtil.assertDirectoryIsReadable(BASECALLS_DIR);
-        final List<String> errors = new ArrayList<String>();
+        final List<String> errors = new ArrayList<>();
 
         for (final Integer lane : LANES) {
             if (lane < 1) {

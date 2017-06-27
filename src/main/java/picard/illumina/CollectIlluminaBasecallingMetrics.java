@@ -57,21 +57,22 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
 
-/***
- - *  A Command line tool to collect Illumina Basecalling metrics for a sequencing run
- - *  Requires a Lane and an input file of Barcodes to expect.
- - *  Outputs metrics:
- - *    *  Mean Clusters Per Tile
- - *    *  Standard Deviation of Clusters Per Tile
- - *    *  Mean Pf Clusters Per Tile
- - *    *  Standard Deviation of Pf Clusters Per Tile
- - *    *  Mean Percentage of Pf Clusters Per Tile
- - *    *  Standard Deviation of Percentage of Pf Clusters Per Tile
- - */
-
+/**
+ * A Command line tool to collect Illumina Basecalling metrics for a sequencing run
+ * Requires a Lane and an input file of Barcodes to expect.
+ * Outputs metrics:
+ * <ul>
+ * <li>Mean Clusters Per Tile</li>
+ * <li>Standard Deviation of Clusters Per Tile</li>
+ * <li>Mean Pf Clusters Per Tile</li>
+ * <li>Standard Deviation of Pf Clusters Per Tile</li>
+ * <li>Mean Percentage of Pf Clusters Per Tile</li>
+ * <li>Standard Deviation of Percentage of Pf Clusters Per Tile</li>
+ * </ul>
+ */
 @CommandLineProgramProperties(
         usage = CollectIlluminaBasecallingMetrics.USAGE_SUMMARY + CollectIlluminaBasecallingMetrics.USAGE_DETAILS,
         usageShort = CollectIlluminaBasecallingMetrics.USAGE_SUMMARY,
@@ -127,8 +128,8 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     @Option(doc = "The file to which the collected metrics are written", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
-    @Option(doc = "Use the new converter", optional = true)
-    public boolean USE_NEW_CONVERTER = false;
+    @Option(doc = "Use the (experimental) new converter that current supports CBCLs output from the NovaSeq", optional = true)
+    public final boolean USE_NEW_CONVERTER = false;
 
     private int barcodeLength = 0;
     private String unmatched_barcode;
@@ -138,7 +139,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     private static final String BARCODE_SEQUENCE_COLUMN_NAME_STUB = "barcode_sequence_";
 
     public CollectIlluminaBasecallingMetrics() {
-        this.barcodeToMetricCounts = new TreeMap<String, IlluminaMetricCounts>();
+        this.barcodeToMetricCounts = new TreeMap<>();
     }
 
     @Override
@@ -203,58 +204,9 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
         //Initialize data provider, iterate over clusters, and collect statistics
         //  BaseIlluminaDataProvider provider;
         if (USE_NEW_CONVERTER) {
-            File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(LANE));
-
-            File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
-
-            //CBCLs
-            List<File> cbcls = new ArrayList<>();
-            Arrays.asList(cycleDirs)
-                    .forEach(cycleDir -> cbcls.addAll(
-                            Arrays.asList(IOUtil.getFilesMatchingRegexp(
-                                    cycleDir, "^" + IlluminaFileUtil.longLaneStr(LANE) + "_(\\d{1,5}).cbcl$"))));
-
-            if (cbcls.size() == 0) {
-                throw new PicardException("No CBCL files found.");
-            }
-
-            IOUtil.assertFilesAreReadable(cbcls);
-
-            //locs
-            List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
-            File locsFile = new File(BASECALLS_DIR.getParentFile(), "s.locs");
-            try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
-                while (locsFileReader.hasNext()) {
-                    locs.add(locsFileReader.next());
-                }
-            }
-            IOUtil.assertFileIsReadable(locsFile);
-
-            //filter
-            Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
-                    ParameterizedFileUtil.makeLaneTileRegex(".filter", LANE)));
-            File[] filterFiles = getTiledFiles(laneDir, laneTileRegex);
-
-            IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
-            Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
-                    ParameterizedFileUtil.makeLaneTileRegex("_barcode.txt", LANE)));
-            Map<Integer, File> barcodesFiles = new HashMap<>();
-            for (File barcodeFile : getTiledFiles(laneDir, barcodeRegex)) {
-                Matcher tileMatcher = barcodeRegex.matcher(barcodeFile.getName());
-                if (tileMatcher.matches()) {
-                    barcodesFiles.put(Integer.valueOf(tileMatcher.group(1)), barcodeFile);
-                }
-            }
-
-            factory.getAvailableTiles().forEach(tile -> {
-                File barcodeFile = barcodesFiles.get(tile);
-                BaseIlluminaDataProvider provider = factory.makeDataProvider(cbcls, locs, filterFiles, tile, barcodeFile);
-                while (provider.hasNext()) {
-                    addCluster(provider.next());
-                }
-            });
+            setupNewDataProvider(factory);
         } else {
-            BaseIlluminaDataProvider provider = factory.makeDataProvider();
+            final BaseIlluminaDataProvider provider = factory.makeDataProvider();
 
             while (provider.hasNext()) {
                 final ClusterData cluster = provider.next();
@@ -262,15 +214,68 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
             }
         }
 
-
         onComplete();
         return 0;
+    }
+
+    private void setupNewDataProvider(final IlluminaDataProviderFactory factory) {
+        final File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(LANE));
+
+        final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
+
+        //CBCLs
+        final List<File> cbcls = Arrays.stream(cycleDirs)
+                .flatMap(cycleDir -> Arrays.stream(IOUtil.getFilesMatchingRegexp(cycleDir,
+                        "^" + IlluminaFileUtil.longLaneStr(LANE) + "_(\\d{1,5}).cbcl$"))).collect(Collectors.toList());
+
+        if (cbcls.size() == 0) {
+            throw new PicardException("No CBCL files found.");
+        }
+
+        IOUtil.assertFilesAreReadable(cbcls);
+
+        //locs
+        final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
+        final File locsFile = new File(BASECALLS_DIR.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
+        IOUtil.assertFileIsReadable(locsFile);
+        try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
+            while (locsFileReader.hasNext()) {
+                locs.add(locsFileReader.next());
+            }
+        }
+
+        //filter
+        final Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
+                ParameterizedFileUtil.makeLaneTileRegex(".filter", LANE)));
+        final File[] filterFiles = NewIlluminaBasecallsConverter.getTiledFiles(laneDir, laneTileRegex);
+
+        IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
+        final Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
+                ParameterizedFileUtil.makeLaneTileRegex("_barcode.txt", LANE)));
+
+
+        final Map<Integer, File> barcodesFiles = new HashMap<>();
+        IOUtil.assertFilesAreReadable(new ArrayList<>(barcodesFiles.values()));
+        for (final File barcodeFile : NewIlluminaBasecallsConverter.getTiledFiles(laneDir, barcodeRegex)) {
+            final Matcher tileMatcher = barcodeRegex.matcher(barcodeFile.getName());
+            if (tileMatcher.matches()) {
+                barcodesFiles.put(Integer.valueOf(tileMatcher.group(1)), barcodeFile);
+            }
+        }
+
+        factory.getAvailableTiles().forEach(tile -> {
+            final File barcodeFile = barcodesFiles.get(tile);
+            final BaseIlluminaDataProvider provider = factory.makeDataProvider(cbcls, locs, filterFiles, tile, barcodeFile);
+            while (provider.hasNext()) {
+                addCluster(provider.next());
+            }
+        });
     }
 
     /***
      * Process new cluster of Illumina data - increment a running counter of data
      */
-    private synchronized void addCluster(final ClusterData cluster) {
+    private void addCluster(final ClusterData cluster) {
         //compute hash of Barcode and Lane for key
         String barcode = cluster.getMatchedBarcode();
         if (barcode == null) barcode = unmatched_barcode;
@@ -297,8 +302,9 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
                 counts.addMetricsToFile(file);
                 allLaneCounts.addIlluminaMetricCounts(counts);
             }
-            if (!barcodeToMetricCounts.keySet().contains(""))
+            if (!barcodeToMetricCounts.keySet().contains("")) {
                 allLaneCounts.addMetricsToFile(file);  // detect non-indexed case
+            }
             file.write(OUTPUT);
         } catch (final Exception ex) {
             throw new PicardException("Error writing output file " + OUTPUT.getPath(), ex);
@@ -321,8 +327,8 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
         final IlluminaBasecallingMetrics metrics;
 
         public IlluminaMetricCounts(final String barcode, final String barcodeName, final Integer laneNumber) {
-            this.tileToClusterHistogram = new Histogram<Integer>();
-            this.tileToPfClusterHistogram = new Histogram<Integer>();
+            this.tileToClusterHistogram = new Histogram<>();
+            this.tileToPfClusterHistogram = new Histogram<>();
             this.metrics = new IlluminaBasecallingMetrics();
             this.metrics.MOLECULAR_BARCODE_SEQUENCE_1 = barcode;
             this.metrics.MOLECULAR_BARCODE_NAME = barcodeName;
@@ -366,8 +372,9 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
 
             final ReadStructure readStructure = new ReadStructure(READ_STRUCTURE);
             int templateBaseCountPerCluster = 0;
-            for (int i = 0; i < readStructure.templates.length(); i++)
+            for (int i = 0; i < readStructure.templates.length(); i++) {
                 templateBaseCountPerCluster += readStructure.templates.get(i).length;
+            }
             metrics.TOTAL_READS = metrics.TOTAL_CLUSTERS * readStructure.templates.length();
             metrics.PF_READS = metrics.PF_CLUSTERS * readStructure.templates.length();
             metrics.TOTAL_BASES = metrics.TOTAL_CLUSTERS * templateBaseCountPerCluster;

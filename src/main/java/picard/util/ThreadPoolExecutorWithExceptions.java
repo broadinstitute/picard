@@ -9,24 +9,33 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * This version of the thread pool executor will throw an exception if any of the internal jobs have throw exceptions
+ * while executing
+ */
 public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
-    public ThreadPoolExecutorWithExceptions(int threads) {
+    /**
+     * Creates a fixed size thread pool executor that will rethrow exceptions from submitted jobs.
+     *
+     * @param threads The number of threads in the executor pool.
+     */
+    public ThreadPoolExecutorWithExceptions(final int threads) {
         super(threads, threads, 0, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
     }
 
     @Override
-    protected void afterExecute(Runnable r, Throwable t) {
+    protected void afterExecute(final Runnable r, Throwable t) {
         if (t == null && r instanceof Future<?>) {
             try {
-                Future<?> future = (Future<?>) r;
+                final Future<?> future = (Future<?>) r;
                 if (future.isDone()) {
                     future.get();
                 }
-            } catch (CancellationException ce) {
+            } catch (final CancellationException ce) {
                 t = ce;
-            } catch (ExecutionException ee) {
+            } catch (final ExecutionException ee) {
                 t = ee.getCause();
-            } catch (InterruptedException ie) {
+            } catch (final InterruptedException ie) {
                 Thread.currentThread().interrupt(); // ignore/reset
             }
         }

@@ -304,12 +304,12 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                     FIRST_TILE, TILE_LIMIT, new QueryNameComparator(),
                     new Codec(numOutputRecords),
                     SAMRecordsForCluster.class, bclQualityEvaluationStrategy,
-                    this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
+                    APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
         } else {
             basecallsConverter = new IlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
                     barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE / numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
                     FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class,
-                    bclQualityEvaluationStrategy, this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
+                    bclQualityEvaluationStrategy, APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
         }
         /*
          * Be sure to pass the outputReadStructure to ClusterDataToSamConverter, which reflects the structure of the output cluster

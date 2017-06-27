@@ -65,6 +65,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
 
@@ -149,7 +150,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     @Option(doc = "Barcode sequence.  These must be unique, and all the same length.  This cannot be used with reads that " +
             "have more than one barcode; use BARCODE_FILE in that case. ", mutex = {"BARCODE_FILE"})
-    public List<String> BARCODE = new ArrayList<String>();
+    public final List<String> BARCODE = new ArrayList<>();
 
     @Option(doc = "Tab-delimited file of barcode sequences, barcode name and, optionally, library name.  " +
             "Barcodes must be unique and all the same length.  Column headers must be 'barcode_sequence_1', " +
@@ -160,31 +161,31 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     public File METRICS_FILE;
 
     @Option(doc = "Maximum mismatches for a barcode to be considered a match.")
-    public int MAX_MISMATCHES = 1;
+    public final int MAX_MISMATCHES = 1;
 
     @Option(doc = "Minimum difference between number of mismatches in the best and second best barcodes for a barcode to be considered a match.")
-    public int MIN_MISMATCH_DELTA = 1;
+    public final int MIN_MISMATCH_DELTA = 1;
 
     @Option(doc = "Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.")
-    public int MAX_NO_CALLS = 2;
+    public final int MAX_NO_CALLS = 2;
 
     @Option(shortName = "Q", doc = "Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match.")
-    public int MINIMUM_BASE_QUALITY = 0;
+    public final int MINIMUM_BASE_QUALITY = 0;
 
     @Option(doc = "The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
             "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
-    public int MINIMUM_QUALITY = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
+    public final int MINIMUM_QUALITY = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
 
     @Option(shortName = "GZIP", doc = "Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the file names.")
-    public boolean COMPRESS_OUTPUTS = false;
+    public final boolean COMPRESS_OUTPUTS = false;
 
     @Option(doc = "Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
             "the number available on the machine less NUM_PROCESSORS.")
-    public int NUM_PROCESSORS = 1;
+    public final int NUM_PROCESSORS = 1;
 
-    @Option(doc = "Use the new converter", optional = true)
-    public boolean USE_NEW_CONVERTER = false;
+    @Option(doc = "Use the (experimental) new converter that current supports CBCLs output from the NovaSeq", optional = true)
+    public final boolean USE_NEW_CONVERTER = false;
 
     private static final Log LOG = Log.getInstance(ExtractIlluminaBarcodes.class);
 
@@ -195,7 +196,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     private IlluminaDataProviderFactory factory;
 
-    private final Map<String, BarcodeMetric> barcodeToMetrics = new LinkedHashMap<String, BarcodeMetric>();
+    private final Map<String, BarcodeMetric> barcodeToMetrics = new LinkedHashMap<>();
 
     private final NumberFormat tileNumberFormatter = NumberFormat.getNumberInstance();
     private BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
@@ -240,16 +241,14 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         final List<PerTileBarcodeExtractor> extractors = new ArrayList<>(factory.getAvailableTiles().size());
 
         if (USE_NEW_CONVERTER) {
-            File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(LANE));
+            final File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(LANE));
 
-            File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
+            final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
 
             //CBCLs
-            List<File> cbcls = new ArrayList<>();
-            Arrays.asList(cycleDirs)
-                    .forEach(cycleDir -> cbcls.addAll(
-                            Arrays.asList(IOUtil.getFilesMatchingRegexp(
-                                    cycleDir, "^" + IlluminaFileUtil.longLaneStr(LANE) + "_(\\d{1,5}).cbcl$"))));
+            final List<File> cbcls = Arrays.stream(cycleDirs)
+                    .flatMap(cycleDir -> Arrays.stream(IOUtil.getFilesMatchingRegexp(cycleDir,
+                            "^" + IlluminaFileUtil.longLaneStr(LANE) + "_(\\d{1,5}).cbcl$"))).collect(Collectors.toList());
 
             if (cbcls.size() == 0) {
                 throw new PicardException("No CBCL files found.");
@@ -258,19 +257,19 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             IOUtil.assertFilesAreReadable(cbcls);
 
             //locs
-            List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
-            File locsFile = new File(BASECALLS_DIR.getParentFile(), "s.locs");
+            final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
+            final File locsFile = new File(BASECALLS_DIR.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
+            IOUtil.assertFileIsReadable(locsFile);
             try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
                 while (locsFileReader.hasNext()) {
                     locs.add(locsFileReader.next());
                 }
             }
-            IOUtil.assertFileIsReadable(locsFile);
 
             //filter
-            Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
+            final Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
                     ParameterizedFileUtil.makeLaneTileRegex(".filter", LANE)));
-            File[] filterFiles = getTiledFiles(laneDir, laneTileRegex);
+            final File[] filterFiles = getTiledFiles(laneDir, laneTileRegex);
 
             IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
 
@@ -344,7 +343,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         finalizeMetrics(barcodeToMetrics, noMatchMetric);
 
         // Warn about minimum qualities and assert that we've achieved the minimum.
-        for (Map.Entry<Byte, Integer> entry : bclQualityEvaluationStrategy.getPoorQualityFrequencies().entrySet()) {
+        for (final Map.Entry<Byte, Integer> entry : bclQualityEvaluationStrategy.getPoorQualityFrequencies().entrySet()) {
             LOG.warn(String.format("Observed low quality of %s %s times.", entry.getKey(), entry.getValue()));
         }
         bclQualityEvaluationStrategy.assertMinimumQualities();
@@ -433,7 +432,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
      */
     @Override
     protected String[] customCommandLineValidation() {
-        final ArrayList<String> messages = new ArrayList<String>();
+        final ArrayList<String> messages = new ArrayList<>();
 
         this.bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
 
@@ -455,7 +454,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         if (BARCODE_FILE != null) {
             parseBarcodeFile(messages);
         } else {
-            final Set<String> barcodes = new HashSet<String>();
+            final Set<String> barcodes = new HashSet<>();
             for (final String barcode : BARCODE) {
                 if (barcodes.contains(barcode)) {
                     messages.add("Barcode " + barcode + " specified more than once.");
@@ -496,7 +495,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         final boolean hasBarcodeName = barcodesParser.hasColumn(BARCODE_NAME_COLUMN);
         final boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
         final int numBarcodes = readStructure.sampleBarcodes.length();
-        final Set<String> barcodes = new HashSet<String>();
+        final Set<String> barcodes = new HashSet<>();
         for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
             final String[] bcStrings = new String[numBarcodes];
             int barcodeNum = 1;
@@ -676,9 +675,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 final int maxNoCalls,
                 final int maxMismatches,
                 final int minMismatchDelta,
-                List<File> cbcls,
-                List<AbstractIlluminaPositionFileReader.PositionInfo> locs,
-                File[] filterFiles) {
+                final List<File> cbcls,
+                final List<AbstractIlluminaPositionFileReader.PositionInfo> locs,
+                final File[] filterFiles) {
             this.tile = tile;
             this.barcodeFile = barcodeFile;
             this.usingQualityScores = minimumBaseQuality > 0;
@@ -742,7 +741,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             this.maxMismatches = maxMismatches;
             this.minMismatchDelta = minMismatchDelta;
             this.minimumBaseQuality = minimumBaseQuality;
-            this.metrics = new LinkedHashMap<String, BarcodeMetric>(barcodeToMetrics.size());
+            this.metrics = new LinkedHashMap<>(barcodeToMetrics.size());
             for (final String key : barcodeToMetrics.keySet()) {
                 this.metrics.put(key, BarcodeMetric.copy(barcodeToMetrics.get(key)));
             }
@@ -913,14 +912,11 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          *
          * @return how many bases did not match
          */
-        private static int countMismatches(final byte[][] barcodeBytes, final byte[][] readSubsequence, final byte[][] qualities, int minimumBaseQuality) {
+        private static int countMismatches(final byte[][] barcodeBytes, final byte[][] readSubsequence, final byte[][] qualities, final int minimumBaseQuality) {
             int numMismatches = 0;
 
             for (int j = 0; j < barcodeBytes.length; j++) {
-                for (int i = 0; i < barcodeBytes[j].length; ++i) {
-                    if (readSubsequence[j].length <= i) {
-                        break;
-                    }
+                for (int i = 0; (i < barcodeBytes[j].length && readSubsequence[j].length <= i); ++i) {
                     if (SequenceUtil.isNoCall(readSubsequence[j][i])) {
                         continue;
                     }
