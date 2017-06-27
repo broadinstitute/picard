@@ -109,7 +109,8 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
     }
 
     public void setup(final VCFHeader vcfHeader) {
-        //noop.
+        //Use sampleMetricsMap.get in case a sample isn't ever put in the map (due to being all HomRef for example)
+        vcfHeader.getGenotypeSamples().stream().forEach(sampleName -> sampleMetricsMap.get(sampleName));
     }
 
     /** Incorporates the provided variant's data into the metric analysis. */
