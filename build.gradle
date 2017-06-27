@@ -160,7 +160,7 @@ ext.commandClasses = ["picard.sam.AddCommentsToBam", "picard.sam.AddOrReplaceRea
                           "picard.analysis.CollectWgsMetricsWithNonZeroCoverage", "picard.analysis.CompareMetrics", "picard.sam.CompareSAMs",
                           "picard.analysis.artifacts.ConvertSequencingArtifactToOxoG", "picard.sam.CreateSequenceDictionary", "picard.sam.DownsampleSam",
                           "picard.illumina.ExtractIlluminaBarcodes", "picard.sam.markduplicates.EstimateLibraryComplexity", "picard.sam.FastqToSam", "picard.util.FifoBuffer",
-                          "picard.vcf.MendelianViolations.FindMendelianViolations","picard.fingerprint.CrosscheckFingerprints", "picard.fingerprint.CheckFingerprint",
+                          "picard.vcf.MendelianViolations.FindMendelianViolations","picard.fingerprint.CrosscheckFingerprints", "picard.fingerprint.ClusterCrosscheckMetrics", "picard.fingerprint.CheckFingerprint",
                           "picard.sam.FilterSamReads", "picard.vcf.filter.FilterVcf", "picard.sam.FixMateInformation", "picard.sam.GatherBamFiles", "picard.vcf.GatherVcfs",
                           "picard.vcf.GenotypeConcordance", "picard.illumina.IlluminaBasecallsToFastq", "picard.illumina.IlluminaBasecallsToSam", "picard.illumina.CheckIlluminaDirectory",
                           "picard.sam.CheckTerminatorBlock", "picard.util.IntervalListTools", "picard.util.LiftOverIntervalList", "picard.vcf.LiftoverVcf", "picard.vcf.MakeSitesOnlyVcf",
