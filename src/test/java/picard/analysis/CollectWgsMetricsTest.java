@@ -139,6 +139,9 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final File tempSamFileUnsorted = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
         tempSamFileUnsorted.deleteOnExit();
         tempSamFile.deleteOnExit();
+        final File sortedSamIdx = new File(TEST_DIR, tempSamFile.getName() + ".idx");
+        sortedSamIdx.deleteOnExit();
+
         final SAMFileHeader header = new SAMFileHeader();
 
         //Check that dictionary file is readable and then set header dictionary

@@ -1,5 +1,6 @@
 package picard.fingerprint;
 
+import htsjdk.samtools.ValidationStringency;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -9,6 +10,7 @@ import picard.vcf.VcfTestUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by farjoun on 8/27/15.
@@ -111,5 +113,57 @@ public class FingerprintCheckerTest {
         Assert.assertEquals(mr.getSampleLikelihood(), llExpectedSample, DELTA);
         Assert.assertEquals(mr.getPopulationLikelihood(), llRandomSample, DELTA);
         Assert.assertEquals(mr.getLOD(), lodExpectedSample, DELTA);
+    }
+
+
+    @Test(dataProvider = "checkFingerprintsVcfDataProvider")
+    public void testFingerprintVcf(File vcfFile,  File genotypesFile,  String observedSampleAlias,  String expectedSampleAlias,
+                                      double llExpectedSample, double llRandomSample, double lodExpectedSample) throws IOException {
+        final FingerprintChecker fpChecker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        Map<FingerprintIdDetails, Fingerprint> fp1=fpChecker.fingerprintVcf(vcfFile);
+
+        Assert.assertFalse(fp1.isEmpty());
+    }
+
+
+    @Test(expectedExceptions = RuntimeException.class)
+    public void testTerminateOnBadFile(){
+        final FingerprintChecker fpChecker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        final File badSam= new File(TEST_DATA_DIR,"aligned_queryname_sorted.sam");
+        fpChecker.fingerprintFiles(Collections.singletonList(badSam), 1, 1, TimeUnit.DAYS);
+    }
+
+    @DataProvider(name = "checkFingerprintsSamDataProvider")
+    public Object[][] testCheckFingerprintsSamDataProvider() {
+        final File na12891_r1 = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam");
+        final File na12891_r2 = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r2.sam");
+        final File na12892_r1 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r1.sam");
+        final File na12892_r2 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r1.sam");
+
+        final File na12891_noRg = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.noRgTag.sam");
+
+        return new Object[][]{
+                {na12891_r1, na12891_r2, true},
+                {na12892_r1, na12892_r2, true},
+                {na12892_r1, na12891_r2, false},
+                {na12892_r1, na12891_noRg, false},
+                {na12891_r1, na12891_noRg, true},
+        };
+    }
+
+    @Test(dataProvider = "checkFingerprintsSamDataProvider")
+    public void testCheckFingerprints(File samFile1, File samFile2, boolean expectedMatch) {
+
+        final String[] args = {
+                "EXPECT_ALL_GROUPS_TO_MATCH=true",
+                "LOD_THRESHOLD=-1",
+                "H=" + SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING.getAbsolutePath(),
+                "I=" + samFile1.getAbsolutePath(),
+                "I=" + samFile2.getAbsolutePath(),
+                "VALIDATION_STRINGENCY=LENIENT",
+                "CROSSCHECK_BY=FILE",
+        };
+
+        Assert.assertEquals(new CrosscheckFingerprints().instanceMain(args), expectedMatch ? 0 : 1);
     }
 }

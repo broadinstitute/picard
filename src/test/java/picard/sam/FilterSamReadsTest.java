@@ -95,6 +95,8 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         // Build a sam file for testing
         final File inputSam = File.createTempFile("testSam", ".sam", TEST_DIR);
         inputSam.deleteOnExit();
+        final File sortedSamIdx = new File(TEST_DIR, inputSam.getName() + ".idx");
+        sortedSamIdx.deleteOnExit();
 
         final SAMFileWriter writer = new SAMFileWriterFactory()
                 .setCreateIndex(true).makeBAMWriter(builder.getHeader(), false, inputSam);
