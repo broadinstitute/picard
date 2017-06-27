@@ -150,7 +150,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     @Option(doc = "Barcode sequence.  These must be unique, and all the same length.  This cannot be used with reads that " +
             "have more than one barcode; use BARCODE_FILE in that case. ", mutex = {"BARCODE_FILE"})
-    public final List<String> BARCODE = new ArrayList<>();
+    public List<String> BARCODE = new ArrayList<>();
 
     @Option(doc = "Tab-delimited file of barcode sequences, barcode name and, optionally, library name.  " +
             "Barcodes must be unique and all the same length.  Column headers must be 'barcode_sequence_1', " +
@@ -161,31 +161,31 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     public File METRICS_FILE;
 
     @Option(doc = "Maximum mismatches for a barcode to be considered a match.")
-    public final int MAX_MISMATCHES = 1;
+    public int MAX_MISMATCHES = 1;
 
     @Option(doc = "Minimum difference between number of mismatches in the best and second best barcodes for a barcode to be considered a match.")
-    public final int MIN_MISMATCH_DELTA = 1;
+    public int MIN_MISMATCH_DELTA = 1;
 
     @Option(doc = "Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.")
-    public final int MAX_NO_CALLS = 2;
+    public int MAX_NO_CALLS = 2;
 
     @Option(shortName = "Q", doc = "Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match.")
-    public final int MINIMUM_BASE_QUALITY = 0;
+    public int MINIMUM_BASE_QUALITY = 0;
 
     @Option(doc = "The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
             "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
-    public final int MINIMUM_QUALITY = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
+    public int MINIMUM_QUALITY = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
 
     @Option(shortName = "GZIP", doc = "Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the file names.")
-    public final boolean COMPRESS_OUTPUTS = false;
+    public boolean COMPRESS_OUTPUTS = false;
 
     @Option(doc = "Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
             "the number available on the machine less NUM_PROCESSORS.")
-    public final int NUM_PROCESSORS = 1;
+    public int NUM_PROCESSORS = 1;
 
     @Option(doc = "Use the (experimental) new converter that current supports CBCLs output from the NovaSeq", optional = true)
-    public final boolean USE_NEW_CONVERTER = false;
+    public boolean USE_NEW_CONVERTER = false;
 
     private static final Log LOG = Log.getInstance(ExtractIlluminaBarcodes.class);
 

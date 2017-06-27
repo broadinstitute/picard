@@ -77,7 +77,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             "UNLESS the " +
             "individual records of the files themselves are spurious.",
             shortName = "DT", optional = true)
-    public final Set<IlluminaDataType> DATA_TYPES = new TreeSet<>();
+    public Set<IlluminaDataType> DATA_TYPES = new TreeSet<>();
 
     @Option(doc = ReadStructure.PARAMETER_DOC + " Note:  If you want to check whether or not a future IlluminaBasecallsToSam or " +
             "ExtractIlluminaBarcodes run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs " +
@@ -94,14 +94,14 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
     @Option(doc = "A flag to determine whether or not to create fake versions of the missing files.", shortName = "F",
             optional = true)
-    public final Boolean FAKE_FILES = false;
+    public Boolean FAKE_FILES = false;
 
     @Option(doc = "A flag to create symlinks to the loc file for the X Ten for each tile.", shortName = "X",
             optional = true)
-    public final Boolean LINK_LOCS = false;
+    public Boolean LINK_LOCS = false;
 
     @Option(doc = "Use the new converter. Defaults to false", optional = true)
-    public final boolean USE_NEW_CONVERTER = false;
+    public boolean USE_NEW_CONVERTER = false;
 
     /**
      * Required main method implementation.

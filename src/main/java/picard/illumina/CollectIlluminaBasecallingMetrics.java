@@ -129,7 +129,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     public File OUTPUT;
 
     @Option(doc = "Use the (experimental) new converter that current supports CBCLs output from the NovaSeq", optional = true)
-    public final boolean USE_NEW_CONVERTER = false;
+    public boolean USE_NEW_CONVERTER = false;
 
     private int barcodeLength = 0;
     private String unmatched_barcode;
