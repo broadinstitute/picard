@@ -45,6 +45,7 @@ import picard.fastq.Casava18ReadNameEncoder;
 import picard.fastq.IlluminaReadNameEncoder;
 import picard.fastq.ReadNameEncoder;
 import picard.illumina.parser.ClusterData;
+import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.ReadData;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
@@ -196,9 +197,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     @Option(shortName = "GZIP", doc = "Compress output FASTQ files using gzip and append a .gz extension to the file names.")
     public boolean COMPRESS_OUTPUTS = false;
 
-    @Option(doc = "Use the new converter", optional = true)
-    public boolean USE_NEW_CONVERTER = false;
-
     /**
      * Simple switch to control the read name format to emit.
      */
@@ -272,7 +270,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             demultiplex = true;
         }
         final int readsPerCluster = readStructure.templates.length() + readStructure.sampleBarcodes.length();
-        if (USE_NEW_CONVERTER) {
+        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
             if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
             basecallsConverter = new NewIlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
                     sampleBarcodeFastqWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster),
@@ -280,8 +278,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                     FIRST_TILE, TILE_LIMIT, queryNameComparator,
                     new FastqRecordsForClusterCodec(readStructure.templates.length(),
                             readStructure.sampleBarcodes.length(), readStructure.molecularBarcode.length()),
-                    FastqRecordsForCluster.class, bclQualityEvaluationStrategy,
-                    this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
+                    FastqRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES);
         } else {
             basecallsConverter = new IlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
                     sampleBarcodeFastqWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster), TMP_DIR, NUM_PROCESSORS,
@@ -297,6 +294,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
 
         log.info("READ STRUCTURE IS " + readStructure.toString());
     }
+
 
     /**
      * Assert that expectedCols are present

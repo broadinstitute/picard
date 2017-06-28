@@ -20,7 +20,6 @@ abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     final int maxReadsInRamPerTile;
     final boolean demultiplex;
     final List<File> tmpDirs;
-    final boolean includeNonPfReads;
     final boolean ignoreUnexpectedBarcodes;
     final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
     final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
@@ -45,7 +44,6 @@ abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
      * @param outputRecordComparator   For sorting output records within a single tile.
      * @param codecPrototype           For spilling output records to disk.
      * @param outputRecordClass        Inconveniently needed to create SortingCollections.
-     * @param includeNonPfReads        If true, will include ALL reads (including those which do not have PF set)
      * @param ignoreUnexpectedBarcodes If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
      */
     BasecallsConverter(final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
@@ -55,7 +53,6 @@ abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                        final boolean ignoreUnexpectedBarcodes,
                        final boolean demultiplex,
                        final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
-                       final boolean includeNonPfReads,
                        final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
                        final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
                        final int numProcessors,
@@ -68,7 +65,6 @@ abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         this.ignoreUnexpectedBarcodes = ignoreUnexpectedBarcodes;
         this.demultiplex = demultiplex;
         this.outputRecordComparator = outputRecordComparator;
-        this.includeNonPfReads = includeNonPfReads;
         this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
         this.outputRecordClass = outputRecordClass;
         this.factory = factory;
@@ -99,7 +95,7 @@ abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         this.converter = converter;
     }
 
-    void setTileLimits(Integer firstTile, Integer tileLimit) {
+    void setTileLimits(final Integer firstTile, final Integer tileLimit) {
         if (firstTile != null) {
             int i;
             for (i = 0; i < tiles.size(); ++i) {

@@ -42,7 +42,7 @@ public class LanePhasingMetricsCollector {
     /** Constructor takes a lane's collection of Tiles and calculates the median phasing/prephasing for the
      * first and second (if available) reads
      */
-    public LanePhasingMetricsCollector(final Collection<Tile> laneTiles, boolean usePercentage) {
+    public LanePhasingMetricsCollector(final Collection<Tile> laneTiles, final boolean usePercentage) {
         final Map<TileTemplateRead, Float> medianPhasingMap = new TreeMap<TileTemplateRead, Float>();
         final Map<TileTemplateRead, Float> medianPrePhasingMap = new TreeMap<TileTemplateRead, Float>();
 

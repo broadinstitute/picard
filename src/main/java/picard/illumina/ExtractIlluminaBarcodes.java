@@ -184,9 +184,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             "the number available on the machine less NUM_PROCESSORS.")
     public int NUM_PROCESSORS = 1;
 
-    @Option(doc = "Use the (experimental) new converter that current supports CBCLs output from the NovaSeq", optional = true)
-    public boolean USE_NEW_CONVERTER = false;
-
     private static final Log LOG = Log.getInstance(ExtractIlluminaBarcodes.class);
 
     /**
@@ -240,7 +237,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
         final List<PerTileBarcodeExtractor> extractors = new ArrayList<>(factory.getAvailableTiles().size());
 
-        if (USE_NEW_CONVERTER) {
+        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
             final File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(LANE));
 
             final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
@@ -445,7 +442,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         final IlluminaDataType[] datatypes = (MINIMUM_BASE_QUALITY > 0) ?
                 new IlluminaDataType[]{IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.QualityScores} :
                 new IlluminaDataType[]{IlluminaDataType.BaseCalls, IlluminaDataType.PF};
-        if (USE_NEW_CONVERTER) {
+        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
             factory = new IlluminaDataProviderFactory(BASECALLS_DIR, OUTPUT_DIR, LANE, readStructure, bclQualityEvaluationStrategy);
         } else {
             factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, bclQualityEvaluationStrategy, datatypes);

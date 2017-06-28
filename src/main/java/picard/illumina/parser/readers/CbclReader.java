@@ -85,6 +85,9 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
     public CbclReader(final List<File> cbcls, final Map<Integer, File> filterFileMap, final int[] outputLengths,
                       final int tileNum, final List<AbstractIlluminaPositionFileReader.PositionInfo> locs, final int[] outputCycles, final boolean headerOnly) {
         super(outputLengths);
+        if (!filterFileMap.containsKey(tileNum)) {
+            throw new PicardException("Filter file for tile " + tileNum + " does not exist.");
+        }
         this.outputCycles = outputCycles;
 
         surfaceToTileToCbclMap = sortCbcls(cbcls);

@@ -186,9 +186,9 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
 
         public static File writePhasingMetrics(final Map<Integer, ? extends Collection<Tile>> laneTiles, final File outputDirectory,
                                                final String outputPrefix, final MetricsFile<MetricBase, Comparable<?>> phasingMetricsFile,
-                                               final String fileExtension, boolean isNovaSeq) {
-            laneTiles.entrySet().stream().forEach(entry -> IlluminaPhasingMetrics.getPhasingMetricsForTiles(entry.getKey().longValue(),
-                    entry.getValue(), !isNovaSeq).forEach(phasingMetricsFile::addMetric));
+                                               final String fileExtension, final boolean isNovaSeq) {
+            laneTiles.forEach((key, value) -> IlluminaPhasingMetrics.getPhasingMetricsForTiles(key.longValue(),
+                    value, !isNovaSeq).forEach(phasingMetricsFile::addMetric));
 
             return writeMetrics(phasingMetricsFile, outputDirectory, outputPrefix, IlluminaPhasingMetrics.getExtension() + fileExtension);
         }
@@ -196,7 +196,7 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
         public static File writeLaneMetrics(final Map<Integer, ? extends Collection<Tile>> laneTiles, final File outputDirectory,
                                             final String outputPrefix, final MetricsFile<MetricBase, Comparable<?>> laneMetricsFile,
                                             final String fileExtension) {
-            laneTiles.entrySet().stream().forEach(entry -> {
+            laneTiles.entrySet().forEach(entry -> {
                 final IlluminaLaneMetrics laneMetric = new IlluminaLaneMetrics();
                 laneMetric.LANE = entry.getKey().longValue();
                 laneMetric.CLUSTER_DENSITY = calculateLaneDensityFromTiles(entry.getValue());

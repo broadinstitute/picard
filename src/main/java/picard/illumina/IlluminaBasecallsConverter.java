@@ -66,6 +66,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  * @param <CLUSTER_OUTPUT_RECORD> The class to which a ClusterData is converted in preparation for writing.
  */
 public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+    final boolean includeNonPfReads;
+
     /**
      * Describes the state of a barcode's data's processing in the context of a tile.  It is either not available in
      * that tile, has been read, has been queued to be written to file, or has been written to file.  A barcode only
@@ -162,7 +164,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
      * @param ignoreUnexpectedBarcodes If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
      *                                 otherwise will throw an exception
      */
-    public IlluminaBasecallsConverter(final File basecallsDir, File barcodesDir, final int lane,
+    public IlluminaBasecallsConverter(final File basecallsDir, final File barcodesDir, final int lane,
                                       final ReadStructure readStructure,
                                       final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
                                       final boolean demultiplex,
@@ -178,10 +180,11 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
                                       final boolean ignoreUnexpectedBarcodes
     ) {
         super(barcodeRecordWriterMap, maxReadsInRamPerTile, tmpDirs, codecPrototype, ignoreUnexpectedBarcodes,
-                demultiplex, outputRecordComparator, includeNonPfReads, bclQualityEvaluationStrategy, outputRecordClass,
+                demultiplex, outputRecordComparator, bclQualityEvaluationStrategy, outputRecordClass,
                 numProcessors,
                 new IlluminaDataProviderFactory(basecallsDir, barcodesDir, lane, readStructure,
                         bclQualityEvaluationStrategy, getDataTypesFromReadStructure(readStructure, demultiplex)));
+        this.includeNonPfReads = includeNonPfReads;
         this.tiles = factory.getAvailableTiles();
         // Since the first non-fixed part of the read name is the tile number, without preceding zeroes,
         // and the output is sorted by read name, process the tiles in this order.

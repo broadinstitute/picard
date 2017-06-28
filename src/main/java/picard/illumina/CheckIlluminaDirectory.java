@@ -100,9 +100,6 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             optional = true)
     public Boolean LINK_LOCS = false;
 
-    @Option(doc = "Use the new converter. Defaults to false", optional = true)
-    public boolean USE_NEW_CONVERTER = false;
-
     /**
      * Required main method implementation.
      */
@@ -126,7 +123,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         log.info("Expected cycles: " + StringUtil.intValuesToString(expectedCycles));
 
         for (final Integer lane : LANES) {
-            if (USE_NEW_CONVERTER) {
+            if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, lane)) {
                 final List<Integer> tiles = new ArrayList<>();
 
                 final File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(lane));

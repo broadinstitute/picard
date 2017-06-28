@@ -128,9 +128,6 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     @Option(doc = "The file to which the collected metrics are written", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
-    @Option(doc = "Use the (experimental) new converter that current supports CBCLs output from the NovaSeq", optional = true)
-    public boolean USE_NEW_CONVERTER = false;
-
     private int barcodeLength = 0;
     private String unmatched_barcode;
     private final SortedMap<String, IlluminaMetricCounts> barcodeToMetricCounts;
@@ -175,7 +172,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
                     barcodeToMetricCounts.put(barcode.toString(), new IlluminaMetricCounts(barcode.toString(), barcodeName, LANE));
                 }
             }
-            if (USE_NEW_CONVERTER) {
+            if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
                 factory = new IlluminaDataProviderFactory(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure, bclQualityEvaluationStrategy);
             } else {
                 factory = barcodeToMetricCounts.isEmpty()
@@ -202,8 +199,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
         unmatched_barcode = StringUtil.repeatCharNTimes('N', barcodeLength);
 
         //Initialize data provider, iterate over clusters, and collect statistics
-        //  BaseIlluminaDataProvider provider;
-        if (USE_NEW_CONVERTER) {
+        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
             setupNewDataProvider(factory);
         } else {
             final BaseIlluminaDataProvider provider = factory.makeDataProvider();

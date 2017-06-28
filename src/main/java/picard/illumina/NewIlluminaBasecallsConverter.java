@@ -55,7 +55,6 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
      * @param outputRecordComparator   For sorting output records within a single tile.
      * @param codecPrototype           For spilling output records to disk.
      * @param outputRecordClass        Inconveniently needed to create SortingCollections.
-     * @param includeNonPfReads        If true, will include ALL reads (including those which do not have PF set)
      * @param ignoreUnexpectedBarcodes If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
      */
     public NewIlluminaBasecallsConverter(final File basecallsDir, final File barcodesDir, final int lane,
@@ -70,11 +69,10 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
                                          final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
                                          final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
                                          final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
-                                         final boolean applyEamssFiltering, final boolean includeNonPfReads,
                                          final boolean ignoreUnexpectedBarcodes) {
 
         super(barcodeRecordWriterMap, maxReadsInRamPerTile, tmpDirs, codecPrototype, ignoreUnexpectedBarcodes,
-                demultiplex, outputRecordComparator, includeNonPfReads, bclQualityEvaluationStrategy,
+                demultiplex, outputRecordComparator, bclQualityEvaluationStrategy,
                 outputRecordClass, numProcessors, new IlluminaDataProviderFactory(basecallsDir,
                         barcodesDir, lane, readStructure, bclQualityEvaluationStrategy));
         this.tiles = new ArrayList<>();
@@ -137,7 +135,6 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
             }
         }
 
-        this.factory.setApplyEamssFiltering(applyEamssFiltering);
         setTileLimits(firstTile, tileLimit);
     }
 
