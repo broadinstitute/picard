@@ -355,6 +355,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             tests.add(new Object[]{builder.make(), reference, result_builder.make()});
         }
 
+        // TODO: add a test that converts the initial C to a AC which will require
+        // TODO: code in LiftOver::extendOneBase(., false) which is currently not covered.
+
+
         //CT/CTCT -> A/ACT in CT repeat region
         result_builder.start(19).stop(19).alleles(CollectionUtil.makeList(RefA, ACT));
         for (start = 20; start <= 27; start += 2) {

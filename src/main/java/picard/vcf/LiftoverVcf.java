@@ -478,7 +478,7 @@ public class LiftoverVcf extends CommandLineProgram {
                 for (final Allele allele : alleleBasesMap.keySet()) {
                     // the first -1 for zero-base (getBases) versus 1-based (variant position)
                     // another   -1 to get the base prior to the location of the start of the allele
-                    final byte extraBase = start > 1 ?
+                    final byte extraBase =  (start > 1) ?
                             referenceSequence.getBases()[start - 2] :
                             referenceSequence.getBases()[end];
 
@@ -520,10 +520,12 @@ public class LiftoverVcf extends CommandLineProgram {
     }
 
     private static byte[] truncateBase(final byte[] allele, final boolean truncateRightmost) {
-        return Arrays.copyOfRange(allele, truncateRightmost ? 0 : 1, truncateRightmost ? allele.length - 1 : allele.length);
+        return Arrays.copyOfRange(allele, truncateRightmost ? 0 : 1, truncateRightmost ?
+                allele.length - 1 :
+                allele.length);
     }
 
-    private static byte[] extendOneBase(final byte[] bases, final byte base, boolean toTheLeft) {
+    private static byte[] extendOneBase(final byte[] bases, final byte base, final boolean toTheLeft) {
 
         final byte[] newBases = new byte[bases.length + 1];
 
