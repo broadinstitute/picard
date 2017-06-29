@@ -129,7 +129,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     public File OUTPUT;
 
     private int barcodeLength = 0;
-    private String unmatched_barcode;
+    private String unmatchedBarcode;
     private final SortedMap<String, IlluminaMetricCounts> barcodeToMetricCounts;
 
     private static final String BARCODE_NAME_COLUMN = "barcode_name";
@@ -196,7 +196,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
             }
         }
 
-        unmatched_barcode = StringUtil.repeatCharNTimes('N', barcodeLength);
+        unmatchedBarcode = StringUtil.repeatCharNTimes('N', barcodeLength);
 
         //Initialize data provider, iterate over clusters, and collect statistics
         if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
@@ -251,10 +251,10 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
 
 
         final Map<Integer, File> barcodesFiles = new HashMap<>();
-        IOUtil.assertFilesAreReadable(new ArrayList<>(barcodesFiles.values()));
         for (final File barcodeFile : NewIlluminaBasecallsConverter.getTiledFiles(laneDir, barcodeRegex)) {
             final Matcher tileMatcher = barcodeRegex.matcher(barcodeFile.getName());
             if (tileMatcher.matches()) {
+                IOUtil.assertFileIsReadable(barcodeFile);
                 barcodesFiles.put(Integer.valueOf(tileMatcher.group(1)), barcodeFile);
             }
         }
@@ -274,7 +274,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     private void addCluster(final ClusterData cluster) {
         //compute hash of Barcode and Lane for key
         String barcode = cluster.getMatchedBarcode();
-        if (barcode == null) barcode = unmatched_barcode;
+        if (barcode == null) barcode = unmatchedBarcode;
 
         //increment counts
         IlluminaMetricCounts counters = barcodeToMetricCounts.get(barcode);
