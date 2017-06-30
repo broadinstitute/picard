@@ -105,6 +105,9 @@ static final String USAGE_DETAILS = "This tool takes a SAM/BAM file input and co
     @Option(doc = "True if we are to clip overlapping reads, false otherwise.", optional=true, overridable = true)
     public boolean CLIP_OVERLAPPING_READS = true;
 
+    @Option(doc = "Output theoretical sensitivities for variable allele fraction.", optional=true)
+    public File TheoreticalSensitivityOutput;
+
     @Override
     protected IntervalList getProbeIntervals() {
         for (final File file : BAIT_INTERVALS) IOUtil.assertFileIsReadable(file);
