@@ -169,6 +169,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Allele T = Allele.create("T", false);
         final Allele C = Allele.create("C", false);
         final Allele CG = Allele.create("CG", false);
+        final Allele GA = Allele.create("GA", false);
+        final Allele TC = Allele.create("TC", false);
         final Allele CAA = Allele.create("CAA", false);
         final Allele ACT = Allele.create("ACT", false);
         final Allele TTT = Allele.create("TTT", false);
@@ -269,6 +271,46 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         result_builder.start(19).stop(19).alleles(CollectionUtil.makeList(RefA, ACT));
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
+        // insertion at end of section
+        // a test that converts the initial C to a AC which requires
+        // code in LiftOver::extendOneBase(., false)
+        //
+        // G*(.)/GA(.) -> .(C)/.T(C) but that's not legal, so
+        // -> C/TC
+        start = CHAIN_SIZE;
+        stop = CHAIN_SIZE;
+
+        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefG, GA));
+        result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, TC));
+        tests.add(new Object[]{builder.make(), reference, result_builder.make()});
+
+        // insertion at end of section
+        // a test that converts the initial C to a AC which requires
+        // code in LiftOver::extendOneBase(., false)
+        //
+        // G*(.)/GG(.) -> .(C)/.C(C) but that's not legal, so
+        // -> C/CC
+        start = CHAIN_SIZE;
+        stop = CHAIN_SIZE;
+
+        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefG, Allele.create("GG")));
+        result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, Allele.create("CC")));
+        tests.add(new Object[]{builder.make(), reference, result_builder.make()});
+
+        // insertion at end of section
+        // a test that converts the initial C to a AC which requires
+        // code in LiftOver::extendOneBase(., false)
+        //
+        // improperly aligned
+        // TTTT(G)->TTTTG(G) -> C/CC
+        start = CHAIN_SIZE - 4;
+        stop = CHAIN_SIZE - 1;
+
+        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(Allele.create("TTTT",true), Allele.create("TTTTG")));
+        result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, Allele.create("CC")));
+        tests.add(new Object[]{builder.make(), reference, result_builder.make()});
+
+
         return tests.iterator();
     }
 
@@ -318,13 +360,26 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1");
         final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1");
 
+        // left aligning at the edge of the reference
+        // simple SNP
+        // CAAA*/CCAAA -> C->CC
+        int start = 1;
+        int stop = 4;
+        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(Allele.create("CAAA",true), Allele.create("CCAAA") ));
+
+        result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, Allele.create("CC")));
+
+        tests.add(new Object[]{builder.make(), reference, result_builder.make()});
+
+
         // simple SNP
         // G*/A -> G/A
-        int start = 13;
-        int stop = start;
+        start = 13;
+        stop = start;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefG, A));
         result_builder.start(stop).stop(start).alleles(CollectionUtil.makeList(RefG, A));
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
+
 
         for (start = 1; start <= reference.getBases().length; start++) {
             builder.start(start).stop(start);
@@ -355,8 +410,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             tests.add(new Object[]{builder.make(), reference, result_builder.make()});
         }
 
-        // TODO: add a test that converts the initial C to a AC which will require
-        // TODO: code in LiftOver::extendOneBase(., false) which is currently not covered.
 
 
         //CT/CTCT -> A/ACT in CT repeat region

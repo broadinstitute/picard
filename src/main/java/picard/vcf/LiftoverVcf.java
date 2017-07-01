@@ -482,7 +482,7 @@ public class LiftoverVcf extends CommandLineProgram {
                             referenceSequence.getBases()[start - 2] :
                             referenceSequence.getBases()[end];
 
-                    alleleBasesMap.put(allele, extendOneBase(alleleBasesMap.get(allele), extraBase, start > 1));
+                    alleleBasesMap.put(allele, extendOneBase(alleleBasesMap.get(allele), extraBase));
                 }
                 changesInAlleles = true;
                 start--;
@@ -525,17 +525,13 @@ public class LiftoverVcf extends CommandLineProgram {
                 allele.length);
     }
 
-    private static byte[] extendOneBase(final byte[] bases, final byte base, final boolean toTheLeft) {
+    //creates a new byte array with the base added at the begining
+    private static byte[] extendOneBase(final byte[] bases, final byte base) {
 
         final byte[] newBases = new byte[bases.length + 1];
 
-        if (toTheLeft) {
-            System.arraycopy(bases, 0, newBases, 1, bases.length);
-            newBases[0] = base;
-        } else {
-            System.arraycopy(bases, 0, newBases, 0, bases.length);
-            newBases[bases.length] = base;
-        }
+        System.arraycopy(bases, 0, newBases, 1, bases.length);
+        newBases[0] = base;
 
         return newBases;
     }
