@@ -88,7 +88,8 @@ public abstract class CommandLineProgram {
     public ValidationStringency VALIDATION_STRINGENCY = ValidationStringency.DEFAULT_STRINGENCY;
 
     @Option(doc = "Compression level for all compressed files created (e.g. BAM and GELI).", common=true)
-    // The default IntelDeflater is slow at levels > 1
+    // Reading from a file compressed by the default IntelDeflater at level 1 is ~3x faster than reading from a file
+    // compressed at level 5 (the htsjdk default), and level 1 files are only slightly larger.
     public int COMPRESSION_LEVEL = 1;
 
     @Option(doc = "When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.", optional=true, common=true)
@@ -106,10 +107,10 @@ public abstract class CommandLineProgram {
     @Option(doc="Google Genomics API client_secrets.json file path.", common = true)
     public String GA4GH_CLIENT_SECRETS="client_secrets.json";
 
-    @Option(shortName = "use_jdk_deflater", doc = "Use the JDK Deflater instead of the IntelDeflater for writing BAMs", common = true)
+    @Option(shortName = "use_jdk_deflater", doc = "Use the JDK Deflater instead of the Intel Deflater for writing with BlockCompressedOutputStreams", common = true)
     public Boolean USE_JDK_DEFLATER = false;
 
-    @Option(shortName = "use_jdk_inflater", doc = "Use the JDK Inflater instead of the IntelInflater for reading BAMs", common = true)
+    @Option(shortName = "use_jdk_inflater", doc = "Use the JDK Inflater instead of the Intel Inflater for reading with BlockGunzippers", common = true)
     public Boolean USE_JDK_INFLATER = false;
     
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
@@ -208,12 +209,16 @@ public abstract class CommandLineProgram {
 
             // Output a one liner about who/where and what software/os we're running on
             try {
+                final boolean usingIntelDeflater = (BlockCompressedOutputStream.getDefaultDeflaterFactory() instanceof IntelDeflaterFactory &&
+                        ((IntelDeflaterFactory)BlockCompressedOutputStream.getDefaultDeflaterFactory()).usingIntelDeflater());
+                final boolean usingIntelInflater = (BlockGunzipper.getDefaultInflaterFactory() instanceof IntelInflaterFactory &&
+                        ((IntelInflaterFactory)BlockGunzipper.getDefaultInflaterFactory()).usingIntelInflater());
                 final String msg = String.format(
                     "[%s] Executing as %s@%s on %s %s %s; %s %s; Deflater: %s; Inflater: %s; Picard version: %s",
                     new Date(), System.getProperty("user.name"), InetAddress.getLocalHost().getHostName(),
                     System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"),
                     System.getProperty("java.vm.name"), System.getProperty("java.runtime.version"),
-                    USE_JDK_DEFLATER ? "Jdk" : "Intel", USE_JDK_INFLATER ? "Jdk" : "Intel",
+                    usingIntelDeflater ? "Jdk" : "Intel", usingIntelInflater ? "Jdk" : "Intel",
                     commandLineParser.getVersion());
                 System.err.println(msg);
             }
