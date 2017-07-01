@@ -50,12 +50,21 @@ jacoco {
 final htsjdkVersion = System.getProperty('htsjdk.version', '2.10.1')
 
 dependencies {
-    compile 'com.intel.gkl:gkl:0.5.2'
+    compile('com.intel.gkl:gkl:0.5.2') {
+        exclude module: 'htsjdk'
+    }
     compile 'com.google.guava:guava:15.0'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     //tools dependency for doclet requires sdk devel
     compile(files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs()))
     testCompile 'org.testng:testng:6.9.10'
+}
+
+configurations.all {
+    resolutionStrategy {
+        // force the htsjdk version so we don't get a different one transitively
+        force 'com.github.samtools:htsjdk:' + htsjdkVersion
+    }
 }
 
 sourceCompatibility = 1.8
