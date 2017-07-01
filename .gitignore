@@ -15,4 +15,3 @@ report
 jacoco.data
 .gradle
 build
-*.bai
