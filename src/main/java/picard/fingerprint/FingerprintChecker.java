@@ -380,11 +380,11 @@ public class FingerprintChecker {
      */
     public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final File samFile, final IntervalList loci) {
         final SamReader in = SamReaderFactory.makeDefault()
-                                             .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
-                                             .open(samFile);
+                .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
+                .open(samFile);
 
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
-                                                     in.getFileHeader().getSequenceDictionary());
+                in.getFileHeader().getSequenceDictionary());
 
         final SamLocusIterator iterator = new SamLocusIterator(in, loci, in.hasIndex());
         iterator.setEmitUncoveredLoci(true);
@@ -400,18 +400,19 @@ public class FingerprintChecker {
             iterator.setSamFilters(filters);
         }
 
+        final Map<SAMReadGroupRecord, FingerprintIdDetails> fingerprintIdDetailsMap = new HashMap<>();
         final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = new HashMap<>();
-        final Collection<FingerprintIdDetails> rgs = in.getFileHeader().getReadGroups().stream().map(rg->
-        {FingerprintIdDetails id = new FingerprintIdDetails(rg.getPlatformUnit(), samFile.getAbsolutePath());
-         id.library = rg.getLibrary();
-         id.sample  = rg.getSample();
-         return id;}).collect(Collectors.toSet());
 
-        for (final FingerprintIdDetails rg : rgs) {
-            final Fingerprint fingerprint = new Fingerprint(rg.sample,
-                                                            samFile,
-                                                            rg.platformUnit);
-            fingerprintsByReadGroup.put(rg, fingerprint);
+        for (final SAMReadGroupRecord rg : in.getFileHeader().getReadGroups()) {
+            final FingerprintIdDetails id = new FingerprintIdDetails(rg.getPlatformUnit(), samFile.getAbsolutePath());
+            id.library = rg.getLibrary();
+            id.sample = rg.getSample();
+            fingerprintIdDetailsMap.put(rg, id);
+
+            final Fingerprint fingerprint = new Fingerprint(id.sample,
+                    samFile,
+                    id.platformUnit);
+            fingerprintsByReadGroup.put(id, fingerprint);
 
             for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
                 fingerprint.add(new HaplotypeProbabilitiesFromSequence(h));
@@ -425,7 +426,6 @@ public class FingerprintChecker {
 
         // Now go through the data at each locus and figure stuff out!
         for (final SamLocusIterator.LocusInfo info : iterator) {
-            FingerprintIdDetails unknownFPDetails = null;
 
             // TODO: Filter out the locus if the allele balance doesn't make sense for either a
             // TODO: 50/50 het or a hom with some errors; in HS data with deep coverage any base
@@ -438,23 +438,21 @@ public class FingerprintChecker {
             for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
                 final FingerprintIdDetails details;
-                if (rg == null) {
+                if (rg == null && !fingerprintIdDetailsMap.containsKey(rg)) {
+                    final FingerprintIdDetails unknownFPDetails = createUnknownFP(samFile, rec.getRecord());
+                    fingerprintIdDetailsMap.put(null, unknownFPDetails);
 
-                    if (unknownFPDetails == null) {
-                        unknownFPDetails = createUnknownFP(samFile, rec.getRecord());
+                    final Fingerprint fp =  new Fingerprint(unknownFPDetails.sample, new File(unknownFPDetails.file), unknownFPDetails.platformUnit);
+                    fingerprintsByReadGroup.put(unknownFPDetails, fp);
+
+                    for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
+                        fp.add(new HaplotypeProbabilitiesFromSequence(h));
                     }
-                    details = unknownFPDetails;
-
-
-                } else { // rg is not null
-                    details = new FingerprintIdDetails(rg, samFile.getAbsolutePath());
                 }
-                if (!fingerprintsByReadGroup.containsKey(details)) {
 
-                    final PicardException e = new PicardException("Unknown read group: " + rg + " in file: " + samFile);
-                    log.error(e);
-                    throw e;
-                } else {
+                if (fingerprintIdDetailsMap.containsKey(rg)) {
+                    details = fingerprintIdDetailsMap.get(rg);
+
                     final String readName = rec.getRecord().getReadName();
                     if (!usedReadNames.contains(readName)) {
                         final HaplotypeProbabilitiesFromSequence probs = (HaplotypeProbabilitiesFromSequence) fingerprintsByReadGroup.get(details).get(haplotypeBlock);
@@ -464,7 +462,12 @@ public class FingerprintChecker {
                         probs.addToProbs(snp, base, qual);
                         usedReadNames.add(readName);
                     }
+                } else {
+                    final PicardException e = new PicardException("Unknown read group: " + rg + " in file: " + samFile);
+                    log.error(e);
+                    throw e;
                 }
+
             }
         }
 
