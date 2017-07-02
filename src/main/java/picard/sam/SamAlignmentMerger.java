@@ -393,25 +393,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         return gaps > maxGaps;
     }
 
-    /**
-     * Criteria for contaminant reads:
-     * 1. primary alignment has fewer than minUnclippedBases unclipped bases
-     * 2. primary alignment has both ends clipped
-     * 3. for pairs, at least one end of primary alignment meets above criteria
-     */
-    protected boolean isContaminant(final HitsForInsert hits) {
-        boolean isContaminant = false;
-        if (hits.numHits() > 0) {
-            final int primaryIndex = hits.getIndexOfEarliestPrimary();
-            if (primaryIndex < 0) throw new IllegalStateException("No primary alignment was found, despite having nonzero hits.");
-            final SAMRecord primaryRead1 = hits.getFirstOfPair(primaryIndex);
-            final SAMRecord primaryRead2 = hits.getSecondOfPair(primaryIndex);
-            if (primaryRead1 != null && primaryRead2 != null) isContaminant = contaminationFilter.filterOut(primaryRead1, primaryRead2);
-            else if (primaryRead1 != null) isContaminant = contaminationFilter.filterOut(primaryRead1);
-            else if (primaryRead2 != null) isContaminant = contaminationFilter.filterOut(primaryRead2);
-            else throw new IllegalStateException("Neither read1 or read2 exist for chosen primary alignment");
-        }
-        return isContaminant;
+    protected boolean isContaminant(final SAMRecord record) {
+        return contaminationFilter.filterOut(record);
     }
 
     // Accessor for testing
