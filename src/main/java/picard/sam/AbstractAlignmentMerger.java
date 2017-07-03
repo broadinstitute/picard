@@ -648,9 +648,9 @@ public abstract class AbstractAlignmentMerger {
     }
 
     /**
-     * Encodes mapping information from a record into a string according to the format sepcified in the
+     * Encodes mapping information from a record into a string according to the format specified in the
      * Sam-Spec under the SA tag. No protection against missing values (for cigar, and NM tag).
-     * (Might make sense to move this to htsJDK.)
+     * (Might make sense to move this to htsJDK.) (rname ,pos ,strand ,CIGAR ,mapQ ,NM ;)
      *
      * @param rec SAMRecord whose alignment information will be encoded
      * @return String encoding rec's alignment information according to SA tag in the SAM spec
@@ -659,6 +659,7 @@ public abstract class AbstractAlignmentMerger {
         return String.join(",",
                 rec.getContig(),
                 ((Integer) rec.getAlignmentStart()).toString(),
+                rec.getReadNegativeStrandFlag()?"-":"+",
                 rec.getCigarString(),
                 ((Integer) rec.getMappingQuality()).toString(),
                 getStringOfNullable(rec.getIntegerAttribute(SAMTag.NM.name()))) + ";";

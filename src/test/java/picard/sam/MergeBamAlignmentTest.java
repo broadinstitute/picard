@@ -347,7 +347,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 true, fasta, output,
                 SamPairUtil.PairOrientation.FR, null, null, null, null, null);
 
-        SamReaderFactory factory = SamReaderFactory.makeDefault();
+        final SamReaderFactory factory = SamReaderFactory.makeDefault();
         final SamReader result = factory.open(output);
          for (final SAMRecord sam : result) {
             // Get the alignment record
@@ -1128,7 +1128,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             alignedWriter.close();
 
             return new File[]{unmappedSam, alignedSam};
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new PicardException(e.getMessage(), e);
         }
     }
@@ -1827,7 +1827,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final File mergedSam = File.createTempFile("merged", ".sam");
         mergedSam.deleteOnExit();
 
-        FileInputStream stream = new FileInputStream(alignedSam);
+        final FileInputStream stream = new FileInputStream(alignedSam);
 
         // Ugliness required to read from a stream given as a string on the commandline.
         // Since the actual fd number is private inside FileDescriptor, need reflection
@@ -1857,7 +1857,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final File mergedSam = File.createTempFile("merged", ".sam");
         mergedSam.deleteOnExit();
 
-        FileInputStream stream = new FileInputStream(unmappedSam);
+        final FileInputStream stream = new FileInputStream(unmappedSam);
 
         // Ugliness required to read from a stream given as a string on the commandline.
         // Since the actual fd number is private inside FileDescriptor, need reflection
