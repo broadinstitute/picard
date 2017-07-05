@@ -6,6 +6,7 @@
  the CollectAlignmentSummaryMetrics program and usually stored in a file with
  the extension ".alignment_summary_metrics".</li>
 <li><a href="#BaseDistributionByCycleMetrics">BaseDistributionByCycleMetrics</a>: </li>
+<li><a href="#ClusteredCrosscheckMetric">ClusteredCrosscheckMetric</a>: A Metric class to hold the result of clustered crosschecking fingerprints.</li>
 <li><a href="#CollectHiSeqXPfFailMetrics.PFFailDetailedMetric">CollectHiSeqXPfFailMetrics.PFFailDetailedMetric</a>: a metric class for describing FP failing reads from an Illumina HiSeqX lane *</li>
 <li><a href="#CollectHiSeqXPfFailMetrics.PFFailSummaryMetric">CollectHiSeqXPfFailMetrics.PFFailSummaryMetric</a>: Metrics produced by the GetHiSeqXPFFailMetrics program.</li>
 <li><a href="#CollectOxoGMetrics.CpcgMetrics">CollectOxoGMetrics.CpcgMetrics</a>: Metrics class for outputs.</li>
@@ -15,6 +16,7 @@
 <li><a href="#CollectVariantCallingMetrics.VariantCallingSummaryMetrics">CollectVariantCallingMetrics.VariantCallingSummaryMetrics</a>: A collection of metrics relating to snps and indels within a variant-calling file (VCF).</li>
 <li><a href="#CollectWgsMetrics.WgsMetrics">CollectWgsMetrics.WgsMetrics</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
 <li><a href="#CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage">CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
+<li><a href="#CrosscheckMetric">CrosscheckMetric</a>: A class to hold the result of crosschecking fingerprints.</li>
 <li><a href="#DuplicationMetrics">DuplicationMetrics</a>: Metrics that are calculated during the process of marking duplicates
  within a stream of SAMRecords.</li>
 <li><a href="#ErrorSummaryMetrics">ErrorSummaryMetrics</a>: Summary metrics produced by CollectSequencingArtifactMetrics as a roll up of the
@@ -98,6 +100,15 @@
 <tr><th>Field</th><th>Description</th></tr>
 <tr><td>READ_END</td><td></td></tr><tr><td>CYCLE</td><td></td></tr><tr><td>PCT_A</td><td></td></tr><tr><td>PCT_C</td><td></td></tr><tr><td>PCT_G</td><td></td></tr><tr><td>PCT_T</td><td></td></tr><tr><td>PCT_N</td><td></td></tr></table>
 </section>
+<a id="ClusteredCrosscheckMetric"></a>
+<h2>ClusteredCrosscheckMetric</h2>
+<section>
+<p>A Metric class to hold the result of clustered crosschecking fingerprints.
+ The same metric will be used for crosschecking Readgroups, libraries, samples, or files.</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>CLUSTER</td><td></td></tr><tr><td>CLUSTER_SIZE</td><td></td></tr></table>
+</section>
 <a id="CollectHiSeqXPfFailMetrics.PFFailDetailedMetric"></a>
 <h2>CollectHiSeqXPfFailMetrics.PFFailDetailedMetric</h2>
 <section>
@@ -138,7 +149,7 @@
 <p>A set of metrics used to describe the general quality of a BAM file</p>
 <table>
 <tr><th>Field</th><th>Description</th></tr>
-<tr><td>TOTAL_READS</td><td>The total number of reads in the input file</td></tr><tr><td>PF_READS</td><td>The number of reads that are PF - pass filter</td></tr><tr><td>READ_LENGTH</td><td>The average read length of all the reads (will be fixed for a lane)</td></tr><tr><td>TOTAL_BASES</td><td>The total number of bases in all reads</td></tr><tr><td>PF_BASES</td><td>The total number of bases in all PF reads</td></tr><tr><td>Q20_BASES</td><td>The number of bases in all reads that achieve quality score 20 or higher</td></tr><tr><td>PF_Q20_BASES</td><td>The number of bases in PF reads that achieve quality score 20 or higher</td></tr><tr><td>Q30_BASES</td><td>The number of bases in all reads that achieve quality score 30 or higher</td></tr><tr><td>PF_Q30_BASES</td><td>The number of bases in PF reads that achieve quality score 30 or higher</td></tr><tr><td>Q20_EQUIVALENT_YIELD</td><td>The sum of quality scores of all bases divided by 20</td></tr><tr><td>PF_Q20_EQUIVALENT_YIELD</td><td>The sum of quality scores of all bases divided by 20</td></tr></table>
+<tr><td>TOTAL_READS</td><td>The total number of reads in the input file</td></tr><tr><td>PF_READS</td><td>The number of reads that are PF - pass filter</td></tr><tr><td>READ_LENGTH</td><td>The average read length of all the reads (will be fixed for a lane)</td></tr><tr><td>TOTAL_BASES</td><td>The total number of bases in all reads</td></tr><tr><td>PF_BASES</td><td>The total number of bases in all PF reads</td></tr><tr><td>Q20_BASES</td><td>The number of bases in all reads that achieve quality score 20 or higher</td></tr><tr><td>PF_Q20_BASES</td><td>The number of bases in PF reads that achieve quality score 20 or higher</td></tr><tr><td>Q30_BASES</td><td>The number of bases in all reads that achieve quality score 30 or higher</td></tr><tr><td>PF_Q30_BASES</td><td>The number of bases in PF reads that achieve quality score 30 or higher</td></tr><tr><td>Q20_EQUIVALENT_YIELD</td><td>The sum of quality scores of all bases divided by 20</td></tr><tr><td>PF_Q20_EQUIVALENT_YIELD</td><td>The sum of quality scores of all bases in PF reads divided by 20</td></tr></table>
 </section>
 <a id="CollectRawWgsMetrics.RawWgsMetrics"></a>
 <h2>CollectRawWgsMetrics.RawWgsMetrics</h2>
@@ -181,6 +192,15 @@
 <tr><th>Field</th><th>Description</th></tr>
 <tr><td>CATEGORY</td><td>One of either WHOLE_GENOME or NON_ZERO_REGIONS</td></tr></table>
 </section>
+<a id="CrosscheckMetric"></a>
+<h2>CrosscheckMetric</h2>
+<section>
+<p>A class to hold the result of crosschecking fingerprints.
+ The same metric will be used for crosschecking Readgroups, libraries, samples, or files.</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>LEFT_GROUP_VALUE</td><td></td></tr><tr><td>RIGHT_GROUP_VALUE</td><td></td></tr><tr><td>RESULT</td><td></td></tr><tr><td>DATA_TYPE</td><td></td></tr><tr><td>LOD_SCORE</td><td></td></tr><tr><td>LOD_SCORE_TUMOR_NORMAL</td><td></td></tr><tr><td>LOD_SCORE_NORMAL_TUMOR</td><td></td></tr><tr><td>LEFT_RUN_BARCODE</td><td></td></tr><tr><td>LEFT_LANE</td><td></td></tr><tr><td>LEFT_MOLECULAR_BARCODE_SEQUENCE</td><td></td></tr><tr><td>LEFT_LIBRARY</td><td></td></tr><tr><td>LEFT_SAMPLE</td><td></td></tr><tr><td>LEFT_FILE</td><td></td></tr><tr><td>RIGHT_RUN_BARCODE</td><td></td></tr><tr><td>RIGHT_LANE</td><td></td></tr><tr><td>RIGHT_MOLECULAR_BARCODE_SEQUENCE</td><td></td></tr><tr><td>RIGHT_LIBRARY</td><td></td></tr><tr><td>RIGHT_SAMPLE</td><td></td></tr><tr><td>RIGHT_FILE</td><td></td></tr></table>
+</section>
 <a id="DuplicationMetrics"></a>
 <h2>DuplicationMetrics</h2>
 <section>
@@ -213,7 +233,7 @@
 <tr><th>Field</th><th>Description</th></tr>
 <tr><td>BARCODE</td><td>The barcode (from the set of expected barcodes) for which the following metrics apply.
  Note that the "symbolic" barcode of NNNNNN is used to report metrics for all reads that
- do not match a barcode.</td></tr><tr><td>BARCODE_NAME</td><td>The barcode name.</td></tr><tr><td>LIBRARY_NAME</td><td>The name of the library</td></tr><tr><td>READS</td><td>The total number of reads matching the barcode.</td></tr><tr><td>PF_READS</td><td>The number of PF reads matching this barcode (always less than or equal to READS).</td></tr><tr><td>PERFECT_MATCHES</td><td>The number of all reads matching this barcode that matched with 0 errors or no-calls.</td></tr><tr><td>PF_PERFECT_MATCHES</td><td>The number of PF reads matching this barcode that matched with 0 errors or no-calls.</td></tr><tr><td>ONE_MISMATCH_MATCHES</td><td>The number of all reads matching this barcode that matched with 1 error or no-call.</td></tr><tr><td>PF_ONE_MISMATCH_MATCHES</td><td>The number of PF reads matching this barcode that matched with 1 error or no-call.</td></tr><tr><td>PCT_MATCHES</td><td>The fraction of all reads in the lane that matched to this barcode.</td></tr><tr><td>RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT</td><td>The rate of all reads matching this barcode to all reads matching the most prevelant barcode. For the
+ do not match a barcode.</td></tr><tr><td>BARCODE_WITHOUT_DELIMITER</td><td></td></tr><tr><td>BARCODE_NAME</td><td>The barcode name.</td></tr><tr><td>LIBRARY_NAME</td><td>The name of the library</td></tr><tr><td>READS</td><td>The total number of reads matching the barcode.</td></tr><tr><td>PF_READS</td><td>The number of PF reads matching this barcode (always less than or equal to READS).</td></tr><tr><td>PERFECT_MATCHES</td><td>The number of all reads matching this barcode that matched with 0 errors or no-calls.</td></tr><tr><td>PF_PERFECT_MATCHES</td><td>The number of PF reads matching this barcode that matched with 0 errors or no-calls.</td></tr><tr><td>ONE_MISMATCH_MATCHES</td><td>The number of all reads matching this barcode that matched with 1 error or no-call.</td></tr><tr><td>PF_ONE_MISMATCH_MATCHES</td><td>The number of PF reads matching this barcode that matched with 1 error or no-call.</td></tr><tr><td>PCT_MATCHES</td><td>The fraction of all reads in the lane that matched to this barcode.</td></tr><tr><td>RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT</td><td>The rate of all reads matching this barcode to all reads matching the most prevelant barcode. For the
  most prevelant barcode this will be 1, for all others it will be less than 1 (except for the possible
  exception of when there are more orphan reads than for any other barcode, in which case the value
  may be arbitrarily large).  One over the lowest number in this column gives you the fold-difference

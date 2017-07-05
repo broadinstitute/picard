@@ -30,10 +30,5 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 <tr><td>IGNORE_UNEXPECTED_BARCODES (Boolean)</td><td>Whether to ignore reads whose barcodes are not found in MULTIPLEX_PARAMS.  Useful when outputting FASTQs for only a subset of the barcodes in a lane.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>READ_NAME_FORMAT (ReadNameFormat)</td><td>The read name header formatting to emit.  Casava1.8 formatting has additional information beyond Illumina, including: the passing-filter flag value for the read, the flowcell name, and the sequencer name.  Default value: CASAVA_1_8. This option can be set to 'null' to clear the default value. Possible values: {CASAVA_1_8, ILLUMINA} </td></tr>
 <tr><td>COMPRESS_OUTPUTS (Boolean)</td><td>Compress output FASTQ files using gzip and append a .gz extension to the file names.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
-<tr><td>USE_NEW_CONVERTER (Boolean)</td><td>Use the new converter  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
-<tr><td>MAX_MISMATCHES (Integer)</td><td>Maximum mismatches for a barcode to be considered a match.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>MIN_MISMATCH_DELTA (Integer)</td><td>Minimum difference between number of mismatches in the best and second best barcodes for a barcode to be considered a match.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>MAX_NO_CALLS (Integer)</td><td>Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.  Default value: 2. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>METRICS_FILE (File)</td><td>Per-barcode and per-lane metrics written to this file.  Default value: null. </td></tr>
 </table>
 </section>
