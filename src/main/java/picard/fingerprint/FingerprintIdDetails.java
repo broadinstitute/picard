@@ -109,6 +109,14 @@ public class FingerprintIdDetails {
         return lhs.equals(rhs) ? lhs : orElse;
     }
 
+    public String getPlatformUnit() {
+        return platformUnit;
+    }
+
+    public String getSample() {
+        return sample;
+    }
+
     /**
      * Fills the relevant fields from the platformUnit string.
      *

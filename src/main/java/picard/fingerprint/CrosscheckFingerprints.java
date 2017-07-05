@@ -225,7 +225,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
     }
 
-    private static Function<FingerprintIdDetails, String> getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType CROSSCHECK_BY) {
+    public static Function<FingerprintIdDetails, String> getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType CROSSCHECK_BY) {
         final Function<FingerprintIdDetails, String> groupByTemp;
         switch (CROSSCHECK_BY) {
             case READGROUP:
