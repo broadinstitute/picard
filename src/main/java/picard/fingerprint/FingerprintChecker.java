@@ -66,7 +66,7 @@ public class FingerprintChecker {
         return validationStringency;
     }
 
-    public void setValidationStringency(ValidationStringency validationStringency) {
+    public void setValidationStringency(final ValidationStringency validationStringency) {
         this.validationStringency = validationStringency;
     }
 
@@ -116,7 +116,7 @@ public class FingerprintChecker {
      * Sets whether duplicate reads should be allowed when calling genotypes from SAM files. This is
      * useful when comparing read groups within a SAM file and individual read groups show artifactually
      * high duplication (e.g. a single-ended read group mixed in with paired-end read groups).
-     * @param allowDuplicateReads
+     * @param allowDuplicateReads should fingerprinting use duplicate reads?
      */
     public void setAllowDuplicateReads(final boolean allowDuplicateReads) {
         this.allowDuplicateReads = allowDuplicateReads;
@@ -185,7 +185,7 @@ public class FingerprintChecker {
             }
             try {
                 getFingerprintFromVc(fingerprints, ctx);
-            } catch (IllegalArgumentException e) {
+            } catch (final IllegalArgumentException e) {
                 log.warn("There was a genotyping error in File: " + fingerprintFile + "\n" + e.getMessage());
             }
         }
@@ -208,7 +208,7 @@ public class FingerprintChecker {
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
                 VCFFileReader.getSequenceDictionary(fingerprintFile));
 
-        SortedSet<Snp> snps = new TreeSet<>(haplotypes.getAllSnps());
+        final SortedSet<Snp> snps = new TreeSet<>(haplotypes.getAllSnps());
 
         final Map<String, Fingerprint> fingerprints = new HashMap<>();
         Set<String> samples = null;
@@ -233,7 +233,7 @@ public class FingerprintChecker {
             }
             try {
                 getFingerprintFromVc(fingerprints, ctx);
-            } catch (IllegalArgumentException e) {
+            } catch (final IllegalArgumentException e) {
                 log.warn("There was a genotyping error in File: " + fingerprintFile + "\n" + e.getMessage());
             }
         }
@@ -247,7 +247,7 @@ public class FingerprintChecker {
      * @param fingerprints a map from Sample to fingerprint
      * @param ctx the VC from which to extract (part of ) a fingerprint
      */
-    private void getFingerprintFromVc(Map<String, Fingerprint> fingerprints, VariantContext ctx) throws IllegalArgumentException {
+    private void getFingerprintFromVc(final Map<String, Fingerprint> fingerprints, final VariantContext ctx) throws IllegalArgumentException {
         if (!isUsableSnp(ctx)) {
             return;
         }
@@ -360,12 +360,12 @@ public class FingerprintChecker {
     }
 
     public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final File vcfFile) {
-        Map<FingerprintIdDetails, Fingerprint> fpIdMap = new HashMap<>();
+        final Map<FingerprintIdDetails, Fingerprint> fpIdMap = new HashMap<>();
 
         final Map< String, Fingerprint> sampleFpMap = loadFingerprints(vcfFile, null);
 
         sampleFpMap.forEach((key, value) -> {
-            FingerprintIdDetails fpId = new FingerprintIdDetails();
+            final FingerprintIdDetails fpId = new FingerprintIdDetails();
             fpId.sample = key;
             fpId.file = vcfFile.getAbsolutePath();
 
@@ -380,11 +380,11 @@ public class FingerprintChecker {
      */
     public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final File samFile, final IntervalList loci) {
         final SamReader in = SamReaderFactory.makeDefault()
-                                             .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
-                                             .open(samFile);
+                .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
+                .open(samFile);
 
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
-                                                     in.getFileHeader().getSequenceDictionary());
+                in.getFileHeader().getSequenceDictionary());
 
         final SamLocusIterator iterator = new SamLocusIterator(in, loci, in.hasIndex());
         iterator.setEmitUncoveredLoci(true);
@@ -400,18 +400,19 @@ public class FingerprintChecker {
             iterator.setSamFilters(filters);
         }
 
+        final Map<SAMReadGroupRecord, FingerprintIdDetails> fingerprintIdDetailsMap = new HashMap<>();
         final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = new HashMap<>();
-        final Collection<FingerprintIdDetails> rgs = in.getFileHeader().getReadGroups().stream().map(rg->
-        {FingerprintIdDetails id = new FingerprintIdDetails(rg.getPlatformUnit(), samFile.getAbsolutePath());
-         id.library = rg.getLibrary();
-         id.sample  = rg.getSample();
-         return id;}).collect(Collectors.toSet());
 
-        for (final FingerprintIdDetails rg : rgs) {
-            final Fingerprint fingerprint = new Fingerprint(rg.sample,
-                                                            samFile,
-                                                            rg.platformUnit);
-            fingerprintsByReadGroup.put(rg, fingerprint);
+        for (final SAMReadGroupRecord rg : in.getFileHeader().getReadGroups()) {
+            final FingerprintIdDetails id = new FingerprintIdDetails(rg.getPlatformUnit(), samFile.getAbsolutePath());
+            id.library = rg.getLibrary();
+            id.sample = rg.getSample();
+            fingerprintIdDetailsMap.put(rg, id);
+
+            final Fingerprint fingerprint = new Fingerprint(id.sample,
+                    samFile,
+                    id.platformUnit);
+            fingerprintsByReadGroup.put(id, fingerprint);
 
             for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
                 fingerprint.add(new HaplotypeProbabilitiesFromSequence(h));
@@ -425,7 +426,7 @@ public class FingerprintChecker {
 
         // Now go through the data at each locus and figure stuff out!
         for (final SamLocusIterator.LocusInfo info : iterator) {
-            boolean loggedMissingRGTag=false;
+
             // TODO: Filter out the locus if the allele balance doesn't make sense for either a
             // TODO: 50/50 het or a hom with some errors; in HS data with deep coverage any base
             // TODO: with major strand bias could cause errors
@@ -437,43 +438,21 @@ public class FingerprintChecker {
             for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
                 final FingerprintIdDetails details;
-                if (rg == null) {
-                    final PicardException e = new PicardException("Found read with no readgroup: " + rec.getRecord().getReadName() + " in file: " + samFile);
-                    if (validationStringency != ValidationStringency.STRICT) {
-                        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("<UNKNOWN>:::" + samFile.getAbsolutePath());
-                        readGroupRecord.setLibrary("<UNKNOWN>");
-                        readGroupRecord.setSample("<UNKNOWN>");
-                        readGroupRecord.setPlatformUnit("<UNKNOWN>.0.ZZZ");
+                if (rg == null && !fingerprintIdDetailsMap.containsKey(rg)) {
+                    final FingerprintIdDetails unknownFPDetails = createUnknownFP(samFile, rec.getRecord());
+                    fingerprintIdDetailsMap.put(null, unknownFPDetails);
 
-                        details = new FingerprintIdDetails(readGroupRecord, samFile.getAbsolutePath());
-                        if (!fingerprintsByReadGroup.containsKey(details)) {
-                            Fingerprint fp = new Fingerprint(readGroupRecord.getSample(), samFile, readGroupRecord.getPlatformUnit());
-                            fingerprintsByReadGroup.put(details, fp);
+                    final Fingerprint fp =  new Fingerprint(unknownFPDetails.sample, new File(unknownFPDetails.file), unknownFPDetails.platformUnit);
+                    fingerprintsByReadGroup.put(unknownFPDetails, fp);
 
-                            for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
-                                fp.add(new HaplotypeProbabilitiesFromSequence(h));
-                            }
-                        }
-                    } else {
-                        log.error(e);
-                        throw e;
+                    for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
+                        fp.add(new HaplotypeProbabilitiesFromSequence(h));
                     }
-
-                    if (validationStringency == ValidationStringency.LENIENT && !loggedMissingRGTag) {
-                            log.warn(e);
-                            log.warn("further messages from this file will be suppressed");
-                            loggedMissingRGTag = true;
-                    }
-
-                } else { // rg is not null
-                    details = new FingerprintIdDetails(rg, samFile.getAbsolutePath());
                 }
-                if (!fingerprintsByReadGroup.containsKey(details)) {
 
-                    final PicardException e = new PicardException("Unknown read group: " + rg + " in file: " + samFile);
-                    log.error(e);
-                    throw e;
-                } else {
+                if (fingerprintIdDetailsMap.containsKey(rg)) {
+                    details = fingerprintIdDetailsMap.get(rg);
+
                     final String readName = rec.getRecord().getReadName();
                     if (!usedReadNames.contains(readName)) {
                         final HaplotypeProbabilitiesFromSequence probs = (HaplotypeProbabilitiesFromSequence) fingerprintsByReadGroup.get(details).get(haplotypeBlock);
@@ -483,11 +462,36 @@ public class FingerprintChecker {
                         probs.addToProbs(snp, base, qual);
                         usedReadNames.add(readName);
                     }
+                } else {
+                    final PicardException e = new PicardException("Unknown read group: " + rg + " in file: " + samFile);
+                    log.error(e);
+                    throw e;
                 }
+
             }
         }
 
         return fingerprintsByReadGroup;
+    }
+
+    private FingerprintIdDetails createUnknownFP(final File samFile, final SAMRecord rec) {
+        final PicardException e = new PicardException("Found read with no readgroup: " + rec.getReadName() + " in file: " + samFile);
+        if (validationStringency != ValidationStringency.STRICT) {
+            final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("<UNKNOWN>:::" + samFile.getAbsolutePath());
+            readGroupRecord.setLibrary("<UNKNOWN>");
+            readGroupRecord.setSample("<UNKNOWN>");
+            readGroupRecord.setPlatformUnit("<UNKNOWN>.0.ZZZ");
+
+            if (validationStringency == ValidationStringency.LENIENT) {
+                log.warn(e);
+                log.warn("further messages from this file will be suppressed");
+            }
+
+            return new FingerprintIdDetails(readGroupRecord, samFile.getAbsolutePath());
+        } else {
+            log.error(e);
+            throw e;
+        }
     }
 
     /**
@@ -620,7 +624,7 @@ public class FingerprintChecker {
                     if (filesRead.incrementAndGet() % 100 == 0) {
                         log.info("Processed " + filesRead.get() + " out of " + files.size());
                     }
-                } catch(Exception e){
+                } catch(final Exception e){
                     log.warn("Exception thrown in thread:" + e.getMessage());
                     throw e;
                 }
@@ -642,26 +646,6 @@ public class FingerprintChecker {
 
         return retval;
     }
-
-    /**
-     * Takes a collection of fingerprints and, assuming that they are independent, merged the fingerprints
-     * by samples and totals up the probabilities.
-     */
-    static public SortedMap<String, Fingerprint> mergeFingerprintsBySample(final Collection<Fingerprint> inputs) {
-        final SortedMap<String, Fingerprint> sampleFps = new TreeMap<>();
-        for (final Fingerprint fp : inputs) {
-            Fingerprint sampleFp = sampleFps.get(fp.getSample());
-            if (sampleFp == null) {
-                sampleFp = new Fingerprint(fp.getSample(), null, fp.getSample());
-                sampleFps.put(fp.getSample(), sampleFp);
-            }
-
-            sampleFp.merge(fp);
-        }
-
-        return sampleFps;
-    }
-
 
     /**
      * Top level method to take a set of one or more SAM files and one or more Genotype files and compare
@@ -755,7 +739,7 @@ public class FingerprintChecker {
 
             for (final String sample : observedFingerprintsBySample.keySet()) {
                 final FingerprintResults results = new FingerprintResults(f, null, sample);
-                for (Fingerprint expectedFp : expectedFingerprints) {
+                for (final Fingerprint expectedFp : expectedFingerprints) {
                     final MatchResults result = calculateMatchResults(observedFingerprintsBySample.get(sample), expectedFp, 0, pLossofHet);
                     results.addResults(result);
                 }
@@ -849,11 +833,11 @@ public class FingerprintChecker {
         return calculateMatchResults(observedFp, expectedFp, 0, 0);
     }
 
-    private static boolean isQueryable(SAMSequenceDictionary dict, VCFFileReader reader){
+    private static boolean isQueryable(final SAMSequenceDictionary dict, final VCFFileReader reader){
 
         try {
             reader.query(dict.getSequence(0).getSequenceName(),0,0);
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
             return false;
         }
         return true;

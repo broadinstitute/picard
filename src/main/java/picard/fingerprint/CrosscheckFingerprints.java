@@ -252,13 +252,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         };
     }
 
-    /**
-     * Method that combines the fingerprint evidence across all the read groups for the same sample
-     * and then produces a matrix of LOD scores for comparing every sample with every other sample.
-     */
-    private int crossCheckGrouped(final Map<FingerprintIdDetails, Fingerprint> fingerprints, final List<CrosscheckMetric> metrics,
-                                  final Function<FingerprintIdDetails, String> by,
-                                  CrosscheckMetric.DataType type) {
+    static public Map<FingerprintIdDetails, Fingerprint> mergeFingerprintsBy(
+            final Map<FingerprintIdDetails, Fingerprint> fingerprints,
+            final Function<FingerprintIdDetails, String> by){
 
         // collect the various entries according to the grouping "by"
 
@@ -267,7 +263,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                         .stream()
                         .collect(Collectors.groupingBy(entry -> by.apply(entry.getKey())));
 
-        final Map<FingerprintIdDetails, Fingerprint> fingerprintsByGroup = collection.entrySet().stream()
+        return collection.entrySet().stream()
                 .collect(Collectors.toMap(
                         entry -> {
                             // merge the keys (unequal values are eliminated by merge).
@@ -287,6 +283,18 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                             return sampleFp;
 
                         }));
+    }
+
+
+    /**
+     * Method that combines the fingerprint evidence across all the read groups for the same sample
+     * and then produces a matrix of LOD scores for comparing every sample with every other sample.
+     */
+    private int crossCheckGrouped(final Map<FingerprintIdDetails, Fingerprint> fingerprints, final List<CrosscheckMetric> metrics,
+                                  final Function<FingerprintIdDetails, String> by,
+                                  final CrosscheckMetric.DataType type) {
+
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintsByGroup = mergeFingerprintsBy(fingerprints, by);
 
         if (MATRIX_OUTPUT != null) {
             crosscheckMatrix = new double[fingerprintsByGroup.size()][];

@@ -47,24 +47,24 @@ public class FingerprintIdDetails {
 
     public FingerprintIdDetails() {}
 
-    public FingerprintIdDetails(String platformUnit, String file) {
+    public FingerprintIdDetails(final String platformUnit, final String file) {
         getPlatformUnitDetails(platformUnit);
         this.platformUnit = platformUnit;
         this.file = file;
     }
 
-    public FingerprintIdDetails(final SAMReadGroupRecord rg, String file) {
+    public FingerprintIdDetails(final SAMReadGroupRecord rg, final String file) {
         this(rg.getPlatformUnit(), file);
         this.sample = rg.getSample();
         this.library = rg.getLibrary();
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        FingerprintIdDetails that = (FingerprintIdDetails) o;
+        final FingerprintIdDetails that = (FingerprintIdDetails) o;
 
         if (platformUnit != null ? !platformUnit.equals(that.platformUnit) : that.platformUnit != null) return false;
         if (runBarcode != null ? !runBarcode.equals(that.runBarcode) : that.runBarcode != null) return false;
@@ -89,7 +89,7 @@ public class FingerprintIdDetails {
         return result;
     }
 
-    public FingerprintIdDetails merge(FingerprintIdDetails other) {
+    public FingerprintIdDetails merge(final FingerprintIdDetails other) {
 
         platformUnit     = equalValueOrElse(platformUnit,     other.platformUnit,     multipleValuesString);
         runBarcode       = equalValueOrElse(runBarcode,       other.runBarcode,       multipleValuesString);
@@ -102,7 +102,7 @@ public class FingerprintIdDetails {
         return this;
     }
 
-    static private <T> T equalValueOrElse(T lhs, T rhs, T orElse) {
+    static private <T> T equalValueOrElse(final T lhs, final T rhs, final T orElse) {
         if (rhs == null) return lhs;
         if (lhs == null) return rhs;
 
@@ -128,7 +128,7 @@ public class FingerprintIdDetails {
             } else {
                 throw new IllegalArgumentException("Unexpected format " + puString + " for PU attribute");
             }
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             throw new IllegalArgumentException("Unexpected format " + puString + " for PU attribute");
         }
     }
