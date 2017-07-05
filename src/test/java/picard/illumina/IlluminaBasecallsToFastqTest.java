@@ -50,10 +50,10 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/fastq");
     private static final File TEST_DATA_DIR_WITH_4M = new File("testdata/picard/illumina/25T8B25T/fastq_with_4M");
     private static final File TEST_DATA_DIR_WITH_4M4M = new File("testdata/picard/illumina/25T8B25T/fastq_with_4M4M");
-    private static final File TEST_DATA_DIR_WITH_CBCLS = new File("testdata/picard/illumina/125T8B8B125T_cbcl/Data/Intensities/BaseCalls");
+    private static final File TEST_DATA_DIR_WITH_CBCLS = new File("testdata/picard/illumina/151T8B8B151T_cbcl/Data/Intensities/BaseCalls");
 
     private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/fastq");
-    private static final File DUAL_CBCL_TEST_DATA_DIR = new File("testdata/picard/illumina/125T8B8B125T_cbcl/fastq");
+    private static final File DUAL_CBCL_TEST_DATA_DIR = new File("testdata/picard/illumina/151T8B8B151T_cbcl/fastq");
 
     public String getCommandLineProgramName() {
         return IlluminaBasecallsToFastq.class.getSimpleName();
@@ -140,56 +140,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
 
     @Test
     public void testCbclConvert() throws Exception {
-        runNewConverterTest(1, "dualBarcode.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR);
-    }
-
-    private void runNewConverterTest(final int lane, final String jobName, final String libraryParamsFile,
-                                     final int concatNColumnFields, final String readStructureString, final File baseCallsDir,
-                                     final File testDataDir) throws Exception {
-        final File outputDir = File.createTempFile(jobName, ".dir");
-        try {
-            outputDir.delete();
-            outputDir.mkdir();
-
-            outputDir.deleteOnExit();
-            // Create barcode.params with output files in the temp directory
-            final File libraryParams = new File(outputDir, libraryParamsFile);
-            libraryParams.deleteOnExit();
-            final List<File> outputPrefixes = new ArrayList<File>();
-            convertParamsFile(libraryParamsFile, concatNColumnFields, testDataDir, outputDir, libraryParams, outputPrefixes);
-
-            runPicardCommandLine(new String[]{
-                    "BASECALLS_DIR=" + baseCallsDir,
-                    "LANE=" + lane,
-                    "RUN_BARCODE=HiMom",
-                    "READ_STRUCTURE=" + readStructureString,
-                    "MULTIPLEX_PARAMS=" + libraryParams,
-                    "MACHINE_NAME=machine1",
-                    "FLOWCELL_BARCODE=abcdeACXX",
-                    "USE_NEW_CONVERTER=true",
-                    "NUM_PROCESSORS=2",
-                    "METRICS_FILE=" + new File(outputDir, "test.metrics")
-            });
-
-            final ReadStructure readStructure = new ReadStructure(readStructureString);
-            for (final File outputSam : outputPrefixes) {
-                for (int i = 1; i <= readStructure.templates.length(); ++i) {
-                    final String filename = outputSam.getName() + "." + i + ".fastq";
-                    compareFastqs(testDataDir, outputSam, filename);
-                }
-                for (int i = 1; i <= readStructure.sampleBarcodes.length(); ++i) {
-                    final String filename = outputSam.getName() + ".barcode_" + i + ".fastq";
-                    compareFastqs(testDataDir, outputSam, filename);
-                }
-                for (int i = 1; i <= readStructure.molecularBarcode.length(); ++i) {
-                    final String filename = outputSam.getName() + ".index_" + i + ".fastq";
-                    compareFastqs(testDataDir, outputSam, filename);
-                }
-            }
-
-        } finally {
-            TestUtil.recursiveDelete(outputDir);
-        }
+        runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR);
     }
 
     private void compareFastqs(File testDataDir, File outputSam, String filename) {

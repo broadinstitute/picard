@@ -1,26 +1,20 @@
 package picard.illumina;
 
 
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
-import picard.illumina.ExtractIlluminaBarcodes.BarcodeMetric;
 import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.ParameterizedFileUtil;
-import picard.illumina.parser.ReadDescriptor;
 import picard.illumina.parser.ReadStructure;
-import picard.illumina.parser.ReadType;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.illumina.parser.readers.LocsFileReader;
-import picard.util.IlluminaUtil;
+import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,10 +24,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -41,19 +31,12 @@ import java.util.regex.Pattern;
 
 public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     private static final Log log = Log.getInstance(NewIlluminaBasecallsConverter.class);
-    private final Map<String, BarcodeMetric> barcodesMetrics = new HashMap<>();
-    private final BarcodeMetric noMatchMetric;
     private final List<File> cbcls;
     private final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
     private final File[] filterFiles;
-    private final int maxNoCalls;
-    private final int maxMismatches;
-    private final int minMismatchDelta;
-    private final int minimumBaseQuality;
-    private final MetricsFile<BarcodeMetric, Integer> metrics;
-    private final File metricsFile;
     private final Map<String, ThreadPoolExecutorWithExceptions> barcodeWriterThreads = new HashMap<>();
     private final Map<Integer, List<RecordWriter>> completedWork = Collections.synchronizedMap(new HashMap<>());
+    private final Map<Integer, File> barcodesFiles = new HashMap<>();
 
     /**
      * @param basecallsDir             Where to read basecalls from.
@@ -72,16 +55,9 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
      * @param outputRecordComparator   For sorting output records within a single tile.
      * @param codecPrototype           For spilling output records to disk.
      * @param outputRecordClass        Inconveniently needed to create SortingCollections.
-     * @param includeNonPfReads        If true, will include ALL reads (including those which do not have PF set)
      * @param ignoreUnexpectedBarcodes If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
-     * @param maxNoCalls               The maximum number of no calls to allow in a match.
-     * @param maxMismatches            The maximum number of mismatched calls to allow in a match.
-     * @param minMismatchDelta         The minimum mismatch difference between the best and second best matches.
-     * @param minimumBaseQuality       The minimum base quality to allow for a matching base call.
-     * @param metrics                  The metrics output for barcode metrics.
-     * @param metricsFile              The metrics file to write out the barcode metrics to.
      */
-    public NewIlluminaBasecallsConverter(final File basecallsDir, File barcodesDir, final int lane,
+    public NewIlluminaBasecallsConverter(final File basecallsDir, final File barcodesDir, final int lane,
                                          final ReadStructure readStructure,
                                          final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
                                          final boolean demultiplex,
@@ -93,40 +69,19 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
                                          final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
                                          final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
                                          final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
-                                         final boolean applyEamssFiltering, final boolean includeNonPfReads,
-                                         final boolean ignoreUnexpectedBarcodes, int maxNoCalls, int maxMismatches,
-                                         int minMismatchDelta, int minimumBaseQuality, MetricsFile<BarcodeMetric, Integer> metrics, File metricsFile) {
+                                         final boolean ignoreUnexpectedBarcodes) {
 
         super(barcodeRecordWriterMap, maxReadsInRamPerTile, tmpDirs, codecPrototype, ignoreUnexpectedBarcodes,
-                demultiplex, outputRecordComparator, includeNonPfReads, bclQualityEvaluationStrategy,
+                demultiplex, outputRecordComparator, bclQualityEvaluationStrategy,
                 outputRecordClass, numProcessors, new IlluminaDataProviderFactory(basecallsDir,
                         barcodesDir, lane, readStructure, bclQualityEvaluationStrategy));
-        this.maxNoCalls = maxNoCalls;
-        this.maxMismatches = maxMismatches;
-        this.minMismatchDelta = minMismatchDelta;
-        this.minimumBaseQuality = minimumBaseQuality;
         this.tiles = new ArrayList<>();
-        this.metrics = metrics;
-        this.metricsFile = metricsFile;
-        int numBarcodes = readStructure.sampleBarcodes.length();
 
-        barcodeRecordWriterMap.keySet().forEach(barcode -> {
-            if (barcode != null) {
-                int pos = 0;
-                String[] bcStrings = new String[numBarcodes];
-                for (int i = 0; i < numBarcodes; i++) {
-                    int endIndex = readStructure.sampleBarcodes.getDescriptorLengths()[i];
-                    bcStrings[i] = barcode.substring(pos, endIndex + pos);
-                    pos += endIndex;
-                }
-                this.barcodesMetrics.put(barcode, new BarcodeMetric(null, null, barcode, bcStrings));
-            }
-            barcodeWriterThreads.put(barcode, new ThreadPoolExecutorWithExceptions(1));
-        });
+        barcodeRecordWriterMap.keySet().forEach(barcode -> barcodeWriterThreads.put(barcode, new ThreadPoolExecutorWithExceptions(1)));
 
-        File laneDir = new File(basecallsDir, IlluminaFileUtil.longLaneStr(lane));
+        final File laneDir = new File(basecallsDir, IlluminaFileUtil.longLaneStr(lane));
 
-        File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
+        final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
 
         //CBCLs
         cbcls = new ArrayList<>();
@@ -142,7 +97,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
         IOUtil.assertFilesAreReadable(cbcls);
 
         //locs
-        File locsFile = new File(basecallsDir.getParentFile(), "s.locs");
+        final File locsFile = new File(basecallsDir.getParentFile(), "s.locs");
         try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
             while (locsFileReader.hasNext()) {
                 locs.add(locsFileReader.next());
@@ -151,11 +106,11 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
         IOUtil.assertFileIsReadable(locsFile);
         //filter
 
-        Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
+        final Pattern filterRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
                 ParameterizedFileUtil.makeLaneTileRegex(".filter", lane)));
-        filterFiles = getTiledFiles(laneDir, laneTileRegex);
-        for (File filterFile : filterFiles) {
-            Matcher tileMatcher = laneTileRegex.matcher(filterFile.getName());
+        filterFiles = getTiledFiles(laneDir, filterRegex);
+        for (final File filterFile : filterFiles) {
+            final Matcher tileMatcher = filterRegex.matcher(filterFile.getName());
             if (tileMatcher.matches()) {
                 tiles.add(Integer.valueOf(tileMatcher.group(1)));
             }
@@ -163,40 +118,44 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
         IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
         tiles.sort(TILE_NUMBER_COMPARATOR);
 
-        this.factory.setApplyEamssFiltering(applyEamssFiltering);
-        setTileLimits(firstTile, tileLimit);
-
-        // Create BarcodeMetric for counting reads that don't match any barcode
-        final String[] noMatchBarcode = new String[readStructure.sampleBarcodes.length()];
-        int index = 0;
-        for (final ReadDescriptor d : readStructure.descriptors) {
-            if (d.type == ReadType.Barcode) {
-                noMatchBarcode[index++] = StringUtil.repeatCharNTimes('N', d.length);
+        if (demultiplex) {
+            final Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
+                    ParameterizedFileUtil.makeLaneTileRegex("_barcode.txt(\\.gz|\\.bz2)?", lane)));
+            final File[] barcodeTileFiles = getTiledFiles(barcodesDir, barcodeRegex);
+            if (barcodeTileFiles.length != tiles.size()) {
+                throw new PicardException(String.format(
+                        "Barcode files are required for each tile. Found %d expected %d.",
+                        barcodeTileFiles.length, tiles.size()));
+            }
+            for (final File barcodeFile : barcodeTileFiles) {
+                final Matcher tileMatcher = barcodeRegex.matcher(barcodeFile.getName());
+                if (tileMatcher.matches()) {
+                    barcodesFiles.put(Integer.valueOf(tileMatcher.group(1)), barcodeFile);
+                }
             }
         }
 
-        this.noMatchMetric = new BarcodeMetric(null, null, IlluminaUtil.barcodeSeqsToString(noMatchBarcode), noMatchBarcode);
-
+        setTileLimits(firstTile, tileLimit);
     }
 
-    public static File[] getTiledFiles(File baseDirectory, Pattern pattern) {
+    public static File[] getTiledFiles(final File baseDirectory, final Pattern pattern) {
         return IOUtil.getFilesMatchingRegexp(baseDirectory, pattern);
     }
 
     @Override
     public void doTileProcessing() {
 
-        ThreadPoolExecutor completedWorkExecutor = new ThreadPoolExecutorWithExceptions(1);
+        final ThreadPoolExecutor completedWorkExecutor = new ThreadPoolExecutorWithExceptions(1);
 
-        CompletedWorkChecker workChecker = new CompletedWorkChecker();
+        final CompletedWorkChecker workChecker = new CompletedWorkChecker();
         completedWorkExecutor.submit(workChecker);
         completedWorkExecutor.shutdown();
 
         //thread by surface tile
-        ThreadPoolExecutor tileProcessingExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
+        final ThreadPoolExecutor tileProcessingExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
 
-        for (Integer tile : tiles) {
-            tileProcessingExecutor.submit(new TileProcessor(tile));
+        for (final Integer tile : tiles) {
+            tileProcessingExecutor.submit(new TileProcessor(tile, barcodesFiles.get(tile)));
         }
 
         tileProcessingExecutor.shutdown();
@@ -206,27 +165,16 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         barcodeWriterThreads.values().forEach(ThreadPoolExecutor::shutdown);
         barcodeWriterThreads.forEach((barcode, executor) -> awaitThreadPoolTermination(barcode + " writer", executor));
-
-        if (metricsFile != null) {
-            ExtractIlluminaBarcodes.finalizeMetrics(barcodesMetrics, noMatchMetric);
-
-            for (final BarcodeMetric barcodeMetric : barcodesMetrics.values()) {
-                metrics.addMetric(barcodeMetric);
-            }
-            metrics.addMetric(noMatchMetric);
-            metrics.write(metricsFile);
-            CloserUtil.close(metricsFile);
-        }
     }
 
-    private void awaitThreadPoolTermination(String executorName, ThreadPoolExecutor executorService) {
+    private void awaitThreadPoolTermination(final String executorName, final ThreadPoolExecutor executorService) {
         try {
             while (!executorService.awaitTermination(300, TimeUnit.SECONDS)) {
                 log.info(String.format("%s waiting for job completion. Finished jobs - %d : Running jobs - %d : Queued jobs  - %d",
                         executorName, executorService.getCompletedTaskCount(), executorService.getActiveCount(),
                         executorService.getQueue().size()));
             }
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -236,8 +184,8 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
         private final ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer;
         private final String barcode;
 
-        RecordWriter(ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer,
-                     SortingCollection<CLUSTER_OUTPUT_RECORD> recordCollection, String barcode) {
+        RecordWriter(final ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer,
+                     final SortingCollection<CLUSTER_OUTPUT_RECORD> recordCollection, final String barcode) {
             this.writer = writer;
             this.recordCollection = recordCollection;
             this.barcode = barcode;
@@ -245,7 +193,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         @Override
         public void run() {
-            for (CLUSTER_OUTPUT_RECORD record : recordCollection) {
+            for (final CLUSTER_OUTPUT_RECORD record : recordCollection) {
                 writer.write(record);
                 writeProgressLogger.record(null, 0);
             }
@@ -260,7 +208,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
         private final ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer;
         private final String barcode;
 
-        private Closer(ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer, String barcode) {
+        private Closer(final ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer, final String barcode) {
             this.writer = writer;
             this.barcode = barcode;
         }
@@ -275,15 +223,16 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
     private class TileProcessor implements Runnable {
         private final int tileNum;
         private final Map<String, SortingCollection<CLUSTER_OUTPUT_RECORD>> barcodeToRecordCollection = new HashMap<>();
+        private final File barcodeFile;
 
-        TileProcessor(int tileNum) {
+        TileProcessor(final int tileNum, final File barcodeFile) {
             this.tileNum = tileNum;
+            this.barcodeFile = barcodeFile;
         }
 
         @Override
         public void run() {
-            final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider(cbcls, locs, filterFiles, tileNum, barcodesMetrics,
-                    noMatchMetric, maxNoCalls, maxMismatches, minMismatchDelta, minimumBaseQuality);
+            final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider(cbcls, locs, filterFiles, tileNum, barcodeFile);
 
             while (dataProvider.hasNext()) {
                 final ClusterData cluster = dataProvider.next();
@@ -294,10 +243,10 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
             dataProvider.close();
 
-            List<RecordWriter> writerList = new ArrayList<>();
+            final List<RecordWriter> writerList = new ArrayList<>();
             barcodeToRecordCollection.forEach((barcode, value) -> {
                 value.doneAdding();
-                ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer = barcodeRecordWriterMap.get(barcode);
+                final ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer = barcodeRecordWriterMap.get(barcode);
                 writerList.add(new RecordWriter(writer, value, barcode));
 
             });
@@ -338,33 +287,6 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
         }
     }
 
-    private class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
-        ThreadPoolExecutorWithExceptions(int threads) {
-            super(threads, threads, 0, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
-        }
-
-        @Override
-        protected void afterExecute(Runnable r, Throwable t) {
-            if (t == null && r instanceof Future<?>) {
-                try {
-                    Future<?> future = (Future<?>) r;
-                    if (future.isDone()) {
-                        future.get();
-                    }
-                } catch (CancellationException ce) {
-                    t = ce;
-                } catch (ExecutionException ee) {
-                    t = ee.getCause();
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt(); // ignore/reset
-                }
-            }
-            if (t != null) {
-                throw new PicardException(t.getMessage(), t);
-            }
-        }
-    }
-
 
     private class CompletedWorkChecker implements Runnable {
 
@@ -373,7 +295,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
         @Override
         public void run() {
             while (currentTileIndex < tiles.size()) {
-                Integer currentTile = tiles.get(currentTileIndex);
+                final Integer currentTile = tiles.get(currentTileIndex);
                 if (completedWork.containsKey(currentTile)) {
                     log.info("Writing out tile " + currentTile);
                     completedWork.get(currentTile).forEach(writer -> barcodeWriterThreads.get(writer.getBarcode()).submit(writer));
@@ -381,7 +303,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
                 } else {
                     try {
                         Thread.sleep(5000);
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         throw new PicardException(e.getMessage(), e);
                     }
                 }

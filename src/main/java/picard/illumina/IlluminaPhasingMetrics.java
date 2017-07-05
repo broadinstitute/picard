@@ -50,7 +50,7 @@ public class IlluminaPhasingMetrics extends MetricBase {
     /** Median pre-phasing value across all tiles in a lane, applied to the first and second template reads */
     public double PREPHASING_APPLIED;
     /** Calculate the median phasing & prephasing values for a lane's tiles and create the appropriate IlluminaPhasingMetrics for them */
-    public static Collection<IlluminaPhasingMetrics> getPhasingMetricsForTiles(final long lane, final Collection<Tile> tilesForLane, boolean usePercentage) {
+    public static Collection<IlluminaPhasingMetrics> getPhasingMetricsForTiles(final long lane, final Collection<Tile> tilesForLane, final boolean usePercentage) {
         final LanePhasingMetricsCollector lanePhasingMetricsCollector = new LanePhasingMetricsCollector(tilesForLane, usePercentage);
         final Collection<IlluminaPhasingMetrics> phasingMetrics = new ArrayList<IlluminaPhasingMetrics>();
         for (final TileTemplateRead tileTemplateRead : lanePhasingMetricsCollector.getMedianPhasingMap().keySet()) {

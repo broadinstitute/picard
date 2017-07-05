@@ -31,7 +31,6 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
-import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Iso8601Date;
@@ -44,7 +43,7 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Illumina;
-import picard.illumina.ExtractIlluminaBarcodes.BarcodeMetric;
+import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.util.AdapterPair;
@@ -255,22 +254,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Option(doc = "The list of tags to store each molecular index.  The number of tags should match the number of molecular indexes.", optional = true)
     public List<String> TAG_PER_MOLECULAR_INDEX;
 
-    @Option(doc = "Use the new converter", optional = true)
-    public boolean USE_NEW_CONVERTER = false;
-
-    @Option(doc = "Maximum mismatches for a barcode to be considered a match.")
-    public int MAX_MISMATCHES = 1;
-
-    @Option(doc = "Minimum difference between number of mismatches in the best and second best barcodes for a barcode to be considered a match.")
-    public int MIN_MISMATCH_DELTA = 1;
-
-    @Option(doc = "Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.")
-    public int MAX_NO_CALLS = 2;
-
-
-    @Option(doc = "Per-barcode and per-lane metrics written to this file.", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME, optional = true)
-    public File METRICS_FILE;
-
     private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<>();
     private ReadStructure readStructure;
     private BasecallsConverter<SAMRecordsForCluster> basecallsConverter;
@@ -287,7 +270,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      * Prepares loggers, initiates garbage collection thread, parses arguments and initialized variables appropriately/
      */
     private void initialize() {
-        BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
+        final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
 
         if (OUTPUT != null) {
             IOUtil.assertFileIsWritable(OUTPUT);
@@ -298,7 +281,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         if (OUTPUT != null) {
-            barcodeSamWriterMap.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, buildSamHeaderParameters(null), !USE_NEW_CONVERTER));
+            barcodeSamWriterMap.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, buildSamHeaderParameters(null), true));
         } else {
             populateWritersFromLibraryParams();
         }
@@ -311,27 +294,19 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             adapters.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
         }
 
-        if (USE_NEW_CONVERTER) {
-            final MetricsFile<BarcodeMetric, Integer> metrics = getMetricsFile();
-
-            if (METRICS_FILE != null) {
-                IOUtil.assertFileIsWritable(METRICS_FILE);
-            } else {
-                log.warn("No METRIC_FILE specified. Barcode metrics will not be generated.");
-            }
+        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
+            if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
             basecallsConverter = new NewIlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
                     barcodeSamWriterMap, true, Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
                     TMP_DIR, NUM_PROCESSORS,
                     FIRST_TILE, TILE_LIMIT, new QueryNameComparator(),
                     new Codec(numOutputRecords),
-                    SAMRecordsForCluster.class, bclQualityEvaluationStrategy,
-                    this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES, MAX_NO_CALLS,
-                    MAX_MISMATCHES, MIN_MISMATCH_DELTA, MINIMUM_QUALITY, metrics, METRICS_FILE);
+                    SAMRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES);
         } else {
             basecallsConverter = new IlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
                     barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE / numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
                     FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class,
-                    bclQualityEvaluationStrategy, this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
+                    bclQualityEvaluationStrategy, APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
         }
         /*
          * Be sure to pass the outputReadStructure to ClusterDataToSamConverter, which reflects the structure of the output cluster
@@ -442,7 +417,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             }
 
             final SAMFileWriterWrapper writer = buildSamFileWriter(new File(row.getField("OUTPUT")),
-                    row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), samHeaderParams, !USE_NEW_CONVERTER);
+                    row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), samHeaderParams, true);
             barcodeSamWriterMap.put(key, writer);
         }
         if (barcodeSamWriterMap.isEmpty()) {
