@@ -53,6 +53,9 @@ import java.util.*;
  */
 public class HaplotypeMap {
     public static final String HET_GENOTYPE_FOR_PHASING = "HetGenotypeForPhasing";
+    public static final String SYNTHETIC_PHASESET_PREFIX = "Synthetic";
+    public static final String PHASESET_PREFIX = "PhaseSet";
+
     private final List<HaplotypeBlock> haplotypeBlocks = new ArrayList<>();
     private final Map<Snp, HaplotypeBlock> haplotypesBySnp = new HashMap<>();
     private final Map<String, HaplotypeBlock> haplotypesBySnpName = new HashMap<>();
@@ -60,6 +63,8 @@ public class HaplotypeMap {
     private final Map<String,Snp> snpsByPosition = new HashMap<>();
     private IntervalList intervals;
     private SAMFileHeader header;
+
+
 
     /**
      * Constructs a HaplotypeMap from the provided file.
@@ -74,8 +79,7 @@ public class HaplotypeMap {
                 throw new IllegalStateException("Haplotype map VCF file must contain header: " + file.getAbsolutePath());
             }
 
-            header = new SAMFileHeader(dict);
-            initialize(header);
+            initialize(new SAMFileHeader(dict));
 
             final Map<String, HaplotypeBlock> anchorToHaplotype = new HashMap<>();
 
@@ -86,6 +90,7 @@ public class HaplotypeMap {
                 }
 
                 final Genotype gc = vc.getGenotype(0); // may be null
+                final boolean hasGc = gc != null;
 
                 if (vc.getAlternateAlleles().size() != 1) {
                     throw new IllegalStateException("Haplotype map VCF file must contain exactly one alternate allele per site: " + vc.toString());
@@ -99,12 +104,13 @@ public class HaplotypeMap {
                     throw new IllegalStateException("Haplotype map VCF Variants must have an '"+ VCFConstants.ALLELE_FREQUENCY_KEY + "' INFO field: " + vc.toString());
                 }
 
-                if (gc != null && gc.isPhased() && !gc.hasExtendedAttribute(VCFConstants.PHASE_SET_KEY)) {
-                    throw new IllegalStateException("Haplotype map VCF Variants' genotypes that are phased must have a PhaseSet ("+VCFConstants.PHASE_SET_KEY+")" + vc.toString());
+
+                if (hasGc && gc.isPhased() && !gc.hasExtendedAttribute(VCFConstants.PHASE_SET_KEY)) {
+                    throw new IllegalStateException("Haplotype map VCF Variants' genotypes that are phased must have a PhaseSet (" + VCFConstants.PHASE_SET_KEY+")" + vc.toString());
                 }
 
-                if (gc != null && gc.isPhased() && !gc.isHet()) {
-                    throw new IllegalStateException("Haplotype map VCF Variants' genotypes that are phased must have a HET genotype" + vc.toString());
+                if (hasGc && gc.isPhased() && !gc.isHet()) {
+                    throw new IllegalStateException("Haplotype map VCF Variants' genotypes that are phased must be HET" + vc.toString());
                 }
 
                 // Then parse them out
@@ -116,7 +122,7 @@ public class HaplotypeMap {
                 final byte var = vc.getAlternateAllele(0).getBases()[0];
 
                 final double temp_maf = vc.getAttributeAsDouble(VCFConstants.ALLELE_FREQUENCY_KEY, 0D);
-                final boolean swapped = gc != null && !gc.getAllele(0).equals(vc.getReference());
+                final boolean swapped = hasGc && !gc.getAllele(0).equals(vc.getReference());
 
                 final byte major, minor;
                 final double maf;
@@ -150,10 +156,10 @@ public class HaplotypeMap {
     static private String anchorFromVc(final VariantContext vc) {
         final Genotype genotype = vc.getGenotype(0);
 
-        if (genotype == null || !genotype.hasExtendedAttribute(VCFConstants.PHASE_SET_KEY) ) {
-           return "Synthetic_"+vc.getContig()+"_"+vc.getStart();
+        if (genotype == null || !genotype.hasExtendedAttribute(VCFConstants.PHASE_SET_KEY)) {
+            return SYNTHETIC_PHASESET_PREFIX + "_" + vc.getContig() + "_" + vc.getStart();
         } else {
-           return "PhaseSet_"+vc.getContig()+"_"+genotype.getExtendedAttribute(VCFConstants.PHASE_SET_KEY);
+            return PHASESET_PREFIX + "_" + vc.getContig() + "_" + genotype.getExtendedAttribute(VCFConstants.PHASE_SET_KEY);
         }
     }
 
@@ -388,17 +394,17 @@ public class HaplotypeMap {
 
         for( final Snp snp : snps) {
             final ReferenceSequence seq = ref.getSubsequenceAt(snp.getChrom(), snp.getPos(), snp.getPos());
-            if(seq.getBases()[0]==snp.getAllele1()) {
+            if (seq.getBases()[0] == snp.getAllele1()) {
                 allele1MatchesReference.put(snp, true);
-            } else if(seq.getBases()[0]==snp.getAllele2()) {
+            } else if (seq.getBases()[0] == snp.getAllele2()) {
                 allele1MatchesReference.put(snp, false);
             } else {
-                throw new RuntimeException("One of the two alleles should agree with the reference: "+ snp.toString());
+                throw new RuntimeException("One of the two alleles should agree with the reference: " + snp.toString());
             }
         }
 
         for (final HaplotypeBlock block : this.getHaplotypes()) {
-            Snp anchorSnp=null;
+            Snp anchorSnp = null;
             final SortedSet<Snp> blocksSnps = new TreeSet<>(block.getSnps());
 
             for (final Snp snp : blocksSnps) {

@@ -40,8 +40,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 
-import static picard.fingerprint.HaplotypeMap.HET_GENOTYPE_FOR_PHASING;
-
 /**
  */
 public class HaplotypeMapTest {
@@ -128,7 +126,7 @@ public class HaplotypeMapTest {
         final VCFFileReader reader = new VCFFileReader(temp);
 
         Assert.assertEquals(reader.getFileHeader().getNGenotypeSamples(), 1, "VCF should have exactly one sample");
-        Assert.assertEquals(reader.getFileHeader().getSampleNamesInOrder().get(0), HET_GENOTYPE_FOR_PHASING, "VCF sole sample should be " + HET_GENOTYPE_FOR_PHASING);
+        Assert.assertEquals(reader.getFileHeader().getSampleNamesInOrder().get(0), HaplotypeMap.HET_GENOTYPE_FOR_PHASING, "VCF sole sample should be " + HaplotypeMap.HET_GENOTYPE_FOR_PHASING);
 
         final Iterator<VariantContext> iter = reader.iterator();
         final VariantContext first = iter.next();
