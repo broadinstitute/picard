@@ -24,15 +24,14 @@
 
 package picard.analysis;
 
+import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.util.MathUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.io.File;
+import java.util.*;
 
 /**
  * Created by David Benjamin on 5/13/15.
@@ -336,5 +335,30 @@ public class TheoreticalSensitivity {
         }
 
         return trimmedDistribution;
+    }
+
+    public static void writeOutput(File theoreticalSensitivityOutput, MetricsFile<TheoreticalSensitivityMetrics, Double> tsOut, Histogram depthHistogram, Histogram baseQHistogram) {
+        if (theoreticalSensitivityOutput != null) {
+            final double[] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
+            final double[] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(baseQHistogram);
+            final Double alleleFractionValues[] = new Double[]{0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5};
+            final List<Double> alleleFractions = new ArrayList<>(Arrays.asList(alleleFractionValues));
+
+            final TheoreticalSensitivityMetrics theoreticalSensitivityMetrics = new TheoreticalSensitivityMetrics();
+            final int theoreticalHetSensitivitySampleSize = 10000;
+
+            theoreticalSensitivityMetrics.HET_SENSITIVITY_LOD3_0 = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, 3.0);
+            theoreticalSensitivityMetrics.HET_SENSITIVITY_LOD6_2 = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, 6.2);
+            double logOddsThreshold = 6.2; // This threshold is used because it is the value used for MuTect2.
+
+            Histogram<Double> sensitivityHistogram = new Histogram<Double>();
+            for (Double alleleFraction : alleleFractions) {
+                sensitivityHistogram.increment(alleleFraction, TheoreticalSensitivity
+                        .theoreticalSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, logOddsThreshold, alleleFraction));
+            }
+            tsOut.addMetric(theoreticalSensitivityMetrics);
+            tsOut.addHistogram(sensitivityHistogram);
+            tsOut.write(theoreticalSensitivityOutput);
+        }
     }
 }

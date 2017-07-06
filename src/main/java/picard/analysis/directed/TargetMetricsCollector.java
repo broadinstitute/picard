@@ -124,6 +124,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
     private static final double LOG_ODDS_THRESHOLD = 3.0;
 
+    private final File theoreticalSensitivityOutput = null;
+
     private final int minimumMappingQuality;
     private final int minimumBaseQuality;
     private final boolean clipOverlappingReads;
@@ -625,6 +627,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             calculateTargetCoverageMetrics();
             calculateTheoreticalHetSensitivity();
+            if(theoreticalSensitivityOutput != null) {
+                TheoreticalSensitivity.writeOutput(theoreticalSensitivityOutput, getMetricsFile(), unfilteredDepthHistogram, unfilteredBaseQHistogram);
+            }
             calculateGcMetrics();
             emitPerBaseCoverageIfRequested();
         }

@@ -106,7 +106,7 @@ static final String USAGE_DETAILS = "This tool takes a SAM/BAM file input and co
     public boolean CLIP_OVERLAPPING_READS = true;
 
     @Option(doc = "Output theoretical sensitivities for variable allele fraction.", optional=true)
-    public File TheoreticalSensitivityOutput;
+    public File THEORETICAL_SENSITIVITY_OUTPUT;
 
     @Override
     protected IntervalList getProbeIntervals() {

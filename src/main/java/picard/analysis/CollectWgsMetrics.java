@@ -47,6 +47,7 @@ import picard.util.MathUtil;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -471,28 +472,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         out.write(OUTPUT);
 
         if(THEORETICAL_SENSITIVITY_OUTPUT != null) {
-            final double[] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(collector.getUnfilteredDepthHistogram());
-            final double[] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(collector.getUnfilteredBaseQHistogram());
-
-            collector.getUnfilteredBaseQHistogram();
-            collector.getUnfilteredDepthHistogram();
-
-            TheoreticalSensitivityMetrics theoreticalSensitivityMetrics = new TheoreticalSensitivityMetrics();
-            int theoreticalHetSensitivitySampleSize = 10000;
-
-            double logOddsThreshold = 6.2; // This threshold is used because it is the value used for MuTect2.
-            theoreticalSensitivityMetrics.SENSITIVITY_AT_0_1 = TheoreticalSensitivity.theoreticalSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, logOddsThreshold, 0.001);
-            theoreticalSensitivityMetrics.SENSITIVITY_AT_0_5 = TheoreticalSensitivity.theoreticalSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, logOddsThreshold, 0.005);
-            theoreticalSensitivityMetrics.SENSITIVITY_AT_01 = TheoreticalSensitivity.theoreticalSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, logOddsThreshold, 0.01);
-            theoreticalSensitivityMetrics.SENSITIVITY_AT_02 = TheoreticalSensitivity.theoreticalSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, logOddsThreshold, 0.02);
-            theoreticalSensitivityMetrics.SENSITIVITY_AT_05 = TheoreticalSensitivity.theoreticalSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, logOddsThreshold, 0.05);
-            theoreticalSensitivityMetrics.SENSITIVITY_AT_10 = TheoreticalSensitivity.theoreticalSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, logOddsThreshold, 0.10);
-            theoreticalSensitivityMetrics.SENSITIVITY_AT_30 = TheoreticalSensitivity.theoreticalSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, logOddsThreshold, 0.30);
-            theoreticalSensitivityMetrics.SENSITIVITY_AT_50 = TheoreticalSensitivity.theoreticalSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, logOddsThreshold, 0.50);
-
-            final MetricsFile<TheoreticalSensitivityMetrics, Double> tsOut = getMetricsFile();
-            tsOut.addMetric(theoreticalSensitivityMetrics);
-            tsOut.write(THEORETICAL_SENSITIVITY_OUTPUT);
+            TheoreticalSensitivity.writeOutput(THEORETICAL_SENSITIVITY_OUTPUT, getMetricsFile(), collector.getUnfilteredDepthHistogram(),collector.getUnfilteredBaseQHistogram());
         }
 
         return 0;
