@@ -445,12 +445,25 @@ public class RevertSamTest extends CommandLineProgramTest {
     }
 
     @Test(expectedExceptions = PicardException.class)
-    public void testNoRgInfo() {
+    public void testNoRgInfoOutputByRg() {
         final String [] args = new String[]{
                 "I=testdata/picard/sam/bam2fastq/paired/bad/missing-rg-info.sam",
                 "OUTPUT_BY_READGROUP=true",
                 "O=."
         };
         runPicardCommandLine(args);
+    }
+
+    @Test
+    public void testNoRgInfoSanitize() throws Exception {
+        final File output = File.createTempFile("no-rg-reverted", ".sam");
+        output.deleteOnExit();
+        final String [] args = new String[]{
+                "I=testdata/picard/sam/bam2fastq/paired/bad/missing-rg-info.sam",
+                "SANITIZE=true",
+                "O=" + output.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        verifyPositiveResults(output, new RevertSam(), true, true, false, false, null, 240, null, null);
     }
 }
