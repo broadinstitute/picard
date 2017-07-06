@@ -1,0 +1,80 @@
+##fileformat=VCFv4.1
+##ApplyRecalibration="analysis_type=ApplyRecalibration input_file=[] read_buffer_size=null phone_home=NO_ET gatk_key=/humgen/gsa-hpprojects/GATK/data/gatk_user_keys/gsamembers_broadinstitute.org.key read_filter=[] intervals=null excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/humgen/gsa-hpprojects/GATK/bundle/current/b37/human_g1k_v37.fasta nonDeterministicRandomSeed=false downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=1000 baq=OFF baqGapOpenPenalty=40.0 performanceLog=null useOriginalQualities=false BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 defaultBaseQualities=-1 validation_strictness=SILENT remove_program_records=false keep_program_records=false unsafe=null num_threads=1 num_cpu_threads=null num_io_threads=null num_bam_file_handles=null read_group_black_list=null pedigree=[] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false logging_level=INFO log_to_file=null help=false input=[(RodBinding name=input source=/broad/hptmp/ami/tmp/CEUTrio_UG_Both_WG/CEUTrio.HiSeq.WGS.b37.listindel.unfiltered.vcf)] recal_file=(RodBinding name=recal_file source=/broad/hptmp/ami/tmp/CEUTrio_UG_Both_WG/CEUTrio.HiSeq.WGS.b37.listindel.recal) tranches_file=/broad/hptmp/ami/tmp/CEUTrio_UG_Both_WG/CEUTrio.HiSeq.WGS.b37.listindel.tranches out=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub no_cmdline_in_header=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub sites_only=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub bcf=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub ts_filter_level=95.0 ignore_filter=null mode=INDEL filter_mismatching_base_and_quals=false"
+##CombineVariants="analysis_type=CombineVariants input_file=[] read_buffer_size=null phone_home=STANDARD gatk_key=null read_filter=[] intervals=null excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/humgen/gsa-hpprojects/GATK/bundle/current/b37/human_g1k_v37.fasta nonDeterministicRandomSeed=false downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=1000 baq=OFF baqGapOpenPenalty=40.0 performanceLog=null useOriginalQualities=false BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 defaultBaseQualities=-1 validation_strictness=SILENT remove_program_records=false keep_program_records=false unsafe=null num_threads=1 num_cpu_threads=null num_io_threads=null num_bam_file_handles=null read_group_black_list=null pedigree=[] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false logging_level=INFO log_to_file=null help=false variant=[(RodBinding name=variant source=CEUTrio.HiSeq.WGS.b37.listsnp.recalibrated.filtered.vcf), (RodBinding name=variant2 source=CEUTrio.HiSeq.WGS.b37.listindel.recalibrated.filtered.vcf)] out=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub no_cmdline_in_header=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub sites_only=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub bcf=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub genotypemergeoption=UNSORTED filteredrecordsmergetype=KEEP_IF_ANY_UNFILTERED multipleallelesmergetype=BY_TYPE rod_priority_list=null printComplexMerges=false filteredAreUncalled=false minimalVCF=false setKey=set assumeIdenticalSamples=true minimumN=1 suppressCommandLineHeader=false mergeInfoWithMaxAC=false filter_mismatching_base_and_quals=false"
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">
+##contig=<ID=chrM,length=16571,assembly=HG18>
+##contig=<ID=chr1,length=247249719,assembly=HG18>
+##contig=<ID=chr2,length=242951149,assembly=HG18>
+##contig=<ID=chr3,length=199501827,assembly=HG18>
+##contig=<ID=chr4,length=191273063,assembly=HG18>
+##contig=<ID=chr5,length=180857866,assembly=HG18>
+##contig=<ID=chr6,length=170899992,assembly=HG18>
+##contig=<ID=chr7,length=158821424,assembly=HG18>
+##contig=<ID=chr8,length=146274826,assembly=HG18>
+##contig=<ID=chr9,length=140273252,assembly=HG18>
+##contig=<ID=chr10,length=135374737,assembly=HG18>
+##contig=<ID=chr11,length=134452384,assembly=HG18>
+##contig=<ID=chr12,length=132349534,assembly=HG18>
+##contig=<ID=chr13,length=114142980,assembly=HG18>
+##contig=<ID=chr14,length=106368585,assembly=HG18>
+##contig=<ID=chr15,length=100338915,assembly=HG18>
+##contig=<ID=chr16,length=88827254,assembly=HG18>
+##contig=<ID=chr17,length=78774742,assembly=HG18>
+##contig=<ID=chr18,length=76117153,assembly=HG18>
+##contig=<ID=chr19,length=63811651,assembly=HG18>
+##contig=<ID=chr20,length=62435964,assembly=HG18>
+##contig=<ID=chr21,length=46944323,assembly=HG18>
+##contig=<ID=chr22,length=49691432,assembly=HG18>
+##contig=<ID=chrX,length=154913754,assembly=HG18>
+##contig=<ID=chrY,length=57772954,assembly=HG18>
+##contig=<ID=chr1_random,length=1663265,assembly=HG18>
+##contig=<ID=chr2_random,length=185571,assembly=HG18>
+##contig=<ID=chr3_random,length=749256,assembly=HG18>
+##contig=<ID=chr4_random,length=842648,assembly=HG18>
+##contig=<ID=chr5_random,length=143687,assembly=HG18>
+##contig=<ID=chr6_random,length=1875562,assembly=HG18>
+##contig=<ID=chr7_random,length=549659,assembly=HG18>
+##contig=<ID=chr8_random,length=943810,assembly=HG18>
+##contig=<ID=chr9_random,length=1146434,assembly=HG18>
+##contig=<ID=chr10_random,length=113275,assembly=HG18>
+##contig=<ID=chr11_random,length=215294,assembly=HG18>
+##contig=<ID=chr13_random,length=186858,assembly=HG18>
+##contig=<ID=chr15_random,length=784346,assembly=HG18>
+##contig=<ID=chr16_random,length=105485,assembly=HG18>
+##contig=<ID=chr17_random,length=2617613,assembly=HG18>
+##contig=<ID=chr18_random,length=4262,assembly=HG18>
+##contig=<ID=chr19_random,length=301858,assembly=HG18>
+##contig=<ID=chr21_random,length=1679693,assembly=HG18>
+##contig=<ID=chr22_random,length=257318,assembly=HG18>
+##contig=<ID=chrX_random,length=1719168,assembly=HG18>
+##reference=file:///humgen/gsa-hpprojects/GATK/bundle/current/b37/human_g1k_v37.fasta
+##source=Yossi Farjoun Manual Port of Picard/testdata/picard/fingerprint/haplotypeMap.txt
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Dummy
+chr1	13900000	rs1	T	C	.	.	AF=0.159601	GT	0/1
+chr1	14600000	rs2	A	G	.	.	AF=0.223794	GT:PS	0/1:14600000
+chr2	80000000	rs3	A	G	.	.	AF=0.437188	GT:PS	0/1:80000000
+chr2	67000000	rs4	G	A	.	.	AF=0.447215	GT:PS	0/1:67000000
+chr2	223500000	rs5	C	A	.	.	AF=0.605985	GT:PS	0/1:223500000
+chr3	17000000	rs6	C	T	.	.	AF=0.623026	GT:PS	0/1:17000000
+chr3	37600000	rs7	T	C	.	.	AF=0.740000	GT:PS	0|1:37600000
+chr3	37600100	rs8	C	T	.	.	AF=0.260000	GT:PS	1|0:37600000
+chr3	153300000	rs9	T	A	.	.	AF=0.722731	GT	0/1
+chr4	26700000	rs10	T	G	.	.	AF=0.205686	GT	0/1
+chr5	88400000	rs11	C	T	.	.	AF=0.558528	GT	0/1
+chr6	79400000	rs12	T	C	.	.	AF=0.212500	GT:PS	0|1:79400000
+chr6	79400200	rs13	C	A	.	.	AF=0.258333	GT:PS	0|1:79400000
+chr6	79400600	rs14	G	A	.	.	AF=0.256803	GT:PS	1|0:79400000
+chr6	153300000	rs15	T	A	.	.	AF=0.452579	GT	0/1
+chr7	86800000	rs16	A	G	.	.	AF=0.662917	GT	0/1
+chr8	71100000	rs17	A	G	.	.	AF=0.392887	GT	0/1
+chr10	129000000	rs18	G	A	.	.	AF=0.228188	GT	0/1
+chr13	34100000	rs19	T	C	.	.	AF=0.425957	GT	0/1
+chr14	95100000	rs20	A	G	.	.	AF=0.376667	GT	0/1
+chr15	45600000	rs21	C	T	.	.	AF=0.296296	GT	0/1
+chr16	49600000	rs22	G	C	.	.	AF=0.547421	GT	0/1
+chr17	20700000	rs23	A	G	.	.	AF=0.175000	GT	0/1
+chr17	40400000	rs24	A	T	.	.	AF=0.628333	GT	0/1
+chr22	31500000	rs25	A	G	.	.	AF=0.554863	GT	0/1
+chrX	24000000	rs26	T	C	.	.	AF=0.706000	GT	0/1

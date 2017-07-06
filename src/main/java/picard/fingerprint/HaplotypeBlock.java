@@ -150,6 +150,7 @@ public class HaplotypeBlock implements Comparable<HaplotypeBlock> {
         int retval = this.chrom.compareTo(that.chrom);
         if (retval == 0) retval = this.start - that.start;
         if (retval == 0) retval = this.end   - that.end;
+
         return retval;
     }
 
