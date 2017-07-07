@@ -108,6 +108,9 @@ public class RevertSam extends CommandLineProgram {
             "Will output a BAM/SAM file per read group. By default, all outputs will be in BAM format. " +
             "However, outputs will be in SAM format if the input path ends with '.sam', or CRAM format if it ends with '.cram'." +
             " This behaviour can be overriden with OUTPUT_BY_READGROUP_FILE_FORMAT option."+
+            "<p>Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to " +
+            "LENIENT or SILENT if the failures are expected to be obviated by the reversion process " +
+            "(e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).</p>" +
             "<hr />";
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")
     public File INPUT;
