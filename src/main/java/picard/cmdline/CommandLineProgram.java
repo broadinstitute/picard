@@ -107,10 +107,10 @@ public abstract class CommandLineProgram {
     @Option(doc="Google Genomics API client_secrets.json file path.", common = true)
     public String GA4GH_CLIENT_SECRETS="client_secrets.json";
 
-    @Option(shortName = "use_jdk_deflater", doc = "Use the JDK Deflater instead of the Intel Deflater for writing with BlockCompressedOutputStreams", common = true)
+    @Option(shortName = "use_jdk_deflater", doc = "Use the JDK Deflater instead of the Intel Deflater for writing compressed output", common = true)
     public Boolean USE_JDK_DEFLATER = false;
 
-    @Option(shortName = "use_jdk_inflater", doc = "Use the JDK Inflater instead of the Intel Inflater for reading with BlockGunzippers", common = true)
+    @Option(shortName = "use_jdk_inflater", doc = "Use the JDK Inflater instead of the Intel Inflater for reading compressed input", common = true)
     public Boolean USE_JDK_INFLATER = false;
     
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
@@ -218,7 +218,7 @@ public abstract class CommandLineProgram {
                     new Date(), System.getProperty("user.name"), InetAddress.getLocalHost().getHostName(),
                     System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"),
                     System.getProperty("java.vm.name"), System.getProperty("java.runtime.version"),
-                    usingIntelDeflater ? "Jdk" : "Intel", usingIntelInflater ? "Jdk" : "Intel",
+                    usingIntelDeflater ? "Intel" : "Jdk", usingIntelInflater ? "Intel" : "Jdk",
                     commandLineParser.getVersion());
                 System.err.println(msg);
             }
