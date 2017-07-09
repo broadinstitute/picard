@@ -24,7 +24,6 @@
 
 package picard.analysis;
 
-import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Log;
@@ -302,11 +301,13 @@ public class TheoreticalSensitivity {
      */
     public static double theoreticalSensitivity(final double[] depthDistribution, final double[] qualityDistribution,
                                                 final int sampleSize, final double logOddsThreshold, final double alleleFraction) {
+        if(alleleFraction > 1.0 || alleleFraction < 0.0) {
+            throw new PicardException("Allele fractions must be between 0 and 1.");
+        }
         double sensitivity = 0.0;
         for (int k = 0; k < depthDistribution.length; k++) {
-            if(k % 10 == 0) {
-                log.info("Calculting sensitivity at depth " + k + " of " + depthDistribution.length);
-                log.info("Sample Size " + sampleSize);
+            if(k % 100 == 0) {
+                log.info("Calculting sensitivity for allele fraction " + alleleFraction + " at depth " + k + " of " + depthDistribution.length);
             }
             sensitivity += sensitivityAtConstantDepth(k, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction) * depthDistribution[k];
         }
@@ -339,16 +340,11 @@ public class TheoreticalSensitivity {
         return trimmedDistribution;
     }
 
-    public static void writeOutput(File theoreticalSensitivityOutput, MetricsFile<TheoreticalSensitivityMetrics, Double> tsOut, int sampleSize, Histogram depthHistogram, Histogram baseQHistogram, List<Double> alleleFractions) {
-        System.out.println(depthHistogram);
-        System.out.println(baseQHistogram);
-        System.out.println(sampleSize);
-
+    public static void writeOutput(final File theoreticalSensitivityOutput, final MetricsFile<TheoreticalSensitivityMetrics, Double> tsOut, final int sampleSize,
+                                   final Histogram depthHistogram, final Histogram baseQHistogram, final List<Double> alleleFractions) {
         if (theoreticalSensitivityOutput != null) {
             final double[] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
             final double[] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(baseQHistogram);
-//            final Double alleleFractionValues[] = new Double[]{0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5};
-//            final List<Double> alleleFractions = new ArrayList<>(Arrays.asList(alleleFractionValues));
 
             final TheoreticalSensitivityMetrics theoreticalSensitivityMetrics = new TheoreticalSensitivityMetrics();
 
