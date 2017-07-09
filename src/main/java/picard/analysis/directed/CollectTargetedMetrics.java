@@ -15,12 +15,16 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.analysis.MetricAccumulationLevel;
+import picard.analysis.TheoreticalSensitivity;
+import picard.analysis.TheoreticalSensitivityMetrics;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.metrics.MultilevelMetrics;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -98,6 +102,11 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     @Option(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
     public int SAMPLE_SIZE=10000;
 
+    @Option(doc="Output for Theoretical Sensitivity metrics.  Default is null.", optional = true)
+    public File THEORETICAL_SENSITIVITY_OUTPUT;
+
+    @Option(doc="Allele fraction to run theoretical sensitivity on.", optional = true)
+    public List<Double> ALLELE_FRACTION = new LinkedList<>(Arrays.asList(0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5));
     /**
      * Asserts that files are readable and writable and then fires off an
      * HsMetricsCalculator instance to do the real work.
@@ -155,6 +164,11 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
         collector.addAllLevelsToFile(metrics);
 
         metrics.write(OUTPUT);
+
+        if(THEORETICAL_SENSITIVITY_OUTPUT != null) {
+            final MetricsFile<TheoreticalSensitivityMetrics, Double> theoreticalSensitivityMetrics = getMetricsFile();
+            TheoreticalSensitivity.writeOutput(THEORETICAL_SENSITIVITY_OUTPUT, theoreticalSensitivityMetrics, SAMPLE_SIZE, collector.getDepthHistogram(), collector.getBaseQualityHistogram(), ALLELE_FRACTION);
+        }
 
         CloserUtil.close(reader);
         return 0;

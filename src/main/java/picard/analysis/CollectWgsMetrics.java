@@ -46,10 +46,7 @@ import picard.filter.CountingPairedFilter;
 import picard.util.MathUtil;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
@@ -121,6 +118,9 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
 
     @Option(doc="Output for Theoretical Sensitivity metrics.  Default is null.", optional = true)
     public File THEORETICAL_SENSITIVITY_OUTPUT;
+
+    @Option(doc="Allele fraction to run theoretical sensitivity on.", optional = true)
+    public List<Double> ALLELE_FRACTION = new LinkedList<>(Arrays.asList(0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5));
 
     @Option(doc = "If true, fast algorithm is used.")
     public boolean USE_FAST_ALGORITHM = false;
@@ -472,7 +472,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         out.write(OUTPUT);
 
         if(THEORETICAL_SENSITIVITY_OUTPUT != null) {
-            TheoreticalSensitivity.writeOutput(THEORETICAL_SENSITIVITY_OUTPUT, getMetricsFile(), collector.getUnfilteredDepthHistogram(),collector.getUnfilteredBaseQHistogram());
+            TheoreticalSensitivity.writeOutput(THEORETICAL_SENSITIVITY_OUTPUT, getMetricsFile(), SAMPLE_SIZE, collector.getUnfilteredDepthHistogram(),collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION);
         }
 
         return 0;

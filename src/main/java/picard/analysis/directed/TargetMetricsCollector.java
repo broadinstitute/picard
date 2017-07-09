@@ -627,9 +627,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             calculateTargetCoverageMetrics();
             calculateTheoreticalHetSensitivity();
-            if(theoreticalSensitivityOutput != null) {
-                TheoreticalSensitivity.writeOutput(theoreticalSensitivityOutput, getMetricsFile(), unfilteredDepthHistogram, unfilteredBaseQHistogram);
-            }
             calculateGcMetrics();
             emitPerBaseCoverageIfRequested();
         }
@@ -925,6 +922,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         public String toString() {
             return "TargetedMetricCollector(interval=" + interval + ", depths = [" + StringUtil.intValuesToString(this.depths) + "])";
         }
+    }
+
+    public Histogram getBaseQualityHistogram() {
+        return unfilteredBaseQHistogram;
+    }
+
+    public Histogram getDepthHistogram() {
+        return unfilteredDepthHistogram;
     }
 }
 
