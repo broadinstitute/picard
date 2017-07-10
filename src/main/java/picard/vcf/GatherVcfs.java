@@ -106,7 +106,13 @@ public class GatherVcfs extends CommandLineProgram {
 
         for (final File f : inputFiles) {
             final VCFFileReader in = new VCFFileReader(f, false);
-            dict.assertSameDictionary(in.getFileHeader().getSequenceDictionary());
+            try {
+                dict.assertSameDictionary(in.getFileHeader().getSequenceDictionary());
+            } catch (final AssertionError e) {
+                log.error("File #1: " + inputFiles.get(0));
+                log.error("File #2: " + f);
+                throw e;
+            }
             final List<String> theseSamples = in.getFileHeader().getGenotypeSamples();
 
             if (!samples.equals(theseSamples)) {
