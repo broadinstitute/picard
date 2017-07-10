@@ -301,12 +301,12 @@ public class TheoreticalSensitivity {
      */
     public static double theoreticalSensitivity(final double[] depthDistribution, final double[] qualityDistribution,
                                                 final int sampleSize, final double logOddsThreshold, final double alleleFraction) {
-        if(alleleFraction > 1.0 || alleleFraction < 0.0) {
+        if (alleleFraction > 1.0 || alleleFraction < 0.0) {
             throw new PicardException("Allele fractions must be between 0 and 1.");
         }
         double sensitivity = 0.0;
         for (int k = 0; k < depthDistribution.length; k++) {
-            if(k % 100 == 0) {
+            if (k % 100 == 0) {
                 log.info("Calculting sensitivity for allele fraction " + alleleFraction + " at depth " + k + " of " + depthDistribution.length);
             }
             sensitivity += sensitivityAtConstantDepth(k, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction) * depthDistribution[k];
@@ -325,38 +325,50 @@ public class TheoreticalSensitivity {
 
         // Locate the index of the distribution where all the values remaining at
         // larger indices are zero.
-        for(endOfDistribution = distribution.length-1;endOfDistribution >= 0;endOfDistribution--) {
-            if(distribution[endOfDistribution] != 0) {
+        for (endOfDistribution = distribution.length-1;endOfDistribution >= 0;endOfDistribution--) {
+            if (distribution[endOfDistribution] != 0) {
                 break;
             }
         }
 
         // Remove trailing zeros.
         final double[] trimmedDistribution = new double[endOfDistribution+1];
-        for(int i = 0;i <= endOfDistribution;i++) {
+        for (int i = 0;i <= endOfDistribution;i++) {
             trimmedDistribution[i] = distribution[i];
         }
 
         return trimmedDistribution;
     }
 
+    /**
+     * This is a utility function
+     * @param theoreticalSensitivityOutput File to save to results ot theoretical sensitivity.
+     * @param tsOut MetricsFile object to save results of theoretical sensitivity to.
+     * @param sampleSize Number of samples to take for each depth.
+     * @param depthHistogram Histogram of depth distribution for sample.
+     * @param baseQHistogram Histogram of Phred-scaled quality scores.
+     * @param alleleFractions Allele fractions
+     */
     public static void writeOutput(final File theoreticalSensitivityOutput, final MetricsFile<TheoreticalSensitivityMetrics, Double> tsOut, final int sampleSize,
                                    final Histogram depthHistogram, final Histogram baseQHistogram, final List<Double> alleleFractions) {
         if (theoreticalSensitivityOutput != null) {
+            final double logOddsThreshold = 6.2; // This threshold is used because it is the value used for MuTect2.
             final double[] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
             final double[] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(baseQHistogram);
 
             final TheoreticalSensitivityMetrics theoreticalSensitivityMetrics = new TheoreticalSensitivityMetrics();
 
-            theoreticalSensitivityMetrics.HET_SENSITIVITY_LOD3_0 = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, sampleSize, 3.0);
-            theoreticalSensitivityMetrics.HET_SENSITIVITY_LOD6_2 = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, sampleSize, 6.2);
-            double logOddsThreshold = 6.2; // This threshold is used because it is the value used for MuTect2.
-
-            Histogram<Double> sensitivityHistogram = new Histogram<>();
+            // For each allele fraction in alleleFractions calculate theoretical sensitivity and add the results
+            // to the histogram sensitivityHistogram.
+            final Histogram<Double> sensitivityHistogram = new Histogram<>();
+            sensitivityHistogram.setBinLabel("allele_fraction");
+            sensitivityHistogram.setValueLabel("theoretical_sensitivity");
             for (Double alleleFraction : alleleFractions) {
                 sensitivityHistogram.increment(alleleFraction, TheoreticalSensitivity
                         .theoreticalSensitivity(depthDoubleArray, baseQDoubleArray, sampleSize, logOddsThreshold, alleleFraction));
             }
+
+            // Write out results to file.
             tsOut.addMetric(theoreticalSensitivityMetrics);
             tsOut.addHistogram(sensitivityHistogram);
             tsOut.write(theoreticalSensitivityOutput);

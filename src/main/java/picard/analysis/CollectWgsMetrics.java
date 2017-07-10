@@ -137,7 +137,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     private SAMFileHeader header = null;
 
     private final Log log = Log.getInstance(CollectWgsMetrics.class);
-    private static final double LOG_ODDS_THRESHOLD = 3;
+    private static final double LOG_ODDS_THRESHOLD = 3.0;
 
     /** Metrics for evaluating the performance of whole genome sequencing experiments. */
     public static class WgsMetrics extends MergeableMetricBase {
@@ -435,6 +435,9 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         if (INTERVALS != null) {
             IOUtil.assertFileIsReadable(INTERVALS);
         }
+        if (THEORETICAL_SENSITIVITY_OUTPUT != null) {
+            IOUtil.assertFileIsWritable(THEORETICAL_SENSITIVITY_OUTPUT);
+        }
 
         // it doesn't make sense for the locus accumulation cap to be lower than the coverage cap
         if (LOCUS_ACCUMULATION_CAP < COVERAGE_CAP) {
@@ -471,7 +474,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         processor.addToMetricsFile(out, INCLUDE_BQ_HISTOGRAM, dupeFilter, mapqFilter, pairFilter);
         out.write(OUTPUT);
 
-        if(THEORETICAL_SENSITIVITY_OUTPUT != null) {
+        if (THEORETICAL_SENSITIVITY_OUTPUT != null) {
             TheoreticalSensitivity.writeOutput(THEORETICAL_SENSITIVITY_OUTPUT, getMetricsFile(), SAMPLE_SIZE, collector.getUnfilteredDepthHistogram(),collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION);
         }
 

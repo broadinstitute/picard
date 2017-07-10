@@ -204,7 +204,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         final MetricsFile<TheoreticalSensitivityMetrics, Double> output = new MetricsFile<>();
         output.read(new FileReader("tso.metrics"));
 
-        Histogram h = output.getHistogram();
+        final Histogram h = output.getHistogram();
 
         // Ensure that the sensitivity calculated for the option ALLELE_FRACTION is correct
         Assert.assertEquals(h.get(additionalAlleleFraction).getValue(), additionalExpectedSensitivity, 0.01);
@@ -213,9 +213,9 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         Iterator<Double> alleleFraction = alleleFractions.iterator();
         Iterator<Double> expectedSensitivity = expectedSensitivities.iterator();
         Assert.assertEquals(alleleFractions.size(), expectedSensitivities.size(), "List of allele fractions to test is not the same size as the list of expected sensitivities.");
-        while(alleleFraction.hasNext() && expectedSensitivity.hasNext()) {
-            double af = h.get(alleleFraction.next()).getValue();
-            double es = expectedSensitivity.next();
+        while (alleleFraction.hasNext() && expectedSensitivity.hasNext()) {
+            final double af = h.get(alleleFraction.next()).getValue();
+            final double es = expectedSensitivity.next();
 
             Assert.assertEquals(af, es, 0.01);
         }

@@ -231,9 +231,9 @@ public class TheoreticalSensitivityTest {
         final File wgsMetricsFile = new File(TEST_DIR, "test_Solexa-332667.wgs_metrics");
         final File targetedMetricsFile = new File(TEST_DIR, "test_25103070136.targeted_pcr_metrics");
 
-        //These magic numbers come from a separate implementation of the code in R.
+        // These magic numbers come from a separate implementation of the code in R.
         return new Object[][]{
-                // expected sensitivity, metrics file, allele fraction, constant depth, sample size.
+                // Expected sensitivity, metrics file, allele fraction, constant depth, sample size.
                 {1.00, wgsMetricsFile, .5, 30, 10000},
                 {1.00, wgsMetricsFile, .5, 30, 10000},
                 {0.78, targetedMetricsFile, .1, 30, 10000},
@@ -254,7 +254,7 @@ public class TheoreticalSensitivityTest {
         final double[] qualityDistribution = TheoreticalSensitivity.normalizeHistogram(qualityHistogram);
 
         // We ensure that even using different random seeds we converge to roughly the same value.
-        for(int i = 0;i < 3;i++) {
+        for (int i = 0;i < 3;i++) {
             double result = TheoreticalSensitivity.sensitivityAtConstantDepth(depth, qualityDistribution, 3, sampleSize, alleleFraction, i);
             Assert.assertEquals(result, expected, tolerance);
         }
@@ -265,7 +265,8 @@ public class TheoreticalSensitivityTest {
         final File wgsMetricsFile = new File(TEST_DIR, "test_Solexa-332667.wgs_metrics");
 
         // This test acts primarily as an intergration test.  The sample size of 100
-        // is not quite large enough to converge properly
+        // is not quite large enough to converge properly, but is used for the purpose of
+        // keeping the compute time of the tests short.
         return new Object[][] {
                 {0.90, wgsMetricsFile,       .5, 100},
                 {0.77, wgsMetricsFile,       .3, 100},
@@ -311,7 +312,7 @@ public class TheoreticalSensitivityTest {
         };
     }
 
-    @Test (dataProvider = "equivalanceHetVsArbitrary")
+    @Test(dataProvider = "equivalanceHetVsArbitrary")
     public void testHetVsArbitrary(final File metricsFile, final double tolerance, final int sampleSize) throws Exception {
         // This test compares Theoretical Sensitivity for arbitrary allele fractions with the theoretical het sensitivity
         // model.  Since allele fraction of 0.5 is equivalent to a het, these should provide the same answer.
