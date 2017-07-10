@@ -35,6 +35,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
     private File tempSamFile;
     private File tempSamFileIndex;
     private File outfile;
+    private File tsOutfile; // Theoretical sensitivity file
     private File perTargetOutfile;
     private final static int LENGTH = 99;
     private final static int RANDOM_SEED = 51;
@@ -127,8 +128,10 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         //create output files for tests
         outfile = File.createTempFile("test", ".TargetedMetrics_Coverage");
         perTargetOutfile = File.createTempFile("perTarget", ".perTargetCoverage");
+        tsOutfile = File.createTempFile("test", ".TheoreticalSensitivityMetrics");
         outfile.deleteOnExit();
         perTargetOutfile.deleteOnExit();
+        tsOutfile.deleteOnExit();
     }
 
     @DataProvider(name = "targetedIntervalDataProvider")
@@ -173,7 +176,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
                 // This test is primarily used as an integration test since theoretical sensitivity doesn't converge
                 // well with a sample size of 10.  The sample size is set so low as to prevent the tests from taking
                 // too long to run.
-                {tempSamFile, outfile, perTargetOutfile, referenceFile, singleIntervals, 10,
+                {tempSamFile, outfile, tsOutfile, perTargetOutfile, referenceFile, singleIntervals, 10,
                         Arrays.asList(0.01, 0.05, 0.10,  0.30,  0.50), // Allele fraction
                         Arrays.asList(0.01, 0.59, 0.87,  0.99,  0.99), // Expected sensitivity
                         0.12, 0.94
@@ -182,7 +185,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "theoreticalSensitivityDataProvider")
-    public void runCollectTargetedMetricsTheoreticalSensitivityTest(final File input, final File outfile, final File perTargetOutfile, final String referenceFile,
+    public void runCollectTargetedMetricsTheoreticalSensitivityTest(final File input, final File outfile, final File tsOutfile, final File perTargetOutfile, final String referenceFile,
                                               final String targetIntervals, final int sampleSize, final List<Double> alleleFractions, final List<Double> expectedSensitivities,
                                               final double additionalAlleleFraction, final double additionalExpectedSensitivity) throws IOException {
 
@@ -195,14 +198,14 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
                 "LEVEL=ALL_READS",
                 "AMPLICON_INTERVALS=" + targetIntervals,
                 "ALLELE_FRACTION=" + additionalAlleleFraction,
-                "THEORETICAL_SENSITIVITY_OUTPUT=tso.metrics",
+                "THEORETICAL_SENSITIVITY_OUTPUT=" + tsOutfile.getAbsolutePath(),
                 "SAMPLE_SIZE=" + sampleSize
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<TheoreticalSensitivityMetrics, Double> output = new MetricsFile<>();
-        output.read(new FileReader("tso.metrics"));
+        output.read(new FileReader(tsOutfile.getAbsolutePath()));
 
         final Histogram h = output.getHistogram();
 
