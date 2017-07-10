@@ -120,7 +120,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     public File THEORETICAL_SENSITIVITY_OUTPUT;
 
     @Option(doc="Allele fraction to run theoretical sensitivity on.", optional = true)
-    public List<Double> ALLELE_FRACTION = new LinkedList<>(Arrays.asList(0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5));
+    public List<Double> ALLELE_FRACTION = new ArrayList<>(Arrays.asList(0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5));
 
     @Option(doc = "If true, fast algorithm is used.")
     public boolean USE_FAST_ALGORITHM = false;
