@@ -17,3 +17,6 @@ before_install:
 script: ./gradlew jacocoTestReport
 after_success:
   - ./gradlew coveralls
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+        ./gradlew uploadArchives;
+    fi
