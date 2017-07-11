@@ -73,10 +73,11 @@ public class DownsampleSam extends CommandLineProgram {
             "<pre>" +
             "java -jar picard.jar DownsampleSam \\<br />" +
             "      I=input.bam \\<br />" +
+            "      METRICS_FILE=downsample_metrics.txt \\<br />" +
             "      O=downsampled.bam" +
             "</pre>" +
             "<hr />";
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample. Starting v2.9.5, supports piping from stdin")
     public File INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM or BAM file to write.")
