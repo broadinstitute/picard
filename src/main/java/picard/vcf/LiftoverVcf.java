@@ -101,9 +101,15 @@ public class LiftoverVcf extends CommandLineProgram {
     public static final String FILTER_NO_TARGET = "NoTarget";
 
     /**
-     * Filter name to use when a target is lifted over, but the reference allele doens't match the new reference.
+     * Filter name to use when a target is lifted over, but the reference allele doesn't match the new reference.
      */
     public static final String FILTER_MISMATCHING_REF_ALLELE = "MismatchedRefAllele";
+
+    /**
+     * Filter name to use when an indel cannot be lifted over since it straddles two links which means
+     * that it is unclear what are the right alleles to be used.
+     */
+    public static final String FILTER_INDEL_STRADDLES_TWO_LINKS = "IndelStraddlesMultipleLinks";
 
     /**
      * Filters to be added to the REJECT file.
@@ -111,7 +117,8 @@ public class LiftoverVcf extends CommandLineProgram {
     private static final List<VCFFilterHeaderLine> FILTERS = CollectionUtil.makeList(
             new VCFFilterHeaderLine(FILTER_CANNOT_LIFTOVER_INDEL, "Indel falls into a reverse complemented region in the target genome."),
             new VCFFilterHeaderLine(FILTER_NO_TARGET, "Variant could not be lifted between genome builds."),
-            new VCFFilterHeaderLine(FILTER_MISMATCHING_REF_ALLELE, "Reference allele does not match reference genome sequence after liftover.")
+            new VCFFilterHeaderLine(FILTER_MISMATCHING_REF_ALLELE, "Reference allele does not match reference genome sequence after liftover."),
+            new VCFFilterHeaderLine(FILTER_INDEL_STRADDLES_TWO_LINKS, "Indel is straddling multiple links in the chain, and so the results are not well defined.")
     );
 
     /**
@@ -140,6 +147,8 @@ public class LiftoverVcf extends CommandLineProgram {
     private VariantContextWriter rejects;
     private final Log log = Log.getInstance(LiftoverVcf.class);
     private SortingCollection<VariantContext> sorter;
+
+    private long failedLiftover = 0, failedAlleleCheck = 0;
 
     @Override
     protected int doWork() {
@@ -193,7 +202,7 @@ public class LiftoverVcf extends CommandLineProgram {
         // Read the input VCF, lift the records over and write to the sorting
         // collection.
         ////////////////////////////////////////////////////////////////////////
-        long failedLiftover = 0, failedAlleleCheck = 0, total = 0;
+        long total = 0;
         log.info("Lifting variants over and sorting.");
 
         sorter = SortingCollection.newInstance(VariantContext.class,
@@ -210,16 +219,24 @@ public class LiftoverVcf extends CommandLineProgram {
             ++total;
             final Interval source = new Interval(ctx.getContig(), ctx.getStart(), ctx.getEnd(), false, ctx.getContig() + ":" + ctx.getStart() + "-" + ctx.getEnd());
             final Interval target = liftOver.liftOver(source, LIFTOVER_MIN_MATCH);
+
+            if (target == null) {
+                rejectVariant(ctx, FILTER_NO_TARGET);
+                continue;
+            }
+            if (ctx.getReference().length() != target.length()){
+                rejectVariant(ctx, FILTER_INDEL_STRADDLES_TWO_LINKS);
+                continue;
+            }
+
             final ReferenceSequence refSeq;
 
             // if the target is null OR (the target is reverse complemented AND the variant is a non-biallelic indel or mixed), then we cannot lift it over
-            if (target == null || (target.isNegativeStrand() && (ctx.isMixed() || (ctx.isIndel() && !ctx.isBiallelic())))) {
-                final String reason = (target == null) ? FILTER_NO_TARGET : FILTER_CANNOT_LIFTOVER_INDEL;
-                rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
-                failedLiftover++;
+            if (target.isNegativeStrand() && (ctx.isMixed() || ctx.isIndel() && !ctx.isBiallelic())) {
+                rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_INDEL);
+
             } else if (!refSeqs.containsKey(target.getContig())) {
-                rejects.add(new VariantContextBuilder(ctx).filter(FILTER_NO_TARGET).make());
-                failedLiftover++;
+                rejectVariant(ctx, FILTER_NO_TARGET);
 
                 final String missingContigMessage = "Encountered a contig, " + target.getContig() + " that is not part of the target reference.";
                 if (WARN_ON_MISSING_CONTIG) {
@@ -236,17 +253,13 @@ public class LiftoverVcf extends CommandLineProgram {
                 if (flippedIndel == null) {
                     throw new IllegalArgumentException("Unexpectedly found null VC. This should have not happened.");
                 } else {
-                    if (!tryToAddVariant(flippedIndel, refSeq, reverseComplementAlleleMap, ctx)){
-                        failedAlleleCheck++;
-                    }
+                    tryToAddVariant(flippedIndel, refSeq, reverseComplementAlleleMap, ctx);
                 }
             } else {
                 refSeq = refSeqs.get(target.getContig());
-                final VariantContext liftedVariant = liftSnp(ctx, target, refSeq);
+                final VariantContext liftedVariant = liftSimpleVariant(ctx, target);
 
-                if (!tryToAddVariant(liftedVariant, refSeq, reverseComplementAlleleMap, ctx)) {
-                    failedAlleleCheck++;
-                }
+                tryToAddVariant(liftedVariant, refSeq, reverseComplementAlleleMap, ctx);
             }
             progress.record(ctx.getContig(), ctx.getStart());
         }
@@ -278,6 +291,11 @@ public class LiftoverVcf extends CommandLineProgram {
         return 0;
     }
 
+    private void rejectVariant(final VariantContext ctx, final String reason) {
+        rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
+        failedLiftover++;
+    }
+
     /**
      *  utility function to attempt to add a variant. Checks that the reference allele still matches the reference (which may have changed)
      *
@@ -287,10 +305,9 @@ public class LiftoverVcf extends CommandLineProgram {
      * @param source the original {@link VariantContext} to use for putting the original location information into vc
      * @return true if successful, false if failed due to mismatching reference allele.
      */
-    private boolean tryToAddVariant(final VariantContext vc, final ReferenceSequence refSeq, final Map<Allele, Allele> alleleMap, final VariantContext source) {
+    private void tryToAddVariant(final VariantContext vc, final ReferenceSequence refSeq, final Map<Allele, Allele> alleleMap, final VariantContext source) {
 
         final VariantContextBuilder builder = new VariantContextBuilder(vc);
-
 
         builder.genotypes(fixGenotypes(source.getGenotypes(), alleleMap));
         builder.filters(source.getFilters());
@@ -308,7 +325,7 @@ public class LiftoverVcf extends CommandLineProgram {
         for (final Allele allele : builder.getAlleles()) {
             if (allele.isReference()) {
                 final byte[] ref = refSeq.getBases();
-                final String refString = StringUtil.bytesToString(ref, vc.getStart() - 1, vc.getEnd()-vc.getStart()+1);
+                final String refString = StringUtil.bytesToString(ref, vc.getStart() - 1, vc.getEnd() - vc.getStart() + 1);
 
                 if (!refString.equalsIgnoreCase(allele.getBaseString())) {
                     mismatchesReference = true;
@@ -322,18 +339,26 @@ public class LiftoverVcf extends CommandLineProgram {
                     .filter(FILTER_MISMATCHING_REF_ALLELE)
                     .attribute(ATTEMPTED_LOCUS, String.format("%s:%d-%d",vc.getContig(),vc.getStart(),vc.getEnd()))
                     .make());
-            return false;
+            failedAlleleCheck++;
         } else {
             sorter.add(builder.make());
-            return true;
         }
     }
 
-
-    protected static VariantContext liftSnp(final VariantContext source, final Interval target , final ReferenceSequence referenceSequence){
+    /** liftsOver snps on either positive or negative strand and biallelic indels on positive strand only
+     *
+     * @param source
+     * @param target
+     * @return
+     */
+    protected static VariantContext liftSimpleVariant(final VariantContext source, final Interval target){
         // Fix the alleles if we went from positive to negative strand
-        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(2);
 
+        if (target == null) return null;
+
+        if (source.getReference().length() != target.length()) {
+            return null;
+        }
         final List<Allele> alleles = new ArrayList<>();
 
         for (final Allele oldAllele : source.getAlleles()) {
@@ -342,7 +367,6 @@ public class LiftoverVcf extends CommandLineProgram {
             } else {
                 final Allele fixedAllele = Allele.create(SequenceUtil.reverseComplement(oldAllele.getBaseString()), oldAllele.isReference());
                 alleles.add(fixedAllele);
-                reverseComplementAlleleMap.put(oldAllele, fixedAllele);
             }
         }
 
@@ -369,9 +393,13 @@ public class LiftoverVcf extends CommandLineProgram {
         if (!source.isBiallelic()) return null;  //only supporting biallelic indels, for now.
 
         final Interval originalLocus = new Interval(source.getContig(), source.getStart(), source.getEnd());
-        final Locatable target = liftOver.liftOver(originalLocus);
+        final Interval target = liftOver.liftOver(originalLocus);
 
         if (target == null) return null;
+        if (!target.isNegativeStrand()) {
+            throw new IllegalArgumentException("Expecting a variant the is lifted over with an inversion. Got " +
+                    source + " maps to " + target.toString());
+        }
 
         // a boolean to protect against trying to access the -1 position in the reference array
         final boolean addToStart = target.getStart() > 1;
