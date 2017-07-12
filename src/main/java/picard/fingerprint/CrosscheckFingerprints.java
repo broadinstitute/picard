@@ -84,7 +84,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Option(shortName = "MO", optional = true,
             doc = "Optional output file to write matrix of LOD scores to. This is less informative than the metrics output " +
-                    "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity)." +
+                    "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity) ." +
                     "It is however sometimes easier to use visually.")
     public File MATRIX_OUTPUT = null;
 
@@ -100,8 +100,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     "\n\n" +
                     "LOD score 0 means equal likelihood" +
                     "that the groups match vs. come from different individuals, negative LOD scores mean N logs more likely " +
-                    "that the groups are from different individuals, and positive numbers mean N logs more likely that" +
-                    " the groups are from the sample individual. ")
+                    "that the groups are from different individuals, and positive numbers mean N logs more likely that " +
+                    "the groups are from the sample individual. ")
     public double LOD_THRESHOLD = 0;
 
     @Option(doc = "Specificies which data-type should be used as the basic comparison unit. Fingerprints from readgroups can " +
@@ -116,8 +116,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "marking has been overly aggressive and coverage is low.")
     public boolean ALLOW_DUPLICATE_READS = false;
 
-    @Option(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from" +
-            " the expected sample.")
+    @Option(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from " +
+            "the expected sample.")
     public double GENOTYPING_ERROR_RATE = 0.01;
 
     @Option(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.")
