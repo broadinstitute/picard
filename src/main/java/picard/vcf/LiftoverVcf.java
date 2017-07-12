@@ -106,10 +106,10 @@ public class LiftoverVcf extends CommandLineProgram {
     public static final String FILTER_MISMATCHING_REF_ALLELE = "MismatchedRefAllele";
 
     /**
-     * Filter name to use when an indel cannot be lifted over since it straddles two links which means
+     * Filter name to use when an indel cannot be lifted over since it straddles two intervals in a chain which means
      * that it is unclear what are the right alleles to be used.
      */
-    public static final String FILTER_INDEL_STRADDLES_TWO_LINKS = "IndelStraddlesMultipleLinks";
+    public static final String FILTER_INDEL_STRADDLES_TWO_INTERVALS = "IndelStraddlesMultipleIntevals";
 
     /**
      * Filters to be added to the REJECT file.
@@ -118,7 +118,7 @@ public class LiftoverVcf extends CommandLineProgram {
             new VCFFilterHeaderLine(FILTER_CANNOT_LIFTOVER_INDEL, "Indel falls into a reverse complemented region in the target genome."),
             new VCFFilterHeaderLine(FILTER_NO_TARGET, "Variant could not be lifted between genome builds."),
             new VCFFilterHeaderLine(FILTER_MISMATCHING_REF_ALLELE, "Reference allele does not match reference genome sequence after liftover."),
-            new VCFFilterHeaderLine(FILTER_INDEL_STRADDLES_TWO_LINKS, "Indel is straddling multiple links in the chain, and so the results are not well defined.")
+            new VCFFilterHeaderLine(FILTER_INDEL_STRADDLES_TWO_INTERVALS, "Indel is straddling multiple intervalss in the chain, and so the results are not well defined.")
     );
 
     /**
@@ -220,12 +220,20 @@ public class LiftoverVcf extends CommandLineProgram {
             final Interval source = new Interval(ctx.getContig(), ctx.getStart(), ctx.getEnd(), false, ctx.getContig() + ":" + ctx.getStart() + "-" + ctx.getEnd());
             final Interval target = liftOver.liftOver(source, LIFTOVER_MIN_MATCH);
 
+            // target is null when there is no good liftover for the context. This happens either when it fall in a gap
+            // where there isn't a chain, or if a large enough proportion of it is diminished by the "deletion" at the
+            // end of each interval in a chain.
             if (target == null) {
                 rejectVariant(ctx, FILTER_NO_TARGET);
                 continue;
             }
+
+            // the target is the lifted-over interval comprised of the start/stop of the variant context,
+            // if the sizes of target and ctx do not match, it means that the interval grew or shrank during
+            // liftover which must be due to straddling multiple intervals in the liftover chain.
+            // This would invalidate the indel as it isn't clear what the resulting alleles should be.
             if (ctx.getReference().length() != target.length()){
-                rejectVariant(ctx, FILTER_INDEL_STRADDLES_TWO_LINKS);
+                rejectVariant(ctx, FILTER_INDEL_STRADDLES_TWO_INTERVALS);
                 continue;
             }
 
@@ -351,10 +359,12 @@ public class LiftoverVcf extends CommandLineProgram {
      * @param target
      * @return
      */
-    protected static VariantContext liftSimpleVariant(final VariantContext source, final Interval target){
+    protected static VariantContext liftSimpleVariant(final VariantContext source, final Interval target) {
         // Fix the alleles if we went from positive to negative strand
 
-        if (target == null) return null;
+        if (target == null) {
+            return null;
+        }
 
         if (source.getReference().length() != target.length()) {
             return null;

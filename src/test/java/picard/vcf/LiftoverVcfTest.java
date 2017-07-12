@@ -28,11 +28,11 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
     private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
     private static final File CHAIN_FILE = new File(TEST_DATA_PATH, "test.over.chain");
-    private static final File TWO_LINK_CHAIN_FILE = new File(TEST_DATA_PATH, "test.two.block.over.chain");
+    private static final File TWO_INTERVAL_CHAIN_FILE = new File(TEST_DATA_PATH, "test.two.block.over.chain");
 
     private static final File CHAIN_FILE_WITH_BAD_CONTIG = new File(TEST_DATA_PATH, "test.over.badContig.chain");
     private static final File REFERENCE_FILE = new File(TEST_DATA_PATH, "dummy.reference.fasta");
-    private static final File TWO_LINK_REFERENCE_FILE = new File(TEST_DATA_PATH, "dummy.two.block.reference.fasta");
+    private static final File TWO_INTERVALS_REFERENCE_FILE = new File(TEST_DATA_PATH, "dummy.two.block.reference.fasta");
 
     private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("LiftoverVcfsTest", null);
 
@@ -523,7 +523,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1");
         final List<Object[]> tests = new ArrayList<>();
 
-        // some more tests with a more complicated chain File. this one has 2 links in the relevant block
+        // some more tests with a more complicated chain File. this one has 2 intervals in the relevant block
         // the cigar string would be 540M5I500M5D40M (if chains were written using cigar strings....)
 
         final Allele AAAARef = Allele.create("AAAA", true);
@@ -539,108 +539,108 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         int stop = 4;
         int offset;
 
-        final ReferenceSequence twoLinkReference = new FastaSequenceFile(TWO_LINK_REFERENCE_FILE, false).nextSequence();
+        final ReferenceSequence twoIntervalChainReference = new FastaSequenceFile(TWO_INTERVALS_REFERENCE_FILE, false).nextSequence();
 
-        final LiftOver liftOver = new LiftOver(TWO_LINK_CHAIN_FILE);
+        final LiftOver liftOver = new LiftOver(TWO_INTERVAL_CHAIN_FILE);
 
         // trivial snp
         builder.source("test1");
         builder.start(1).stop(1).alleles(CollectionUtil.makeList(CRef, A));
         result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(CRef, A));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), result_builder.make()});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
         // trivial case indel
         builder.source("test2");
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(CAAARef, CAA));
         result_builder.start(1).stop(4).alleles(CollectionUtil.makeList(CAAARef, CAA));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), result_builder.make()});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
-        // near end of link indel
+        // near end of interval indel
         builder.source("test3");
         builder.start(537).stop(540).alleles(CollectionUtil.makeList(AAAARef, AAA));
         result_builder.start(537).stop(540).alleles(CollectionUtil.makeList(AAAARef, AAA));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), result_builder.make()});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
-        // near end of link snp
+        // near end of interval snp
         builder.source("test4");
         builder.start(540).stop(540).alleles(CollectionUtil.makeList(ARef, T));
         result_builder.start(540).stop(540).alleles(CollectionUtil.makeList(ARef, T));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), result_builder.make()});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
         // straddling chains indel
         builder.source("test5");
         builder.start(538).stop(541).alleles(CollectionUtil.makeList(AAAARef, AAA));
         result_builder.start(537).stop(540).alleles(CollectionUtil.makeList(AAAARef, AAA));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), null});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), null});
 
-        // near start of second link snp
+        // near start of second interval snp
         builder.source("test6");
         start = 541;
         offset = 5;
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(ARef, T));
         result_builder.start(start + offset).stop(start + offset).alleles(CollectionUtil.makeList(ARef, T));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), result_builder.make()});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
 
-        // near start of second link indel
+        // near start of second interval indel
         builder.source("test7");
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(ARef, T));
         result_builder.start(start + offset).stop(start + offset).alleles(CollectionUtil.makeList(ARef, T));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), result_builder.make()});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
-        // near end of second link snp
+        // near end of second interval snp
         builder.source("test8");
         start = 1040;
         offset = 5;
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(ARef, T));
         result_builder.start(start + offset).stop(start + offset).alleles(CollectionUtil.makeList(ARef, T));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), result_builder.make()});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
-        // near end of second link indel
+        // near end of second interval indel
         builder.source("test9");
         start = 1037;
         stop = 1040;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(AAAARef, AAA));
         result_builder.start(start + offset).stop(stop + offset).alleles(CollectionUtil.makeList(AAAARef, AAA));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), result_builder.make()});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
 
-        // straddling link indel
+        // straddling interval indel
         builder.source("test9");
         start = 1038;
         stop = 1041;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(AAAARef, AAA));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), null});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), null});
 
-        // straddling link indel
+        // straddling interval indel
         builder.source("test10");
         start = 1045;
         stop = 1048;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(AAAARef, AAA));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), null});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), null});
 
         // vanishing snp
         builder.source("test11");
         start = 1045;
         stop = 1045;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(ARef, T));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), null});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), null});
 
-        //  after second link indel
+        //  after second interval indel
         builder.source("test12");
         start = 1046;
         stop = 1049;
         offset = 0;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(AAAARef, AAA));
         result_builder.start(start + offset).stop(stop + offset).alleles(CollectionUtil.makeList(AAAARef, AAA));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), result_builder.make()});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
-        // near start of second link snp
+        // near start of second interval snp
         builder.source("test13");
         start = 1046;
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(ARef, T));
         result_builder.start(start + offset).stop(start + offset).alleles(CollectionUtil.makeList(ARef, T));
-        tests.add(new Object[]{liftOver, twoLinkReference, builder.make(), result_builder.make()});
+        tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
         return tests.iterator();
     }
