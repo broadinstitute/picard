@@ -75,7 +75,7 @@ public class CrosscheckReadGroupFingerprints extends CrosscheckFingerprints {
 
         if (MATRIX_OUTPUT != null) {
             errors.add("When calling CrosscheckReadGroupFingerprints, please refrain from supplying a MATRIX_OUTPUT argument.\n" +
-                    " (Found value " + MATRIX_OUTPUT + "\n" +
+                    "(Found value " + MATRIX_OUTPUT + "\n" +
                     "Use CrosscheckFingerprints if you would like to do that.");
         }
 
