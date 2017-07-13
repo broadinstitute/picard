@@ -93,14 +93,16 @@ public class CrosscheckReadGroupFingerprints extends CrosscheckFingerprints {
             EXPECT_ALL_GROUPS_TO_MATCH = EXPECT_ALL_READ_GROUPS_TO_MATCH;
         }
 
-        if (CROSSCHECK_LIBRARIES) {
+        if (CROSSCHECK_LIBRARIES) { // if cross-checking library we want matrix output
             CROSSCHECK_BY = CrosscheckMetric.DataType.LIBRARY;
-        } else if (CROSSCHECK_SAMPLES) {
-            CROSSCHECK_BY = CrosscheckMetric.DataType.SAMPLE;
-        } else {
-            CROSSCHECK_BY = CrosscheckMetric.DataType.READGROUP;
             MATRIX_OUTPUT = OUTPUT;
             OUTPUT = new File("/dev/null");
+        } else if (CROSSCHECK_SAMPLES) {  // if cross-checking sample we want matrix output
+            CROSSCHECK_BY = CrosscheckMetric.DataType.SAMPLE;
+            MATRIX_OUTPUT = OUTPUT;
+            OUTPUT = new File("/dev/null");
+        } else {
+            CROSSCHECK_BY = CrosscheckMetric.DataType.READGROUP;
         }
 
         return super.doWork();

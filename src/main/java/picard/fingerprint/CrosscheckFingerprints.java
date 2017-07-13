@@ -59,15 +59,15 @@ import static picard.fingerprint.CrosscheckMetric.FingerprintResult.*;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        usage = "Checks if all fingerprints within a set of files appear to come from the same individual." +
-                "The fingerprints are calculated initially at the readgroup level (if present) but can be" +
+        usage = "Checks if all fingerprints within a set of files appear to come from the same individual. " +
+                "The fingerprints are calculated initially at the readgroup level (if present) but can be " +
                 "\"rolled-up\" by library, sample or file, to increase power and provide results at the " +
                 "desired resolution. Regular output is in a \"Moltenized\" format, one row per comparison. " +
                 "In this format the output will include the LOD score and also tumor-aware LOD score which can " +
-                "help assess identity even in the presence of a severe LOH sample with high purity." +
-                "A matrix output is also availalble to facilitate visual inspection of crosscheck results." +
+                "help assess identity even in the presence of a severe LOH sample with high purity. " +
+                "A matrix output is also available to facilitate visual inspection of crosscheck results." +
                 "\n" +
-                "A separate CLP, ClusterCrosscheckMetrics, can cluster the results as a connected graph" +
+                "A separate CLP, ClusterCrosscheckMetrics, can cluster the results as a connected graph " +
                 "according to LOD greater than a threshold. ",
         usageShort = "Checks if all fingerprints appear to come from the same individual.",
         programGroup = Fingerprinting.class
@@ -84,7 +84,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Option(shortName = "MO", optional = true,
             doc = "Optional output file to write matrix of LOD scores to. This is less informative than the metrics output " +
-                    "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity)." +
+                    "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity). " +
                     "It is however sometimes easier to use visually.")
     public File MATRIX_OUTPUT = null;
 
@@ -100,8 +100,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     "\n\n" +
                     "LOD score 0 means equal likelihood" +
                     "that the groups match vs. come from different individuals, negative LOD scores mean N logs more likely " +
-                    "that the groups are from different individuals, and positive numbers mean N logs more likely that" +
-                    " the groups are from the sample individual. ")
+                    "that the groups are from different individuals, and positive numbers mean N logs more likely that " +
+                    "the groups are from the sample individual. ")
     public double LOD_THRESHOLD = 0;
 
     @Option(doc = "Specificies which data-type should be used as the basic comparison unit. Fingerprints from readgroups can " +
@@ -116,8 +116,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "marking has been overly aggressive and coverage is low.")
     public boolean ALLOW_DUPLICATE_READS = false;
 
-    @Option(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from" +
-            " the expected sample.")
+    @Option(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from " +
+            "the expected sample.")
     public double GENOTYPING_ERROR_RATE = 0.01;
 
     @Option(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.")
