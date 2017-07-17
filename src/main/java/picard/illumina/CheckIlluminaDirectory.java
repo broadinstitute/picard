@@ -31,6 +31,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static picard.illumina.BasecallsConverter.TILE_NUMBER_COMPARATOR;
 import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
@@ -167,11 +169,18 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 final OutputMapping outputMapping = new OutputMapping(readStructure);
 
                 final CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tiles.get(0), locs, outputMapping.getOutputCycles(), true);
-
                 reader.getAllTiles().forEach((key, value) -> {
                     final List<File> fileForCycle = reader.getFilesForCycle(key);
                     final long totalFilesSize = fileForCycle.stream().mapToLong(file -> file.length() - reader.getHeaderSize()).sum();
                     final long expectedFileSize = value.stream().mapToLong(BaseBclReader.TileData::getCompressedBlockSize).sum();
+                    final Stream<BaseBclReader.TileData> emptyCycles = value.stream().filter((cycle) -> cycle.getCompressedBlockSize() <= 2);
+
+                    String emptyCycleString = emptyCycles.map(tile -> String.valueOf(tile.getTileNum())).collect(Collectors.joining(", "));
+
+                    if (emptyCycleString.length() > 0) {
+                        log.warn("The following tiles have no data for cycle " + key);
+                        log.warn(emptyCycleString);
+                    }
 
                     if (expectedFileSize != totalFilesSize) {
                         throw new PicardException(String.format("File %s is not the expected size of %d instead it is %d",

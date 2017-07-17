@@ -332,28 +332,31 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
                     (totalCycleCount + 1), this.streamFiles[totalCycleCount].getAbsolutePath()));
         }
 
-        // Uncompress the data from the buffer we just wrote - use gzip input stream to write to uncompressed buffer
+        // Decompress the data from the buffer we just wrote - use gzip input stream to write to uncompressed buffer
         final ByteArrayInputStream byteInputStream = new ByteArrayInputStream(Arrays.copyOfRange(tileByteArray, 0, readBytes));
 
-        final GZIPInputStream gzipInputStream = new GZIPInputStream(byteInputStream, uncompressedByteArray.length);
-        int read;
-        int totalRead = 0;
-        try {
-            while ((read = gzipInputStream.read(uncompressedByteArray, totalRead, uncompressedByteArray.length - totalRead)) != -1) {
-                if (read == 0) break;
-                totalRead += read;
+        //only decompress the data if we are expecting data.
+        if (uncompressedByteArray.length > 0) {
+            int read;
+            int totalRead = 0;
+            try (GZIPInputStream gzipInputStream = new GZIPInputStream(byteInputStream, uncompressedByteArray.length)) {
+                while ((read = gzipInputStream.read(uncompressedByteArray, totalRead, uncompressedByteArray.length - totalRead)) != -1) {
+                    if (read == 0) break;
+                    totalRead += read;
+                }
+            } catch (final EOFException eofException) {
+                throw new PicardException("Unexpected end of file " + this.streamFiles[totalCycleCount].getAbsolutePath()
+                        + " this file is likely corrupt or truncated. We have read "
+                        + totalRead + " and were expecting to read "
+                        + uncompressedByteArray.length);
             }
-        } catch (final EOFException eofException) {
-            throw new PicardException("Unexpected end of file " + this.streamFiles[totalCycleCount].getAbsolutePath()
-                    + " this file is likely corrupt or truncated. We have read "
-                    + totalRead + " and were expecting to read "
-                    + uncompressedByteArray.length);
+            if (totalRead != tileData.uncompressedBlockSize) {
+                throw new PicardException(String.format("Error while decompressing from BCL file for cycle %d. Offending file on disk is %s",
+                        (totalCycleCount + 1), this.streamFiles[totalCycleCount].getAbsolutePath()));
+            }
+        } else {
+            log.warn("Ignoring tile " + tileData.tileNum + " there are no PF reads.");
         }
-        if (totalRead != tileData.uncompressedBlockSize) {
-            throw new PicardException(String.format("Error while decompressing from BCL file for cycle %d. Offending file on disk is %s",
-                    (totalCycleCount + 1), this.streamFiles[totalCycleCount].getAbsolutePath()));
-        }
-
         // Read uncompressed data from the buffer and expand each nibble into a full byte for ease of use
         int index = 0;
         for (final byte singleByte : uncompressedByteArray) {
@@ -362,7 +365,7 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
             unNibbledByteArray[index] = (byte) ((singleByte >> 4) & 0x0f);
             index++;
         }
-        gzipInputStream.close();
+
 
         // Write buffer contents to cached tile array
         // if nonPF reads are included we need to strip them out

@@ -156,12 +156,17 @@ public class BaseBclReader {
             this.filePosition = filePosition;
         }
 
+        public int getTileNum() {
+            return tileNum;
+        }
+
         public int getCompressedBlockSize() {
             return compressedBlockSize;
         }
 
-        public int getNumClustersInTile() {
+        int getNumClustersInTile() {
             return numClustersInTile;
         }
+
     }
 }
