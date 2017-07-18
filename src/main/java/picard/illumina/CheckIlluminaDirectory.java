@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static picard.illumina.BasecallsConverter.TILE_NUMBER_COMPARATOR;
 import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
@@ -152,7 +153,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 tiles.sort(TILE_NUMBER_COMPARATOR);
 
                 //check s.locs
-                final File locsFile = new File(BASECALLS_DIR.getParentFile(), "s.locs");
+                final File locsFile = new File(BASECALLS_DIR.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
                 final LocsFileReader locsFileReader = new LocsFileReader(locsFile);
                 final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
                 while (locsFileReader.hasNext()) {
@@ -167,8 +168,19 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 final OutputMapping outputMapping = new OutputMapping(readStructure);
 
                 final CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tiles.get(0), locs, outputMapping.getOutputCycles(), true);
-
                 reader.getAllTiles().forEach((key, value) -> {
+                    //we are looking for cycles with compressed data count of 2 bytes (standard gzip header size)
+                    String emptyCycleString = value.stream()
+                            .filter(cycle -> cycle.getCompressedBlockSize() <= 2)
+                            .map(BaseBclReader.TileData::getTileNum)
+                            .map(Object::toString)
+                            .collect(Collectors.joining(", "));
+
+                    if (emptyCycleString.length() > 0) {
+                        log.warn("The following tiles have no data for cycle " + key);
+                        log.warn(emptyCycleString);
+                    }
+
                     final List<File> fileForCycle = reader.getFilesForCycle(key);
                     final long totalFilesSize = fileForCycle.stream().mapToLong(file -> file.length() - reader.getHeaderSize()).sum();
                     final long expectedFileSize = value.stream().mapToLong(BaseBclReader.TileData::getCompressedBlockSize).sum();
@@ -221,7 +233,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     }
 
     private void createLocFileSymlinks(final IlluminaFileUtil fileUtil, final int lane) {
-        final File baseFile = new File(BASECALLS_DIR.getParentFile().getAbsolutePath() + File.separator + "s.locs");
+        final File baseFile = new File(BASECALLS_DIR.getParentFile().getAbsolutePath() + File.separator + AbstractIlluminaPositionFileReader.S_LOCS_FILE);
         final File newFileBase = new File(baseFile.getParent() + File.separator + IlluminaFileUtil
                 .longLaneStr(lane) + File.separator);
         if (baseFile.exists()) {
