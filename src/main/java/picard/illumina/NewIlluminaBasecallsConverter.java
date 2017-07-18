@@ -97,7 +97,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
         IOUtil.assertFilesAreReadable(cbcls);
 
         //locs
-        final File locsFile = new File(basecallsDir.getParentFile(), "s.locs");
+        final File locsFile = new File(basecallsDir.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
         try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
             while (locsFileReader.hasNext()) {
                 locs.add(locsFileReader.next());

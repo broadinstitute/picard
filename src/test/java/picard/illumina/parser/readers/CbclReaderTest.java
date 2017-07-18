@@ -7,6 +7,7 @@ import picard.illumina.parser.BclData;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +17,8 @@ public class CbclReaderTest {
     private static final File TestDataDir = new File("testdata/picard/illumina/readerTests/cbcls");
     private static final File PASSING_CBCL_C1_1 = new File(TestDataDir + "/C1.1", "L001_1.cbcl");
     private static final File PASSING_CBCL_C2_1 = new File(TestDataDir + "/C2.1", "L001_1.cbcl");
+    private static final File CBCL_WITH_EMPTY_TILE = new File(TestDataDir + "/C3.1", "L001_1.cbcl");
     private static final File TILE_1101_FILTER = new File(TestDataDir, "tile_1101.filter");
-    private static final File TILE_1102_FILTER = new File(TestDataDir, "tile_1102.filter");
 
     private static final char[] expectedBases = new char[]{
             'G', 'G', 'C', 'C', 'G', 'A', 'A', 'G'
@@ -62,5 +63,16 @@ public class CbclReaderTest {
         new CbclReader(Arrays.asList(PASSING_CBCL_C1_1, PASSING_CBCL_C2_1),
                 filters, new int[]{2}, 1102, locs, new int[]{1, 2}, false);
 
+    }
+
+    @Test
+    public void testEmptyTile() {
+        final Map<Integer, File> filters = new HashMap<>();
+        filters.put(1101, TILE_1101_FILTER);
+        final LocsFileReader locsFileReader = new LocsFileReader(new File("testdata/picard/illumina/readerTests/s_1_6.locs"));
+        List<AbstractIlluminaPositionFileReader.PositionInfo> locs = locsFileReader.toList();
+        CbclReader reader = new CbclReader(Collections.singletonList(CBCL_WITH_EMPTY_TILE),
+                filters, new int[]{1}, 1101, locs, new int[]{3}, false);
+        Assert.assertFalse(reader.hasNext());
     }
 }

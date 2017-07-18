@@ -8,12 +8,13 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgramTest;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.IlluminaFileUtilTest;
+import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -373,13 +374,12 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
 
     private void createSingleLocsFile() {
         try {
-            final File singleLocsFile = new File(intensityDir, "s.locs");
+            final File singleLocsFile = new File(intensityDir, AbstractIlluminaPositionFileReader.S_LOCS_FILE);
             final FileWriter writer = new FileWriter(singleLocsFile);
             writer.write("This is a test string.");
             writer.close();
         } catch (final IOException e) {
             e.printStackTrace();
         }
-
     }
 }

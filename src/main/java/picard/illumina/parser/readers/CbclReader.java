@@ -314,10 +314,6 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
 
     private void cacheTile(final int totalCycleCount, final TileData tileData, final CycleData currentCycleData) throws IOException {
         final byte[] tileByteArray = new byte[tileData.compressedBlockSize];
-        //we are going to explode the nibbles in to bytes to make PF filtering easier
-        final byte[] uncompressedByteArray = new byte[tileData.uncompressedBlockSize];
-        // ByteBuffer uncompressedByteArray = ByteBuffer.allocate(tileData.uncompressedBlockSize);
-        final byte[] unNibbledByteArray = new byte[tileData.uncompressedBlockSize * 2];
 
         // Read the whole compressed block into a buffer, then sanity check the length
         final InputStream stream = this.streams[totalCycleCount];
@@ -334,39 +330,16 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
 
         // Decompress the data from the buffer we just wrote - use gzip input stream to write to uncompressed buffer
         final ByteArrayInputStream byteInputStream = new ByteArrayInputStream(Arrays.copyOfRange(tileByteArray, 0, readBytes));
+        byte[] decompressedByteArray = decompressTile(totalCycleCount, tileData, byteInputStream);
 
-        //only decompress the data if we are expecting data.
-        if (uncompressedByteArray.length > 0) {
-            int read;
-            int totalRead = 0;
-            try (GZIPInputStream gzipInputStream = new GZIPInputStream(byteInputStream, uncompressedByteArray.length)) {
-                while ((read = gzipInputStream.read(uncompressedByteArray, totalRead, uncompressedByteArray.length - totalRead)) != -1) {
-                    if (read == 0) break;
-                    totalRead += read;
-                }
-            } catch (final EOFException eofException) {
-                throw new PicardException("Unexpected end of file " + this.streamFiles[totalCycleCount].getAbsolutePath()
-                        + " this file is likely corrupt or truncated. We have read "
-                        + totalRead + " and were expecting to read "
-                        + uncompressedByteArray.length);
-            }
-            if (totalRead != tileData.uncompressedBlockSize) {
-                throw new PicardException(String.format("Error while decompressing from BCL file for cycle %d. Offending file on disk is %s",
-                        (totalCycleCount + 1), this.streamFiles[totalCycleCount].getAbsolutePath()));
-            }
-        } else {
-            log.warn("Ignoring tile " + tileData.tileNum + " there are no PF reads.");
-        }
         // Read uncompressed data from the buffer and expand each nibble into a full byte for ease of use
-        int index = 0;
-        for (final byte singleByte : uncompressedByteArray) {
-            unNibbledByteArray[index] = (byte) (singleByte & 0x0f);
-            index++;
-            unNibbledByteArray[index] = (byte) ((singleByte >> 4) & 0x0f);
-            index++;
-        }
+        byte[] unNibbledByteArray = promoteNibblesToBytes(decompressedByteArray);
+        cachedTile[totalCycleCount] = filterNonPfReads(tileData, currentCycleData, unNibbledByteArray);
 
+        cachedTilePosition[totalCycleCount] = 0;
+    }
 
+    private byte[] filterNonPfReads(TileData tileData, CycleData currentCycleData, byte[] unNibbledByteArray) {
         // Write buffer contents to cached tile array
         // if nonPF reads are included we need to strip them out
         if (!currentCycleData.pfExcluded) {
@@ -386,11 +359,52 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
                 }
                 filterIndex++;
             }
-            cachedTile[totalCycleCount] = filteredByteArray;
+            return filteredByteArray;
         } else {
-            cachedTile[totalCycleCount] = unNibbledByteArray;
+            return unNibbledByteArray;
         }
-        cachedTilePosition[totalCycleCount] = 0;
+    }
+
+    private byte[] promoteNibblesToBytes(byte[] decompressedByteArray) {
+        //we are going to explode the nibbles in to bytes to make PF filtering easier
+        final byte[] unNibbledByteArray = new byte[decompressedByteArray.length * 2];
+        int index = 0;
+        for (final byte singleByte : decompressedByteArray) {
+            unNibbledByteArray[index] = (byte) (singleByte & 0x0f);
+            index++;
+            unNibbledByteArray[index] = (byte) ((singleByte >> 4) & 0x0f);
+            index++;
+        }
+        return unNibbledByteArray;
+    }
+
+    private byte[] decompressTile(int totalCycleCount, TileData tileData, ByteArrayInputStream byteInputStream) throws IOException {
+        final byte[] decompressedByteArray = new byte[tileData.uncompressedBlockSize];
+        //only decompress the data if we are expecting data.
+        if (decompressedByteArray.length == 0) {
+            log.warn("Ignoring tile " + tileData.tileNum + " there are no PF reads.");
+        } else {
+            int read;
+            int totalRead = 0;
+            try (GZIPInputStream gzipInputStream = new GZIPInputStream(byteInputStream, decompressedByteArray.length)) {
+                while ((read = gzipInputStream.read(decompressedByteArray, totalRead, decompressedByteArray.length - totalRead)) != -1) {
+                    if (read == 0) {
+                        break;
+                    }
+                    totalRead += read;
+                }
+            } catch (final EOFException eofException) {
+                throw new PicardException("Unexpected end of file " + this.streamFiles[totalCycleCount].getAbsolutePath()
+                        + " this file is likely corrupt or truncated. We have read "
+                        + totalRead + " and were expecting to read "
+                        + decompressedByteArray.length);
+            }
+            if (totalRead != tileData.uncompressedBlockSize) {
+                throw new PicardException(String.format("Error while decompressing from BCL file for cycle %d. Offending file on disk is %s",
+                        (totalCycleCount + 1), this.streamFiles[totalCycleCount].getAbsolutePath()));
+            }
+        }
+        return decompressedByteArray;
     }
 
     public CycleData[] getCycleData() {
