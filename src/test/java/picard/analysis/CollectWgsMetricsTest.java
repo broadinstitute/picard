@@ -136,8 +136,10 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         //Create Sam Files
         tempSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
+        final File tempSamIndex = new File(tempSamFile.getAbsolutePath().replace("bam", "bai"));
         final File tempSamFileUnsorted = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
         tempSamFileUnsorted.deleteOnExit();
+        tempSamIndex.deleteOnExit();
         tempSamFile.deleteOnExit();
         final File sortedSamIdx = new File(TEST_DIR, tempSamFile.getName() + ".idx");
         sortedSamIdx.deleteOnExit();

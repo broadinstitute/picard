@@ -335,8 +335,10 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         final String flowCellBarcode = "TESTBARCODE";
 
         tempSamFile = File.createTempFile("CollectGcBias", ".bam", TEST_DIR);
+        final File tempSamIndex = new File(tempSamFile.getAbsolutePath().replace("bam", "bai"));
         final File tempSamFileUnsorted = File.createTempFile("CollectGcBias", ".bam", TEST_DIR);
         tempSamFileUnsorted.deleteOnExit();
+        tempSamIndex.deleteOnExit();
         tempSamFile.deleteOnExit();
 
         BufferedLineReader bufferedLineReader = null;
