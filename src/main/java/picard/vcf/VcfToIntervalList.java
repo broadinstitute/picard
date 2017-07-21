@@ -25,6 +25,8 @@ import java.io.File;
         programGroup = VcfOrBcf.class)
 @DocumentedFeature
 public class VcfToIntervalList extends CommandLineProgram {
+    public static final String INCLUDE_FILTERED_SHORT_NAME = "IF";
+
     // The following attributes define the command-line arguments
     public static final Log LOG = Log.getInstance(VcfToIntervalList.class);
 
@@ -33,6 +35,11 @@ public class VcfToIntervalList extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output Picard Interval List")
     public File OUTPUT;
+
+    @Argument(shortName = INCLUDE_FILTERED_SHORT_NAME,
+            doc = "Include variants that were filtered in the output interval list.",
+            optional = true)
+    public boolean INCLUDE_FILTERED = false;
 
     public static void main(final String[] argv) {
         new VcfToIntervalList().instanceMainWithExit(argv);
@@ -43,7 +50,8 @@ public class VcfToIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final IntervalList intervalList = VCFFileReader.fromVcf(INPUT);
+        final IntervalList intervalList = VCFFileReader.fromVcf(INPUT, INCLUDE_FILTERED);
+
         // Sort and write the output
         intervalList.uniqued().write(OUTPUT);
         return 0;
