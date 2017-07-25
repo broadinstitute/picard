@@ -88,9 +88,7 @@ public abstract class CommandLineProgram {
     public ValidationStringency VALIDATION_STRINGENCY = ValidationStringency.DEFAULT_STRINGENCY;
 
     @Option(doc = "Compression level for all compressed files created (e.g. BAM and GELI).", common=true)
-    // Reading from a file compressed by the default IntelDeflater at level 1 is ~3x faster than reading from a file
-    // compressed at level 5 (the htsjdk default), and level 1 files are only slightly larger.
-    public int COMPRESSION_LEVEL = 1;
+    public int COMPRESSION_LEVEL = Defaults.COMPRESSION_LEVEL;
 
     @Option(doc = "When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.", optional=true, common=true)
     public Integer MAX_RECORDS_IN_RAM = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
