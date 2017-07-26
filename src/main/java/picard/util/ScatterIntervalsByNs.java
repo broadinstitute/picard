@@ -1,32 +1,19 @@
 package picard.util;
 
-import htsjdk.samtools.util.SequenceUtil;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Intervals;
-import picard.cmdline.Option;
-import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.Intervals;
 
 import java.io.File;
-import java.lang.Boolean;
-import java.lang.Override;
-import java.lang.String;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -55,7 +42,9 @@ public class ScatterIntervalsByNs extends CommandLineProgram {
             "      O=output.interval_list" +
             "</pre>" +
             "<hr />";
-    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence to use.")
+    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence to use. " +
+            "Note: this tool requires that the reference fasta " +
+            "has both an associated index and a dictionary.")
     public File REFERENCE;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file for interval list.")
@@ -102,6 +91,12 @@ public class ScatterIntervalsByNs extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
 
         final ReferenceSequenceFile refFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE, true);
+        if (!refFile.isIndexed()) {
+            throw new IllegalStateException("Reference file must be indexed, but no index file was found");
+        }
+        if (refFile.getSequenceDictionary() == null) {
+            throw new IllegalStateException("Reference file must include a dictionary, but no dictionary file was found");
+        }
 
         // get the intervals
         final IntervalList intervals = segregateReference(refFile, MAX_TO_MERGE);
