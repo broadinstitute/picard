@@ -133,8 +133,6 @@ public class FingerprintIdDetails {
                 this.runBarcode = tmp[0];
                 this.runLane = Integer.parseInt(tmp[1]);
                 this.molecularBarcode = (tmp.length == 3) ? tmp[2] : "";  // In older BAMS there may be no molecular barcode sequence
-            } else {
-                throw new IllegalArgumentException("Unexpected format " + puString + " for PU attribute");
             }
         } catch (final NumberFormatException e) {
             throw new IllegalArgumentException("Unexpected format " + puString + " for PU attribute");
