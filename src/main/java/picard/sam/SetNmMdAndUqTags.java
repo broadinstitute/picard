@@ -70,7 +70,7 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
     @Option(doc = "The fixed BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    @Option(doc = "Whether the file contains bisulfite sequence (used when calculating the NM tag).")
+    @Option(doc = "Whether the file contains bisulfite sequence.")
     public boolean IS_BISULFITE_SEQUENCE = false;
 
     @Override
@@ -78,6 +78,7 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
         if (REFERENCE_SEQUENCE == null) {
             return new String[]{"Must have a non-null REFERENCE_SEQUENCE"};
         }
+
         return super.customCommandLineValidation();
     }
 
@@ -88,17 +89,11 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
     }
 
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
-        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        validateInputs();
 
-        if (reader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-            throw new SAMException("Input must be coordinate-sorted for this program to run. Found: " + reader.getFileHeader().getSortOrder());
-        }
+        final SamReader reader = createSamReader();
 
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
-        writer.setProgressLogger(
-                new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
+        final SAMFileWriter writer = createSamFileWriter(reader, log);
 
         final ReferenceSequenceFileWalker refSeq = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
 
@@ -109,5 +104,26 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
         CloserUtil.close(reader);
         writer.close();
         return 0;
+    }
+
+    protected void validateInputs(){
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
+    }
+
+    protected SamReader createSamReader(){
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+
+        if (reader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+            throw new SAMException("Input must be coordinate-sorted for this program to run. Found: " + reader.getFileHeader().getSortOrder());
+        }
+        return reader;
+    }
+
+    protected SAMFileWriter createSamFileWriter(SamReader reader, Log log){
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
+        writer.setProgressLogger(
+                new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
+        return writer;
     }
 }

@@ -30,16 +30,32 @@ public class SetNmMdAndUqTagsTest {
 
         sort(input, sortOutput);
         fixFile(sortOutput, fixOutput, reference);
-        validate(fixOutput,validateOutput, reference);
+        validate(fixOutput,validateOutput, reference, false);
     }
 
-    private void validate(final File input, final File output, final File reference) {
+    @Test(dataProvider = "filesToFix")
+    public void TestUQValidSort(final File input, final File reference) throws IOException {
+        final File sortOutput = File.createTempFile("Sort", ".bam");
+        sortOutput.deleteOnExit();
+        final File fixOutput = File.createTempFile("Fix", ".bam");
+        fixOutput.deleteOnExit();
+        final File validateOutput = File.createTempFile("Sort", ".validation_report");
+        validateOutput.deleteOnExit();
+
+        sort(input, sortOutput);
+        calcUQ(sortOutput, fixOutput, reference);
+        //ignore warnings because a bam with no NM tag throws warnings
+        validate(fixOutput,validateOutput, reference, true);
+    }
+
+    private void validate(final File input, final File output, final File reference, final boolean ignoreWarnings) {
 
         final String[] args = new String[] {
                 "INPUT="+input,
                 "OUTPUT="+output,
                 "MODE=VERBOSE",
-                "REFERENCE_SEQUENCE="+reference };
+                "REFERENCE_SEQUENCE="+reference,
+                "IGNORE_WARNINGS="+ignoreWarnings};
 
         ValidateSamFile validateSam = new ValidateSamFile();
         Assert.assertEquals(validateSam.instanceMain(args), 0, "validate did not succeed");
@@ -66,5 +82,16 @@ public class SetNmMdAndUqTagsTest {
 
         SetNmMdAndUqTags setNmMdAndUqTags = new SetNmMdAndUqTags();
         Assert.assertEquals(setNmMdAndUqTags.instanceMain(args), 0, "Fix did not succeed");
+    }
+
+    private void calcUQ(final File input, final File output, final File reference) throws IOException {
+
+        final String[] args = new String[] {
+                "INPUT="+input,
+                "OUTPUT="+output,
+                "REFERENCE_SEQUENCE="+reference };
+
+        CalculateUqTag calculateUqTag = new CalculateUqTag();
+        Assert.assertEquals(calculateUqTag.instanceMain(args), 0, "Fix did not succeed");
     }
 }
