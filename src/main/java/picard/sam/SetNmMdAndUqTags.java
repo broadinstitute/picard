@@ -78,7 +78,6 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
         if (REFERENCE_SEQUENCE == null) {
             return new String[]{"Must have a non-null REFERENCE_SEQUENCE"};
         }
-
         return super.customCommandLineValidation();
     }
 
