@@ -189,6 +189,7 @@ public class IlluminaDataProviderFactory {
         if (availableTiles.isEmpty()) {
             throw new PicardException("No available tiles were found, make sure that " + basecallDirectory.getAbsolutePath() + " has a lane " + lane);
         }
+        availableTiles.sort(NewIlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR);
 
         outputMapping = new OutputMapping(readStructure);
     }
