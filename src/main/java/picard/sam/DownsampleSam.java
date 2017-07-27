@@ -97,7 +97,7 @@ public class DownsampleSam extends CommandLineProgram {
             "Higher accuracy will generally require more memory.")
     public double ACCURACY = 0.0001;
 
-    @Option(shortName = "M", doc = "The file to write metrics to (QualityYieldMetrics)")
+    @Option(shortName = "M", doc = "The file to write metrics to (QualityYieldMetrics)", optional=true)
     public File METRICS_FILE;
 
     private final Log log = Log.getInstance(DownsampleSam.class);
