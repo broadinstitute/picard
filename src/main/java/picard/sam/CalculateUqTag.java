@@ -56,7 +56,9 @@ public class CalculateUqTag extends SetNmMdAndUqTags {
 
     private final Log log = Log.getInstance(CalculateUqTag.class);
 
-    public static void main(final String[] argv) { new CalculateUqTag().instanceMainWithExit(argv); }
+    public static void main(final String[] argv) {
+        new CalculateUqTag().instanceMainWithExit(argv);
+    }
 
     @Override
     protected int doWork() {
@@ -68,8 +70,8 @@ public class CalculateUqTag extends SetNmMdAndUqTags {
 
         final ReferenceSequenceFileWalker refSeq = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
 
-        StreamSupport.stream(reader.spliterator(),false)
-                .peek(rec->{if(!rec.getReadUnmappedFlag()) AbstractAlignmentMerger.calculateUq(rec, refSeq, IS_BISULFITE_SEQUENCE);})
+        StreamSupport.stream(reader.spliterator(), false)
+                .peek(rec -> {if (!rec.getReadUnmappedFlag()) AbstractAlignmentMerger.calculateUq(rec, refSeq, IS_BISULFITE_SEQUENCE);})
                 .forEach(writer::addAlignment);
 
         CloserUtil.close(reader);

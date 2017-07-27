@@ -96,8 +96,8 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
 
         final ReferenceSequenceFileWalker refSeq = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
 
-        StreamSupport.stream(reader.spliterator(),false)
-                .peek(rec->{if(!rec.getReadUnmappedFlag()) AbstractAlignmentMerger.fixNmMdAndUq(rec, refSeq, IS_BISULFITE_SEQUENCE);})
+        StreamSupport.stream(reader.spliterator(), false)
+                .peek(rec -> {if (!rec.getReadUnmappedFlag()) AbstractAlignmentMerger.fixNmMdAndUq(rec, refSeq, IS_BISULFITE_SEQUENCE);})
                 .forEach(writer::addAlignment);
 
         CloserUtil.close(reader);
@@ -105,12 +105,12 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
         return 0;
     }
 
-    protected void validateInputs(){
+    protected void validateInputs() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
     }
 
-    protected SamReader createSamReader(){
+    protected SamReader createSamReader() {
         final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
 
         if (reader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
@@ -119,7 +119,7 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
         return reader;
     }
 
-    protected SAMFileWriter createSamFileWriter(SamReader reader, Log log){
+    protected SAMFileWriter createSamFileWriter(SamReader reader, Log log) {
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
         writer.setProgressLogger(
                 new ProgressLogger(log, (int) 1e7, "Wrote", "records"));

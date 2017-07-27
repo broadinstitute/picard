@@ -11,7 +11,7 @@ public class SetNmMdAndUqTagsTest {
 
     private static final File fasta = new File("testdata/picard/sam/merger.fasta");
     @DataProvider(name="filesToFix")
-    Object[][] TestValidSortData() {
+    Object[][] testValidSortData() {
         return new Object[][]{
                 new Object[]{new File("testdata/picard/sam/aligned.sam"), fasta},
                 new Object[]{new File("testdata/picard/sam/aligned_queryname_sorted.sam"), fasta},
@@ -20,7 +20,7 @@ public class SetNmMdAndUqTagsTest {
     }
 
     @Test(dataProvider = "filesToFix")
-    public void TestValidSort(final File input, final File reference) throws IOException {
+    public void testValidSort(final File input, final File reference) throws IOException {
         final File sortOutput = File.createTempFile("Sort", ".bam");
         sortOutput.deleteOnExit();
         final File fixOutput = File.createTempFile("Fix", ".bam");
@@ -30,11 +30,11 @@ public class SetNmMdAndUqTagsTest {
 
         sort(input, sortOutput);
         fixFile(sortOutput, fixOutput, reference);
-        validate(fixOutput,validateOutput, reference, false);
+        validate(fixOutput, validateOutput, reference, false);
     }
 
     @Test(dataProvider = "filesToFix")
-    public void TestUQValidSort(final File input, final File reference) throws IOException {
+    public void testUQValidSort(final File input, final File reference) throws IOException {
         final File sortOutput = File.createTempFile("Sort", ".bam");
         sortOutput.deleteOnExit();
         final File fixOutput = File.createTempFile("Fix", ".bam");
@@ -45,25 +45,25 @@ public class SetNmMdAndUqTagsTest {
         sort(input, sortOutput);
         calcUQ(sortOutput, fixOutput, reference);
         //ignore warnings because a bam with no NM tag throws warnings
-        validate(fixOutput,validateOutput, reference, true);
+        validate(fixOutput, validateOutput, reference, true);
     }
 
     private void validate(final File input, final File output, final File reference, final boolean ignoreWarnings) {
 
-        final String[] args = new String[] {
-                "INPUT="+input,
-                "OUTPUT="+output,
+        final String[] args = {
+                "INPUT=" + input,
+                "OUTPUT=" + output,
                 "MODE=VERBOSE",
-                "REFERENCE_SEQUENCE="+reference,
-                "IGNORE_WARNINGS="+ignoreWarnings};
+                "REFERENCE_SEQUENCE=" + reference,
+                "IGNORE_WARNINGS=" + ignoreWarnings};
 
         ValidateSamFile validateSam = new ValidateSamFile();
-        Assert.assertEquals(validateSam.instanceMain(args), 0, "validate did not succeed");
+        Assert.assertEquals(validateSam.instanceMain(args), 0, "Validate did not succeed");
     }
 
     private void sort(final File input, final File output) {
 
-        final String[] args = new String[] {
+        final String[] args = {
                 "INPUT=" + input,
                 "OUTPUT=" + output,
                 "SORT_ORDER=coordinate"
@@ -75,9 +75,9 @@ public class SetNmMdAndUqTagsTest {
 
     private void fixFile(final File input, final File output, final File reference) throws IOException {
 
-        final String[] args = new String[] {
-                "INPUT="+input,
-                "OUTPUT="+output,
+        final String[] args = {
+                "INPUT=" + input,
+                "OUTPUT=" + output,
                 "REFERENCE_SEQUENCE="+reference };
 
         SetNmMdAndUqTags setNmMdAndUqTags = new SetNmMdAndUqTags();
@@ -86,12 +86,12 @@ public class SetNmMdAndUqTagsTest {
 
     private void calcUQ(final File input, final File output, final File reference) throws IOException {
 
-        final String[] args = new String[] {
-                "INPUT="+input,
-                "OUTPUT="+output,
-                "REFERENCE_SEQUENCE="+reference };
+        final String[] args = {
+                "INPUT=" + input,
+                "OUTPUT=" + output,
+                "REFERENCE_SEQUENCE=" + reference };
 
         CalculateUqTag calculateUqTag = new CalculateUqTag();
-        Assert.assertEquals(calculateUqTag.instanceMain(args), 0, "Fix did not succeed");
+        Assert.assertEquals(calculateUqTag.instanceMain(args), 0, "Uq calc did not succeed");
     }
 }
