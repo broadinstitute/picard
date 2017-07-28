@@ -47,6 +47,7 @@ public class FingerprintIdDetails {
 
     public FingerprintIdDetails() {}
 
+    // If platformUnit is not populated, then fields will be initialized as flowcellBarcode="?", lane=-1, molecularBarcode="?"
     public FingerprintIdDetails(final String platformUnit, final String file) {
         getPlatformUnitDetails(platformUnit);
         this.platformUnit = platformUnit;
@@ -133,8 +134,6 @@ public class FingerprintIdDetails {
                 this.runBarcode = tmp[0];
                 this.runLane = Integer.parseInt(tmp[1]);
                 this.molecularBarcode = (tmp.length == 3) ? tmp[2] : "";  // In older BAMS there may be no molecular barcode sequence
-            } else {
-                throw new IllegalArgumentException("Unexpected format " + puString + " for PU attribute");
             }
         } catch (final NumberFormatException e) {
             throw new IllegalArgumentException("Unexpected format " + puString + " for PU attribute");
