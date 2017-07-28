@@ -47,6 +47,7 @@ public class FingerprintIdDetails {
 
     public FingerprintIdDetails() {}
 
+    // If platformUnit is not populated, then fields will be initialized as flowcellBarcode="?", lane=-1, molecularBarcode="?"
     public FingerprintIdDetails(final String platformUnit, final String file) {
         getPlatformUnitDetails(platformUnit);
         this.platformUnit = platformUnit;
