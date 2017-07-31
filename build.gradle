@@ -50,7 +50,7 @@ jacoco {
 final htsjdkVersion = System.getProperty('htsjdk.version', '2.10.1')
 
 dependencies {
-    compile('com.intel.gkl:gkl:0.5.2') {
+    compile('com.intel.gkl:gkl:0.5.3') {
         exclude module: 'htsjdk'
     }
     compile 'com.google.guava:guava:15.0'
@@ -238,7 +238,7 @@ task createMetricsDoc(dependsOn: classes, type: Javadoc) {
     doFirst {
         htmlDirInc.mkdirs()
     }
-    
+
     source = sourceSets.main.allJava
     classpath = sourceSets.main.runtimeClasspath
     outputs.dir(htmlDirInc)
