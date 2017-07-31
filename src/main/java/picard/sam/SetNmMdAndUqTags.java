@@ -73,6 +73,9 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
     @Argument(doc = "Whether the file contains bisulfite sequence (used when calculating the NM tag).")
     public boolean IS_BISULFITE_SEQUENCE = false;
 
+    @Option(doc = "Only set the UQ tag, ignore MD and NM")
+    public boolean SET_ONLY_UQ = false;
+
     @Override
     protected boolean requiresReference() {
         return true;
@@ -100,10 +103,21 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
 
         final ReferenceSequenceFileWalker refSeq = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
 
-        StreamSupport.stream(reader.spliterator(),false)
-                .peek(rec->{if(!rec.getReadUnmappedFlag()) AbstractAlignmentMerger.fixNmMdAndUq(rec, refSeq, IS_BISULFITE_SEQUENCE);})
-                .forEach(writer::addAlignment);
-
+        if(SET_ONLY_UQ){
+            StreamSupport.stream(reader.spliterator(), false)
+                    .peek(rec -> {
+                        if (!rec.getReadUnmappedFlag())
+                            AbstractAlignmentMerger.fixUq(rec, refSeq, IS_BISULFITE_SEQUENCE);
+                    })
+                    .forEach(writer::addAlignment);
+        } else {
+            StreamSupport.stream(reader.spliterator(), false)
+                    .peek(rec -> {
+                        if (!rec.getReadUnmappedFlag())
+                            AbstractAlignmentMerger.fixNmMdAndUq(rec, refSeq, IS_BISULFITE_SEQUENCE);
+                    })
+                    .forEach(writer::addAlignment);
+        }
         CloserUtil.close(reader);
         writer.close();
         return 0;
