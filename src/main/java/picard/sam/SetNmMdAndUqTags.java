@@ -103,21 +103,16 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
 
         final ReferenceSequenceFileWalker refSeq = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
 
-        if(SET_ONLY_UQ){
-            StreamSupport.stream(reader.spliterator(), false)
-                    .peek(rec -> {
-                        if (!rec.getReadUnmappedFlag())
+        StreamSupport.stream(reader.spliterator(), false)
+                .peek(rec -> {
+                    if (!rec.getReadUnmappedFlag()) {
+                        if (SET_ONLY_UQ)
                             AbstractAlignmentMerger.fixUq(rec, refSeq, IS_BISULFITE_SEQUENCE);
-                    })
-                    .forEach(writer::addAlignment);
-        } else {
-            StreamSupport.stream(reader.spliterator(), false)
-                    .peek(rec -> {
-                        if (!rec.getReadUnmappedFlag())
+                        else
                             AbstractAlignmentMerger.fixNmMdAndUq(rec, refSeq, IS_BISULFITE_SEQUENCE);
-                    })
-                    .forEach(writer::addAlignment);
-        }
+                    }
+                })
+                .forEach(writer::addAlignment);
         CloserUtil.close(reader);
         writer.close();
         return 0;
