@@ -18,6 +18,6 @@ Chained: Attempts to provide a compromise strategy that offers some of the advan
 <tr><td>RANDOM_SEED (Integer)</td><td>Random seed to use if deterministic behavior is desired.  Setting to null will cause multiple invocations to produce different results.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>PROBABILITY (Double)</td><td>The probability of keeping any individual read, between 0 and 1.  Default value: 1.0. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>ACCURACY (Double)</td><td>The accuracy that the downsampler should try to achieve if the selected strategy supports it. Note that accuracy is never guaranteed, but some strategies will attempt to provide accuracy within the requested bounds.Higher accuracy will generally require more memory.  Default value: 1.0E-4. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>METRICS_FILE (File)</td><td>The file to write metrics to (QualityYieldMetrics)  Required. </td></tr>
+<tr><td>METRICS_FILE (File)</td><td>The file to write metrics to (QualityYieldMetrics)  Default value: null. </td></tr>
 </table>
 </section>
