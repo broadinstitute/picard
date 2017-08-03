@@ -164,7 +164,7 @@ public class GenotypeConcordance extends CommandLineProgram {
     public static final String SUMMARY_METRICS_FILE_EXTENSION     = ".genotype_concordance_summary_metrics";
     public static final String DETAILED_METRICS_FILE_EXTENSION    = ".genotype_concordance_detail_metrics";
     public static final String CONTINGENCY_METRICS_FILE_EXTENSION = ".genotype_concordance_contingency_metrics";
-    public static final String OUTPUT_VCF_FILE_EXTENSION          = ".genotype_concordance.vcf.gz";
+    public static final String OUTPUT_VCF_FILE_EXTENSION          = ".genotype_concordance" + IOUtil.COMPRESSED_VCF_FILE_EXTENSION;
 
     protected GenotypeConcordanceCounts snpCounter;
     public GenotypeConcordanceCounts getSnpCounter() { return snpCounter; }
