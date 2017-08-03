@@ -327,7 +327,6 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         output = new File(outputDir, "output.sam");
         args.add("INPUT=" + input.getAbsoluteFile());
         args.add("OUTPUT=" + output.getAbsoluteFile());
-        args.add("ADD_PG_TAG_TO_READS=true");
         Assert.assertEquals(runPicardCommandLine(args), 0);
         test();
     }
