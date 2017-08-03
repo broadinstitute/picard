@@ -27,6 +27,7 @@ package picard.sam.markduplicates.util;
 import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.*;
 import htsjdk.samtools.util.Log;
+import picard.sam.util.ReadOutputCommandLineProgram;
 
 /**
  * Abstract class that holds parameters and methods common to classes that optical duplicate detection.  We put them here so that
@@ -34,7 +35,7 @@ import htsjdk.samtools.util.Log;
  *
  * @author Tim Fennell
  */
-public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends CommandLineProgram {
+public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends ReadOutputCommandLineProgram {
     protected static Log LOG = Log.getInstance(AbstractOpticalDuplicateFinderCommandLineProgram.class);
 
 

@@ -179,6 +179,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     @Argument(doc= "Determines how duplicate types are recorded in the DT optional attribute.")
     public DuplicateTaggingPolicy TAGGING_POLICY = DuplicateTaggingPolicy.DontTag;
 
+    @Option(doc= "If true, clear any original DT tags.  If your SAM doesn't have this tag, leave false as " +
+            "this is a speed increase.  Should be set to true if SAM does have this tag.")
+    public boolean CLEAR_DT = false;
+
     private SortingCollection<ReadEndsForMarkDuplicates> pairSort;
     private SortingCollection<ReadEndsForMarkDuplicates> fragSort;
     private SortingLongCollection duplicateIndexes;
@@ -355,7 +359,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     rec.getReadName().equals(opticalDuplicateQueryName) ||
                     recordInFileIndex == nextOpticalDuplicateIndex;
 
-            rec.setAttribute(DUPLICATE_TYPE_TAG, null);
+            if (CLEAR_DT) rec.setAttribute(DUPLICATE_TYPE_TAG, null);
 
             if (this.TAGGING_POLICY != DuplicateTaggingPolicy.DontTag && rec.getDuplicateReadFlag()) {
                 if (isOpticalDuplicate) {
@@ -393,7 +397,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             if (this.REMOVE_DUPLICATES            && rec.getDuplicateReadFlag()) continue;
             if (this.REMOVE_SEQUENCING_DUPLICATES && isOpticalDuplicate)         continue;
 
-            if (PROGRAM_RECORD_ID != null)  rec.setAttribute(SAMTag.PG.name(), chainedPgIds.get(rec.getStringAttribute(SAMTag.PG.name())));
+            if (PROGRAM_RECORD_ID != null && ADD_PG_TAG_TO_READS) rec.setAttribute(SAMTag.PG.name(), chainedPgIds.get(rec.getStringAttribute(SAMTag.PG.name())));
             out.addAlignment(rec);
             progress.record(rec);
         }

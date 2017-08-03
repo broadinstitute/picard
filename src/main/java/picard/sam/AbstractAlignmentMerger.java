@@ -91,6 +91,7 @@ public abstract class AbstractAlignmentMerger {
     private boolean addMateCigar = false;
     private boolean unmapContaminantReads = false;
     private UnmappingReadStrategy unmappingReadsStrategy = UnmappingReadStrategy.DO_NOT_CHANGE;
+    private boolean addPGTagToReads = false;
 
 
     private final SamRecordFilter alignmentFilter = new SamRecordFilter() {
@@ -314,6 +315,11 @@ public abstract class AbstractAlignmentMerger {
         this.maxRecordsInRam = maxRecordsInRam;
     }
 
+    /** Allows the caller to decide whether or not to write the PG tag to reads when applicable */
+    public void setAddPGTagToReads(final boolean addPGTagToReads) {
+        this.addPGTagToReads = addPGTagToReads;
+    }
+
     /**
      * Do this unconditionally, not just for aligned records, for two reasons:
      * - An unaligned read has been processed by the aligner, so it is more truthful.
@@ -322,7 +328,7 @@ public abstract class AbstractAlignmentMerger {
      * and a separate chain for the unmapped reads.
      */
     private void maybeSetPgTag(final SAMRecord rec) {
-        if (this.programRecord != null) {
+        if (this.programRecord != null && addPGTagToReads) {
             rec.setAttribute(ReservedTagConstants.PROGRAM_GROUP_ID, this.programRecord.getProgramGroupId());
         }
     }
