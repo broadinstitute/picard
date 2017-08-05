@@ -1,6 +1,8 @@
 package picard.util;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SamFlagField;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.CloserUtil;
@@ -274,6 +276,12 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
     @Option(shortName = "T", doc = "The file with design parameters and targets")
     public File TARGETS;
 
+    @Option(shortName = "AUX_T", doc = "The file with targets to include when calculating statistics (ex. re-design)", optional = true)
+    public File AUX_TARGETS;
+
+    @Option(shortName = "AUX_B", doc = "The file with baits to include when calculating statistics (ex. re-design)", optional = true)
+    public File AUX_BAITS;
+
     @Option(doc = "The name of the bait design")
     public String DESIGN_NAME;
 
@@ -428,7 +436,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
 
             if (MERGE_NEARBY_TARGETS) {
                 final ListIterator<Interval> iterator = padded.getIntervals().listIterator();
-                Interval previous = iterator.next();
+                Interval previous = iterator.hasNext() ? iterator.next() : null;
 
                 targets = new IntervalList(padded.getHeader());
 
@@ -487,6 +495,40 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
                     discardedBaits++;
                 }
             }
+        }
+
+        if (AUX_BAITS != null) {
+            final IntervalList auxBaits = IntervalList.fromFile(AUX_BAITS);
+            SequenceUtil.assertSequenceDictionariesEqual(auxBaits.getHeader().getSequenceDictionary(),
+                    baits.getHeader().getSequenceDictionary());
+
+            final ReferenceSequenceFileWalker walker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
+            ReferenceSequence reference = null;
+            final SAMSequenceDictionary dict = auxBaits.getHeader().getSequenceDictionary();
+            for (final Interval interval : auxBaits.getIntervals()) {
+                final int contigIndex = dict.getSequenceIndex(interval.getContig());
+                if (reference == null || contigIndex != reference.getContigIndex()) {
+                    reference = walker.get(contigIndex);
+                }
+                final Bait bait = new Bait(interval.getContig(),
+                        interval.getStart(),
+                        interval.getEnd(),
+                        interval.isNegativeStrand(),
+                        interval.getName()
+                );
+                bait.addBases(reference, DESIGN_ON_TARGET_STRAND);
+                baits.add(bait);
+            }
+            log.info("Added " + auxBaits.size() + " auxiliary baits");
+        }
+
+        if (AUX_TARGETS != null) {
+            final IntervalList auxTargets = IntervalList.fromFile(AUX_TARGETS);
+            SequenceUtil.assertSequenceDictionariesEqual(auxTargets.getHeader().getSequenceDictionary(),
+                    targets.getHeader().getSequenceDictionary());
+            targets.addall(auxTargets.getIntervals());
+            log.info("Added " + auxTargets.size() + " auxiliary targets");
+
         }
 
         calculateStatistics(targets, baits);
