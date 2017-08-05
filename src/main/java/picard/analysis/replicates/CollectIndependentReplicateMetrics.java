@@ -57,9 +57,9 @@ import htsjdk.variant.variantcontext.filter.SnpFilter;
 import htsjdk.variant.vcf.VCFContigHeaderLine;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
-import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Alpha;
 import picard.filter.CountingPairedFilter;
@@ -102,50 +102,50 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
  */
 
 @CommandLineProgramProperties(
-        summary = "Estimates the rate of independent replication rate of reads within a bam. \n" +
+        usage = "Estimates the rate of independent replication rate of reads within a bam. \n" +
                 "That is, it estimates the fraction of the reads which would be marked as duplicates but " +
                 "are actually biological replicates, independent observations of the data. ",
-        oneLineSummary = "Estimates the rate of independent replication of reads within a bam.",
+        usageShort = "Estimates the rate of independent replication of reads within a bam.",
         programGroup = Alpha.class
 )
 public class CollectIndependentReplicateMetrics extends CommandLineProgram {
     private static final int DOUBLETON_SIZE = 2, TRIPLETON_SIZE = 3;
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input (indexed) BAM file.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input (indexed) BAM file.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Write metrics to this file")
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Write metrics to this file")
     public File OUTPUT;
 
-    @Argument(shortName = "MO", doc = "Write the confusion matrix (of UMIs) to this file", optional = true)
+    @Option(shortName = "MO", doc = "Write the confusion matrix (of UMIs) to this file", optional = true)
     public File MATRIX_OUTPUT;
 
-    @Argument(shortName = "V", doc = "Input VCF file")
+    @Option(shortName = "V", doc = "Input VCF file")
     public File VCF;
 
-    @Argument(shortName = "GQ", doc = "minimal value for the GQ field in the VCF to use variant site.", optional = true)
+    @Option(shortName = "GQ", doc = "minimal value for the GQ field in the VCF to use variant site.", optional = true)
     public Integer MINIMUM_GQ = 90;
 
-    @Argument(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "minimal value for the mapping quality of the reads to be used in the estimation.", optional = true)
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "minimal value for the mapping quality of the reads to be used in the estimation.", optional = true)
     public Integer MINIMUM_MQ = 40;
 
-    @Argument(shortName = "BQ", doc = "minimal value for the base quality of a base to be used in the estimation.", optional = true)
+    @Option(shortName = "BQ", doc = "minimal value for the base quality of a base to be used in the estimation.", optional = true)
     public Integer MINIMUM_BQ = 17;
 
-    @Argument(shortName = StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME,
+    @Option(shortName = StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME,
             doc = "Name of sample to look at in VCF. Can be omitted if VCF contains only one sample.", optional = true)
     public String SAMPLE = null;
 
-    @Argument(doc = "Number of sets to examine before stopping.", optional = true)
+    @Option(doc = "Number of sets to examine before stopping.", optional = true)
     public Integer STOP_AFTER = 0;
 
-    @Argument(doc = "Barcode SAM tag.", optional = true)
+    @Option(doc = "Barcode SAM tag.", optional = true)
     public String BARCODE_TAG = "RX";
 
-    @Argument(doc = "Barcode Quality SAM tag.", optional = true)
+    @Option(doc = "Barcode Quality SAM tag.", optional = true)
     public String BARCODE_BQ = "QX";
 
-    @Argument(shortName = "MBQ", doc = "minimal value for the base quality of all the bases in a molecular barcode, for it to be used.", optional = true)
+    @Option(shortName = "MBQ", doc = "minimal value for the base quality of all the bases in a molecular barcode, for it to be used.", optional = true)
     public Integer MINIMUM_BARCODE_BQ = 30;
 
     private static final Log log = Log.getInstance(CollectIndependentReplicateMetrics.class);

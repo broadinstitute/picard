@@ -43,9 +43,9 @@ import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
-import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 import picard.pedigree.PedFile;
@@ -81,7 +81,7 @@ import static htsjdk.variant.variantcontext.writer.Options.INDEX_ON_THE_FLY;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        summary = "Finds mendelian violations of all types within a VCF. " +
+        usage = "Finds mendelian violations of all types within a VCF. " +
            "Takes in VCF or BCF and a pedigree file and looks for high confidence calls " +
            "where the genotype of the offspring is incompatible with the genotypes of the parents. " +
                 "Assumes the existence of format fields AD, DP, GT, GQ, and PL fields. " +
@@ -96,47 +96,47 @@ import static htsjdk.variant.variantcontext.writer.Options.INDEX_ON_THE_FLY;
                 "                 MIN_DP=20 \n" +
                 "\n"
         ,
-        oneLineSummary = "Finds mendelian violations of all types within a VCF",
+        usageShort = "Finds mendelian violations of all types within a VCF",
         programGroup = VcfOrBcf.class
 )
 public class FindMendelianViolations extends CommandLineProgram {
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF or BCF with genotypes.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF or BCF with genotypes.")
     public File INPUT;
 
-    @Argument(shortName = "PED", doc = "File of Trio information in PED format (with no genotype columns).")
+    @Option(shortName = "PED", doc = "File of Trio information in PED format (with no genotype columns).")
     public File TRIOS;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output metrics file.")
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output metrics file.")
     public File OUTPUT;
 
-    @Argument(shortName = "GQ", doc = "Minimum genotyping quality (or non-ref likelihood) to perform tests.")
+    @Option(shortName = "GQ", doc = "Minimum genotyping quality (or non-ref likelihood) to perform tests.")
     public int MIN_GQ = 30;
 
-    @Argument(shortName = "DP", doc="Minimum depth in each sample to consider possible mendelian violations.")
+    @Option(shortName = "DP", doc="Minimum depth in each sample to consider possible mendelian violations.")
     public int MIN_DP = 0;
 
-    @Argument(shortName = "MINHET", doc = "Minimum allele balance at sites that are heterozygous in the offspring.")
+    @Option(shortName = "MINHET", doc = "Minimum allele balance at sites that are heterozygous in the offspring.")
     public double MIN_HET_FRACTION = 0.3;
 
-    @Argument(optional = true, doc = "If provided, output per-family VCFs of mendelian violations into this directory.")
+    @Option(optional = true, doc = "If provided, output per-family VCFs of mendelian violations into this directory.")
     public File VCF_DIR;
 
-    @Argument(doc = "List of chromosome names to skip entirely.")
+    @Option(doc = "List of chromosome names to skip entirely.")
     public Set<String> SKIP_CHROMS = CollectionUtil.makeSet("MT", "chrM");
 
-    @Argument(doc = "List of possible names for male sex chromosome(s)")
+    @Option(doc = "List of possible names for male sex chromosome(s)")
     public Set<String> MALE_CHROMS = CollectionUtil.makeSet("Y", "chrY");
 
-    @Argument(doc = "List of possible names for female sex chromosome(s)")
+    @Option(doc = "List of possible names for female sex chromosome(s)")
     public Set<String> FEMALE_CHROMS = CollectionUtil.makeSet("X", "chrX");
 
-    @Argument(doc = "List of chr:start-end for pseudo-autosomal regions on the female sex chromosome. Defaults to HG19/b37 & HG38 coordinates.")
+    @Option(doc = "List of chr:start-end for pseudo-autosomal regions on the female sex chromosome. Defaults to HG19/b37 & HG38 coordinates.")
     public Set<String> PSEUDO_AUTOSOMAL_REGIONS = CollectionUtil.makeSet("X:10001-2649520", "X:59034050-59373566", "chrX:10000-2781479", "chrX:155701382-156030895");
 
-    @Argument(doc = "The number of threads that will be used to collect the metrics. ")
+    @Option(doc = "The number of threads that will be used to collect the metrics. ")
     public int THREAD_COUNT = 1;
 
-    @Argument(doc = "If true then fields need to be delimited by a single tab. If false the delimiter is one or more whitespace characters." +
+    @Option(doc = "If true then fields need to be delimited by a single tab. If false the delimiter is one or more whitespace characters." +
             " Note that tab mode does not strictly follow the PED spec")
     public boolean TAB_MODE = false;
 

@@ -1,11 +1,7 @@
 package picard.cmdline;
 
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import picard.cmdline.programgroups.Testing;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -17,11 +13,10 @@ import java.io.PrintStream;
 public class CommandLineProgramStartupErrorLogTest {
 
     @CommandLineProgramProperties(
-            summary = "No-op CLP for testing initialization behavior.",
-            oneLineSummary = "No-op CLP for testing initialization behavior.",
-            programGroup = Testing.class
+            usage = "No-op CLP for testing initialization behavior.",
+            usageShort = "No-op CLP for testing initialization behavior."
     )
-    public static class MockCLP extends CommandLineProgram {
+    private class MockCLP extends CommandLineProgram {
         @Override
         public int doWork() { return 0; }
     }

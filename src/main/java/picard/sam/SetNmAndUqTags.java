@@ -24,7 +24,7 @@
 
 package picard.sam;
 
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.programgroups.SamOrBam;
 
 /**
@@ -32,8 +32,8 @@ import picard.cmdline.programgroups.SamOrBam;
  */
 @Deprecated
 @CommandLineProgramProperties(
-        summary = SetNmAndUqTags.USAGE_SUMMARY + SetNmMdAndUqTags.USAGE_DETAILS,
-        oneLineSummary = SetNmAndUqTags.USAGE_SUMMARY,
+        usage = SetNmAndUqTags.USAGE_SUMMARY + SetNmMdAndUqTags.USAGE_DETAILS,
+        usageShort = SetNmAndUqTags.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class SetNmAndUqTags extends SetNmMdAndUqTags {

@@ -31,10 +31,10 @@ import htsjdk.variant.variantcontext.filter.JavascriptVariantFilter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.*;
-import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
@@ -50,35 +50,35 @@ import java.util.List;
  * @author Pierre Lindenbaum added the javascript filter in 2016 
  */
 @CommandLineProgramProperties(
-        summary = "Applies one or more hard filters to a VCF file to filter out genotypes and variants.",
-        oneLineSummary = "Hard filters a VCF.",
+        usage = "Applies one or more hard filters to a VCF file to filter out genotypes and variants.",
+        usageShort = "Hard filters a VCF.",
         programGroup = VcfOrBcf.class
 )
 public class FilterVcf extends CommandLineProgram {
-    @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The INPUT VCF or BCF file.")
+    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The INPUT VCF or BCF file.")
     public File INPUT;
 
-    @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output VCF or BCF.")
+    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output VCF or BCF.")
     public File OUTPUT;
 
-    @Argument(doc="The minimum allele balance acceptable before filtering a site. Allele balance is calculated for heterozygotes as " +
+    @Option(doc="The minimum allele balance acceptable before filtering a site. Allele balance is calculated for heterozygotes as " +
             "the number of bases supporting the least-represented allele over the total number of base observations. Different heterozygote " +
             "genotypes at the same locus are measured independently. The locus is filtered if any allele balance is below the limit.")
     public double MIN_AB = 0.0d;
 
-    @Argument(doc="The minimum sequencing depth supporting a genotype before the genotype will be filtered out.")
+    @Option(doc="The minimum sequencing depth supporting a genotype before the genotype will be filtered out.")
     public int MIN_DP = 0;
 
-    @Argument(doc="The minimum genotype quality that must be achieved for a sample otherwise the genotype will be filtered out.")
+    @Option(doc="The minimum genotype quality that must be achieved for a sample otherwise the genotype will be filtered out.")
     public int MIN_GQ = 0;
 
-    @Argument(doc="The maximum phred scaled fisher strand value before a site will be filtered out.")
+    @Option(doc="The maximum phred scaled fisher strand value before a site will be filtered out.")
     public double MAX_FS = Double.MAX_VALUE;
 
-    @Argument(doc="The minimum QD value to accept or otherwise filter out the variant.")
+    @Option(doc="The minimum QD value to accept or otherwise filter out the variant.")
     public double MIN_QD = 0;
 
-    @Argument(shortName = "JS", doc = "Filters a VCF file with a javascript expression interpreted by the java javascript engine. "
+    @Option(shortName = "JS", doc = "Filters a VCF file with a javascript expression interpreted by the java javascript engine. "
             + " The script puts the following variables in the script context: "
             + " 'variant' a VariantContext ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/variantcontext/VariantContext.html ) and "
             + " 'header' a VCFHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/vcf/VCFHeader.html )."

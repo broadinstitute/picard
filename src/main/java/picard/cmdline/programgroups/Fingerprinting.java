@@ -23,7 +23,7 @@
  */
 package picard.cmdline.programgroups;
 
-import org.broadinstitute.barclay.argparser.CommandLineProgramGroup;
+import picard.cmdline.CommandLineProgramGroup;
 
 public class Fingerprinting implements CommandLineProgramGroup {
     @Override

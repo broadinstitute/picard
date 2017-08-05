@@ -24,7 +24,10 @@
 
 package picard.analysis;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
@@ -33,12 +36,11 @@ import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
@@ -56,8 +58,8 @@ import java.util.Set;
  */
 
 @CommandLineProgramProperties(
-        summary = CollectRrbsMetrics.USAGE_SUMMARY + CollectRrbsMetrics.USAGE_DETAILS,
-        oneLineSummary = CollectRrbsMetrics.USAGE_SUMMARY,
+        usage = CollectRrbsMetrics.USAGE_SUMMARY + CollectRrbsMetrics.USAGE_DETAILS,
+        usageShort = CollectRrbsMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectRrbsMetrics extends CommandLineProgram {
@@ -97,24 +99,26 @@ public class CollectRrbsMetrics extends CommandLineProgram {
 
 private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
 
-    @Argument(doc = "The BAM or SAM file containing aligned reads. Must be coordinate sorted", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Option(doc = "The BAM or SAM file containing aligned reads. Must be coordinate sorted", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
-    @Argument(doc = "Base name for output files", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME)
+    @Option(doc = "Base name for output files", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME)
     public String METRICS_FILE_PREFIX;
-    @Argument(doc = "Minimum read length")
+    @Option(doc = "The reference sequence fasta file", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
+    public File REFERENCE;
+    @Option(doc = "Minimum read length")
     public int MINIMUM_READ_LENGTH = 5;
-    @Argument(doc = "Threshold for base quality of a C base before it is considered")
+    @Option(doc = "Threshold for base quality of a C base before it is considered")
     public int C_QUALITY_THRESHOLD = 20;
-    @Argument(doc = "Threshold for quality of a base next to a C before the C base is considered")
+    @Option(doc = "Threshold for quality of a base next to a C before the C base is considered")
     public int NEXT_BASE_QUALITY_THRESHOLD = 10;
-    @Argument(doc = "Maximum percentage of mismatches in a read for it to be considered, with a range of 0-1")
+    @Option(doc = "Maximum percentage of mismatches in a read for it to be considered, with a range of 0-1")
     public double MAX_MISMATCH_RATE = 0.1;
-    @Argument(doc = "Set of sequence names to consider, if not specified all sequences will be used", optional = true)
+    @Option(doc = "Set of sequence names to consider, if not specified all sequences will be used", optional = true)
     public Set<String> SEQUENCE_NAMES = new HashSet<String>();
-    @Argument(shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME,
+    @Option(shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME,
             doc = "If true, assume that the input file is coordinate sorted even if the header says otherwise.")
     public boolean ASSUME_SORTED = false;
-    @Argument(shortName = "LEVEL", doc = "The level(s) at which to accumulate metrics.  ")
+    @Option(shortName = "LEVEL", doc = "The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
     public static final String DETAIL_FILE_EXTENSION = "rrbs_detail_metrics";
@@ -122,23 +126,6 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
     public static final String PDF_FILE_EXTENSION = "rrbs_qc.pdf";
 
     private static final Log log = Log.getInstance(CollectRrbsMetrics.class);
-
-    // return a custom argument collection since this tool uses a (required) argument name
-    // of "REFERENCE", not "REFERENCE_SEQUENCE"
-    @Override
-    protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
-        return new CollectRrbsMetricsReferenceArgumentCollection();
-    }
-
-    public static class CollectRrbsMetricsReferenceArgumentCollection implements ReferenceArgumentCollection {
-        @Argument(doc = "The reference sequence fasta file", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
-        public File REFERENCE;
-
-        @Override
-        public File getReferenceFile() {
-            return REFERENCE;
-        };
-    }
 
     public static void main(final String[] args) {
         new CollectRrbsMetrics().instanceMainWithExit(args);
@@ -159,7 +146,7 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
             throw new PicardException("The input file " + INPUT.getAbsolutePath() + " does not appear to be coordinate sorted");
         }
 
-        final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
+        final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE);
         final ProgressLogger progressLogger = new ProgressLogger(log);
 
         final RrbsMetricsCollector metricsCollector = new RrbsMetricsCollector(METRIC_ACCUMULATION_LEVEL, samReader.getFileHeader().getReadGroups(),
@@ -199,7 +186,7 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
 
     private void assertIoFiles(final File summaryFile, final File detailsFile, final File plotsFile) {
         IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
+        IOUtil.assertFileIsReadable(REFERENCE);
         IOUtil.assertFileIsWritable(summaryFile);
         IOUtil.assertFileIsWritable(detailsFile);
         IOUtil.assertFileIsWritable(plotsFile);

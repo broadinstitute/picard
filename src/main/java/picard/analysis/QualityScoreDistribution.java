@@ -33,9 +33,9 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
@@ -48,8 +48,8 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        summary = QualityScoreDistribution.USAGE_SUMMARY + QualityScoreDistribution.USAGE_DETAILS,
-        oneLineSummary = QualityScoreDistribution.USAGE_SUMMARY,
+        usage = QualityScoreDistribution.USAGE_SUMMARY + QualityScoreDistribution.USAGE_DETAILS,
+        usageShort = QualityScoreDistribution.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class QualityScoreDistribution extends SinglePassSamProgram {
@@ -74,16 +74,16 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
             "      CHART=qual_score_dist.pdf" +
             "</pre>" +
             "<hr />";
-    @Argument(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
+    @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 
-    @Argument(doc="If set to true calculate mean quality over aligned reads only.")
+    @Option(doc="If set to true calculate mean quality over aligned reads only.")
     public boolean ALIGNED_READS_ONLY = false;
 
-    @Argument(shortName="PF", doc="If set to true calculate mean quality over PF reads only.")
+    @Option(shortName="PF", doc="If set to true calculate mean quality over PF reads only.")
     public boolean PF_READS_ONLY = false;
 
-    @Argument(doc="If set to true, include quality for no-call bases in the distribution.")
+    @Option(doc="If set to true, include quality for no-call bases in the distribution.")
     public boolean INCLUDE_NO_CALLS = false;
 
     private final long[] qCounts  = new long[128];

@@ -33,13 +33,11 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.*;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.argumentcollections.IntervalArgumentCollection;
 import picard.cmdline.programgroups.Metrics;
 import picard.filter.CountingDuplicateFilter;
 import picard.filter.CountingFilter;
@@ -62,8 +60,8 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
  * @author tfennell
  */
 @CommandLineProgramProperties(
-        summary = CollectWgsMetrics.USAGE_SUMMARY + CollectWgsMetrics.USAGE_DETAILS,
-        oneLineSummary = CollectWgsMetrics.USAGE_SUMMARY,
+        usage = CollectWgsMetrics.USAGE_SUMMARY + CollectWgsMetrics.USAGE_DETAILS,
+        usageShort = CollectWgsMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectWgsMetrics extends CommandLineProgram {
@@ -86,75 +84,56 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
 "<hr />"
 ;
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output metrics file.")
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output metrics file.")
     public File OUTPUT;
 
-    @Argument(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality for a read to contribute coverage.")
+    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "The reference sequence fasta aligned to.")
+    public File REFERENCE_SEQUENCE;
+
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
     public int MINIMUM_MAPPING_QUALITY = 20;
 
-    @Argument(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage. N bases will be treated as having a base quality " +
-            "of negative infinity and will therefore be excluded from coverage regardless of the value of this parameter.")
+    @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage. N bases will be treated as having a base quality " +
+            "of negative infinity and will therefore be excluded from coverage regardless of the value of this parameter.", overridable = true)
     public int MINIMUM_BASE_QUALITY = 20;
 
-    @Argument(shortName = "CAP", doc = "Treat positions with coverage exceeding this value as if they had coverage at this value (but calculate the difference for PCT_EXC_CAPPED).")
+    @Option(shortName = "CAP", doc = "Treat positions with coverage exceeding this value as if they had coverage at this value (but calculate the difference for PCT_EXC_CAPPED).", overridable = true)
     public int COVERAGE_CAP = 250;
 
-    @Argument(doc="At positions with coverage exceeding this value, completely ignore reads that accumulate beyond this value (so that they will not be considered for PCT_EXC_CAPPED).  Used to keep memory consumption in check, but could create bias if set too low")
+    @Option(doc="At positions with coverage exceeding this value, completely ignore reads that accumulate beyond this value (so that they will not be considered for PCT_EXC_CAPPED).  Used to keep memory consumption in check, but could create bias if set too low", overridable = true)
     public int LOCUS_ACCUMULATION_CAP = 100000;
 
-    @Argument(doc = "For debugging purposes, stop after processing this many genomic bases.")
+    @Option(doc = "For debugging purposes, stop after processing this many genomic bases.")
     public long STOP_AFTER = -1;
 
-    @Argument(doc = "Determines whether to include the base quality histogram in the metrics file.")
+    @Option(doc = "Determines whether to include the base quality histogram in the metrics file.")
     public boolean INCLUDE_BQ_HISTOGRAM = false;
 
-    @Argument(doc="If true, count unpaired reads, and paired reads with one end unmapped")
+    @Option(doc="If true, count unpaired reads, and paired reads with one end unmapped")
     public boolean COUNT_UNPAIRED = false;
 
-    @Argument(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
+    @Option(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
     public int SAMPLE_SIZE=10000;
 
-    @ArgumentCollection
-    protected IntervalArgumentCollection intervalArugmentCollection = makeIntervalArgumentCollection();
-
-    @Argument(doc = "If true, fast algorithm is used.")
+    @Option(doc = "If true, fast algorithm is used.")
     public boolean USE_FAST_ALGORITHM = false;
 
-    @Argument(doc = "Average read length in the file. Default is 150.", optional = true)
+    @Option(doc = "Average read length in the file. Default is 150.", optional = true)
     public int READ_LENGTH = 150;
 
-    protected File INTERVALS = null;
+    @Option(doc = "An interval list file that contains the positions to restrict the assessment. Please note that " +
+            "all bases of reads that overlap these intervals will be considered, even if some of those bases extend beyond the boundaries of " +
+            "the interval. The ideal use case for this argument is to use it to restrict the calculation to a subset of (whole) contigs.",
+            optional = true, overridable = true)
+    public File INTERVALS = null;
 
     private SAMFileHeader header = null;
 
     private final Log log = Log.getInstance(CollectWgsMetrics.class);
     private static final double LOG_ODDS_THRESHOLD = 3.0;
-
-    @Override
-    protected boolean requiresReference() {
-        return true;
-    }
-
-    /**
-     * @return An interval argument collection to be used for this tool. Subclasses can override this
-     * to provide an argument collection with alternative arguments or argument annotations.
-     */
-    protected IntervalArgumentCollection makeIntervalArgumentCollection() {
-        return new CollectWgsMetricsIntervalArgumentCollection();
-    }
-
-    public static class CollectWgsMetricsIntervalArgumentCollection implements IntervalArgumentCollection {
-        @Argument(doc = "An interval list file that contains the positions to restrict the assessment. Please note that " +
-                "all bases of reads that overlap these intervals will be considered, even if some of those bases extend beyond the boundaries of " +
-                "the interval. The ideal use case for this argument is to use it to restrict the calculation to a subset of (whole) contigs.",
-                optional = true)
-        public File INTERVALS;
-
-        public File getIntervalFile() { return INTERVALS; };
-    };
 
     /** Metrics for evaluating the performance of whole genome sequencing experiments. */
     public static class WgsMetrics extends MergeableMetricBase {
@@ -449,7 +428,6 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
-        INTERVALS = intervalArugmentCollection.getIntervalFile();
         if (INTERVALS != null) {
             IOUtil.assertFileIsReadable(INTERVALS);
         }

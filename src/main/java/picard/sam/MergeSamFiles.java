@@ -40,10 +40,10 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
-import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -59,8 +59,8 @@ import java.util.Map;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        summary = MergeSamFiles.USAGE_SUMMARY + MergeSamFiles.USAGE_DETAILS,
-        oneLineSummary = MergeSamFiles.USAGE_SUMMARY,
+        usage = MergeSamFiles.USAGE_SUMMARY + MergeSamFiles.USAGE_DETAILS,
+        usageShort = MergeSamFiles.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class MergeSamFiles extends CommandLineProgram {
@@ -83,31 +83,31 @@ public class MergeSamFiles extends CommandLineProgram {
             "</pre>" +
             "<hr />"
            ;
-    @Argument(shortName = "I", doc = "SAM or BAM input file", minElements = 1)
+    @Option(shortName = "I", doc = "SAM or BAM input file", minElements = 1)
     public List<File> INPUT = new ArrayList<File>();
 
-    @Argument(shortName = "O", doc = "SAM or BAM file to write merged result to")
+    @Option(shortName = "O", doc = "SAM or BAM file to write merged result to")
     public File OUTPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc = "Sort order of output file", optional = true)
+    @Option(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc = "Sort order of output file", optional = true)
     public SAMFileHeader.SortOrder SORT_ORDER = SAMFileHeader.SortOrder.coordinate;
 
-    @Argument(doc = "If true, assume that the input files are in the same sort order as the requested output sort order, even if their headers say otherwise.",
+    @Option(doc = "If true, assume that the input files are in the same sort order as the requested output sort order, even if their headers say otherwise.",
             shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = false;
 
-    @Argument(shortName = "MSD", doc = "Merge the sequence dictionaries", optional = true)
+    @Option(shortName = "MSD", doc = "Merge the sequence dictionaries", optional = true)
     public boolean MERGE_SEQUENCE_DICTIONARIES = false;
 
-    @Argument(doc = "Option to create a background thread to encode, " +
+    @Option(doc = "Option to create a background thread to encode, " +
             "compress and write to disk the output file. The threaded version uses about 20% more CPU and decreases " +
             "runtime by ~20% when writing out a compressed BAM file.")
     public boolean USE_THREADING = false;
 
-    @Argument(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
+    @Option(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
     public List<String> COMMENT = new ArrayList<String>();
 
-    @Argument(shortName = "RGN", doc = "An interval list file that contains the locations of the positions to merge. "+
+    @Option(shortName = "RGN", doc = "An interval list file that contains the locations of the positions to merge. "+
             "Assume bam are sorted and indexed. "+
             "The resulting file will contain alignments that may overlap with genomic regions outside the requested region. "+
             "Unmapped reads are discarded.",

@@ -4,11 +4,10 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProcessExecutor;
 import htsjdk.samtools.util.StringUtil;
-import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Illumina;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Illumina;
 import picard.illumina.parser.IlluminaDataProviderFactory;
@@ -43,8 +42,8 @@ import static picard.illumina.parser.NewIlluminaDataProvider.fileToTile;
  * specified data type.  If NO data type is specified then the default data types used by IlluminaBasecallsToSam are used.
  */
 @CommandLineProgramProperties(
-        summary = CheckIlluminaDirectory.USAGE_SUMMARY + CheckIlluminaDirectory.USAGE_DETAILS,
-        oneLineSummary = CheckIlluminaDirectory.USAGE_SUMMARY,
+        usage = CheckIlluminaDirectory.USAGE_SUMMARY + CheckIlluminaDirectory.USAGE_DETAILS,
+        usageShort = CheckIlluminaDirectory.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
 public class CheckIlluminaDirectory extends CommandLineProgram {
@@ -68,10 +67,10 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
     // The following attributes define the command-line arguments
 
-    @Argument(doc = "The basecalls output directory. ", shortName = "B")
+    @Option(doc = "The basecalls output directory. ", shortName = "B")
     public File BASECALLS_DIR;
 
-    @Argument(doc = "The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are " +
+    @Option(doc = "The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are " +
             "those required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary " +
             "slightly depending on whether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to " +
             "IlluminaBasecallsToSam.  " +
@@ -81,24 +80,24 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             shortName = "DT", optional = true)
     public Set<IlluminaDataType> DATA_TYPES = new TreeSet<>();
 
-    @Argument(doc = ReadStructure.PARAMETER_DOC + " Note:  If you want to check whether or not a future IlluminaBasecallsToSam or " +
+    @Option(doc = ReadStructure.PARAMETER_DOC + " Note:  If you want to check whether or not a future IlluminaBasecallsToSam or " +
             "ExtractIlluminaBarcodes run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs " +
             "for this run.",
             shortName = "RS")
     public String READ_STRUCTURE;
 
-    @Argument(doc = "The number of the lane(s) to check. ", shortName = StandardOptionDefinitions.LANE_SHORT_NAME,
+    @Option(doc = "The number of the lane(s) to check. ", shortName = StandardOptionDefinitions.LANE_SHORT_NAME,
             minElements = 1)
     public List<Integer> LANES;
 
-    @Argument(doc = "The number(s) of the tile(s) to check. ", shortName = "T", optional = true)
+    @Option(doc = "The number(s) of the tile(s) to check. ", shortName = "T", optional = true)
     public List<Integer> TILE_NUMBERS;
 
-    @Argument(doc = "A flag to determine whether or not to create fake versions of the missing files.", shortName = "F",
+    @Option(doc = "A flag to determine whether or not to create fake versions of the missing files.", shortName = "F",
             optional = true)
     public Boolean FAKE_FILES = false;
 
-    @Argument(doc = "A flag to create symlinks to the loc file for the X Ten for each tile.", shortName = "X",
+    @Option(doc = "A flag to create symlinks to the loc file for the X Ten for each tile.", shortName = "X",
             optional = true)
     public Boolean LINK_LOCS = false;
 

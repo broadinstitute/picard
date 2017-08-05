@@ -31,11 +31,10 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.analysis.directed.InsertSizeMetricsCollector;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
@@ -49,11 +48,10 @@ import java.util.Set;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 @CommandLineProgramProperties(
-        summary = CollectInsertSizeMetrics.USAGE_SUMMARY + CollectInsertSizeMetrics.USAGE_BRIEF,
-        oneLineSummary = CollectInsertSizeMetrics.USAGE_BRIEF,
+        usage = CollectInsertSizeMetrics.USAGE_SUMMARY + CollectInsertSizeMetrics.USAGE_BRIEF,
+        usageShort = CollectInsertSizeMetrics.USAGE_BRIEF,
         programGroup = Metrics.class
 )
-@DocumentedFeature
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     static final String USAGE_BRIEF = "Collect metrics about the insert size distribution of a paired-end library.";
     static final String USAGE_SUMMARY = "<p>This tool provides useful metrics for validating library construction including " +
@@ -85,26 +83,26 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
     protected static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";
 
-    @Argument(shortName="H", doc="File to write insert size Histogram chart to.")
-    public File HISTOGRAM_FILE;
+    @Option(shortName="H", doc="File to write insert size Histogram chart to.")
+    public File Histogram_FILE;
 
-    @Argument(doc="Generate mean, sd and plots by trimming the data down to MEDIAN + DEVIATIONS*MEDIAN_ABSOLUTE_DEVIATION. " +
+    @Option(doc="Generate mean, sd and plots by trimming the data down to MEDIAN + DEVIATIONS*MEDIAN_ABSOLUTE_DEVIATION. " +
             "This is done because insert size data typically includes enough anomalous values from chimeras and other " +
             "artifacts to make the mean and sd grossly misleading regarding the real distribution.")
     public double DEVIATIONS = 10;
 
-    @Argument(shortName="W", doc="Explicitly sets the Histogram width, overriding automatic truncation of Histogram tail. " +
+    @Option(shortName="W", doc="Explicitly sets the Histogram width, overriding automatic truncation of Histogram tail. " +
             "Also, when calculating mean and standard deviation, only bins <= Histogram_WIDTH will be included.", optional=true)
     public Integer HISTOGRAM_WIDTH = null;
 
-    @Argument(shortName="M", doc="When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
+    @Option(shortName="M", doc="When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
             "percentage of overall reads. (Range: 0 to 1).")
     public float MINIMUM_PCT = 0.05f;
 
-    @Argument(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
+    @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
-    @Argument(doc="If true, also include reads marked as duplicates in the insert size histogram.")
+    @Option(doc="If true, also include reads marked as duplicates in the insert size histogram.")
     public boolean INCLUDE_DUPLICATES = false;
 
     // Calculates InsertSizeMetrics for all METRIC_ACCUMULATION_LEVELs provided
@@ -136,7 +134,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 
     @Override protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
-        IOUtil.assertFileIsWritable(HISTOGRAM_FILE);
+        IOUtil.assertFileIsWritable(Histogram_FILE);
 
         //Delegate actual collection to InsertSizeMetricCollector
         multiCollector = new InsertSizeMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(),
@@ -168,13 +166,13 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
                 rResult = RExecutor.executeFromClasspath(
                     Histogram_R_SCRIPT,
                     OUTPUT.getAbsolutePath(),
-                    HISTOGRAM_FILE.getAbsolutePath(),
+                    Histogram_FILE.getAbsolutePath(),
                     INPUT.getName());
             } else {
                 rResult = RExecutor.executeFromClasspath(
                     Histogram_R_SCRIPT,
                     OUTPUT.getAbsolutePath(),
-                    HISTOGRAM_FILE.getAbsolutePath(),
+                    Histogram_FILE.getAbsolutePath(),
                     INPUT.getName(),
                     String.valueOf(HISTOGRAM_WIDTH) ); //Histogram_WIDTH is passed because R automatically sets Histogram width to the last
                                                          //bin that has data, which may be less than Histogram_WIDTH and confuse the user.

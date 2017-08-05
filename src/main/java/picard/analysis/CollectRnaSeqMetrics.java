@@ -34,12 +34,12 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
@@ -49,8 +49,8 @@ import java.util.List;
 import java.util.Set;
 
 @CommandLineProgramProperties(
-        summary = CollectRnaSeqMetrics.USAGE_SUMMARY + CollectRnaSeqMetrics.USAGE_DETAILS,
-        oneLineSummary = CollectRnaSeqMetrics.USAGE_SUMMARY,
+        usage = CollectRnaSeqMetrics.USAGE_SUMMARY + CollectRnaSeqMetrics.USAGE_DETAILS,
+        usageShort = CollectRnaSeqMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
@@ -102,32 +102,32 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
 
-    @Argument(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
+    @Option(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
     public File REF_FLAT;
 
-    @Argument(doc="Location of rRNA sequences in genome, in interval_list format.  " +
+    @Option(doc="Location of rRNA sequences in genome, in interval_list format.  " +
             "If not specified no bases will be identified as being ribosomal.  " +
             "Format described <a href=\"http://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalList.html\">here</a>:", optional = true)
     public File RIBOSOMAL_INTERVALS;
 
-    @Argument(shortName = "STRAND", doc="For strand-specific library prep. " +
+    @Option(shortName = "STRAND", doc="For strand-specific library prep. " +
             "For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND if the reads are expected to be on the transcription strand.")
     public RnaSeqMetricsCollector.StrandSpecificity STRAND_SPECIFICITY;
 
-    @Argument(doc="When calculating coverage based values (e.g. CV of coverage) only use transcripts of this length or greater.")
+    @Option(doc="When calculating coverage based values (e.g. CV of coverage) only use transcripts of this length or greater.")
     public int MINIMUM_LENGTH = 500;
 
-    @Argument(doc="The PDF file to write out a plot of normalized position vs. coverage.", shortName="CHART", optional = true)
+    @Option(doc="The PDF file to write out a plot of normalized position vs. coverage.", shortName="CHART", optional = true)
     public File CHART_OUTPUT;
 
-    @Argument(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.  " +
+    @Option(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.  " +
     "These reads are not counted as ")
     public Set<String> IGNORE_SEQUENCE = new HashSet<String>();
 
-    @Argument(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair to be considered rRNA.")
+    @Option(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair to be considered rRNA.")
     public double RRNA_FRAGMENT_PERCENTAGE = 0.8;
 
-    @Argument(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
+    @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
     private RnaSeqMetricsCollector collector;

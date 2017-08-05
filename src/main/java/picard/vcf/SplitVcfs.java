@@ -13,10 +13,10 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
@@ -30,8 +30,8 @@ import java.io.File;
  * extension will create gzip-compressed output.
  */
 @CommandLineProgramProperties(
-        summary = SplitVcfs.USAGE_SUMMARY + SplitVcfs.USAGE_DETAILS,
-        oneLineSummary = SplitVcfs.USAGE_SUMMARY,
+        usage = SplitVcfs.USAGE_SUMMARY + SplitVcfs.USAGE_DETAILS,
+        usageShort = SplitVcfs.USAGE_SUMMARY,
         programGroup = VcfOrBcf.class
 )
 public class SplitVcfs extends CommandLineProgram {
@@ -49,19 +49,19 @@ public class SplitVcfs extends CommandLineProgram {
             "      STRICT=false" +
             "</pre>" +
             "<hr />" ;
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF or BCF input file")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF or BCF input file")
     public File INPUT;
 
-    @Argument(doc = "The VCF or BCF file to which SNP records should be written. The file format is determined by file extension.")
+    @Option(doc = "The VCF or BCF file to which SNP records should be written. The file format is determined by file extension.")
     public File SNP_OUTPUT;
 
-    @Argument(doc = "The VCF or BCF file to which indel records should be written. The file format is determined by file extension.")
+    @Option(doc = "The VCF or BCF file to which indel records should be written. The file format is determined by file extension.")
     public File INDEL_OUTPUT;
 
-    @Argument(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionaries in the input files", optional = true)
+    @Option(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionaries in the input files", optional = true)
     public File SEQUENCE_DICTIONARY;
 
-    @Argument(doc = "If true an exception will be thrown if an event type other than SNP or indel is encountered")
+    @Option(doc = "If true an exception will be thrown if an event type other than SNP or indel is encountered")
     public Boolean STRICT = true;
 
     private final Log log = Log.getInstance(SplitVcfs.class);

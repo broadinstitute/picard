@@ -43,10 +43,10 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
-import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.DbSnpBitSetUtil;
@@ -66,8 +66,8 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
  * Class for trying to quantify the CpCG->CpCA error rate.
  */
 @CommandLineProgramProperties(
-        summary = CollectOxoGMetrics.USAGE_SUMMARY + CollectOxoGMetrics.USAGE_DETAILS,
-        oneLineSummary = CollectOxoGMetrics.USAGE_SUMMARY,
+        usage = CollectOxoGMetrics.USAGE_SUMMARY + CollectOxoGMetrics.USAGE_DETAILS,
+        usageShort = CollectOxoGMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectOxoGMetrics extends CommandLineProgram {
@@ -94,51 +94,55 @@ public class CollectOxoGMetrics extends CommandLineProgram {
             "</pre>" +
             "" +
             "<hr />";
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "Input BAM file for analysis.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "Location of output metrics file to write.")
     public File OUTPUT;
 
-    @Argument(doc = "An optional list of intervals to restrict analysis to.",
+    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME,
+            doc = "Reference sequence to which BAM is aligned.")
+    public File REFERENCE_SEQUENCE;
+
+    @Option(doc = "An optional list of intervals to restrict analysis to.",
             optional = true)
     public File INTERVALS;
 
-    @Argument(doc = "VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis.",
+    @Option(doc = "VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis.",
             optional = true)
     public File DB_SNP;
 
-    @Argument(shortName = "Q",
+    @Option(shortName = "Q",
             doc = "The minimum base quality score for a base to be included in analysis.")
     public int MINIMUM_QUALITY_SCORE = 20;
 
-    @Argument(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME,
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME,
             doc = "The minimum mapping quality score for a base to be included in analysis.")
     public int MINIMUM_MAPPING_QUALITY = 30;
 
-    @Argument(shortName = "MIN_INS",
+    @Option(shortName = "MIN_INS",
             doc = "The minimum insert size for a read to be included in analysis. Set of 0 to allow unpaired reads.")
     public int MINIMUM_INSERT_SIZE = 60;
 
-    @Argument(shortName = "MAX_INS",
+    @Option(shortName = "MAX_INS",
             doc = "The maximum insert size for a read to be included in analysis. Set of 0 to allow unpaired reads.")
     public int MAXIMUM_INSERT_SIZE = 600;
 
-    @Argument(shortName = "NON_PF", doc = "Whether or not to include non-PF reads.")
+    @Option(shortName = "NON_PF", doc = "Whether or not to include non-PF reads.")
     public boolean INCLUDE_NON_PF_READS = true;
 
-    @Argument(doc = "When available, use original quality scores for filtering.")
+    @Option(doc = "When available, use original quality scores for filtering.")
     public boolean USE_OQ = true;
 
-    @Argument(doc = "The number of context bases to include on each side of the assayed G/C base.")
+    @Option(doc = "The number of context bases to include on each side of the assayed G/C base.")
     public int CONTEXT_SIZE = 1;
 
-    @Argument(doc = "The optional set of sequence contexts to restrict analysis to. If not supplied all contexts are analyzed.", optional = true)
+    @Option(doc = "The optional set of sequence contexts to restrict analysis to. If not supplied all contexts are analyzed.")
     public Set<String> CONTEXTS = new HashSet<String>();
 
-    @Argument(doc = "For debugging purposes: stop after visiting this many sites with at least 1X coverage.")
+    @Option(doc = "For debugging purposes: stop after visiting this many sites with at least 1X coverage.")
     public int STOP_AFTER = Integer.MAX_VALUE;
 
     private final Log log = Log.getInstance(CollectOxoGMetrics.class);
@@ -212,11 +216,6 @@ public class CollectOxoGMetrics extends CommandLineProgram {
     // Stock main method
     public static void main(final String[] args) {
         new CollectOxoGMetrics().instanceMainWithExit(args);
-    }
-
-    @Override
-    protected boolean requiresReference() {
-        return true;
     }
 
     @Override

@@ -5,11 +5,11 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.util.*;
 import htsjdk.variant.vcf.VCFFileReader;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineParser.ClpEnum;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
+import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.programgroups.Intervals;
 import picard.cmdline.StandardOptionDefinitions;
 
@@ -28,8 +28,8 @@ import java.util.Set;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        summary = IntervalListTools.USAGE_SUMMARY + IntervalListTools.USAGE_DETAILS,
-        oneLineSummary = IntervalListTools.USAGE_SUMMARY,
+        usage = IntervalListTools.USAGE_SUMMARY + IntervalListTools.USAGE_DETAILS,
+        usageShort = IntervalListTools.USAGE_SUMMARY,
         programGroup = Intervals.class
 )
 public class IntervalListTools extends CommandLineProgram {
@@ -60,53 +60,53 @@ public class IntervalListTools extends CommandLineProgram {
             "      O=new.interval_list" +
             "</pre>" +
             "<hr />";
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more interval lists. If multiple interval lists are provided the output is the" +
                     "result of merging the inputs. Supported formats are interval_list and VCF.", minElements = 1)
     public List<File> INPUT;
 
-    @Argument(doc = "The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which " +
+    @Option(doc = "The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which " +
             "to write the scattered interval sub-directories (if SCATTER_COUNT > 1)", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
-    @Argument(doc = "The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed " +
+    @Option(doc = "The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed " +
             "and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists <b> before </b> the ACTION is performed.", optional = true)
     public int PADDING = 0;
 
-    @Argument(doc = "If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true")
+    @Option(doc = "If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true")
     public boolean UNIQUE = false;
 
-    @Argument(doc = "If true, sort the resulting interval list by coordinate.")
+    @Option(doc = "If true, sort the resulting interval list by coordinate.")
     public boolean SORT = true;
 
-    @Argument(doc = "Action to take on inputs.")
+    @Option(doc = "Action to take on inputs.")
     public Action ACTION = Action.CONCAT;
 
-    @Argument(shortName = "SI", doc = "Second set of intervals for SUBTRACT and DIFFERENCE operations.", optional = true)
+    @Option(shortName = "SI", doc = "Second set of intervals for SUBTRACT and DIFFERENCE operations.", optional = true)
     public List<File> SECOND_INPUT;
 
-    @Argument(doc = "One or more lines of comment to add to the header of the output file.", optional = true)
+    @Option(doc = "One or more lines of comment to add to the header of the output file.", optional = true)
     public List<String> COMMENT = null;
 
-    @Argument(doc = "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  " +
+    @Option(doc = "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  " +
             "Note - if > 1, the resultant scattered intervals will be sorted and uniqued.  The sort will be inverted if the INVERT flag is set.")
     public int SCATTER_COUNT = 1;
 
-    @Argument(doc = "Whether to include filtered variants in the vcf when generating an interval list from vcf", optional = true)
+    @Option(doc = "Whether to include filtered variants in the vcf when generating an interval list from vcf", optional = true)
     public boolean INCLUDE_FILTERED=false;
 
-    @Argument(shortName = "BRK", doc = "If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value.  Set to 0 to NOT break up intervals", optional = true)
+    @Option(shortName = "BRK", doc = "If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value.  Set to 0 to NOT break up intervals", optional = true)
     public int BREAK_BANDS_AT_MULTIPLES_OF = 0;
 
-    @Argument(shortName = "M", doc = "Do not subdivide ")
+    @Option(shortName = "M", doc = "Do not subdivide ")
     public IntervalListScatterer.Mode SUBDIVISION_MODE = IntervalListScatterer.Mode.INTERVAL_SUBDIVISION;
 
-    @Argument(doc = "Produce the inverse list", optional = true)
+    @Option(doc = "Produce the inverse list", optional = true)
     public boolean INVERT = false;
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
 
-    public enum Action implements ClpEnum {
+    public enum Action implements CommandLineParser.ClpEnum {
 
         CONCAT("The concatenation of all the INPUTs, no sorting or merging of overlapping/abutting intervals implied. Will result in an unsorted list unless requested otherwise.") {
             @Override

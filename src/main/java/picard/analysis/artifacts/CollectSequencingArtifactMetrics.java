@@ -8,14 +8,14 @@ import htsjdk.samtools.filter.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.*;
-import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
 import picard.analysis.SinglePassSamProgram;
 import picard.analysis.artifacts.SequencingArtifactMetrics.BaitBiasDetailMetrics;
 import picard.analysis.artifacts.SequencingArtifactMetrics.BaitBiasSummaryMetrics;
 import picard.analysis.artifacts.SequencingArtifactMetrics.PreAdapterDetailMetrics;
 import picard.analysis.artifacts.SequencingArtifactMetrics.PreAdapterSummaryMetrics;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.DbSnpBitSetUtil;
 import picard.util.VariantType;
@@ -44,8 +44,8 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
  *
  */
 @CommandLineProgramProperties(
-        summary = CollectSequencingArtifactMetrics.USAGE_SUMMARY + CollectSequencingArtifactMetrics.USAGE_DETAILS,
-        oneLineSummary = CollectSequencingArtifactMetrics.USAGE_SUMMARY,
+        usage = CollectSequencingArtifactMetrics.USAGE_SUMMARY + CollectSequencingArtifactMetrics.USAGE_DETAILS,
+        usageShort = CollectSequencingArtifactMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {
@@ -87,49 +87,49 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
 "for complete descriptions of the output metrics produced by this tool. "+
 "<hr />"
 ;
-    @Argument(doc = "An optional list of intervals to restrict analysis to.", optional = true)
+    @Option(doc = "An optional list of intervals to restrict analysis to.", optional = true)
     public File INTERVALS;
 
-    @Argument(doc = "VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis.", optional = true)
+    @Option(doc = "VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis.", optional = true)
     public File DB_SNP;
 
-    @Argument(shortName = "Q", doc = "The minimum base quality score for a base to be included in analysis.")
+    @Option(shortName = "Q", doc = "The minimum base quality score for a base to be included in analysis.")
     public int MINIMUM_QUALITY_SCORE = 20;
 
-    @Argument(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "The minimum mapping quality score for a base to be included in analysis.")
+    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "The minimum mapping quality score for a base to be included in analysis.")
     public int MINIMUM_MAPPING_QUALITY = 30;
 
-    @Argument(shortName = "MIN_INS", doc = "The minimum insert size for a read to be included in analysis.")
+    @Option(shortName = "MIN_INS", doc = "The minimum insert size for a read to be included in analysis.")
     public int MINIMUM_INSERT_SIZE = 60;
 
-    @Argument(shortName = "MAX_INS", doc = "The maximum insert size for a read to be included in analysis. Set to 0 to have no maximum.")
+    @Option(shortName = "MAX_INS", doc = "The maximum insert size for a read to be included in analysis. Set to 0 to have no maximum.")
     public int MAXIMUM_INSERT_SIZE = 600;
 
-    @Argument(shortName = "UNPAIRED", doc = "Include unpaired reads. If set to true then all paired reads will be included as well - " +
+    @Option(shortName = "UNPAIRED", doc = "Include unpaired reads. If set to true then all paired reads will be included as well - " +
             "MINIMUM_INSERT_SIZE and MAXIMUM_INSERT_SIZE will be ignored.")
     public boolean INCLUDE_UNPAIRED = false;
 
-    @Argument(shortName = "DUPES", doc = "Include duplicate reads. If set to true then all reads flagged as duplicates will be included as well.")
+    @Option(shortName = "DUPES", doc = "Include duplicate reads. If set to true then all reads flagged as duplicates will be included as well.")
     public boolean INCLUDE_DUPLICATES = false;
 
-    @Argument(shortName = "NON_PF", doc = "Whether or not to include non-PF reads.")
+    @Option(shortName = "NON_PF", doc = "Whether or not to include non-PF reads.")
     public boolean INCLUDE_NON_PF_READS = false;
 
-    @Argument(shortName = "TANDEM", doc = "Set to true if mate pairs are being sequenced from the same strand, " +
+    @Option(shortName = "TANDEM", doc = "Set to true if mate pairs are being sequenced from the same strand, " +
             "i.e. they're expected to face the same direction.")
     public boolean TANDEM_READS = false;
 
-    @Argument(doc = "When available, use original quality scores for filtering.")
+    @Option(doc = "When available, use original quality scores for filtering.")
     public boolean USE_OQ = true;
 
-    @Argument(doc = "The number of context bases to include on each side of the assayed base.")
+    @Option(doc = "The number of context bases to include on each side of the assayed base.")
     public int CONTEXT_SIZE = 1;
 
-    @Argument(doc = "If specified, only print results for these contexts in the detail metrics output. " +
-                  "However, the summary metrics output will still take all contexts into consideration.", optional = true)
+    @Option(doc = "If specified, only print results for these contexts in the detail metrics output. " +
+                  "However, the summary metrics output will still take all contexts into consideration.")
     public Set<String> CONTEXTS_TO_PRINT = new HashSet<String>();
 
-    @Argument(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.pre_adapter_summary_metrics.EXT). None if null", optional=true)
+    @Option(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.pre_adapter_summary_metrics.EXT). None if null", optional=true)
     public String FILE_EXTENSION = null;
 
     private static final String UNKNOWN_LIBRARY = "UnknownLibrary";
@@ -155,11 +155,6 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
     private static final Log log = Log.getInstance(CollectSequencingArtifactMetrics.class);
 
     @Override
-    protected boolean requiresReference() {
-        return true;
-    }
-
-    @Override
     protected String[] customCommandLineValidation() {
         final List<String> messages = new ArrayList<String>();
 
@@ -176,6 +171,8 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
         if (MAXIMUM_INSERT_SIZE > 0 && MAXIMUM_INSERT_SIZE < MINIMUM_INSERT_SIZE) {
             messages.add("MAXIMUM_INSERT_SIZE cannot be less than MINIMUM_INSERT_SIZE unless set to 0");
         }
+
+        if (REFERENCE_SEQUENCE == null) messages.add("REFERENCE_SEQUENCE must be provided.");
 
         return messages.isEmpty() ? null : messages.toArray(new String[messages.size()]);
     }

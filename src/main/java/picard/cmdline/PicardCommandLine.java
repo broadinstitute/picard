@@ -2,8 +2,6 @@ package picard.cmdline;
 
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
-import org.broadinstitute.barclay.argparser.CommandLineProgramGroup;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -243,9 +241,9 @@ public class PicardCommandLine {
                 }
                 if (!commandListOnly) {
                     if (clazz.getSimpleName().length() >= 45) {
-                        builder.append(String.format("%s    %s    %s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.oneLineSummary(), KNRM));
+                        builder.append(String.format("%s    %s    %s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
                     } else {
-                        builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.oneLineSummary(), KNRM));
+                        builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
                     }
                 }
                 else {

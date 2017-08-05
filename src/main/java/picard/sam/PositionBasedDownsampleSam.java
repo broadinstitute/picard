@@ -37,10 +37,10 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 import picard.sam.markduplicates.util.OpticalDuplicateFinder;
@@ -74,7 +74,7 @@ import java.util.Map;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        summary = "Class to downsample a BAM file while respecting that we should either get rid of both ends of a pair or neither \n" +
+        usage = "Class to downsample a BAM file while respecting that we should either get rid of both ends of a pair or neither \n" +
                 "end of the pair. In addition, this program uses the read-name and extracts the position within the tile whence \n" +
                 "the read came from. The downsampling is based on this position. Results with the exact same input will produce the \n" +
                 "same results.\n" +
@@ -89,27 +89,27 @@ import java.util.Map;
                 "Finally, the code has been designed to simulate sequencing less as accurately as possible, not for getting an exact downsample \n" +
                 "fraction. In particular, since the reads may be distributed non-evenly within the lanes/tiles, the resulting downsampling \n" +
                 "percentage will not be accurately determined by the input argument FRACTION.",
-        oneLineSummary = "Downsample a SAM or BAM file to retain a subset of the reads based on the reads location in each tile in the flowcell.",
+        usageShort = "Downsample a SAM or BAM file to retain a subset of the reads based on the reads location in each tile in the flowcell.",
         programGroup = SamOrBam.class
 )
 public class PositionBasedDownsampleSam extends CommandLineProgram {
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM or BAM file to write.")
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM or BAM file to write.")
     public File OUTPUT;
 
-    @Argument(shortName = "F", doc = "The (approximate) fraction of reads to be kept, between 0 and 1.", optional = false)
+    @Option(shortName = "F", doc = "The (approximate) fraction of reads to be kept, between 0 and 1.", optional = false)
     public Double FRACTION = null;
 
-    @Argument(doc = "Stop after processing N reads, mainly for debugging.", optional = true)
+    @Option(doc = "Stop after processing N reads, mainly for debugging.", optional = true)
     public Long STOP_AFTER = null;
 
-    @Argument(doc = "Allow Downsampling again despite this being a bad idea with possibly unexpected results.", optional = true)
+    @Option(doc = "Allow Downsampling again despite this being a bad idea with possibly unexpected results.", optional = true)
     public boolean ALLOW_MULTIPLE_DOWNSAMPLING_DESPITE_WARNINGS = false;
 
-    @Argument(doc = "Determines whether the duplicate tag should be reset since the downsampling requires re-marking duplicates.")
+    @Option(doc = "Determines whether the duplicate tag should be reset since the downsampling requires re-marking duplicates.")
     public boolean REMOVE_DUPLICATE_INFORMATION = true;
 
     private final Log log = Log.getInstance(PositionBasedDownsampleSam.class);

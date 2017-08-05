@@ -36,9 +36,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
-import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.File;
@@ -53,27 +53,20 @@ import java.util.Collection;
  * @author Tim Fennell
  */
 public abstract class SinglePassSamProgram extends CommandLineProgram {
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
 
-    @Argument(shortName = "O", doc = "File to write the output to.")
+    @Option(shortName = "O", doc = "File to write the output to.")
     public File OUTPUT;
 
-    @Argument(doc = "If true (default), then the sort order in the header file will be ignored.",
+    @Option(doc = "If true (default), then the sort order in the header file will be ignored.",
             shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = true;
 
-    @Argument(doc = "Stop after processing N reads, mainly for debugging.")
+    @Option(doc = "Stop after processing N reads, mainly for debugging.")
     public long STOP_AFTER = 0;
 
     private static final Log log = Log.getInstance(SinglePassSamProgram.class);
-
-    /**
-     * Set the reference File.
-     */
-    public void setReferenceSequence(final File referenceFile) {
-        REFERENCE_SEQUENCE = referenceFile;
-    };
 
     /**
      * Final implementation of doWork() that checks and loads the input and optionally reference
@@ -165,7 +158,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         }
     }
 
-    /** Can be overridden and set to false if the section of unmapped reads at the end of the file isn't needed. */
+    /** Can be overriden and set to false if the section of unmapped reads at the end of the file isn't needed. */
     protected boolean usesNoRefReads() { return true; }
 
     /** Should be implemented by subclasses to do one-time initialization work. */

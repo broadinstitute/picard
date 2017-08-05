@@ -33,10 +33,9 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.Metrics;
 
 import java.io.File;
@@ -74,8 +73,8 @@ import java.util.Set;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 @CommandLineProgramProperties(
-        summary = CollectAlignmentSummaryMetrics.USAGE_SUMMARY + CollectAlignmentSummaryMetrics.USAGE_DETAILS,
-        oneLineSummary = CollectAlignmentSummaryMetrics.USAGE_SUMMARY,
+        usage = CollectAlignmentSummaryMetrics.USAGE_SUMMARY + CollectAlignmentSummaryMetrics.USAGE_DETAILS,
+        usageShort = CollectAlignmentSummaryMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
@@ -102,20 +101,24 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
-    @Argument(doc="Paired-end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
+    @Option(doc="Paired-end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
     public int MAX_INSERT_SIZE = ChimeraUtil.DEFAULT_INSERT_SIZE_LIMIT;
 
-    @Argument(doc="Paired-end reads that do not have this expected orientation will be considered chimeric.")
+    @Option(doc="Paired-end reads that do not have this expected orientation will be considered chimeric.")
     public Set<PairOrientation> EXPECTED_PAIR_ORIENTATIONS = EnumSet.copyOf(ChimeraUtil.DEFAULT_EXPECTED_ORIENTATIONS);
 
-    @Argument(doc="List of adapter sequences to use when processing the alignment metrics.")
+    @Option(doc="List of adapter sequences to use when processing the alignment metrics.")
 	public List<String> ADAPTER_SEQUENCE = AdapterUtility.DEFAULT_ADAPTER_SEQUENCE;
 
-    @Argument(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.")
+    @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
-    @Argument(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.")
+    @Option(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.")
     public boolean IS_BISULFITE_SEQUENCED = false;
+
+    //overridden to make it visible on the commandline and to change the doc.
+    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file. Note that while this argument isn't required, without it only a small subset of the metrics will be calculated. Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.",  optional = true, overridable = true)
+    public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
     private AlignmentSummaryMetricsCollector collector;
 
@@ -152,23 +155,4 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
         file.write(OUTPUT);
     }
-
-    //overridden to make it visible on the commandline and to change the doc.
-    @Override
-    protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
-        return new CollectAlignmentRefArgCollection();
-    }
-
-    public static class CollectAlignmentRefArgCollection implements ReferenceArgumentCollection {
-        @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME,
-                doc = "Reference sequence file. Note that while this argument isn't required, without it only a small subset of the metrics will be calculated. Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.",
-                optional = true)
-        public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
-
-        @Override
-        public File getReferenceFile() {
-            return REFERENCE_SEQUENCE;
-        };
-    }
-
 }

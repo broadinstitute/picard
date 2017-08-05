@@ -28,8 +28,8 @@ package picard.fingerprint;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import org.broadinstitute.barclay.argparser.Argument;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Fingerprinting;
 import picard.util.GraphUtils;
@@ -49,22 +49,22 @@ import java.util.stream.Collectors;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        summary = "Clusters the results from a CrosscheckFingerprints into groups that are connected according " +
+        usage = "Clusters the results from a CrosscheckFingerprints into groups that are connected according " +
                 "to a large enough LOD score.",
-        oneLineSummary = "Clusters the results of a CrosscheckFingerprints run by LOD score.",
+        usageShort = "Clusters the results of a CrosscheckFingerprints run by LOD score.",
         programGroup = Fingerprinting.class
 )
 public class ClusterCrosscheckMetrics extends CommandLineProgram {
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "The cross-check metrics file to be clustered")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
             doc = "Optional output file to write metrics to. Default is to write to stdout.")
     public File OUTPUT;
 
-    @Argument(shortName = "LOD",
+    @Option(shortName = "LOD",
             doc = "LOD score to be used as the threshold for clustering.")
     public double LOD_THRESHOLD = 0;
 
