@@ -31,10 +31,12 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloserUtil;
+import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
@@ -308,6 +310,38 @@ public class RevertSamTest extends CommandLineProgramTest {
         args[index++] = "OUTPUT_BY_READGROUP=true";
         args[index++] = "OUTPUT=" + outputDir;
         args[index++] = "OUTPUT_MAP=" + validOutputMap;
+
+        try {
+            final int returnCode = runPicardCommandLine(args);
+            Assert.assertEquals(returnCode, 1);
+        } catch (CommandLineException e) {
+            // Barclay parser throws on mutex violation
+            Assert.assertFalse(CommandLineProgram.useLegacyParser(getClass()));
+        }
+    }
+
+    @Test
+    public void testNoInput() throws Exception {
+        final File outputDir = Files.createTempDirectory("picardRevertSamTest").toFile();
+        outputDir.deleteOnExit();
+
+        final String args[] = new String[0];
+        try {
+            final int returnCode = runPicardCommandLine(args);
+            Assert.assertEquals(returnCode, 1);
+        } catch (CommandLineException e) {
+            // Barclay parser throws on command line errors
+            Assert.assertFalse(CommandLineProgram.useLegacyParser(getClass()));
+        }
+    }
+
+    @Test
+    public void testCommandLineHelp() throws Exception {
+        final File outputDir = Files.createTempDirectory("picardRevertSamTest").toFile();
+        outputDir.deleteOnExit();
+
+        final String args[] = new String[1];
+        args[0] = "--help";
         final int returnCode = runPicardCommandLine(args);
         Assert.assertEquals(returnCode, 1);
     }

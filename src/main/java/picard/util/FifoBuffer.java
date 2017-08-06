@@ -4,8 +4,8 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.RuntimeIOException;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.programgroups.None;
 
 import java.io.IOException;
@@ -26,22 +26,22 @@ import java.text.NumberFormat;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Provides a large, configurable, FIFO buffer that can be used to buffer input and output " +
+        summary = "Provides a large, configurable, FIFO buffer that can be used to buffer input and output " +
                 "streams between programs with a buffer size that is larger than that offered by native unix FIFOs (usually 64k).",
-        usageShort = "FIFO buffer used to buffer input and output streams with a customizable buffer size ",
+        oneLineSummary = "FIFO buffer used to buffer input and output streams with a customizable buffer size ",
         programGroup = None.class
 )
 public class FifoBuffer extends CommandLineProgram {
-    @Option(doc="The size of the memory buffer in bytes.")
+    @Argument(doc="The size of the memory buffer in bytes.")
     public int BUFFER_SIZE = 512 * 1024 * 1024;
 
-    @Option(doc="The size, in bytes, to read/write atomically to the input and output streams.")
+    @Argument(doc="The size, in bytes, to read/write atomically to the input and output streams.")
     public int IO_SIZE = 64 * 1024; // 64k == most common unix pipe buffer size
 
-    @Option(doc="How frequently, in seconds, to report debugging statistics. Set to zero for never.")
+    @Argument(doc="How frequently, in seconds, to report debugging statistics. Set to zero for never.")
     public int DEBUG_FREQUENCY = 0;
 
-    @Option(doc="Name to use for Fifo in debugging statements.", optional=true)
+    @Argument(doc="Name to use for Fifo in debugging statements.", optional=true)
     public String NAME;
 
     // Standard log object

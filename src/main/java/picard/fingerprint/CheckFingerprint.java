@@ -36,12 +36,12 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.analysis.FingerprintingDetailMetrics;
 import picard.analysis.FingerprintingSummaryMetrics;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Fingerprinting;
 
@@ -56,8 +56,8 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = CheckFingerprint.USAGE_DETAILS,
-        usageShort = "Computes a fingerprint from the supplied input (SAM/BAM or VCF) file and compares it to the provided genotypes",
+        summary = CheckFingerprint.USAGE_DETAILS,
+        oneLineSummary = "Computes a fingerprint from the supplied input (SAM/BAM or VCF) file and compares it to the provided genotypes",
         programGroup = Fingerprinting.class
 )
 public class CheckFingerprint extends CommandLineProgram {
@@ -75,43 +75,43 @@ public class CheckFingerprint extends CommandLineProgram {
             "files, with the summary metrics having a file extension '" + CheckFingerprint.FINGERPRINT_SUMMARY_FILE_SUFFIX + "' " +
             "and the detail metrics having a file extension '" + CheckFingerprint.FINGERPRINT_DETAIL_FILE_SUFFIX + "'.";
 
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file SAM/BAM or VCF.  If a VCF is used, " +
+    @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file SAM/BAM or VCF.  If a VCF is used, " +
             "it must have at least one sample.  If there are more than one samples in the VCF, the parameter OBSERVED_SAMPLE_ALIAS must " +
             "be provided in order to indicate which sample's data to use.  If there are no samples in the VCF, an exception will be thrown.")
     public File INPUT;
 
-    @Option(optional = true, doc = "If the input is a VCF, this parameters used to select which sample's data in the VCF to use.")
+    @Argument(optional = true, doc = "If the input is a VCF, this parameters used to select which sample's data in the VCF to use.")
     public String OBSERVED_SAMPLE_ALIAS;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The base prefix of output files to write.  The summary metrics " +
+    @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The base prefix of output files to write.  The summary metrics " +
             "will have the file extension '" + CheckFingerprint.FINGERPRINT_SUMMARY_FILE_SUFFIX + "' and the detail metrics will have " +
             "the extension '" + CheckFingerprint.FINGERPRINT_DETAIL_FILE_SUFFIX + "'.",  mutex = {"SUMMARY_OUTPUT", "DETAIL_OUTPUT"})
     public String OUTPUT;
 
-    @Option(shortName = "S", doc = "The text file to which to write summary metrics.", mutex = {"OUTPUT"})
+    @Argument(shortName = "S", doc = "The text file to which to write summary metrics.", mutex = {"OUTPUT"})
     public File SUMMARY_OUTPUT;
 
-    @Option(shortName = "D", doc = "The text file to which to write detail metrics.",  mutex = {"OUTPUT"})
+    @Argument(shortName = "D", doc = "The text file to which to write detail metrics.",  mutex = {"OUTPUT"})
     public File DETAIL_OUTPUT;
 
-    @Option(shortName="G", doc = "File of genotypes (VCF or GELI) to be used in comparison. May contain " +
+    @Argument(shortName="G", doc = "File of genotypes (VCF or GELI) to be used in comparison. May contain " +
             "any number of genotypes; CheckFingerprint will use only those that are usable for fingerprinting.")
     public File GENOTYPES;
 
-    @Option(shortName = "SAMPLE_ALIAS", optional=true, doc = "This parameter can be used to specify which sample's genotypes to use from the " +
+    @Argument(shortName = "SAMPLE_ALIAS", optional=true, doc = "This parameter can be used to specify which sample's genotypes to use from the " +
             "expected VCF file (the GENOTYPES file).  If it is not supplied, the sample name from the input " +
             "(VCF or BAM read group header) will be used.")
     public String EXPECTED_SAMPLE_ALIAS;
 
-    @Option(shortName="H", doc = "The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +          
+    @Argument(shortName="H", doc = "The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
             "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
     public File HAPLOTYPE_MAP;
 
-    @Option(shortName="LOD", doc = "When counting haplotypes checked and matching, count only haplotypes " +
+    @Argument(shortName="LOD", doc = "When counting haplotypes checked and matching, count only haplotypes " +
             "where the most likely haplotype achieves at least this LOD.")
     public double GENOTYPE_LOD_THRESHOLD = 5;
 
-    @Option(optional=true, shortName="IGNORE_RG", doc = "If the input is a SAM/BAM, and this parameter is true, treat the " +
+    @Argument(optional=true, shortName="IGNORE_RG", doc = "If the input is a SAM/BAM, and this parameter is true, treat the " +
             "entire input BAM as one single read group in the calculation, " +
             "ignoring RG annotations, and producing a single fingerprint metric for the entire BAM.")
     public boolean IGNORE_READ_GROUPS = false;

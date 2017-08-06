@@ -38,9 +38,9 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 import picard.sam.DuplicationMetrics;
@@ -78,8 +78,8 @@ import static java.lang.Math.pow;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = EstimateLibraryComplexity.USAGE_SUMMARY + EstimateLibraryComplexity.USAGE_DETAILS,
-        usageShort = EstimateLibraryComplexity.USAGE_SUMMARY,
+        summary = EstimateLibraryComplexity.USAGE_SUMMARY + EstimateLibraryComplexity.USAGE_DETAILS,
+        oneLineSummary = EstimateLibraryComplexity.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCommandLineProgram {
@@ -113,45 +113,45 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
             "Please see the documentation for the companion " +
             "<a href='https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates'>MarkDuplicates</a> tool." +
             "<hr />";
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "One or more files to combine and " +
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "One or more files to combine and " +
             "estimate library complexity from. Reads can be mapped or unmapped.")
     public List<File> INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "Output file to writes per-library metrics to.")
     public File OUTPUT;
 
-    @Option(doc = "The minimum number of bases at the starts of reads that must be identical for reads to " +
+    @Argument(doc = "The minimum number of bases at the starts of reads that must be identical for reads to " +
             "be grouped together for duplicate detection.  In effect total_reads / 4^max_id_bases reads will " +
             "be compared at a time, so lower numbers will produce more accurate results but consume " +
             "exponentially more memory and CPU.")
     public int MIN_IDENTICAL_BASES = 5;
 
-    @Option(doc = "The maximum rate of differences between two reads to call them identical.")
+    @Argument(doc = "The maximum rate of differences between two reads to call them identical.")
     public double MAX_DIFF_RATE = 0.03;
 
-    @Option(doc = "The minimum mean quality of the bases in a read pair for the read to be analyzed. Reads with " +
+    @Argument(doc = "The minimum mean quality of the bases in a read pair for the read to be analyzed. Reads with " +
             "lower average quality are filtered out and not considered in any calculations.")
     public int MIN_MEAN_QUALITY = 20;
 
-    @Option(doc = "Do not process self-similar groups that are this many times over the mean expected group size. " +
+    @Argument(doc = "Do not process self-similar groups that are this many times over the mean expected group size. " +
             "I.e. if the input contains 10m read pairs and MIN_IDENTICAL_BASES is set to 5, then the mean expected " +
             "group size would be approximately 10 reads.")
     public int MAX_GROUP_RATIO = 500;
 
-    @Option(doc = "Barcode SAM tag (ex. BC for 10X Genomics)", optional = true)
+    @Argument(doc = "Barcode SAM tag (ex. BC for 10X Genomics)", optional = true)
     public String BARCODE_TAG = null;
 
-    @Option(doc = "Read one barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
+    @Argument(doc = "Read one barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
     public String READ_ONE_BARCODE_TAG = null;
 
-    @Option(doc = "Read two barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
+    @Argument(doc = "Read two barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
     public String READ_TWO_BARCODE_TAG = null;
 
-    @Option(doc = "The maximum number of bases to consider when comparing reads (0 means no maximum).", optional = true)
+    @Argument(doc = "The maximum number of bases to consider when comparing reads (0 means no maximum).", optional = true)
     public int MAX_READ_LENGTH = 0;
 
-    @Option(doc = "Minimum number group count.  On a per-library basis, we count the number of groups of duplicates " +
+    @Argument(doc = "Minimum number group count.  On a per-library basis, we count the number of groups of duplicates " +
             "that have a particular size.  Omit from consideration any count that is less than this value.  For " +
             "example, if we see only one group of duplicates with size 500, we omit it from the metric calculations if " +
             "MIN_GROUP_COUNT is set to two.  Setting this to two may help remove technical artifacts from the library " +

@@ -35,10 +35,10 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 import picard.sam.DuplicationMetrics;
@@ -55,8 +55,8 @@ import java.util.List;
  * @author ktibbett@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = CollectJumpingLibraryMetrics.USAGE_SUMMARY + CollectJumpingLibraryMetrics.USAGE_DETAILS,
-        usageShort = CollectJumpingLibraryMetrics.USAGE_SUMMARY,
+        summary = CollectJumpingLibraryMetrics.USAGE_SUMMARY + CollectJumpingLibraryMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectJumpingLibraryMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectJumpingLibraryMetrics extends CommandLineProgram {
@@ -86,16 +86,16 @@ public class CollectJumpingLibraryMetrics extends CommandLineProgram {
 
     // Usage and parameters
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "BAM file(s) of reads with duplicates marked")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "BAM file(s) of reads with duplicates marked")
     public List<File> INPUT = new ArrayList<File>();
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "File to which metrics should be written")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "File to which metrics should be written")
     public File OUTPUT;
-    @Option(shortName = StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Mapping quality minimum cutoff")
+    @Argument(shortName = StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Mapping quality minimum cutoff")
     public Integer MINIMUM_MAPPING_QUALITY = 0;
-    @Option(shortName = "T", doc = "When calculating mean and stdev stop when the bins in the tail of the distribution " +
+    @Argument(shortName = "T", doc = "When calculating mean and stdev stop when the bins in the tail of the distribution " +
             "contain fewer than mode/TAIL_LIMIT items")
     public int TAIL_LIMIT = 10000;
-    @Option(doc = "Jumps greater than or equal to the greater of this value or 2 times the mode of the " +
+    @Argument(doc = "Jumps greater than or equal to the greater of this value or 2 times the mode of the " +
             "outward-facing pairs are considered chimeras")
     public int CHIMERA_KB_MIN = 100000;
 

@@ -6,9 +6,12 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.SequenceUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import picard.cmdline.programgroups.Intervals;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Intervals;
 
@@ -24,8 +27,8 @@ import java.util.*;
  */
 
 @CommandLineProgramProperties(
-        usage = ScatterIntervalsByNs.USAGE_SUMMARY + ScatterIntervalsByNs.USAGE_DETAILS,
-        usageShort = ScatterIntervalsByNs.USAGE_SUMMARY,
+        summary = ScatterIntervalsByNs.USAGE_SUMMARY + ScatterIntervalsByNs.USAGE_DETAILS,
+        oneLineSummary = ScatterIntervalsByNs.USAGE_SUMMARY,
         programGroup = Intervals.class
 )
 public class ScatterIntervalsByNs extends CommandLineProgram {
@@ -42,18 +45,13 @@ public class ScatterIntervalsByNs extends CommandLineProgram {
             "      O=output.interval_list" +
             "</pre>" +
             "<hr />";
-    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence to use. " +
-            "Note: this tool requires that the reference fasta " +
-            "has both an associated index and a dictionary.")
-    public File REFERENCE;
-
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file for interval list.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file for interval list.")
     public File OUTPUT;
 
-    @Option(shortName = "OT", doc = "Type of intervals to output.", optional = true)
+    @Argument(shortName = "OT", doc = "Type of intervals to output.", optional = true)
     public OutputType OUTPUT_TYPE = OutputType.BOTH;
 
-    @Option(shortName = "N", doc = "Maximal number of contiguous N bases to tolerate, thereby continuing the current ACGT interval.", optional = true)
+    @Argument(shortName = "N", doc = "Maximal number of contiguous N bases to tolerate, thereby continuing the current ACGT interval.", optional = true)
     public int MAX_TO_MERGE = 1;
 
     //not using an enum since Interval.name is a String, and am using that to define the type of the Interval
@@ -85,12 +83,31 @@ public class ScatterIntervalsByNs extends CommandLineProgram {
         new ScatterIntervalsByNs().instanceMainWithExit(args);
     }
 
+    // return a custom argument collection since this tool uses a (required) argument name
+    // of "REFERENCE", not "REFERENCE_SEQUENCE"
+    @Override
+    protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
+        return new ScatterIntervalsByNReferenceArgumentCollection();
+    }
+
+    public static class ScatterIntervalsByNReferenceArgumentCollection implements ReferenceArgumentCollection {
+        @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence to use. " +
+                "Note: this tool requires that the reference fasta " +
+                "has both an associated index and a dictionary.")
+        public File REFERENCE;
+
+        @Override
+        public File getReferenceFile() {
+            return REFERENCE;
+        };
+    }
+
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(REFERENCE);
+        IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final ReferenceSequenceFile refFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE, true);
+        final ReferenceSequenceFile refFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE, true);
         if (!refFile.isIndexed()) {
             throw new IllegalStateException("Reference file must be indexed, but no index file was found");
         }

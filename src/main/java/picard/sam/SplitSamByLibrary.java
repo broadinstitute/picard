@@ -33,9 +33,9 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -53,20 +53,20 @@ import java.util.Map;
  * @author ktibbett@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "Takes a SAM or BAM file and separates all the reads " +
+        summary = "Takes a SAM or BAM file and separates all the reads " +
                 "into one SAM or BAM file per library name.  Reads that do not have " +
                 "a read group specified or whose read group does not have a library name " +
                 "are written to a file called 'unknown.'  The format (SAM or BAM) of the  " +
                 "output files matches that of the input file.  ",
-        usageShort = "Splits a SAM or BAM file into individual files by library",
+        oneLineSummary = "Splits a SAM or BAM file into individual files by library",
         programGroup = SamOrBam.class
 )
 public class SplitSamByLibrary extends CommandLineProgram {
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "The SAM or BAM file to be split. ")
     public File INPUT;
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "The directory where the library SAM or BAM files should be written " +
                     "(defaults to the current directory). ", optional = true)
     public File OUTPUT = new File(".").getAbsoluteFile();

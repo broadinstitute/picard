@@ -44,10 +44,10 @@ import htsjdk.samtools.util.QualityEncodingDetector;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -62,8 +62,8 @@ import java.util.List;
  * Input files can be in GZip format (end in .gz).
  */
 @CommandLineProgramProperties(
-        usage = FastqToSam.USAGE_SUMMARY + FastqToSam.USAGE_DETAILS,
-        usageShort = FastqToSam.USAGE_SUMMARY,
+        summary = FastqToSam.USAGE_SUMMARY + FastqToSam.USAGE_DETAILS,
+        oneLineSummary = FastqToSam.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class FastqToSam extends CommandLineProgram {
@@ -83,73 +83,73 @@ public class FastqToSam extends CommandLineProgram {
             "<hr />";
     private static final Log LOG = Log.getInstance(FastqToSam.class);
 
-    @Option(shortName="F1", doc="Input fastq file (optionally gzipped) for single end data, or first read in paired end data.")
+    @Argument(shortName="F1", doc="Input fastq file (optionally gzipped) for single end data, or first read in paired end data.")
     public File FASTQ;
 
-    @Option(shortName="F2", doc="Input fastq file (optionally gzipped) for the second read of paired end data.", optional=true)
+    @Argument(shortName="F2", doc="Input fastq file (optionally gzipped) for the second read of paired end data.", optional=true)
     public File FASTQ2;
     
-    @Option(doc="Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz", optional=true)
+    @Argument(doc="Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz", optional=true)
     public boolean USE_SEQUENTIAL_FASTQS = false;
 
-    @Option(shortName="V", doc="A value describing how the quality values are encoded in the input FASTQ file.  " +
+    @Argument(shortName="V", doc="A value describing how the quality values are encoded in the input FASTQ file.  " +
             "Either Solexa (phred scaling + 66), Illumina (phred scaling + 64) or Standard (phred scaling + 33).  " +
             "If this value is not specified, the quality format will be detected automatically.", optional = true)
     public FastqQualityFormat QUALITY_FORMAT;
 
-    @Option(doc="Output SAM/BAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME) 
+    @Argument(doc="Output SAM/BAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT ;
 
-    @Option(shortName="RG", doc="Read group name")
+    @Argument(shortName="RG", doc="Read group name")
     public String READ_GROUP_NAME = "A";
 
-    @Option(shortName="SM", doc="Sample name to insert into the read group header")
+    @Argument(shortName="SM", doc="Sample name to insert into the read group header")
     public String SAMPLE_NAME;
 
-    @Option(shortName="LB", doc="The library name to place into the LB attribute in the read group header", optional=true)
+    @Argument(shortName="LB", doc="The library name to place into the LB attribute in the read group header", optional=true)
     public String LIBRARY_NAME;
 
-    @Option(shortName="PU", doc="The platform unit (often run_barcode.lane) to insert into the read group header", optional=true)
+    @Argument(shortName="PU", doc="The platform unit (often run_barcode.lane) to insert into the read group header", optional=true)
     public String PLATFORM_UNIT;
 
-    @Option(shortName="PL", doc="The platform type (e.g. illumina, solid) to insert into the read group header", optional=true)
+    @Argument(shortName="PL", doc="The platform type (e.g. illumina, solid) to insert into the read group header", optional=true)
     public String PLATFORM;
 
-    @Option(shortName="CN", doc="The sequencing center from which the data originated", optional=true)
+    @Argument(shortName="CN", doc="The sequencing center from which the data originated", optional=true)
     public String SEQUENCING_CENTER;
 
-    @Option(shortName = "PI", doc = "Predicted median insert size, to insert into the read group header", optional = true)
+    @Argument(shortName = "PI", doc = "Predicted median insert size, to insert into the read group header", optional = true)
     public Integer PREDICTED_INSERT_SIZE;
 
-    @Option(shortName = "PG", doc = "Program group to insert into the read group header.", optional=true)
+    @Argument(shortName = "PG", doc = "Program group to insert into the read group header.", optional=true)
     public String PROGRAM_GROUP;
 
-    @Option(shortName = "PM", doc = "Platform model to insert into the group header (free-form text providing further details of the platform/technology used)", optional=true)
+    @Argument(shortName = "PM", doc = "Platform model to insert into the group header (free-form text providing further details of the platform/technology used)", optional=true)
     public String PLATFORM_MODEL;
 
-    @Option(doc="Comment(s) to include in the merged output file's header.", optional=true, shortName="CO")
+    @Argument(doc="Comment(s) to include in the merged output file's header.", optional=true, shortName="CO")
     public List<String> COMMENT = new ArrayList<String>();
 
-    @Option(shortName = "DS", doc = "Inserted into the read group header", optional = true)
+    @Argument(shortName = "DS", doc = "Inserted into the read group header", optional = true)
     public String DESCRIPTION;
 
-    @Option(shortName = "DT", doc = "Date the run was produced, to insert into the read group header", optional = true)
+    @Argument(shortName = "DT", doc = "Date the run was produced, to insert into the read group header", optional = true)
     public Iso8601Date RUN_DATE;
 
-    @Option(shortName="SO", doc="The sort order for the output sam/bam file.")
+    @Argument(shortName="SO", doc="The sort order for the output sam/bam file.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
 
-    @Option(doc="Minimum quality allowed in the input fastq.  An exception will be thrown if a quality is less than this value.")
+    @Argument(doc="Minimum quality allowed in the input fastq.  An exception will be thrown if a quality is less than this value.")
     public int MIN_Q = 0;
 
-    @Option(doc="Maximum quality allowed in the input fastq.  An exception will be thrown if a quality is greater than this value.")
+    @Argument(doc="Maximum quality allowed in the input fastq.  An exception will be thrown if a quality is greater than this value.")
     public int MAX_Q = SAMUtils.MAX_PHRED_SCORE;
 
     @Deprecated
-    @Option(doc="Deprecated (No longer used). If true and this is an unpaired fastq any occurrence of '/1' or '/2' will be removed from the end of a read name.")
+    @Argument(doc="Deprecated (No longer used). If true and this is an unpaired fastq any occurrence of '/1' or '/2' will be removed from the end of a read name.")
     public Boolean STRIP_UNPAIRED_MATE_NUMBER = false;
 
-    @Option(doc="Allow (and ignore) empty lines")
+    @Argument(doc="Allow (and ignore) empty lines")
     public Boolean ALLOW_AND_IGNORE_EMPTY_LINES = false;
 
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();

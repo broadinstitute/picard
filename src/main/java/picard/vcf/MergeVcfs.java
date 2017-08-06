@@ -39,10 +39,10 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFUtils;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
@@ -63,21 +63,21 @@ import java.util.List;
  * ".gz" extension will create gzip-compressed output.
  */
 @CommandLineProgramProperties(
-        usage = "Merges multiple VCF or BCF files into one VCF file. Input files must be sorted by their contigs " +
+        summary = "Merges multiple VCF or BCF files into one VCF file. Input files must be sorted by their contigs " +
                 "and, within contigs, by start position. The input files must have the same sample and " +
                 "contig lists. An index file is created and a sequence dictionary is required by default.",
-        usageShort = "Merges multiple VCF or BCF files into one VCF file or BCF",
+        oneLineSummary = "Merges multiple VCF or BCF files into one VCF file or BCF",
         programGroup = VcfOrBcf.class
 )
 public class MergeVcfs extends CommandLineProgram {
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files (File format is determined by file extension), or a file having a '.list' suffix containing the path to the files.", minElements=1)
+    @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files (File format is determined by file extension), or a file having a '.list' suffix containing the path to the files.", minElements=1)
     public List<File> INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The merged VCF or BCF file. File format is determined by file extension.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The merged VCF or BCF file. File format is determined by file extension.")
     public File OUTPUT;
 
-    @Option(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionary in the input file", optional = true)
+    @Argument(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionary in the input file", optional = true)
     public File SEQUENCE_DICTIONARY;
 
     private final Log log = Log.getInstance(MergeVcfs.class);

@@ -4,8 +4,8 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 import picard.analysis.CollectOxoGMetrics.*;
@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.Set;
 
 @CommandLineProgramProperties(
-        usage = ConvertSequencingArtifactToOxoG.USAGE_SUMMARY + ConvertSequencingArtifactToOxoG.USAGE_DETAILS,
-        usageShort = ConvertSequencingArtifactToOxoG.USAGE_SUMMARY,
+        summary = ConvertSequencingArtifactToOxoG.USAGE_SUMMARY + ConvertSequencingArtifactToOxoG.USAGE_DETAILS,
+        oneLineSummary = ConvertSequencingArtifactToOxoG.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class ConvertSequencingArtifactToOxoG extends CommandLineProgram {
@@ -50,11 +50,11 @@ static final String USAGE_DETAILS = "<p>This tool extracts 8-oxoguanine (OxoG) a
 "for detailed descriptions of the output metrics produced by this tool."+
 "<hr />"
 ;
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "Basename of the input artifact metrics file (output by CollectSequencingArtifactMetrics)")
     public File INPUT_BASE;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "Basename for output OxoG metrics. Defaults to same basename as input metrics",
             optional = true)
     public File OUTPUT_BASE;

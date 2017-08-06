@@ -35,10 +35,10 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -48,8 +48,8 @@ import java.io.File;
  * @author alecw@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage =  ReplaceSamHeader.USAGE_SUMMARY + ReplaceSamHeader.USAGE_DETAILS,
-        usageShort = ReplaceSamHeader.USAGE_SUMMARY,
+        summary =  ReplaceSamHeader.USAGE_SUMMARY + ReplaceSamHeader.USAGE_DETAILS,
+        oneLineSummary = ReplaceSamHeader.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class ReplaceSamHeader extends CommandLineProgram {
@@ -68,13 +68,13 @@ public class ReplaceSamHeader extends CommandLineProgram {
             "      O=bam_with_new_head.bam" +
             "</pre>" +
             "<hr />";
-    @Option(doc = "SAM file from which SAMRecords will be read.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "SAM file from which SAMRecords will be read.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Option(doc = "SAM file from which SAMFileHeader will be read.")
+    @Argument(doc = "SAM file from which SAMFileHeader will be read.")
     public File HEADER;
 
-    @Option(doc = "SAMFileHeader from HEADER file will be written to this file, followed by SAMRecords from INPUT file",
+    @Argument(doc = "SAMFileHeader from HEADER file will be written to this file, followed by SAMRecords from INPUT file",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 

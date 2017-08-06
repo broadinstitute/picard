@@ -3,9 +3,9 @@ package picard.analysis.directed;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.util.IntervalList;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.analysis.MetricAccumulationLevel;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 
 import java.io.File;
@@ -17,8 +17,8 @@ import java.util.Set;
  * more information
  */
 @CommandLineProgramProperties(
-        usage = CollectTargetedPcrMetrics.USAGE_SUMMARY + CollectTargetedPcrMetrics.USAGE_DETAILS,
-        usageShort = CollectTargetedPcrMetrics.USAGE_SUMMARY,
+        summary = CollectTargetedPcrMetrics.USAGE_SUMMARY + CollectTargetedPcrMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectTargetedPcrMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectTargetedPcrMetrics extends CollectTargetedMetrics<TargetedPcrMetrics, TargetedPcrMetricsCollector> {
@@ -48,10 +48,10 @@ public class CollectTargetedPcrMetrics extends CollectTargetedMetrics<TargetedPc
         "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#TargetedPcrMetrics'>TargetedPcrMetrics</a> " +
         "for detailed explanations of the output metrics produced by this tool." +
         "<hr />";
-    @Option(shortName = "AI", doc = "An interval list file that contains the locations of the baits used.")
+    @Argument(shortName = "AI", doc = "An interval list file that contains the locations of the baits used.")
     public File AMPLICON_INTERVALS;
 
-    @Option(shortName = "N", doc = "Custom amplicon set name. If not provided it is inferred from the filename of the AMPLICON_INTERVALS intervals.", optional = true)
+    @Argument(shortName = "N", doc = "Custom amplicon set name. If not provided it is inferred from the filename of the AMPLICON_INTERVALS intervals.", optional = true)
     public String CUSTOM_AMPLICON_SET_NAME;
 
     /**

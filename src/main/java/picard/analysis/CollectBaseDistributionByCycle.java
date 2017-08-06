@@ -37,17 +37,17 @@ import java.util.Arrays;
 import java.util.List;
 
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
 
 
 @CommandLineProgramProperties(
-        usage = CollectBaseDistributionByCycle.USAGE_SUMMARY + CollectBaseDistributionByCycle.USAGE_DETAILS,
-        usageShort = CollectBaseDistributionByCycle.USAGE_SUMMARY,
+        summary = CollectBaseDistributionByCycle.USAGE_SUMMARY + CollectBaseDistributionByCycle.USAGE_DETAILS,
+        oneLineSummary = CollectBaseDistributionByCycle.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
@@ -83,13 +83,13 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
                 "</pre>" +
                 "<hr />"
                 ;
-    @Option(shortName = "CHART", doc = "A file (with .pdf extension) to write the chart to.")
+    @Argument(shortName = "CHART", doc = "A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 
-    @Option(doc = "If set to true, calculate the base distribution over aligned reads only.")
+    @Argument(doc = "If set to true, calculate the base distribution over aligned reads only.")
     public boolean ALIGNED_READS_ONLY = false;
 
-    @Option(doc = "If set to true, calculate the base distribution over PF reads only (Illumina specific). PF reads are reads that passed the internal quality filters applied by Illumina sequencers.")
+    @Argument(doc = "If set to true, calculate the base distribution over PF reads only (Illumina specific). PF reads are reads that passed the internal quality filters applied by Illumina sequencers.")
     public boolean PF_READS_ONLY = false;
 
     private HistogramGenerator hist;

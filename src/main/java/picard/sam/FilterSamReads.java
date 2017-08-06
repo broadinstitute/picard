@@ -40,9 +40,9 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.Interval;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -60,8 +60,8 @@ import java.util.List;
  * $Id$
  */
 @CommandLineProgramProperties(
-        usage =  FilterSamReads.USAGE_SUMMARY + FilterSamReads.USAGE_DETAILS,
-        usageShort = FilterSamReads.USAGE_SUMMARY,
+        summary =  FilterSamReads.USAGE_SUMMARY + FilterSamReads.USAGE_DETAILS,
+        oneLineSummary = FilterSamReads.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class FilterSamReads extends CommandLineProgram {
@@ -101,39 +101,39 @@ public class FilterSamReads extends CommandLineProgram {
         }
     }
 
-    @Option(doc = "The SAM or BAM file that will be filtered.",
+    @Argument(doc = "The SAM or BAM file that will be filtered.",
             optional = false,
             shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Option(doc = "Filter.", optional = false)
+    @Argument(doc = "Filter.", optional = false)
     public Filter FILTER = null;
 
-    @Option(doc = "Read List File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.",
+    @Argument(doc = "Read List File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.",
             optional = true,
             shortName = "RLF")
     public File READ_LIST_FILE;
 
-    @Option(doc = "Interval List File containing intervals that will be included or excluded from the OUTPUT SAM or BAM file.",
+    @Argument(doc = "Interval List File containing intervals that will be included or excluded from the OUTPUT SAM or BAM file.",
             optional = true,
             shortName = "IL")
     public File INTERVAL_LIST;
 
-    @Option(
+    @Argument(
             doc = "SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.",
             optional = true, shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
-    @Option(
+    @Argument(
             doc = "Create .reads files (for debugging purposes)",
             optional = true)
     public boolean WRITE_READS_FILES = true;
 
-    @Option(doc = "SAM or BAM file to write read excluded results to",
+    @Argument(doc = "SAM or BAM file to write read excluded results to",
             optional = false, shortName = "O")
     public File OUTPUT;
     
-	@Option(shortName = "JS",
+	@Argument(shortName = "JS",
 			doc = "Filters a SAM or BAM file with a javascript expression using the java javascript-engine. "
 	        + " The script puts the following variables in the script context: "
 	        + " 'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and "

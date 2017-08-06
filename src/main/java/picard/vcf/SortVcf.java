@@ -16,9 +16,9 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFRecordCodec;
 import htsjdk.variant.vcf.VCFUtils;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
@@ -33,8 +33,8 @@ import java.util.List;
  * the same sequence dictionaries
  */
 @CommandLineProgramProperties(
-        usage = SortVcf.USAGE_SUMMARY + SortVcf.USAGE_DETAILS,
-        usageShort = SortVcf.USAGE_SUMMARY,
+        summary = SortVcf.USAGE_SUMMARY + SortVcf.USAGE_DETAILS,
+        oneLineSummary = SortVcf.USAGE_SUMMARY,
         programGroup = VcfOrBcf.class
 )
 public class SortVcf extends CommandLineProgram {
@@ -54,13 +54,13 @@ public class SortVcf extends CommandLineProgram {
             "      O=sorted.vcf" +
             "</pre>" +
             "<hr />" ;
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF(s) to be sorted. Multiple inputs must have the same sample names (in order)")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF(s) to be sorted. Multiple inputs must have the same sample names (in order)")
     public List<File> INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF to be written.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF to be written.")
     public File OUTPUT;
 
-    @Option(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, optional = true)
+    @Argument(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, optional = true)
     public File SEQUENCE_DICTIONARY;
 
     private final Log log = Log.getInstance(SortVcf.class);

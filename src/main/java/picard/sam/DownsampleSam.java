@@ -32,10 +32,11 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetrics;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetricsCollector;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
@@ -51,8 +52,8 @@ import java.util.Random;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = DownsampleSam.USAGE_SUMMARY + DownsampleSam.USAGE_DETAILS,
-        usageShort = DownsampleSam.USAGE_SUMMARY,
+        summary = DownsampleSam.USAGE_SUMMARY + DownsampleSam.USAGE_DETAILS,
+        oneLineSummary = DownsampleSam.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class DownsampleSam extends CommandLineProgram {
@@ -76,28 +77,28 @@ public class DownsampleSam extends CommandLineProgram {
             "      O=downsampled.bam" +
             "</pre>" +
             "<hr />";
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM or BAM file to write.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM or BAM file to write.")
     public File OUTPUT;
 
-    @Option(shortName="S", doc="The downsampling strategy to use. See usage for discussion.")
+    @Argument(shortName="S", doc="The downsampling strategy to use. See usage for discussion.")
     public Strategy STRATEGY = Strategy.ConstantMemory;
 
-    @Option(shortName = "R", doc = "Random seed to use if deterministic behavior is desired.  " +
+    @Argument(shortName = "R", doc = "Random seed to use if deterministic behavior is desired.  " +
             "Setting to null will cause multiple invocations to produce different results.")
     public Integer RANDOM_SEED = 1;
 
-    @Option(shortName = "P", doc = "The probability of keeping any individual read, between 0 and 1.")
+    @Argument(shortName = "P", doc = "The probability of keeping any individual read, between 0 and 1.")
     public double PROBABILITY = 1;
 
-    @Option(shortName = "A", doc = "The accuracy that the downsampler should try to achieve if the selected strategy supports it. " +
+    @Argument(shortName = "A", doc = "The accuracy that the downsampler should try to achieve if the selected strategy supports it. " +
             "Note that accuracy is never guaranteed, but some strategies will attempt to provide accuracy within the requested bounds." +
             "Higher accuracy will generally require more memory.")
     public double ACCURACY = 0.0001;
 
-    @Option(shortName = "M", doc = "The file to write metrics to (QualityYieldMetrics)", optional=true)
+    @Argument(shortName = "M", doc = "The file to write metrics to (QualityYieldMetrics)", optional=true)
     public File METRICS_FILE;
 
     private final Log log = Log.getInstance(DownsampleSam.class);
@@ -145,4 +146,19 @@ public class DownsampleSam extends CommandLineProgram {
 
         return 0;
     }
+
+    @Override
+    protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
+        // Override to allow "R" to be hijacked for "RANDOM_SEED"
+        return new ReferenceArgumentCollection() {
+            @Argument(doc = "The reference sequence file.", optional=true, common=false)
+            public File REFERENCE_SEQUENCE;
+
+            @Override
+            public File getReferenceFile() {
+                return REFERENCE_SEQUENCE;
+            }
+        };
+    }
+
 }

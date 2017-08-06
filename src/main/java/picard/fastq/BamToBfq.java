@@ -24,9 +24,9 @@
 
 package picard.fastq;
 
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -38,8 +38,8 @@ import java.io.File;
  * @author ktibbett@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = BamToBfq.USAGE_SUMMARY + BamToBfq.USAGE_DETAILS,
-        usageShort = BamToBfq.USAGE_SUMMARY,
+        summary = BamToBfq.USAGE_SUMMARY + BamToBfq.USAGE_DETAILS,
+        oneLineSummary = BamToBfq.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class BamToBfq extends CommandLineProgram {
@@ -59,19 +59,19 @@ public class BamToBfq extends CommandLineProgram {
             ;
     // The following attributes define the command-line arguments
 
-    @Option(doc="The BAM file to parse.", shortName=StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;
-    @Option(doc="The analysis directory for the binary output file. ") public File ANALYSIS_DIR;
-    @Option(doc="Flowcell barcode (e.g. 30PYMAAXX).  ", shortName="F", mutex="OUTPUT_FILE_PREFIX") public String FLOWCELL_BARCODE;
-    @Option(doc="Lane number. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME, optional=true,mutex="OUTPUT_FILE_PREFIX") public Integer LANE;
-    @Option(doc="Prefix for all output files", mutex={"FLOWCELL_BARCODE","LANE"}) public String OUTPUT_FILE_PREFIX;
-    @Option(doc="Number of reads to align (null = all).", shortName="NUM", optional=true) public Integer READS_TO_ALIGN;
-    @Option(doc="Number of reads to break into individual groups for alignment", shortName="CHUNK") public Integer READ_CHUNK_SIZE = 2000000;
-    @Option(doc="Whether this is a paired-end run. ", shortName="PE") public Boolean PAIRED_RUN;
-    @Option(doc="Deprecated option; use READ_NAME_PREFIX instead", mutex="READ_NAME_PREFIX", shortName="RB", optional=true) public String RUN_BARCODE;
-    @Option(doc="Prefix to be stripped off the beginning of all read names  (to make them short enough to run in Maq)", optional=true) public String READ_NAME_PREFIX;
-    @Option(doc="Whether to include non-PF reads", shortName="NONPF", optional=true) public Boolean INCLUDE_NON_PF_READS = false;
-    @Option(doc="Whether to clip adapters from the reads") public boolean CLIP_ADAPTERS = true;
-    @Option(doc="The number of bases from each read to write to the bfq file.  If this is non-null, then " +
+    @Argument(doc="The BAM file to parse.", shortName=StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;
+    @Argument(doc="The analysis directory for the binary output file. ") public File ANALYSIS_DIR;
+    @Argument(doc="Flowcell barcode (e.g. 30PYMAAXX).  ", shortName="F", mutex="OUTPUT_FILE_PREFIX") public String FLOWCELL_BARCODE;
+    @Argument(doc="Lane number. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME, optional=true,mutex="OUTPUT_FILE_PREFIX") public Integer LANE;
+    @Argument(doc="Prefix for all output files", mutex={"FLOWCELL_BARCODE","LANE"}) public String OUTPUT_FILE_PREFIX;
+    @Argument(doc="Number of reads to align (null = all).", shortName="NUM", optional=true) public Integer READS_TO_ALIGN;
+    @Argument(doc="Number of reads to break into individual groups for alignment", shortName="CHUNK") public Integer READ_CHUNK_SIZE = 2000000;
+    @Argument(doc="Whether this is a paired-end run. ", shortName="PE") public Boolean PAIRED_RUN;
+    @Argument(doc="Deprecated option; use READ_NAME_PREFIX instead", mutex="READ_NAME_PREFIX", shortName="RB", optional=true) public String RUN_BARCODE;
+    @Argument(doc="Prefix to be stripped off the beginning of all read names  (to make them short enough to run in Maq)", optional=true) public String READ_NAME_PREFIX;
+    @Argument(doc="Whether to include non-PF reads", shortName="NONPF", optional=true) public Boolean INCLUDE_NON_PF_READS = false;
+    @Argument(doc="Whether to clip adapters from the reads") public boolean CLIP_ADAPTERS = true;
+    @Argument(doc="The number of bases from each read to write to the bfq file.  If this is non-null, then " +
             "only the first BASES_TO_WRITE bases from each read will be written.", optional=true) public Integer BASES_TO_WRITE = null;
 
     protected int doWork() {
