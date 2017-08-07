@@ -43,6 +43,10 @@ public class OpticalDuplicateFinder extends ReadNameParser {
 
     public static final int DEFAULT_OPTICAL_DUPLICATE_DISTANCE = 100;
     public static final int DEFAULT_BIG_DUPLICATE_SET_SIZE = 1000;
+    public static final int DEFAULT_MAX_DUPLICATE_SET_SIZE = 300000; // larger than this number will generate over 100 billion comparisons in the n^2 algorithm below
+
+    private int bigDuplicateSetSize = DEFAULT_BIG_DUPLICATE_SET_SIZE;
+    private long maxDuplicateSetSize = DEFAULT_MAX_DUPLICATE_SET_SIZE;
 
     /**
      * Sets the size of a set that is big enough to log progress about.
@@ -54,7 +58,18 @@ public class OpticalDuplicateFinder extends ReadNameParser {
         this.bigDuplicateSetSize = bigDuplicateSetSize;
     }
 
-    private int bigDuplicateSetSize = DEFAULT_BIG_DUPLICATE_SET_SIZE;
+    /**
+     * Sets the size of a set that is too big to process.
+     * Defaults to {@value OpticalDuplicateFinder#DEFAULT_MAX_DUPLICATE_SET_SIZE}
+     *
+     * @param maxDuplicateSetSize the size of a set that is too big enough to process
+     */
+    public void setMaxDuplicateSetSize(final long maxDuplicateSetSize) {
+        if (maxDuplicateSetSize < 1) {
+            this.maxDuplicateSetSize = Long.MAX_VALUE;
+        }
+        this.maxDuplicateSetSize = maxDuplicateSetSize;
+    }
 
     /**
      * Uses the default duplicate distance {@value OpticalDuplicateFinder#DEFAULT_OPTICAL_DUPLICATE_DISTANCE} and the default read name regex
@@ -77,6 +92,19 @@ public class OpticalDuplicateFinder extends ReadNameParser {
     }
 
     /**
+     *
+     * @param readNameRegex see {@link ReadNameParser#DEFAULT_READ_NAME_REGEX}.
+     * @param opticalDuplicatePixelDistance the optical duplicate pixel distance
+     * @param maxDuplicateSetSize the size of a set that is too big enough to process
+     * @param log the log to which to write messages.
+     */
+    public OpticalDuplicateFinder(final String readNameRegex, final int opticalDuplicatePixelDistance, final long maxDuplicateSetSize, final Log log) {
+        super(readNameRegex, log);
+        this.opticalDuplicatePixelDistance = opticalDuplicatePixelDistance;
+        this.maxDuplicateSetSize = maxDuplicateSetSize;
+    }
+
+    /**
      * Finds which reads within the list of duplicates that are likely to be optical/co-localized duplicates of
      * one another. Within each cluster of optical duplicates that is found, one read remains un-flagged for
      * optical duplication and the rest are flagged as optical duplicates.  The set of reads that are considered
@@ -90,13 +118,17 @@ public class OpticalDuplicateFinder extends ReadNameParser {
      * @return a boolean[] of the same length as the incoming list marking which reads are optical duplicates
      */
     public boolean[] findOpticalDuplicates(final List<? extends PhysicalLocation> list, final PhysicalLocation keeper) {
-        // If there is only one or zero reads passed in, then just return an array of all false
-        if (list.size() < 2) return new boolean[list.size()];
-
         final int length = list.size();
         final boolean[] opticalDuplicateFlags = new boolean[length];
-        final int distance = this.opticalDuplicatePixelDistance;
 
+        // If there is only one or zero reads passed in (so there are obviously no optical duplicates),
+        // or if there are too many reads (so we don't want to try to run this expensive n^2 algorithm),
+        // then just return an array of all false
+        if (length < 2 || length > maxDuplicateSetSize) {
+            return opticalDuplicateFlags;
+        }
+
+        final int distance = this.opticalDuplicatePixelDistance;
         final PhysicalLocation actualKeeper = keeperOrNull(list, keeper);
 
         final Log log;

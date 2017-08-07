@@ -125,6 +125,23 @@ public class OpticalDuplicateFinderTest {
         assertEquals(finder.findOpticalDuplicates(locs, locs.get(2)), new boolean[] {true, true, false});
     }
 
+    @Test
+    public void testMaxSetSize() {
+        final Log log = Log.getInstance(OpticalDuplicateFinderTest.class);
+        List<PhysicalLocation> locs = Arrays.asList(
+                loc(7, 1500, 1500),
+                loc(7, 1501, 1501),
+                loc(7, 1490, 1502));
+
+        // there should be at least 1 optical duplicate
+        final OpticalDuplicateFinder normalFinder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 100, log);
+        Assert.assertTrue(countTrue(normalFinder.findOpticalDuplicates(locs, null)) > 0);
+
+        // there should be zero optical duplicates
+        final OpticalDuplicateFinder constrainedFinder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 100, 1, log);
+        Assert.assertEquals(countTrue(constrainedFinder.findOpticalDuplicates(locs, null)), 0);
+    }
+
     /** Helper method to create a physical location. */
     private PhysicalLocation loc(final int tile, final int x, final int y) {
         final PhysicalLocation l = new PhysicalLocationInt() {

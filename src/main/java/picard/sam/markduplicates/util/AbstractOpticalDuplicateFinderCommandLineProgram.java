@@ -58,12 +58,18 @@ public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends C
             "appropriate. For other platforms and models, users should experiment to find what works best.")
     public int OPTICAL_DUPLICATE_PIXEL_DISTANCE = OpticalDuplicateFinder.DEFAULT_OPTICAL_DUPLICATE_DISTANCE;
 
+    @Argument(doc = "This number is the maximum size of a set of duplicate reads for which we will attempt to determine " +
+            "which are optical duplicates.  Please be aware that if you raise this value too high and do encounter a very " +
+            "large set of duplicate reads, it will severely affect the runtime of this tool.  To completely disable this check, " +
+            "set the value to -1.")
+    public long MAX_OPTICAL_DUPLICATE_SET_SIZE = OpticalDuplicateFinder.DEFAULT_MAX_DUPLICATE_SET_SIZE;
+
     // The tool with which to find optical duplicates
     protected OpticalDuplicateFinder opticalDuplicateFinder = null;
 
     // Needed for testing
     public void setupOpticalDuplicateFinder() {
-        this.opticalDuplicateFinder = new OpticalDuplicateFinder(READ_NAME_REGEX, OPTICAL_DUPLICATE_PIXEL_DISTANCE, LOG);
+        this.opticalDuplicateFinder = new OpticalDuplicateFinder(READ_NAME_REGEX, OPTICAL_DUPLICATE_PIXEL_DISTANCE, MAX_OPTICAL_DUPLICATE_SET_SIZE, LOG);
     }
 
     @Override
