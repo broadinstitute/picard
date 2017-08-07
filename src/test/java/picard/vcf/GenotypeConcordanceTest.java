@@ -548,12 +548,12 @@ public class GenotypeConcordanceTest {
             final VariantContext callCtx  = callIterator.next();
 
             {
-                final GenotypeConcordance.Alleles alleles = GenotypeConcordance.normalizeAlleles(truthCtx, truthSample, callCtx, callSample);
+                final GenotypeConcordance.Alleles alleles = GenotypeConcordance.normalizeAlleles(truthCtx, truthSample, callCtx, callSample, false);
                 Assert.assertEquals(alleles.truthAllele1, alleles.callAllele1);
                 Assert.assertEquals(alleles.truthAllele2, alleles.callAllele2);
             }
             {
-                final GenotypeConcordance.Alleles alleles = GenotypeConcordance.normalizeAlleles(callCtx, callSample, truthCtx, truthSample);
+                final GenotypeConcordance.Alleles alleles = GenotypeConcordance.normalizeAlleles(callCtx, callSample, truthCtx, truthSample, false);
                 Assert.assertEquals(alleles.truthAllele1, alleles.callAllele1);
                 Assert.assertEquals(alleles.truthAllele2, alleles.callAllele2);
             }
@@ -576,7 +576,6 @@ public class GenotypeConcordanceTest {
         Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
     }
 
-<<<<<<< Updated upstream
     @Test
     public void testNormalizeAllelesForWritingVCF() throws FileNotFoundException {
         final File truthVcfPath             = new File(TEST_DATA_PATH.getAbsolutePath(), NORMALIZE_NO_CALLS_TRUTH);
@@ -639,6 +638,66 @@ public class GenotypeConcordanceTest {
                 Assert.assertEquals(metrics.TP_COUNT, 0);
                 Assert.assertEquals(metrics.TN_COUNT,0);
                 Assert.assertEquals(metrics.FP_COUNT, 0);
+                Assert.assertEquals(metrics.FN_COUNT, 0);
+                Assert.assertEquals(metrics.EMPTY_COUNT, 0);
+            }
+        }
+    }
+
+    @Test
+    public void testIgnoreFilterStatus() throws Exception {
+        final File truthVcfPath = new File(TEST_DATA_PATH.getAbsolutePath(), "NIST_truth.vcf");
+        final File callVcfPath = new File(TEST_DATA_PATH.getAbsolutePath(), "vcf_with_filters.vcf");
+        final File ignoreFilterStatusOutputBaseFileName = new File(OUTPUT_DATA_PATH, "ignoreFilterStatus");
+        final File doIgnoreMetrics = new File(ignoreFilterStatusOutputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
+        doIgnoreMetrics.deleteOnExit();
+        final File dontIgnoreFilterStatusOutputBaseFileName = new File(OUTPUT_DATA_PATH, "dontIgnoreFilterStatus");
+        final File dontIgnoreMetrics = new File(dontIgnoreFilterStatusOutputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
+        dontIgnoreMetrics.deleteOnExit();
+
+        final GenotypeConcordance dontIgnore = new GenotypeConcordance();
+        dontIgnore.TRUTH_VCF = truthVcfPath;
+        dontIgnore.TRUTH_SAMPLE = "NA12878";
+        dontIgnore.CALL_VCF = callVcfPath;
+        dontIgnore.CALL_SAMPLE = "NA12878";
+        dontIgnore.OUTPUT = new File(OUTPUT_DATA_PATH, "dontIgnoreFilterStatus");
+        dontIgnore.OUTPUT_VCF = false;
+
+        final GenotypeConcordance doIgnore = new GenotypeConcordance();
+        doIgnore.TRUTH_VCF = truthVcfPath;
+        doIgnore.TRUTH_SAMPLE = "NA12878";
+        doIgnore.CALL_VCF = callVcfPath;
+        doIgnore.CALL_SAMPLE = "NA12878";
+        doIgnore.OUTPUT = new File(OUTPUT_DATA_PATH, "ignoreFilterStatus");
+        dontIgnore.OUTPUT_VCF = false;
+        doIgnore.IGNORE_FILTER_STATUS = true;
+
+
+        Assert.assertEquals(dontIgnore.instanceMain(new String[0]), 0);
+        Assert.assertEquals(doIgnore.instanceMain(new String[0]), 0);
+
+
+        final MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>> dontIgnoreOut = new MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>>();
+        dontIgnoreOut.read(new FileReader(dontIgnoreMetrics));
+
+        for (final GenotypeConcordanceContingencyMetrics metrics : dontIgnoreOut.getMetrics()) {
+            if (metrics.VARIANT_TYPE == VariantContext.Type.SNP) {
+                Assert.assertEquals(metrics.TP_COUNT,   1);
+                Assert.assertEquals(metrics.TN_COUNT, 3);
+                Assert.assertEquals(metrics.FP_COUNT, 1);
+                Assert.assertEquals(metrics.FN_COUNT, 2);
+                Assert.assertEquals(metrics.EMPTY_COUNT, 0);
+            }
+        }
+
+
+        final MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>> doIgnoreOut = new MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>>();
+        doIgnoreOut.read(new FileReader(doIgnoreMetrics));
+        for (final GenotypeConcordanceContingencyMetrics metrics : doIgnoreOut.getMetrics()) {
+            if (metrics.VARIANT_TYPE == VariantContext.Type.SNP) {
+                Assert.assertEquals(metrics.TP_COUNT,   3);
+                Assert.assertEquals(metrics.TN_COUNT, 3);
+                Assert.assertEquals(metrics.FP_COUNT, 1);
                 Assert.assertEquals(metrics.FN_COUNT, 0);
                 Assert.assertEquals(metrics.EMPTY_COUNT, 0);
             }

@@ -1,0 +1,144 @@
+##fileformat=VCFv4.1
+##FILTER=<ID=Uncertain,Description="Uncertain genotype due to reason in filter INFO field">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Total read depth summed across all datasets, excluding MQ0 reads">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Net Genotype quality across all datasets, defined as difference between most likely and next most likely genotype likelihoods">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Net Genotype across all datasets">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods summed across all unfiltered datasets for genotypes as defined in the VCF specification">
+##GATKCommandLine=<ID=LeftAlignAndTrimVariants,Version=3.1-144-g00f68a3,Date="Thu Oct 16 09:56:50 EDT 2014",Epoch=1413467810462,CommandLineOptions="analysis_type=LeftAlignAndTrimVariants input_file=[] showFullBamList=false read_buffer_size=null phone_home=AWS gatk_key=null tag=NA read_filter=[] intervals=null excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/crsp/qa/references/v1/ReferenceSequences/Homo_sapiens_assembly19/v1/Homo_sapiens_assembly19.fasta nonDeterministicRandomSeed=false disableDithering=false maxRuntime=-1 maxRuntimeUnits=MINUTES downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=1000 baq=OFF baqGapOpenPenalty=40.0 refactor_NDN_cigar_string=false fix_misencoded_quality_scores=false allow_potentially_misencoded_quality_scores=false useOriginalQualities=false defaultBaseQualities=-1 performanceLog=null BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 globalQScorePrior=-1.0 validation_strictness=SILENT remove_program_records=false keep_program_records=false sample_rename_mapping_file=null unsafe=null disable_auto_index_creation_and_locking_when_reading_rods=false num_threads=1 num_cpu_threads_per_data_thread=1 num_io_threads=0 monitorThreadEfficiency=false num_bam_file_handles=null read_group_black_list=null pedigree=[] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false variant_index_type=DYNAMIC_SEEK variant_index_parameter=-1 logging_level=INFO log_to_file=null help=false version=false variant=(RodBinding name=variant source=/crsp/qa/references/Validation/NISTIntegratedCalls_13datasets_130719_allcall_UGHapMerge_HetHomVarPASS_VQSRv2.17_all_nouncert_excludesimplerep_excludesegdups_excludedecoy_excludeRepSeqSTRs_noCNVs.vcf) trimAlleles=true splitMultiallelics=false out=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub no_cmdline_in_header=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub sites_only=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub bcf=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub filter_reads_with_N_cigar=false filter_mismatching_base_and_quals=false filter_bases_not_stored=false">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth; some reads may have been filtered">
+##INFO=<ID=DPSum,Number=1,Type=Integer,Description="Total read depth summed across all datasets, excluding MQ0 reads">
+##INFO=<ID=Entropy,Number=1,Type=Float,Description="Shannon entropy of variant flanking regions, 12bp on both sides">
+##INFO=<ID=HRun,Number=1,Type=Integer,Description="Largest Contiguous Homopolymer Run of Variant Allele In Either Direction">
+##INFO=<ID=HapNoVar,Number=1,Type=Integer,Description="Number of datasets for which HaplotypeCaller called a variant within 20bp and did not call a variant at this location">
+##INFO=<ID=LEN,Number=A,Type=Integer,Description="allele length">
+##INFO=<ID=NoPLTot,Number=1,Type=Integer,Description="Number of datasets with likelihood ratio > 20 for a genotype different from the called genotype">
+##INFO=<ID=PL454WG,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~16x 454 whole genome sequencing from 1000 Genomes Project, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLCG,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~73x Complete Genomics whole genome sequencing, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLHSWEx,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~66x 2x100bp Illumina exome sequencing from Broad Institute, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLHSWG,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~68x 2x100bp Illumina whole genome sequencing from Broad Institute, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLILL250,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~50x 2x250bp Illumina PCR-free whole genome sequencing from Broad Institute, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLILLCLIA,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~80x 2x100bp Illumina whole genome sequencing from Illumina CLIA lab, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLILLWEx,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~30x 2x54bp Illumina exome sequencing from Broad Institute, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLILLWG,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~39x 2x44bp Illumina whole genome sequencing from Broad Institute, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLIllPCRFree,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~56x 2x100bp Illumina PCR-free whole genome sequencing from Illumina Platinum Genomes Project, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLIonEx,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~80x mean 237bp Ion Torrent exome sequencing from Life Technologies, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLPlatGen,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~190x 2x100bp Illumina PCR-free whole genome sequencing from Illumina Platinum Genomes Project, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLXIll,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~37x 2x100bp Illumina whole genome sequencing from X Prize, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLXPSolWGLS,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~24x 50bpx35bp SOLiD whole genome sequencing from X Prize, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLminsum,Number=1,Type=Integer,Description="Net Genotype quality across all datasets, defined as difference between most likely and next most likely genotype likelihoods">
+##INFO=<ID=PLminsumOverDP,Number=1,Type=Float,Description="Net Genotype quality across all datasets, defined as difference between most likely and next most likely genotype likelihoods, divided by the depth of coverage">
+##INFO=<ID=RPA,Number=.,Type=Integer,Description="Number of times tandem repeat unit is repeated, for each allele (including reference)">
+##INFO=<ID=RU,Number=1,Type=String,Description="Tandem repeat unit (bases)">
+##INFO=<ID=TYPE,Number=A,Type=String,Description="The type of allele, either snp, mnp, ins, del, or complex.">
+##INFO=<ID=TrancheABQDmin2,Number=1,Type=Float,Description="2nd lowest VQSR tranche for the called genotype for annotations associated with abnormal allele balance (AB and QD)">
+##INFO=<ID=TrancheAlignmin2,Number=1,Type=Float,Description="2nd lowest VQSR tranche for the called genotype for annotations associated with local alignment errors (distance from the end of the read and clipping)">
+##INFO=<ID=TrancheMapmin2,Number=1,Type=Float,Description="2nd lowest VQSR tranche for the called genotype for annotations associated with mapping errors (mapping quality and depth of coverage)">
+##INFO=<ID=TrancheSSEmin2,Number=1,Type=Float,Description="2nd lowest VQSR tranche for the called genotype for annotations associated with systematic sequencing errors (strand bias and neighboring base quality)">
+##INFO=<ID=YesPLtot,Number=1,Type=Integer,Description="Number of datasets with likelihood ratio > 20 for the called genotype">
+##INFO=<ID=allalts,Number=1,Type=Integer,Description="All ALT alleles originally considered at this position">
+##INFO=<ID=datasetcalls,Number=1,Type=Integer,Description="Number of datasets with any genotype call at this position">
+##INFO=<ID=filter,Number=1,Type=String,Description="Reason for filtering this genotype as uncertain">
+##INFO=<ID=geno,Number=1,Type=Integer,Description="Most probable genotype, corresponding to the minimum entry in the PL field (e.g., 1=0/0,2=0/1,3=1/1,4=0/2,etc)">
+##INFO=<ID=genoMapGood,Number=1,Type=Integer,Description="Number of datasets calling this genotype with VQSR mapping tranche <= 95">
+##INFO=<ID=platformbias,Number=.,Type=String,Description="Names of platforms that have at more than twice as many incorrect than correct genotypes at this location, indicating platform-specific bias (ill=Illumina,sol=SOLiD,454=454,ion=Ion Torrent,cg=Complete Genomics)">
+##INFO=<ID=platformnames,Number=.,Type=String,Description="Names of platforms that called this genotype (ill=Illumina,sol=SOLiD,454=454,ion=Ion Torrent,cg=Complete Genomics)">
+##INFO=<ID=platforms,Number=1,Type=Integer,Description="Number of different platforms that called this genotype">
+##INFO=<ID=varType,Number=1,Type=String,Description="Type of variant">
+##SelectVariants="analysis_type=SelectVariants input_file=[] read_buffer_size=null phone_home=STANDARD gatk_key=null tag=NA read_filter=[] intervals=[/scratch/justin.zook/NA12878/bed/union13callableMQonlymerged_addcert_nouncert_excludesimplerep_excludesegdups_excludedecoy_excludeRepSeqSTRs_noCNVs_v2.17.bed] excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/scratch/justin.zook/references/human_g1k_v37.fasta nonDeterministicRandomSeed=false disableDithering=false maxRuntime=-1 maxRuntimeUnits=MINUTES downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=1000 baq=OFF baqGapOpenPenalty=40.0 fix_misencoded_quality_scores=false allow_potentially_misencoded_quality_scores=false performanceLog=null useOriginalQualities=false BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 globalQScorePrior=-1.0 allow_bqsr_on_reduced_bams_despite_repeated_warnings=false defaultBaseQualities=-1 validation_strictness=SILENT remove_program_records=false keep_program_records=false unsafe=LENIENT_VCF_PROCESSING disable_auto_index_creation_and_locking_when_reading_rods=false num_threads=1 num_cpu_threads_per_data_thread=1 num_io_threads=0 monitorThreadEfficiency=false num_bam_file_handles=null read_group_black_list=null pedigree=[] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false logging_level=INFO log_to_file=null help=false version=false variant=(RodBinding name=variant source=/scratch/justin.zook/NA12878/Integration130719/AllFDAdatasets_130719_allcall_UGHapMerge_HetHomVarPASS_VQSRv2.17_all.primitives.vcf) discordance=(RodBinding name= source=UNBOUND) concordance=(RodBinding name= source=UNBOUND) out=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub no_cmdline_in_header=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub sites_only=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub bcf=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub sample_name=[] sample_expressions=null sample_file=null exclude_sample_name=[] exclude_sample_file=[] select_expressions=[] excludeNonVariants=false excludeFiltered=false restrictAllelesTo=ALL keepOriginalAC=false mendelianViolation=false mendelianViolationQualThreshold=0.0 select_random_fraction=0.0 remove_fraction_genotypes=0.0 selectTypeToInclude=[] keepIDs=null fullyDecode=false forceGenotypesDecode=false justRead=false maxIndelSize=2147483647 ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES=false filter_mismatching_base_and_quals=false filter_bases_not_stored=false"
+##contig=<ID=1,length=249250621>
+##contig=<ID=2,length=243199373>
+##contig=<ID=3,length=198022430>
+##contig=<ID=4,length=191154276>
+##contig=<ID=5,length=180915260>
+##contig=<ID=6,length=171115067>
+##contig=<ID=7,length=159138663>
+##contig=<ID=8,length=146364022>
+##contig=<ID=9,length=141213431>
+##contig=<ID=10,length=135534747>
+##contig=<ID=11,length=135006516>
+##contig=<ID=12,length=133851895>
+##contig=<ID=13,length=115169878>
+##contig=<ID=14,length=107349540>
+##contig=<ID=15,length=102531392>
+##contig=<ID=16,length=90354753>
+##contig=<ID=17,length=81195210>
+##contig=<ID=18,length=78077248>
+##contig=<ID=19,length=59128983>
+##contig=<ID=20,length=63025520>
+##contig=<ID=21,length=48129895>
+##contig=<ID=22,length=51304566>
+##contig=<ID=X,length=155270560>
+##contig=<ID=Y,length=59373566>
+##contig=<ID=MT,length=16569>
+##contig=<ID=GL000207.1,length=4262>
+##contig=<ID=GL000226.1,length=15008>
+##contig=<ID=GL000229.1,length=19913>
+##contig=<ID=GL000231.1,length=27386>
+##contig=<ID=GL000210.1,length=27682>
+##contig=<ID=GL000239.1,length=33824>
+##contig=<ID=GL000235.1,length=34474>
+##contig=<ID=GL000201.1,length=36148>
+##contig=<ID=GL000247.1,length=36422>
+##contig=<ID=GL000245.1,length=36651>
+##contig=<ID=GL000197.1,length=37175>
+##contig=<ID=GL000203.1,length=37498>
+##contig=<ID=GL000246.1,length=38154>
+##contig=<ID=GL000249.1,length=38502>
+##contig=<ID=GL000196.1,length=38914>
+##contig=<ID=GL000248.1,length=39786>
+##contig=<ID=GL000244.1,length=39929>
+##contig=<ID=GL000238.1,length=39939>
+##contig=<ID=GL000202.1,length=40103>
+##contig=<ID=GL000234.1,length=40531>
+##contig=<ID=GL000232.1,length=40652>
+##contig=<ID=GL000206.1,length=41001>
+##contig=<ID=GL000240.1,length=41933>
+##contig=<ID=GL000236.1,length=41934>
+##contig=<ID=GL000241.1,length=42152>
+##contig=<ID=GL000243.1,length=43341>
+##contig=<ID=GL000242.1,length=43523>
+##contig=<ID=GL000230.1,length=43691>
+##contig=<ID=GL000237.1,length=45867>
+##contig=<ID=GL000233.1,length=45941>
+##contig=<ID=GL000204.1,length=81310>
+##contig=<ID=GL000198.1,length=90085>
+##contig=<ID=GL000208.1,length=92689>
+##contig=<ID=GL000191.1,length=106433>
+##contig=<ID=GL000227.1,length=128374>
+##contig=<ID=GL000228.1,length=129120>
+##contig=<ID=GL000214.1,length=137718>
+##contig=<ID=GL000221.1,length=155397>
+##contig=<ID=GL000209.1,length=159169>
+##contig=<ID=GL000218.1,length=161147>
+##contig=<ID=GL000220.1,length=161802>
+##contig=<ID=GL000213.1,length=164239>
+##contig=<ID=GL000211.1,length=166566>
+##contig=<ID=GL000199.1,length=169874>
+##contig=<ID=GL000217.1,length=172149>
+##contig=<ID=GL000216.1,length=172294>
+##contig=<ID=GL000215.1,length=172545>
+##contig=<ID=GL000205.1,length=174588>
+##contig=<ID=GL000219.1,length=179198>
+##contig=<ID=GL000224.1,length=179693>
+##contig=<ID=GL000223.1,length=180455>
+##contig=<ID=GL000195.1,length=182896>
+##contig=<ID=GL000212.1,length=186858>
+##contig=<ID=GL000222.1,length=186861>
+##contig=<ID=GL000200.1,length=187035>
+##contig=<ID=GL000193.1,length=189789>
+##contig=<ID=GL000194.1,length=191469>
+##contig=<ID=GL000225.1,length=211173>
+##contig=<ID=GL000192.1,length=547496>
+##contig=<ID=NC_007605,length=171823>
+##fileDate=20130719
+##phasing=none
+##reference=file:///crsp/qa/references/v1/ReferenceSequences/Homo_sapiens_assembly19/v1/Homo_sapiens_assembly19.fasta
+##source=SelectVariants
+##variants_justified=left
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA12878
+1	981931	.	A	G	6782	PASS	DPSum=538;HRun=0;HapNoVar=0;NoPLTot=0;PL454WG=166,0,116;PLCG=13,0,93;PLHSWEx=232,0,933;PLHSWG=308,0,432;PLILL250=290,0,446;PLILLCLIA=1884,0,1476;PLILLWG=174,0,168;PLIllPCRFree=704,0,150;PLIonEx=180,0,283;PLPlatGen=2610,0,2126;PLXIll=221,0,319;PLminsum=6542;PLminsumOverDP=12.16;TrancheABQDmin2=0;TrancheAlignmin2=0;TrancheMapmin2=0;TrancheSSEmin2=0;YesPLtot=10;allalts=G;datasetcalls=11;geno=2;genoMapGood=10;platformbias=none;platformnames=ill,454,ion;platforms=3;varType=SNP	GT:DP:GQ:PL	0/1:538:6542:6782,0,6542
+1	2338126	.	C	A	9759	PASS	DPSum=794;HRun=2;HapNoVar=0;NoPLTot=0;PL454WG=142,0,167;PLCG=325,0,666;PLHSWEx=292,0,441;PLHSWG=806,0,717;PLILL250=339,0,487;PLILLCLIA=2904,0,2874;PLILLWG=350,0,208;PLIllPCRFree=511,0,730;PLIonEx=679,0,180;PLPlatGen=3050,0,3139;PLXIll=361,0,544;PLminsum=9759;PLminsumOverDP=12.29;RPA=2,1;RU=G;TrancheABQDmin2=0;TrancheAlignmin2=0;TrancheMapmin2=0;TrancheSSEmin2=0;YesPLtot=11;allalts=A;datasetcalls=11;geno=2;genoMapGood=11;platformbias=none;platformnames=ill,454,ion,cg;platforms=4;varType=SNP	GT:DP:GQ:PL	0/1:794:9759:9759,0,10153
+1	2411451	.	A	G	9379	PASS	DPSum=779;HRun=2;HapNoVar=0;NoPLTot=0;PL454WG=140,0,89;PLCG=224,0,713;PLHSWEx=803,0,971;PLHSWG=749,0,420;PLILL250=587,0,525;PLILLCLIA=2333,0,3490;PLILLWG=185,0,216;PLIllPCRFree=720,0,1015;PLIonEx=115,0,191;PLPlatGen=3067,0,3598;PLXIll=456,0,434;PLminsum=9379;PLminsumOverDP=12.04;RPA=2,1;RU=G;TrancheABQDmin2=0;TrancheAlignmin2=0;TrancheMapmin2=0;TrancheSSEmin2=0;YesPLtot=11;allalts=G;datasetcalls=11;geno=2;genoMapGood=11;platformbias=none;platformnames=ill,454,ion,cg;platforms=4;varType=SNP	GT:DP:GQ:PL	0/1:779:9379:9379,0,11662
