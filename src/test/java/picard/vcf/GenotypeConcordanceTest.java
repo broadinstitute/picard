@@ -506,7 +506,7 @@ public class GenotypeConcordanceTest {
                                                        final VariantContext callVariantContext, final CallState expectedCallState,
                                                        final int minGq, final int minDp) {
         final TruthAndCallStates truthAndCallStates = GenotypeConcordance.determineState(truthVariantContext, TRUTH_SAMPLE_NAME,
-                callVariantContext, CALL_SAMPLE_NAME, minGq, minDp);
+                callVariantContext, CALL_SAMPLE_NAME, minGq, minDp, false);
         Assert.assertEquals(truthAndCallStates.truthState, expectedTruthState);
         Assert.assertEquals(truthAndCallStates.callState, expectedCallState);
     }
@@ -576,6 +576,7 @@ public class GenotypeConcordanceTest {
         Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
     }
 
+<<<<<<< Updated upstream
     @Test
     public void testNormalizeAllelesForWritingVCF() throws FileNotFoundException {
         final File truthVcfPath             = new File(TEST_DATA_PATH.getAbsolutePath(), NORMALIZE_NO_CALLS_TRUTH);

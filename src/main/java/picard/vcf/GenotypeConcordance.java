@@ -158,6 +158,9 @@ public class GenotypeConcordance extends CommandLineProgram {
             "This flag can only be used with a high confidence interval list.")
     public boolean MISSING_SITES_HOM_REF = false;
 
+    @Argument(doc="Default is false. If true, filter status of sites will be ignored", optional = true)
+    public boolean IGNORE_FILTER_STATUS = false;
+
     private final Log log = Log.getInstance(GenotypeConcordance.class);
     private final ProgressLogger progress = new ProgressLogger(log, 10000, "checked", "variants");
 
@@ -322,7 +325,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             final boolean stateClassified = classifyVariants(tuple.leftVariantContext, TRUTH_SAMPLE,
                     tuple.rightVariantContext, CALL_SAMPLE,
                     Optional.of(snpCounter), Optional.of(indelCounter),
-                    MIN_GQ, MIN_DP);
+                    MIN_GQ, MIN_DP, IGNORE_FILTER_STATUS);
 
             if (!stateClassified) {
                 final String condition = truthVariantContextType + " " + callVariantContextType;
@@ -424,7 +427,7 @@ public class GenotypeConcordance extends CommandLineProgram {
 
         // Get the alleles for each genotype.  No alleles will be extracted for a genotype if the genotype is
         // mixed, filtered, or missing.
-        final Alleles alleles = normalizeAlleles(truthContext, TRUTH_SAMPLE, callContext, CALL_SAMPLE);
+        final Alleles alleles = normalizeAlleles(truthContext, TRUTH_SAMPLE, callContext, CALL_SAMPLE, IGNORE_FILTER_STATUS);
 
         // There will be no alleles if both genotypes are one of mixed, filtered, or missing.  Do not output any
         // variant context in this case.
@@ -457,7 +460,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             builder.genotypes(genotypes);
 
             // set the concordance state attribute
-            final TruthAndCallStates state = GenotypeConcordance.determineState(truthContext, TRUTH_SAMPLE, callContext, CALL_SAMPLE, MIN_GQ, MIN_DP);
+            final TruthAndCallStates state = GenotypeConcordance.determineState(truthContext, TRUTH_SAMPLE, callContext, CALL_SAMPLE, MIN_GQ, MIN_DP, IGNORE_FILTER_STATUS);
             final ContingencyState[] stateArray = scheme.getConcordanceStateArray(state.truthState, state.callState);
             builder.attribute(CONTINGENCY_STATE_TAG, Arrays.asList(stateArray));
 
@@ -504,8 +507,10 @@ public class GenotypeConcordance extends CommandLineProgram {
                                            final String truthSample,
                                            final Optional<VariantContext> callContext,
                                            final String callSample,
-                                           final int minGq, final int minDp) {
-        return classifyVariants(truthContext, truthSample, callContext, callSample, Optional.empty(), Optional.empty(), minGq, minDp);
+                                           final int minGq, final int minDp,
+                                           final boolean ignoreFilterStatus) {
+        return classifyVariants(truthContext, truthSample, callContext, callSample, Optional.empty(), Optional.empty(),
+                minGq, minDp, ignoreFilterStatus);
     }
 
     /**
@@ -529,13 +534,13 @@ public class GenotypeConcordance extends CommandLineProgram {
                                            final String callSample,
                                            final Optional<GenotypeConcordanceCounts> snpCounter,
                                            final Optional<GenotypeConcordanceCounts> indelCounter,
-                                           final int minGq, final int minDp) {
+                                           final int minGq, final int minDp, final boolean ignoreFilteredStatus) {
         final VariantContext.Type truthVariantContextType = truthContext.map(VariantContext::getType).orElse(NO_VARIATION);
         final VariantContext.Type callVariantContextType  = callContext.map(VariantContext::getType).orElse(NO_VARIATION);
 
         // A flag to keep track of whether we have been able to successfully classify the Truth/Call States.
         // Unclassified include MIXED/MNP/Symbolic...
-        final TruthAndCallStates truthAndCallStates = determineState(truthContext.orElse(null), truthSample, callContext.orElse(null), callSample, minGq, minDp);
+        final TruthAndCallStates truthAndCallStates = determineState(truthContext.orElse(null), truthSample, callContext.orElse(null), callSample, minGq, minDp, ignoreFilteredStatus);
         if (truthVariantContextType == SNP) {
             if ((callVariantContextType == SNP) || (callVariantContextType == MIXED) || (callVariantContextType == NO_VARIATION)) {
                 // Note.  If truth is SNP and call is MIXED, the event will be logged in the snpCounter, with row = MIXED
@@ -700,14 +705,15 @@ public class GenotypeConcordance extends CommandLineProgram {
     final protected static Alleles normalizeAlleles(final VariantContext truthContext,
                                                     final String truthSample,
                                                     final VariantContext callContext,
-                                                    final String callSample) {
+                                                    final String callSample,
+                                                    final Boolean ignoreFilteredStatus) {
 
         final Genotype truthGenotype, callGenotype;
 
         if (truthContext == null || truthContext.isMixed() || truthContext.isFiltered()) truthGenotype = null;
         else truthGenotype = truthContext.getGenotype(truthSample);
 
-        if (callContext == null || callContext.isMixed() || callContext.isFiltered()) callGenotype = null;
+        if (callContext == null || callContext.isMixed() || (!ignoreFilteredStatus && callContext.isFiltered())) callGenotype = null;
         else callGenotype = callContext.getGenotype(callSample);
 
         // initialize the reference
@@ -842,18 +848,22 @@ public class GenotypeConcordance extends CommandLineProgram {
      * @param minDp Threshold for filtering by genotype attribute DP
      * @return TruthAndCallStates object containing the TruthState and CallState determined here.
      */
-    final public static TruthAndCallStates determineState(final VariantContext truthContext, final String truthSample, final VariantContext callContext, final String callSample, final int minGq, final int minDp) {
+    final public static TruthAndCallStates determineState(final VariantContext truthContext, final String truthSample, final VariantContext callContext, final String callSample, final int minGq, final int minDp, final Boolean ignoreFilteredStatus) {
         TruthState truthState = null;
         CallState callState = null;
 
         // TODO: what about getPloidy()
 
         // Get truth and call states if they are filtered or are not going to be compared (ex. depth is less than minDP).
-        final GenotypeConcordanceStateCodes truthStateCode = getStateCode(truthContext, truthSample, minGq, minDp);
+        GenotypeConcordanceStateCodes truthStateCode = getStateCode(truthContext, truthSample, minGq, minDp);
+
         if (null != truthStateCode) {
             truthState = GenotypeConcordanceStates.truthMap.get(truthStateCode.ordinal());
         }
-        final GenotypeConcordanceStateCodes callStateCode = getStateCode(callContext, callSample, minGq, minDp);
+        GenotypeConcordanceStateCodes callStateCode = getStateCode(callContext, callSample, minGq, minDp);
+        if (ignoreFilteredStatus && callStateCode == GenotypeConcordanceStateCodes.VC_FILTERED_CODE) {
+            callStateCode = null;
+        }
         if (null != callStateCode) {
             callState = GenotypeConcordanceStates.callMap.get(callStateCode.ordinal());
         }
@@ -862,7 +872,7 @@ public class GenotypeConcordance extends CommandLineProgram {
                 truthState == null ? truthContext : null,
                 truthSample,
                 callState == null ? callContext : null,
-                callSample);
+                callSample, ignoreFilteredStatus);
         final OrderedSet<String> allAlleles = alleles.allAlleles;
         final String truthAllele1           = alleles.truthAllele1;
         final String truthAllele2           = alleles.truthAllele2;
