@@ -53,7 +53,7 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
-                "HISTOGRAM_FILE=" + pdf.getAbsolutePath(),
+                "Histogram_FILE=" + pdf.getAbsolutePath(),
                 "LEVEL=SAMPLE",
                 "LEVEL=LIBRARY",
                 "LEVEL=READ_GROUP"
@@ -216,7 +216,7 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
-                "HISTOGRAM_FILE=" + pdf.getAbsolutePath(),
+                "Histogram_FILE=" + pdf.getAbsolutePath(),
                 "LEVEL=null",
                 "LEVEL=READ_GROUP"
         };

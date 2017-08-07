@@ -6,10 +6,10 @@ import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.RuntimeIOException;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.programgroups.Fasta;
 import picard.cmdline.StandardOptionDefinitions;
 
@@ -22,8 +22,8 @@ import java.io.IOException;
  * same length, and are a reasonable length!
  */
 @CommandLineProgramProperties(
-        usage = NormalizeFasta.USAGE_SUMMARY + NormalizeFasta.USAGE_DETAILS,
-        usageShort = NormalizeFasta.USAGE_SUMMARY,
+        summary = NormalizeFasta.USAGE_SUMMARY + NormalizeFasta.USAGE_DETAILS,
+        oneLineSummary = NormalizeFasta.USAGE_SUMMARY,
         programGroup = Fasta.class
 )
 public class NormalizeFasta extends CommandLineProgram {
@@ -40,16 +40,16 @@ public class NormalizeFasta extends CommandLineProgram {
             "</pre>" +
             "<hr />"
             ;
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input FASTA file to normalize.")
+    @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input FASTA file to normalize.")
     public File INPUT;
 
-    @Option(shortName= StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output FASTA file to write.")
+    @Argument(shortName= StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output FASTA file to write.")
     public File OUTPUT;
 
-    @Option(doc="The line length to be used for the output FASTA file.")
+    @Argument(doc="The line length to be used for the output FASTA file.")
     public int LINE_LENGTH=100;
 
-    @Option(doc="Truncate sequence names at first whitespace.")
+    @Argument(doc="Truncate sequence names at first whitespace.")
     public boolean TRUNCATE_SEQUENCE_NAMES_AT_WHITESPACE=false;
 
     private final Log log = Log.getInstance(NormalizeFasta.class);

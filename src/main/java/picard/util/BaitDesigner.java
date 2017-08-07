@@ -12,10 +12,10 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.None;
 
@@ -39,8 +39,8 @@ import java.util.regex.Pattern;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-                usage = BaitDesigner.USAGE_SUMMARY + BaitDesigner.USAGE_DETAILS,
-                usageShort = BaitDesigner.USAGE_SUMMARY,
+        summary = BaitDesigner.USAGE_SUMMARY + BaitDesigner.USAGE_DETAILS,
+        oneLineSummary = BaitDesigner.USAGE_SUMMARY,
                 programGroup = None.class
         )
 public class BaitDesigner extends CommandLineProgram {
@@ -271,57 +271,54 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
     // Options for the Bait Designer
     ///////////////////////////////////////////////////////////////////////////
 
-    @Option(shortName = "T", doc = "The file with design parameters and targets")
+    @Argument(shortName = "T", doc = "The file with design parameters and targets")
     public File TARGETS;
 
-    @Option(doc = "The name of the bait design")
+    @Argument(doc = "The name of the bait design")
     public String DESIGN_NAME;
 
-    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "The reference sequence fasta file")
-    public File REFERENCE_SEQUENCE;
-
-    @Option(doc = "The left amplification primer to prepend to all baits for synthesis")
+    @Argument(doc = "The left amplification primer to prepend to all baits for synthesis")
     public String LEFT_PRIMER = "ATCGCACCAGCGTGT";
 
-    @Option(doc = "The right amplification primer to prepend to all baits for synthesis")
+    @Argument(doc = "The right amplification primer to prepend to all baits for synthesis")
     public String RIGHT_PRIMER = "CACTGCGGCTCCTCA";
 
-    @Option(doc = "The design strategy to use to layout baits across each target")
+    @Argument(doc = "The design strategy to use to layout baits across each target")
     public DesignStrategy DESIGN_STRATEGY = DesignStrategy.FixedOffset;
 
-    @Option(doc = "The length of each individual bait to design")
+    @Argument(doc = "The length of each individual bait to design")
     public int BAIT_SIZE = 120;
 
-    @Option(doc = "The minimum number of baits to design per target.")
+    @Argument(doc = "The minimum number of baits to design per target.")
     public int MINIMUM_BAITS_PER_TARGET = 2;
 
-    @Option(doc = "The desired offset between the start of one bait and the start of another bait for the same target.")
+    @Argument(doc = "The desired offset between the start of one bait and the start of another bait for the same target.")
     public int BAIT_OFFSET = 80;
 
-    @Option(doc = "Pad the input targets by this amount when designing baits. Padding is applied on both sides in this amount.")
+    @Argument(doc = "Pad the input targets by this amount when designing baits. Padding is applied on both sides in this amount.")
     public int PADDING = 0;
 
-    @Option(doc = "Baits that have more than REPEAT_TOLERANCE soft or hard masked bases will not be allowed")
+    @Argument(doc = "Baits that have more than REPEAT_TOLERANCE soft or hard masked bases will not be allowed")
     public int REPEAT_TOLERANCE = 50;
 
-    @Option(doc = "The size of pools or arrays for synthesis. If no pool files are desired, can be set to 0.")
+    @Argument(doc = "The size of pools or arrays for synthesis. If no pool files are desired, can be set to 0.")
     public int POOL_SIZE = 55000;
 
-    @Option(doc = "If true, fill up the pools with alternating fwd and rc copies of all baits. Equal copies of " +
+    @Argument(doc = "If true, fill up the pools with alternating fwd and rc copies of all baits. Equal copies of " +
             "all baits will always be maintained")
     public boolean FILL_POOLS = true;
 
-    @Option(doc = "If true design baits on the strand of the target feature, if false always design on the + strand of " +
+    @Argument(doc = "If true design baits on the strand of the target feature, if false always design on the + strand of " +
             "the genome.")
     public boolean DESIGN_ON_TARGET_STRAND = false;
 
-    @Option(doc = "If true merge targets that are 'close enough' that designing against a merged target would be more efficient.")
+    @Argument(doc = "If true merge targets that are 'close enough' that designing against a merged target would be more efficient.")
     public boolean MERGE_NEARBY_TARGETS = true;
 
-    @Option(doc = "If true also output .design.txt files per pool with one line per bait sequence")
+    @Argument(doc = "If true also output .design.txt files per pool with one line per bait sequence")
     public boolean OUTPUT_AGILENT_FILES = true;
 
-    @Option(shortName = "O", optional = true,
+    @Argument(shortName = "O", optional = true,
             doc = "The output directory. If not provided then the DESIGN_NAME will be used as the output directory")
     public File OUTPUT_DIRECTORY;
 
@@ -337,6 +334,11 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
     // Utility objects
     private static final Log log = Log.getInstance(BaitDesigner.class);
     private final NumberFormat fmt = NumberFormat.getIntegerInstance();
+
+    @Override
+    protected boolean requiresReference() {
+        return true;
+    }
 
     /** Takes a target name and a bait index and creates a uniform bait name. */
     String makeBaitName(final String targetName, final int baitIndex, final int totalBaits) {

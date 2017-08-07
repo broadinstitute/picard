@@ -15,9 +15,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -32,27 +32,27 @@ import java.util.Iterator;
  * @author Nils Homer
  */
 @CommandLineProgramProperties(
-        usage = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.",
-        usageShort = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs",
+        summary = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.",
+        oneLineSummary = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs",
         programGroup = SamOrBam.class
 )
 public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgram {
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM file to create.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM file to create.")
     public File OUTPUT;
 
-    @Option(shortName = "SO", doc = "The sort order to create the reverted output file with."
+    @Argument(shortName = "SO", doc = "The sort order to create the reverted output file with."
             + "By default, the sort order will be the same as the input.", optional = true)
     public SAMFileHeader.SortOrder SORT_ORDER = null;
 
-    @Option(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME, doc = "True to restore original" +
+    @Argument(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME, doc = "True to restore original" +
             " qualities from the OQ field to the QUAL field if available.")
     public boolean RESTORE_ORIGINAL_QUALITIES = true;
 
-    @Option(doc = "The maximum number of records to examine to determine if we can exit early and not output, given that"
+    @Argument(doc = "The maximum number of records to examine to determine if we can exit early and not output, given that"
             + " there are a no original base qualities (if we are to restore) and mate cigars exist."
             + " Set to 0 to never skip the file.")
     public int MAX_RECORDS_TO_EXAMINE = 10000;

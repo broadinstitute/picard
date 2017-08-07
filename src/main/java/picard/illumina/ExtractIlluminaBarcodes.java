@@ -30,10 +30,10 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Illumina;
 import picard.illumina.parser.BaseIlluminaDataProvider;
@@ -84,8 +84,8 @@ import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
  */
 @CommandLineProgramProperties(
 
-        usage = ExtractIlluminaBarcodes.USAGE_SUMMARY + ExtractIlluminaBarcodes.USAGE_DETAILS,
-        usageShort = ExtractIlluminaBarcodes.USAGE_SUMMARY,
+        summary = ExtractIlluminaBarcodes.USAGE_SUMMARY + ExtractIlluminaBarcodes.USAGE_DETAILS,
+        oneLineSummary = ExtractIlluminaBarcodes.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
 public class ExtractIlluminaBarcodes extends CommandLineProgram {
@@ -136,50 +136,50 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     // The following attributes define the command-line arguments
 
-    @Option(doc = "The Illumina basecalls directory. ", shortName = "B")
+    @Argument(doc = "The Illumina basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
 
-    @Option(doc = "Where to write _barcode.txt files.  By default, these are written to BASECALLS_DIR.", optional = true)
+    @Argument(doc = "Where to write _barcode.txt files.  By default, these are written to BASECALLS_DIR.", optional = true)
     public File OUTPUT_DIR;
 
-    @Option(doc = "Lane number. ", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
+    @Argument(doc = "Lane number. ", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Option(doc = ReadStructure.PARAMETER_DOC, shortName = "RS")
+    @Argument(doc = ReadStructure.PARAMETER_DOC, shortName = "RS")
     public String READ_STRUCTURE;
 
-    @Option(doc = "Barcode sequence.  These must be unique, and all the same length.  This cannot be used with reads that " +
+    @Argument(doc = "Barcode sequence.  These must be unique, and all the same length.  This cannot be used with reads that " +
             "have more than one barcode; use BARCODE_FILE in that case. ", mutex = {"BARCODE_FILE"})
     public List<String> BARCODE = new ArrayList<>();
 
-    @Option(doc = "Tab-delimited file of barcode sequences, barcode name and, optionally, library name.  " +
+    @Argument(doc = "Tab-delimited file of barcode sequences, barcode name and, optionally, library name.  " +
             "Barcodes must be unique and all the same length.  Column headers must be 'barcode_sequence_1', " +
             "'barcode_sequence_2' (optional), 'barcode_name', and 'library_name'.", mutex = {"BARCODE"})
     public File BARCODE_FILE;
 
-    @Option(doc = "Per-barcode and per-lane metrics written to this file.", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME)
+    @Argument(doc = "Per-barcode and per-lane metrics written to this file.", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME)
     public File METRICS_FILE;
 
-    @Option(doc = "Maximum mismatches for a barcode to be considered a match.")
+    @Argument(doc = "Maximum mismatches for a barcode to be considered a match.")
     public int MAX_MISMATCHES = 1;
 
-    @Option(doc = "Minimum difference between number of mismatches in the best and second best barcodes for a barcode to be considered a match.")
+    @Argument(doc = "Minimum difference between number of mismatches in the best and second best barcodes for a barcode to be considered a match.")
     public int MIN_MISMATCH_DELTA = 1;
 
-    @Option(doc = "Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.")
+    @Argument(doc = "Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.")
     public int MAX_NO_CALLS = 2;
 
-    @Option(shortName = "Q", doc = "Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match.")
+    @Argument(shortName = "Q", doc = "Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match.")
     public int MINIMUM_BASE_QUALITY = 0;
 
-    @Option(doc = "The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
+    @Argument(doc = "The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
             "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
     public int MINIMUM_QUALITY = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
 
-    @Option(shortName = "GZIP", doc = "Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the file names.")
+    @Argument(shortName = "GZIP", doc = "Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the file names.")
     public boolean COMPRESS_OUTPUTS = false;
 
-    @Option(doc = "Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
+    @Argument(doc = "Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
             "the number available on the machine less NUM_PROCESSORS.")
     public int NUM_PROCESSORS = 1;

@@ -1,6 +1,6 @@
 package picard.cmdline.programgroups;
 
-import picard.cmdline.CommandLineProgramGroup;
+import org.broadinstitute.barclay.argparser.CommandLineProgramGroup;
 
 /**
  * @author nhomer

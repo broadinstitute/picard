@@ -30,8 +30,8 @@ import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.IOUtil;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 
@@ -45,8 +45,8 @@ import java.io.File;
 
 
 @CommandLineProgramProperties(
-        usage = CollectQualityYieldMetrics.USAGE_SUMMARY + CollectQualityYieldMetrics.USAGE_DETAILS,
-        usageShort = CollectQualityYieldMetrics.USAGE_SUMMARY,
+        summary = CollectQualityYieldMetrics.USAGE_SUMMARY + CollectQualityYieldMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectQualityYieldMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectQualityYieldMetrics extends SinglePassSamProgram {
@@ -76,16 +76,16 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
             "the QualityYieldMetrics documentation</a> for details and explanations of the output metrics." +
             "<hr />";
 
-    @Option(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME,
             doc = "If available in the OQ tag, use the original quality scores " +
                     "as inputs instead of the quality scores in the QUAL field.")
     public boolean USE_ORIGINAL_QUALITIES = true;
 
-    @Option(doc="If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting " +
+    @Argument(doc="If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting " +
             "of bases if there are secondary alignments in the input file.")
     public boolean INCLUDE_SECONDARY_ALIGNMENTS = false;
 
-    @Option(doc="If true, include bases from supplemental alignments in metrics. Setting to true may cause double-counting " +
+    @Argument(doc="If true, include bases from supplemental alignments in metrics. Setting to true may cause double-counting " +
             "of bases if there are supplemental alignments in the input file.")
     public boolean INCLUDE_SUPPLEMENTAL_ALIGNMENTS = false;
 

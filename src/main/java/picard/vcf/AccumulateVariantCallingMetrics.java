@@ -25,10 +25,10 @@ package picard.vcf;
 
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.*;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 
@@ -42,18 +42,18 @@ import java.util.*;
  * @author Eric Banks
  */
 @CommandLineProgramProperties(
-        usage = "Combines multiple Variant Calling Metrics files into a single file.  This tool is used in cases where the metrics are calculated" +
+        summary = "Combines multiple Variant Calling Metrics files into a single file.  This tool is used in cases where the metrics are calculated" +
                 " separately for different (genomic) shards of the same callset and we want to combine them into a single result over the entire callset." +
                 " The shards are expected to contain the same samples (although it will not fail if they do not) and to not have been run over overlapping genomic positions.",
-        usageShort = "Combines multiple Variant Calling Metrics files into a single file",
+        oneLineSummary = "Combines multiple Variant Calling Metrics files into a single file",
         programGroup = Metrics.class
 )
 public class AccumulateVariantCallingMetrics extends CommandLineProgram {
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Paths (except for the file extensions) of Variant Calling Metrics files to read and merge.", minElements=1)
+    @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Paths (except for the file extensions) of Variant Calling Metrics files to read and merge.", minElements=1)
     public List<File> INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Path (except for the file extension) of output metrics files to write.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Path (except for the file extension) of output metrics files to write.")
     public File OUTPUT;
 
     @Override

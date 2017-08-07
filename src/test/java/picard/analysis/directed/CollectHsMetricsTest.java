@@ -42,7 +42,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "collectHsMetricsDataProvider")
-    public void runCollectTargetedMetricsTest(final String input,
+    public void runCollectHsMetricsTest(final String input,
                                               final String targetIntervals,
                                               final int minimumMappingQuality,
                                               final int minimumBaseQuality,

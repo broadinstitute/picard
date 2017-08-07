@@ -24,9 +24,9 @@
 
 package picard.sam.markduplicates;
 
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IterableAdapter;
 import htsjdk.samtools.util.Log;
@@ -58,8 +58,8 @@ import java.util.*;
  * @author Nils Homer
  */
 @CommandLineProgramProperties(
-        usage = MarkDuplicatesWithMateCigar.USAGE_SUMMARY + MarkDuplicatesWithMateCigar.USAGE_DETAILS,
-        usageShort =  MarkDuplicatesWithMateCigar.USAGE_SUMMARY,
+        summary = MarkDuplicatesWithMateCigar.USAGE_SUMMARY + MarkDuplicatesWithMateCigar.USAGE_DETAILS,
+        oneLineSummary =  MarkDuplicatesWithMateCigar.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLineProgram {
@@ -89,7 +89,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
 
     private final Log log = Log.getInstance(MarkDuplicatesWithMateCigar.class);
 
-    @Option(doc = "The minimum distance to buffer records to account for clipping on the 5' end of the records. " +
+    @Argument(doc = "The minimum distance to buffer records to account for clipping on the 5' end of the records. " +
             "For a given alignment, this parameter controls the width of the window to search for duplicates of that alignment. " +
             "Due to 5' read clipping, duplicates do not necessarily have the same 5' alignment coordinates, so the algorithm " +
             "needs to search around the neighborhood. For single end sequencing data, the neighborhood is only determined by " +
@@ -101,10 +101,10 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
             "you could run into performance limitations if you use a value that is unnecessarily large.", optional = true)
     public int MINIMUM_DISTANCE = -1;
 
-    @Option(doc = "Skip record pairs with no mate cigar and include them in the output.")
+    @Argument(doc = "Skip record pairs with no mate cigar and include them in the output.")
     boolean SKIP_PAIRS_WITH_NO_MATE_CIGAR = true;
 
-    @Option(doc = "The block size for use in the coordinate-sorted record buffer.", optional = true)
+    @Argument(doc = "The block size for use in the coordinate-sorted record buffer.", optional = true)
     public int BLOCK_SIZE = 100000;
 
     /** Warnings that will only be emitted once */

@@ -36,8 +36,8 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Histogram;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.PicardException;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.sam.DuplicationMetrics;
 
@@ -57,57 +57,57 @@ import java.util.Set;
  */
 public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractOpticalDuplicateFinderCommandLineProgram {
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more input SAM or BAM files to analyze. Must be coordinate sorted.")
     public List<String> INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "The output file to write marked records to")
     public File OUTPUT;
 
-    @Option(shortName = "M",
+    @Argument(shortName = "M",
             doc = "File to write duplication metrics to")
     public File METRICS_FILE;
 
-    @Option(doc = "If true do not write duplicates to the output file instead of writing them with appropriate flags set.")
+    @Argument(doc = "If true do not write duplicates to the output file instead of writing them with appropriate flags set.")
     public boolean REMOVE_DUPLICATES = false;
 
     @Deprecated
-    @Option(shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME,
             doc = "If true, assume that the input file is coordinate sorted even if the header says otherwise. " +
                     "Deprecated, used ASSUME_SORT_ORDER=coordinate instead.", mutex = {"ASSUME_SORT_ORDER"})
     public boolean ASSUME_SORTED = false;
 
-    @Option(shortName = StandardOptionDefinitions.ASSUME_SORT_ORDER_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.ASSUME_SORT_ORDER_SHORT_NAME,
             doc = "If not null, assume that the input file has this order even if the header says otherwise.",
             optional = true, mutex = {"ASSUME_SORTED"})
     public SAMFileHeader.SortOrder ASSUME_SORT_ORDER = null;
 
-    @Option(shortName = "DS", doc = "The scoring strategy for choosing the non-duplicate among candidates.")
+    @Argument(shortName = "DS", doc = "The scoring strategy for choosing the non-duplicate among candidates.")
     public ScoringStrategy DUPLICATE_SCORING_STRATEGY = ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH;
     
-    @Option(shortName = StandardOptionDefinitions.PROGRAM_RECORD_ID_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.PROGRAM_RECORD_ID_SHORT_NAME,
             doc = "The program record ID for the @PG record(s) created by this program. Set to null to disable " +
                     "PG record creation.  This string may have a suffix appended to avoid collision with other " +
                     "program record IDs.",
             optional = true)
     public String PROGRAM_RECORD_ID = "MarkDuplicates";
 
-    @Option(shortName = "PG_VERSION",
+    @Argument(shortName = "PG_VERSION",
             doc = "Value of VN tag of PG record to be created. If not specified, the version will be detected automatically.",
             optional = true)
     public String PROGRAM_GROUP_VERSION;
 
-    @Option(shortName = "PG_COMMAND",
+    @Argument(shortName = "PG_COMMAND",
             doc = "Value of CL tag of PG record to be created. If not supplied the command line will be detected automatically.",
             optional = true)
     public String PROGRAM_GROUP_COMMAND_LINE;
 
-    @Option(shortName = "PG_NAME",
+    @Argument(shortName = "PG_NAME",
             doc = "Value of PN tag of PG record to be created.")
     public String PROGRAM_GROUP_NAME = getClass().getSimpleName();
 
-    @Option(shortName = "CO",
+    @Argument(shortName = "CO",
             doc = "Comment(s) to include in the output file's header.",
             optional = true)
     public List<String> COMMENT = new ArrayList<>();

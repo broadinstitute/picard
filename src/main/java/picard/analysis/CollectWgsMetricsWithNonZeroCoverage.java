@@ -33,8 +33,8 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Alpha;
 import picard.filter.CountingFilter;
 import picard.filter.CountingPairedFilter;
@@ -44,8 +44,8 @@ import java.io.File;
 import java.util.List;
 
 @CommandLineProgramProperties(
-        usage = CollectWgsMetricsWithNonZeroCoverage.USAGE_SUMMARY + CollectWgsMetricsWithNonZeroCoverage.USAGE_DETAILS,
-        usageShort = CollectWgsMetricsWithNonZeroCoverage.USAGE_SUMMARY,
+        summary = CollectWgsMetricsWithNonZeroCoverage.USAGE_SUMMARY + CollectWgsMetricsWithNonZeroCoverage.USAGE_DETAILS,
+        oneLineSummary = CollectWgsMetricsWithNonZeroCoverage.USAGE_SUMMARY,
         programGroup = Alpha.class
 )
 public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
@@ -69,7 +69,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
             "WgsMetricsWithNonZeroCoverage</a> documentation for detailed explanations of the output metrics." +
             "<hr />";
 
-    @Option(shortName = "CHART", doc = "A file (with .pdf extension) to write the chart to.")
+    @Argument(shortName = "CHART", doc = "A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 
     private final Log log = Log.getInstance(CollectWgsMetricsWithNonZeroCoverage.class);

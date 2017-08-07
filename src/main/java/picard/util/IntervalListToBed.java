@@ -28,9 +28,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.RuntimeIOException;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Intervals;
 
@@ -45,21 +45,21 @@ import java.util.stream.Collectors;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Converts an Picard IntervalList file to a BED file.",
-        usageShort = "Converts an Picard IntervalList file to a BED file.",
+        summary = "Converts an Picard IntervalList file to a BED file.",
+        oneLineSummary = "Converts an Picard IntervalList file to a BED file.",
         programGroup = Intervals.class
 )
 public class IntervalListToBed extends CommandLineProgram {
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input IntervalList file.")
+    @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input IntervalList file.")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output BED file.")
+    @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output BED file.")
     public File OUTPUT;
 
-    @Option(doc="The score, between 0-1000, to output for each interval in the BED file.")
+    @Argument(doc="The score, between 0-1000, to output for each interval in the BED file.")
     public int SCORE = 500;
 
-    @Option(doc="If true, sort the interval list prior to outputting as BED file.")
+    @Argument(doc="If true, sort the interval list prior to outputting as BED file.")
     public boolean SORT = true;
 
     @Override
