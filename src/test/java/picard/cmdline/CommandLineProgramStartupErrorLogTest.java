@@ -42,4 +42,22 @@ public class CommandLineProgramStartupErrorLogTest {
             System.setErr(oldStderr);
         }
     }
+
+
+    @Test
+    public void testNoStartupOutputLog() {
+        ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+        PrintStream newStdout = new PrintStream(stdoutStream);
+        PrintStream oldStdout = System.out;
+        System.setOut(newStdout);
+
+        CommandLineProgram clp = new MockCLP();
+
+        try {
+            clp.instanceMain(new String[]{});
+            Assert.assertTrue(stdoutStream.toString().isEmpty(), stdoutStream.toString());
+        } finally {
+            System.setOut(oldStdout);
+        }
+    }
 }
