@@ -68,7 +68,7 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
     @Argument(doc = "Whether the file contains bisulfite sequence (used when calculating the NM tag).")
     public boolean IS_BISULFITE_SEQUENCE = false;
 
-    @Option(doc = "Only set the UQ tag, ignore MD and NM")
+    @Argument(doc = "Only set the UQ tag, ignore MD and NM")
     public boolean SET_ONLY_UQ = false;
 
     @Override
