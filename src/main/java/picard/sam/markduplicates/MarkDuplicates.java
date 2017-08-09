@@ -242,7 +242,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             log.info("Found " + (this.libraryIdGenerator.getNumberOfOpticalDuplicateClusters()) + " optical duplicate clusters.");
         }
 
-        final SamHeaderAndIterator headerAndIterator = openInputs();
+        final SamHeaderAndIterator headerAndIterator = openInputs(false);
         final SAMFileHeader header = headerAndIterator.header;
         final SAMFileHeader.SortOrder sortOrder = header.getSortOrder();
 
@@ -472,7 +472,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 maxInMemory,
                 TMP_DIR);
 
-        final SamHeaderAndIterator headerAndIterator = openInputs();
+        final SamHeaderAndIterator headerAndIterator = openInputs(true);
         final SAMFileHeader.SortOrder assumedSortOrder = headerAndIterator.header.getSortOrder();
         final SAMFileHeader header = headerAndIterator.header;
         final ReadEndsForMarkDuplicatesMap tmp = new DiskBasedReadEndsForMarkDuplicatesMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP, diskCodec);
@@ -500,7 +500,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 pgIdsSeen.add(rec.getStringAttribute(SAMTag.PG.name()));
             }
 
-            // Of working in query-sorted, need to keep index of first record with any given query-name.
+            // If working in query-sorted, need to keep index of first record with any given query-name.
             if(assumedSortOrder == SAMFileHeader.SortOrder.queryname && !rec.getReadName().equals(duplicateQueryName)) {
                 duplicateQueryName  = rec.getReadName();
                 duplicateIndex      = index;
@@ -621,7 +621,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         if (this.opticalDuplicateFinder.addLocationInformation(rec.getReadName(), ends)) {
             // calculate the RG number (nth in list)
             ends.readGroup = 0;
-            final String rg = (String) rec.getAttribute("RG");
+            final String rg = (String) rec.getAttribute(ReservedTagConstants.READ_GROUP_ID);
             final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
 
             if (rg != null && readGroups != null) {
@@ -648,8 +648,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     /**
      * Goes through the accumulated ReadEndsForMarkDuplicates objects and determines which of them are
      * to be marked as duplicates.
-     *
-     * @return an array with an ordered list of indexes into the source file
      */
     private void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
         int entryOverhead;

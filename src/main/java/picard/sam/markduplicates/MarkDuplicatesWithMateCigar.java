@@ -126,7 +126,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         IOUtil.assertFileIsWritable(METRICS_FILE);
 
         // Open the inputs
-        final SamHeaderAndIterator headerAndIterator = openInputs();
+        final SamHeaderAndIterator headerAndIterator = openInputs(true);
         final SAMFileHeader header = headerAndIterator.header;
 
         // Create the output header

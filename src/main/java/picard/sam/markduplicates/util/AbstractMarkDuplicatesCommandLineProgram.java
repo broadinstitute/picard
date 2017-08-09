@@ -201,14 +201,14 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
      * Since this may read its inputs more than once this method does all the opening
      * and checking of the inputs.
      */
-    protected SamHeaderAndIterator openInputs() {
+    protected SamHeaderAndIterator openInputs(boolean eagerlyDecode) {
         final List<SAMFileHeader> headers = new ArrayList<>(INPUT.size());
         final List<SamReader> readers = new ArrayList<>(INPUT.size());
 
         for (final String input : INPUT) {
-            SamReader reader = SamReaderFactory.makeDefault()
-                .enable(SamReaderFactory.Option.EAGERLY_DECODE)
-                .open(SamInputResource.of(input));
+            SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+            SamReader reader = eagerlyDecode ? readerFactory.enable(SamReaderFactory.Option.EAGERLY_DECODE).open(SamInputResource.of(input)) :
+                    readerFactory.open(SamInputResource.of(input));
             final SAMFileHeader header = reader.getFileHeader();
 
             headers.add(header);
