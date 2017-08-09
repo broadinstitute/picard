@@ -23,12 +23,7 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMException;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -101,20 +96,23 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
         writer.setProgressLogger(
                 new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
 
-        final ReferenceSequenceFileWalker refSeq = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
+        final ReferenceSequenceFileWalker refSeqWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
 
         StreamSupport.stream(reader.spliterator(), false)
-                .peek(rec -> {
-                    if (!rec.getReadUnmappedFlag()) {
-                        if (SET_ONLY_UQ)
-                            AbstractAlignmentMerger.fixUq(rec, refSeq, IS_BISULFITE_SEQUENCE);
-                        else
-                            AbstractAlignmentMerger.fixNmMdAndUq(rec, refSeq, IS_BISULFITE_SEQUENCE);
-                    }
-                })
+                .peek(rec -> fixRecord(rec, refSeqWalker))
                 .forEach(writer::addAlignment);
         CloserUtil.close(reader);
         writer.close();
         return 0;
+    }
+
+    private void fixRecord(SAMRecord record, ReferenceSequenceFileWalker refSeqWalker){
+        if (!record.getReadUnmappedFlag()) {
+            if (SET_ONLY_UQ) {
+                AbstractAlignmentMerger.fixUq(record, refSeqWalker, IS_BISULFITE_SEQUENCE);
+            } else {
+                AbstractAlignmentMerger.fixNmMdAndUq(record, refSeqWalker, IS_BISULFITE_SEQUENCE);
+            }
+        }
     }
 }

@@ -1,5 +1,9 @@
 package picard.sam;
 
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -30,7 +34,7 @@ public class SetNmMdAndUqTagsTest {
 
         sort(input, sortOutput);
         fixFile(sortOutput, fixOutput, reference);
-        validate(fixOutput,validateOutput, reference, false);
+        validate(fixOutput,validateOutput, reference);
     }
 
     @Test(dataProvider = "filesToFix")
@@ -44,21 +48,29 @@ public class SetNmMdAndUqTagsTest {
 
         sort(input, sortOutput);
         setUqOnly(sortOutput, fixOutput, reference);
-        //ignore warnings here because having no NM/MD tags throws a warning
-        validate(fixOutput,validateOutput, reference, true);
+        validateUq(fixOutput, reference);
     }
 
-    private void validate(final File input, final File output, final File reference, final boolean ignore_warnings) {
+    private void validate(final File input, final File output, final File reference) {
         final String[] args = {
                 "INPUT=" + input,
                 "OUTPUT=" + output,
                 "MODE=VERBOSE",
-                "REFERENCE_SEQUENCE=" + reference,
-                "IGNORE_WARNINGS=" + ignore_warnings
+                "REFERENCE_SEQUENCE=" + reference
         };
 
         ValidateSamFile validateSam = new ValidateSamFile();
         Assert.assertEquals(validateSam.instanceMain(args), 0, "validate did not succeed");
+    }
+
+    private void validateUq(final File input, final File reference) {
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(reference).open(input);
+        final SAMRecordIterator iterator = reader.iterator();
+        while (iterator.hasNext()){
+            SAMRecord rec = iterator.next();
+            if (!rec.getReadUnmappedFlag())
+                Assert.assertNotNull(rec.getAttribute("UQ"));
+        }
     }
 
     private void sort(final File input, final File output) {
