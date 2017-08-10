@@ -554,8 +554,8 @@ public abstract class AbstractAlignmentMerger {
      * No return value, modifies the provided record.
      */
     public static void fixNmMdAndUq(final SAMRecord record, final ReferenceSequenceFileWalker refSeqWalker, final boolean isBisulfiteSequence) {
-        final ReferenceSequence refSeq = refSeqWalker.get(refSeqWalker.getSequenceDictionary().getSequenceIndex(record.getReferenceName()));
-        final byte[] referenceBases = refSeq.getBases();
+        int seqIndex = refSeqWalker.getSequenceDictionary().getSequenceIndex(record.getReferenceName());
+        final byte[] referenceBases = refSeqWalker.get(seqIndex).getBases();
         // only recalculate NM if it isn't bisulfite, since it needs to be treated specially below
         SequenceUtil.calculateMdAndNmTags(record, referenceBases, true, !isBisulfiteSequence);
         if (isBisulfiteSequence) {  // recalculate the NM tag for bisulfite data
@@ -574,8 +574,8 @@ public abstract class AbstractAlignmentMerger {
      */
     public static void fixUq(final SAMRecord record, final ReferenceSequenceFileWalker refSeqWalker, final boolean isBisulfiteSequence) {
         if (record.getBaseQualities() != SAMRecord.NULL_QUALS) {
-            final ReferenceSequence refSeq = refSeqWalker.get(refSeqWalker.getSequenceDictionary().getSequenceIndex(record.getReferenceName()));
-            final byte[] referenceBases = refSeq.getBases();
+            int seqIndex = refSeqWalker.getSequenceDictionary().getSequenceIndex(record.getReferenceName());
+            final byte[] referenceBases = refSeqWalker.get(seqIndex).getBases();
             record.setAttribute(SAMTag.UQ.name(), SequenceUtil.sumQualitiesOfMismatches(record, referenceBases, 0, isBisulfiteSequence));
         }
     }
