@@ -26,6 +26,7 @@ package picard.sam;
 import htsjdk.samtools.*;
 import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.util.*;
@@ -553,13 +554,26 @@ public abstract class AbstractAlignmentMerger {
      * No return value, modifies the provided record.
      */
     public static void fixNmMdAndUq(final SAMRecord record, final ReferenceSequenceFileWalker refSeqWalker, final boolean isBisulfiteSequence) {
-        final byte[] referenceBases = refSeqWalker.get(refSeqWalker.getSequenceDictionary().getSequenceIndex(record.getReferenceName())).getBases();
+        final byte[] referenceBases = refSeqWalker.get(record.getReferenceIndex()).getBases();
         // only recalculate NM if it isn't bisulfite, since it needs to be treated specially below
         SequenceUtil.calculateMdAndNmTags(record, referenceBases, true, !isBisulfiteSequence);
         if (isBisulfiteSequence) {  // recalculate the NM tag for bisulfite data
             record.setAttribute(SAMTag.NM.name(), SequenceUtil.calculateSamNmTag(record, referenceBases, 0, isBisulfiteSequence));
         }
+        fixUq(record, refSeqWalker, isBisulfiteSequence);
+    }
+
+    /** Calculates and sets UQ tag from the record and the reference
+     *
+     * @param record the record to be fixed
+     * @param refSeqWalker a ReferenceSequenceWalker that will be used to traverse the reference
+     * @param isBisulfiteSequence a flag indicating whether the sequence came from bisulfite-sequencing.
+     *
+     * No return value, modifies the provided record.
+     */
+    public static void fixUq(final SAMRecord record, final ReferenceSequenceFileWalker refSeqWalker, final boolean isBisulfiteSequence) {
         if (record.getBaseQualities() != SAMRecord.NULL_QUALS) {
+            final byte[] referenceBases = refSeqWalker.get(record.getReferenceIndex()).getBases();
             record.setAttribute(SAMTag.UQ.name(), SequenceUtil.sumQualitiesOfMismatches(record, referenceBases, 0, isBisulfiteSequence));
         }
     }

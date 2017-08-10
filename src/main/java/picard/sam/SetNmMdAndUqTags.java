@@ -23,12 +23,7 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMException;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -73,6 +68,9 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
     @Argument(doc = "Whether the file contains bisulfite sequence (used when calculating the NM tag).")
     public boolean IS_BISULFITE_SEQUENCE = false;
 
+    @Argument(doc = "Only set the UQ tag, ignore MD and NM")
+    public boolean SET_ONLY_UQ = false;
+
     @Override
     protected boolean requiresReference() {
         return true;
@@ -98,14 +96,23 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
         writer.setProgressLogger(
                 new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
 
-        final ReferenceSequenceFileWalker refSeq = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
+        final ReferenceSequenceFileWalker refSeqWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
 
-        StreamSupport.stream(reader.spliterator(),false)
-                .peek(rec->{if(!rec.getReadUnmappedFlag()) AbstractAlignmentMerger.fixNmMdAndUq(rec, refSeq, IS_BISULFITE_SEQUENCE);})
+        StreamSupport.stream(reader.spliterator(), false)
+                .peek(rec -> fixRecord(rec, refSeqWalker))
                 .forEach(writer::addAlignment);
-
         CloserUtil.close(reader);
         writer.close();
         return 0;
+    }
+
+    private void fixRecord(SAMRecord record, ReferenceSequenceFileWalker refSeqWalker){
+        if (!record.getReadUnmappedFlag()) {
+            if (SET_ONLY_UQ) {
+                AbstractAlignmentMerger.fixUq(record, refSeqWalker, IS_BISULFITE_SEQUENCE);
+            } else {
+                AbstractAlignmentMerger.fixNmMdAndUq(record, refSeqWalker, IS_BISULFITE_SEQUENCE);
+            }
+        }
     }
 }
