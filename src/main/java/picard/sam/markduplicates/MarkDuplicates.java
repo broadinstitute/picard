@@ -179,7 +179,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     @Argument(doc= "Determines how duplicate types are recorded in the DT optional attribute.")
     public DuplicateTaggingPolicy TAGGING_POLICY = DuplicateTaggingPolicy.DontTag;
 
-    @Option(doc= "If true, clear any original DT tags.  If your SAM doesn't have this tag, leave false as " +
+    @Argument(doc= "If true, clear any original DT tags.  If your SAM doesn't have this tag, leave false as " +
             "this is a speed increase.  Should be set to true if SAM does have this tag.")
     public boolean CLEAR_DT = true;
 
