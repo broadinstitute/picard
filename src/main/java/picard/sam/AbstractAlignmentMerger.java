@@ -91,7 +91,7 @@ public abstract class AbstractAlignmentMerger {
     private boolean addMateCigar = false;
     private boolean unmapContaminantReads = false;
     private UnmappingReadStrategy unmappingReadsStrategy = UnmappingReadStrategy.DO_NOT_CHANGE;
-    private boolean addPGTagToReads = false;
+    private boolean addPGTagToReads = true;
 
 
     private final SamRecordFilter alignmentFilter = new SamRecordFilter() {
