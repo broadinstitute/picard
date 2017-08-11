@@ -607,4 +607,31 @@ public class GenotypeConcordanceTest {
             }
         }
     }
+
+    @Test
+    public void testSpanningDeletion() throws FileNotFoundException {
+        final File truthVcfPath             = new File(TEST_DATA_PATH.getAbsolutePath(), "spanningDeletionTruth.vcf");
+        final File callVcfPath              = new File(TEST_DATA_PATH.getAbsolutePath(), "spanningDeletionCallset.vcf");
+        final File outputBaseFileName       = new File(OUTPUT_DATA_PATH, "spanningDeletion");
+        final File outputContingencyMetrics = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
+        outputContingencyMetrics.deleteOnExit();
+
+        final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
+        genotypeConcordance.TRUTH_VCF = truthVcfPath;
+        genotypeConcordance.TRUTH_SAMPLE = "/dev/stdin";
+        genotypeConcordance.CALL_VCF = callVcfPath;
+        genotypeConcordance.CALL_SAMPLE = "CHMI_CHMI3_WGS2";
+        genotypeConcordance.OUTPUT = new File(OUTPUT_DATA_PATH, "spanningDeletion");
+        genotypeConcordance.OUTPUT_VCF = true;
+
+        Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
+
+        final MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>> output = new MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>>();
+        output.read(new FileReader(outputContingencyMetrics));
+
+        for (final GenotypeConcordanceContingencyMetrics metrics : output.getMetrics()) {
+            metrics.CALL_SAMPLE = "CHMI_CHMI3_WGS2";
+            metrics.TRUTH_SAMPLE = "/dev/stdin";
+        }
+    }
 }
