@@ -685,7 +685,11 @@ public class GenotypeConcordance extends CommandLineProgram {
             return destination.substring(0, insertIdx) + toInsert + destination.substring(insertIdx);
         }
         else {
-            return destination + toInsert;
+            if (destination.length() > 0 && destination.charAt(destination.length()-1) == '*') {
+                return destination;
+            } else {
+                return destination + toInsert;
+            }
         }
     }
 
