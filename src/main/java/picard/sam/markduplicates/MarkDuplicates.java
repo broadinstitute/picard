@@ -181,7 +181,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
     @Option(doc= "If true, clear any original DT tags.  If your SAM doesn't have this tag, leave false as " +
             "this is a speed increase.  Should be set to true if SAM does have this tag.")
-    public boolean CLEAR_DT = false;
+    public boolean CLEAR_DT = true;
 
     private SortingCollection<ReadEndsForMarkDuplicates> pairSort;
     private SortingCollection<ReadEndsForMarkDuplicates> fragSort;
