@@ -12,6 +12,7 @@ import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.*;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -34,8 +35,8 @@ import java.util.stream.Collectors;
 @CommandLineProgramProperties(
         summary = LiftoverVcf.USAGE_SUMMARY + LiftoverVcf.USAGE_DETAILS,
         oneLineSummary = LiftoverVcf.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class LiftoverVcf extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Lifts over a VCF file from one reference build to another.  ";
     static final String USAGE_DETAILS = "This tool adjusts the coordinates of variants within a VCF file to match a new reference. The " +

@@ -13,6 +13,7 @@ import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -43,6 +44,7 @@ import java.util.regex.Pattern;
         oneLineSummary = BaitDesigner.USAGE_SUMMARY,
                 programGroup = None.class
         )
+@DocumentedFeature
 public class BaitDesigner extends CommandLineProgram {
 static final String USAGE_SUMMARY = "Designs oligonucleotide baits for hybrid selection reactions.";
 static final String USAGE_DETAILS = "<p>This tool is used to design custom bait sets for hybrid selection experiments. The following " +

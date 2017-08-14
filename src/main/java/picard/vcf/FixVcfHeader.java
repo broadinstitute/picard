@@ -44,6 +44,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -64,8 +65,8 @@ import java.util.Set;
 @CommandLineProgramProperties(
         summary = FixVcfHeader.USAGE_SUMMARY + FixVcfHeader.USAGE_DETAILS,
         oneLineSummary = FixVcfHeader.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class FixVcfHeader extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Replaces or fixes a VCF header.";
     static final String USAGE_DETAILS =

@@ -32,6 +32,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.*;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -52,8 +53,8 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = "Applies one or more hard filters to a VCF file to filter out genotypes and variants.",
         oneLineSummary = "Hard filters a VCF.",
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class FilterVcf extends CommandLineProgram {
     @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The INPUT VCF or BCF file.")
     public File INPUT;

@@ -28,6 +28,7 @@ import htsjdk.samtools.BAMIndex;
 import htsjdk.samtools.BAMIndexMetaData;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -47,8 +48,8 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary = BamIndexStats.USAGE_SUMMARY + BamIndexStats.USAGE_DETAILS,
         oneLineSummary = BamIndexStats.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class BamIndexStats extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Generate index statistics from a BAM file";
     static final String USAGE_DETAILS = "This tool calculates statistics from a BAM index (.bai) file, emulating the behavior of the " +

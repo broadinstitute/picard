@@ -34,6 +34,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -62,8 +63,8 @@ import static picard.vcf.GenotypeConcordanceStateCodes.*;
 @CommandLineProgramProperties(
         summary = GenotypeConcordance.USAGE_SUMMARY + GenotypeConcordance.USAGE_DETAILS,
         oneLineSummary =  GenotypeConcordance.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class GenotypeConcordance extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Evaluate genotype concordance between callsets.";
     static final String USAGE_DETAILS = "This tool evaluates the concordance between genotype calls for samples in different " +

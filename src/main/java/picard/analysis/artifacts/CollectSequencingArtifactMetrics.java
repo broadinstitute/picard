@@ -9,6 +9,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.analysis.SinglePassSamProgram;
 import picard.analysis.artifacts.SequencingArtifactMetrics.BaitBiasDetailMetrics;
@@ -48,6 +49,7 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
         oneLineSummary = CollectSequencingArtifactMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {
 static final String USAGE_SUMMARY = "Collect metrics to quantify single-base sequencing artifacts.  ";
 static final String USAGE_DETAILS = "<p>This tool examines two sources of sequencing errors associated with hybrid selection "+

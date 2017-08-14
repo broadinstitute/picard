@@ -37,6 +37,7 @@ import htsjdk.samtools.util.StringUtil;
 import htsjdk.samtools.util.WholeGenomeReferenceSequenceMask;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -54,6 +55,7 @@ import java.io.IOException;
         oneLineSummary = NonNFastaSize.USAGE_SUMMARY,
         programGroup = Fasta.class
 )
+@DocumentedFeature
 public class NonNFastaSize extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Counts the number of non-N bases in a fasta file.";
 

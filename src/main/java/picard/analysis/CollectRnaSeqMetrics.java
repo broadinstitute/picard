@@ -36,6 +36,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
@@ -53,6 +54,7 @@ import java.util.Set;
         oneLineSummary = CollectRnaSeqMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 static final String USAGE_SUMMARY = "Produces RNA alignment metrics for a SAM or BAM file.  ";
 static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containing the aligned reads from an RNAseq experiment "+

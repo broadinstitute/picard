@@ -8,6 +8,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineParser.ClpEnum;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.programgroups.Intervals;
@@ -32,6 +33,7 @@ import java.util.Set;
         oneLineSummary = IntervalListTools.USAGE_SUMMARY,
         programGroup = Intervals.class
 )
+@DocumentedFeature
 public class IntervalListTools extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Manipulates interval lists.  ";
     static final String USAGE_DETAILS = "This tool offers multiple interval list file manipulation capabilities include sorting, " +

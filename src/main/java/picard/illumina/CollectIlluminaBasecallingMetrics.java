@@ -28,6 +28,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -79,6 +80,7 @@ import java.util.stream.Collectors;
         oneLineSummary = CollectIlluminaBasecallingMetrics.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
+@DocumentedFeature
 public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Collects Illumina Basecalling metrics for a sequencing run.  ";
     static final String USAGE_DETAILS = "<p>This tool will produce per-barcode and per-lane basecall metrics for each sequencing run.  " +

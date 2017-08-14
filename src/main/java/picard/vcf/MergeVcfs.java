@@ -40,6 +40,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFUtils;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -67,8 +68,8 @@ import java.util.List;
                 "and, within contigs, by start position. The input files must have the same sample and " +
                 "contig lists. An index file is created and a sequence dictionary is required by default.",
         oneLineSummary = "Merges multiple VCF or BCF files into one VCF file or BCF",
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class MergeVcfs extends CommandLineProgram {
 
     @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files (File format is determined by file extension), or a file having a '.list' suffix containing the path to the files.", minElements=1)

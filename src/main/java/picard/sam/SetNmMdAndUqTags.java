@@ -30,6 +30,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
@@ -44,8 +45,8 @@ import java.util.stream.StreamSupport;
 @CommandLineProgramProperties(
         summary = SetNmMdAndUqTags.USAGE_SUMMARY + SetNmMdAndUqTags.USAGE_DETAILS,
         oneLineSummary = SetNmMdAndUqTags.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class SetNmMdAndUqTags extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Fixes the NM, MD, and UQ tags in a SAM file.  ";
     static final String USAGE_DETAILS = "This tool takes in a SAM or BAM file (sorted by coordinate) and calculates the NM, MD, and UQ tags by comparing with the reference."+

@@ -1,6 +1,7 @@
 package picard.sam;
 
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -19,8 +20,8 @@ import java.io.IOException;
 @CommandLineProgramProperties(
         summary = CheckTerminatorBlock.USAGE,
         oneLineSummary = CheckTerminatorBlock.USAGE,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class CheckTerminatorBlock extends CommandLineProgram {
     static final String USAGE = "Asserts the provided gzip file's (e.g., BAM) last block is well-formed; RC 100 otherwise";
     

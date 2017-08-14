@@ -44,6 +44,7 @@ import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SortingCollection;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -66,8 +67,8 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = FixMateInformation.USAGE_SUMMARY + FixMateInformation.USAGE_DETAILS,
         oneLineSummary = FixMateInformation.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class FixMateInformation extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Verify mate-pair information between mates and fix if needed.";
     static final String USAGE_DETAILS = "This tool ensures that all mate-pair information is in sync between each read " +

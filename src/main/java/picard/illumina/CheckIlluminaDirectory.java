@@ -5,6 +5,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProcessExecutor;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -47,6 +48,7 @@ import static picard.illumina.parser.NewIlluminaDataProvider.fileToTile;
         oneLineSummary = CheckIlluminaDirectory.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
+@DocumentedFeature
 public class CheckIlluminaDirectory extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Asserts the validity for specified Illumina basecalling data.  ";
     static final String USAGE_DETAILS = "<p>This tool will check that the basecall directory and the internal files are available, exist, " +

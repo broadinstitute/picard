@@ -25,6 +25,7 @@
 package picard.sam.markduplicates;
 
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import htsjdk.samtools.util.Histogram;
@@ -60,8 +61,8 @@ import java.util.*;
 @CommandLineProgramProperties(
         summary = MarkDuplicatesWithMateCigar.USAGE_SUMMARY + MarkDuplicatesWithMateCigar.USAGE_DETAILS,
         oneLineSummary =  MarkDuplicatesWithMateCigar.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLineProgram {
     static final String USAGE_SUMMARY = "Identifies duplicate reads, accounting for mate CIGAR.  ";
     static final String USAGE_DETAILS = "This tool locates and tags duplicate reads (both PCR and optical) in a BAM or SAM file, where " +

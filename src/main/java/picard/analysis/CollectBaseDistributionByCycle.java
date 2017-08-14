@@ -38,6 +38,7 @@ import java.util.List;
 
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Metrics;
@@ -50,6 +51,7 @@ import picard.util.RExecutor;
         oneLineSummary = CollectBaseDistributionByCycle.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
         static final String USAGE_SUMMARY = "Chart the nucleotide distribution per cycle in a SAM or BAM file";
         static final String USAGE_DETAILS = "This tool produces a chart of the nucleotide distribution per cycle in a SAM or BAM file " +

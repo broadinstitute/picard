@@ -15,6 +15,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -35,8 +36,8 @@ import java.util.TreeSet;
                 "all site level information, including annotations based on genotypes (e.g. AN, AF). Output an be " +
                 "any support variant format including .vcf, .vcf.gz or .bcf.",
         oneLineSummary = "Creates a VCF bereft of genotype information from an input VCF or BCF",
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class MakeSitesOnlyVcf extends CommandLineProgram {
 
     @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input VCF or BCF")

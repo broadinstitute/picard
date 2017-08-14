@@ -32,6 +32,7 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.IOUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 
@@ -49,6 +50,7 @@ import java.io.File;
         oneLineSummary = CollectQualityYieldMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectQualityYieldMetrics extends SinglePassSamProgram {
     private QualityYieldMetricsCollector collector = null;
 

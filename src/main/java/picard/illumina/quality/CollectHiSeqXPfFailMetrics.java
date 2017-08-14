@@ -29,6 +29,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
@@ -62,6 +63,7 @@ import java.util.concurrent.TimeUnit;
         oneLineSummary = CollectHiSeqXPfFailMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 
 public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into " +

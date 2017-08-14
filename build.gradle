@@ -360,3 +360,32 @@ uploadArchives {
         System.out.println("Uploading version $version")
     }
 }
+
+ext.htmlDir = new File("build/docs/html")
+
+//update static web docs
+task copyJavadoc(dependsOn: 'javadoc', type: Copy) {
+    from 'build/docs/javadoc'
+    into "$htmlDir/javadoc"
+}
+
+task copyPicardDoc(dependsOn: 'picardDoc', type: Copy){
+    from 'build/docs/picarddoc'
+    into "$htmlDir/_includes"
+}
+
+task updateGhPages(dependsOn: ['copyJavadoc', 'copyPicardDoc']){
+  outputs.dir htmlDir
+}
+
+updateGhPages.finalizedBy publishGhPages
+
+githubPages {
+  repoUri = 'git@github.com:broadinstitute/picard.git'
+  targetBranch = 'gh-pages'
+  deleteExistingFiles = false
+  pages {
+    from htmlDir
+    into '.'
+  }
+}

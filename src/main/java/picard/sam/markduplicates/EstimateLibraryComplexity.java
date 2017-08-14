@@ -40,6 +40,7 @@ import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
@@ -82,6 +83,7 @@ import static java.lang.Math.pow;
         oneLineSummary = EstimateLibraryComplexity.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCommandLineProgram {
     static final String USAGE_SUMMARY = "Estimates the numbers of unique molecules in a sequencing library.  ";
     static final String USAGE_DETAILS = "<p>This tool outputs quality metrics for a sequencing library preparation." +

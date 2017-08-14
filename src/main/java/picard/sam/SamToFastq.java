@@ -41,6 +41,7 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.samtools.util.TrimmingUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -66,8 +67,8 @@ import java.util.Set;
 @CommandLineProgramProperties(
         summary = SamToFastq.USAGE_SUMMARY + SamToFastq.USAGE_DETAILS,
         oneLineSummary = SamToFastq.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class SamToFastq extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Converts a SAM or BAM file to FASTQ.  ";
     static final String USAGE_DETAILS = "This tool extracts read sequences and base quality scores from the input SAM/BAM file and " +

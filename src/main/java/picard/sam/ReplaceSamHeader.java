@@ -37,6 +37,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -50,8 +51,8 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary =  ReplaceSamHeader.USAGE_SUMMARY + ReplaceSamHeader.USAGE_DETAILS,
         oneLineSummary = ReplaceSamHeader.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class ReplaceSamHeader extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Replaces the SAMFileHeader in a SAM or BAM file.  ";
     static final String USAGE_DETAILS = "This tool makes it possible to replace the header of a SAM or BAM file with the header of another" +

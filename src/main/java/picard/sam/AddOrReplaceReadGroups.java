@@ -16,6 +16,7 @@ import htsjdk.samtools.util.Iso8601Date;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
@@ -32,8 +33,8 @@ import java.util.Arrays;
 @CommandLineProgramProperties(
         summary = AddOrReplaceReadGroups.USAGE_SUMMARY + AddOrReplaceReadGroups.USAGE_DETAILS,
         oneLineSummary = AddOrReplaceReadGroups.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class AddOrReplaceReadGroups extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Replace read groups in a BAM file.";
     static final String USAGE_DETAILS = "This tool enables the user to replace all read groups in the INPUT file with a single new read " +

@@ -28,6 +28,7 @@ import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.analysis.artifacts.CollectSequencingArtifactMetrics;
 import picard.cmdline.CommandLineProgram;
@@ -50,6 +51,7 @@ import java.util.*;
         oneLineSummary = CollectMultipleMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectMultipleMetrics extends CommandLineProgram {
 
     /**

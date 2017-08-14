@@ -35,6 +35,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.Metrics;
@@ -78,6 +79,7 @@ import java.util.Set;
         oneLineSummary = CollectAlignmentSummaryMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "<b>Produces a summary of alignment metrics from a SAM or BAM file.</b>  ";
     static final String USAGE_DETAILS = "This tool takes a SAM/BAM file input and produces metrics detailing the quality of the read " +

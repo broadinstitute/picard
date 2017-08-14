@@ -27,6 +27,7 @@ package picard.fingerprint;
 
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -54,6 +55,7 @@ import java.util.stream.Collectors;
         oneLineSummary = "Clusters the results of a CrosscheckFingerprints run by LOD score.",
         programGroup = Fingerprinting.class
 )
+@DocumentedFeature
 public class ClusterCrosscheckMetrics extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,

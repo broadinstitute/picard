@@ -15,6 +15,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -32,8 +33,8 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary = SplitVcfs.USAGE_SUMMARY + SplitVcfs.USAGE_DETAILS,
         oneLineSummary = SplitVcfs.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class SplitVcfs extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Splits SNPs and INDELs into separate files.  ";
     static final String USAGE_DETAILS = "This tool reads in a VCF or BCF file and writes out the SNPs and INDELs it contains to separate " +

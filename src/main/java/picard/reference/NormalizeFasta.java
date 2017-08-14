@@ -8,6 +8,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.RuntimeIOException;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.programgroups.Fasta;
@@ -26,6 +27,7 @@ import java.io.IOException;
         oneLineSummary = NormalizeFasta.USAGE_SUMMARY,
         programGroup = Fasta.class
 )
+@DocumentedFeature
 public class NormalizeFasta extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Normalizes lines of sequence in a FASTA file to be of the same length.";
     static final String USAGE_DETAILS = "This tool takes any FASTA-formatted file and reformats the sequence to ensure that all of the " +

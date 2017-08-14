@@ -18,6 +18,7 @@ import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -34,6 +35,7 @@ import java.io.IOException;
         oneLineSummary = BedToIntervalList.USAGE_SUMMARY,
         programGroup = Intervals.class
 )
+@DocumentedFeature
 public class BedToIntervalList extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Converts a BED file to a Picard Interval List.  " ;
     static final String USAGE_DETAILS = "This tool provides easy conversion from BED to the Picard interval_list format which is " +
