@@ -179,8 +179,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     @Argument(doc= "Determines how duplicate types are recorded in the DT optional attribute.")
     public DuplicateTaggingPolicy TAGGING_POLICY = DuplicateTaggingPolicy.DontTag;
 
-    @Argument(doc= "If true, clear any original DT tags.  If your SAM doesn't have this tag, leave false as " +
-            "this is a speed increase.  Should be set to true if SAM does have this tag.")
+    @Argument(doc= "Clear DT tag from input SAM records. Should be set to false if input SAM doesn't have this tag.  Default true")
     public boolean CLEAR_DT = true;
 
     private SortingCollection<ReadEndsForMarkDuplicates> pairSort;
