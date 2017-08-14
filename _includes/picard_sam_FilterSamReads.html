@@ -1,0 +1,883 @@
+<?php
+
+    include '../../../common/include/common.php';
+    include_once '../../config.php';
+    $module = modules::GATK;
+    printHeader($module, "Picard | Tool Documentation Index", "Guide");
+?>
+
+<link type='text/css' rel='stylesheet' href='picardDoc.css'>
+
+<div class='row-fluid' id="top">
+
+	
+
+	<?php $group = 'SAM/BAM'; ?>
+
+	<section class="span4">
+		<aside class="well">
+			<a href="index.html"><h4><i class='fa fa-chevron-left'></i> Back to Tool Docs Index</h4></a>
+		</aside>
+		<aside class="well">
+			<h2>Categories</h2>
+        <style>
+            #sidenav .accordion-body a {
+                color : gray;
+            }
+
+            .accordion-body li {
+                list-style : none;
+            }
+        </style>
+        <ul class="nav nav-pills nav-stacked" id="sidenav">
+        		<hr>
+        		<hr>
+        		<hr>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
+							<div id="Fasta"
+								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
+											</li>
+											<li>
+												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
+											</li>
+											<li>
+												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#FingerprintingTools">Fingerprinting Tools</a>
+							<div id="FingerprintingTools"
+								<?php echo ($group == 'Fingerprinting Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IlluminaTools">Illumina Tools</a>
+							<div id="IlluminaTools"
+								<?php echo ($group == 'Illumina Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_illumina_CheckIlluminaDirectory.html">CheckIlluminaDirectory</a>
+											</li>
+											<li>
+												<a href="picard_illumina_CollectIlluminaBasecallingMetrics.html">CollectIlluminaBasecallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_CollectIlluminaLaneMetrics.html">CollectIlluminaLaneMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_ExtractIlluminaBarcodes.html">ExtractIlluminaBarcodes</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaBasecallsToFastq.html">IlluminaBasecallsToFastq</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaBasecallsToSam.html">IlluminaBasecallsToSam</a>
+											</li>
+											<li>
+												<a href="picard_illumina_MarkIlluminaAdapters.html">MarkIlluminaAdapters</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalTools">Interval Tools</a>
+							<div id="IntervalTools"
+								<?php echo ($group == 'Interval Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
+											</li>
+											<li>
+												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
+											</li>
+											<li>
+												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Metrics">Metrics</a>
+							<div id="Metrics"
+								<?php echo ($group == 'Metrics')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectBaseDistributionByCycle.html">CollectBaseDistributionByCycle</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectGcBiasMetrics.html">CollectGcBiasMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_quality_CollectHiSeqXPfFailMetrics.html">CollectHiSeqXPfFailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_CollectHsMetrics.html">CollectHsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectInsertSizeMetrics.html">CollectInsertSizeMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectJumpingLibraryMetrics.html">CollectJumpingLibraryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectMultipleMetrics.html">CollectMultipleMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectOxoGMetrics.html">CollectOxoGMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectQualityYieldMetrics.html">CollectQualityYieldMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRawWgsMetrics.html">CollectRawWgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRnaSeqMetrics.html">CollectRnaSeqMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRrbsMetrics.html">CollectRrbsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_CollectSequencingArtifactMetrics.html">CollectSequencingArtifactMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_CollectTargetedPcrMetrics.html">CollectTargetedPcrMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_CollectVariantCallingMetrics.html">CollectVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectWgsMetrics.html">CollectWgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CompareMetrics.html">CompareMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_EstimateLibraryComplexity.html">EstimateLibraryComplexity</a>
+											</li>
+											<li>
+												<a href="picard_analysis_MeanQualityByCycle.html">MeanQualityByCycle</a>
+											</li>
+											<li>
+												<a href="picard_analysis_QualityScoreDistribution.html">QualityScoreDistribution</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#MiscellaneousTools">Miscellaneous Tools</a>
+							<div id="MiscellaneousTools"
+								<?php echo ($group == 'Miscellaneous Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+											</li>
+											<li>
+												<a href="picard_util_FifoBuffer.html">FifoBuffer</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#SAMBAM">SAM/BAM</a>
+							<div id="SAMBAM"
+								<?php echo ($group == 'SAM/BAM')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_AddCommentsToBam.html">AddCommentsToBam</a>
+											</li>
+											<li>
+												<a href="picard_sam_AddOrReplaceReadGroups.html">AddOrReplaceReadGroups</a>
+											</li>
+											<li>
+												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
+											</li>
+											<li>
+												<a href="picard_fastq_BamToBfq.html">BamToBfq</a>
+											</li>
+											<li>
+												<a href="picard_sam_BuildBamIndex.html">BuildBamIndex</a>
+											</li>
+											<li>
+												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
+											</li>
+											<li>
+												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
+											</li>
+											<li>
+												<a href="picard_sam_CleanSam.html">CleanSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
+											</li>
+											<li>
+												<a href="picard_sam_DownsampleSam.html">DownsampleSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_FastqToSam.html">FastqToSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_FilterSamReads.html">FilterSamReads</a>
+											</li>
+											<li>
+												<a href="picard_sam_FixMateInformation.html">FixMateInformation</a>
+											</li>
+											<li>
+												<a href="picard_sam_GatherBamFiles.html">GatherBamFiles</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_MarkDuplicates.html">MarkDuplicates</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_MarkDuplicatesWithMateCigar.html">MarkDuplicatesWithMateCigar</a>
+											</li>
+											<li>
+												<a href="picard_sam_MergeBamAlignment.html">MergeBamAlignment</a>
+											</li>
+											<li>
+												<a href="picard_sam_MergeSamFiles.html">MergeSamFiles</a>
+											</li>
+											<li>
+												<a href="picard_sam_PositionBasedDownsampleSam.html">PositionBasedDownsampleSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_ReorderSam.html">ReorderSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_ReplaceSamHeader.html">ReplaceSamHeader</a>
+											</li>
+											<li>
+												<a href="picard_sam_RevertOriginalBaseQualitiesAndAddMateCigar.html">RevertOriginalBaseQualitiesAndAddMateCigar</a>
+											</li>
+											<li>
+												<a href="picard_sam_RevertSam.html">RevertSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamFormatConverter.html">SamFormatConverter</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamToFastq.html">SamToFastq</a>
+											</li>
+											<li>
+												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
+											</li>
+											<li>
+												<a href="picard_sam_SortSam.html">SortSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a>
+											</li>
+											<li>
+												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
+											</li>
+											<li>
+												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VCFBCF">VCF/BCF</a>
+							<div id="VCFBCF"
+								<?php echo ($group == 'VCF/BCF')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_filter_FilterVcf.html">FilterVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
+											</li>
+											<li>
+												<a href="picard_vcf_FixVcfHeader.html">FixVcfHeader</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GatherVcfs.html">GatherVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
+											</li>
+											<li>
+												<a href="picard_vcf_LiftoverVcf.html">LiftoverVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MakeSitesOnlyVcf.html">MakeSitesOnlyVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MergeVcfs.html">MergeVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_RenameSampleInVcf.html">RenameSampleInVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_SortVcf.html">SortVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_SplitVcfs.html">SplitVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_UpdateVcfSequenceDictionary.html">UpdateVcfSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_vcf_VcfFormatConverter.html">VcfFormatConverter</a>
+											</li>
+											<li>
+												<a href="picard_vcf_VcfToIntervalList.html">VcfToIntervalList</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+        		<hr>
+        </ul>
+		</aside>
+		<?php getForumPosts( 'FilterSamReads' ) ?>
+
+	</section>
+
+	<div class="span8">
+
+		<h1>FilterSamReads</h1>
+
+		<p class="lead">Subset read data from a SAM or BAM file</p>
+
+			<h3>Category
+				<small> SAM/BAM</small>
+			</h3>
+		<hr>
+		<h2>Overview</h2>
+		From a SAM or BAM file, produce a new SAM or BAM by filtering aligned reads or a list of read
+ names provided in a file (one readname per line)
+ <p/>
+ $Id$
+
+
+				<h3>FilterSamReads specific arguments</h3>
+				<p>This table summarizes the command-line arguments that are specific to this tool. For more details on each argument, see the list further down below the table or click on an argument name to jump directly to that entry in the list.</p>
+				<table class="table table-striped table-bordered table-condensed">
+					<thead>
+					<tr>
+						<th>Argument name(s)</th>
+						<th>Default value</th>
+						<th>Summary</th>
+					</tr>
+					</thead>
+					<tbody>
+			<tr>
+				<th colspan="4" id="row-divider">Required Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--FILTER">--FILTER</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Filter</td> -->
+					<td>null</td>
+					<td>Filter.</td>
+				</tr>
+				<tr>
+					<td><a href="#--INPUT">--INPUT</a><br />
+								&nbsp;<em>-I</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>The SAM or BAM file that will be filtered.</td>
+				</tr>
+				<tr>
+					<td><a href="#--OUTPUT">--OUTPUT</a><br />
+								&nbsp;<em>-O</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>SAM or BAM file to write read excluded results to</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--INTERVAL_LIST">--INTERVAL_LIST</a><br />
+								&nbsp;<em>-IL</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Interval List File containing intervals that will be included or excluded from the OUTPUT SAM or BAM file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--JAVASCRIPT_FILE">--JAVASCRIPT_FILE</a><br />
+								&nbsp;<em>-JS</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Filters a SAM or BAM file with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context:  'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and  'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ). Last value of the script should be a boolean to tell wether we should accept or reject the record.</td>
+				</tr>
+				<tr>
+					<td><a href="#--READ_LIST_FILE">--READ_LIST_FILE</a><br />
+								&nbsp;<em>-RLF</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Read List File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--SORT_ORDER">--SORT_ORDER</a><br />
+								&nbsp;<em>-SO</em>
+					</td>
+					<!--<td>SortOrder</td> -->
+					<td>null</td>
+					<td>SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--WRITE_READS_FILES">--WRITE_READS_FILES</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>true</td>
+					<td>Create .reads files (for debugging purposes)</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Optional Common Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--COMPRESSION_LEVEL">--COMPRESSION_LEVEL</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>5</td>
+					<td>Compression level for all compressed files created (e.g. BAM and GELI).</td>
+				</tr>
+				<tr>
+					<td><a href="#--CREATE_INDEX">--CREATE_INDEX</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
+				</tr>
+				<tr>
+					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>client_secrets.json</td>
+					<td>Google Genomics API client_secrets.json file path.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Integer</td> -->
+					<td>500000</td>
+					<td>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</td>
+				</tr>
+				<tr>
+					<td><a href="#--QUIET">--QUIET</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Whether to suppress job-summary info on System.err.</td>
+				</tr>
+				<tr>
+					<td><a href="#--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE</a><br />
+								&nbsp;<em>-R</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Reference sequence file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--TMP_DIR">--TMP_DIR</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>One or more directories with space available to be used by this program for temporary storage of working files</td>
+				</tr>
+				<tr>
+					<td><a href="#--USE_JDK_DEFLATER">--USE_JDK_DEFLATER</a><br />
+								&nbsp;<em>-use_jdk_deflater</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Use the JDK Deflater instead of the Intel Deflater for writing compressed output</td>
+				</tr>
+				<tr>
+					<td><a href="#--USE_JDK_INFLATER">--USE_JDK_INFLATER</a><br />
+								&nbsp;<em>-use_jdk_inflater</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Use the JDK Inflater instead of the Intel Inflater for reading compressed input</td>
+				</tr>
+				<tr>
+					<td><a href="#--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>ValidationStringency</td> -->
+					<td>STRICT</td>
+					<td>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</td>
+				</tr>
+				<tr>
+					<td><a href="#--VERBOSITY">--VERBOSITY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>LogLevel</td> -->
+					<td>INFO</td>
+					<td>Control verbosity of logging.</td>
+				</tr>
+					</tbody>
+				</table>
+
+					<h3>Argument details</h3>
+					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Compression level for all compressed files created (e.g. BAM and GELI).</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">5</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CREATE_INDEX">--CREATE_INDEX </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CREATE_MD5_FILE">--CREATE_MD5_FILE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to create an MD5 digest for any BAM or FASTQ files created.  </b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--FILTER">--FILTER </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Filter.</b><br />
+			
+		</p>
+			<p>
+				The --FILTER argument is an enumerated type (Filter), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">includeAligned</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">excludeAligned</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">includeReadList</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">excludeReadList</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">includeJavascript</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">includePairedIntervals</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+				<span class="badge badge-important">R</span>
+		<span class="label label-info ">Filter</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Google Genomics API client_secrets.json file path.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--INPUT">--INPUT </a>
+			 / <small>-I</small>
+		</h3>
+		<p class="args">
+			<b>The SAM or BAM file that will be filtered.</b><br />
+			
+		</p>
+		<p>
+				<span class="badge badge-important">R</span>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--INTERVAL_LIST">--INTERVAL_LIST </a>
+			 / <small>-IL</small>
+		</h3>
+		<p class="args">
+			<b>Interval List File containing intervals that will be included or excluded from the OUTPUT SAM or BAM file.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--JAVASCRIPT_FILE">--JAVASCRIPT_FILE </a>
+			 / <small>-JS</small>
+		</h3>
+		<p class="args">
+			<b>Filters a SAM or BAM file with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context:  'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and  'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ). Last value of the script should be a boolean to tell wether we should accept or reject the record.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Integer</span>
+			&nbsp;<span class="label">500000</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--OUTPUT">--OUTPUT </a>
+			 / <small>-O</small>
+		</h3>
+		<p class="args">
+			<b>SAM or BAM file to write read excluded results to</b><br />
+			
+		</p>
+		<p>
+				<span class="badge badge-important">R</span>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--QUIET">--QUIET </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to suppress job-summary info on System.err.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--READ_LIST_FILE">--READ_LIST_FILE </a>
+			 / <small>-RLF</small>
+		</h3>
+		<p class="args">
+			<b>Read List File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE </a>
+			 / <small>-R</small>
+		</h3>
+		<p class="args">
+			<b>Reference sequence file.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--SORT_ORDER">--SORT_ORDER </a>
+			 / <small>-SO</small>
+		</h3>
+		<p class="args">
+			<b>SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.</b><br />
+			
+		</p>
+			<p>
+				The --SORT_ORDER argument is an enumerated type (SortOrder), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">unsorted</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">queryname</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">coordinate</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">duplicate</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">unknown</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">SortOrder</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--TMP_DIR">--TMP_DIR </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>One or more directories with space available to be used by this program for temporary storage of working files</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--USE_JDK_DEFLATER">--USE_JDK_DEFLATER </a>
+			 / <small>-use_jdk_deflater</small>
+		</h3>
+		<p class="args">
+			<b>Use the JDK Deflater instead of the Intel Deflater for writing compressed output</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--USE_JDK_INFLATER">--USE_JDK_INFLATER </a>
+			 / <small>-use_jdk_inflater</small>
+		</h3>
+		<p class="args">
+			<b>Use the JDK Inflater instead of the Intel Inflater for reading compressed input</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</b><br />
+			
+		</p>
+			<p>
+				The --VALIDATION_STRINGENCY argument is an enumerated type (ValidationStringency), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">STRICT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">LENIENT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">SILENT</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">ValidationStringency</span>
+			&nbsp;<span class="label">STRICT</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--VERBOSITY">--VERBOSITY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Control verbosity of logging.</b><br />
+			
+		</p>
+			<p>
+				The --VERBOSITY argument is an enumerated type (LogLevel), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">ERROR</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">WARNING</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INFO</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">DEBUG</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">LogLevel</span>
+			&nbsp;<span class="label">INFO</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--WRITE_READS_FILES">--WRITE_READS_FILES </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Create .reads files (for debugging purposes)</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+
+        <hr>
+        <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
+        <hr>
+        <p class="see-also">See also 
+        	<a href="https://www.broadinstitute.org/picard/guide/">Picard Documentation Index</a> |
+        	<a href="index.html">Tool Docs Index</a> |
+        	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
+        </p>
+
+        <p class="version">Picard version 2.10.9-1-gaa8c979-SNAPSHOT built at 14-52-2017 04:52:45.
+        </p>
+
+	</div>
+
+	<?php printFooter($module); ?>

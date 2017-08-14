@@ -1,0 +1,1385 @@
+<?php
+
+    include '../../../common/include/common.php';
+    include_once '../../config.php';
+    $module = modules::GATK;
+    printHeader($module, "Picard | Tool Documentation Index", "Guide");
+?>
+
+<link type='text/css' rel='stylesheet' href='picardDoc.css'>
+
+<div class='row-fluid' id="top">
+
+	
+
+	<?php $group = 'SAM/BAM'; ?>
+
+	<section class="span4">
+		<aside class="well">
+			<a href="index.html"><h4><i class='fa fa-chevron-left'></i> Back to Tool Docs Index</h4></a>
+		</aside>
+		<aside class="well">
+			<h2>Categories</h2>
+        <style>
+            #sidenav .accordion-body a {
+                color : gray;
+            }
+
+            .accordion-body li {
+                list-style : none;
+            }
+        </style>
+        <ul class="nav nav-pills nav-stacked" id="sidenav">
+        		<hr>
+        		<hr>
+        		<hr>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
+							<div id="Fasta"
+								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
+											</li>
+											<li>
+												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
+											</li>
+											<li>
+												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#FingerprintingTools">Fingerprinting Tools</a>
+							<div id="FingerprintingTools"
+								<?php echo ($group == 'Fingerprinting Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IlluminaTools">Illumina Tools</a>
+							<div id="IlluminaTools"
+								<?php echo ($group == 'Illumina Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_illumina_CheckIlluminaDirectory.html">CheckIlluminaDirectory</a>
+											</li>
+											<li>
+												<a href="picard_illumina_CollectIlluminaBasecallingMetrics.html">CollectIlluminaBasecallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_CollectIlluminaLaneMetrics.html">CollectIlluminaLaneMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_ExtractIlluminaBarcodes.html">ExtractIlluminaBarcodes</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaBasecallsToFastq.html">IlluminaBasecallsToFastq</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaBasecallsToSam.html">IlluminaBasecallsToSam</a>
+											</li>
+											<li>
+												<a href="picard_illumina_MarkIlluminaAdapters.html">MarkIlluminaAdapters</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalTools">Interval Tools</a>
+							<div id="IntervalTools"
+								<?php echo ($group == 'Interval Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
+											</li>
+											<li>
+												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
+											</li>
+											<li>
+												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Metrics">Metrics</a>
+							<div id="Metrics"
+								<?php echo ($group == 'Metrics')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectBaseDistributionByCycle.html">CollectBaseDistributionByCycle</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectGcBiasMetrics.html">CollectGcBiasMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_quality_CollectHiSeqXPfFailMetrics.html">CollectHiSeqXPfFailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_CollectHsMetrics.html">CollectHsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectInsertSizeMetrics.html">CollectInsertSizeMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectJumpingLibraryMetrics.html">CollectJumpingLibraryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectMultipleMetrics.html">CollectMultipleMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectOxoGMetrics.html">CollectOxoGMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectQualityYieldMetrics.html">CollectQualityYieldMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRawWgsMetrics.html">CollectRawWgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRnaSeqMetrics.html">CollectRnaSeqMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRrbsMetrics.html">CollectRrbsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_CollectSequencingArtifactMetrics.html">CollectSequencingArtifactMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_CollectTargetedPcrMetrics.html">CollectTargetedPcrMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_CollectVariantCallingMetrics.html">CollectVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectWgsMetrics.html">CollectWgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CompareMetrics.html">CompareMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_EstimateLibraryComplexity.html">EstimateLibraryComplexity</a>
+											</li>
+											<li>
+												<a href="picard_analysis_MeanQualityByCycle.html">MeanQualityByCycle</a>
+											</li>
+											<li>
+												<a href="picard_analysis_QualityScoreDistribution.html">QualityScoreDistribution</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#MiscellaneousTools">Miscellaneous Tools</a>
+							<div id="MiscellaneousTools"
+								<?php echo ($group == 'Miscellaneous Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+											</li>
+											<li>
+												<a href="picard_util_FifoBuffer.html">FifoBuffer</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#SAMBAM">SAM/BAM</a>
+							<div id="SAMBAM"
+								<?php echo ($group == 'SAM/BAM')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_AddCommentsToBam.html">AddCommentsToBam</a>
+											</li>
+											<li>
+												<a href="picard_sam_AddOrReplaceReadGroups.html">AddOrReplaceReadGroups</a>
+											</li>
+											<li>
+												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
+											</li>
+											<li>
+												<a href="picard_fastq_BamToBfq.html">BamToBfq</a>
+											</li>
+											<li>
+												<a href="picard_sam_BuildBamIndex.html">BuildBamIndex</a>
+											</li>
+											<li>
+												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
+											</li>
+											<li>
+												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
+											</li>
+											<li>
+												<a href="picard_sam_CleanSam.html">CleanSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
+											</li>
+											<li>
+												<a href="picard_sam_DownsampleSam.html">DownsampleSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_FastqToSam.html">FastqToSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_FilterSamReads.html">FilterSamReads</a>
+											</li>
+											<li>
+												<a href="picard_sam_FixMateInformation.html">FixMateInformation</a>
+											</li>
+											<li>
+												<a href="picard_sam_GatherBamFiles.html">GatherBamFiles</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_MarkDuplicates.html">MarkDuplicates</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_MarkDuplicatesWithMateCigar.html">MarkDuplicatesWithMateCigar</a>
+											</li>
+											<li>
+												<a href="picard_sam_MergeBamAlignment.html">MergeBamAlignment</a>
+											</li>
+											<li>
+												<a href="picard_sam_MergeSamFiles.html">MergeSamFiles</a>
+											</li>
+											<li>
+												<a href="picard_sam_PositionBasedDownsampleSam.html">PositionBasedDownsampleSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_ReorderSam.html">ReorderSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_ReplaceSamHeader.html">ReplaceSamHeader</a>
+											</li>
+											<li>
+												<a href="picard_sam_RevertOriginalBaseQualitiesAndAddMateCigar.html">RevertOriginalBaseQualitiesAndAddMateCigar</a>
+											</li>
+											<li>
+												<a href="picard_sam_RevertSam.html">RevertSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamFormatConverter.html">SamFormatConverter</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamToFastq.html">SamToFastq</a>
+											</li>
+											<li>
+												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
+											</li>
+											<li>
+												<a href="picard_sam_SortSam.html">SortSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a>
+											</li>
+											<li>
+												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
+											</li>
+											<li>
+												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VCFBCF">VCF/BCF</a>
+							<div id="VCFBCF"
+								<?php echo ($group == 'VCF/BCF')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_filter_FilterVcf.html">FilterVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
+											</li>
+											<li>
+												<a href="picard_vcf_FixVcfHeader.html">FixVcfHeader</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GatherVcfs.html">GatherVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
+											</li>
+											<li>
+												<a href="picard_vcf_LiftoverVcf.html">LiftoverVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MakeSitesOnlyVcf.html">MakeSitesOnlyVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MergeVcfs.html">MergeVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_RenameSampleInVcf.html">RenameSampleInVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_SortVcf.html">SortVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_SplitVcfs.html">SplitVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_UpdateVcfSequenceDictionary.html">UpdateVcfSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_vcf_VcfFormatConverter.html">VcfFormatConverter</a>
+											</li>
+											<li>
+												<a href="picard_vcf_VcfToIntervalList.html">VcfToIntervalList</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+        		<hr>
+        </ul>
+		</aside>
+		<?php getForumPosts( 'MergeBamAlignment' ) ?>
+
+	</section>
+
+	<div class="span8">
+
+		<h1>MergeBamAlignment</h1>
+
+		<p class="lead">Merge alignment data from a SAM or BAM with data in an unmapped BAM file.  </p>
+
+			<h3>Category
+				<small> SAM/BAM</small>
+			</h3>
+		<hr>
+		<h2>Overview</h2>
+		A command-line tool to merge BAM/SAM alignment info from a third-party aligner with the data in an
+ unmapped BAM file, producing a third BAM file that has alignment data and all the additional data
+ from the unmapped BAM
+
+
+				<h3>MergeBamAlignment specific arguments</h3>
+				<p>This table summarizes the command-line arguments that are specific to this tool. For more details on each argument, see the list further down below the table or click on an argument name to jump directly to that entry in the list.</p>
+				<table class="table table-striped table-bordered table-condensed">
+					<thead>
+					<tr>
+						<th>Argument name(s)</th>
+						<th>Default value</th>
+						<th>Summary</th>
+					</tr>
+					</thead>
+					<tbody>
+			<tr>
+				<th colspan="4" id="row-divider">Required Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--OUTPUT">--OUTPUT</a><br />
+								&nbsp;<em>-O</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Merged SAM or BAM file to write to.</td>
+				</tr>
+				<tr>
+					<td><a href="#--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE</a><br />
+								&nbsp;<em>-R</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Reference sequence file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--UNMAPPED_BAM">--UNMAPPED_BAM</a><br />
+								&nbsp;<em>-UNMAPPED</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Original SAM or BAM file of unmapped reads, which must be in queryname order.</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--ADD_MATE_CIGAR">--ADD_MATE_CIGAR</a><br />
+								&nbsp;<em>-MC</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>true</td>
+					<td>Adds the mate CIGAR tag (MC) if true, does not if false.</td>
+				</tr>
+				<tr>
+					<td><a href="#--ALIGNED_BAM">--ALIGNED_BAM</a><br />
+								&nbsp;<em>-ALIGNED</em>
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>SAM or BAM file(s) with alignment data.</td>
+				</tr>
+				<tr>
+					<td><a href="#--ALIGNED_READS_ONLY">--ALIGNED_READS_ONLY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Whether to output only aligned reads.  </td>
+				</tr>
+				<tr>
+					<td><a href="#--ALIGNER_PROPER_PAIR_FLAGS">--ALIGNER_PROPER_PAIR_FLAGS</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Use the aligner's idea of what a proper pair is rather than computing in this program.</td>
+				</tr>
+				<tr>
+					<td><a href="#--ATTRIBUTES_TO_REMOVE">--ATTRIBUTES_TO_REMOVE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>List[String]</td> -->
+					<td>[]</td>
+					<td>Attributes from the alignment record that should be removed when merging.  This overrides ATTRIBUTES_TO_RETAIN if they share common tags.</td>
+				</tr>
+				<tr>
+					<td><a href="#--ATTRIBUTES_TO_RETAIN">--ATTRIBUTES_TO_RETAIN</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>List[String]</td> -->
+					<td>[]</td>
+					<td>Reserved alignment attributes (tags starting with X, Y, or Z) that should be brought over from the alignment data when merging.</td>
+				</tr>
+				<tr>
+					<td><a href="#--ATTRIBUTES_TO_REVERSE">--ATTRIBUTES_TO_REVERSE</a><br />
+								&nbsp;<em>-RV</em>
+					</td>
+					<!--<td>Set[String]</td> -->
+					<td>[OQ, U2]</td>
+					<td>Attributes on negative strand reads that need to be reversed.</td>
+				</tr>
+				<tr>
+					<td><a href="#--ATTRIBUTES_TO_REVERSE_COMPLEMENT">--ATTRIBUTES_TO_REVERSE_COMPLEMENT</a><br />
+								&nbsp;<em>-RC</em>
+					</td>
+					<!--<td>Set[String]</td> -->
+					<td>[E2, SQ]</td>
+					<td>Attributes on negative strand reads that need to be reverse complemented.</td>
+				</tr>
+				<tr>
+					<td><a href="#--CLIP_ADAPTERS">--CLIP_ADAPTERS</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>true</td>
+					<td>Whether to clip adapters where identified.</td>
+				</tr>
+				<tr>
+					<td><a href="#--CLIP_OVERLAPPING_READS">--CLIP_OVERLAPPING_READS</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>true</td>
+					<td>For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.</td>
+				</tr>
+				<tr>
+					<td><a href="#--EXPECTED_ORIENTATIONS">--EXPECTED_ORIENTATIONS</a><br />
+								&nbsp;<em>-ORIENTATIONS</em>
+					</td>
+					<!--<td>List[PairOrientation]</td> -->
+					<td>[]</td>
+					<td>The expected orientation of proper read pairs. Replaces JUMP_SIZE</td>
+				</tr>
+				<tr>
+					<td><a href="#--INCLUDE_SECONDARY_ALIGNMENTS">--INCLUDE_SECONDARY_ALIGNMENTS</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>true</td>
+					<td>If false, do not write secondary alignments to output.</td>
+				</tr>
+				<tr>
+					<td><a href="#--IS_BISULFITE_SEQUENCE">--IS_BISULFITE_SEQUENCE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Whether the lane is bisulfite sequence (used when calculating the NM tag).</td>
+				</tr>
+				<tr>
+					<td><a href="#--JUMP_SIZE">--JUMP_SIZE</a><br />
+								&nbsp;<em>-JUMP</em>
+					</td>
+					<!--<td>Integer</td> -->
+					<td>null</td>
+					<td>The expected jump size (required if this is a jumping library). Deprecated. Use EXPECTED_ORIENTATIONS instead</td>
+				</tr>
+				<tr>
+					<td><a href="#--MATCHING_DICTIONARY_TAGS">--MATCHING_DICTIONARY_TAGS</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>List[String]</td> -->
+					<td>[M5, LN]</td>
+					<td>List of Sequence Records tags that must be equal (if present) in the reference dictionary and in the aligned file. Mismatching tags will cause an error if in this list, and a warning otherwise.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MAX_INSERTIONS_OR_DELETIONS">--MAX_INSERTIONS_OR_DELETIONS</a><br />
+								&nbsp;<em>-MAX_GAPS</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>1</td>
+					<td>The maximum number of insertions or deletions permitted for an alignment to be included. Alignments with more than this many insertions or deletions will be ignored. Set to -1 to allow any number of insertions or deletions.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MIN_UNCLIPPED_BASES">--MIN_UNCLIPPED_BASES</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>32</td>
+					<td>If UNMAP_CONTAMINANT_READS is set, require this many unclipped bases or else the read will be marked as contaminant.</td>
+				</tr>
+				<tr>
+					<td><a href="#--PRIMARY_ALIGNMENT_STRATEGY">--PRIMARY_ALIGNMENT_STRATEGY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>PrimaryAlignmentStrategy</td> -->
+					<td>BestMapq</td>
+					<td>Strategy for selecting primary alignment when the aligner has provided more than one alignment for a pair or fragment, and none are marked as primary, more than one is marked as primary, or the primary alignment is filtered out for some reason. BestMapq expects that multiple alignments will be correlated with HI tag, and prefers the pair of alignments with the largest MAPQ, in the absence of a primary selected by the aligner. EarliestFragment prefers the alignment which maps the earliest base in the read. Note that EarliestFragment may not be used for paired reads. BestEndMapq is appropriate for cases in which the aligner is not pair-aware, and does not output the HI tag. It simply picks the alignment for each end with the highest MAPQ, and makes those alignments primary, regardless of whether the two alignments make sense together.MostDistant is also for a non-pair-aware aligner, and picks the alignment pair with the largest insert size. If all alignments would be chimeric, it picks the alignments for each end with the best MAPQ.  For all algorithms, ties are resolved arbitrarily.</td>
+				</tr>
+				<tr>
+					<td><a href="#--PROGRAM_GROUP_COMMAND_LINE">--PROGRAM_GROUP_COMMAND_LINE</a><br />
+								&nbsp;<em>-PG_COMMAND</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>The command line of the program group (if not supplied by the aligned file).</td>
+				</tr>
+				<tr>
+					<td><a href="#--PROGRAM_GROUP_NAME">--PROGRAM_GROUP_NAME</a><br />
+								&nbsp;<em>-PG_NAME</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>The name of the program group (if not supplied by the aligned file).</td>
+				</tr>
+				<tr>
+					<td><a href="#--PROGRAM_GROUP_VERSION">--PROGRAM_GROUP_VERSION</a><br />
+								&nbsp;<em>-PG_VERSION</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>The version of the program group (if not supplied by the aligned file).</td>
+				</tr>
+				<tr>
+					<td><a href="#--PROGRAM_RECORD_ID">--PROGRAM_RECORD_ID</a><br />
+								&nbsp;<em>-PG</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>The program group ID of the aligner (if not supplied by the aligned file).</td>
+				</tr>
+				<tr>
+					<td><a href="#--READ1_ALIGNED_BAM">--READ1_ALIGNED_BAM</a><br />
+								&nbsp;<em>-R1_ALIGNED</em>
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>SAM or BAM file(s) with alignment data from the first read of a pair.</td>
+				</tr>
+				<tr>
+					<td><a href="#--READ1_TRIM">--READ1_TRIM</a><br />
+								&nbsp;<em>-R1_TRIM</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>0</td>
+					<td>The number of bases trimmed from the beginning of read 1 prior to alignment</td>
+				</tr>
+				<tr>
+					<td><a href="#--READ2_ALIGNED_BAM">--READ2_ALIGNED_BAM</a><br />
+								&nbsp;<em>-R2_ALIGNED</em>
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>SAM or BAM file(s) with alignment data from the second read of a pair.</td>
+				</tr>
+				<tr>
+					<td><a href="#--READ2_TRIM">--READ2_TRIM</a><br />
+								&nbsp;<em>-R2_TRIM</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>0</td>
+					<td>The number of bases trimmed from the beginning of read 2 prior to alignment</td>
+				</tr>
+				<tr>
+					<td><a href="#--SORT_ORDER">--SORT_ORDER</a><br />
+								&nbsp;<em>-SO</em>
+					</td>
+					<!--<td>SortOrder</td> -->
+					<td>coordinate</td>
+					<td>The order in which the merged reads should be output.</td>
+				</tr>
+				<tr>
+					<td><a href="#--UNMAP_CONTAMINANT_READS">--UNMAP_CONTAMINANT_READS</a><br />
+								&nbsp;<em>-UNMAP_CONTAM</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Detect reads originating from foreign organisms (e.g. bacterial DNA in a non-bacterial sample),and unmap + label those reads accordingly.</td>
+				</tr>
+				<tr>
+					<td><a href="#--UNMAPPED_READ_STRATEGY">--UNMAPPED_READ_STRATEGY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>UnmappingReadStrategy</td> -->
+					<td>DO_NOT_CHANGE</td>
+					<td>How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) Currently ignored unless UNMAP_CONTAMINANT_READS = true</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Optional Common Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--COMPRESSION_LEVEL">--COMPRESSION_LEVEL</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>5</td>
+					<td>Compression level for all compressed files created (e.g. BAM and GELI).</td>
+				</tr>
+				<tr>
+					<td><a href="#--CREATE_INDEX">--CREATE_INDEX</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
+				</tr>
+				<tr>
+					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>client_secrets.json</td>
+					<td>Google Genomics API client_secrets.json file path.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Integer</td> -->
+					<td>500000</td>
+					<td>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</td>
+				</tr>
+				<tr>
+					<td><a href="#--QUIET">--QUIET</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Whether to suppress job-summary info on System.err.</td>
+				</tr>
+				<tr>
+					<td><a href="#--TMP_DIR">--TMP_DIR</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>One or more directories with space available to be used by this program for temporary storage of working files</td>
+				</tr>
+				<tr>
+					<td><a href="#--USE_JDK_DEFLATER">--USE_JDK_DEFLATER</a><br />
+								&nbsp;<em>-use_jdk_deflater</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Use the JDK Deflater instead of the Intel Deflater for writing compressed output</td>
+				</tr>
+				<tr>
+					<td><a href="#--USE_JDK_INFLATER">--USE_JDK_INFLATER</a><br />
+								&nbsp;<em>-use_jdk_inflater</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Use the JDK Inflater instead of the Intel Inflater for reading compressed input</td>
+				</tr>
+				<tr>
+					<td><a href="#--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>ValidationStringency</td> -->
+					<td>STRICT</td>
+					<td>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</td>
+				</tr>
+				<tr>
+					<td><a href="#--VERBOSITY">--VERBOSITY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>LogLevel</td> -->
+					<td>INFO</td>
+					<td>Control verbosity of logging.</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Deprecated Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--PAIRED_RUN">--PAIRED_RUN</a><br />
+								&nbsp;<em>-PE</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>true</td>
+					<td>This argument is ignored and will be removed.</td>
+				</tr>
+					</tbody>
+				</table>
+
+					<h3>Argument details</h3>
+					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--ADD_MATE_CIGAR">--ADD_MATE_CIGAR </a>
+			 / <small>-MC</small>
+		</h3>
+		<p class="args">
+			<b>Adds the mate CIGAR tag (MC) if true, does not if false.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--ALIGNED_BAM">--ALIGNED_BAM </a>
+			 / <small>-ALIGNED</small>
+		</h3>
+		<p class="args">
+			<b>SAM or BAM file(s) with alignment data.</b><br />
+			
+		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, R1_ALIGNED, R2_ALIGNED</code>.</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--ALIGNED_READS_ONLY">--ALIGNED_READS_ONLY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to output only aligned reads.  </b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--ALIGNER_PROPER_PAIR_FLAGS">--ALIGNER_PROPER_PAIR_FLAGS </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Use the aligner's idea of what a proper pair is rather than computing in this program.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--ATTRIBUTES_TO_REMOVE">--ATTRIBUTES_TO_REMOVE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Attributes from the alignment record that should be removed when merging.  This overrides ATTRIBUTES_TO_RETAIN if they share common tags.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[String]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--ATTRIBUTES_TO_RETAIN">--ATTRIBUTES_TO_RETAIN </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Reserved alignment attributes (tags starting with X, Y, or Z) that should be brought over from the alignment data when merging.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[String]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--ATTRIBUTES_TO_REVERSE">--ATTRIBUTES_TO_REVERSE </a>
+			 / <small>-RV</small>
+		</h3>
+		<p class="args">
+			<b>Attributes on negative strand reads that need to be reversed.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Set[String]</span>
+			&nbsp;<span class="label">[OQ, U2]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--ATTRIBUTES_TO_REVERSE_COMPLEMENT">--ATTRIBUTES_TO_REVERSE_COMPLEMENT </a>
+			 / <small>-RC</small>
+		</h3>
+		<p class="args">
+			<b>Attributes on negative strand reads that need to be reverse complemented.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Set[String]</span>
+			&nbsp;<span class="label">[E2, SQ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CLIP_ADAPTERS">--CLIP_ADAPTERS </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to clip adapters where identified.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CLIP_OVERLAPPING_READS">--CLIP_OVERLAPPING_READS </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Compression level for all compressed files created (e.g. BAM and GELI).</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">5</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CREATE_INDEX">--CREATE_INDEX </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CREATE_MD5_FILE">--CREATE_MD5_FILE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to create an MD5 digest for any BAM or FASTQ files created.  </b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--EXPECTED_ORIENTATIONS">--EXPECTED_ORIENTATIONS </a>
+			 / <small>-ORIENTATIONS</small>
+		</h3>
+		<p class="args">
+			<b>The expected orientation of proper read pairs. Replaces JUMP_SIZE</b><br />
+			
+		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>JUMP_SIZE</code>.</p>
+		<p>
+		<span class="label label-info ">List[PairOrientation]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Google Genomics API client_secrets.json file path.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--INCLUDE_SECONDARY_ALIGNMENTS">--INCLUDE_SECONDARY_ALIGNMENTS </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>If false, do not write secondary alignments to output.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--IS_BISULFITE_SEQUENCE">--IS_BISULFITE_SEQUENCE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether the lane is bisulfite sequence (used when calculating the NM tag).</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--JUMP_SIZE">--JUMP_SIZE </a>
+			 / <small>-JUMP</small>
+		</h3>
+		<p class="args">
+			<b>The expected jump size (required if this is a jumping library). Deprecated. Use EXPECTED_ORIENTATIONS instead</b><br />
+			
+		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>EXPECTED_ORIENTATIONS, ORIENTATIONS</code>.</p>
+		<p>
+		<span class="label label-info ">Integer</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MATCHING_DICTIONARY_TAGS">--MATCHING_DICTIONARY_TAGS </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>List of Sequence Records tags that must be equal (if present) in the reference dictionary and in the aligned file. Mismatching tags will cause an error if in this list, and a warning otherwise.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[String]</span>
+			&nbsp;<span class="label">[M5, LN]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MAX_INSERTIONS_OR_DELETIONS">--MAX_INSERTIONS_OR_DELETIONS </a>
+			 / <small>-MAX_GAPS</small>
+		</h3>
+		<p class="args">
+			<b>The maximum number of insertions or deletions permitted for an alignment to be included. Alignments with more than this many insertions or deletions will be ignored. Set to -1 to allow any number of insertions or deletions.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">1</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Integer</span>
+			&nbsp;<span class="label">500000</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MIN_UNCLIPPED_BASES">--MIN_UNCLIPPED_BASES </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>If UNMAP_CONTAMINANT_READS is set, require this many unclipped bases or else the read will be marked as contaminant.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">32</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--OUTPUT">--OUTPUT </a>
+			 / <small>-O</small>
+		</h3>
+		<p class="args">
+			<b>Merged SAM or BAM file to write to.</b><br />
+			
+		</p>
+		<p>
+				<span class="badge badge-important">R</span>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PAIRED_RUN">--PAIRED_RUN </a>
+			 / <small>-PE</small>
+		</h3>
+		<p class="args">
+			<b>This argument is ignored and will be removed.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PRIMARY_ALIGNMENT_STRATEGY">--PRIMARY_ALIGNMENT_STRATEGY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Strategy for selecting primary alignment when the aligner has provided more than one alignment for a pair or fragment, and none are marked as primary, more than one is marked as primary, or the primary alignment is filtered out for some reason. BestMapq expects that multiple alignments will be correlated with HI tag, and prefers the pair of alignments with the largest MAPQ, in the absence of a primary selected by the aligner. EarliestFragment prefers the alignment which maps the earliest base in the read. Note that EarliestFragment may not be used for paired reads. BestEndMapq is appropriate for cases in which the aligner is not pair-aware, and does not output the HI tag. It simply picks the alignment for each end with the highest MAPQ, and makes those alignments primary, regardless of whether the two alignments make sense together.MostDistant is also for a non-pair-aware aligner, and picks the alignment pair with the largest insert size. If all alignments would be chimeric, it picks the alignments for each end with the best MAPQ.  For all algorithms, ties are resolved arbitrarily.</b><br />
+			
+		</p>
+			<p>
+				The --PRIMARY_ALIGNMENT_STRATEGY argument is an enumerated type (PrimaryAlignmentStrategy), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">BestMapq</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">EarliestFragment</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">BestEndMapq</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MostDistant</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">PrimaryAlignmentStrategy</span>
+			&nbsp;<span class="label">BestMapq</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PROGRAM_GROUP_COMMAND_LINE">--PROGRAM_GROUP_COMMAND_LINE </a>
+			 / <small>-PG_COMMAND</small>
+		</h3>
+		<p class="args">
+			<b>The command line of the program group (if not supplied by the aligned file).</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PROGRAM_GROUP_NAME">--PROGRAM_GROUP_NAME </a>
+			 / <small>-PG_NAME</small>
+		</h3>
+		<p class="args">
+			<b>The name of the program group (if not supplied by the aligned file).</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PROGRAM_GROUP_VERSION">--PROGRAM_GROUP_VERSION </a>
+			 / <small>-PG_VERSION</small>
+		</h3>
+		<p class="args">
+			<b>The version of the program group (if not supplied by the aligned file).</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PROGRAM_RECORD_ID">--PROGRAM_RECORD_ID </a>
+			 / <small>-PG</small>
+		</h3>
+		<p class="args">
+			<b>The program group ID of the aligner (if not supplied by the aligned file).</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--QUIET">--QUIET </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to suppress job-summary info on System.err.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--READ1_ALIGNED_BAM">--READ1_ALIGNED_BAM </a>
+			 / <small>-R1_ALIGNED</small>
+		</h3>
+		<p class="args">
+			<b>SAM or BAM file(s) with alignment data from the first read of a pair.</b><br />
+			
+		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>ALIGNED_BAM</code>.</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--READ1_TRIM">--READ1_TRIM </a>
+			 / <small>-R1_TRIM</small>
+		</h3>
+		<p class="args">
+			<b>The number of bases trimmed from the beginning of read 1 prior to alignment</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">0</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--READ2_ALIGNED_BAM">--READ2_ALIGNED_BAM </a>
+			 / <small>-R2_ALIGNED</small>
+		</h3>
+		<p class="args">
+			<b>SAM or BAM file(s) with alignment data from the second read of a pair.</b><br />
+			
+		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>ALIGNED_BAM</code>.</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--READ2_TRIM">--READ2_TRIM </a>
+			 / <small>-R2_TRIM</small>
+		</h3>
+		<p class="args">
+			<b>The number of bases trimmed from the beginning of read 2 prior to alignment</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">0</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE </a>
+			 / <small>-R</small>
+		</h3>
+		<p class="args">
+			<b>Reference sequence file.</b><br />
+			
+		</p>
+		<p>
+				<span class="badge badge-important">R</span>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--SORT_ORDER">--SORT_ORDER </a>
+			 / <small>-SO</small>
+		</h3>
+		<p class="args">
+			<b>The order in which the merged reads should be output.</b><br />
+			
+		</p>
+			<p>
+				The --SORT_ORDER argument is an enumerated type (SortOrder), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">unsorted</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">queryname</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">coordinate</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">duplicate</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">unknown</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">SortOrder</span>
+			&nbsp;<span class="label">coordinate</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--TMP_DIR">--TMP_DIR </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>One or more directories with space available to be used by this program for temporary storage of working files</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--UNMAP_CONTAMINANT_READS">--UNMAP_CONTAMINANT_READS </a>
+			 / <small>-UNMAP_CONTAM</small>
+		</h3>
+		<p class="args">
+			<b>Detect reads originating from foreign organisms (e.g. bacterial DNA in a non-bacterial sample),and unmap + label those reads accordingly.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--UNMAPPED_BAM">--UNMAPPED_BAM </a>
+			 / <small>-UNMAPPED</small>
+		</h3>
+		<p class="args">
+			<b>Original SAM or BAM file of unmapped reads, which must be in queryname order.</b><br />
+			
+		</p>
+		<p>
+				<span class="badge badge-important">R</span>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--UNMAPPED_READ_STRATEGY">--UNMAPPED_READ_STRATEGY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) Currently ignored unless UNMAP_CONTAMINANT_READS = true</b><br />
+			
+		</p>
+			<p>
+				The --UNMAPPED_READ_STRATEGY argument is an enumerated type (UnmappingReadStrategy), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">COPY_TO_TAG</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">DO_NOT_CHANGE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MOVE_TO_TAG</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">UnmappingReadStrategy</span>
+			&nbsp;<span class="label">DO_NOT_CHANGE</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--USE_JDK_DEFLATER">--USE_JDK_DEFLATER </a>
+			 / <small>-use_jdk_deflater</small>
+		</h3>
+		<p class="args">
+			<b>Use the JDK Deflater instead of the Intel Deflater for writing compressed output</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--USE_JDK_INFLATER">--USE_JDK_INFLATER </a>
+			 / <small>-use_jdk_inflater</small>
+		</h3>
+		<p class="args">
+			<b>Use the JDK Inflater instead of the Intel Inflater for reading compressed input</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</b><br />
+			
+		</p>
+			<p>
+				The --VALIDATION_STRINGENCY argument is an enumerated type (ValidationStringency), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">STRICT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">LENIENT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">SILENT</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">ValidationStringency</span>
+			&nbsp;<span class="label">STRICT</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--VERBOSITY">--VERBOSITY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Control verbosity of logging.</b><br />
+			
+		</p>
+			<p>
+				The --VERBOSITY argument is an enumerated type (LogLevel), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">ERROR</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">WARNING</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INFO</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">DEBUG</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">LogLevel</span>
+			&nbsp;<span class="label">INFO</span>
+		</p>
+
+        <hr>
+        <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
+        <hr>
+        <p class="see-also">See also 
+        	<a href="https://www.broadinstitute.org/picard/guide/">Picard Documentation Index</a> |
+        	<a href="index.html">Tool Docs Index</a> |
+        	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
+        </p>
+
+        <p class="version">Picard version 2.10.9-1-gaa8c979-SNAPSHOT built at 14-52-2017 04:52:45.
+        </p>
+
+	</div>
+
+	<?php printFooter($module); ?>

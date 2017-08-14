@@ -1,0 +1,1100 @@
+<?php
+
+    include '../../../common/include/common.php';
+    include_once '../../config.php';
+    $module = modules::GATK;
+    printHeader($module, "Picard | Tool Documentation Index", "Guide");
+?>
+
+<link type='text/css' rel='stylesheet' href='picardDoc.css'>
+
+<div class='row-fluid' id="top">
+
+	
+
+	<?php $group = 'SAM/BAM'; ?>
+
+	<section class="span4">
+		<aside class="well">
+			<a href="index.html"><h4><i class='fa fa-chevron-left'></i> Back to Tool Docs Index</h4></a>
+		</aside>
+		<aside class="well">
+			<h2>Categories</h2>
+        <style>
+            #sidenav .accordion-body a {
+                color : gray;
+            }
+
+            .accordion-body li {
+                list-style : none;
+            }
+        </style>
+        <ul class="nav nav-pills nav-stacked" id="sidenav">
+        		<hr>
+        		<hr>
+        		<hr>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
+							<div id="Fasta"
+								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
+											</li>
+											<li>
+												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
+											</li>
+											<li>
+												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#FingerprintingTools">Fingerprinting Tools</a>
+							<div id="FingerprintingTools"
+								<?php echo ($group == 'Fingerprinting Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IlluminaTools">Illumina Tools</a>
+							<div id="IlluminaTools"
+								<?php echo ($group == 'Illumina Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_illumina_CheckIlluminaDirectory.html">CheckIlluminaDirectory</a>
+											</li>
+											<li>
+												<a href="picard_illumina_CollectIlluminaBasecallingMetrics.html">CollectIlluminaBasecallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_CollectIlluminaLaneMetrics.html">CollectIlluminaLaneMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_ExtractIlluminaBarcodes.html">ExtractIlluminaBarcodes</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaBasecallsToFastq.html">IlluminaBasecallsToFastq</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaBasecallsToSam.html">IlluminaBasecallsToSam</a>
+											</li>
+											<li>
+												<a href="picard_illumina_MarkIlluminaAdapters.html">MarkIlluminaAdapters</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalTools">Interval Tools</a>
+							<div id="IntervalTools"
+								<?php echo ($group == 'Interval Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
+											</li>
+											<li>
+												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
+											</li>
+											<li>
+												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Metrics">Metrics</a>
+							<div id="Metrics"
+								<?php echo ($group == 'Metrics')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectBaseDistributionByCycle.html">CollectBaseDistributionByCycle</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectGcBiasMetrics.html">CollectGcBiasMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_quality_CollectHiSeqXPfFailMetrics.html">CollectHiSeqXPfFailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_CollectHsMetrics.html">CollectHsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectInsertSizeMetrics.html">CollectInsertSizeMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectJumpingLibraryMetrics.html">CollectJumpingLibraryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectMultipleMetrics.html">CollectMultipleMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectOxoGMetrics.html">CollectOxoGMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectQualityYieldMetrics.html">CollectQualityYieldMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRawWgsMetrics.html">CollectRawWgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRnaSeqMetrics.html">CollectRnaSeqMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRrbsMetrics.html">CollectRrbsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_CollectSequencingArtifactMetrics.html">CollectSequencingArtifactMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_CollectTargetedPcrMetrics.html">CollectTargetedPcrMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_CollectVariantCallingMetrics.html">CollectVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectWgsMetrics.html">CollectWgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CompareMetrics.html">CompareMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_EstimateLibraryComplexity.html">EstimateLibraryComplexity</a>
+											</li>
+											<li>
+												<a href="picard_analysis_MeanQualityByCycle.html">MeanQualityByCycle</a>
+											</li>
+											<li>
+												<a href="picard_analysis_QualityScoreDistribution.html">QualityScoreDistribution</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#MiscellaneousTools">Miscellaneous Tools</a>
+							<div id="MiscellaneousTools"
+								<?php echo ($group == 'Miscellaneous Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+											</li>
+											<li>
+												<a href="picard_util_FifoBuffer.html">FifoBuffer</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#SAMBAM">SAM/BAM</a>
+							<div id="SAMBAM"
+								<?php echo ($group == 'SAM/BAM')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_AddCommentsToBam.html">AddCommentsToBam</a>
+											</li>
+											<li>
+												<a href="picard_sam_AddOrReplaceReadGroups.html">AddOrReplaceReadGroups</a>
+											</li>
+											<li>
+												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
+											</li>
+											<li>
+												<a href="picard_fastq_BamToBfq.html">BamToBfq</a>
+											</li>
+											<li>
+												<a href="picard_sam_BuildBamIndex.html">BuildBamIndex</a>
+											</li>
+											<li>
+												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
+											</li>
+											<li>
+												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
+											</li>
+											<li>
+												<a href="picard_sam_CleanSam.html">CleanSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
+											</li>
+											<li>
+												<a href="picard_sam_DownsampleSam.html">DownsampleSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_FastqToSam.html">FastqToSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_FilterSamReads.html">FilterSamReads</a>
+											</li>
+											<li>
+												<a href="picard_sam_FixMateInformation.html">FixMateInformation</a>
+											</li>
+											<li>
+												<a href="picard_sam_GatherBamFiles.html">GatherBamFiles</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_MarkDuplicates.html">MarkDuplicates</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_MarkDuplicatesWithMateCigar.html">MarkDuplicatesWithMateCigar</a>
+											</li>
+											<li>
+												<a href="picard_sam_MergeBamAlignment.html">MergeBamAlignment</a>
+											</li>
+											<li>
+												<a href="picard_sam_MergeSamFiles.html">MergeSamFiles</a>
+											</li>
+											<li>
+												<a href="picard_sam_PositionBasedDownsampleSam.html">PositionBasedDownsampleSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_ReorderSam.html">ReorderSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_ReplaceSamHeader.html">ReplaceSamHeader</a>
+											</li>
+											<li>
+												<a href="picard_sam_RevertOriginalBaseQualitiesAndAddMateCigar.html">RevertOriginalBaseQualitiesAndAddMateCigar</a>
+											</li>
+											<li>
+												<a href="picard_sam_RevertSam.html">RevertSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamFormatConverter.html">SamFormatConverter</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamToFastq.html">SamToFastq</a>
+											</li>
+											<li>
+												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
+											</li>
+											<li>
+												<a href="picard_sam_SortSam.html">SortSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a>
+											</li>
+											<li>
+												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
+											</li>
+											<li>
+												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VCFBCF">VCF/BCF</a>
+							<div id="VCFBCF"
+								<?php echo ($group == 'VCF/BCF')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_filter_FilterVcf.html">FilterVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
+											</li>
+											<li>
+												<a href="picard_vcf_FixVcfHeader.html">FixVcfHeader</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GatherVcfs.html">GatherVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
+											</li>
+											<li>
+												<a href="picard_vcf_LiftoverVcf.html">LiftoverVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MakeSitesOnlyVcf.html">MakeSitesOnlyVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MergeVcfs.html">MergeVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_RenameSampleInVcf.html">RenameSampleInVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_SortVcf.html">SortVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_SplitVcfs.html">SplitVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_UpdateVcfSequenceDictionary.html">UpdateVcfSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_vcf_VcfFormatConverter.html">VcfFormatConverter</a>
+											</li>
+											<li>
+												<a href="picard_vcf_VcfToIntervalList.html">VcfToIntervalList</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+        		<hr>
+        </ul>
+		</aside>
+		<?php getForumPosts( 'MarkDuplicatesWithMateCigar' ) ?>
+
+	</section>
+
+	<div class="span8">
+
+		<h1>MarkDuplicatesWithMateCigar</h1>
+
+		<p class="lead">Identifies duplicate reads, accounting for mate CIGAR.  </p>
+
+			<h3>Category
+				<small> SAM/BAM</small>
+			</h3>
+		<hr>
+		<h2>Overview</h2>
+		An even better duplication marking algorithm that handles all cases including clipped
+ and gapped alignments.
+ <p/>
+ This tool differs with MarkDuplicates as it may break ties differently.  Furthermore,
+ as it is a one-pass algorithm, it cannot know the program records contained in the file
+ that should be chained in advance.  Therefore it will only be able to examine the header
+ to attempt to infer those program group records that have no associated previous program
+ group record. If a read is encountered without a program record, or not one as previously
+ defined, it will not be updated.
+ <p/>
+ This tool will also not work with alignments that have large gaps or skips, such as those
+ from RNA-seq data.  This is due to the need to buffer small genomic windows to ensure
+ integrity of the duplicate marking, while large skips (ex. skipping introns) in the
+ alignment records would force making that window very large, thus exhausting memory.
+
+
+				<h3>MarkDuplicatesWithMateCigar specific arguments</h3>
+				<p>This table summarizes the command-line arguments that are specific to this tool. For more details on each argument, see the list further down below the table or click on an argument name to jump directly to that entry in the list.</p>
+				<table class="table table-striped table-bordered table-condensed">
+					<thead>
+					<tr>
+						<th>Argument name(s)</th>
+						<th>Default value</th>
+						<th>Summary</th>
+					</tr>
+					</thead>
+					<tbody>
+			<tr>
+				<th colspan="4" id="row-divider">Required Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--INPUT">--INPUT</a><br />
+								&nbsp;<em>-I</em>
+					</td>
+					<!--<td>List[String]</td> -->
+					<td>[]</td>
+					<td>One or more input SAM or BAM files to analyze. Must be coordinate sorted.</td>
+				</tr>
+				<tr>
+					<td><a href="#--METRICS_FILE">--METRICS_FILE</a><br />
+								&nbsp;<em>-M</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>File to write duplication metrics to</td>
+				</tr>
+				<tr>
+					<td><a href="#--OUTPUT">--OUTPUT</a><br />
+								&nbsp;<em>-O</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>The output file to write marked records to</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--ASSUME_SORT_ORDER">--ASSUME_SORT_ORDER</a><br />
+								&nbsp;<em>-ASO</em>
+					</td>
+					<!--<td>SortOrder</td> -->
+					<td>null</td>
+					<td>If not null, assume that the input file has this order even if the header says otherwise.</td>
+				</tr>
+				<tr>
+					<td><a href="#--BLOCK_SIZE">--BLOCK_SIZE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>100000</td>
+					<td>The block size for use in the coordinate-sorted record buffer.</td>
+				</tr>
+				<tr>
+					<td><a href="#--COMMENT">--COMMENT</a><br />
+								&nbsp;<em>-CO</em>
+					</td>
+					<!--<td>List[String]</td> -->
+					<td>[]</td>
+					<td>Comment(s) to include in the output file's header.</td>
+				</tr>
+				<tr>
+					<td><a href="#--DUPLICATE_SCORING_STRATEGY">--DUPLICATE_SCORING_STRATEGY</a><br />
+								&nbsp;<em>-DS</em>
+					</td>
+					<!--<td>ScoringStrategy</td> -->
+					<td>TOTAL_MAPPED_REFERENCE_LENGTH</td>
+					<td>The scoring strategy for choosing the non-duplicate among candidates.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MAX_OPTICAL_DUPLICATE_SET_SIZE">--MAX_OPTICAL_DUPLICATE_SET_SIZE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>long</td> -->
+					<td>300000</td>
+					<td>This number is the maximum size of a set of duplicate reads for which we will attempt to determine which are optical duplicates.  Please be aware that if you raise this value too high and do encounter a very large set of duplicate reads, it will severely affect the runtime of this tool.  To completely disable this check, set the value to -1.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MINIMUM_DISTANCE">--MINIMUM_DISTANCE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>-1</td>
+					<td>The minimum distance to buffer records to account for clipping on the 5' end of the records. For a given alignment, this parameter controls the width of the window to search for duplicates of that alignment. Due to 5' read clipping, duplicates do not necessarily have the same 5' alignment coordinates, so the algorithm needs to search around the neighborhood. For single end sequencing data, the neighborhood is only determined by the amount of clipping (assuming no split reads), thus setting MINIMUM_DISTANCE to twice the sequencing read length should be sufficient. For paired end sequencing, the neighborhood is also determined by the fragment insert size, so you may want to set MINIMUM_DISTANCE to something like twice the 99.5% percentile of the fragment insert size distribution (see CollectInsertSizeMetrics). Or you can set this number to -1 to use either a) twice the first read's read length, or b) 100, whichever is smaller. Note that the larger the window, the greater the RAM requirements, so you could run into performance limitations if you use a value that is unnecessarily large.</td>
+				</tr>
+				<tr>
+					<td><a href="#--OPTICAL_DUPLICATE_PIXEL_DISTANCE">--OPTICAL_DUPLICATE_PIXEL_DISTANCE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>100</td>
+					<td>The maximum offset between two duplicate clusters in order to consider them optical duplicates. The default is appropriate for unpatterned versions of the Illumina platform. For the patterned flowcell models, 2500 is moreappropriate. For other platforms and models, users should experiment to find what works best.</td>
+				</tr>
+				<tr>
+					<td><a href="#--PROGRAM_GROUP_COMMAND_LINE">--PROGRAM_GROUP_COMMAND_LINE</a><br />
+								&nbsp;<em>-PG_COMMAND</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>Value of CL tag of PG record to be created. If not supplied the command line will be detected automatically.</td>
+				</tr>
+				<tr>
+					<td><a href="#--PROGRAM_GROUP_NAME">--PROGRAM_GROUP_NAME</a><br />
+								&nbsp;<em>-PG_NAME</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>MarkDuplicatesWithMateCigar</td>
+					<td>Value of PN tag of PG record to be created.</td>
+				</tr>
+				<tr>
+					<td><a href="#--PROGRAM_GROUP_VERSION">--PROGRAM_GROUP_VERSION</a><br />
+								&nbsp;<em>-PG_VERSION</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>Value of VN tag of PG record to be created. If not specified, the version will be detected automatically.</td>
+				</tr>
+				<tr>
+					<td><a href="#--PROGRAM_RECORD_ID">--PROGRAM_RECORD_ID</a><br />
+								&nbsp;<em>-PG</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>MarkDuplicates</td>
+					<td>The program record ID for the @PG record(s) created by this program. Set to null to disable PG record creation.  This string may have a suffix appended to avoid collision with other program record IDs.</td>
+				</tr>
+				<tr>
+					<td><a href="#--READ_NAME_REGEX">--READ_NAME_REGEX</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>String</td> -->
+					<td><optimized capture of last three ':' separated fields as numeric values></td>
+					<td>Regular expression that can be used to parse read names in the incoming SAM file. Read names are parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used to estimate the rate of optical duplication in order to give a more accurate estimated library size. Set this option to null to disable optical duplicate detection, e.g. for RNA-seq or other data where duplicate sets are extremely large and estimating library complexity is not an aim. Note that without optical duplicate counts, library size estimation will be inaccurate. The regular expression should contain three capture groups for the three variables, in order. It must match the entire read name. Note that if the default regex is specified, a regex match is not actually done, but instead the read name  is split on colon character. For 5 element names, the 3rd, 4th and 5th elements are assumed to be tile, x and y values. For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values.</td>
+				</tr>
+				<tr>
+					<td><a href="#--REMOVE_DUPLICATES">--REMOVE_DUPLICATES</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>If true do not write duplicates to the output file instead of writing them with appropriate flags set.</td>
+				</tr>
+				<tr>
+					<td><a href="#--SKIP_PAIRS_WITH_NO_MATE_CIGAR">--SKIP_PAIRS_WITH_NO_MATE_CIGAR</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>true</td>
+					<td>Skip record pairs with no mate cigar and include them in the output.</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Optional Common Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--COMPRESSION_LEVEL">--COMPRESSION_LEVEL</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>5</td>
+					<td>Compression level for all compressed files created (e.g. BAM and GELI).</td>
+				</tr>
+				<tr>
+					<td><a href="#--CREATE_INDEX">--CREATE_INDEX</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
+				</tr>
+				<tr>
+					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>client_secrets.json</td>
+					<td>Google Genomics API client_secrets.json file path.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Integer</td> -->
+					<td>500000</td>
+					<td>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</td>
+				</tr>
+				<tr>
+					<td><a href="#--QUIET">--QUIET</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Whether to suppress job-summary info on System.err.</td>
+				</tr>
+				<tr>
+					<td><a href="#--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE</a><br />
+								&nbsp;<em>-R</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Reference sequence file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--TMP_DIR">--TMP_DIR</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>One or more directories with space available to be used by this program for temporary storage of working files</td>
+				</tr>
+				<tr>
+					<td><a href="#--USE_JDK_DEFLATER">--USE_JDK_DEFLATER</a><br />
+								&nbsp;<em>-use_jdk_deflater</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Use the JDK Deflater instead of the Intel Deflater for writing compressed output</td>
+				</tr>
+				<tr>
+					<td><a href="#--USE_JDK_INFLATER">--USE_JDK_INFLATER</a><br />
+								&nbsp;<em>-use_jdk_inflater</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Use the JDK Inflater instead of the Intel Inflater for reading compressed input</td>
+				</tr>
+				<tr>
+					<td><a href="#--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>ValidationStringency</td> -->
+					<td>STRICT</td>
+					<td>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</td>
+				</tr>
+				<tr>
+					<td><a href="#--VERBOSITY">--VERBOSITY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>LogLevel</td> -->
+					<td>INFO</td>
+					<td>Control verbosity of logging.</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Deprecated Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--ASSUME_SORTED">--ASSUME_SORTED</a><br />
+								&nbsp;<em>-AS</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>If true, assume that the input file is coordinate sorted even if the header says otherwise. Deprecated, used ASSUME_SORT_ORDER=coordinate instead.</td>
+				</tr>
+					</tbody>
+				</table>
+
+					<h3>Argument details</h3>
+					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--ASSUME_SORT_ORDER">--ASSUME_SORT_ORDER </a>
+			 / <small>-ASO</small>
+		</h3>
+		<p class="args">
+			<b>If not null, assume that the input file has this order even if the header says otherwise.</b><br />
+			
+		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>ASSUME_SORTED</code>.</p>
+			<p>
+				The --ASSUME_SORT_ORDER argument is an enumerated type (SortOrder), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">unsorted</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">queryname</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">coordinate</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">duplicate</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">unknown</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">SortOrder</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--ASSUME_SORTED">--ASSUME_SORTED </a>
+			 / <small>-AS</small>
+		</h3>
+		<p class="args">
+			<b>If true, assume that the input file is coordinate sorted even if the header says otherwise. Deprecated, used ASSUME_SORT_ORDER=coordinate instead.</b><br />
+			
+		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>ASSUME_SORT_ORDER, ASO</code>.</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--BLOCK_SIZE">--BLOCK_SIZE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>The block size for use in the coordinate-sorted record buffer.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">100000</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--COMMENT">--COMMENT </a>
+			 / <small>-CO</small>
+		</h3>
+		<p class="args">
+			<b>Comment(s) to include in the output file's header.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[String]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Compression level for all compressed files created (e.g. BAM and GELI).</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">5</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CREATE_INDEX">--CREATE_INDEX </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CREATE_MD5_FILE">--CREATE_MD5_FILE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to create an MD5 digest for any BAM or FASTQ files created.  </b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--DUPLICATE_SCORING_STRATEGY">--DUPLICATE_SCORING_STRATEGY </a>
+			 / <small>-DS</small>
+		</h3>
+		<p class="args">
+			<b>The scoring strategy for choosing the non-duplicate among candidates.</b><br />
+			
+		</p>
+			<p>
+				The --DUPLICATE_SCORING_STRATEGY argument is an enumerated type (ScoringStrategy), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">SUM_OF_BASE_QUALITIES</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">TOTAL_MAPPED_REFERENCE_LENGTH</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">RANDOM</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">ScoringStrategy</span>
+			&nbsp;<span class="label">TOTAL_MAPPED_REFERENCE_LENGTH</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Google Genomics API client_secrets.json file path.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--INPUT">--INPUT </a>
+			 / <small>-I</small>
+		</h3>
+		<p class="args">
+			<b>One or more input SAM or BAM files to analyze. Must be coordinate sorted.</b><br />
+			
+		</p>
+		<p>
+				<span class="badge badge-important">R</span>
+		<span class="label label-info ">List[String]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MAX_OPTICAL_DUPLICATE_SET_SIZE">--MAX_OPTICAL_DUPLICATE_SET_SIZE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>This number is the maximum size of a set of duplicate reads for which we will attempt to determine which are optical duplicates.  Please be aware that if you raise this value too high and do encounter a very large set of duplicate reads, it will severely affect the runtime of this tool.  To completely disable this check, set the value to -1.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">long</span>
+			&nbsp;<span class="label">300000</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Integer</span>
+			&nbsp;<span class="label">500000</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--METRICS_FILE">--METRICS_FILE </a>
+			 / <small>-M</small>
+		</h3>
+		<p class="args">
+			<b>File to write duplication metrics to</b><br />
+			
+		</p>
+		<p>
+				<span class="badge badge-important">R</span>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MINIMUM_DISTANCE">--MINIMUM_DISTANCE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>The minimum distance to buffer records to account for clipping on the 5' end of the records. For a given alignment, this parameter controls the width of the window to search for duplicates of that alignment. Due to 5' read clipping, duplicates do not necessarily have the same 5' alignment coordinates, so the algorithm needs to search around the neighborhood. For single end sequencing data, the neighborhood is only determined by the amount of clipping (assuming no split reads), thus setting MINIMUM_DISTANCE to twice the sequencing read length should be sufficient. For paired end sequencing, the neighborhood is also determined by the fragment insert size, so you may want to set MINIMUM_DISTANCE to something like twice the 99.5% percentile of the fragment insert size distribution (see CollectInsertSizeMetrics). Or you can set this number to -1 to use either a) twice the first read's read length, or b) 100, whichever is smaller. Note that the larger the window, the greater the RAM requirements, so you could run into performance limitations if you use a value that is unnecessarily large.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">-1</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--OPTICAL_DUPLICATE_PIXEL_DISTANCE">--OPTICAL_DUPLICATE_PIXEL_DISTANCE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>The maximum offset between two duplicate clusters in order to consider them optical duplicates. The default is appropriate for unpatterned versions of the Illumina platform. For the patterned flowcell models, 2500 is moreappropriate. For other platforms and models, users should experiment to find what works best.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">100</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--OUTPUT">--OUTPUT </a>
+			 / <small>-O</small>
+		</h3>
+		<p class="args">
+			<b>The output file to write marked records to</b><br />
+			
+		</p>
+		<p>
+				<span class="badge badge-important">R</span>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PROGRAM_GROUP_COMMAND_LINE">--PROGRAM_GROUP_COMMAND_LINE </a>
+			 / <small>-PG_COMMAND</small>
+		</h3>
+		<p class="args">
+			<b>Value of CL tag of PG record to be created. If not supplied the command line will be detected automatically.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PROGRAM_GROUP_NAME">--PROGRAM_GROUP_NAME </a>
+			 / <small>-PG_NAME</small>
+		</h3>
+		<p class="args">
+			<b>Value of PN tag of PG record to be created.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">MarkDuplicatesWithMateCigar</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PROGRAM_GROUP_VERSION">--PROGRAM_GROUP_VERSION </a>
+			 / <small>-PG_VERSION</small>
+		</h3>
+		<p class="args">
+			<b>Value of VN tag of PG record to be created. If not specified, the version will be detected automatically.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PROGRAM_RECORD_ID">--PROGRAM_RECORD_ID </a>
+			 / <small>-PG</small>
+		</h3>
+		<p class="args">
+			<b>The program record ID for the @PG record(s) created by this program. Set to null to disable PG record creation.  This string may have a suffix appended to avoid collision with other program record IDs.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">MarkDuplicates</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--QUIET">--QUIET </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to suppress job-summary info on System.err.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--READ_NAME_REGEX">--READ_NAME_REGEX </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Regular expression that can be used to parse read names in the incoming SAM file. Read names are parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used to estimate the rate of optical duplication in order to give a more accurate estimated library size. Set this option to null to disable optical duplicate detection, e.g. for RNA-seq or other data where duplicate sets are extremely large and estimating library complexity is not an aim. Note that without optical duplicate counts, library size estimation will be inaccurate. The regular expression should contain three capture groups for the three variables, in order. It must match the entire read name. Note that if the default regex is specified, a regex match is not actually done, but instead the read name  is split on colon character. For 5 element names, the 3rd, 4th and 5th elements are assumed to be tile, x and y values. For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label"><optimized capture of last three ':' separated fields as numeric values></span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE </a>
+			 / <small>-R</small>
+		</h3>
+		<p class="args">
+			<b>Reference sequence file.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--REMOVE_DUPLICATES">--REMOVE_DUPLICATES </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>If true do not write duplicates to the output file instead of writing them with appropriate flags set.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--SKIP_PAIRS_WITH_NO_MATE_CIGAR">--SKIP_PAIRS_WITH_NO_MATE_CIGAR </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Skip record pairs with no mate cigar and include them in the output.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--TMP_DIR">--TMP_DIR </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>One or more directories with space available to be used by this program for temporary storage of working files</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--USE_JDK_DEFLATER">--USE_JDK_DEFLATER </a>
+			 / <small>-use_jdk_deflater</small>
+		</h3>
+		<p class="args">
+			<b>Use the JDK Deflater instead of the Intel Deflater for writing compressed output</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--USE_JDK_INFLATER">--USE_JDK_INFLATER </a>
+			 / <small>-use_jdk_inflater</small>
+		</h3>
+		<p class="args">
+			<b>Use the JDK Inflater instead of the Intel Inflater for reading compressed input</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</b><br />
+			
+		</p>
+			<p>
+				The --VALIDATION_STRINGENCY argument is an enumerated type (ValidationStringency), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">STRICT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">LENIENT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">SILENT</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">ValidationStringency</span>
+			&nbsp;<span class="label">STRICT</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--VERBOSITY">--VERBOSITY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Control verbosity of logging.</b><br />
+			
+		</p>
+			<p>
+				The --VERBOSITY argument is an enumerated type (LogLevel), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">ERROR</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">WARNING</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INFO</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">DEBUG</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">LogLevel</span>
+			&nbsp;<span class="label">INFO</span>
+		</p>
+
+        <hr>
+        <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
+        <hr>
+        <p class="see-also">See also 
+        	<a href="https://www.broadinstitute.org/picard/guide/">Picard Documentation Index</a> |
+        	<a href="index.html">Tool Docs Index</a> |
+        	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
+        </p>
+
+        <p class="version">Picard version 2.10.9-1-gaa8c979-SNAPSHOT built at 14-52-2017 04:52:45.
+        </p>
+
+	</div>
+
+	<?php printFooter($module); ?>
