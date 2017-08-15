@@ -325,7 +325,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     (sortOrder == SAMFileHeader.SortOrder.queryname &&
                     recordInFileIndex > nextDuplicateIndex && rec.getReadName().equals(duplicateQueryName));
 
-
                 if (isDuplicate) {
                     duplicateQueryName = rec.getReadName();
                     rec.setDuplicateReadFlag(true);
@@ -358,7 +357,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     rec.getReadName().equals(opticalDuplicateQueryName) ||
                     recordInFileIndex == nextOpticalDuplicateIndex;
 
-            if (CLEAR_DT) rec.setAttribute(DUPLICATE_TYPE_TAG, null);
+            if (CLEAR_DT) {
+                rec.setAttribute(DUPLICATE_TYPE_TAG, null);
+            }
 
             if (this.TAGGING_POLICY != DuplicateTaggingPolicy.DontTag && rec.getDuplicateReadFlag()) {
                 if (isOpticalDuplicate) {
@@ -393,10 +394,15 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
             // Output the record if desired and bump the record index
             recordInFileIndex++;
-            if (this.REMOVE_DUPLICATES            && rec.getDuplicateReadFlag()) continue;
-            if (this.REMOVE_SEQUENCING_DUPLICATES && isOpticalDuplicate)         continue;
-
-            if (PROGRAM_RECORD_ID != null && ADD_PG_TAG_TO_READS) rec.setAttribute(SAMTag.PG.name(), chainedPgIds.get(rec.getStringAttribute(SAMTag.PG.name())));
+            if (this.REMOVE_DUPLICATES && rec.getDuplicateReadFlag()) {
+                continue;
+            }
+            if (this.REMOVE_SEQUENCING_DUPLICATES && isOpticalDuplicate) {
+                continue;
+            }
+            if (PROGRAM_RECORD_ID != null && ADD_PG_TAG_TO_READS) {
+                rec.setAttribute(SAMTag.PG.name(), chainedPgIds.get(rec.getStringAttribute(SAMTag.PG.name())));
+            }
             out.addAlignment(rec);
             progress.record(rec);
         }
@@ -687,7 +693,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             } else {
                 if (nextChunk.size() > 1) {
                     markDuplicatePairs(nextChunk);
-                    if (TAG_DUPLICATE_SET_MEMBERS) addRepresentativeReadIndex(nextChunk);
+                    if (TAG_DUPLICATE_SET_MEMBERS) {
+                        addRepresentativeReadIndex(nextChunk);
+                    }
                 }
                 nextChunk.clear();
                 nextChunk.add(next);
@@ -696,7 +704,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
         if (nextChunk.size() > 1) {
             markDuplicatePairs(nextChunk);
-            if (TAG_DUPLICATE_SET_MEMBERS) addRepresentativeReadIndex(nextChunk);
+            if (TAG_DUPLICATE_SET_MEMBERS) {
+                addRepresentativeReadIndex(nextChunk);
+            }
         }
         this.pairSort.cleanup();
         this.pairSort = null;
@@ -730,8 +740,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         log.info("Sorting list of duplicate records.");
         this.duplicateIndexes.doneAddingStartIteration();
-        if (this.opticalDuplicateIndexes != null) this.opticalDuplicateIndexes.doneAddingStartIteration();
-        if (TAG_DUPLICATE_SET_MEMBERS) this.representativeReadIndicesForDuplicates.doneAdding();
+        if (this.opticalDuplicateIndexes != null) {
+            this.opticalDuplicateIndexes.doneAddingStartIteration();
+        }
+        if (TAG_DUPLICATE_SET_MEMBERS) {
+            this.representativeReadIndicesForDuplicates.doneAdding();
+        }
     }
 
     private boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs, final boolean compareRead2, final boolean useBarcodes) {
@@ -828,7 +842,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                 // in query-sorted case, these will be the same.
                 // TODO: also in coordinate sorted, when one read is unmapped
-                if(end.read2IndexInFile != end.read1IndexInFile) addIndexAsDuplicate(end.read2IndexInFile);
+                if(end.read2IndexInFile != end.read1IndexInFile) {
+                    addIndexAsDuplicate(end.read2IndexInFile);
+                }
 
                 if (end.isOpticalDuplicate && this.opticalDuplicateIndexes != null) {
                     this.opticalDuplicateIndexes.add(end.read1IndexInFile);
@@ -848,7 +864,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     private void markDuplicateFragments(final List<ReadEndsForMarkDuplicates> list, final boolean containsPairs) {
         if (containsPairs) {
             for (final ReadEndsForMarkDuplicates end : list) {
-                if (!end.isPaired()) addIndexAsDuplicate(end.read1IndexInFile);
+                if (!end.isPaired()) {
+                    addIndexAsDuplicate(end.read1IndexInFile);
+                }
             }
         } else {
             short maxScore = 0;
@@ -887,17 +905,37 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             if (useBarcodes) {
                 final ReadEndsForMarkDuplicatesWithBarcodes lhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) lhs;
                 final ReadEndsForMarkDuplicatesWithBarcodes rhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) rhs;
-                if (compareDifference == 0) compareDifference = compareInteger(lhsWithBarcodes.barcode, rhsWithBarcodes.barcode);
-                if (compareDifference == 0) compareDifference = compareInteger(lhsWithBarcodes.readOneBarcode, rhsWithBarcodes.readOneBarcode);
-                if (compareDifference == 0) compareDifference = compareInteger(lhsWithBarcodes.readTwoBarcode, rhsWithBarcodes.readTwoBarcode);
+                if (compareDifference == 0) {
+                    compareDifference = compareInteger(lhsWithBarcodes.barcode, rhsWithBarcodes.barcode);
+                }
+                if (compareDifference == 0) {
+                    compareDifference = compareInteger(lhsWithBarcodes.readOneBarcode, rhsWithBarcodes.readOneBarcode);
+                }
+                if (compareDifference == 0) {
+                    compareDifference = compareInteger(lhsWithBarcodes.readTwoBarcode, rhsWithBarcodes.readTwoBarcode);
+                }
             }
-            if (compareDifference == 0) compareDifference = lhs.read1ReferenceIndex - rhs.read1ReferenceIndex;
-            if (compareDifference == 0) compareDifference = lhs.read1Coordinate - rhs.read1Coordinate;
-            if (compareDifference == 0) compareDifference = lhs.orientation - rhs.orientation;
-            if (compareDifference == 0) compareDifference = lhs.read2ReferenceIndex - rhs.read2ReferenceIndex;
-            if (compareDifference == 0) compareDifference = lhs.read2Coordinate - rhs.read2Coordinate;
-            if (compareDifference == 0) compareDifference = (int) (lhs.read1IndexInFile - rhs.read1IndexInFile);
-            if (compareDifference == 0) compareDifference = (int) (lhs.read2IndexInFile - rhs.read2IndexInFile);
+            if (compareDifference == 0) {
+                compareDifference = lhs.read1ReferenceIndex - rhs.read1ReferenceIndex;
+            }
+            if (compareDifference == 0) {
+                compareDifference = lhs.read1Coordinate - rhs.read1Coordinate;
+            }
+            if (compareDifference == 0) {
+                compareDifference = lhs.orientation - rhs.orientation;
+            }
+            if (compareDifference == 0) {
+                compareDifference = lhs.read2ReferenceIndex - rhs.read2ReferenceIndex;
+            }
+            if (compareDifference == 0) {
+                compareDifference = lhs.read2Coordinate - rhs.read2Coordinate;
+            }
+            if (compareDifference == 0) {
+                compareDifference = (int) (lhs.read1IndexInFile - rhs.read1IndexInFile);
+            }
+            if (compareDifference == 0) {
+                compareDifference = (int) (lhs.read2IndexInFile - rhs.read2IndexInFile);
+            }
 
             return compareDifference;
         }
