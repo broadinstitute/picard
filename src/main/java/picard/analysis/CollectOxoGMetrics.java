@@ -44,6 +44,7 @@ import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -70,6 +71,7 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
         oneLineSummary = CollectOxoGMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectOxoGMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Collect metrics to assess oxidative artifacts.";
     static final String USAGE_DETAILS = "This tool collects metrics quantifying the error rate resulting from oxidative artifacts. " +

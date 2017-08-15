@@ -33,6 +33,7 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -51,8 +52,8 @@ import java.io.File;
         summary = "Convert a BAM file to a SAM file, or SAM to BAM.\n" +
                 "Input and output formats are determined by file extension.",
         oneLineSummary = "Convert a BAM file to a SAM file, or a SAM to a BAM",
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class
         SamFormatConverter extends CommandLineProgram {
 

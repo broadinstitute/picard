@@ -31,6 +31,7 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -49,8 +50,8 @@ import java.util.*;
 @CommandLineProgramProperties(
         summary = MergeBamAlignment.USAGE_SUMMARY + MergeBamAlignment.USAGE_DETAILS,
         oneLineSummary = MergeBamAlignment.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class MergeBamAlignment extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Merge alignment data from a SAM or BAM with data in an unmapped BAM file.  ";
     static final String USAGE_DETAILS = "This tool produces a new SAM or BAM file that includes all aligned and unaligned reads and also carries " +

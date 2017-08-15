@@ -12,6 +12,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -36,8 +37,8 @@ import java.util.TreeSet;
         summary = "Gathers multiple VCF files from a scatter operation into a single VCF file. Input files " +
                 "must be supplied in genomic order and must not have events at overlapping positions.",
         oneLineSummary = "Gathers multiple VCF files from a scatter operation into a single VCF file",
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class GatherVcfs extends CommandLineProgram {
 
     @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,  doc="Input VCF file(s).")

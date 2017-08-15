@@ -30,6 +30,7 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.RuntimeIOException;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Intervals;
@@ -49,6 +50,7 @@ import java.util.stream.Collectors;
         oneLineSummary = "Converts an Picard IntervalList file to a BED file.",
         programGroup = Intervals.class
 )
+@DocumentedFeature
 public class IntervalListToBed extends CommandLineProgram {
     @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input IntervalList file.")
     public File INPUT;

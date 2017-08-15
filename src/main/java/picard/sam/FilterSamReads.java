@@ -42,6 +42,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.Interval;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
@@ -62,8 +63,8 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary =  FilterSamReads.USAGE_SUMMARY + FilterSamReads.USAGE_DETAILS,
         oneLineSummary = FilterSamReads.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class FilterSamReads extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Subset read data from a SAM or BAM file";
     static final String USAGE_DETAILS = "This tool takes a SAM or BAM file and subsets it to a new file that either excludes or " +

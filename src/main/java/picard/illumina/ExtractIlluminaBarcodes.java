@@ -32,6 +32,7 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -88,6 +89,7 @@ import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
         oneLineSummary = ExtractIlluminaBarcodes.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
+@DocumentedFeature
 public class ExtractIlluminaBarcodes extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Tool determines the barcode for each read in an Illumina lane.  ";
     static final String USAGE_DETAILS = "<p>This tool determines the numbers of reads containing barcode-matching sequences and provides " +

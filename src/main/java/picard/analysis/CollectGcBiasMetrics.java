@@ -32,6 +32,7 @@ import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.programgroups.Metrics;
 import picard.metrics.GcBiasMetrics;
 import picard.util.RExecutor;
@@ -56,6 +57,7 @@ import java.util.Set;
         oneLineSummary = CollectGcBiasMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectGcBiasMetrics extends SinglePassSamProgram {
 
     static final String USAGE_SUMMARY = "Collect metrics regarding GC bias. ";

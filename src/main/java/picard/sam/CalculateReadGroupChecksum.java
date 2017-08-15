@@ -4,6 +4,7 @@ import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.util.IOUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -16,8 +17,8 @@ import java.io.IOException;
 @CommandLineProgramProperties(
         summary = CalculateReadGroupChecksum.USAGE_SUMMARY + CalculateReadGroupChecksum.USAGE_DETAILS,
         oneLineSummary = CalculateReadGroupChecksum.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class CalculateReadGroupChecksum extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Creates a hash code based on the read groups (RG).  ";
     static final String USAGE_DETAILS = "This tool creates a hash code based on identifying information in the read groups " +

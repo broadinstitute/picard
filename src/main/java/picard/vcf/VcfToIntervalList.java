@@ -6,6 +6,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
@@ -21,8 +22,8 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary = "Converts a VCF or BCF file to a Picard Interval List.",
         oneLineSummary = "Converts a VCF or BCF file to a Picard Interval List.",
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class VcfToIntervalList extends CommandLineProgram {
     // The following attributes define the command-line arguments
     public static final Log LOG = Log.getInstance(VcfToIntervalList.class);

@@ -34,6 +34,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Metrics;
@@ -56,6 +57,7 @@ import java.util.List;
         oneLineSummary = MeanQualityByCycle.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class MeanQualityByCycle extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "Collect mean quality by cycle.";
     static final String USAGE_DETAILS = "This tool generates a data table and chart of mean quality by cycle from a BAM file. It is " +

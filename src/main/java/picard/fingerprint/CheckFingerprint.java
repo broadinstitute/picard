@@ -38,6 +38,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.analysis.FingerprintingDetailMetrics;
 import picard.analysis.FingerprintingSummaryMetrics;
@@ -60,6 +61,7 @@ import java.util.List;
         oneLineSummary = "Computes a fingerprint from the supplied input (SAM/BAM or VCF) file and compares it to the provided genotypes",
         programGroup = Fingerprinting.class
 )
+@DocumentedFeature
 public class CheckFingerprint extends CommandLineProgram {
 
     static final String USAGE_DETAILS = "Computes a fingerprint from the supplied input file (SAM/BAM or VCF) file and " +

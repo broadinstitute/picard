@@ -9,6 +9,7 @@ import htsjdk.samtools.util.*;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.programgroups.Intervals;
@@ -31,6 +32,7 @@ import java.util.*;
         oneLineSummary = ScatterIntervalsByNs.USAGE_SUMMARY,
         programGroup = Intervals.class
 )
+@DocumentedFeature
 public class ScatterIntervalsByNs extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Writes an interval list based on splitting a reference by Ns.  ";
     static final String USAGE_DETAILS = "This tool identifies positions in a reference where the bases are 'no-calls' and writes out an " +

@@ -30,6 +30,7 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetrics;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetricsCollector;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -54,8 +55,8 @@ import java.util.Random;
 @CommandLineProgramProperties(
         summary = DownsampleSam.USAGE_SUMMARY + DownsampleSam.USAGE_DETAILS,
         oneLineSummary = DownsampleSam.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class DownsampleSam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Downsample a SAM or BAM file.  ";
     static final String USAGE_DETAILS = "This tool applies a random downsampling algorithm to a SAM or BAM file to retain " +

@@ -34,6 +34,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.MergeableMetricBase;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -51,6 +52,7 @@ import java.util.Optional;
         oneLineSummary = "Collects per-sample and aggregate (spanning all samples) metrics from the provided VCF file",
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectVariantCallingMetrics extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input vcf file for analysis")

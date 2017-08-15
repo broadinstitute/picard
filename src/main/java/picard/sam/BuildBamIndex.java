@@ -36,6 +36,7 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
@@ -52,8 +53,8 @@ import java.net.URL;
 @CommandLineProgramProperties(
         summary = BuildBamIndex.USAGE_SUMMARY + BuildBamIndex.USAGE_DETAILS,
         oneLineSummary = BuildBamIndex.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class BuildBamIndex extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Generates a BAM index \".bai\" file.  ";
     static final String USAGE_DETAILS = "This tool creates an index file for the input BAM that allows fast look-up of data in a " +

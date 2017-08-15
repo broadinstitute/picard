@@ -34,6 +34,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
@@ -44,8 +45,8 @@ import java.util.EnumSet;
 @CommandLineProgramProperties(
         summary = RenameSampleInVcf.USAGE_SUMMARY + RenameSampleInVcf.USAGE_DETAILS,
         oneLineSummary = RenameSampleInVcf.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class RenameSampleInVcf extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Renames a sample within a VCF or BCF.  ";
     static final String USAGE_DETAILS = "This tool enables the user to rename a sample in either a VCF or BCF file.  " +

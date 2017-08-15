@@ -11,6 +11,7 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
@@ -29,8 +30,8 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = GatherBamFiles.USAGE_SUMMARY + GatherBamFiles.USAGE_DETAILS,
         oneLineSummary = GatherBamFiles.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class GatherBamFiles extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Concatenate one or more BAM files as efficiently as possible";
     static final String USAGE_DETAILS = "This tool performs a rapid \"gather\" operation on BAM files after scatter" +

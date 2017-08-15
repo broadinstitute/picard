@@ -2,6 +2,7 @@ package picard.util;
 
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.RuntimeIOException;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -31,6 +32,7 @@ import java.text.NumberFormat;
         oneLineSummary = "FIFO buffer used to buffer input and output streams with a customizable buffer size ",
         programGroup = None.class
 )
+@DocumentedFeature
 public class FifoBuffer extends CommandLineProgram {
     @Argument(doc="The size of the memory buffer in bytes.")
     public int BUFFER_SIZE = 512 * 1024 * 1024;

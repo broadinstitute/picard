@@ -37,6 +37,7 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -59,6 +60,7 @@ import java.util.List;
         oneLineSummary = CollectJumpingLibraryMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectJumpingLibraryMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Collect jumping library metrics. ";
     static final String USAGE_DETAILS = "<p>This tool collects high-level metrics about the " +

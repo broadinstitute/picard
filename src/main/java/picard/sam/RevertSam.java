@@ -49,6 +49,7 @@ import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.SortingCollection;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -73,8 +74,8 @@ import java.util.Map;
 @CommandLineProgramProperties(
         summary = RevertSam.USAGE_SUMMARY + RevertSam.USAGE_DETAILS,
         oneLineSummary = RevertSam.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class RevertSam extends CommandLineProgram {
     static final String USAGE_SUMMARY ="Reverts SAM or BAM files to a previous state.  ";
     static final String USAGE_DETAILS ="This tool removes or restores certain properties of the SAM records, including alignment " +

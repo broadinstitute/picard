@@ -3,6 +3,7 @@ package picard.analysis.artifacts;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.SequenceUtil;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -24,6 +25,7 @@ import java.util.Set;
         oneLineSummary = ConvertSequencingArtifactToOxoG.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class ConvertSequencingArtifactToOxoG extends CommandLineProgram {
 static final String USAGE_SUMMARY = "Extract OxoG metrics from generalized artifacts metrics.  ";
 static final String USAGE_DETAILS = "<p>This tool extracts 8-oxoguanine (OxoG) artifact metrics from the output of " +

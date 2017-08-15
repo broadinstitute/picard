@@ -33,6 +33,7 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -54,6 +55,7 @@ import java.io.IOException;
         oneLineSummary = ExtractSequences.USAGE_SUMMARY,
         programGroup = Fasta.class
 )
+@DocumentedFeature
 public class ExtractSequences extends CommandLineProgram {
     static final String USAGE_SUMMARY ="Subsets intervals from a reference sequence to a new FASTA file.";
     static final String USAGE_DETAILS ="This tool takes a list of intervals, reads the corresponding subsquences from a reference " +

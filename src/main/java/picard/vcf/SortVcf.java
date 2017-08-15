@@ -17,6 +17,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFRecordCodec;
 import htsjdk.variant.vcf.VCFUtils;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
@@ -35,8 +36,8 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = SortVcf.USAGE_SUMMARY + SortVcf.USAGE_DETAILS,
         oneLineSummary = SortVcf.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class SortVcf extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Sorts one or more VCF files.  ";
     static final String USAGE_DETAILS = "This tool sorts the records in VCF files according to the order of the contigs " +

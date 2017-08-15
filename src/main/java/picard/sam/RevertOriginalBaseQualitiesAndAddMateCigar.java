@@ -16,6 +16,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
@@ -34,8 +35,8 @@ import java.util.Iterator;
 @CommandLineProgramProperties(
         summary = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.",
         oneLineSummary = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs",
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")

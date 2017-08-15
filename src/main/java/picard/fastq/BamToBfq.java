@@ -25,8 +25,9 @@
 package picard.fastq;
 
 import org.broadinstitute.barclay.argparser.Argument;
-import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -40,8 +41,8 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary = BamToBfq.USAGE_SUMMARY + BamToBfq.USAGE_DETAILS,
         oneLineSummary = BamToBfq.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class BamToBfq extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Create BFQ files from a BAM file for use by the maq aligner.  ";
     static final String USAGE_DETAILS = "BFQ is a binary version of the FASTQ file format. This tool creates bfq files from a BAM file " +

@@ -39,6 +39,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -54,8 +55,8 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary = VcfFormatConverter.USAGE_SUMMARY + VcfFormatConverter.USAGE_DETAILS,
         oneLineSummary = VcfFormatConverter.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class VcfFormatConverter extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Converts VCF to BCF or BCF to VCF.  ";
     static final String USAGE_DETAILS = "This tool converts files between the plain-text VCF format and its binary compressed equivalent, " +

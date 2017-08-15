@@ -163,7 +163,6 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         return new CreateSeqDictReferenceArgumentCollection();
     }
 
-    @DocumentedFeature
     public static class CreateSeqDictReferenceArgumentCollection implements ReferenceArgumentCollection {
         @Argument(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
         public File REFERENCE;

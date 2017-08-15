@@ -35,6 +35,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -60,6 +61,7 @@ import java.util.Set;
         oneLineSummary = CollectRrbsMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectRrbsMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "<b>Collects metrics from reduced representation bisulfite sequencing (Rrbs) data.</b>  ";
     static final String USAGE_DETAILS = "<p>This tool uses reduced representation bisulfite sequencing (Rrbs) data to determine cytosine " +

@@ -36,6 +36,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -73,6 +74,7 @@ import java.util.Set;
         oneLineSummary = IlluminaBasecallsToFastq.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
+@DocumentedFeature
 public class IlluminaBasecallsToFastq extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Generate FASTQ file(s) from Illumina basecall read data.  ";
     static final String USAGE_DETAILS = "<p>This tool generates FASTQ files from data in an Illumina BaseCalls output directory.  " +

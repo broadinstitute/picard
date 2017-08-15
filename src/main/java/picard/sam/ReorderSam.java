@@ -39,6 +39,7 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -61,8 +62,8 @@ import java.util.Map;
                 "as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new " +
                 "reference are dropped. Runs substantially faster if the input is an indexed BAM file.",
         oneLineSummary = "Reorders reads in a SAM or BAM file to match ordering in reference",
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class ReorderSam extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file (bam or sam) to extract reads from.")

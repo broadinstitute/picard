@@ -46,6 +46,7 @@ import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -64,8 +65,8 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = FastqToSam.USAGE_SUMMARY + FastqToSam.USAGE_DETAILS,
         oneLineSummary = FastqToSam.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class FastqToSam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Converts a FASTQ file to an unaligned BAM or SAM file.  ";
     static final String USAGE_DETAILS = "This tool extracts read sequences and base qualities from the input FASTQ file and writes them" +

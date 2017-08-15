@@ -35,6 +35,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -66,6 +67,7 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
         oneLineSummary = CollectWgsMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectWgsMetrics extends CommandLineProgram {
 static final String USAGE_SUMMARY = "Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.";
 static final String USAGE_DETAILS = "<p>This tool collects metrics about the fractions of reads that pass base- and mapping-quality "+

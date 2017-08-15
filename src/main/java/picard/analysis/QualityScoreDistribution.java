@@ -35,6 +35,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
@@ -52,6 +53,7 @@ import java.util.List;
         oneLineSummary = QualityScoreDistribution.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class QualityScoreDistribution extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "Chart the distribution of quality scores.  ";
     static final String USAGE_DETAILS = "<p>This tool is used for determining the overall 'quality' for a library in a given run. To " +

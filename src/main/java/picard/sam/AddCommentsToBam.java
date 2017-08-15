@@ -6,6 +6,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.IOUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -23,8 +24,8 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary =  AddCommentsToBam.USAGE_SUMMARY + AddCommentsToBam.USAGE_DETAILS,
         oneLineSummary = AddCommentsToBam.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class AddCommentsToBam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Adds comments to the header of a BAM file.";
     static final String USAGE_DETAILS = "This tool makes a copy of the input bam file, with a modified header that includes the comments " +

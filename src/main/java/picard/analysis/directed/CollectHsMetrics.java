@@ -30,6 +30,7 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.MetricAccumulationLevel;
 import picard.cmdline.programgroups.Metrics;
 
@@ -51,6 +52,7 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
         oneLineSummary = CollectHsMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectHsMetrics extends CollectTargetedMetrics<HsMetrics, HsMetricCollector> {
 static final String USAGE_SUMMARY = "Collects hybrid-selection (HS) metrics for a SAM or BAM file.  ";
 static final String USAGE_DETAILS = "This tool takes a SAM/BAM file input and collects metrics that are specific for sequence "+

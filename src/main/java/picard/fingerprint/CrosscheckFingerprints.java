@@ -29,6 +29,7 @@ import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -72,6 +73,7 @@ import static picard.fingerprint.CrosscheckMetric.FingerprintResult.*;
         oneLineSummary = "Checks if all fingerprints appear to come from the same individual.",
         programGroup = Fingerprinting.class
 )
+@DocumentedFeature
 public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,

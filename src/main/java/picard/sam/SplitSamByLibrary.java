@@ -34,6 +34,7 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
@@ -59,8 +60,8 @@ import java.util.Map;
                 "are written to a file called 'unknown.'  The format (SAM or BAM) of the  " +
                 "output files matches that of the input file.  ",
         oneLineSummary = "Splits a SAM or BAM file into individual files by library",
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class SplitSamByLibrary extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,

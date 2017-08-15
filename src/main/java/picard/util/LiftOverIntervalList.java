@@ -31,6 +31,7 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
@@ -47,6 +48,7 @@ import java.util.List;
         oneLineSummary = LiftOverIntervalList.USAGE_SUMMARY,
         programGroup = Intervals.class
 )
+@DocumentedFeature
 public class LiftOverIntervalList extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Lifts over an interval list from one reference build to another.  ";
     static final String USAGE_DETAILS = "This tool adjusts the coordinates in an interval list derived from one reference to match " +

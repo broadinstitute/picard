@@ -41,6 +41,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -61,8 +62,8 @@ import java.util.Map;
 @CommandLineProgramProperties(
         summary = MergeSamFiles.USAGE_SUMMARY + MergeSamFiles.USAGE_DETAILS,
         oneLineSummary = MergeSamFiles.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class MergeSamFiles extends CommandLineProgram {
     private static final Log log = Log.getInstance(MergeSamFiles.class);
 

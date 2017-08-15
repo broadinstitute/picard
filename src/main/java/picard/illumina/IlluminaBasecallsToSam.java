@@ -39,6 +39,7 @@ import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.programgroups.Illumina;
@@ -100,6 +101,7 @@ import java.util.Set;
         oneLineSummary = IlluminaBasecallsToSam.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
+@DocumentedFeature
 public class IlluminaBasecallsToSam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Transforms raw Illumina sequencing data into an unmapped SAM or BAM file.";
     static final String USAGE_DETAILS = "<p>The IlluminaBaseCallsToSam program collects, demultiplexes, and sorts reads across all " +

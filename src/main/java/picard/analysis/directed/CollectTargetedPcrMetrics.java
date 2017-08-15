@@ -5,6 +5,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.util.IntervalList;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.MetricAccumulationLevel;
 import picard.cmdline.programgroups.Metrics;
 
@@ -21,6 +22,7 @@ import java.util.Set;
         oneLineSummary = CollectTargetedPcrMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectTargetedPcrMetrics extends CollectTargetedMetrics<TargetedPcrMetrics, TargetedPcrMetricsCollector> {
     static final String USAGE_SUMMARY = "Calculate PCR-related metrics from targeted sequencing data. ";
     static final String USAGE_DETAILS = "<p>This tool calculates a set of PCR-related metrics from an aligned SAM or " +

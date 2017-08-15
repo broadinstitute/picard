@@ -37,6 +37,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -56,8 +57,8 @@ import java.io.FileOutputStream;
 @CommandLineProgramProperties(
         summary = "Takes a VCF and a second file that contains a sequence dictionary and updates the VCF with the new sequence dictionary.",
         oneLineSummary = "Takes a VCF and a second file that contains a sequence dictionary and updates the VCF with the new sequence dictionary.",
-        programGroup = VcfOrBcf.class
-)
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class UpdateVcfSequenceDictionary extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF")
     public File INPUT;

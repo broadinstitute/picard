@@ -27,6 +27,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -48,6 +49,7 @@ import java.util.*;
         oneLineSummary = "Combines multiple Variant Calling Metrics files into a single file",
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class AccumulateVariantCallingMetrics extends CommandLineProgram {
 
     @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Paths (except for the file extensions) of Variant Calling Metrics files to read and merge.", minElements=1)

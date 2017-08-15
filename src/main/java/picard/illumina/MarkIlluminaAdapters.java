@@ -41,6 +41,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -67,6 +68,7 @@ import static picard.util.IlluminaUtil.IlluminaAdapterPair;
         oneLineSummary = MarkIlluminaAdapters.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
+@DocumentedFeature
 public class MarkIlluminaAdapters extends CommandLineProgram {
 
     static final String USAGE_SUMMARY = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  ";

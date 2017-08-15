@@ -30,6 +30,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -64,6 +65,7 @@ import java.util.stream.Collectors;
         oneLineSummary = CollectIlluminaLaneMetrics.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
+@DocumentedFeature
 public class CollectIlluminaLaneMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Collects Illumina lane metrics for the given BaseCalling analysis directory.  ";
     static final String USAGE_DETAILS = "This tool produces quality control metrics on cluster density for each lane of an Illumina flowcell." +
