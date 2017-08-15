@@ -371,7 +371,7 @@ task copyJavadoc(dependsOn: 'javadoc', type: Copy) {
 
 task copyPicardDoc(dependsOn: 'picardDoc', type: Copy){
     from 'build/docs/picarddoc'
-    into "$htmlDir/_includes"
+    into "$htmlDir/picarddoc"
 }
 
 task updateGhPages(dependsOn: ['copyJavadoc', 'copyPicardDoc']){
@@ -386,6 +386,6 @@ githubPages {
   deleteExistingFiles = false
   pages {
     from htmlDir
-    into '.'
+    into 'newdocs'
   }
 }
