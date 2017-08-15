@@ -1,0 +1,997 @@
+<?php
+
+    include '../../../common/include/common.php';
+    include_once '../../config.php';
+    $module = modules::GATK;
+    printHeader($module, "Picard | Tool Documentation Index", "Guide");
+?>
+
+<link type='text/css' rel='stylesheet' href='picardDoc.css'>
+
+<div class='row-fluid' id="top">
+
+	
+
+	<?php $group = 'Metrics'; ?>
+
+	<section class="span4">
+		<aside class="well">
+			<a href="index.html"><h4><i class='fa fa-chevron-left'></i> Back to Tool Docs Index</h4></a>
+		</aside>
+		<aside class="well">
+			<h2>Categories</h2>
+        <style>
+            #sidenav .accordion-body a {
+                color : gray;
+            }
+
+            .accordion-body li {
+                list-style : none;
+            }
+        </style>
+        <ul class="nav nav-pills nav-stacked" id="sidenav">
+        		<hr>
+        		<hr>
+        		<hr>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
+							<div id="Fasta"
+								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
+											</li>
+											<li>
+												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
+											</li>
+											<li>
+												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#FingerprintingTools">Fingerprinting Tools</a>
+							<div id="FingerprintingTools"
+								<?php echo ($group == 'Fingerprinting Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IlluminaTools">Illumina Tools</a>
+							<div id="IlluminaTools"
+								<?php echo ($group == 'Illumina Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_illumina_CheckIlluminaDirectory.html">CheckIlluminaDirectory</a>
+											</li>
+											<li>
+												<a href="picard_illumina_CollectIlluminaBasecallingMetrics.html">CollectIlluminaBasecallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_CollectIlluminaLaneMetrics.html">CollectIlluminaLaneMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_ExtractIlluminaBarcodes.html">ExtractIlluminaBarcodes</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaBasecallsToFastq.html">IlluminaBasecallsToFastq</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaBasecallsToSam.html">IlluminaBasecallsToSam</a>
+											</li>
+											<li>
+												<a href="picard_illumina_MarkIlluminaAdapters.html">MarkIlluminaAdapters</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalTools">Interval Tools</a>
+							<div id="IntervalTools"
+								<?php echo ($group == 'Interval Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
+											</li>
+											<li>
+												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
+											</li>
+											<li>
+												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Metrics">Metrics</a>
+							<div id="Metrics"
+								<?php echo ($group == 'Metrics')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectBaseDistributionByCycle.html">CollectBaseDistributionByCycle</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectGcBiasMetrics.html">CollectGcBiasMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_quality_CollectHiSeqXPfFailMetrics.html">CollectHiSeqXPfFailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_CollectHsMetrics.html">CollectHsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectInsertSizeMetrics.html">CollectInsertSizeMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectJumpingLibraryMetrics.html">CollectJumpingLibraryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectMultipleMetrics.html">CollectMultipleMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectOxoGMetrics.html">CollectOxoGMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectQualityYieldMetrics.html">CollectQualityYieldMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRawWgsMetrics.html">CollectRawWgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRnaSeqMetrics.html">CollectRnaSeqMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRrbsMetrics.html">CollectRrbsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_CollectSequencingArtifactMetrics.html">CollectSequencingArtifactMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_CollectTargetedPcrMetrics.html">CollectTargetedPcrMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_CollectVariantCallingMetrics.html">CollectVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectWgsMetrics.html">CollectWgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CompareMetrics.html">CompareMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_EstimateLibraryComplexity.html">EstimateLibraryComplexity</a>
+											</li>
+											<li>
+												<a href="picard_analysis_MeanQualityByCycle.html">MeanQualityByCycle</a>
+											</li>
+											<li>
+												<a href="picard_analysis_QualityScoreDistribution.html">QualityScoreDistribution</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#MiscellaneousTools">Miscellaneous Tools</a>
+							<div id="MiscellaneousTools"
+								<?php echo ($group == 'Miscellaneous Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+											</li>
+											<li>
+												<a href="picard_util_FifoBuffer.html">FifoBuffer</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#SAMBAM">SAM/BAM</a>
+							<div id="SAMBAM"
+								<?php echo ($group == 'SAM/BAM')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_AddCommentsToBam.html">AddCommentsToBam</a>
+											</li>
+											<li>
+												<a href="picard_sam_AddOrReplaceReadGroups.html">AddOrReplaceReadGroups</a>
+											</li>
+											<li>
+												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
+											</li>
+											<li>
+												<a href="picard_fastq_BamToBfq.html">BamToBfq</a>
+											</li>
+											<li>
+												<a href="picard_sam_BuildBamIndex.html">BuildBamIndex</a>
+											</li>
+											<li>
+												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
+											</li>
+											<li>
+												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
+											</li>
+											<li>
+												<a href="picard_sam_CleanSam.html">CleanSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
+											</li>
+											<li>
+												<a href="picard_sam_DownsampleSam.html">DownsampleSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_FastqToSam.html">FastqToSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_FilterSamReads.html">FilterSamReads</a>
+											</li>
+											<li>
+												<a href="picard_sam_FixMateInformation.html">FixMateInformation</a>
+											</li>
+											<li>
+												<a href="picard_sam_GatherBamFiles.html">GatherBamFiles</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_MarkDuplicates.html">MarkDuplicates</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_MarkDuplicatesWithMateCigar.html">MarkDuplicatesWithMateCigar</a>
+											</li>
+											<li>
+												<a href="picard_sam_MergeBamAlignment.html">MergeBamAlignment</a>
+											</li>
+											<li>
+												<a href="picard_sam_MergeSamFiles.html">MergeSamFiles</a>
+											</li>
+											<li>
+												<a href="picard_sam_PositionBasedDownsampleSam.html">PositionBasedDownsampleSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_ReorderSam.html">ReorderSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_ReplaceSamHeader.html">ReplaceSamHeader</a>
+											</li>
+											<li>
+												<a href="picard_sam_RevertOriginalBaseQualitiesAndAddMateCigar.html">RevertOriginalBaseQualitiesAndAddMateCigar</a>
+											</li>
+											<li>
+												<a href="picard_sam_RevertSam.html">RevertSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamFormatConverter.html">SamFormatConverter</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamToFastq.html">SamToFastq</a>
+											</li>
+											<li>
+												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
+											</li>
+											<li>
+												<a href="picard_sam_SortSam.html">SortSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a>
+											</li>
+											<li>
+												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
+											</li>
+											<li>
+												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VCFBCF">VCF/BCF</a>
+							<div id="VCFBCF"
+								<?php echo ($group == 'VCF/BCF')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_filter_FilterVcf.html">FilterVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
+											</li>
+											<li>
+												<a href="picard_vcf_FixVcfHeader.html">FixVcfHeader</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GatherVcfs.html">GatherVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
+											</li>
+											<li>
+												<a href="picard_vcf_LiftoverVcf.html">LiftoverVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MakeSitesOnlyVcf.html">MakeSitesOnlyVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MergeVcfs.html">MergeVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_RenameSampleInVcf.html">RenameSampleInVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_SortVcf.html">SortVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_SplitVcfs.html">SplitVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_UpdateVcfSequenceDictionary.html">UpdateVcfSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_vcf_VcfFormatConverter.html">VcfFormatConverter</a>
+											</li>
+											<li>
+												<a href="picard_vcf_VcfToIntervalList.html">VcfToIntervalList</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+        		<hr>
+        </ul>
+		</aside>
+		<?php getForumPosts( 'EstimateLibraryComplexity' ) ?>
+
+	</section>
+
+	<div class="span8">
+
+		<h1>EstimateLibraryComplexity</h1>
+
+		<p class="lead">Estimates the numbers of unique molecules in a sequencing library.  </p>
+
+			<h3>Category
+				<small> Metrics</small>
+			</h3>
+		<hr>
+		<h2>Overview</h2>
+		<p>Attempts to estimate library complexity from sequence alone. Does so by sorting all reads
+ by the first N bases (5 by default) of each read and then comparing reads with the first
+ N bases identical to each other for duplicates.  Reads are considered to be duplicates if
+ they match each other with no gaps and an overall mismatch rate less than or equal to
+ MAX_DIFF_RATE (0.03 by default).</p>
+ <p/>
+ <p>Reads of poor quality are filtered out so as to provide a more accurate estimate. The filtering
+ removes reads with any no-calls in the first N bases or with a mean base quality lower than
+ MIN_MEAN_QUALITY across either the first or second read.</p>
+ <p/>
+ <p>The algorithm attempts to detect optical duplicates separately from PCR duplicates and excludes
+ these in the calculation of library size. Also, since there is no alignment to screen out technical
+ reads one further filter is applied on the data.  After examining all reads a Histogram is built of
+ [#reads in duplicate set -> #of duplicate sets]; all bins that contain exactly one duplicate set are
+ then removed from the Histogram as outliers before library size is estimated.</p>
+
+
+				<h3>EstimateLibraryComplexity specific arguments</h3>
+				<p>This table summarizes the command-line arguments that are specific to this tool. For more details on each argument, see the list further down below the table or click on an argument name to jump directly to that entry in the list.</p>
+				<table class="table table-striped table-bordered table-condensed">
+					<thead>
+					<tr>
+						<th>Argument name(s)</th>
+						<th>Default value</th>
+						<th>Summary</th>
+					</tr>
+					</thead>
+					<tbody>
+			<tr>
+				<th colspan="4" id="row-divider">Required Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--INPUT">--INPUT</a><br />
+								&nbsp;<em>-I</em>
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>One or more files to combine and estimate library complexity from. Reads can be mapped or unmapped.</td>
+				</tr>
+				<tr>
+					<td><a href="#--OUTPUT">--OUTPUT</a><br />
+								&nbsp;<em>-O</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Output file to writes per-library metrics to.</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--BARCODE_TAG">--BARCODE_TAG</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>Barcode SAM tag (ex. BC for 10X Genomics)</td>
+				</tr>
+				<tr>
+					<td><a href="#--MAX_DIFF_RATE">--MAX_DIFF_RATE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>double</td> -->
+					<td>0.03</td>
+					<td>The maximum rate of differences between two reads to call them identical.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MAX_GROUP_RATIO">--MAX_GROUP_RATIO</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>500</td>
+					<td>Do not process self-similar groups that are this many times over the mean expected group size. I.e. if the input contains 10m read pairs and MIN_IDENTICAL_BASES is set to 5, then the mean expected group size would be approximately 10 reads.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MAX_OPTICAL_DUPLICATE_SET_SIZE">--MAX_OPTICAL_DUPLICATE_SET_SIZE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>long</td> -->
+					<td>300000</td>
+					<td>This number is the maximum size of a set of duplicate reads for which we will attempt to determine which are optical duplicates.  Please be aware that if you raise this value too high and do encounter a very large set of duplicate reads, it will severely affect the runtime of this tool.  To completely disable this check, set the value to -1.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MAX_READ_LENGTH">--MAX_READ_LENGTH</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>0</td>
+					<td>The maximum number of bases to consider when comparing reads (0 means no maximum).</td>
+				</tr>
+				<tr>
+					<td><a href="#--MIN_GROUP_COUNT">--MIN_GROUP_COUNT</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>2</td>
+					<td>Minimum number group count.  On a per-library basis, we count the number of groups of duplicates that have a particular size.  Omit from consideration any count that is less than this value.  For example, if we see only one group of duplicates with size 500, we omit it from the metric calculations if MIN_GROUP_COUNT is set to two.  Setting this to two may help remove technical artifacts from the library size calculation, for example, adapter dimers.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MIN_IDENTICAL_BASES">--MIN_IDENTICAL_BASES</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>5</td>
+					<td>The minimum number of bases at the starts of reads that must be identical for reads to be grouped together for duplicate detection.  In effect total_reads / 4^max_id_bases reads will be compared at a time, so lower numbers will produce more accurate results but consume exponentially more memory and CPU.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MIN_MEAN_QUALITY">--MIN_MEAN_QUALITY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>20</td>
+					<td>The minimum mean quality of the bases in a read pair for the read to be analyzed. Reads with lower average quality are filtered out and not considered in any calculations.</td>
+				</tr>
+				<tr>
+					<td><a href="#--OPTICAL_DUPLICATE_PIXEL_DISTANCE">--OPTICAL_DUPLICATE_PIXEL_DISTANCE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>100</td>
+					<td>The maximum offset between two duplicate clusters in order to consider them optical duplicates. The default is appropriate for unpatterned versions of the Illumina platform. For the patterned flowcell models, 2500 is moreappropriate. For other platforms and models, users should experiment to find what works best.</td>
+				</tr>
+				<tr>
+					<td><a href="#--READ_NAME_REGEX">--READ_NAME_REGEX</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>String</td> -->
+					<td><optimized capture of last three ':' separated fields as numeric values></td>
+					<td>Regular expression that can be used to parse read names in the incoming SAM file. Read names are parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used to estimate the rate of optical duplication in order to give a more accurate estimated library size. Set this option to null to disable optical duplicate detection, e.g. for RNA-seq or other data where duplicate sets are extremely large and estimating library complexity is not an aim. Note that without optical duplicate counts, library size estimation will be inaccurate. The regular expression should contain three capture groups for the three variables, in order. It must match the entire read name. Note that if the default regex is specified, a regex match is not actually done, but instead the read name  is split on colon character. For 5 element names, the 3rd, 4th and 5th elements are assumed to be tile, x and y values. For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values.</td>
+				</tr>
+				<tr>
+					<td><a href="#--READ_ONE_BARCODE_TAG">--READ_ONE_BARCODE_TAG</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>Read one barcode SAM tag (ex. BX for 10X Genomics)</td>
+				</tr>
+				<tr>
+					<td><a href="#--READ_TWO_BARCODE_TAG">--READ_TWO_BARCODE_TAG</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>Read two barcode SAM tag (ex. BX for 10X Genomics)</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Optional Common Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--COMPRESSION_LEVEL">--COMPRESSION_LEVEL</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>5</td>
+					<td>Compression level for all compressed files created (e.g. BAM and GELI).</td>
+				</tr>
+				<tr>
+					<td><a href="#--CREATE_INDEX">--CREATE_INDEX</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
+				</tr>
+				<tr>
+					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>client_secrets.json</td>
+					<td>Google Genomics API client_secrets.json file path.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Integer</td> -->
+					<td>7943352</td>
+					<td>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</td>
+				</tr>
+				<tr>
+					<td><a href="#--QUIET">--QUIET</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Whether to suppress job-summary info on System.err.</td>
+				</tr>
+				<tr>
+					<td><a href="#--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE</a><br />
+								&nbsp;<em>-R</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Reference sequence file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--TMP_DIR">--TMP_DIR</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>One or more directories with space available to be used by this program for temporary storage of working files</td>
+				</tr>
+				<tr>
+					<td><a href="#--USE_JDK_DEFLATER">--USE_JDK_DEFLATER</a><br />
+								&nbsp;<em>-use_jdk_deflater</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Use the JDK Deflater instead of the Intel Deflater for writing compressed output</td>
+				</tr>
+				<tr>
+					<td><a href="#--USE_JDK_INFLATER">--USE_JDK_INFLATER</a><br />
+								&nbsp;<em>-use_jdk_inflater</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Use the JDK Inflater instead of the Intel Inflater for reading compressed input</td>
+				</tr>
+				<tr>
+					<td><a href="#--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>ValidationStringency</td> -->
+					<td>STRICT</td>
+					<td>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</td>
+				</tr>
+				<tr>
+					<td><a href="#--VERBOSITY">--VERBOSITY</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>LogLevel</td> -->
+					<td>INFO</td>
+					<td>Control verbosity of logging.</td>
+				</tr>
+					</tbody>
+				</table>
+
+					<h3>Argument details</h3>
+					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--BARCODE_TAG">--BARCODE_TAG </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Barcode SAM tag (ex. BC for 10X Genomics)</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Compression level for all compressed files created (e.g. BAM and GELI).</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">5</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CREATE_INDEX">--CREATE_INDEX </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CREATE_MD5_FILE">--CREATE_MD5_FILE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to create an MD5 digest for any BAM or FASTQ files created.  </b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Google Genomics API client_secrets.json file path.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--INPUT">--INPUT </a>
+			 / <small>-I</small>
+		</h3>
+		<p class="args">
+			<b>One or more files to combine and estimate library complexity from. Reads can be mapped or unmapped.</b><br />
+			
+		</p>
+		<p>
+				<span class="badge badge-important">R</span>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MAX_DIFF_RATE">--MAX_DIFF_RATE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>The maximum rate of differences between two reads to call them identical.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">double</span>
+			&nbsp;<span class="label">0.03</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MAX_GROUP_RATIO">--MAX_GROUP_RATIO </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Do not process self-similar groups that are this many times over the mean expected group size. I.e. if the input contains 10m read pairs and MIN_IDENTICAL_BASES is set to 5, then the mean expected group size would be approximately 10 reads.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">500</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MAX_OPTICAL_DUPLICATE_SET_SIZE">--MAX_OPTICAL_DUPLICATE_SET_SIZE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>This number is the maximum size of a set of duplicate reads for which we will attempt to determine which are optical duplicates.  Please be aware that if you raise this value too high and do encounter a very large set of duplicate reads, it will severely affect the runtime of this tool.  To completely disable this check, set the value to -1.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">long</span>
+			&nbsp;<span class="label">300000</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MAX_READ_LENGTH">--MAX_READ_LENGTH </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>The maximum number of bases to consider when comparing reads (0 means no maximum).</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">0</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Integer</span>
+			&nbsp;<span class="label">7943352</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MIN_GROUP_COUNT">--MIN_GROUP_COUNT </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Minimum number group count.  On a per-library basis, we count the number of groups of duplicates that have a particular size.  Omit from consideration any count that is less than this value.  For example, if we see only one group of duplicates with size 500, we omit it from the metric calculations if MIN_GROUP_COUNT is set to two.  Setting this to two may help remove technical artifacts from the library size calculation, for example, adapter dimers.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">2</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MIN_IDENTICAL_BASES">--MIN_IDENTICAL_BASES </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>The minimum number of bases at the starts of reads that must be identical for reads to be grouped together for duplicate detection.  In effect total_reads / 4^max_id_bases reads will be compared at a time, so lower numbers will produce more accurate results but consume exponentially more memory and CPU.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">5</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MIN_MEAN_QUALITY">--MIN_MEAN_QUALITY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>The minimum mean quality of the bases in a read pair for the read to be analyzed. Reads with lower average quality are filtered out and not considered in any calculations.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">20</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--OPTICAL_DUPLICATE_PIXEL_DISTANCE">--OPTICAL_DUPLICATE_PIXEL_DISTANCE </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>The maximum offset between two duplicate clusters in order to consider them optical duplicates. The default is appropriate for unpatterned versions of the Illumina platform. For the patterned flowcell models, 2500 is moreappropriate. For other platforms and models, users should experiment to find what works best.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">100</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--OUTPUT">--OUTPUT </a>
+			 / <small>-O</small>
+		</h3>
+		<p class="args">
+			<b>Output file to writes per-library metrics to.</b><br />
+			
+		</p>
+		<p>
+				<span class="badge badge-important">R</span>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--QUIET">--QUIET </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Whether to suppress job-summary info on System.err.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--READ_NAME_REGEX">--READ_NAME_REGEX </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Regular expression that can be used to parse read names in the incoming SAM file. Read names are parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used to estimate the rate of optical duplication in order to give a more accurate estimated library size. Set this option to null to disable optical duplicate detection, e.g. for RNA-seq or other data where duplicate sets are extremely large and estimating library complexity is not an aim. Note that without optical duplicate counts, library size estimation will be inaccurate. The regular expression should contain three capture groups for the three variables, in order. It must match the entire read name. Note that if the default regex is specified, a regex match is not actually done, but instead the read name  is split on colon character. For 5 element names, the 3rd, 4th and 5th elements are assumed to be tile, x and y values. For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label"><optimized capture of last three ':' separated fields as numeric values></span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--READ_ONE_BARCODE_TAG">--READ_ONE_BARCODE_TAG </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Read one barcode SAM tag (ex. BX for 10X Genomics)</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--READ_TWO_BARCODE_TAG">--READ_TWO_BARCODE_TAG </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Read two barcode SAM tag (ex. BX for 10X Genomics)</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE </a>
+			 / <small>-R</small>
+		</h3>
+		<p class="args">
+			<b>Reference sequence file.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--TMP_DIR">--TMP_DIR </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>One or more directories with space available to be used by this program for temporary storage of working files</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--USE_JDK_DEFLATER">--USE_JDK_DEFLATER </a>
+			 / <small>-use_jdk_deflater</small>
+		</h3>
+		<p class="args">
+			<b>Use the JDK Deflater instead of the Intel Deflater for writing compressed output</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--USE_JDK_INFLATER">--USE_JDK_INFLATER </a>
+			 / <small>-use_jdk_inflater</small>
+		</h3>
+		<p class="args">
+			<b>Use the JDK Inflater instead of the Intel Inflater for reading compressed input</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</b><br />
+			
+		</p>
+			<p>
+				The --VALIDATION_STRINGENCY argument is an enumerated type (ValidationStringency), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">STRICT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">LENIENT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">SILENT</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">ValidationStringency</span>
+			&nbsp;<span class="label">STRICT</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--VERBOSITY">--VERBOSITY </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Control verbosity of logging.</b><br />
+			
+		</p>
+			<p>
+				The --VERBOSITY argument is an enumerated type (LogLevel), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">ERROR</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">WARNING</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INFO</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">DEBUG</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">LogLevel</span>
+			&nbsp;<span class="label">INFO</span>
+		</p>
+
+        <hr>
+        <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
+        <hr>
+        <p class="see-also">See also 
+        	<a href="https://www.broadinstitute.org/picard/guide/">Picard Documentation Index</a> |
+        	<a href="index.html">Tool Docs Index</a> |
+        	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
+        </p>
+
+        <p class="version">Picard version 2.10.9-2-g3c1d884-SNAPSHOT built at 15-51-2017 09:51:44.
+        </p>
+
+	</div>
+
+	<?php printFooter($module); ?>
