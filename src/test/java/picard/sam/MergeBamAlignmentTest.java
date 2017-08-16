@@ -1326,7 +1326,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 "ALIGNED_READS_ONLY=" + alignReadsOnly,
                 "CLIP_ADAPTERS=" + clipAdapters,
                 "IS_BISULFITE_SEQUENCE=" + isBisulfiteSequence,
-                "MAX_INSERTIONS_OR_DELETIONS=" + maxInsOrDels));
+                "MAX_INSERTIONS_OR_DELETIONS=" + maxInsOrDels,
+                "ADD_PG_TAG_TO_READS=true"));
         if (alignedBams != null) {
             for (final File alignedBam : alignedBams) {
                 args.add("ALIGNED_BAM=" + alignedBam.getAbsolutePath());
