@@ -630,8 +630,13 @@ public class GenotypeConcordanceTest {
         output.read(new FileReader(outputContingencyMetrics));
 
         for (final GenotypeConcordanceContingencyMetrics metrics : output.getMetrics()) {
-            metrics.CALL_SAMPLE = "CHMI_CHMI3_WGS2";
-            metrics.TRUTH_SAMPLE = "/dev/stdin";
+            if (metrics.VARIANT_TYPE == VariantContext.Type.SNP) {
+                Assert.assertEquals(metrics.TP_COUNT, 0);
+                Assert.assertEquals(metrics.TN_COUNT,0);
+                Assert.assertEquals(metrics.FP_COUNT, 0);
+                Assert.assertEquals(metrics.FN_COUNT, 0);
+                Assert.assertEquals(metrics.EMPTY_COUNT, 0);
+            }
         }
     }
 }
