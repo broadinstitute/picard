@@ -82,6 +82,6 @@ public class SamFormatConverterTest {
         compareSAMs.samFiles = samFiles;
         compareSAMs.doWork();
 
-        assertTrue(compareSAMs.areEqual());
+        assertEquals(compareSAMs.doWork(), 0);
     }
 }
