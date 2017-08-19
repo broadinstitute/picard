@@ -35,6 +35,7 @@ class ArtifactCounter {
 
     private final Set<String> leadingContexts = new HashSet<>();
     private final Set<String> trailingContexts = new HashSet<>();
+    private final int contextSize;
 
     // tuple to keep track of the different types of sub-contexts from a given reference context
     protected final class RefContext {
@@ -51,6 +52,7 @@ class ArtifactCounter {
     public ArtifactCounter(final String sampleAlias, final String library, final int contextSize, final boolean expectedTandemReads) {
         this.sampleAlias = sampleAlias;
         this.library = library;
+        this.contextSize = contextSize;
 
         // define the contexts
         final HashSet<String> fullContexts = new HashSet<>();
@@ -91,16 +93,10 @@ class ArtifactCounter {
     }
 
     /**
-     * Add a record to all the accumulators.
+     * Add a record to the full accumulator.
      */
     public void countRecord(final String refContext, final char calledBase, final SAMRecord rec) {
-        if (this.contextMap.containsKey(refContext)) {
-            final RefContext contexts = contextMap.get(refContext);
-            this.fullContextAccumulator.countRecord(contexts.ref, calledBase, rec);
-            this.halfContextAccumulator.countRecord(contexts.leading, calledBase, rec);
-            this.halfContextAccumulator.countRecord(contexts.trailing, calledBase, rec);
-            this.zeroContextAccumulator.countRecord(contexts.zero, calledBase, rec);
-        }
+        this.fullContextAccumulator.countRecord(refContext, calledBase, rec);
     }
 
     /**
@@ -140,7 +136,9 @@ class ArtifactCounter {
 
         // extract the detail metrics from each accumulator
         final ListMap<Transition, DetailPair> fullMetrics = this.fullContextAccumulator.calculateMetrics(sampleAlias, library);
+        this.halfContextAccumulator.fillHalfRecords(this.fullContextAccumulator, contextSize);
         final ListMap<Transition, DetailPair> halfMetrics = this.halfContextAccumulator.calculateMetrics(sampleAlias, library);
+        this.zeroContextAccumulator.fillZeroRecords(this.fullContextAccumulator, contextSize);
         final ListMap<Transition, DetailPair> zeroMetrics = this.zeroContextAccumulator.calculateMetrics(sampleAlias, library);
 
         // compute the summary metrics - one row for each transition
