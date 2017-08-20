@@ -126,7 +126,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         IOUtil.assertFileIsWritable(METRICS_FILE);
 
         // Open the inputs
-        final SamHeaderAndIterator headerAndIterator = openInputs();
+        final SamHeaderAndIterator headerAndIterator = openInputs(true);
         final SAMFileHeader header = headerAndIterator.header;
 
         // Create the output header
@@ -201,7 +201,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
      * Updates the program record if necessary.
      */
     private void updateProgramRecord(final SAMRecord record, final Map<String, String> chainedPgIds) {
-        if (PROGRAM_RECORD_ID != null) {
+        if (PROGRAM_RECORD_ID != null && ADD_PG_TAG_TO_READS) {
             final String pgId = record.getStringAttribute(SAMTag.PG.name());
             if (null == pgId) {
                 if (!warnedNullProgramRecords) {

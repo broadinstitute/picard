@@ -100,6 +100,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
             final File outputSam = new File(outputDir, TEST_BASE_NAME + ".sam");
             args.add("OUTPUT=" + outputSam.getAbsolutePath());
             args.add("METRICS_FILE=" + new File(outputDir, TEST_BASE_NAME + ".duplicate_metrics").getAbsolutePath());
+            args.add("ADD_PG_TAG_TO_READS=true");
             if (suppressPg) args.add("PROGRAM_RECORD_ID=null");
 
             // I generally prefer to call doWork rather than invoking the argument parser, but it is necessary
