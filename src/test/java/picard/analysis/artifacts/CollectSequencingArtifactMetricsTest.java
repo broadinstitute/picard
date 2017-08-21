@@ -85,6 +85,11 @@ public class CollectSequencingArtifactMetricsTest extends CommandLineProgramTest
     }
 
     @Test
+    public void testLargerContext() throws IOException {
+        runAnalysis("with_larger_context", "CONTEXT_SIZE=2");
+    }
+
+    @Test
     public void testDbSnp() throws IOException {
         runAnalysis("with_dbsnp", "DB_SNP=" + DB_SNP);
     }
