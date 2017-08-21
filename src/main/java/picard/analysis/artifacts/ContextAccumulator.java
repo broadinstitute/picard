@@ -43,44 +43,50 @@ class ContextAccumulator {
 
     public void countRecord(final String refContext, final char calledBase, final SAMRecord rec) {
         AlignmentAccumulator[] accumulators = artifactMap.get(refContext);
-        if(accumulators != null) {accumulators[Transition.baseIndexMap[calledBase]].countRecord(rec);}
+        if (accumulators != null) {
+            accumulators[Transition.baseIndexMap[calledBase]].countRecord(rec);
+        }
     }
 
     /**
-     * Fills a halfContextAccumualtor by summing over the appropriate counts from a fullContextAccumulator.
+     * Fills a halfContextAccumulator by summing over the appropriate counts from a fullContextAccumulator.
      */
-    public void fillHalfRecords(final ContextAccumulator fullContextAccumulator, int contextSize){
+    public void fillHalfRecords(final ContextAccumulator fullContextAccumulator, final int contextSize) {
         final String padding = StringUtil.repeatCharNTimes('N', contextSize);
-        for(Map.Entry<String,AlignmentAccumulator[]> fullContext : fullContextAccumulator.artifactMap.entrySet()){
+
+        for (Map.Entry<String,AlignmentAccumulator[]> fullContext : fullContextAccumulator.artifactMap.entrySet()) {
             final String context = fullContext.getKey();
             final char centralBase = context.charAt(contextSize);
             final String leadingKey = context.substring(0, contextSize) + centralBase + padding;
             final String trailingKey = padding + centralBase + context.substring(contextSize + 1, context.length());
 
-            AlignmentAccumulator[] trailingAlignmentAccumulators = this.artifactMap.get(trailingKey);
-            AlignmentAccumulator[] leadingAlignmentAccumulators = this.artifactMap.get(leadingKey);
+            final AlignmentAccumulator[] trailingAlignmentAccumulators = this.artifactMap.get(trailingKey);
+            final AlignmentAccumulator[] leadingAlignmentAccumulators = this.artifactMap.get(leadingKey);
+            final AlignmentAccumulator[] fullAlignmentAccumulators = fullContext.getValue();
 
-            for(int i=0; i < fullContext.getValue().length; i++){
-                trailingAlignmentAccumulators[i].includeCounts(fullContext.getValue()[i]);
-                leadingAlignmentAccumulators[i].includeCounts(fullContext.getValue()[i]);
+            for (int i=0; i < fullAlignmentAccumulators.length; i++) {
+                trailingAlignmentAccumulators[i].mergeCounts(fullContext.getValue()[i]);
+                leadingAlignmentAccumulators[i].mergeCounts(fullContext.getValue()[i]);
             }
         }
     }
 
     /**
-     * Fills a zeroContextAccumualtor by summing over the appropriate counts from a fullContextAccumulator.
+     * Fills a zeroContextAccumulator by summing over the appropriate counts from a fullContextAccumulator.
      */
-    public void fillZeroRecords(final ContextAccumulator fullContextAccumulator, int contextSize) {
+    public void fillZeroRecords(final ContextAccumulator fullContextAccumulator, final int contextSize) {
         final String padding = StringUtil.repeatCharNTimes('N', contextSize);
-        for(Map.Entry<String,AlignmentAccumulator[]> fullContext : fullContextAccumulator.artifactMap.entrySet()){
+
+        for (Map.Entry<String,AlignmentAccumulator[]> fullContext : fullContextAccumulator.artifactMap.entrySet()) {
             final String context = fullContext.getKey();
             final char centralBase = context.charAt(contextSize);
             final String key = padding + centralBase + padding;
 
-            AlignmentAccumulator[] alignmentAccumulators = this.artifactMap.get(key);
+            final AlignmentAccumulator[] zeroAlignmentAccumulators = this.artifactMap.get(key);
+            final AlignmentAccumulator[] fullAlignmentAccumulators = fullContext.getValue();
 
-            for(int i=0; i < fullContext.getValue().length; i++){
-                alignmentAccumulators[i].includeCounts(fullContext.getValue()[i]);
+            for (int i=0; i < fullAlignmentAccumulators.length; i++) {
+                zeroAlignmentAccumulators[i].mergeCounts(fullContext.getValue()[i]);
             }
         }
     }
@@ -178,7 +184,7 @@ class ContextAccumulator {
             }
         }
 
-        private void includeCounts(final AlignmentAccumulator other){
+        private void mergeCounts(final AlignmentAccumulator other) {
             this.R1_POS = this.R1_POS + other.R1_POS;
             this.R2_POS = this.R2_POS + other.R2_POS;
             this.R1_NEG = this.R1_NEG + other.R1_NEG;
