@@ -608,6 +608,10 @@ public class GenotypeConcordanceTest {
         }
     }
 
+    
+    /**
+     * Tests that we ignore a spanning deletion (*) instead of throwing an exception.
+     */
     @Test
     public void testSpanningDeletion() throws FileNotFoundException {
         final File truthVcfPath             = new File(TEST_DATA_PATH.getAbsolutePath(), "spanningDeletionTruth.vcf");
