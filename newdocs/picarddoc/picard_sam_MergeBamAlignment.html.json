@@ -17,6 +17,21 @@
       "options": []
     },
     {
+      "summary": "Add PG tag to each read in a SAM or BAM",
+      "name": "--ADD_PG_TAG_TO_READS",
+      "synonyms": "-",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
       "summary": "SAM or BAM file(s) with alignment data.",
       "name": "--ALIGNED_BAM",
       "synonyms": "-ALIGNED",

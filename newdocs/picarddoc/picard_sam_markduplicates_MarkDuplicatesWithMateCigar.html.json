@@ -2,6 +2,21 @@
   "summary": "Identifies duplicate reads, accounting for mate CIGAR.  ",
   "arguments": [
     {
+      "summary": "Add PG tag to each read in a SAM or BAM",
+      "name": "--ADD_PG_TAG_TO_READS",
+      "synonyms": "-",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
       "summary": "If not null, assume that the input file has this order even if the header says otherwise.",
       "name": "--ASSUME_SORT_ORDER",
       "synonyms": "-ASO",
