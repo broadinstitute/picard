@@ -1052,12 +1052,12 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                         new MultipleAlignmentSpec("15M1S", true, 200, true)}},
                 {"tie resolved via MAPQ", new MultipleAlignmentSpec[]{
                         new MultipleAlignmentSpec("1S15M", false, 200, false),
-                        new MultipleAlignmentSpec("1S13M1S", false, 205, true),
+                        new MultipleAlignmentSpec("1S14M1S", false, 205, true),
                         new MultipleAlignmentSpec("15M1S", true, 200, false),
                         new MultipleAlignmentSpec("14M2S", true, 195, false)}},
                 {"tie with same MAPQ resolved arbitrarily", new MultipleAlignmentSpec[]{
                         new MultipleAlignmentSpec("1S15M", false, 200, false),
-                        new MultipleAlignmentSpec("1S13M1S", false, 205, true),
+                        new MultipleAlignmentSpec("1S14M1S", false, 205, true),
                         new MultipleAlignmentSpec("15M1S", true, 205, true),
                         new MultipleAlignmentSpec("14M2S", true, 195, false)}},
                 {"one cigar with deletion and higher MAPQ", new MultipleAlignmentSpec[]{

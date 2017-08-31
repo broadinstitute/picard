@@ -344,4 +344,6 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         return samRecordSetBuilder.getSamReader();
     }
 
+    public SAMRecordSetBuilder getSamRecordSetBuilder() { return samRecordSetBuilder; }
+
 }
