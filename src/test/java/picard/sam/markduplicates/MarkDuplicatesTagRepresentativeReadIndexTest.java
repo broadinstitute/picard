@@ -42,6 +42,7 @@ public class MarkDuplicatesTagRepresentativeReadIndexTest extends AbstractMarkDu
     @Test
     public void testRepresentativeReadTag() {
         final MarkDuplicatesTagRepresentativeReadIndexTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(45);
         tester.testRepresentativeReads = true;
         tester.setExpectedOpticalDuplicate(1);
         String representativeReadName = "RUNID:1:1:16020:13352";
@@ -62,6 +63,7 @@ public class MarkDuplicatesTagRepresentativeReadIndexTest extends AbstractMarkDu
     @Test
     public void testMultiRepresentativeReadTags() {
         final MarkDuplicatesTagRepresentativeReadIndexTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(45);
         tester.testRepresentativeReads = true;
         tester.setExpectedOpticalDuplicate(3);
         // Duplicate set: size 2 - all optical

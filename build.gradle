@@ -47,7 +47,7 @@ jacoco {
     toolVersion = "0.7.5.201505241946"
 }
 
-final htsjdkVersion = System.getProperty('htsjdk.version', '2.10.1')
+final htsjdkVersion = System.getProperty('htsjdk.version', '2.11.0')
 
 // Get the jdk files we need to run javaDoc. We need to use these during compile, testCompile,
 // test execution, and gatkDoc generation, but we don't want them as part of the runtime
