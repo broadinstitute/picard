@@ -686,7 +686,12 @@ public class GenotypeConcordance extends CommandLineProgram {
             return destination.substring(0, insertIdx) + toInsert + destination.substring(insertIdx);
         }
         else {
-            return destination + toInsert;
+            // Just return the destination string if it ends on a spanning deletion, do not append to a spanning deletion
+            if (destination.length() > 0 && destination.substring(destination.length()-1).equals(Allele.SPAN_DEL_STRING)) {
+                return destination;
+            } else {
+                return destination + toInsert;
+            }
         }
     }
 
