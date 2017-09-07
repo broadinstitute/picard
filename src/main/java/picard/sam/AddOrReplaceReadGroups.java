@@ -88,9 +88,15 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
     @Argument(shortName = "DT", doc = "Read Group run date", optional = true)
     public Iso8601Date RGDT;
 
+    @Argument(shortName = "KS", doc = "Read Group key sequence", optional = true)
+    public String RGKS;
+
+    @Argument(shortName = "FO", doc = "Read Group flow order", optional = true)
+    public String RGFO;
+
     @Argument(shortName = "PI", doc = "Read Group predicted insert size", optional = true)
     public Integer RGPI;
-    
+
     @Argument(shortName = "PG", doc = "Read Group program group", optional = true)
     public String RGPG;
     
@@ -124,6 +130,8 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
         if (RGPI != null) rg.setPredictedMedianInsertSize(RGPI);
         if (RGPG != null) rg.setProgramGroup(RGPG);
         if (RGPM != null) rg.setPlatformModel(RGPM);
+        if (RGKS != null) rg.setKeySequence(RGKS);
+        if (RGFO != null) rg.setFlowOrder(RGFO);
 
         log.info(String.format("Created read group ID=%s PL=%s LB=%s SM=%s%n", rg.getId(), rg.getPlatform(), rg.getLibrary(), rg.getSample()));
 
