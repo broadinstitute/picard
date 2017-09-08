@@ -156,7 +156,7 @@ public class FilterVcf extends CommandLineProgram {
 
     private boolean isVcfOrBcf(final File file) {
         final String fileName = file.getName();
-        return fileName.endsWith(".vcf") || fileName.endsWith(".bcf");
+        return fileName.endsWith(IOUtil.VCF_FILE_EXTENSION) || fileName.endsWith(IOUtil.BCF_FILE_EXTENSION);
     }
     
     /** Javascript filter implementing VariantFilter */

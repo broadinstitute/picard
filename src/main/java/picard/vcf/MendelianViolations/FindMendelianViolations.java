@@ -235,7 +235,7 @@ public class FindMendelianViolations extends CommandLineProgram {
             headerLines.add(new VCFInfoHeaderLine(MendelianViolationDetector.ORIGINAL_AN, 1, VCFHeaderLineType.Integer, "Original AN"));
 
             for (final PedFile.PedTrio trio : pedFile.get().values()) {
-                final File outputFile = new File(VCF_DIR, IOUtil.makeFileNameSafe(trio.getFamilyId() + ".vcf"));
+                final File outputFile = new File(VCF_DIR, IOUtil.makeFileNameSafe(trio.getFamilyId() + IOUtil.VCF_FILE_EXTENSION));
                 LOG.info(String.format("Writing %s violation VCF to %s", trio.getFamilyId(), outputFile.getAbsolutePath()));
 
                 final VariantContextWriter out = new VariantContextWriterBuilder()
