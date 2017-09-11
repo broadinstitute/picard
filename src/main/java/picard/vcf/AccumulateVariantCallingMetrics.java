@@ -68,8 +68,8 @@ public class AccumulateVariantCallingMetrics extends CommandLineProgram {
         IOUtil.assertFileIsWritable(summaryOutputFile);
 
         // set up the collectors
-        final Map<String, Collection<CollectVariantCallingMetrics.VariantCallingDetailMetrics>> sampleDetailsMap = new HashMap<>();
-        final Collection<CollectVariantCallingMetrics.VariantCallingSummaryMetrics> summaries = new ArrayList<>();
+        final Map<String, CollectVariantCallingMetrics.VariantCallingDetailMetrics> collapsedSampleDetailsMap = new HashMap<>();
+        final CollectVariantCallingMetrics.VariantCallingSummaryMetrics collapsedSummary = new CollectVariantCallingMetrics.VariantCallingSummaryMetrics();
 
         for (final File file : INPUT) {
             final String inputPrefix = file.getAbsolutePath() + ".";
@@ -88,11 +88,12 @@ public class AccumulateVariantCallingMetrics extends CommandLineProgram {
                     detailedMetrics.calculateFromDerivedFields();
                     totalHetDepth += detailedMetrics.TOTAL_HET_DEPTH;
 
-                    // add it to the list of metrics for that sample so that we can merge them later
-                    sampleDetailsMap.computeIfAbsent(detailedMetrics.SAMPLE_ALIAS, f -> new ArrayList<>()).add(detailedMetrics);
+                    // collapse it into to the main metrics for that sample
+                    final CollectVariantCallingMetrics.VariantCallingDetailMetrics sampleDetails = collapsedSampleDetailsMap.computeIfAbsent(detailedMetrics.SAMPLE_ALIAS, f -> new CollectVariantCallingMetrics.VariantCallingDetailMetrics());
+                    sampleDetails.merge(detailedMetrics);
                 }
 
-                // next, read in the summary metrics
+                // next, read in the new summary metrics
                 final File summary = new File(inputPrefix + CollectVariantCallingMetrics.VariantCallingSummaryMetrics.getFileExtension());
                 IOUtil.assertFileIsReadable(summary);
                 MetricsFile<CollectVariantCallingMetrics.VariantCallingSummaryMetrics, ?> summaryMetricsFile = getMetricsFile();
@@ -101,34 +102,26 @@ public class AccumulateVariantCallingMetrics extends CommandLineProgram {
                     throw new PicardException(String.format("Expected 1 row in the summary metrics file but saw %d", summaryMetricsFile.getMetrics().size()));
                 }
 
-                // re-calculate internal fields from derived fields and add it to the list of summary metrics
+                // re-calculate internal fields from derived fields and merge it into the main summary metrics
                 final CollectVariantCallingMetrics.VariantCallingSummaryMetrics summaryMetrics = summaryMetricsFile.getMetrics().get(0);
                 summaryMetrics.calculateFromDerivedFields(totalHetDepth);
-                summaries.add(summaryMetrics);
+                collapsedSummary.merge(summaryMetrics);
             } catch (IOException e) {
                 throw new PicardException(String.format("Cannot read from metrics files with prefix %s", inputPrefix));
             }
         }
 
-        // now merge all of the accumulated metrics
-        final Collection<CollectVariantCallingMetrics.VariantCallingDetailMetrics> collapsedDetails = new ArrayList<>();
-        sampleDetailsMap.values().forEach(sampleDetails -> {
-            final CollectVariantCallingMetrics.VariantCallingDetailMetrics collapsed = new CollectVariantCallingMetrics.VariantCallingDetailMetrics();
-            CollectVariantCallingMetrics.VariantCallingDetailMetrics.foldInto(collapsed, sampleDetails);
-            collapsed.calculateDerivedFields();
-            collapsedDetails.add(collapsed);
-        });
-        final CollectVariantCallingMetrics.VariantCallingSummaryMetrics collapsedSummary = new CollectVariantCallingMetrics.VariantCallingSummaryMetrics();
-        CollectVariantCallingMetrics.VariantCallingSummaryMetrics.foldInto(collapsedSummary, summaries);
-        collapsedSummary.calculateDerivedFields();
-
         // prepare and write the finalized merged metrics
         final MetricsFile<CollectVariantCallingMetrics.VariantCallingDetailMetrics, Integer> detail = getMetricsFile();
-        final MetricsFile<CollectVariantCallingMetrics.VariantCallingSummaryMetrics, Integer> summary = getMetricsFile();
-        summary.addMetric(collapsedSummary);
-        collapsedDetails.forEach(detail::addMetric);
-
+        collapsedSampleDetailsMap.values().forEach((v)-> {
+            v.calculateDerivedFields();
+            detail.addMetric(v);
+        });
         detail.write(detailOutputFile);
+
+        final MetricsFile<CollectVariantCallingMetrics.VariantCallingSummaryMetrics, Integer> summary = getMetricsFile();
+        collapsedSummary.calculateDerivedFields();
+        summary.addMetric(collapsedSummary);
         summary.write(summaryOutputFile);
 
         return 0;
