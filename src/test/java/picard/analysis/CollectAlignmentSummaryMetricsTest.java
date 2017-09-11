@@ -117,6 +117,77 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         }
     }
 
+
+    @Test
+    public void testSupplementaryReadsAndBases() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_supplementary.sam");
+        final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test_supplementary.fasta");
+        final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
+        outfile.deleteOnExit();
+        final String[] args = new String[] {
+                "INPUT="  + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
+        output.read(new FileReader(outfile));
+
+        Assert.assertEquals(output.getMetrics().size(), 3);
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.MEAN_READ_LENGTH, 101.0);
+            switch (metrics.CATEGORY) {
+                case FIRST_OF_PAIR:
+                    Assert.assertEquals(metrics.TOTAL_READS, 1);
+                    Assert.assertEquals(metrics.PF_READS, 1);
+                    Assert.assertEquals(metrics.PF_NOISE_READS, 0);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 1);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 21);
+                    Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 19.0);
+                    Assert.assertEquals(metrics.PF_READS_ALIGNED, 1);
+                    Assert.assertEquals(metrics.PF_READS_IMPROPER_PAIRS, 0);
+                    Assert.assertEquals(metrics.PCT_PF_READS_IMPROPER_PAIRS, 0.0);
+                    Assert.assertEquals(metrics.PF_ALIGNED_BASES, 101);
+                    Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.188119);
+                    Assert.assertEquals(metrics.BAD_CYCLES, 19);
+                    break;
+                case SECOND_OF_PAIR:
+                    Assert.assertEquals(metrics.TOTAL_READS, 2);
+                    Assert.assertEquals(metrics.PF_READS, 2);
+                    Assert.assertEquals(metrics.PF_NOISE_READS, 0);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 1);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 66);
+                    Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 2.5);
+                    Assert.assertEquals(metrics.PF_READS_ALIGNED, 1);
+                    Assert.assertEquals(metrics.PF_READS_IMPROPER_PAIRS, 1);
+                    Assert.assertEquals(metrics.PCT_PF_READS_IMPROPER_PAIRS, 1.0);
+                    Assert.assertEquals(metrics.PF_ALIGNED_BASES, 202);
+                    Assert.assertEquals(metrics.PCT_READS_ALIGNED_IN_PAIRS, 0.0);
+                    Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.024752);
+                    Assert.assertEquals(metrics.BAD_CYCLES, 3);
+                    break;
+                case PAIR:
+                    Assert.assertEquals(metrics.TOTAL_READS, 3);
+                    Assert.assertEquals(metrics.PF_READS, 3);
+                    Assert.assertEquals(metrics.PF_NOISE_READS, 0);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 2);
+                    Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 87);
+                    Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
+                    Assert.assertEquals(metrics.PF_READS_ALIGNED, 2);
+                    Assert.assertEquals(metrics.PF_READS_IMPROPER_PAIRS, 1);
+                    Assert.assertEquals(metrics.PCT_PF_READS_IMPROPER_PAIRS, 0.5);
+                    Assert.assertEquals(metrics.PF_ALIGNED_BASES, 303);
+                    Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.079208);
+                    Assert.assertEquals(metrics.BAD_CYCLES, 22);
+                    break;
+                case UNPAIRED:
+                default:
+                    Assert.fail("Data does not contain this category: " + metrics.CATEGORY);
+            }
+        }
+    }
+
     @Test
     public void testBisulfite() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_bisulfite_test.sam");
