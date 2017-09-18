@@ -255,7 +255,17 @@ public class LiftoverVcf extends CommandLineProgram {
             final ReferenceSequence refSeq;
 
             // if the target is null OR (the target is reverse complemented AND the variant is a non-biallelic indel or mixed), then we cannot lift it over
-            if (target.isNegativeStrand()) {
+            if (!refSeqs.containsKey(target.getContig())) {
+                rejectVariant(ctx, FILTER_NO_TARGET);
+
+                final String missingContigMessage = "Encountered a contig, " + target.getContig() + " that is not part of the target reference.";
+                if (WARN_ON_MISSING_CONTIG) {
+                    log.warn(missingContigMessage);
+                } else {
+                    log.error(missingContigMessage);
+                    return EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE;
+                }
+            } else if (target.isNegativeStrand()) {
                 if (ctx.isMixed() || (ctx.isIndel() && !ctx.isBiallelic())){
                     rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_INDEL);
                 }
@@ -268,16 +278,6 @@ public class LiftoverVcf extends CommandLineProgram {
                     } else {
                         tryToAddVariant(flippedVC, refSeq, ctx);
                     }
-                }
-            } else if (!refSeqs.containsKey(target.getContig())) {
-                rejectVariant(ctx, FILTER_NO_TARGET);
-
-                final String missingContigMessage = "Encountered a contig, " + target.getContig() + " that is not part of the target reference.";
-                if (WARN_ON_MISSING_CONTIG) {
-                    log.warn(missingContigMessage);
-                } else {
-                    log.error(missingContigMessage);
-                    return EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE;
                 }
             } else {
                 refSeq = refSeqs.get(target.getContig());
@@ -423,7 +423,7 @@ public class LiftoverVcf extends CommandLineProgram {
         }
 
         // a boolean to protect against trying to access the -1 position in the reference array
-        final boolean addToStart = target.getStart() > 1;
+        final boolean addToStart = source.isIndel() && target.getStart() > 1;
 
         final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(2);
 
@@ -434,10 +434,14 @@ public class LiftoverVcf extends CommandLineProgram {
             // target.getStart is 1-based, reference bases are 0-based
             final StringBuilder alleleBuilder = new StringBuilder(target.getEnd() - target.getStart() + 1);
 
-            if (addToStart) alleleBuilder.append((char) referenceSequence.getBases()[target.getStart() - 2]);
-            alleleBuilder.append(SequenceUtil.reverseComplement(oldAllele.getBaseString().substring(1, oldAllele.length())));
-            if (!addToStart) alleleBuilder.append((char) referenceSequence.getBases()[target.getEnd() - 1]);
-
+            if (source.isIndel()) {
+                if (addToStart) alleleBuilder.append((char) referenceSequence.getBases()[target.getStart() - 2]);
+                alleleBuilder.append(SequenceUtil.reverseComplement(oldAllele.getBaseString().substring(1, oldAllele.length())));
+                if (!addToStart) alleleBuilder.append((char) referenceSequence.getBases()[target.getEnd() - 1]);
+            }
+            else {
+                alleleBuilder.append(SequenceUtil.reverseComplement(oldAllele.getBaseString().substring(0, oldAllele.length())));
+            }
             final Allele fixedAllele = Allele.create(alleleBuilder.toString(), oldAllele.isReference());
             alleles.add(fixedAllele);
             reverseComplementAlleleMap.put(oldAllele, fixedAllele);
