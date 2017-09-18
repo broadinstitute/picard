@@ -41,6 +41,10 @@ final public class MathUtil {
     /** The double value closest to 1 while still being less than 1. */
     public static final double MAX_PROB_BELOW_ONE = 0.9999999999999999d;
 
+    /** Constant to convert between the natural base e and 4.0.  Useful for
+     * entropy calculations on DNA. */
+    public static final double LOG_4_BASE_E = Math.log(4.0);
+
     /**
      *  this function mimics the behavior of log_1p but resulting in log _base 10_ of (1+x) instead of natural log of 1+x
      */
@@ -110,6 +114,18 @@ final public class MathUtil {
         BigDecimal bd = new BigDecimal(num);
         bd = bd.setScale(precision, BigDecimal.ROUND_HALF_UP);
         return bd.doubleValue();
+    }
+
+    /**
+     * Divide two Doubles but return 0.0 if the denominator is 0
+     * @param numerator dividend
+     * @param denominator divisor
+     * @return numerator/denominator unless denominator is 0, in which case returns 0
+     */
+    public static double divide(final double numerator, final double denominator) {
+        return Math.abs(0.0 - denominator) >  0.000001
+                ? numerator / denominator
+                : 0.0;
     }
 
     /** Returns the largest value stored in the array. */

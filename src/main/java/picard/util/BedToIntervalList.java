@@ -3,7 +3,6 @@ package picard.util;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
@@ -17,10 +16,11 @@ import htsjdk.tribble.annotation.Strand;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Intervals;
 
@@ -31,10 +31,11 @@ import java.io.IOException;
  * @author nhomer
  */
 @CommandLineProgramProperties(
-        usage = BedToIntervalList.USAGE_SUMMARY + BedToIntervalList.USAGE_DETAILS,
-        usageShort = BedToIntervalList.USAGE_SUMMARY,
+        summary = BedToIntervalList.USAGE_SUMMARY + BedToIntervalList.USAGE_DETAILS,
+        oneLineSummary = BedToIntervalList.USAGE_SUMMARY,
         programGroup = Intervals.class
 )
+@DocumentedFeature
 public class BedToIntervalList extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Converts a BED file to a Picard Interval List.  " ;
     static final String USAGE_DETAILS = "This tool provides easy conversion from BED to the Picard interval_list format which is " +
@@ -65,9 +66,16 @@ public class BedToIntervalList extends CommandLineProgram {
             "     -Strand - Indicates +/- strand for the interval (either + or -) <br /> " +
             "     -Interval name - (Each interval should have a unique name) " +
             "</pre>" +
-            "  <br /><br />" +
-            "This tool requires sequence dictionary file (with \".dict\" extension), which can be created from a reference sequence " +
-            "using Picard's CreateSequenceDictionary tool."+
+            "<br/>" +
+            "This tool requires a sequence dictionary, provided with the SEQUENCE_DICTIONARY or SD argument. " +
+            "The value given to this argument can be any of the following:" +
+            "<pre>" +
+            "    - A file with .dict extension generated using Picard's CreateSequenceDictionaryTool</br>" +
+            "    - A reference.fa or reference.fasta file with a reference.dict in the same directory</br>" +
+            "    - Another IntervalList with @SQ lines in the header from which to generate a dictionary</br>" +
+            "    - A VCF that contains #contig lines from which to generate a sequence dictionary</br>" +
+            "    - A SAM or BAM file with @SQ lines in the header from which to generate a dictionary</br>" +
+            "</pre>" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar BedToIntervalList \\<br />" +
@@ -78,19 +86,20 @@ public class BedToIntervalList extends CommandLineProgram {
             "<br /> <br /> "+
             "<hr />"
             ;
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input BED file")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input BED file")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, doc = "The sequence dictionary")
+    @Argument(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME,
+            doc = "The sequence dictionary, or BAM/VCF/IntervalList from which a dictionary can be extracted.")
     public File SEQUENCE_DICTIONARY;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output Picard Interval List")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output Picard Interval List")
     public File OUTPUT;
 
-    @Option(doc="If true, sort the output interval list before writing it.")
+    @Argument(doc="If true, sort the output interval list before writing it.")
     public boolean SORT = true;
 
-    @Option(doc="If true, unique the output interval list by merging overlapping regions, before writing it (implies sort=true).")
+    @Argument(doc="If true, unique the output interval list by merging overlapping regions, before writing it (implies sort=true).")
     public boolean UNIQUE = false;
 
     final Log LOG = Log.getInstance(getClass());

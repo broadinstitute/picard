@@ -1,3 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2015 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package picard.analysis;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -14,6 +38,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
+import static picard.analysis.GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector.*;
 
 import java.io.File;
 import java.io.FileReader;
@@ -41,6 +66,8 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
 
     private final static File TEST_DIR = new File("testdata/picard/sam/CollectGcBiasMetrics/");
     private final File dict = new File(TEST_DIR, "MNOheader.dict");
+    private final String REFERENCE_FILE_1 = "testdata/picard/metrics/chrMNO.reference.fasta";
+    private final String REFERENCE_FILE_2 = "testdata/picard/metrics/chrM.reference.fasta";
 
     File tempSamFileChrM_O;
     File tempSamFileAllChr;
@@ -115,13 +142,13 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
         outfile.deleteOnExit();
         detailsOutfile.deleteOnExit();
 
-        runGcBias(tempSamFileChrM_O, outfile, detailsOutfile);
+        runGcBias(tempSamFileChrM_O, REFERENCE_FILE_1, outfile, detailsOutfile, false);
 
         final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> output = new MetricsFile<GcBiasSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
 
         for (final GcBiasSummaryMetrics metrics : output.getMetrics()) {
-            if (metrics.ACCUMULATION_LEVEL.equals("All Reads")) { //ALL_READS level
+            if (metrics.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS)) { //ALL_READS level
                 Assert.assertEquals(metrics.TOTAL_CLUSTERS, 300);
                 Assert.assertEquals(metrics.ALIGNED_READS, 600);
                 Assert.assertEquals(metrics.AT_DROPOUT, 21.624498);
@@ -204,8 +231,8 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
         detailsOutfile.deleteOnExit();
         allChrDetailsOutfile.deleteOnExit();
 
-        runGcBias(tempSamFileChrM_O, outfile, detailsOutfile);
-        runGcBias(tempSamFileAllChr, allChrOutFile, allChrDetailsOutfile);
+        runGcBias(tempSamFileChrM_O, REFERENCE_FILE_1, outfile, detailsOutfile, false);
+        runGcBias(tempSamFileAllChr, REFERENCE_FILE_1, allChrOutFile, allChrDetailsOutfile, false);
 
         final MetricsFile<GcBiasDetailMetrics, Comparable<?>> outputDetails = new MetricsFile<GcBiasDetailMetrics, Comparable<?>>();
         outputDetails.read(new FileReader(detailsOutfile));
@@ -218,11 +245,12 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
 
         //Output for the two sam files are only the same for the "All Reads" level
         for (final GcBiasDetailMetrics metrics : outputAllChrDetails.getMetrics()) {
-            if (metrics.ACCUMULATION_LEVEL.equals("All Reads")) {
+            if (metrics.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS)) {
                 Assert.assertEquals(metrics.WINDOWS, details.get(i).WINDOWS);
                 i++;
+            } else {
+                break;
             }
-            else {break;}
         }
     }
 
@@ -234,11 +262,13 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
     public File build (final List<SAMRecordSetBuilder> setBuilder, final File unsortedSam, final SAMFileHeader header) throws IOException {
         final File sortedSam = File.createTempFile("CollectGcBias", ".bam", TEST_DIR);
         sortedSam.deleteOnExit();
+        final File sortedSamIdx = new File(TEST_DIR, sortedSam.getName() + ".idx");
+        sortedSamIdx.deleteOnExit();
 
         final SAMFileWriter writer = new SAMFileWriterFactory()
                 .setCreateIndex(true).makeBAMWriter(header, false, unsortedSam);
 
-        for( final SAMRecordSetBuilder subSetBuilder : setBuilder){
+        for (final SAMRecordSetBuilder subSetBuilder : setBuilder) {
             for (final SAMRecord record : subSetBuilder) {
                 writer.addAlignment(record);
             }
@@ -260,8 +290,8 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
     /////////////////////////////////////////////////////////////////////////////
     // Runs CollectGcBias with input Sam file and outputs details and summary files for truth assertion.
     /////////////////////////////////////////////////////////////////////////////
-    public void runGcBias (final File input, final File outfile, final File detailsOutfile) throws IOException {
-        final String referenceFile = "testdata/picard/metrics/chrMNO.reference.fasta";
+    public void runGcBias (final File input, final String referenceFile, final File summaryOutfile, final File detailsOutfile,
+                           final boolean nonDups) throws IOException {
         final File pdf = File.createTempFile("test", ".pdf");
         pdf.deleteOnExit();
 
@@ -274,7 +304,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + detailsOutfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + referenceFile,
-                "SUMMARY_OUTPUT=" + outfile.getAbsolutePath(),
+                "SUMMARY_OUTPUT=" + summaryOutfile.getAbsolutePath(),
                 "CHART_OUTPUT=" + pdf.getAbsolutePath(),
                 "SCAN_WINDOW_SIZE=" + windowSize,
                 "MINIMUM_GENOME_FRACTION=" + minGenFraction,
@@ -282,9 +312,84 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
                 "LEVEL=ALL_READS",
                 "LEVEL=SAMPLE",
                 "LEVEL=READ_GROUP",
-                "ASSUME_SORTED=" + assumeSorted
+                "ASSUME_SORTED=" + assumeSorted,
+                "ALSO_IGNORE_DUPLICATES=" + nonDups
         };
-        Assert.assertEquals(runPicardCommandLine(args), 0);
+        runPicardCommandLine(args);
+    }
+
+    /**
+     * Compares metric's results by summary files without duplicates.
+     * @throws IOException
+     */
+    @Test
+    public void runNonDupsComparisonTest() throws IOException {
+        final File inputFileWithDuplicates = new File("testdata/picard/metrics/chrMReads.sam");
+        final File detailsOutfile = File.createTempFile("test", ".gc_bias_detail_metrics");
+        final File summaryOutfile = File.createTempFile("test", ".gc_bias_summary_metrics");
+        detailsOutfile.deleteOnExit();
+        summaryOutfile.deleteOnExit();
+
+        runGcBias(inputFileWithDuplicates, REFERENCE_FILE_2, summaryOutfile, detailsOutfile, true);
+
+        final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> outputSummary = new MetricsFile<>();
+        outputSummary.read(new FileReader(summaryOutfile));
+
+        for (final GcBiasSummaryMetrics summary : outputSummary.getMetrics()) {
+            if (summary.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS) && summary.READS_USED.equals(READS_USED_UNIQUE)) { //ALL_READS level for case without duplicates
+                Assert.assertEquals(summary.TOTAL_CLUSTERS, 3);
+                Assert.assertEquals(summary.ALIGNED_READS, 3);
+                Assert.assertEquals(summary.AT_DROPOUT, 79.180328);
+                Assert.assertEquals(summary.GC_DROPOUT, 12.28901);
+                Assert.assertEquals(summary.GC_NC_0_19, 0.0);
+                Assert.assertEquals(summary.GC_NC_20_39, 0.0);
+                Assert.assertEquals(summary.GC_NC_40_59, 1.246783);
+                Assert.assertEquals(summary.GC_NC_60_79, 0.0);
+                Assert.assertEquals(summary.GC_NC_80_100, 0.0);
+            }
+            if (summary.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS) && summary.READS_USED.equals(READS_USED_ALL)) { //ALL_READS level
+                Assert.assertEquals(summary.TOTAL_CLUSTERS, 5);
+                Assert.assertEquals(summary.ALIGNED_READS, 5);
+                Assert.assertEquals(summary.AT_DROPOUT, 79.180328);
+                Assert.assertEquals(summary.GC_DROPOUT, 10.37037);
+                Assert.assertEquals(summary.GC_NC_0_19, 0.0);
+                Assert.assertEquals(summary.GC_NC_20_39, 0.0);
+                Assert.assertEquals(summary.GC_NC_40_59, 1.246783);
+                Assert.assertEquals(summary.GC_NC_60_79, 0.0);
+                Assert.assertEquals(summary.GC_NC_80_100, 0.0);
+            }
+        }
+    }
+
+    /**
+     * If SAM/BAM file with '*' in SEQ field omit this read.
+     */
+    @Test
+    public void runCheckingNoSEQTest() throws IOException {
+        final File input = new File("testdata/picard/metrics/chrM_NO_SEQ.sam");
+        final File summaryOutfile = File.createTempFile("test", ".gc_bias.summary_metrics");
+        final File detailsOutfile = File.createTempFile("test", ".gc_bias.detail_metrics");
+        summaryOutfile.deleteOnExit();
+        detailsOutfile.deleteOnExit();
+
+        runGcBias(input, REFERENCE_FILE_2, summaryOutfile, detailsOutfile, false);
+
+        final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
+        output.read(new FileReader(summaryOutfile));
+
+        for (final GcBiasSummaryMetrics metrics : output.getMetrics()) {
+            if (metrics.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS)) { //ALL_READS level
+                Assert.assertEquals(metrics.TOTAL_CLUSTERS, 0);
+                Assert.assertEquals(metrics.ALIGNED_READS, 1);
+                Assert.assertEquals(metrics.AT_DROPOUT, 78.682453);
+                Assert.assertEquals(metrics.GC_DROPOUT, 14.693382);
+                Assert.assertEquals(metrics.GC_NC_0_19, 0.0);
+                Assert.assertEquals(metrics.GC_NC_20_39, 0.0);
+                Assert.assertEquals(metrics.GC_NC_40_59, 1.246783);
+                Assert.assertEquals(metrics.GC_NC_60_79, 0.0);
+                Assert.assertEquals(metrics.GC_NC_80_100, 0.0);
+            }
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////

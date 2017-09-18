@@ -26,9 +26,7 @@ package picard.vcf.filter;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextUtils;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 
 import java.util.HashMap;

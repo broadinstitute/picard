@@ -2,14 +2,12 @@ package picard.util;
 
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.util.IOUtil;
-import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * @author nhomer

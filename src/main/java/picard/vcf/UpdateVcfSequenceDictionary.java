@@ -36,13 +36,17 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 
 /**
  * Takes a VCF file and a Sequence Dictionary (from a variety of file types) and updates the Sequence Dictionary in VCF.
@@ -51,18 +55,18 @@ import java.io.File;
  *
  */
 @CommandLineProgramProperties(
-        usage = "Takes a VCF and a second file that contains a sequence dictionary and updates the VCF with the new sequence dictionary.",
-        usageShort = "Takes a VCF and a second file that contains a sequence dictionary and updates the VCF with the new sequence dictionary.",
-        programGroup = VcfOrBcf.class
-)
+        summary = "Takes a VCF and a second file that contains a sequence dictionary and updates the VCF with the new sequence dictionary.",
+        oneLineSummary = "Takes a VCF and a second file that contains a sequence dictionary and updates the VCF with the new sequence dictionary.",
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class UpdateVcfSequenceDictionary extends CommandLineProgram {
-     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF to be written.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF to be written.")
     public File OUTPUT;
 
-    @Option(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, doc = "A Sequence Dictionary (can be read from one of the " +
+    @Argument(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, doc = "A Sequence Dictionary (can be read from one of the " +
             "following file types (SAM, BAM, VCF, BCF, Interval List, Fasta, or Dict)")
     public File SEQUENCE_DICTIONARY;
 
@@ -89,7 +93,13 @@ public class UpdateVcfSequenceDictionary extends CommandLineProgram {
         if (CREATE_INDEX)
             builder.setOption(Options.INDEX_ON_THE_FLY);
 
-        final VariantContextWriter vcfWriter = builder.setOutputFile(OUTPUT).build();
+        try {
+            builder.setOutputStream(new FileOutputStream(OUTPUT));
+        } catch (final FileNotFoundException ex ) {
+            throw new PicardException("Could not open " + OUTPUT.getAbsolutePath() + ": " + ex.getMessage(), ex);
+        }
+
+        final VariantContextWriter vcfWriter = builder.build();
         fileHeader.setSequenceDictionary(samSequenceDictionary);
         vcfWriter.writeHeader(fileHeader);
 

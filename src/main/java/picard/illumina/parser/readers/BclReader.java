@@ -23,7 +23,6 @@
 */
 package picard.illumina.parser.readers;
 
-import htsjdk.samtools.Defaults;
 import htsjdk.samtools.util.BlockCompressedInputStream;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
@@ -36,7 +35,6 @@ import picard.util.UnsignedTypeUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -72,32 +70,14 @@ import java.util.zip.GZIPInputStream;
  * <p/>
  * So the output base/quality will be a (T/34)
  */
-public class BclReader implements CloseableIterator<BclData> {
-    private static final byte BASE_MASK = 0x0003;
+public class BclReader extends BaseBclReader implements CloseableIterator<BclData> {
     private static final int HEADER_SIZE = 4;
-    private static final byte[] BASE_LOOKUP = new byte[]{'A', 'C', 'G', 'T'};
-
-    private final InputStream[] streams;
-    private final File[] streamFiles;
-    private final int[] outputLengths;
-    int[] numClustersPerCycle;
-
-    private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
-    private BclData queue = null;
+    protected BclData queue = null;
 
     public BclReader(final List<File> bclsForOneTile, final int[] outputLengths,
                      final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final boolean seekable) {
+        super(outputLengths, bclQualityEvaluationStrategy);
         try {
-            this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
-            this.outputLengths = outputLengths;
-
-            int cycles = 0;
-            for (final int outputLength : outputLengths) {
-                cycles += outputLength;
-            }
-            this.streams = new InputStream[cycles];
-            this.streamFiles = new File[cycles];
-            this.numClustersPerCycle = new int[cycles];
 
             final ByteBuffer byteBuffer = ByteBuffer.allocate(HEADER_SIZE);
             byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -173,14 +153,8 @@ public class BclReader implements CloseableIterator<BclData> {
 
 
     public BclReader(final File bclFile, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final boolean seekable) {
+        super(new int[]{1}, bclQualityEvaluationStrategy);
         try {
-
-            this.outputLengths = new int[]{1};
-            this.streams = new InputStream[1];
-            this.streamFiles = new File[1];
-            this.numClustersPerCycle = new int[]{1};
-            this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
-
             final ByteBuffer byteBuffer = ByteBuffer.allocate(HEADER_SIZE);
             final String filePath = bclFile.getName();
             final boolean isGzip = filePath.endsWith(".gz");
@@ -195,7 +169,7 @@ public class BclReader implements CloseableIterator<BclData> {
             byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
             this.numClustersPerCycle[0] = byteBuffer.getInt();
             if (!isBgzf && !isGzip) {
-                assertProperFileStructure(bclFile, this.numClustersPerCycle[0], stream);
+                assertProperFileStructure(bclFile, this.getNumClusters(), stream);
             }
             this.streams[0] = stream;
             this.streamFiles[0] = bclFile;
@@ -209,38 +183,6 @@ public class BclReader implements CloseableIterator<BclData> {
         if (numClusters != elementsInFile) {
             CloserUtil.close(stream);
             throw new PicardException("Expected " + numClusters + " in file " + file.getAbsolutePath() + " but found " + elementsInFile);
-        }
-    }
-
-    InputStream open(final File file, final boolean seekable, final boolean isGzip, final boolean isBgzf) throws IOException {
-        final String filePath = file.getAbsolutePath();
-
-        try {
-            // Open up a buffered stream to read from the file and optionally wrap it in a gzip stream
-            // if necessary
-            if (isBgzf) {
-                // Only BlockCompressedInputStreams can seek, and only if they are fed a SeekableStream.
-                return new BlockCompressedInputStream(IOUtil.maybeBufferedSeekableStream(file));
-            } else if (isGzip) {
-                if (seekable) {
-                    throw new IllegalArgumentException(
-                            String.format("Cannot create a seekable reader for gzip bcl: %s.", filePath)
-                    );
-                }
-                return (IOUtil.maybeBufferInputStream(new GZIPInputStream(new FileInputStream(file), Defaults.BUFFER_SIZE / 2),
-                        Defaults.BUFFER_SIZE / 2));
-            } else {
-                if (seekable) {
-                    throw new IllegalArgumentException(
-                            String.format("Cannot create a seekable reader for provided bcl: %s.", filePath)
-                    );
-                }
-                return IOUtil.maybeBufferInputStream(new FileInputStream(file));
-            }
-        } catch (final FileNotFoundException fnfe) {
-            throw new PicardException("File not found: (" + filePath + ")", fnfe);
-        } catch (final IOException ioe) {
-            throw new PicardException("Error reading file: (" + filePath + ")", ioe);
         }
     }
 
@@ -258,14 +200,10 @@ public class BclReader implements CloseableIterator<BclData> {
         return queue != null;
     }
 
-    private long getNumClusters() {
-        return numClustersPerCycle[0];
-    }
-
     protected void assertProperFileStructure(final File file) {
         final long elementsInFile = file.length() - HEADER_SIZE;
-        if (numClustersPerCycle[0] != elementsInFile) {
-            throw new PicardException("Expected " + numClustersPerCycle[0]  + " in file " + file.getAbsolutePath() + " but found " + elementsInFile);
+        if (getNumClusters() != elementsInFile) {
+            throw new PicardException("Expected " + getNumClusters() + " in file " + file.getAbsolutePath() + " but found " + elementsInFile);
 
         }
     }
@@ -306,14 +244,7 @@ public class BclReader implements CloseableIterator<BclData> {
                         return;
                     }
 
-                    if (readByte == 0) {
-                        //NO CALL, don't confuse with an A call
-                        data.bases[read][cycle] = (byte) '.';
-                        data.qualities[read][cycle] = (byte) 2;
-                    } else {
-                        data.bases[read][cycle] = BASE_LOOKUP[readByte & BASE_MASK];
-                        data.qualities[read][cycle] = bclQualityEvaluationStrategy.reviseAndConditionallyLogQuality((byte) (readByte >>> 2));
-                    }
+                    decodeBasecall(data, read, cycle, readByte);
                     totalCycleCount++;
                 } catch (final IOException ioe) {
                     throw new RuntimeIOException(ioe);

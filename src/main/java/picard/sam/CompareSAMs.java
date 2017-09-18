@@ -32,10 +32,11 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.SecondaryOrSupplementarySkippingIterator;
 import htsjdk.samtools.util.CloserUtil;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.PositionalArguments;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.PositionalArguments;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
@@ -50,10 +51,10 @@ import java.util.Map;
  * @author alecw@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = CompareSAMs.USAGE_SUMMARY + CompareSAMs.USAGE_DETAILS,
-        usageShort = CompareSAMs.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        summary = CompareSAMs.USAGE_SUMMARY + CompareSAMs.USAGE_DETAILS,
+        oneLineSummary = CompareSAMs.USAGE_SUMMARY,
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class CompareSAMs extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Compare two input \".sam\" or \".bam\" files.  ";
     static final String USAGE_DETAILS = "This tool initially compares the headers of SAM or BAM files. " +

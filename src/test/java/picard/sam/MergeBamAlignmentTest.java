@@ -26,6 +26,7 @@ package picard.sam;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -34,13 +35,11 @@ import picard.cmdline.CommandLineProgramTest;
 import picard.sam.testers.ValidateSamTester;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Field;
+import java.util.*;
 
 /**
  *  Test for the MergeBamAlignment class
@@ -63,13 +62,14 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     private static final File secondReadAlignedBam_firstHalf = new File(TEST_DATA_DIR, "firsthalf.read2.trimmed.aligned.sam");
     private static final File secondReadAlignedBam_secondHalf = new File(TEST_DATA_DIR, "secondhalf.read2.trimmed.aligned.sam");
     private static final File supplementalReadAlignedBam = new File(TEST_DATA_DIR, "aligned.supplement.sam");
-    private static final File alignedQuerynameSortedBam =
-            new File("testdata/picard/sam/aligned_queryname_sorted.sam");
+    private static final File alignedQuerynameSortedBam = new File("testdata/picard/sam/aligned_queryname_sorted.sam");
     private static final File fasta = new File("testdata/picard/sam/merger.fasta");
     private static final String bigSequenceName = "chr7"; // The longest sequence in merger.fasta
     private static final File sequenceDict = new File("testdata/picard/sam/merger.dict");
+    private static final File sequenceDict2 = new File("testdata/picard/sam/merger.2.dict");
     private static final File badorderUnmappedBam = new File(TEST_DATA_DIR, "unmapped.badorder.sam");
     private static final File badorderAlignedBam = new File(TEST_DATA_DIR, "aligned.badorder.sam");
+    private static final File multipleStrandsAlignedBam = new File(TEST_DATA_DIR, "aligned.both.strands.sam");
 
     // For EarliestFragment tests, tag placed on the alignments which are expected to be marked as primary.
     private static final String ONE_OF_THE_BEST_TAG = "YB";
@@ -212,6 +212,13 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 throw new Exception("Unexpected read name: " + sam.getReadName());
             }
 
+            final boolean pos = !sam.getReadNegativeStrandFlag();
+            Assert.assertEquals(sam.getAttribute("aa"), pos ? "Hello" : "olleH");
+            Assert.assertEquals(sam.getAttribute("ab"), pos ? "ATTCGG" : "CCGAAT");
+            Assert.assertEquals(sam.getAttribute("ac"), pos ? new byte[] {1,2,3} : new byte[] {3,2,1});
+            Assert.assertEquals(sam.getAttribute("as"), pos ? new short[]{1,2,3} : new short[]{3,2,1});
+            Assert.assertEquals(sam.getAttribute("ai"), pos ? new int[]  {1,2,3} : new int[]  {3,2,1});
+            Assert.assertEquals(sam.getAttribute("af"), pos ? new float[]{1,2,3} : new float[]{3,2,1});
         }
 
         // Quick test to make sure the program record gets picked up from the file if not specified
@@ -272,7 +279,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             // MIN_ADAPTER_BASES hanging off the end
             else if (sam.getReadName().equals("both_reads_align_min_adapter_bases_exceeded")) {
                 Assert.assertEquals(sam.getReferenceName(), "chr7");
-                Assert.assertTrue(sam.getCigarString().indexOf("S") == -1,
+                Assert.assertTrue(!sam.getCigarString().contains("S"),
                         "Read was clipped when it should not be.");
             } else if (sam.getReadName().equals("neither_read_aligns_or_present")) {
                 Assert.assertTrue(sam.getReadUnmappedFlag(), "Read should be unmapped but isn't");
@@ -288,9 +295,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             } else {
                 throw new Exception("Unexpected read name: " + sam.getReadName());
             }
-
         }
-
     }
 
     @Test(dataProvider="data")
@@ -300,8 +305,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final File target = File.createTempFile("target", "bam");
         target.deleteOnExit();
         final SamAlignmentMerger merger = new SamAlignmentMerger(unmapped,  target, fasta, null, true, false,
-                false, Arrays.asList(aligned), 1, null, null, null, null, null, null,
-                Arrays.asList(SamPairUtil.PairOrientation.FR),
+                false, Collections.singletonList(aligned), 1, null, null, null, null, null, null,
+                Collections.singletonList(SamPairUtil.PairOrientation.FR),
                 coordinateSorted ? SAMFileHeader.SortOrder.coordinate : SAMFileHeader.SortOrder.queryname,
                 new BestMapqPrimaryAlignmentSelectionStrategy(), false, false, 30);
 
@@ -562,7 +567,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             final HitSpec secondHitSpec = secondOfPair.isEmpty()? null: secondOfPair.get(i);
             final SAMRecord first = makeRead(alignedHeader, firstUnmappedRec, firstHitSpec, true, i);
             final SAMRecord second = makeRead(alignedHeader, secondUnmappedRec, secondHitSpec, false, i);
-            if (first != null && second != null) SamPairUtil.setMateInfo(first, second, alignedHeader);
+            if (first != null && second != null) SamPairUtil.setMateInfo(first, second);
             if (first != null) {
                 if (second == null) first.setMateUnmappedFlag(true);
                 alignedWriter.addAlignment(first);
@@ -937,7 +942,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         secondOfPair.setReadUnmappedFlag(true);
         secondOfPair.setReadPairedFlag(true);
         secondOfPair.setSecondOfPairFlag(true);
-        SamPairUtil.setMateInfo(firstOfPair, secondOfPair, header);
+        SamPairUtil.setMateInfo(firstOfPair, secondOfPair);
 
         final SAMFileWriter unmappedWriter = factory.makeSAMWriter(header, false, unmappedSam);
         unmappedWriter.addAlignment(firstOfPair);
@@ -948,7 +953,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         alignedSam.deleteOnExit();
 
         // Populate the header with SAMSequenceRecords
-        header.getSequenceDictionary().addSequence(new SAMSequenceRecord("chr1", 1000000));
+        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2));
 
         // Create 2 alignments for each end of pair
         final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
@@ -977,7 +982,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             secondOfPairAligned.setSecondOfPairFlag(true);
             secondOfPairAligned.setAttribute(SAMTag.HI.name(), i);
 
-            SamPairUtil.setMateInfo(firstOfPairAligned, secondOfPairAligned, header);
+            SamPairUtil.setMateInfo(firstOfPairAligned, secondOfPairAligned);
 
             alignedWriter.addAlignment(firstOfPairAligned);
             alignedWriter.addAlignment(secondOfPairAligned);
@@ -1047,12 +1052,12 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                         new MultipleAlignmentSpec("15M1S", true, 200, true)}},
                 {"tie resolved via MAPQ", new MultipleAlignmentSpec[]{
                         new MultipleAlignmentSpec("1S15M", false, 200, false),
-                        new MultipleAlignmentSpec("1S13M1S", false, 205, true),
+                        new MultipleAlignmentSpec("1S14M1S", false, 205, true),
                         new MultipleAlignmentSpec("15M1S", true, 200, false),
                         new MultipleAlignmentSpec("14M2S", true, 195, false)}},
                 {"tie with same MAPQ resolved arbitrarily", new MultipleAlignmentSpec[]{
                         new MultipleAlignmentSpec("1S15M", false, 200, false),
-                        new MultipleAlignmentSpec("1S13M1S", false, 205, true),
+                        new MultipleAlignmentSpec("1S14M1S", false, 205, true),
                         new MultipleAlignmentSpec("15M1S", true, 205, true),
                         new MultipleAlignmentSpec("14M2S", true, 195, false)}},
                 {"one cigar with deletion and higher MAPQ", new MultipleAlignmentSpec[]{
@@ -1102,7 +1107,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
             final String sequence = "chr1";
             // Populate the header with SAMSequenceRecords
-            header.getSequenceDictionary().addSequence(new SAMSequenceRecord(sequence, 1000000));
+            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2));
 
             final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
             for (final MultipleAlignmentSpec spec : specs) {
@@ -1227,7 +1232,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
         final String sequence = "chr1";
         // Populate the header with SAMSequenceRecords
-        header.getSequenceDictionary().addSequence(new SAMSequenceRecord(sequence, 1000000));
+        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2));
 
         final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
 
@@ -1242,7 +1247,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true,
-                new File(TEST_DATA_DIR, "cliptest.fasta"), output,
+                fasta, output,
                 SamPairUtil.PairOrientation.FR,
                 MergeBamAlignment.PrimaryAlignmentStrategy.BestEndMapq,
                 null, includeSecondary, null, null);
@@ -1292,13 +1297,37 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                                   final Boolean includeSecondary,
                                   final Boolean unmapContaminantReads,
                                   final SAMFileHeader.SortOrder sortOrder) {
+        doMergeAlignment(unmappedBam, alignedBams, read1AlignedBams, read2AlignedBams, read1Trim, read2Trim,
+                alignReadsOnly, clipAdapters, isBisulfiteSequence, maxInsOrDels,
+                progRecordId, progGroupVersion, progGroupCommandLine, progGroupName, pairedRun, refSeq, output,
+                expectedOrientation, primaryAlignmentStrategy, attributesToRetain, includeSecondary, unmapContaminantReads,
+                sortOrder, null);
+    }
 
-        final List<String> args = new ArrayList<String>(Arrays.asList(
+    private void doMergeAlignment(final File unmappedBam, final List<File> alignedBams,
+                                  final List<File> read1AlignedBams, final List<File> read2AlignedBams, final Integer read1Trim, final Integer read2Trim,
+                                  final boolean alignReadsOnly, final boolean clipAdapters, final boolean isBisulfiteSequence, final int maxInsOrDels,
+                                  final String progRecordId, final String progGroupVersion, final String progGroupCommandLine, final String progGroupName,
+                                  final boolean pairedRun, final File refSeq, final File output,
+                                  final SamPairUtil.PairOrientation expectedOrientation, final MergeBamAlignment.PrimaryAlignmentStrategy primaryAlignmentStrategy,
+                                  final String attributesToRetain,
+                                  final Boolean includeSecondary,
+                                  final Boolean unmapContaminantReads,
+                                  final SAMFileHeader.SortOrder sortOrder,
+                                  final AbstractAlignmentMerger.UnmappingReadStrategy unmappingReadStrategy) {
+
+        final List<String> tagsToRc  = new ArrayList<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
+        final List<String> tagsToRev = new ArrayList<>(SAMRecord.TAGS_TO_REVERSE);
+        tagsToRc.add("ab");
+        tagsToRev.addAll(Arrays.asList("aa", "ac", "as", "ai", "af"));
+
+        final List<String> args = new ArrayList<>(Arrays.asList(
                 "UNMAPPED_BAM=" + unmappedBam.getAbsolutePath(),
                 "ALIGNED_READS_ONLY=" + alignReadsOnly,
                 "CLIP_ADAPTERS=" + clipAdapters,
                 "IS_BISULFITE_SEQUENCE=" + isBisulfiteSequence,
-                "MAX_INSERTIONS_OR_DELETIONS=" + maxInsOrDels));
+                "MAX_INSERTIONS_OR_DELETIONS=" + maxInsOrDels,
+                "ADD_PG_TAG_TO_READS=true"));
         if (alignedBams != null) {
             for (final File alignedBam : alignedBams) {
                 args.add("ALIGNED_BAM=" + alignedBam.getAbsolutePath());
@@ -1345,11 +1374,20 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         if (attributesToRetain != null) {
             args.add("ATTRIBUTES_TO_RETAIN=" + attributesToRetain);
         }
+        for (final String t : tagsToRc) {
+            args.add("ATTRIBUTES_TO_REVERSE_COMPLEMENT=" + t);
+        }
+        for (final String t : tagsToRev) {
+            args.add("ATTRIBUTES_TO_REVERSE=" + t);
+        }
         if (includeSecondary != null) {
             args.add("INCLUDE_SECONDARY_ALIGNMENTS=" + includeSecondary);
         }
         if (unmapContaminantReads != null) {
             args.add("UNMAP_CONTAMINANT_READS=" + unmapContaminantReads);
+        }
+        if (unmappingReadStrategy != null) {
+            args.add("UNMAPPED_READ_STRATEGY=" + unmappingReadStrategy);
         }
         if (sortOrder != null) {
             args.add("SORT_ORDER=" + sortOrder.name());
@@ -1656,11 +1694,21 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         };
     }
 
-    @Test
-    public void testContaminationDetection() throws IOException {
+    @DataProvider(name="UnmappedReadStrategies")
+    public Object[][]  UnmappedReadStrategiesProvider() {
+        return new Object[][] {
+                {AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE, "contam.expected.NO_CHANGE.sam"},
+                {null,                                                        "contam.expected.NO_CHANGE.sam"},
+                {AbstractAlignmentMerger.UnmappingReadStrategy.COPY_TO_TAG,   "contam.expected.COPY_TO_TAG.sam"},
+                {AbstractAlignmentMerger.UnmappingReadStrategy.MOVE_TO_TAG,   "contam.expected.MOVE_TO_TAG.sam"}
+        };
+    }
+
+    @Test(dataProvider = "UnmappedReadStrategies")
+    public void testContaminationDetection(final AbstractAlignmentMerger.UnmappingReadStrategy strategy, final String basename) throws IOException {
         final File unmappedSam = new File(TEST_DATA_DIR, "contam.unmapped.sam");
         final File alignedSam = new File(TEST_DATA_DIR, "contam.aligned.sam");
-        final File expectedSam = new File(TEST_DATA_DIR, "contam.expected.sam");
+        final File expectedSam = new File(TEST_DATA_DIR, basename);
         final File refFasta = new File(TEST_DATA_DIR, "cliptest.fasta");
         final File mergedSam = File.createTempFile("merged", ".sam");
         mergedSam.deleteOnExit();
@@ -1670,7 +1718,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 false, true, false, 1,
                 "0", "1.0", "align!", "myAligner",
                 true, refFasta, mergedSam,
-                null, null, null, null, true, null);
+                null, null, null, null, true, SAMFileHeader.SortOrder.coordinate, strategy);
 
         assertSamValid(mergedSam);
         IOUtil.assertFilesEqual(expectedSam, mergedSam);
@@ -1701,12 +1749,163 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             if (hasTags) {
                 Assert.assertNull(rec.getAttribute("MD"));
                 Assert.assertNull(rec.getAttribute("NM"));
-            }
-            else {
+            } else {
                 Assert.assertNotNull(rec.getAttribute("MD"));
                 Assert.assertNotNull(rec.getAttribute("NM"));
             }
         }
         result.close();
     }
+
+    @Test
+    public void testMappedToMultipleStrands() throws Exception {
+        final File outputMappedToMultipleStands = File.createTempFile("mappedToMultipleStrands", ".sam");
+        outputMappedToMultipleStands.deleteOnExit();
+
+        doMergeAlignment(mergingUnmappedBam,
+                Collections.singletonList(multipleStrandsAlignedBam),
+                null, null, null, null,
+                false, true, false, 1,
+                "0", "1.0", "align!", "myAligner",
+                true, fasta, outputMappedToMultipleStands,
+                SamPairUtil.PairOrientation.FR, null, null, null, null, null);
+
+        final SamReader result = SamReaderFactory.makeDefault().open(outputMappedToMultipleStands);
+
+        for (final SAMRecord sam : result) {
+            if (sam.getReadName().equals("test:1") && !sam.getReadUnmappedFlag()) {
+                if (sam.getReadNegativeStrandFlag() && sam.getFirstOfPairFlag()) {
+                    Assert.assertEquals(sam.getReadString(), "TTTACTGATGTTATGACCATTACTCCGAAAGTGCCAAGATCATGAAGGGCAAGGAGAGAGTGGGATCCCCGGGTAC", "Read aligned to negative strand has unexpected bases.");
+                } else {
+                    Assert.assertEquals(sam.getReadString(), "GTACCCGGGGATCCCACTCTCTCCTTGCCCTTCATGATCTTGGCACTTTCGGAGTAATGGTCATAACATCAGTAAA", "Read aligned to positive strand has unexpected bases.");
+                }
+            }
+
+            if (sam.getReadName().equals("test:2") && !sam.getReadUnmappedFlag()) {
+                if (sam.getReadNegativeStrandFlag() && sam.getSecondOfPairFlag()) {
+                    Assert.assertEquals(sam.getReadString(), "TTATTCACTTAGTGTGTTTTTCCTGAGAACTTGCTATGTGTTAGGTCCTAGGCTGGGTGGGATCCTCTAGAGTCGA", "Read aligned to negative strand has unexpected bases.");
+                } else {
+                    Assert.assertEquals(sam.getReadString(), "TCGACTCTAGAGGATCCCACCCAGCCTAGGACCTAACACATAGCAAGTTCTCAGGAAAAACACACTAAGTGAATAA", "Read aligned to positive strand has unexpected bases.");
+                }
+            }
+
+            if (sam.getReadName().equals("test:5") && !sam.getReadUnmappedFlag()) {
+                if (sam.getReadNegativeStrandFlag()) {
+                    Assert.assertEquals(sam.getReadString(), "AGTTTTGGTTTGTCAGACCCAGCCCTGGGCACAGATGAGGAATTCTGGCTTCTCCTCCTGTGGGATCCCCGGGTAC", "Read aligned to negative strand has unexpected bases.");
+                } else {
+                    Assert.assertEquals(sam.getReadString(), "GTACCCGGGGATCCCACAGGAGGAGAAGCCAGAATTCCTCATCTGTGCCCAGGGCTGGGTCTGACAAACCAAAACT", "Read aligned to positive strand has unexpected bases.");
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testMergeHeaderMappedAndReference() throws IOException {
+        final File unmappedSam = new File(TEST_DATA_DIR, "specialHeader.unmapped.sam");
+        final File alignedSam = new File(TEST_DATA_DIR, "specialHeader.aligned.sam");
+        final File expectedSam = new File(TEST_DATA_DIR, "specialHeader.expected.sam");
+        final File refFasta = new File(TEST_DATA_DIR, "specialHeader.fasta");
+        final File mergedSam = File.createTempFile("merged", ".sam");
+        mergedSam.deleteOnExit();
+
+        doMergeAlignment(unmappedSam, Collections.singletonList(alignedSam),
+                null, null, null, null,
+                false, true, false, 1,
+                "0", "1.0", "align!", "myAligner",
+                true, refFasta, mergedSam,
+                null, null, null, null, true, null);
+
+        assertSamValid(mergedSam);
+        IOUtil.assertFilesEqual(expectedSam, mergedSam);
+    }
+
+    @Test
+    public void testMergeHeaderMappedAndReferenceWithAlignedAsNamedStream() throws IOException, InterruptedException, NoSuchFieldException, IllegalAccessException {
+        final File unmappedSam = new File(TEST_DATA_DIR, "specialHeader.unmapped.sam");
+        final File alignedSam = new File(TEST_DATA_DIR, "specialHeader.aligned.sam");
+        final File expectedSam = new File(TEST_DATA_DIR, "specialHeader.expected.sam");
+        final File refFasta = new File(TEST_DATA_DIR, "specialHeader.fasta");
+        final File mergedSam = File.createTempFile("merged", ".sam");
+        mergedSam.deleteOnExit();
+
+        FileInputStream stream = new FileInputStream(alignedSam);
+
+        // Ugliness required to read from a stream given as a string on the commandline.
+        // Since the actual fd number is private inside FileDescriptor, need reflection
+        // in order to pull it out.
+
+        final Field fdField = FileDescriptor.class.getDeclaredField("fd");
+        fdField.setAccessible(true);
+        final File inputStream = new File("/dev/fd/" + fdField.getInt(stream.getFD()));
+
+        doMergeAlignment(unmappedSam, Collections.singletonList(inputStream),
+                null, null, null, null,
+                false, true, false, 1,
+                "0", "1.0", "align!", "myAligner",
+                true, refFasta, mergedSam,
+                null, null, null, null, true, null);
+
+        assertSamValid(mergedSam);
+        IOUtil.assertFilesEqual(expectedSam, mergedSam);
+    }
+
+    @Test
+    public void testMergeHeaderMappedAndReferenceWithUnmappedAsNamedStream() throws IOException, InterruptedException, NoSuchFieldException, IllegalAccessException {
+        final File unmappedSam = new File(TEST_DATA_DIR, "specialHeader.unmapped.sam");
+        final File alignedSam = new File(TEST_DATA_DIR, "specialHeader.aligned.sam");
+        final File expectedSam = new File(TEST_DATA_DIR, "specialHeader.expected.sam");
+        final File refFasta = new File(TEST_DATA_DIR, "specialHeader.fasta");
+        final File mergedSam = File.createTempFile("merged", ".sam");
+        mergedSam.deleteOnExit();
+
+        FileInputStream stream = new FileInputStream(unmappedSam);
+
+        // Ugliness required to read from a stream given as a string on the commandline.
+        // Since the actual fd number is private inside FileDescriptor, need reflection
+        // in order to pull it out.
+
+        final Field fdField = FileDescriptor.class.getDeclaredField("fd");
+        fdField.setAccessible(true);
+        final File inputStream = new File("/dev/fd/" + fdField.getInt(stream.getFD()));
+
+        doMergeAlignment(inputStream, Collections.singletonList(alignedSam),
+                null, null, null, null,
+                false, true, false, 1,
+                "0", "1.0", "align!", "myAligner",
+                true, refFasta, mergedSam,
+                null, null, null, null, true, null);
+
+        assertSamValid(mergedSam);
+        IOUtil.assertFilesEqual(expectedSam, mergedSam);
+    }
+
+
+    @DataProvider(name = "brokenAlignedFiles")
+    Object[][] brokenAlignedFiles() {
+        return new Object[][]{
+                new Object[]{"specialHeader.aligned.breaks.length.sam"},
+                new Object[]{"specialHeader.aligned.breaks.md5.sam"}
+        };
+    }
+
+    @Test(dataProvider = "brokenAlignedFiles", expectedExceptions = IllegalArgumentException.class)
+    public void testHeaderFromMappedBreaks(final String filename) throws IOException {
+        final File unmappedSam = new File(TEST_DATA_DIR, "specialHeader.unmapped.sam");
+        final File alignedSam = new File(TEST_DATA_DIR, filename);
+        final File expectedSam = new File(TEST_DATA_DIR, "specialHeader.expected.sam");
+        final File refFasta = new File(TEST_DATA_DIR, "specialHeader.fasta");
+        final File mergedSam = File.createTempFile("merged", ".sam");
+        mergedSam.deleteOnExit();
+
+        doMergeAlignment(unmappedSam, Collections.singletonList(alignedSam),
+                null, null, null, null,
+                false, true, false, 1,
+                "0", "1.0", "align!", "myAligner",
+                true, refFasta, mergedSam,
+                null, null, null, null, true, null);
+
+        assertSamValid(mergedSam);
+        IOUtil.assertFilesEqual(expectedSam, mergedSam);
+    }
 }
+

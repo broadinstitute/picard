@@ -33,9 +33,10 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
@@ -48,10 +49,11 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = QualityScoreDistribution.USAGE_SUMMARY + QualityScoreDistribution.USAGE_DETAILS,
-        usageShort = QualityScoreDistribution.USAGE_SUMMARY,
+        summary = QualityScoreDistribution.USAGE_SUMMARY + QualityScoreDistribution.USAGE_DETAILS,
+        oneLineSummary = QualityScoreDistribution.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class QualityScoreDistribution extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "Chart the distribution of quality scores.  ";
     static final String USAGE_DETAILS = "<p>This tool is used for determining the overall 'quality' for a library in a given run. To " +
@@ -74,16 +76,16 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
             "      CHART=qual_score_dist.pdf" +
             "</pre>" +
             "<hr />";
-    @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
+    @Argument(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 
-    @Option(doc="If set to true calculate mean quality over aligned reads only.")
+    @Argument(doc="If set to true calculate mean quality over aligned reads only.")
     public boolean ALIGNED_READS_ONLY = false;
 
-    @Option(shortName="PF", doc="If set to true calculate mean quality over PF reads only.")
+    @Argument(shortName="PF", doc="If set to true calculate mean quality over PF reads only.")
     public boolean PF_READS_ONLY = false;
 
-    @Option(doc="If set to true, include quality for no-call bases in the distribution.")
+    @Argument(doc="If set to true, include quality for no-call bases in the distribution.")
     public boolean INCLUDE_NO_CALLS = false;
 
     private final long[] qCounts  = new long[128];

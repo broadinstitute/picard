@@ -66,6 +66,36 @@ public class RnaSeqMetrics extends MultilevelMetrics {
     /** Number of aligned reads that are mapped to the incorrect strand.  0 if library is not strand-specific. */
     public long INCORRECT_STRAND_READS;
 
+    /** The number of reads that support the model where R1 is on the strand of transcription and R2 is on the
+     * opposite strand.
+     */
+    public long NUM_R1_TRANSCRIPT_STRAND_READS;
+
+    /**
+     * The fraction of reads that support the model where R2 is on the strand of transcription and R1 is on the opposite
+     * strand.
+     */
+    public long NUM_R2_TRANSCRIPT_STRAND_READS;
+
+    /**
+     * The fraction of reads for which the transcription strand model could not be inferred.
+     */
+    public long NUM_UNEXPLAINED_READS;
+
+
+    /** The fraction of reads that support the model where R1 is on the strand of transcription and R2 is on the
+     * opposite strand.  For unpaired reads, it is the fraction of reads that are on the transcription strand (out of all
+     * the reads).
+     */
+    public double PCT_R1_TRANSCRIPT_STRAND_READS;
+
+    /**
+     * The fraction of reads that support the model where R2 is on the strand of transcription and R1 is on the opposite
+     * strand.  For unpaired reads, it is the fraction of reads that are on opposite strand than that of the the
+     * transcription strand (out of all the reads).
+     */
+    public double PCT_R2_TRANSCRIPT_STRAND_READS;
+
     /** Fraction of PF_ALIGNED_BASES that mapped to regions encoding ribosomal RNA, RIBOSOMAL_BASES/PF_ALIGNED_BASES */
     public Double PCT_RIBOSOMAL_BASES;
 

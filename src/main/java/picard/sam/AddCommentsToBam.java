@@ -4,10 +4,11 @@ import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.IOUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -21,10 +22,10 @@ import java.util.List;
  * @author jgentry
  */
 @CommandLineProgramProperties(
-        usage =  AddCommentsToBam.USAGE_SUMMARY + AddCommentsToBam.USAGE_DETAILS,
-        usageShort = AddCommentsToBam.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        summary =  AddCommentsToBam.USAGE_SUMMARY + AddCommentsToBam.USAGE_DETAILS,
+        oneLineSummary = AddCommentsToBam.USAGE_SUMMARY,
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class AddCommentsToBam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Adds comments to the header of a BAM file.";
     static final String USAGE_DETAILS = "This tool makes a copy of the input bam file, with a modified header that includes the comments " +
@@ -40,13 +41,13 @@ public class AddCommentsToBam extends CommandLineProgram {
             "</pre>" +
             "" +
             "<hr />";
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input BAM file to add a comment to the header")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input BAM file to add a comment to the header")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output BAM file to write results")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output BAM file to write results")
     public File OUTPUT;
 
-    @Option(shortName = "C", doc = "Comments to add to the BAM file")
+    @Argument(shortName = "C", doc = "Comments to add to the BAM file")
     public List<String> COMMENT;
 
     public static void main(final String[] args) { new AddCommentsToBam().instanceMainWithExit(args); }

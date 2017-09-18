@@ -27,10 +27,11 @@ package picard.analysis;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.PositionalArguments;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.PositionalArguments;
 import picard.cmdline.programgroups.Metrics;
 
 import java.io.File;
@@ -41,10 +42,11 @@ import java.util.List;
  * Compare two metrics files.
  */
 @CommandLineProgramProperties(
-        usage = CompareMetrics.USAGE_SUMMARY + CompareMetrics.USAGE_DETAIL,
-        usageShort = CompareMetrics.USAGE_SUMMARY,
+        summary = CompareMetrics.USAGE_SUMMARY + CompareMetrics.USAGE_DETAIL,
+        oneLineSummary = CompareMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CompareMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Compare two metrics files.";
     static final String USAGE_DETAIL = "This tool compares the metrics and histograms generated from metric tools to determine " +

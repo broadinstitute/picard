@@ -1,29 +1,28 @@
 package picard.vcf;
 
-import htsjdk.samtools.util.BlockCompressedInputStream;import htsjdk.samtools.util.BlockCompressedOutputStream;import htsjdk.samtools.util.BlockCompressedStreamConstants;import htsjdk.samtools.util.CloseableIterator;import htsjdk.samtools.util.CloserUtil;import htsjdk.samtools.util.CollectionUtil;import htsjdk.samtools.util.RuntimeIOException;import picard.PicardException;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
-import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.PeekableIterator;
-import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.util.*;
+import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
-import htsjdk.variant.variantcontext.writer.VariantContextWriterFactory;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.IllegalArgumentException;import java.lang.IllegalStateException;import java.lang.Override;import java.lang.String;import java.util.EnumSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -35,17 +34,17 @@ import java.util.TreeSet;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Gathers multiple VCF files from a scatter operation into a single VCF file. Input files " +
+        summary = "Gathers multiple VCF files from a scatter operation into a single VCF file. Input files " +
                 "must be supplied in genomic order and must not have events at overlapping positions.",
-        usageShort = "Gathers multiple VCF files from a scatter operation into a single VCF file",
-        programGroup = VcfOrBcf.class
-)
+        oneLineSummary = "Gathers multiple VCF files from a scatter operation into a single VCF file",
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class GatherVcfs extends CommandLineProgram {
 
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,  doc="Input VCF file(s).")
+    @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,  doc="Input VCF file(s).")
 	public List<File> INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output VCF file.")
+    @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output VCF file.")
 	public File OUTPUT;
 
     private static final Log log = Log.getInstance(GatherVcfs.class);
@@ -90,7 +89,7 @@ public class GatherVcfs extends CommandLineProgram {
     /** Checks (via filename checking) that all files appear to be block compressed files. */
     private boolean areAllBlockCompressed(final List<File> input) {
         for (final File f : input) {
-            if (VariantContextWriterFactory.isBCFOutput(f) || !VariantContextWriterFactory.isCompressedVcf(f)) return false;
+            if (VCFFileReader.isBCF(f) || !AbstractFeatureReader.hasBlockCompressedExtension(f)) return false;
         }
 
         return true;
@@ -142,9 +141,17 @@ public class GatherVcfs extends CommandLineProgram {
                                       final boolean createIndex,
                                       final List<File> inputFiles,
                                       final File outputFile) {
-        final EnumSet<Options> options = EnumSet.copyOf(VariantContextWriterFactory.DEFAULT_OPTIONS);
-        if (createIndex) options.add(Options.INDEX_ON_THE_FLY); else options.remove(Options.INDEX_ON_THE_FLY);
-        final VariantContextWriter out = VariantContextWriterFactory.create(outputFile, sequenceDictionary, options);
+        final EnumSet<Options> options = EnumSet.copyOf(VariantContextWriterBuilder.DEFAULT_OPTIONS);
+        if (createIndex){
+            options.add(Options.INDEX_ON_THE_FLY);
+        } else {
+            options.remove(Options.INDEX_ON_THE_FLY);
+        }
+        final VariantContextWriter out = new VariantContextWriterBuilder()
+                .setOptions(options)
+                .setOutputFile(outputFile)
+                .setReferenceDictionary(sequenceDictionary)
+                .build();
 
         final ProgressLogger progress = new ProgressLogger(log, 10000);
         VariantContext lastContext = null;

@@ -39,12 +39,11 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Illumina;
 import picard.util.AdapterMarker;
@@ -65,10 +64,11 @@ import static picard.util.IlluminaUtil.IlluminaAdapterPair;
  */
 @CommandLineProgramProperties(
 
-        usage = MarkIlluminaAdapters.USAGE_SUMMARY + MarkIlluminaAdapters.USAGE_DETAILS,
-        usageShort = MarkIlluminaAdapters.USAGE_SUMMARY,
+        summary = MarkIlluminaAdapters.USAGE_SUMMARY + MarkIlluminaAdapters.USAGE_DETAILS,
+        oneLineSummary = MarkIlluminaAdapters.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
+@DocumentedFeature
 public class MarkIlluminaAdapters extends CommandLineProgram {
 
     static final String USAGE_SUMMARY = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  ";
@@ -86,53 +86,53 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
             ;
     // The following attributes define the command-line arguments
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Option(doc = "If output is not specified, just the metrics are generated",
+    @Argument(doc = "If output is not specified, just the metrics are generated",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
-    @Option(doc = "Histogram showing counts of bases_clipped in how many reads", shortName = "M")
+    @Argument(doc = "Histogram showing counts of bases_clipped in how many reads", shortName = "M")
     public File METRICS;
 
-    @Option(doc = "The minimum number of bases to match over when clipping single-end reads.")
+    @Argument(doc = "The minimum number of bases to match over when clipping single-end reads.")
     public int MIN_MATCH_BASES_SE = ClippingUtility.MIN_MATCH_BASES;
 
-    @Option(doc = "The minimum number of bases to match over (per-read) when clipping paired-end reads.")
+    @Argument(doc = "The minimum number of bases to match over (per-read) when clipping paired-end reads.")
     public int MIN_MATCH_BASES_PE = ClippingUtility.MIN_MATCH_PE_BASES;
 
-    @Option(doc = "The maximum mismatch error rate to tolerate when clipping single-end reads.")
+    @Argument(doc = "The maximum mismatch error rate to tolerate when clipping single-end reads.")
     public double MAX_ERROR_RATE_SE = ClippingUtility.MAX_ERROR_RATE;
 
-    @Option(doc = "The maximum mismatch error rate to tolerate when clipping paired-end reads.")
+    @Argument(doc = "The maximum mismatch error rate to tolerate when clipping paired-end reads.")
     public double MAX_ERROR_RATE_PE = ClippingUtility.MAX_PE_ERROR_RATE;
 
-    @Option(doc = "DEPRECATED. Whether this is a paired-end run. No longer used.", shortName = "PE", optional = true)
+    @Argument(doc = "DEPRECATED. Whether this is a paired-end run. No longer used.", shortName = "PE", optional = true)
     public Boolean PAIRED_RUN;
 
-    @Option(doc = "Which adapters sequences to attempt to identify and clip.")
+    @Argument(doc = "Which adapters sequences to attempt to identify and clip.")
     public List<IlluminaAdapterPair> ADAPTERS =
             CollectionUtil.makeList(IlluminaAdapterPair.INDEXED,
                     IlluminaAdapterPair.DUAL_INDEXED,
                     IlluminaAdapterPair.PAIRED_END
             );
 
-    @Option(doc = "For specifying adapters other than standard Illumina", optional = true)
+    @Argument(doc = "For specifying adapters other than standard Illumina", optional = true)
     public String FIVE_PRIME_ADAPTER;
-    @Option(doc = "For specifying adapters other than standard Illumina", optional = true)
+    @Argument(doc = "For specifying adapters other than standard Illumina", optional = true)
     public String THREE_PRIME_ADAPTER;
 
-    @Option(doc = "Adapters are truncated to this length to speed adapter matching.  Set to a large number to effectively disable truncation.")
+    @Argument(doc = "Adapters are truncated to this length to speed adapter matching.  Set to a large number to effectively disable truncation.")
     public int ADAPTER_TRUNCATION_LENGTH = AdapterMarker.DEFAULT_ADAPTER_LENGTH;
 
-    @Option(doc = "If looking for multiple adapter sequences, then after having seen this many adapters, shorten the list of sequences. " +
+    @Argument(doc = "If looking for multiple adapter sequences, then after having seen this many adapters, shorten the list of sequences. " +
             "Keep the adapters that were found most frequently in the input so far. " +
             "Set to -1 if the input has a heterogeneous mix of adapters so shortening is undesirable.",
             shortName = "APT")
     public int PRUNE_ADAPTER_LIST_AFTER_THIS_MANY_ADAPTERS_SEEN = AdapterMarker.DEFAULT_PRUNE_ADAPTER_LIST_AFTER_THIS_MANY_ADAPTERS_SEEN;
 
-    @Option(doc = "If pruning the adapter list, keep only this many adapter sequences when pruning the list (plus any adapters that " +
+    @Argument(doc = "If pruning the adapter list, keep only this many adapter sequences when pruning the list (plus any adapters that " +
             "were tied with the adapters being kept).")
     public int NUM_ADAPTERS_TO_KEEP = AdapterMarker.DEFAULT_NUM_ADAPTERS_TO_KEEP;
 
@@ -146,7 +146,7 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
     @Override
     protected String[] customCommandLineValidation() {
         if ((FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER == null) || (THREE_PRIME_ADAPTER != null && FIVE_PRIME_ADAPTER == null)) {
-            return new String[]{"Either both or neither of THREE_PRIME_ADAPTER and FIVE_PRIME_ADAPTER must be set."};
+            return new String[]{"THREE_PRIME_ADAPTER and FIVE_PRIME_ADAPTER must either both be null or both be set."};
         } else {
             return null;
         }
@@ -250,39 +250,5 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
 
         CloserUtil.close(in);
         return 0;
-    }
-
-    private final class CustomAdapterPair implements AdapterPair {
-
-        final String fivePrime, threePrime, fivePrimeReadOrder;
-        final byte[] fivePrimeBytes, threePrimeBytes, fivePrimeReadOrderBytes;
-
-        private CustomAdapterPair(final String fivePrime, final String threePrime) {
-            this.threePrime = threePrime;
-            this.threePrimeBytes = StringUtil.stringToBytes(threePrime);
-
-            this.fivePrime = fivePrime;
-            this.fivePrimeReadOrder = SequenceUtil.reverseComplement(fivePrime);
-            this.fivePrimeBytes = StringUtil.stringToBytes(fivePrime);
-            this.fivePrimeReadOrderBytes = StringUtil.stringToBytes(fivePrimeReadOrder);
-        }
-
-        public String get3PrimeAdapter() { return threePrime; }
-
-        public String get5PrimeAdapter() { return fivePrime; }
-
-        public String get3PrimeAdapterInReadOrder() { return threePrime; }
-
-        public String get5PrimeAdapterInReadOrder() { return fivePrimeReadOrder; }
-
-        public byte[] get3PrimeAdapterBytes() { return threePrimeBytes; }
-
-        public byte[] get5PrimeAdapterBytes() { return fivePrimeBytes; }
-
-        public byte[] get3PrimeAdapterBytesInReadOrder() { return threePrimeBytes; }
-
-        public byte[] get5PrimeAdapterBytesInReadOrder() { return fivePrimeReadOrderBytes; }
-
-        public String getName() { return "Custom adapter pair"; }
     }
 }

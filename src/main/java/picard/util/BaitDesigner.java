@@ -12,10 +12,11 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.None;
 
@@ -39,12 +40,13 @@ import java.util.regex.Pattern;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-                usage = BaitDesigner.USAGE_SUMMARY + BaitDesigner.USAGE_DETAILS,
-                usageShort = BaitDesigner.USAGE_SUMMARY,
+        summary = BaitDesigner.USAGE_SUMMARY + BaitDesigner.USAGE_DETAILS,
+        oneLineSummary = BaitDesigner.USAGE_SUMMARY,
                 programGroup = None.class
         )
+@DocumentedFeature
 public class BaitDesigner extends CommandLineProgram {
-static final String USAGE_SUMMARY = "<b>Designs oligonucleotide baits for hybrid selection reactions.</b>  ";
+static final String USAGE_SUMMARY = "Designs oligonucleotide baits for hybrid selection reactions.";
 static final String USAGE_DETAILS = "<p>This tool is used to design custom bait sets for hybrid selection experiments. The following " +
         "files are input into BaitDesigner: a (TARGET) interval list indicating the sequences of interest, e.g. exons with their " +
         "respective coordinates, a reference sequence, and a unique identifier string (DESIGN_NAME). </p>" +
@@ -123,7 +125,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
                 if (target.length() <= baitSize) {
                     final int midpoint = target.getStart() + (target.length() / 2);
                     final int baitStart = midpoint - (baitSize / 2);
-                    final Bait bait = new Bait(target.getSequence(),
+                    final Bait bait = new Bait(target.getContig(),
                             baitStart,
                             CoordMath.getEnd(baitStart, baitSize),
                             target.isNegativeStrand(),
@@ -142,7 +144,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
                     int start = firstBaitStart;
                     while (start <= lastBaitStart) {
                         final int end = CoordMath.getEnd(start, baitSize);
-                        final Bait bait = new Bait(target.getSequence(),
+                        final Bait bait = new Bait(target.getContig(),
                                 start,
                                 end,
                                 target.isNegativeStrand(),
@@ -179,7 +181,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
                     final int addon = minTargetSize - target.length();
                     final int left = addon / 2;
                     final int right = addon - left;
-                    t2 = new Interval(target.getSequence(),
+                    t2 = new Interval(target.getContig(),
                             Math.max(target.getStart() - left, 1),
                             Math.min(target.getEnd() + right, reference.length()),
                             target.isNegativeStrand(),
@@ -223,7 +225,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
                         }
                     }
 
-                    final Bait bait = new Bait(t2.getSequence(),
+                    final Bait bait = new Bait(t2.getContig(),
                             start,
                             end,
                             t2.isNegativeStrand(),
@@ -251,7 +253,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
 
                 int i = 0;
                 for (int start = target.getStart(); start < lastPossibleBaitStart; start += baitOffset) {
-                    final Bait bait = new Bait(target.getSequence(),
+                    final Bait bait = new Bait(target.getContig(),
                             start,
                             CoordMath.getEnd(start, baitSize),
                             target.isNegativeStrand(),
@@ -271,57 +273,54 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
     // Options for the Bait Designer
     ///////////////////////////////////////////////////////////////////////////
 
-    @Option(shortName = "T", doc = "The file with design parameters and targets")
+    @Argument(shortName = "T", doc = "The file with design parameters and targets")
     public File TARGETS;
 
-    @Option(doc = "The name of the bait design")
+    @Argument(doc = "The name of the bait design")
     public String DESIGN_NAME;
 
-    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "The reference sequence fasta file")
-    public File REFERENCE_SEQUENCE;
-
-    @Option(doc = "The left amplification primer to prepend to all baits for synthesis")
+    @Argument(doc = "The left amplification primer to prepend to all baits for synthesis")
     public String LEFT_PRIMER = "ATCGCACCAGCGTGT";
 
-    @Option(doc = "The right amplification primer to prepend to all baits for synthesis")
+    @Argument(doc = "The right amplification primer to prepend to all baits for synthesis")
     public String RIGHT_PRIMER = "CACTGCGGCTCCTCA";
 
-    @Option(doc = "The design strategy to use to layout baits across each target")
+    @Argument(doc = "The design strategy to use to layout baits across each target")
     public DesignStrategy DESIGN_STRATEGY = DesignStrategy.FixedOffset;
 
-    @Option(doc = "The length of each individual bait to design")
+    @Argument(doc = "The length of each individual bait to design")
     public int BAIT_SIZE = 120;
 
-    @Option(doc = "The minimum number of baits to design per target.")
+    @Argument(doc = "The minimum number of baits to design per target.")
     public int MINIMUM_BAITS_PER_TARGET = 2;
 
-    @Option(doc = "The desired offset between the start of one bait and the start of another bait for the same target.")
+    @Argument(doc = "The desired offset between the start of one bait and the start of another bait for the same target.")
     public int BAIT_OFFSET = 80;
 
-    @Option(doc = "Pad the input targets by this amount when designing baits. Padding is applied on both sides in this amount.")
+    @Argument(doc = "Pad the input targets by this amount when designing baits. Padding is applied on both sides in this amount.")
     public int PADDING = 0;
 
-    @Option(doc = "Baits that have more than REPEAT_TOLERANCE soft or hard masked bases will not be allowed")
+    @Argument(doc = "Baits that have more than REPEAT_TOLERANCE soft or hard masked bases will not be allowed")
     public int REPEAT_TOLERANCE = 50;
 
-    @Option(doc = "The size of pools or arrays for synthesis. If no pool files are desired, can be set to 0.")
+    @Argument(doc = "The size of pools or arrays for synthesis. If no pool files are desired, can be set to 0.")
     public int POOL_SIZE = 55000;
 
-    @Option(doc = "If true, fill up the pools with alternating fwd and rc copies of all baits. Equal copies of " +
+    @Argument(doc = "If true, fill up the pools with alternating fwd and rc copies of all baits. Equal copies of " +
             "all baits will always be maintained")
     public boolean FILL_POOLS = true;
 
-    @Option(doc = "If true design baits on the strand of the target feature, if false always design on the + strand of " +
+    @Argument(doc = "If true design baits on the strand of the target feature, if false always design on the + strand of " +
             "the genome.")
     public boolean DESIGN_ON_TARGET_STRAND = false;
 
-    @Option(doc = "If true merge targets that are 'close enough' that designing against a merged target would be more efficient.")
+    @Argument(doc = "If true merge targets that are 'close enough' that designing against a merged target would be more efficient.")
     public boolean MERGE_NEARBY_TARGETS = true;
 
-    @Option(doc = "If true also output .design.txt files per pool with one line per bait sequence")
+    @Argument(doc = "If true also output .design.txt files per pool with one line per bait sequence")
     public boolean OUTPUT_AGILENT_FILES = true;
 
-    @Option(shortName = "O", optional = true,
+    @Argument(shortName = "O", optional = true,
             doc = "The output directory. If not provided then the DESIGN_NAME will be used as the output directory")
     public File OUTPUT_DIRECTORY;
 
@@ -337,6 +336,11 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
     // Utility objects
     private static final Log log = Log.getInstance(BaitDesigner.class);
     private final NumberFormat fmt = NumberFormat.getIntegerInstance();
+
+    @Override
+    protected boolean requiresReference() {
+        return true;
+    }
 
     /** Takes a target name and a bait index and creates a uniform bait name. */
     String makeBaitName(final String targetName, final int baitIndex, final int totalBaits) {
@@ -415,9 +419,9 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
             final IntervalList padded = new IntervalList(originalTargets.getHeader());
             final SAMSequenceDictionary dict = padded.getHeader().getSequenceDictionary();
             for (final Interval i : originalTargets.getIntervals()) {
-                padded.add(new Interval(i.getSequence(),
+                padded.add(new Interval(i.getContig(),
                         Math.max(i.getStart() - PADDING, 1),
-                        Math.min(i.getEnd() + PADDING, dict.getSequence(i.getSequence()).getSequenceLength()),
+                        Math.min(i.getEnd() + PADDING, dict.getSequence(i.getContig()).getSequenceLength()),
                         i.isNegativeStrand(),
                         i.getName()));
             }
@@ -434,10 +438,10 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
 
                 while (iterator.hasNext()) {
                     final Interval next = iterator.next();
-                    if (previous.getSequence().equals(next.getSequence()) &&
+                    if (previous.getContig().equals(next.getContig()) &&
                             estimateBaits(previous.getStart(), previous.getEnd()) + estimateBaits(next.getStart(), next.getEnd()) >=
                                     estimateBaits(previous.getStart(), next.getEnd())) {
-                        previous = new Interval(previous.getSequence(),
+                        previous = new Interval(previous.getContig(),
                                 previous.getStart(),
                                 Math.max(previous.getEnd(), next.getEnd()),
                                 previous.isNegativeStrand(),
@@ -465,7 +469,7 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
         int discardedBaits = 0;
         final IntervalList baits = new IntervalList(targets.getHeader());
         for (final Interval target : targets) {
-            final int sequenceIndex = targets.getHeader().getSequenceIndex(target.getSequence());
+            final int sequenceIndex = targets.getHeader().getSequenceIndex(target.getContig());
             final ReferenceSequence reference = referenceWalker.get(sequenceIndex);
 
             for (final Bait bait : DESIGN_STRATEGY.design(this, target, reference)) {

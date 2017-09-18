@@ -26,8 +26,6 @@ package picard.vcf.filter;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
-import java.util.Map;
-
 /**
  * An interface for classes that perform Genotype filtration. Implementations are expected to take in a VariantContext
  * and a single Genotype and return either null (for no filter) or a specific filter string.

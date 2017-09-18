@@ -32,10 +32,11 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SequenceUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Fasta;
 import picard.cmdline.StandardOptionDefinitions;
 
@@ -50,10 +51,11 @@ import java.io.IOException;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = ExtractSequences.USAGE_SUMMARY + ExtractSequences.USAGE_DETAILS,
-        usageShort = ExtractSequences.USAGE_SUMMARY,
+        summary = ExtractSequences.USAGE_SUMMARY + ExtractSequences.USAGE_DETAILS,
+        oneLineSummary = ExtractSequences.USAGE_SUMMARY,
         programGroup = Fasta.class
 )
+@DocumentedFeature
 public class ExtractSequences extends CommandLineProgram {
     static final String USAGE_SUMMARY ="Subsets intervals from a reference sequence to a new FASTA file.";
     static final String USAGE_DETAILS ="This tool takes a list of intervals, reads the corresponding subsquences from a reference " +
@@ -69,20 +71,22 @@ public class ExtractSequences extends CommandLineProgram {
             "      O=extracted_IL_sequences.fasta" +
             "</pre>" +
             "<hr />";
-    @Option(doc="Interval list describing intervals to be extracted from the reference sequence.")
+    @Argument(doc="Interval list describing intervals to be extracted from the reference sequence.")
     public File INTERVAL_LIST;
 
-    @Option(shortName= StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="Reference sequence FASTA file.")
-    public File REFERENCE_SEQUENCE;
-
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output FASTA file.")
+    @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output FASTA file.")
     public File OUTPUT;
 
-    @Option(doc="Maximum line length for sequence data.")
+    @Argument(doc="Maximum line length for sequence data.")
     public int LINE_LENGTH = 80;
 
     public static void main(final String[] args) {
         new ExtractSequences().instanceMainWithExit(args);
+    }
+
+    @Override
+    protected boolean requiresReference() {
+        return true;
     }
 
     @Override
@@ -98,7 +102,7 @@ public class ExtractSequences extends CommandLineProgram {
         final BufferedWriter out = IOUtil.openFileForBufferedWriting(OUTPUT);
 
         for (final Interval interval : intervals) {
-            final ReferenceSequence seq = ref.getSubsequenceAt(interval.getSequence(), interval.getStart(), interval.getEnd());
+            final ReferenceSequence seq = ref.getSubsequenceAt(interval.getContig(), interval.getStart(), interval.getEnd());
             final byte[] bases = seq.getBases();
             if (interval.isNegativeStrand()) SequenceUtil.reverseComplement(bases);
 

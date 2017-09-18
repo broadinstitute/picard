@@ -24,11 +24,11 @@
 
 package picard.illumina;
 
+import htsjdk.samtools.metrics.MetricBase;
 import picard.illumina.parser.Tile;
 import picard.illumina.parser.TileTemplateRead;
-import htsjdk.samtools.metrics.MetricBase;
 
-import java.lang.String;import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.Collection;
 
 
@@ -50,8 +50,8 @@ public class IlluminaPhasingMetrics extends MetricBase {
     /** Median pre-phasing value across all tiles in a lane, applied to the first and second template reads */
     public double PREPHASING_APPLIED;
     /** Calculate the median phasing & prephasing values for a lane's tiles and create the appropriate IlluminaPhasingMetrics for them */
-    public static Collection<IlluminaPhasingMetrics> getPhasingMetricsForTiles(final long lane, final Collection<Tile> tilesForLane) {
-        final LanePhasingMetricsCollector lanePhasingMetricsCollector = new LanePhasingMetricsCollector(tilesForLane);
+    public static Collection<IlluminaPhasingMetrics> getPhasingMetricsForTiles(final long lane, final Collection<Tile> tilesForLane, final boolean usePercentage) {
+        final LanePhasingMetricsCollector lanePhasingMetricsCollector = new LanePhasingMetricsCollector(tilesForLane, usePercentage);
         final Collection<IlluminaPhasingMetrics> phasingMetrics = new ArrayList<IlluminaPhasingMetrics>();
         for (final TileTemplateRead tileTemplateRead : lanePhasingMetricsCollector.getMedianPhasingMap().keySet()) {
             final IlluminaPhasingMetrics phasingMetric = new IlluminaPhasingMetrics();

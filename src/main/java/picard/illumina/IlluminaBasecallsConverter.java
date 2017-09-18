@@ -25,11 +25,10 @@ package picard.illumina;
 
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.PeekIterator;
-import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
+import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
-import picard.illumina.parser.IlluminaDataProvider;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.ReadStructure;
@@ -61,12 +60,14 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Manages the conversion of Illumina basecalls into some output format.  Creates multiple threads to manage reading,
- * sorting and writing efficiently.  Output is written in queryname output.  Optionally demultiplexes indexed reads
+ * sorting and writing efficiently.  Output is written in query name output.  Optionally demultiplexes indexed reads
  * into separate outputs by barcode.
  *
  * @param <CLUSTER_OUTPUT_RECORD> The class to which a ClusterData is converted in preparation for writing.
  */
-public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+    final boolean includeNonPfReads;
+
     /**
      * Describes the state of a barcode's data's processing in the context of a tile.  It is either not available in
      * that tile, has been read, has been queued to be written to file, or has been written to file.  A barcode only
@@ -93,117 +94,77 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         DATA_TYPES_WITH_BARCODE[DATA_TYPES_WITH_BARCODE.length - 1] = IlluminaDataType.Barcodes;
     }
 
-    /**
-     * A comparator for tile numbers, which are not necessarily ordered by the number's value.
-     */
-    public static final Comparator<Integer> TILE_NUMBER_COMPARATOR = new Comparator<Integer>() {
-        @Override
-        public int compare(final Integer integer1, final Integer integer2) {
-            final String s1 = integer1.toString();
-            final String s2 = integer2.toString();
-            // Because a the tile number is followed by a colon, a tile number that
-            // is a prefix of another tile number should sort after. (e.g. 10 sorts after 100).
-            if (s1.length() < s2.length()) {
-                if (s2.startsWith(s1)) {
-                    return 1;
-                }
-            } else if (s2.length() < s1.length() && s1.startsWith(s2)) {
-                return -1;
-            }
-            return s1.compareTo(s2);
-        }
-    };
-
-    private final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
-
-    private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
-    private final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
-    private final int maxReadsInRamPerTile;
-    private final boolean demultiplex;
-    private final List<File> tmpDirs;
-    private final IlluminaDataProviderFactory factory;
-    private ClusterDataConverter<CLUSTER_OUTPUT_RECORD> converter = null;
-    private final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
-    private final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
-    private int numThreads;
     // If FORCE_GC, this is non-null.  For production this is not necessary because it will run until the JVM
     // ends, but for unit testing it is desirable to stop the task when done with this instance.
     private final TimerTask gcTimerTask;
-    private List<Integer> tiles;
-    private final boolean includeNonPfReads;
-    private final boolean ignoreUnexpectedBarcodes;
-
-    private final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
-    // Annoying that we need this.
-    private final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
 
     /**
-	 * @param basecallsDir           Where to read basecalls from.
-	 * @param lane                   What lane to process.
-	 * @param readStructure          How to interpret each cluster.
-	 * @param barcodeRecordWriterMap Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
-	 *                               one writer stored with key=null.
-	 * @param demultiplex            If true, output is split by barcode, otherwise all are written to the same output stream.
-	 * @param maxReadsInRamPerTile   Configures number of reads each tile will store in RAM before spilling to disk.
-	 * @param tmpDirs                For SortingCollection spilling.
-	 * @param numProcessors          Controls number of threads.  If <= 0, the number of threads allocated is
-	 *                               available cores - numProcessors.
-	 * @param forceGc                Force explicit GC periodically.  This is good for causing memory maps to be released.
-	 * @param firstTile              (For debugging) If non-null, start processing at this tile.
-	 * @param tileLimit              (For debugging) If non-null, process no more than this many tiles.
-	 * @param outputRecordComparator For sorting output records within a single tile.
-	 * @param codecPrototype         For spilling output records to disk.
-	 * @param outputRecordClass      Inconveniently needed to create SortingCollections.
-	 * @param includeNonPfReads      If true, will include ALL reads (including those which do not have PF set)
-     * @param ignoreUnexpectedBarcodes  If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
-     *                                  otherwise will throw an exception
-	 */
-	public IlluminaBasecallsConverter(final File basecallsDir, final int lane, final ReadStructure readStructure,
-	                                  final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
-	                                  final boolean demultiplex,
-	                                  final int maxReadsInRamPerTile,
-	                                  final List<File> tmpDirs,
-	                                  final int numProcessors, final boolean forceGc,
-	                                  final Integer firstTile, final Integer tileLimit,
-	                                  final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
-	                                  final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
-	                                  final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
-	                                  final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
-	                                  final boolean applyEamssFiltering,
-	                                  final boolean includeNonPfReads,
-                                      final boolean ignoreUnexpectedBarcodes
-	) {
-		this(basecallsDir, null, lane, readStructure,
-				barcodeRecordWriterMap, demultiplex, maxReadsInRamPerTile,
-				tmpDirs, numProcessors, forceGc, firstTile, tileLimit,
-				outputRecordComparator, codecPrototype, outputRecordClass,
-				bclQualityEvaluationStrategy, applyEamssFiltering,
-				includeNonPfReads, ignoreUnexpectedBarcodes);
-	}
-
-	/**
-     * @param basecallsDir           Where to read basecalls from.
-     * @param barcodesDir            Where to read barcodes from (optional; use basecallsDir if not specified).
-     * @param lane                   What lane to process.
-     * @param readStructure          How to interpret each cluster.
-     * @param barcodeRecordWriterMap Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
-     *                               one writer stored with key=null.
-     * @param demultiplex            If true, output is split by barcode, otherwise all are written to the same output stream.
-     * @param maxReadsInRamPerTile   Configures number of reads each tile will store in RAM before spilling to disk.
-     * @param tmpDirs                For SortingCollection spilling.
-     * @param numProcessors          Controls number of threads.  If <= 0, the number of threads allocated is
-     *                               available cores - numProcessors.
-     * @param forceGc                Force explicit GC periodically.  This is good for causing memory maps to be released.
-     * @param firstTile              (For debugging) If non-null, start processing at this tile.
-     * @param tileLimit              (For debugging) If non-null, process no more than this many tiles.
-     * @param outputRecordComparator For sorting output records within a single tile.
-     * @param codecPrototype         For spilling output records to disk.
-     * @param outputRecordClass      Inconveniently needed to create SortingCollections.
-     * @param includeNonPfReads      If true, will include ALL reads (including those which do not have PF set)
-     * @param ignoreUnexpectedBarcodes  If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
-     *                                  otherwise will throw an exception
+     * @param basecallsDir             Where to read basecalls from.
+     * @param lane                     What lane to process.
+     * @param readStructure            How to interpret each cluster.
+     * @param barcodeRecordWriterMap   Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
+     *                                 one writer stored with key=null.
+     * @param demultiplex              If true, output is split by barcode, otherwise all are written to the same output stream.
+     * @param maxReadsInRamPerTile     Configures number of reads each tile will store in RAM before spilling to disk.
+     * @param tmpDirs                  For SortingCollection spilling.
+     * @param numProcessors            Controls number of threads.  If <= 0, the number of threads allocated is
+     *                                 available cores - numProcessors.
+     * @param forceGc                  Force explicit GC periodically.  This is good for causing memory maps to be released.
+     * @param firstTile                (For debugging) If non-null, start processing at this tile.
+     * @param tileLimit                (For debugging) If non-null, process no more than this many tiles.
+     * @param outputRecordComparator   For sorting output records within a single tile.
+     * @param codecPrototype           For spilling output records to disk.
+     * @param outputRecordClass        Inconveniently needed to create SortingCollections.
+     * @param includeNonPfReads        If true, will include ALL reads (including those which do not have PF set)
+     * @param ignoreUnexpectedBarcodes If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
+     *                                 otherwise will throw an exception
      */
-    public IlluminaBasecallsConverter(final File basecallsDir, File barcodesDir, final int lane,
+    public IlluminaBasecallsConverter(final File basecallsDir, final int lane, final ReadStructure readStructure,
+                                      final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
+                                      final boolean demultiplex,
+                                      final int maxReadsInRamPerTile,
+                                      final List<File> tmpDirs,
+                                      final int numProcessors, final boolean forceGc,
+                                      final Integer firstTile, final Integer tileLimit,
+                                      final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
+                                      final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
+                                      final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
+                                      final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
+                                      final boolean applyEamssFiltering,
+                                      final boolean includeNonPfReads,
+                                      final boolean ignoreUnexpectedBarcodes
+    ) {
+        this(basecallsDir, null, lane, readStructure,
+                barcodeRecordWriterMap, demultiplex, maxReadsInRamPerTile,
+                tmpDirs, numProcessors, forceGc, firstTile, tileLimit,
+                outputRecordComparator, codecPrototype, outputRecordClass,
+                bclQualityEvaluationStrategy, applyEamssFiltering,
+                includeNonPfReads, ignoreUnexpectedBarcodes);
+    }
+
+    /**
+     * @param basecallsDir             Where to read basecalls from.
+     * @param barcodesDir              Where to read barcodes from (optional; use basecallsDir if not specified).
+     * @param lane                     What lane to process.
+     * @param readStructure            How to interpret each cluster.
+     * @param barcodeRecordWriterMap   Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
+     *                                 one writer stored with key=null.
+     * @param demultiplex              If true, output is split by barcode, otherwise all are written to the same output stream.
+     * @param maxReadsInRamPerTile     Configures number of reads each tile will store in RAM before spilling to disk.
+     * @param tmpDirs                  For SortingCollection spilling.
+     * @param numProcessors            Controls number of threads.  If <= 0, the number of threads allocated is
+     *                                 available cores - numProcessors.
+     * @param forceGc                  Force explicit GC periodically.  This is good for causing memory maps to be released.
+     * @param firstTile                (For debugging) If non-null, start processing at this tile.
+     * @param tileLimit                (For debugging) If non-null, process no more than this many tiles.
+     * @param outputRecordComparator   For sorting output records within a single tile.
+     * @param codecPrototype           For spilling output records to disk.
+     * @param outputRecordClass        Inconveniently needed to create SortingCollections.
+     * @param includeNonPfReads        If true, will include ALL reads (including those which do not have PF set)
+     * @param ignoreUnexpectedBarcodes If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
+     *                                 otherwise will throw an exception
+     */
+    public IlluminaBasecallsConverter(final File basecallsDir, final File barcodesDir, final int lane,
                                       final ReadStructure readStructure,
                                       final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
                                       final boolean demultiplex,
@@ -218,17 +179,19 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                                       final boolean applyEamssFiltering, final boolean includeNonPfReads,
                                       final boolean ignoreUnexpectedBarcodes
     ) {
-        this.barcodeRecordWriterMap = barcodeRecordWriterMap;
-        this.demultiplex = demultiplex;
-        this.maxReadsInRamPerTile = maxReadsInRamPerTile;
-        this.tmpDirs = tmpDirs;
-        this.outputRecordComparator = outputRecordComparator;
-        this.codecPrototype = codecPrototype;
-        this.outputRecordClass = outputRecordClass;
-        this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
+        super(barcodeRecordWriterMap, maxReadsInRamPerTile, tmpDirs, codecPrototype, ignoreUnexpectedBarcodes,
+                demultiplex, outputRecordComparator, bclQualityEvaluationStrategy, outputRecordClass,
+                numProcessors,
+                new IlluminaDataProviderFactory(basecallsDir, barcodesDir, lane, readStructure,
+                        bclQualityEvaluationStrategy, getDataTypesFromReadStructure(readStructure, demultiplex)));
         this.includeNonPfReads = includeNonPfReads;
-        this.ignoreUnexpectedBarcodes = ignoreUnexpectedBarcodes;
+        this.tiles = factory.getAvailableTiles();
+        // Since the first non-fixed part of the read name is the tile number, without preceding zeroes,
+        // and the output is sorted by read name, process the tiles in this order.
+        tiles.sort(TILE_NUMBER_COMPARATOR);
+        setTileLimits(firstTile, tileLimit);
 
+        this.numThreads = Math.max(1, Math.min(this.numThreads, tiles.size()));
         // If we're forcing garbage collection, collect every 5 minutes in a daemon thread.
         if (forceGc) {
             final Timer gcTimer = new Timer(true);
@@ -247,67 +210,23 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             gcTimerTask = null;
         }
 
-        this.factory = new IlluminaDataProviderFactory(basecallsDir, barcodesDir, lane, readStructure, bclQualityEvaluationStrategy, getDataTypesFromReadStructure(readStructure, demultiplex));
         this.factory.setApplyEamssFiltering(applyEamssFiltering);
 
-        if (numProcessors == 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors();
-        } else if (numProcessors < 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors() + numProcessors;
-        } else {
-            this.numThreads = numProcessors;
-        }
-        this.tiles = new ArrayList<Integer>(factory.getAvailableTiles());
-        // Since the first non-fixed part of the read name is the tile number, without preceding zeroes,
-        // and the output is sorted by read name, process the tiles in this order.
-        Collections.sort(tiles, TILE_NUMBER_COMPARATOR);
-        if (firstTile != null) {
-            int i;
-            for (i = 0; i < tiles.size(); ++i) {
-                if (tiles.get(i).intValue() == firstTile.intValue()) {
-                    tiles = tiles.subList(i, tiles.size());
-                    break;
-                }
-            }
-            if (tiles.get(0).intValue() != firstTile.intValue()) {
-                throw new PicardException("firstTile=" + firstTile + ", but that tile was not found.");
-            }
-        }
-        if (tileLimit != null && tiles.size() > tileLimit) {
-            tiles = tiles.subList(0, tileLimit);
-        }
-
-        this.numThreads = Math.max(1, Math.min(this.numThreads, tiles.size()));
     }
 
-    /**
-     * Must be called before doTileProcessing.  This is not passed in the ctor because often the
-     * IlluminaDataProviderFactory is needed in order to construct the converter.
-     *
-     * @param converter Converts ClusterData to CLUSTER_OUTPUT_RECORD
-     */
-    public void setConverter(final ClusterDataConverter<CLUSTER_OUTPUT_RECORD> converter) {
-        this.converter = converter;
-    }
-
-    /**
-     * In case caller needs to get some info from factory.
-     */
-    public IlluminaDataProviderFactory getFactory() {
-        return factory;
-    }
 
     /**
      * Do the work, i.e. create a bunch of threads to read, sort and write.
      * setConverter() must be called before calling this method.
      */
+    @Override
     public void doTileProcessing() {
         try {
             // TODO: Eliminate this when switch to JDK 7
             FileChannelJDKBugWorkAround.doBugWorkAround();
 
             // Generate the list of tiles that will be processed
-            final List<Tile> tiles = new ArrayList<Tile>();
+            final List<Tile> tiles = new ArrayList<>();
             for (final Integer tileNumber : this.tiles) {
                 tiles.add(new Tile(tileNumber));
             }
@@ -330,7 +249,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 
         } finally {
             try {
-            	if (gcTimerTask != null) gcTimerTask.cancel();
+                if (gcTimerTask != null) gcTimerTask.cancel();
             } catch (final Throwable ex) {
                 log.warn(ex, "Ignoring exception stopping background GC thread.");
             }
@@ -389,7 +308,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         /**
          * Returns the priority level.  Higher priorities are run earlier.
          *
-         * @return
+         * @return The priority for this runnable.
          */
         int getPriority() {
             return this.priority;
@@ -405,8 +324,8 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
      */
     private class TileProcessingRecord {
         final private Map<String, SortingCollection<CLUSTER_OUTPUT_RECORD>> barcodeToRecordCollection =
-                new HashMap<String, SortingCollection<CLUSTER_OUTPUT_RECORD>>();
-        final private Map<String, TileBarcodeProcessingState> barcodeToProcessingState = new HashMap<String, TileBarcodeProcessingState>();
+                new HashMap<>();
+        final private Map<String, TileBarcodeProcessingState> barcodeToProcessingState = new HashMap<>();
         private TileProcessingState state = TileProcessingState.NOT_DONE_READING;
         private long recordCount = 0;
 
@@ -494,11 +413,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                         "A tile's barcode data's state cannot be queried until the tile has been completely read.");
             }
 
-            if (this.barcodeToProcessingState.containsKey(barcode)) {
-                return this.barcodeToProcessingState.get(barcode);
-            } else {
-                return TileBarcodeProcessingState.NA;
-            }
+            return this.barcodeToProcessingState.getOrDefault(barcode, TileBarcodeProcessingState.NA);
         }
 
         public synchronized Map<String, TileBarcodeProcessingState> getBarcodeProcessingStates() {
@@ -521,7 +436,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         /**
          * Returns the distinct set of barcodes for which data has been collected in this record.
          *
-         * @return
+         * @return The distinct set of barcodes for this record.
          */
         public synchronized Set<String> getBarcodes() {
             return this.getBarcodeRecords().keySet();
@@ -548,7 +463,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
          * this tile.
          */
         public void process() {
-            final IlluminaDataProvider dataProvider = factory.makeDataProvider(Arrays.asList(this.tile.getNumber()));
+            final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider(Collections.singletonList(this.tile.getNumber()));
             log.debug(String.format("Reading data from tile %s ...", tile.getNumber()));
 
             while (dataProvider.hasNext()) {
@@ -577,29 +492,20 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
          * <p/>
          * Implemented as a TreeMap to guarantee tiles are iterated over in natural order.
          */
-        private final Map<Tile, TileProcessingRecord> tileRecords = new TreeMap<Tile, TileProcessingRecord>();
+        private final Map<Tile, TileProcessingRecord> tileRecords = new TreeMap<>();
 
         /**
-         * The executor responsible for doing work.
-         * <p/>
-         * Implemented as a ThreadPoolExecutor with a PriorityBlockingQueue which orders submitted Runnables by their
-         * priority.
+         * Compare the two Runnables, and assume they are PriorityRunnable; if not something strange is
+         * going on, so allow a ClassCastException be thrown.
          */
         private final ExecutorService prioritizingThreadPool = new ThreadPoolExecutor(
                 numThreads,
                 numThreads,
                 0L,
                 MILLISECONDS,
-                new PriorityBlockingQueue<Runnable>(5, new Comparator<Runnable>() {
-                    @Override
-                    /**
-                     * Compare the two Runnables, and assume they are PriorityRunnable; if not something strange is
-                     * going on, so allow a ClassCastException be thrown.
-                     */
-                    public int compare(final Runnable o1, final Runnable o2) {
-                        // Higher priority items go earlier in the queue, so reverse the "natural" comparison.
-                        return ((PriorityRunnable) o2).getPriority() - ((PriorityRunnable) o1).getPriority();
-                    }
+                new PriorityBlockingQueue<>(5, (o1, o2) -> {
+                    // Higher priority items go earlier in the queue, so reverse the "natural" comparison.
+                    return ((PriorityRunnable) o2).getPriority() - ((PriorityRunnable) o1).getPriority();
                 })
         );
 
@@ -619,7 +525,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         /**
          * Creates a TileReadAggregator that reads from the provided tiles.
          *
-         * @param tiles
+         * @param tiles A collection of tiles to be read from.
          */
         public TileReadAggregator(final Collection<Tile> tiles) {
             for (final Tile t : tiles) {
@@ -642,7 +548,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             // Set the thread that is executing this work
             this.parentThread = Thread.currentThread();
 
-            /**
+            /*
              * For each tile, create and submit a tile processor.  Give it a negative execution priority (so that
              * prioritized tasks with a positive execution priority execute first), and give later tiles a lesser
              * (more negative) priority.
@@ -655,15 +561,12 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                     public void run() {
                         try {
                             reader.process();
-                        } catch (final RuntimeException e) {
-                            /**
+                        } catch (final RuntimeException | Error e) {
+                            /*
                              * In the event of an internal failure, signal to the parent thread that something has gone
                              * wrong.  This is necessary because if an item of work fails to complete, the aggregator will
                              * will never reach its completed state, and it will never terminate.
                              */
-                            parentThread.interrupt();
-                            throw e;
-                        } catch (final Error e) {
                             parentThread.interrupt();
                             throw e;
                         }
@@ -702,7 +605,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         /**
          * Blocks until this aggregator completes its work.
          *
-         * @throws InterruptedException
+         * @throws InterruptedException is thrown when this executor has been interrupted.
          */
         public void awaitWorkComplete() throws InterruptedException {
             synchronized (this.completionLatch) {
@@ -726,21 +629,21 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
          */
         private void findAndEnqueueWorkOrSignalCompletion() {
             synchronized (this.workEnqueueMonitor) {
-                /**
+                /*
                  * If there is work remaining to be done in this aggregator, walk through all of the barcodes and find
                  * tiles which have not yet written their barcode data but are in a state where they are able to.
                  */
                 if (this.isWorkCompleted()) {
                     this.signalWorkComplete();
                 } else {
-                    final Queue<Runnable> tasks = new LinkedList<Runnable>();
+                    final Queue<Runnable> tasks = new LinkedList<>();
                     for (final String barcode : barcodeRecordWriterMap.keySet()) {
                         NEXT_BARCODE:
                         for (final Map.Entry<Tile, TileProcessingRecord> entry : this.tileRecords.entrySet()) {
                             final Tile tile = entry.getKey();
                             final TileProcessingRecord tileRecord = entry.getValue();
 
-                            /**
+                            /*
                              * If this tile has not been read, we cannot write this or later tiles' barcode data;
                              * move to the next barcode.
                              */
@@ -750,20 +653,20 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                             switch (tileRecord.getBarcodeState(barcode)) {
                                 case NA:
                                 case WRITTEN:
-                                    /**
+                                    /*
                                      * There is no data for this barcode for this tile, or it is already written; in
                                      * either scenario, this barcode will not be processed further for this tile, so
                                      * move onto the next tile as a possible candidate.
                                      */
                                     continue;
                                 case QUEUED_FOR_WRITE:
-                                    /**
+                                    /*
                                      * The write for this barcode is in progress for this tile, so skip to the next
                                      * barcode.
                                      */
                                     break NEXT_BARCODE;
                                 case READ:
-                                    /**
+                                    /*
                                      * This barcode has been read, and all of the earlier tiles have been written
                                      * for this barcode, so queue its writing.
                                      */
@@ -801,11 +704,11 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 
                         log.debug(String.format("Writing records from tile %s with barcode %s ...", tile.getNumber(), barcode));
 
-                        final PeekIterator<CLUSTER_OUTPUT_RECORD> it = new PeekIterator<CLUSTER_OUTPUT_RECORD>(records.iterator());
+                        final PeekIterator<CLUSTER_OUTPUT_RECORD> it = new PeekIterator<>(records.iterator());
                         while (it.hasNext()) {
                             final CLUSTER_OUTPUT_RECORD rec = it.next();
 
-                            /**
+                            /*
                              * PIC-330 Sometimes there are two reads with the same cluster coordinates, and thus
                              * the same read name.  Discard both of them.  This code assumes that the two first of pairs
                              * will come before the two second of pairs, so it isn't necessary to look ahead a different
@@ -835,15 +738,12 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                         tileRecord.setBarcodeState(barcode, TileBarcodeProcessingState.WRITTEN);
                         findAndEnqueueWorkOrSignalCompletion();
 
-                    } catch (final RuntimeException e) {
-                        /**
+                    } catch (final RuntimeException | Error e) {
+                        /*
                          * In the event of an internal failure, signal to the parent thread that something has gone
                          * wrong.  This is necessary because if an item of work fails to complete, the aggregator will
                          * will never reach its completed state, and it will never terminate.
                          */
-                        parentThread.interrupt();
-                        throw e;
-                    } catch (final Error e) {
                         parentThread.interrupt();
                         throw e;
                     }
@@ -899,17 +799,4 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         }
     }
 
-    public static interface ClusterDataConverter<OUTPUT_RECORD> {
-
-        /**
-         * Creates the OUTPUT_RECORDs from the cluster
-         */
-        public OUTPUT_RECORD convertClusterToOutputRecord(final ClusterData cluster);
-    }
-
-    public static interface ConvertedClusterDataWriter<OUTPUT_RECORD> {
-        void write(final OUTPUT_RECORD rec);
-
-        void close();
-    }
 }

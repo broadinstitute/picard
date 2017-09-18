@@ -8,7 +8,6 @@ import picard.illumina.parser.readers.BclReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -60,7 +59,7 @@ public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
             cycledMap.put(getCycleFromDir(cycleDir), fileMap);
         }
 
-        this.tiles = Collections.unmodifiableList(new ArrayList<Integer>(uniqueTiles));
+        this.tiles = new ArrayList<>(uniqueTiles);
         return cycledMap;
     }
 
@@ -255,7 +254,7 @@ public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
         return "C" + currentCycle + ".1" + File.separator + "s_" + lane + "_" + tile + extension;
     }
 
-    private static int getCycleFromDir(final File tempCycleDir) {
+    public static int getCycleFromDir(final File tempCycleDir) {
         final String fileName = tempCycleDir.getName();
 
         final Matcher matcher = IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN.matcher(fileName);

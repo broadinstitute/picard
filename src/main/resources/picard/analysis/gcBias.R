@@ -69,6 +69,7 @@ for (k in 1:(num.plots)){
     	if(accLevel == "Sample"){datasetName <- summaryMetrics[k, "SAMPLE"]}
     	if(accLevel == "Library"){datasetName <- summaryMetrics[k, "LIBRARY"]}
     	else(datasetName <- summaryMetrics[k, "READ_GROUP"])}
+    duplicatesMarker <- ifelse(summaryMetrics[k, "READS_USED"] == "ALL", "", " (duplicates excluded) ");
     subtitle = cat("Total clusters: ",summaryMetrics[k,"TOTAL_CLUSTERS"],", Aligned reads: ",summaryMetrics[k, "ALIGNED_READS"]);
     # Do the main plot of the normalized coverage by GC
     plot(type="p", x=metrics$GC, y=metrics$NORMALIZED_COVERAGE,
@@ -77,7 +78,7 @@ for (k in 1:(num.plots)){
         xlim=c(0,100),
         ylim=c(0, Y_AXIS_LIM),
         col=COLORS[1],
-        main=paste(accLevel, "Level:", datasetName, "GC Bias Plot", "\n", subtitle)
+        main=paste(accLevel, "Level:", datasetName, duplicatesMarker, "GC Bias Plot", "\n", subtitle)
         );
 
     # Add lines at the 50% GC and coverage=1

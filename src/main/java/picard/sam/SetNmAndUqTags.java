@@ -24,7 +24,7 @@
 
 package picard.sam;
 
-import picard.cmdline.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.SamOrBam;
 
 /**
@@ -32,10 +32,9 @@ import picard.cmdline.programgroups.SamOrBam;
  */
 @Deprecated
 @CommandLineProgramProperties(
-        usage = SetNmAndUqTags.USAGE_SUMMARY + SetNmMdAndUqTags.USAGE_DETAILS,
-        usageShort = SetNmAndUqTags.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        summary = SetNmAndUqTags.USAGE_SUMMARY + SetNmMdAndUqTags.USAGE_DETAILS,
+        oneLineSummary = SetNmAndUqTags.USAGE_SUMMARY,
+        programGroup = SamOrBam.class)
 public class SetNmAndUqTags extends SetNmMdAndUqTags {
     static final String USAGE_SUMMARY = "DEPRECATED: Use SetNmMdAndUqTags instead.";
     static final String USAGE_DETAILS = "DEPRECATED: Use SetNmMdAndUqTags instead.  This tool takes in a SAM or BAM file (sorted by coordinate) and calculates the NM, MD, and UQ tags by comparing with the reference."+

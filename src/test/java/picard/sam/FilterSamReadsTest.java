@@ -95,9 +95,11 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         // Build a sam file for testing
         final File inputSam = File.createTempFile("testSam", ".sam", TEST_DIR);
         inputSam.deleteOnExit();
+        final File sortedSamIdx = new File(TEST_DIR, inputSam.getName() + ".idx");
+        sortedSamIdx.deleteOnExit();
 
         final SAMFileWriter writer = new SAMFileWriterFactory()
-                .setCreateIndex(true).makeBAMWriter(builder.getHeader(), false, inputSam);
+                .setCreateIndex(true).makeSAMWriter(builder.getHeader(), false, inputSam);
 
         for (final SAMRecord record : builder) {
             writer.addAlignment(record);
@@ -107,6 +109,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         final File intervalFile = new File(intervalFilename);
 
         FilterSamReads filterTest = setupProgram(intervalFile, inputSam, FilterSamReads.Filter.includePairedIntervals);
+
         Assert.assertEquals(filterTest.doWork(),0);
 
         long count = getReadCount(filterTest);

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ package picard.sam.markduplicates;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import htsjdk.samtools.util.QualityUtil;
 import picard.PicardException;
 
 import java.util.*;
@@ -153,7 +154,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
         tester.setExpectedAssignedUmis(assignedUmi).runTest();
     }
 
-    @Test(dataProvider = "testBadUmiSetsDataProvider", expectedExceptions = PicardException.class)
+    @Test(dataProvider = "testBadUmiSetsDataProvider", expectedExceptions = {IllegalArgumentException.class, PicardException.class})
     public void testBadUmis(List<String> umis, List<String> assignedUmi, final List<Boolean> isDuplicate, final int editDistanceToJoin) {
         UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
         tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
@@ -162,5 +163,81 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
             tester.addMatePairWithUmi(umis.get(i), assignedUmi.get(i), isDuplicate.get(i), isDuplicate.get(i));
         }
         tester.setExpectedAssignedUmis(assignedUmi).runTest();
+    }
+
+    @DataProvider(name = "testUmiMetricsDataProvider")
+    private Object[][] testUmiMetricsDataProvider() {
+
+        // Calculate values of metrics by hand to ensure they are right
+        // effectiveLength4_1 is the effective UMI length observing 5 UMIs where 4 are the same
+        double effectiveLength4_1 = -(4./5.)*Math.log(4./5.)/Math.log(4.) -(1./5.)*Math.log(1./5.)/Math.log(4.);
+        // effectiveLength4_1 is the effective UMI length observing 5 UMIs where 3 are the same and the other two are
+        // unique
+        double effectiveLength3_1_1 = -(3./5.)*Math.log(3./5.)/Math.log(4.) -2*(1./5.)*Math.log(1./5.)/Math.log(4.);
+
+        // estimatedBaseQualityk_n is the phred scaled base quality score where k of n bases are incorrect
+        double estimatedBaseQuality1_20 = QualityUtil.getPhredScoreFromErrorProbability(1./20.);
+        double estimatedBaseQuality3_20 = QualityUtil.getPhredScoreFromErrorProbability(3./20.);
+
+        return new Object[][]{{
+                // Test basic error correction using edit distance of 1
+                Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAT"}), // Observed UMI
+                Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAA"}), // Expected inferred UMI
+                Arrays.asList(new Boolean[]{false, true, false, true, true}), // Should it be marked as duplicate?
+                1, // Edit Distance to Join
+                new UmiMetrics(4.0,                      // MEAN_UMI_LENGTH
+                               3,                        // OBSERVED_UNIQUE_UMIS
+                               2,                        // INFERRED_UNIQUE_UMIS
+                               2,                        // OBSERVED_BASE_ERRORS (Note: This is 2 rather than 1 because we are using paired end reads)
+                               2,                        // DUPLICATE_SETS_WITHOUT_UMI
+                               4,                        // DUPLICATE_SETS_WITH_UMI
+                               effectiveLength4_1,       // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
+                               effectiveLength3_1_1,     // EFECTIVE_LENGTH_OF_OBSERVED_UMIS
+                               estimatedBaseQuality1_20) // ESTIMATED_BASE_QUALITY_OF_UMIS
+        }, {
+                // Test basic error correction using edit distance of 2
+                Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAT"}),
+                Arrays.asList(new String[]{"AAAA", "AAAA", "AAAA", "AAAA", "AAAA"}),
+                Arrays.asList(new Boolean[]{false, true, true, true, true}),
+                2,
+                new UmiMetrics(4.0,                      // MEAN_UMI_LENGTH
+                               3,                        // OBSERVED_UNIQUE_UMIS
+                               1,                        // INFERRED_UNIQUE_UMIS
+                               6,                        // OBSERVED_BASE_ERRORS
+                               2,                        // DUPLICATE_SETS_WITHOUT_UMI
+                               2,                        // DUPLICATE_SETS_WITH_UMI
+                               0.0,                      // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
+                               effectiveLength3_1_1,     // EFECTIVE_LENGTH_OF_OBSERVED_UMIS
+                               estimatedBaseQuality3_20) // ESTIMATED_BASE_QUALITY_OF_UMIS
+        }, {
+                // Test maximum entropy (EFFECTIVE_LENGTH_OF_INFERRED_UMIS)
+                Arrays.asList(new String[]{"AA", "AT", "AC", "AG", "TA", "TT", "TC", "TG", "CA", "CT", "CC", "CG", "GA", "GT", "GC", "GG"}),
+                Arrays.asList(new String[]{"AA", "AT", "AC", "AG", "TA", "TT", "TC", "TG", "CA", "CT", "CC", "CG", "GA", "GT", "GC", "GG"}),
+                Arrays.asList(new Boolean[]{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false}),
+                0,
+                new UmiMetrics(2.0,                       // MEAN_UMI_LENGTH
+                               16,                        // OBSERVED_UNIQUE_UMIS
+                               16,                        // INFERRED_UNIQUE_UMIS
+                               0,                         // OBSERVED_BASE_ERRORS
+                               2,                         // DUPLICATE_SETS_WITHOUT_UMI
+                               32,                        // DUPLICATE_SETS_WITH_UMI
+                               2.0,                       // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
+                               2,                         // EFECTIVE_LENGTH_OF_OBSERVED_UMIS
+                               -1)                        // ESTIMATED_BASE_QUALITY_OF_UMIS
+        }};
+    }
+
+    @Test(dataProvider = "testUmiMetricsDataProvider")
+    public void testUmiMetrics(List<String> umis, List<String> assignedUmi, final List<Boolean> isDuplicate,
+                               final int editDistanceToJoin, final UmiMetrics expectedMetrics) {
+        UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
+        tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
+
+        for( int i = 0;i < umis.size();i++ ) {
+            tester.addMatePairWithUmi(umis.get(i), assignedUmi.get(i), isDuplicate.get(i), isDuplicate.get(i));
+        }
+        tester.setExpectedAssignedUmis(assignedUmi);
+        tester.setExpectedMetrics(expectedMetrics);
+        tester.runTest();
     }
 }

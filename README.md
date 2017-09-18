@@ -1,5 +1,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/broadinstitute/picard/badge.svg?branch=master)](https://coveralls.io/github/broadinstitute/picard?branch=master)
 [![Build Status](https://travis-ci.org/broadinstitute/picard.svg?branch=master)](https://travis-ci.org/broadinstitute/picard)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/broadinstitute/picard/blob/master/LICENSE.txt)
 
 A set of Java command line tools for manipulating high-throughput sequencing (HTS) data and formats.  
 
@@ -13,7 +14,7 @@ As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last ver
 
 * First, clone the repo:
 ```
-    git clone git@github.com:broadinstitute/picard.git
+    git clone https://github.com/broadinstitute/picard.git
     cd picard/
 ```
 
@@ -79,6 +80,10 @@ During development in Picard, it is sometimes necessary to build locally against
     * Clone [HTSJDK](https://github.com/samtools/htsjdk/), and in your clone check out the tag or branch you want to build Picard with.
     * Run `./gradlew install printVersion` in your htsjdk clone to install that version to your local maven repository. Take note of the version number that gets printed at the end.
     * Switch back to your Picard clone, and run `./gradlew shadowJar -Dhtsjdk.version=VERSION`, where VERSION is the version of HTSJDK you installed to your local maven repository.
+
+####Releasing Picard
+
+Full instructions on how to create a new release of Picard are [here](https://github.com/broadinstitute/picard/wiki/How-to-release-Picard)
 
 ----
 

@@ -3,6 +3,7 @@ package picard.analysis.artifacts;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.ListMap;
 import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.analysis.artifacts.SequencingArtifactMetrics.BaitBiasDetailMetrics;
 import picard.analysis.artifacts.SequencingArtifactMetrics.DetailPair;
@@ -41,7 +42,53 @@ class ContextAccumulator {
     }
 
     public void countRecord(final String refContext, final char calledBase, final SAMRecord rec) {
-        artifactMap.get(refContext)[Transition.baseIndexMap[calledBase]].countRecord(rec);
+        AlignmentAccumulator[] accumulators = artifactMap.get(refContext);
+        if (accumulators != null) {
+            accumulators[Transition.baseIndexMap[calledBase]].countRecord(rec);
+        }
+    }
+
+    /**
+     * Fills a halfContextAccumulator by summing over the appropriate counts from a fullContextAccumulator.
+     */
+    public void fillHalfRecords(final ContextAccumulator fullContextAccumulator, final int contextSize) {
+        final String padding = StringUtil.repeatCharNTimes('N', contextSize);
+
+        for (Map.Entry<String,AlignmentAccumulator[]> fullContext : fullContextAccumulator.artifactMap.entrySet()) {
+            final String fullContextKey = fullContext.getKey();
+            final char centralBase = fullContextKey.charAt(contextSize);
+            final String leadingContextKey = fullContextKey.substring(0, contextSize) + centralBase + padding;
+            final String trailingContextKey = padding + centralBase + fullContextKey.substring(contextSize + 1, fullContextKey.length());
+
+            final AlignmentAccumulator[] trailingAlignmentAccumulators = this.artifactMap.get(trailingContextKey);
+            final AlignmentAccumulator[] leadingAlignmentAccumulators = this.artifactMap.get(leadingContextKey);
+            final AlignmentAccumulator[] fullAlignmentAccumulators = fullContext.getValue();
+
+            for (int i=0; i < fullAlignmentAccumulators.length; i++) {
+                trailingAlignmentAccumulators[i].merge(fullAlignmentAccumulators[i]);
+                leadingAlignmentAccumulators[i].merge(fullAlignmentAccumulators[i]);
+            }
+        }
+    }
+
+    /**
+     * Fills a zeroContextAccumulator by summing over the appropriate counts from a fullContextAccumulator.
+     */
+    public void fillZeroRecords(final ContextAccumulator fullContextAccumulator, final int contextSize) {
+        final String padding = StringUtil.repeatCharNTimes('N', contextSize);
+
+        for (Map.Entry<String,AlignmentAccumulator[]> fullContext : fullContextAccumulator.artifactMap.entrySet()) {
+            final String fullContextKey = fullContext.getKey();
+            final char centralBase = fullContextKey.charAt(contextSize);
+            final String zeroContextKey = padding + centralBase + padding;
+
+            final AlignmentAccumulator[] zeroAlignmentAccumulators = this.artifactMap.get(zeroContextKey);
+            final AlignmentAccumulator[] fullAlignmentAccumulators = fullContext.getValue();
+
+            for (int i=0; i < fullAlignmentAccumulators.length; i++) {
+                zeroAlignmentAccumulators[i].merge(fullAlignmentAccumulators[i]);
+            }
+        }
     }
 
     /**
@@ -135,6 +182,13 @@ class ContextAccumulator {
                 if (isNegativeStrand) this.R1_NEG++;
                 else this.R1_POS++;
             }
+        }
+
+        private void merge(final AlignmentAccumulator other) {
+            this.R1_POS = this.R1_POS + other.R1_POS;
+            this.R2_POS = this.R2_POS + other.R2_POS;
+            this.R1_NEG = this.R1_NEG + other.R1_NEG;
+            this.R2_NEG = this.R2_NEG + other.R2_NEG;
         }
     }
 }

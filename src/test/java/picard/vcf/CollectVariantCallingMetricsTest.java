@@ -92,6 +92,8 @@ public class CollectVariantCallingMetricsTest {
         final List<CollectVariantCallingMetrics.VariantCallingDetailMetrics> detailMetrics = detail.getMetrics();
         detail.getMetrics().stream().filter(metrics -> metrics.SAMPLE_ALIAS.equals("HG00160")).forEach(metrics -> {
             Assert.assertEquals(metrics.HET_HOMVAR_RATIO, 0.72549, 0.0001);
+            Assert.assertEquals(metrics.TOTAL_GQ0_VARIANTS, 2);
+            Assert.assertEquals(metrics.PCT_GQ0_VARIANTS, 0.022727);
             Assert.assertEquals(metrics.TOTAL_SNPS, 81);
             Assert.assertEquals(metrics.NUM_IN_DB_SNP, 44);
             Assert.assertEquals(metrics.NOVEL_SNPS, 37);
@@ -114,7 +116,6 @@ public class CollectVariantCallingMetricsTest {
 
         Assert.assertEquals(detailMetrics.size(), 50, "Did not parse the desired number of detail metrics.");
     }
-
 
     @Test
     public void testMetricsTinyGVCF() throws IOException {
@@ -165,8 +166,10 @@ public class CollectVariantCallingMetricsTest {
         final MetricsFile<CollectVariantCallingMetrics.VariantCallingDetailMetrics, Comparable<?>> detail = new MetricsFile<>();
         detail.read(new FileReader(detailFile));
         final List<CollectVariantCallingMetrics.VariantCallingDetailMetrics> detailMetrics = detail.getMetrics();
-        detail.getMetrics().stream().filter(metrics -> metrics.SAMPLE_ALIAS.equals("HG00160")).forEach(metrics -> {
-            Assert.assertEquals(metrics.HET_HOMVAR_RATIO, .6, 0.0001);
+        detail.getMetrics().stream().filter(metrics -> metrics.SAMPLE_ALIAS.equals("NA12878")).forEach(metrics -> {
+            Assert.assertEquals(metrics.HET_HOMVAR_RATIO, 0.421053, 0.0001);
+            Assert.assertEquals(metrics.TOTAL_GQ0_VARIANTS, 2);
+            Assert.assertEquals(metrics.PCT_GQ0_VARIANTS, 0.074074);
             Assert.assertEquals(metrics.TOTAL_SNPS, 20);
             Assert.assertEquals(metrics.NUM_IN_DB_SNP, 1);
             Assert.assertEquals(metrics.NOVEL_SNPS, 19);
@@ -187,5 +190,36 @@ public class CollectVariantCallingMetricsTest {
         });
 
         Assert.assertEquals(detailMetrics.size(), 1, "Did not parse the expected number of detail metrics.");
+    }
+
+    @Test
+    public void testAllHomRefVCF() throws IOException {
+        final File dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf");
+        final File vcfFile = new File(TEST_DATA_DIR, "allHomRef.vcf");
+        final File indexedVcfFile = VcfTestUtils.createTemporaryIndexedVcfFromInput(vcfFile, "allHomRef.tmp.");
+        final File outFile = new File(TEST_DATA_DIR, "vcmetrics_allHomRef");
+        final File summaryFile = new File(outFile + ".variant_calling_summary_metrics");
+        final File detailFile = new File(outFile + ".variant_calling_detail_metrics");
+
+        outFile.deleteOnExit();
+        summaryFile.deleteOnExit();
+        detailFile.deleteOnExit();
+
+        final CollectVariantCallingMetrics program = new CollectVariantCallingMetrics();
+        program.INPUT = indexedVcfFile;
+        program.DBSNP = dbSnpFile;
+        program.OUTPUT = outFile;
+        Assert.assertEquals(program.doWork(), 0);
+
+        final MetricsFile<CollectVariantCallingMetrics.VariantCallingDetailMetrics, Comparable<?>> detail = new MetricsFile<>();
+        detail.read(new FileReader(detailFile));
+        boolean seenSampleWithOnlyHomRefs = false;
+        for (final CollectVariantCallingMetrics.VariantCallingDetailMetrics metrics : detail.getMetrics()) {
+            if (metrics.SAMPLE_ALIAS.equals("HG00116")) {
+                seenSampleWithOnlyHomRefs = true;
+                Assert.assertEquals(metrics.TOTAL_SNPS, 0);
+            }
+        }
+        Assert.assertTrue(seenSampleWithOnlyHomRefs);
     }
 }

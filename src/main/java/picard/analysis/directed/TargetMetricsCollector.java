@@ -58,14 +58,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.LongStream;
 
 /**
  * TargetMetrics, are metrics to measure how well we hit specific targets (or baits) when using a targeted sequencing process like hybrid selection
@@ -118,8 +112,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
     private final int sampleSize;
 
-    private final Histogram<Integer> baseQHistogram = new Histogram<Integer>("value", "baseq_count");
-    private final Histogram<Integer> depthHistogram = new Histogram<Integer>("coverage", "count");
+    // histogram of depths. does not include bases with quality less than MINIMUM_BASE_QUALITY (default 20)
+    // give it the bin label "coverage_or_base_quality" to make clear that in the metrics file the coverage and base quality histograms share the same bin column on the left
+    private final Histogram<Integer> highQualityDepthHistogram = new Histogram<>("coverage_or_base_quality", "high_quality_coverage_count");
+
+    // histogram of base qualities. includes all but quality 2 bases. we use this histogram to calculate theoretical het sensitivity.
+    private final Histogram<Integer> unfilteredDepthHistogram = new Histogram<>("coverage_or_base_quality", "unfiltered_coverage_count");
+
+    // histogram of base qualities. includes all but quality 2 bases. we use this histogram to calculate theoretical het sensitivity.
+    private final Histogram<Integer> unfilteredBaseQHistogram = new Histogram<>("baseq", "unfiltered_baseq_count");
 
     private static final double LOG_ODDS_THRESHOLD = 3.0;
 
@@ -309,7 +310,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         if (refFile != null) {
             intervalToGc = new HashMap<Interval,Double>();
             for (final Interval target : uniqueTargets) {
-                final ReferenceSequence rs = refFile.getSubsequenceAt(target.getSequence(), target.getStart(), target.getEnd());
+                final ReferenceSequence rs = refFile.getSubsequenceAt(target.getContig(), target.getStart(), target.getEnd());
                 intervalToGc.put(target,SequenceUtil.calculateGc(rs.getBases()));
             }
         }
@@ -325,8 +326,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     @Override
     protected PerUnitMetricCollector<METRIC_TYPE, Integer, SAMRecord> makeChildCollector(final String sample, final String library, final String readGroup) {
         final PerUnitTargetMetricCollector collector =  new PerUnitTargetMetricCollector(probeSetName, coverageByTargetForRead.keySet(),
-                                                                                         sample, library, readGroup, probeTerritory, targetTerritory, genomeSize,
-                                                                                         intervalToGc, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads);
+                sample, library, readGroup, probeTerritory, targetTerritory, genomeSize,
+                intervalToGc, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads);
         if (this.probeSetName != null) {
             collector.setBaitSetName(probeSetName);
         }
@@ -350,10 +351,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         private final Map<Interval, Double> intervalToGc;
         private File perTargetOutput;
         private File perBaseOutput;
-        final long[] baseQHistogramArray = new long[Byte.MAX_VALUE];
 
-        // A Map to accumulate per-bait-region (i.e. merge of overlapping targets) coverage. */
-        private final Map<Interval, Coverage> coverageByTarget;
+        final long[] baseQHistogramArray = new long[Byte.MAX_VALUE];
+        // A Map to accumulate per-bait-region (i.e. merge of overlapping targets) coverage
+        // excludes bases with qualities lower than minimumBaseQuality (default 20)
+        private final Map<Interval, Coverage> highQualityCoverageByTarget;
+
+        // only excludes bases with quality 2. collected for theoretical set sensitivity
+        private final Map<Interval, Coverage> unfilteredCoverageByTarget;
 
         private final TargetMetrics metrics = new TargetMetrics();
         private final int minimumBaseQuality;
@@ -380,9 +385,12 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             metrics.TARGET_TERRITORY = targetTerritory;
             metrics.GENOME_SIZE      = genomeSize;
 
-            this.coverageByTarget = new LinkedHashMap<Interval, Coverage>(coverageTargets.size() * 2, 0.5f);
+            highQualityCoverageByTarget = new LinkedHashMap<>(coverageTargets.size() * 2, 0.5f);
+            unfilteredCoverageByTarget =  new LinkedHashMap<>(coverageTargets.size() * 2, 0.5f);
+
             for (final Interval target : coverageTargets) {
-                this.coverageByTarget.put(target, new Coverage(target, 0));
+                highQualityCoverageByTarget.put(target, new Coverage(target, 0));
+                unfilteredCoverageByTarget.put(target, new Coverage(target, 0));
             }
 
             this.mapQFilter = new CountingMapQFilter(minimumMappingQuality);
@@ -404,6 +412,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /** Sets the name of the bait set explicitly instead of inferring it from the bait file. */
         public void setBaitSetName(final String name) {
             this.metrics.PROBE_SET = name;
+        }
+
+        /**
+         * Returns the accumulated coverage per target.  Note that while the returned Map is
+         * immutable, it is possible that the underlying Map will continue to be mutated if
+         * the map is retrieved prior to additional calls to {@link #acceptRecord(SAMRecord)}.
+         */
+        public Map<Interval, Coverage> getCoverageByTarget() {
+            return Collections.unmodifiableMap(this.highQualityCoverageByTarget);
         }
 
         /** Adds information about an individual SAMRecord to the statistics. */
@@ -521,41 +538,67 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 final int numOverlappingBasesToClip = SAMUtils.getNumOverlappingAlignedBasesToClip(record);
                 rec = SAMUtils.clipOverlappingAlignedBases(record, numOverlappingBasesToClip, noSideEffects);
                 metrics.PCT_EXC_OVERLAP += numOverlappingBasesToClip;
-            } else rec = record;
+
+                // If clipping resulted in the read becoming unmapped (because all bases were clipped), return here
+                if (rec.getReadUnmappedFlag()) return;
+            }
+            else {
+                rec = record;
+            }
 
             // Find the target overlaps
             final Set<Interval> coveredTargets = new HashSet<>();
             for (final AlignmentBlock block : rec.getAlignmentBlocks()) {
-                final int length = block.getLength(), refStart = block.getReferenceStart(), readStart = block.getReadStart();
+                final int length = block.getLength();
+                final int refStart = block.getReferenceStart();
+                final int readStart = block.getReadStart();
 
                 for (int offset = 0; offset < length; ++offset) {
                     final int refPos = refStart + offset;
                     final int readPos = readStart + offset;
                     final int qual = baseQualities[readPos - 1];
 
-                    if (qual < minimumBaseQuality) {
-                        this.metrics.PCT_EXC_BASEQ++;
-                    } else {
-                        boolean isOnTarget = false;
-                        for (final Interval target : targets) {
-                            if (refPos >= target.getStart() && refPos <= target.getEnd()) {
-                                ++this.metrics.ON_TARGET_BASES;
-                                if (mappedInPair) ++this.metrics.ON_TARGET_FROM_PAIR_BASES;
+                    if (qual <= 2) {
+                        metrics.PCT_EXC_BASEQ++;
+                        continue;
+                    }
 
-                                final int targetOffset = refPos - target.getStart();
-                                final Coverage coverage = this.coverageByTarget.get(target);
-                                coverage.addBase(targetOffset);
-                                baseQHistogramArray[baseQualities[offset]]++;
+                    boolean isOnTarget = false;
+                    for (final Interval target : targets) {
+                        if (refPos >= target.getStart() && refPos <= target.getEnd()) {
+                            final int targetOffset = refPos - target.getStart();
+
+                            // if the base quality exceeds the minimum threshold, then we update various metrics
+                            if (qual >= minimumBaseQuality) {
+                                ++metrics.ON_TARGET_BASES;
+                                if (mappedInPair) ++metrics.ON_TARGET_FROM_PAIR_BASES;
+                                final Coverage highQualityCoverage = highQualityCoverageByTarget.get(target);
+                                highQualityCoverage.addBase(targetOffset);
                                 if (!coveredTargets.contains(target)) {
-                                    coverage.incrementReadCount();
+                                    highQualityCoverage.incrementReadCount();
                                     coveredTargets.add(target);
+                                    isOnTarget = true;
                                 }
-                                isOnTarget = true;
+
+                            } else {
+                                // the base quality is in the range (2, minimumBaseQuality). we exclude them from the high-quality coverage histogram
+                                this.metrics.PCT_EXC_BASEQ++;
+                            }
+
+                            // even when the base quality is below minimumBaseQuality (but higher than 2), update the base quality and unfiltered coverage histogram for theoretical het sensitivity
+                            // we don't bother with the read count for unfiltered coverage histogram because we don't use it
+                            unfilteredCoverageByTarget.get(target).addBase(targetOffset);
+
+                            // we do not want to increment the base quality histogram for bases that will eventually get thrown out by the coverage cap
+                            if (unfilteredCoverageByTarget.get(target).getDepths()[targetOffset] <= coverageCap){
+                                baseQHistogramArray[qual]++;
                             }
                         }
-
-                        if (!isOnTarget) this.metrics.PCT_EXC_OFF_TARGET++;
                     }
+
+                    // a base must not be on target and its base quality must exceed minimumBaseQuality for us to increment PCT_EXC_OFF_TARGET
+                    if (!isOnTarget) this.metrics.PCT_EXC_OFF_TARGET++;
+
                 }
             }
         }
@@ -566,7 +609,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             metrics.PCT_PF_UQ_READS         = metrics.PF_UNIQUE_READS / (double) metrics.TOTAL_READS;
             metrics.PCT_PF_UQ_READS_ALIGNED = metrics.PF_UQ_READS_ALIGNED / (double) metrics.PF_UNIQUE_READS;
 
-            final double denominator        = (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES + metrics.OFF_PROBE_BASES);
+            final double denominator        = metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES + metrics.OFF_PROBE_BASES;
 
             metrics.PCT_SELECTED_BASES      = (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES) / denominator;
             metrics.PCT_OFF_PROBE           = metrics.OFF_PROBE_BASES / denominator;
@@ -580,56 +623,46 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             metrics.PCT_EXC_OVERLAP        /= (double) metrics.PF_BASES_ALIGNED;
             metrics.PCT_EXC_OFF_TARGET     /= (double) metrics.PF_BASES_ALIGNED;
 
-            // Get Theoretical Het SNP Sensitivity and Calculate Target Coverage Metrics
-            final double[] coverageDistribution = calculateTargetCoverageMetrics();
-
-            // Construct and write the outputs
-            for (int i=0; i<baseQHistogramArray.length; ++i) {
-                baseQHistogram.increment(i, baseQHistogramArray[i]);
-            }
-
-            // Construct and write the outputs
-            for (int i = 0; i < coverageDistribution.length; ++i) {
-                depthHistogram.increment(i, coverageDistribution[i]);
-            }
-
-            final double [] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
-            final double [] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(baseQHistogram);
-            metrics.HET_SNP_SENSITIVITY = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, sampleSize, LOG_ODDS_THRESHOLD);
-            metrics.HET_SNP_Q = QualityUtil.getPhredScoreFromErrorProbability((1 - metrics.HET_SNP_SENSITIVITY));
-
+            calculateTargetCoverageMetrics();
+            calculateTheoreticalHetSensitivity();
             calculateGcMetrics();
             emitPerBaseCoverageIfRequested();
         }
 
         /** Calculates how much additional sequencing is needed to raise 80% of bases to the mean for the lane. */
-        private double[] calculateTargetCoverageMetrics() {
-            final int[] depths = new int[(int) this.metrics.TARGET_TERRITORY];
-            final double[] coverageDistribution = new double[coverageCap+1];
+        private void calculateTargetCoverageMetrics() {
+            final long[] highQualityCoverageHistogramArray = new long[coverageCap+1];
             int zeroCoverageTargets = 0;
-            int depthIndex = 0;
-            double totalCoverage = 0;
 
-            // The "how many bases at at-least X" calculations.
-            final int[] targetBasesDepth = {0, 1, 2, 10, 20, 30, 40, 50, 100}; // NB: this should be in ascending order
-            final int[] targetBases = new int[targetBasesDepth.length]; // counts for how many target bases are at at least X coverage, where X corresponds to the value at the same offset in targetBasesDepth
+            // the number of bases we counted towards the depth histogram plus those that got thrown out by the coverage cap
+            long totalCoverage = 0;
 
-            // consider all bases in calculating the mean, median etc.
-            for (final Coverage c : this.coverageByTarget.values()) {
-                final boolean hasCoverage = c.hasCoverage();
-                final int[] targetDepths = c.getDepths();
+            // the maximum depth at any target base
+            long maxDepth = 0;
 
-                if (!hasCoverage) {
+            // The "how many target bases at at-least X" calculations.
+            // downstream code relies on this array being sorted in ascending order
+            final int[] targetBasesDepth = {0, 1, 2, 10, 20, 30, 40, 50, 100};
+
+            // counts for how many target bases are at at least X coverage,
+            // where X corresponds to the value at the same offset in targetBasesDepth
+            final int[] targetBases = new int[targetBasesDepth.length];
+
+            // for each target, count up the depth for each base and increment the depth histogram array
+            for (final Coverage c : this.highQualityCoverageByTarget.values()) {
+                if (!c.hasCoverage()) {
                     zeroCoverageTargets++;
-                    coverageDistribution[0] += c.getDepths().length;
+                    highQualityCoverageHistogramArray[0] += c.interval.length();
+                    targetBases[0] += c.interval.length();
+                    continue;
                 }
 
-                for (final int depth : targetDepths) {
-                    if (0 < depth) totalCoverage += depth;
-                    if (hasCoverage) depths[depthIndex++] = depth;
-                    coverageDistribution[Math.min(depth, coverageCap)]++;
+                for (final int depth : c.getDepths()) {
+                    totalCoverage += depth;
+                    highQualityCoverageHistogramArray[Math.min(depth, coverageCap)]++;
+                    maxDepth = Math.max(maxDepth, depth);
 
-                    // Add to the "how many bases at at-least X" calculations.
+                    // Add to the "how many target bases at at-least X" calculations.
                     for (int i = 0; i < targetBasesDepth.length; i++) {
                         if (depth >= targetBasesDepth[i]) targetBases[i]++;
                         else break; // NB: assumes that targetBasesDepth is sorted in ascending order
@@ -637,37 +670,68 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 }
             }
 
-            // Sort the array (ASCENDING)
-            Arrays.sort(depths);
-
-            this.metrics.MEAN_TARGET_COVERAGE = totalCoverage / this.metrics.TARGET_TERRITORY;
-            this.metrics.MEDIAN_TARGET_COVERAGE =
-                    (0 == (depths.length % 2)) ? ((depths[(depths.length/2) - 1] + depths[(depths.length/2)]) / 2.0) : depths[(depths.length-1)/2];
-
-            // find the base the coverage value that lies at the 80%
-            // line, which is actually at 20% into the array now
-            final int indexOf80thPercentile = Math.max((int) (depthIndex * 0.2 ) - 1, 0);
-            final int coverageAt80thPercentile;
-            if (depths.length > 0) {
-                coverageAt80thPercentile = depths[indexOf80thPercentile];
+            if (targetBases[0] !=  highQualityCoverageByTarget.keySet().stream().mapToInt(Interval::length).sum()) {
+                throw new PicardException("the number of target bases with at least 0x coverage does not equal the number of target bases");
             }
-            else {
-                throw new PicardException("Interval list only contains one zero-length interval.");
+
+            for (int i = 0; i < highQualityCoverageHistogramArray.length; ++i) {
+                highQualityDepthHistogram.increment(i, highQualityCoverageHistogramArray[i]);
             }
-            this.metrics.FOLD_80_BASE_PENALTY = this.metrics.MEAN_TARGET_COVERAGE / coverageAt80thPercentile;
-            this.metrics.ZERO_CVG_TARGETS_PCT = zeroCoverageTargets / (double) allTargets.getIntervals().size();
+
+            // we do this instead of highQualityDepthHistogram.getMean() because the histogram imposes a coverage cap
+            metrics.MEAN_TARGET_COVERAGE = (double) totalCoverage / metrics.TARGET_TERRITORY;
+            metrics.MEDIAN_TARGET_COVERAGE = highQualityDepthHistogram.getMedian();
+            metrics.MAX_TARGET_COVERAGE = maxDepth;
+
+            // compute the coverage value such that 80% of target bases have better coverage than it i.e. 20th percentile
+            // this roughly measures how much we must sequence extra such that 80% of target bases have coverage at least as deep as the current mean coverage
+            metrics.FOLD_80_BASE_PENALTY = metrics.MEAN_TARGET_COVERAGE / highQualityDepthHistogram.getPercentile(0.2);
+            metrics.ZERO_CVG_TARGETS_PCT = zeroCoverageTargets / (double) allTargets.getIntervals().size();
 
             // Store the "how many bases at at-least X" calculations.
-            this.metrics.PCT_TARGET_BASES_1X   = (double) targetBases[1] / (double) targetBases[0];
-            this.metrics.PCT_TARGET_BASES_2X   = (double) targetBases[2] / (double) targetBases[0];
-            this.metrics.PCT_TARGET_BASES_10X  = (double) targetBases[3] / (double) targetBases[0];
-            this.metrics.PCT_TARGET_BASES_20X  = (double) targetBases[4] / (double) targetBases[0];
-            this.metrics.PCT_TARGET_BASES_30X  = (double) targetBases[5] / (double) targetBases[0];
-            this.metrics.PCT_TARGET_BASES_40X  = (double) targetBases[6] / (double) targetBases[0];
-            this.metrics.PCT_TARGET_BASES_50X  = (double) targetBases[7] / (double) targetBases[0];
-            this.metrics.PCT_TARGET_BASES_100X = (double) targetBases[8] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_1X   = (double) targetBases[1] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_2X   = (double) targetBases[2] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_10X  = (double) targetBases[3] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_20X  = (double) targetBases[4] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_30X  = (double) targetBases[5] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_40X  = (double) targetBases[6] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_50X  = (double) targetBases[7] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_100X = (double) targetBases[8] / (double) targetBases[0];
+        }
 
-            return coverageDistribution;
+        private void calculateTheoreticalHetSensitivity(){
+            final long[] unfilteredDepthHistogramArray = new long[coverageCap + 1];
+
+            // collect the unfiltered coverages (i.e. only quality 2 bases excluded) for all targets into a histogram array
+            for (final Coverage c : this.unfilteredCoverageByTarget.values()) {
+                if (!c.hasCoverage()) {
+                    unfilteredDepthHistogramArray[0] += c.interval.length();
+                    continue;
+                }
+
+                for (final int depth : c.getDepths()) {
+                    unfilteredDepthHistogramArray[Math.min(depth, coverageCap)]++;
+                }
+            }
+
+            if (LongStream.of(baseQHistogramArray).sum() != LongStream.rangeClosed(0, coverageCap).map(i -> i * unfilteredDepthHistogramArray[(int)i]).sum()) {
+                throw new PicardException("numbers of bases in the base quality histogram and the coverage histogram are not equal");
+            }
+
+            // TODO: normalize the arrays directly. then we don't have to convert to Histograms
+            for (int i=0; i<baseQHistogramArray.length; ++i) {
+                unfilteredBaseQHistogram.increment(i, baseQHistogramArray[i]);
+            }
+
+            for (int i = 0; i < unfilteredDepthHistogramArray.length; i++){
+                unfilteredDepthHistogram.increment(i, unfilteredDepthHistogramArray[i]);
+            }
+
+            final double [] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(unfilteredDepthHistogram);
+            final double [] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(unfilteredBaseQHistogram);
+            metrics.HET_SNP_SENSITIVITY = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, sampleSize, LOG_ODDS_THRESHOLD);
+            metrics.HET_SNP_Q = QualityUtil.getPhredScoreFromErrorProbability((1 - metrics.HET_SNP_SENSITIVITY));
+
         }
 
         /** Emits a file with per base coverage if an output file has been set. */
@@ -676,7 +740,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             final PrintWriter out = new PrintWriter(IOUtil.openFileForBufferedWriting(this.perBaseOutput));
             out.println("chrom\tpos\ttarget\tcoverage");
-            for (final Map.Entry<Interval,Coverage> entry : this.coverageByTarget.entrySet()) {
+            for (final Map.Entry<Interval,Coverage> entry : this.highQualityCoverageByTarget.entrySet()) {
                 final Interval interval = entry.getKey();
                 final String chrom = interval.getContig();
                 final int firstBase = interval.getStart();
@@ -719,7 +783,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 final long[] targetBasesByGc  = new long[bins];
                 final long[] alignedBasesByGc = new long[bins];
 
-                for (final Map.Entry<Interval,Coverage> entry : this.coverageByTarget.entrySet()) {
+                for (final Map.Entry<Interval,Coverage> entry : this.highQualityCoverageByTarget.entrySet()) {
                     final Interval interval = entry.getKey();
                     final Coverage cov = entry.getValue();
 
@@ -745,20 +809,20 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                             if (max < d) max = d;
                         }
 
-                        out.println(interval.getSequence() + "\t" +
-                                    interval.getStart() + "\t" +
-                                    interval.getEnd() + "\t" +
-                                    interval.length() + "\t" +
-                                    interval.getName() + "\t" +
-                                    fmt.format(gcDouble) + "\t" +
-                                    fmt.format(coverage) + "\t" +
-                                    fmt.format(coverage / this.metrics.MEAN_TARGET_COVERAGE) + "\t" +
-                                    fmt.format(min / this.metrics.MEAN_TARGET_COVERAGE) + "\t" +
-                                    fmt.format(max / this.metrics.MEAN_TARGET_COVERAGE) + "\t" +
-                                    fmt.format(min) + "\t" +
-                                    fmt.format(max) + "\t" +
-                                    fmt.format(targetBasesAt0x / interval.length()) + "\t" +
-                                    fmt.format(cov.readCount)
+                        out.println(interval.getContig() + "\t" +
+                                interval.getStart() + "\t" +
+                                interval.getEnd() + "\t" +
+                                interval.length() + "\t" +
+                                interval.getName() + "\t" +
+                                fmt.format(gcDouble) + "\t" +
+                                fmt.format(coverage) + "\t" +
+                                fmt.format(coverage / this.metrics.MEAN_TARGET_COVERAGE) + "\t" +
+                                fmt.format(min / this.metrics.MEAN_TARGET_COVERAGE) + "\t" +
+                                fmt.format(max / this.metrics.MEAN_TARGET_COVERAGE) + "\t" +
+                                fmt.format(min) + "\t" +
+                                fmt.format(max) + "\t" +
+                                fmt.format(targetBasesAt0x / interval.length()) + "\t" +
+                                fmt.format(cov.readCount)
                         );
                     }
                 }
@@ -793,8 +857,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         @Override
         public void addMetricsToFile(final MetricsFile<METRIC_TYPE, Integer> hsMetricsComparableMetricsFile) {
             hsMetricsComparableMetricsFile.addMetric(convertMetric(this.metrics));
-            hsMetricsComparableMetricsFile.addHistogram(depthHistogram);
-            hsMetricsComparableMetricsFile.addHistogram(baseQHistogram);
+            hsMetricsComparableMetricsFile.addHistogram(highQualityDepthHistogram);
+            hsMetricsComparableMetricsFile.addHistogram(unfilteredBaseQHistogram);
         }
     }
 
@@ -816,8 +880,13 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         /** Adds a single point of depth at the desired offset into the coverage array. */
         public void addBase(final int offset) {
-            if (offset >= 0 && offset < this.depths.length && this.depths[offset] < Integer.MAX_VALUE) {
-                this.depths[offset] += 1;
+            addBase(offset, 1);
+        }
+
+        /** Adds some depth at the desired offset into the coverage array. */
+        public void addBase(final int offset, final int depth) {
+            if (offset >= 0 && offset < this.depths.length && this.depths[offset] < Integer.MAX_VALUE - depth) {
+                this.depths[offset] += depth;
             }
         }
 
@@ -839,9 +908,11 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /** Gets the coverage depths as an array of ints. */
         public int[] getDepths() { return this.depths; }
 
-        public int getTotal() {
-            int total = 0;
-            for (int i=0; i<depths.length; ++i) total += depths[i];
+        public long getTotal() {
+            long total = 0;
+            for (int i=0; i<depths.length; ++i) {
+                total += (total < Long.MAX_VALUE - depths[i]) ? depths[i] : Long.MAX_VALUE - total;
+            }
             return total;
         }
 
@@ -948,6 +1019,9 @@ class TargetMetrics extends MultilevelMetrics {
 
     /** The median coverage of targets. */
     public double MEDIAN_TARGET_COVERAGE;
+
+    /** The maximum coverage of reads that mapped to target regions of an experiment. */
+    public long MAX_TARGET_COVERAGE;
 
     /** The fraction of targets that did not reach coverage=1 over any base. */
     public double ZERO_CVG_TARGETS_PCT;

@@ -52,6 +52,8 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/sams");
     private static final File TEST_DATA_DIR_WITH_4M_INDEX = new File("testdata/picard/illumina/25T8B25T/sams_with_4M");
     private static final File TEST_DATA_DIR_WITH_4M4M_INDEX = new File("testdata/picard/illumina/25T8B25T/sams_with_4M4M");
+    private static final File TEST_DATA_DIR_WITH_CBCLS = new File("testdata/picard/illumina/151T8B8B151T_cbcl/Data/Intensities/BaseCalls");
+    private static final File DUAL_CBCL_TEST_DATA_DIR = new File("testdata/picard/illumina/151T8B8B151T_cbcl/sams");
 
     public String getCommandLineProgramName() {
         return IlluminaBasecallsToSam.class.getSimpleName();
@@ -250,6 +252,11 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     @Test(enabled = false)
     public void testDualBarcodes() throws Exception {
         runStandardTest(1, "dualBarcode.", "barcode_double.params", 1, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
+    }
+
+    @Test
+    public void testCbclConvert() throws Exception {
+        runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR);
     }
 
     /**

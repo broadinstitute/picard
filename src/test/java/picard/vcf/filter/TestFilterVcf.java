@@ -31,7 +31,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.PicardException;
-import picard.vcf.filter.FilterVcf;
+import picard.vcf.VcfTestUtils;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -46,7 +46,6 @@ public class TestFilterVcf {
     private final File INPUT = new File("testdata/picard/vcf/filter/testFiltering.vcf");
     private final File BAD_INPUT = new File("testdata/picard/vcf/filter/testFilteringNoSeqDictionary.vcf");
 
-
     /* write content of javascript in the returned file */
 	private File quickJavascriptFilter(String content) throws Exception {
 		final File out = File.createTempFile("jsfilter", ".js");
@@ -59,8 +58,7 @@ public class TestFilterVcf {
 
 	@Test
 	public void testJavaScript() throws Exception {
-		final File out = File.createTempFile("filterVcfTestJS.", ".vcf");
-		out.deleteOnExit();
+        final File out = VcfTestUtils.createTemporaryIndexedVcfFile("filterVcfTestJS.", ".vcf");
 		final FilterVcf filterer = new FilterVcf();
 		filterer.INPUT = INPUT;
 		filterer.OUTPUT = out;
@@ -68,7 +66,7 @@ public class TestFilterVcf {
 
 		final int retval = filterer.doWork();
 		Assert.assertEquals(retval, 0);
-		
+
 		//count the number of reads
 		final int expectedNumber = 4;
 		int count=0;
@@ -82,7 +80,7 @@ public class TestFilterVcf {
 		in.close();
 		Assert.assertEquals(count, expectedNumber);
 	}
-    
+
     /** Returns a sorted copy of the supplied set, for safer comparison. */
     <T extends Comparable> SortedSet<T> sorted(Set<T> in) { return new TreeSet<T>(in); }
 
@@ -159,9 +157,8 @@ public class TestFilterVcf {
     }
 
     /** Utility method that takes a a VCF and a set of parameters and filters the VCF. */
-    File testFiltering(final File vcf, final String outputExtension, final double minAb, final int minDp, final int minGq, final double maxFs) throws Exception {
-        final File out = File.createTempFile("filterVcfTest.", outputExtension);
-        out.deleteOnExit();
+    private File testFiltering(final File vcf, final String outputExtension, final double minAb, final int minDp, final int minGq, final double maxFs) throws Exception {
+        final File out = VcfTestUtils.createTemporaryIndexedVcfFile("filterVcfTest.", outputExtension);
 
         final FilterVcf filterer = new FilterVcf();
         filterer.CREATE_INDEX = true;
@@ -200,7 +197,7 @@ public class TestFilterVcf {
 
 
     /** Consumes a VCF and returns a ListMap where each they keys are the IDs of filtered out sites and the values are the set of filters. */
-    ListMap<String,String> slurpFilters(final File vcf) {
+    private ListMap<String,String> slurpFilters(final File vcf) {
         final ListMap<String,String> map = new ListMap<String, String>();
         final VCFFileReader in = new VCFFileReader(vcf, false);
         for (final VariantContext ctx : in) {

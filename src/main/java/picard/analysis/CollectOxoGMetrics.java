@@ -43,10 +43,11 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.DbSnpBitSetUtil;
@@ -66,10 +67,11 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
  * Class for trying to quantify the CpCG->CpCA error rate.
  */
 @CommandLineProgramProperties(
-        usage = CollectOxoGMetrics.USAGE_SUMMARY + CollectOxoGMetrics.USAGE_DETAILS,
-        usageShort = CollectOxoGMetrics.USAGE_SUMMARY,
+        summary = CollectOxoGMetrics.USAGE_SUMMARY + CollectOxoGMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectOxoGMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectOxoGMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Collect metrics to assess oxidative artifacts.";
     static final String USAGE_DETAILS = "This tool collects metrics quantifying the error rate resulting from oxidative artifacts. " +
@@ -94,55 +96,51 @@ public class CollectOxoGMetrics extends CommandLineProgram {
             "</pre>" +
             "" +
             "<hr />";
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "Input BAM file for analysis.")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "Location of output metrics file to write.")
     public File OUTPUT;
 
-    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME,
-            doc = "Reference sequence to which BAM is aligned.")
-    public File REFERENCE_SEQUENCE;
-
-    @Option(doc = "An optional list of intervals to restrict analysis to.",
+    @Argument(doc = "An optional list of intervals to restrict analysis to.",
             optional = true)
     public File INTERVALS;
 
-    @Option(doc = "VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis.",
+    @Argument(doc = "VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis.",
             optional = true)
     public File DB_SNP;
 
-    @Option(shortName = "Q",
+    @Argument(shortName = "Q",
             doc = "The minimum base quality score for a base to be included in analysis.")
     public int MINIMUM_QUALITY_SCORE = 20;
 
-    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME,
+    @Argument(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME,
             doc = "The minimum mapping quality score for a base to be included in analysis.")
     public int MINIMUM_MAPPING_QUALITY = 30;
 
-    @Option(shortName = "MIN_INS",
+    @Argument(shortName = "MIN_INS",
             doc = "The minimum insert size for a read to be included in analysis. Set of 0 to allow unpaired reads.")
     public int MINIMUM_INSERT_SIZE = 60;
 
-    @Option(shortName = "MAX_INS",
+    @Argument(shortName = "MAX_INS",
             doc = "The maximum insert size for a read to be included in analysis. Set of 0 to allow unpaired reads.")
     public int MAXIMUM_INSERT_SIZE = 600;
 
-    @Option(shortName = "NON_PF", doc = "Whether or not to include non-PF reads.")
+    @Argument(shortName = "NON_PF", doc = "Whether or not to include non-PF reads.")
     public boolean INCLUDE_NON_PF_READS = true;
 
-    @Option(doc = "When available, use original quality scores for filtering.")
+    @Argument(doc = "When available, use original quality scores for filtering.")
     public boolean USE_OQ = true;
 
-    @Option(doc = "The number of context bases to include on each side of the assayed G/C base.")
+    @Argument(doc = "The number of context bases to include on each side of the assayed G/C base.")
     public int CONTEXT_SIZE = 1;
 
-    @Option(doc = "The optional set of sequence contexts to restrict analysis to. If not supplied all contexts are analyzed.")
+    @Argument(doc = "The optional set of sequence contexts to restrict analysis to. If not supplied all contexts are analyzed.", optional = true)
     public Set<String> CONTEXTS = new HashSet<String>();
 
-    @Option(doc = "For debugging purposes: stop after visiting this many sites with at least 1X coverage.")
+    @Argument(doc = "For debugging purposes: stop after visiting this many sites with at least 1X coverage.")
     public int STOP_AFTER = Integer.MAX_VALUE;
 
     private final Log log = Log.getInstance(CollectOxoGMetrics.class);
@@ -216,6 +214,11 @@ public class CollectOxoGMetrics extends CommandLineProgram {
     // Stock main method
     public static void main(final String[] args) {
         new CollectOxoGMetrics().instanceMainWithExit(args);
+    }
+
+    @Override
+    protected boolean requiresReference() {
+        return true;
     }
 
     @Override
@@ -468,7 +471,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
             final Counts counts = new Counts();
             final byte altBase = (refBase == 'C') ? (byte) 'A' : (byte) 'T';
 
-            for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndPositions()) {
+            for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
                 final byte qual;
                 final SAMRecord samrec = rec.getRecord();
 

@@ -76,10 +76,12 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
                 final VariantCallingDetailMetrics collapsed = new VariantCallingDetailMetrics();
                 VariantCallingDetailMetrics.foldInto(collapsed, sampleDetails);
                 collapsedDetails.add(collapsed);
+                collapsed.calculateDerivedFields();
             });
 
             final VariantCallingSummaryMetrics collapsedSummary = new VariantCallingSummaryMetrics();
             VariantCallingSummaryMetrics.foldInto(collapsedSummary, summaries);
+            collapsedSummary.calculateDerivedFields();
 
             return new Result(collapsedSummary, collapsedDetails);
         }
@@ -107,7 +109,8 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
     }
 
     public void setup(final VCFHeader vcfHeader) {
-        //noop.
+        //Use sampleMetricsMap.get in case a sample isn't ever put in the map (due to being all HomRef for example)
+        vcfHeader.getGenotypeSamples().stream().forEach(sampleName -> sampleMetricsMap.get(sampleName));
     }
 
     /** Incorporates the provided variant's data into the metric analysis. */
@@ -157,9 +160,9 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
 
     public Result result() {
         final Collection<VariantCallingDetailMetrics> values = sampleMetricsMap.values();
-        values.forEach(CollectVariantCallingMetrics.VariantCallingDetailMetrics::updateDerivedValuesInPlace);
+        values.forEach(CollectVariantCallingMetrics.VariantCallingDetailMetrics::calculateDerivedFields);
 
-        summaryMetric.updateDerivedValuesInPlace();
+        summaryMetric.calculateDerivedFields();
         return new Result(summaryMetric, values);
     }
 
@@ -177,6 +180,9 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
         updateSummaryMetric(metric, genotype, vc, hasSingletonSample);
 
         if (genotype != null && !vc.isFiltered()) {
+            if (genotype.getGQ() == 0) {
+                ++metric.TOTAL_GQ0_VARIANTS;
+            }
             if (genotype.isHet()) {
                 ++metric.numHets;
             } else if (genotype.isHomVar()) {

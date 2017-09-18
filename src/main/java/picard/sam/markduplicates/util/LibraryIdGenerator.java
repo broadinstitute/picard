@@ -24,6 +24,7 @@
 
 package picard.sam.markduplicates.util;
 
+import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
@@ -81,7 +82,7 @@ public class LibraryIdGenerator {
      * returned.
      */
     public static String getLibraryName(final SAMFileHeader header, final SAMRecord rec) {
-        final String readGroupId = (String) rec.getAttribute("RG");
+        final String readGroupId = (String) rec.getAttribute(ReservedTagConstants.READ_GROUP_ID);
 
         if (readGroupId != null) {
             final SAMReadGroupRecord rg = header.getReadGroup(readGroupId);

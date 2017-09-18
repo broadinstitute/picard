@@ -31,16 +31,17 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloserUtil;
+import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -275,7 +276,6 @@ public class RevertSamTest extends CommandLineProgramTest {
 
         final File output = File.createTempFile("bad", ".sam");
         output.deleteOnExit();
-        final RevertSam reverter = new RevertSam();
         final String args[] = new String[2 + (sample != null ? 1 : 0) + (library != null ? 1 : 0)];
         int index = 0;
         args[index++] = "INPUT=" + sampleLibraryOverrideSam;
@@ -304,13 +304,44 @@ public class RevertSamTest extends CommandLineProgramTest {
         final File outputDir = Files.createTempDirectory("picardRevertSamTest").toFile();
         outputDir.deleteOnExit();
 
-        final RevertSam reverter = new RevertSam();
         final String args[] = new String[4];
         int index = 0;
         args[index++] = "INPUT=" + basicSamToRevert;
         args[index++] = "OUTPUT_BY_READGROUP=true";
         args[index++] = "OUTPUT=" + outputDir;
         args[index++] = "OUTPUT_MAP=" + validOutputMap;
+
+        try {
+            final int returnCode = runPicardCommandLine(args);
+            Assert.assertEquals(returnCode, 1);
+        } catch (CommandLineException e) {
+            // Barclay parser throws on mutex violation
+            Assert.assertFalse(CommandLineProgram.useLegacyParser(getClass()));
+        }
+    }
+
+    @Test
+    public void testNoInput() throws Exception {
+        final File outputDir = Files.createTempDirectory("picardRevertSamTest").toFile();
+        outputDir.deleteOnExit();
+
+        final String args[] = new String[0];
+        try {
+            final int returnCode = runPicardCommandLine(args);
+            Assert.assertEquals(returnCode, 1);
+        } catch (CommandLineException e) {
+            // Barclay parser throws on command line errors
+            Assert.assertFalse(CommandLineProgram.useLegacyParser(getClass()));
+        }
+    }
+
+    @Test
+    public void testCommandLineHelp() throws Exception {
+        final File outputDir = Files.createTempDirectory("picardRevertSamTest").toFile();
+        outputDir.deleteOnExit();
+
+        final String args[] = new String[1];
+        args[0] = "--help";
         final int returnCode = runPicardCommandLine(args);
         Assert.assertEquals(returnCode, 1);
     }
@@ -445,5 +476,28 @@ public class RevertSamTest extends CommandLineProgramTest {
         Assert.assertEquals(RevertSam.getDefaultExtension("this.is.a.cram"), ".cram");
         Assert.assertEquals(RevertSam.getDefaultExtension("this.is.a.bam"), ".bam");
         Assert.assertEquals(RevertSam.getDefaultExtension("foo"), ".bam");
+    }
+
+    @Test(expectedExceptions = PicardException.class)
+    public void testNoRgInfoOutputByRg() {
+        final String [] args = new String[]{
+                "I=testdata/picard/sam/bam2fastq/paired/bad/missing-rg-info.sam",
+                "OUTPUT_BY_READGROUP=true",
+                "O=."
+        };
+        runPicardCommandLine(args);
+    }
+
+    @Test
+    public void testNoRgInfoSanitize() throws Exception {
+        final File output = File.createTempFile("no-rg-reverted", ".sam");
+        output.deleteOnExit();
+        final String [] args = new String[]{
+                "I=testdata/picard/sam/bam2fastq/paired/bad/missing-rg-info.sam",
+                "SANITIZE=true",
+                "O=" + output.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        verifyPositiveResults(output, new RevertSam(), true, true, false, false, null, 240, null, null);
     }
 }

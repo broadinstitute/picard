@@ -51,7 +51,7 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     /** The number of PF reads where PF is defined as passing Illumina's filter. */
     public long PF_READS;
 
-    /** The percentage of reads that are PF (PF_READS / TOTAL_READS) */
+    /** The fraction of reads that are PF (PF_READS / TOTAL_READS) */
     public double PCT_PF_READS;
 
     /**
@@ -108,7 +108,7 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public double PF_MISMATCH_RATE;
 
     /**
-     * The percentage of bases that mismatch the reference in PF HQ aligned reads.
+     * The fraction of bases that mismatch the reference in PF HQ aligned reads.
      */
     public double PF_HQ_ERROR_RATE;
 
@@ -131,10 +131,21 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public long READS_ALIGNED_IN_PAIRS;
 
     /**
-     * The percentage of reads whose mate pair was also aligned to the reference.
+     * The fraction of reads whose mate pair was also aligned to the reference.
      * READS_ALIGNED_IN_PAIRS / PF_READS_ALIGNED
      */
     public double PCT_READS_ALIGNED_IN_PAIRS;
+
+    /**
+     * The number of (primary) aligned reads that are **not** "properly" aligned in pairs (as per SAM flag 0x2).
+     */
+    public long PF_READS_IMPROPER_PAIRS;
+
+    /**
+     * The fraction of (primary) reads that are *not* "properly" aligned in pairs (as per SAM flag 0x2).
+     * PF_READS_IMPROPER_PAIRS / PF_READS_ALIGNED
+     */
+    public double PCT_PF_READS_IMPROPER_PAIRS;
 
     /**
      * The number of instrument cycles in which 80% or more of base calls were no-calls.
@@ -148,13 +159,13 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public double STRAND_BALANCE;
 
     /**
-     * The percentage of reads that map outside of a maximum insert size (usually 100kb) or that have
+     * The fraction of reads that map outside of a maximum insert size (usually 100kb) or that have
      * the two ends mapping to different chromosomes.
      */
     public double PCT_CHIMERAS;
 
     /**
-     * The percentage of PF reads that are unaligned and match to a known adapter sequence right from the
+     * The fraction of PF reads that are unaligned and match to a known adapter sequence right from the
      * start of the read.
      */
     public double PCT_ADAPTER;

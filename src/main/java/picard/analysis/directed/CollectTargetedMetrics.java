@@ -2,7 +2,6 @@ package picard.analysis.directed;
 
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
@@ -15,9 +14,9 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.analysis.MetricAccumulationLevel;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.metrics.MultilevelMetrics;
 
@@ -61,42 +60,42 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
                                                final int nearProbeDistance);
 
 
-    @Option(shortName = "TI", doc = "An interval list file that contains the locations of the targets.", minElements=1)
+    @Argument(shortName = "TI", doc = "An interval list file that contains the locations of the targets.", minElements=1)
     public List<File> TARGET_INTERVALS;
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "An aligned SAM or BAM file.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "An aligned SAM or BAM file.")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output file to write the metrics to.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output file to write the metrics to.")
     public File OUTPUT;
 
-    @Option(shortName = "LEVEL", doc = "The level(s) at which to accumulate metrics.")
+    @Argument(shortName = "LEVEL", doc = "The level(s) at which to accumulate metrics.")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
-    @Option(optional = true, doc = "An optional file to output per target coverage information to.")
+    @Argument(optional = true, doc = "An optional file to output per target coverage information to.")
     public File PER_TARGET_COVERAGE;
 
-    @Option(optional = true, doc = "An optional file to output per base coverage information to. The per-base file contains " +
+    @Argument(optional = true, doc = "An optional file to output per base coverage information to. The per-base file contains " +
             "one line per target base and can grow very large. It is not recommended for use with large target sets.")
     public File PER_BASE_COVERAGE;
 
-    @Option(optional = true, doc= "The maximum distance between a read and the nearest probe/bait/amplicon for the read to be " +
+    @Argument(optional = true, doc= "The maximum distance between a read and the nearest probe/bait/amplicon for the read to be " +
             "considered 'near probe' and included in percent selected.")
     public int NEAR_DISTANCE = TargetedPcrMetricsCollector.NEAR_PROBE_DISTANCE_DEFAULT;
 
-    @Option(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
+    @Argument(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality for a read to contribute coverage.")
     public int MINIMUM_MAPPING_QUALITY = 1;
 
-    @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.", overridable = true)
+    @Argument(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.")
     public int MINIMUM_BASE_QUALITY = 0;
 
-    @Option(doc = "True if we are to clip overlapping reads, false otherwise.", optional=true, overridable = true)
+    @Argument(doc = "True if we are to clip overlapping reads, false otherwise.", optional=true)
     public boolean CLIP_OVERLAPPING_READS = false;
 
-    @Option(shortName = "covMax", doc = "Parameter to set a max coverage limit for Theoretical Sensitivity calculations. Default is 200.", optional = true)
+    @Argument(shortName = "covMax", doc = "Parameter to set a max coverage limit for Theoretical Sensitivity calculations. Default is 200.", optional = true)
     public int COVERAGE_CAP = 200;
 
-    @Option(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
+    @Argument(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
     public int SAMPLE_SIZE=10000;
 
     /**

@@ -72,6 +72,7 @@ public class CollectSequencingArtifactMetricsTest extends CommandLineProgramTest
         Assert.assertTrue(areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT),"Pre-Adapter details files differ.");
         Assert.assertTrue(areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.BAIT_BIAS_SUMMARY_EXT), "Bait-Bias summary files differ.");
         Assert.assertTrue(areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT), "Bait-bias details files differ.");
+        Assert.assertTrue(areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.ERROR_SUMMARY_EXT), "Error-summary files differ.");
     }
 
     private boolean areMetricsEqual(final File expectedBase, final File actualBase, final String extension) {
@@ -81,6 +82,11 @@ public class CollectSequencingArtifactMetricsTest extends CommandLineProgramTest
     @Test
     public void testContext() throws IOException {
         runAnalysis("with_context", "CONTEXT_SIZE=1");
+    }
+
+    @Test
+    public void testLargerContext() throws IOException {
+        runAnalysis("with_larger_context", "CONTEXT_SIZE=2");
     }
 
     @Test

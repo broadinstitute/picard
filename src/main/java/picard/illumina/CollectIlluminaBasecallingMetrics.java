@@ -24,41 +24,63 @@
 
 package picard.illumina;
 
-import picard.PicardException;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Illumina;
-import picard.cmdline.Option;
-import picard.cmdline.StandardOptionDefinitions;
-import picard.illumina.parser.ClusterData;import picard.illumina.parser.IlluminaDataProvider;import picard.illumina.parser.IlluminaDataProviderFactory;import picard.illumina.parser.IlluminaDataType;import picard.illumina.parser.ReadStructure;import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
-import picard.util.TabbedTextFileWithHeaderParser;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.programgroups.Illumina;
+import org.broadinstitute.barclay.argparser.Argument;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.Illumina;
+import picard.illumina.parser.BaseIlluminaDataProvider;
+import picard.illumina.parser.ClusterData;
+import picard.illumina.parser.IlluminaDataProviderFactory;
+import picard.illumina.parser.IlluminaDataType;
+import picard.illumina.parser.IlluminaFileUtil;
+import picard.illumina.parser.ParameterizedFileUtil;
+import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.illumina.parser.readers.LocsFileReader;
+import picard.util.TabbedTextFileWithHeaderParser;
 
 import java.io.File;
-import java.lang.Comparable;import java.lang.Double;import java.lang.Exception;import java.lang.Integer;import java.lang.Math;import java.lang.Override;import java.lang.String;import java.lang.StringBuilder;import java.text.DecimalFormat;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-/***
-        - *  A Command line tool to collect Illumina Basecalling metrics for a sequencing run
-        - *  Requires a Lane and an input file of Barcodes to expect.
-        - *  Outputs metrics:
-        - *    *  Mean Clusters Per Tile
-        - *    *  Standard Deviation of Clusters Per Tile
-        - *    *  Mean Pf Clusters Per Tile
-        - *    *  Standard Deviation of Pf Clusters Per Tile
-        - *    *  Mean Percentage of Pf Clusters Per Tile
-        - *    *  Standard Deviation of Percentage of Pf Clusters Per Tile
-        - */
 
+/**
+ * A Command line tool to collect Illumina Basecalling metrics for a sequencing run
+ * Requires a Lane and an input file of Barcodes to expect.
+ * Outputs metrics:
+ * <ul>
+ * <li>Mean Clusters Per Tile</li>
+ * <li>Standard Deviation of Clusters Per Tile</li>
+ * <li>Mean Pf Clusters Per Tile</li>
+ * <li>Standard Deviation of Pf Clusters Per Tile</li>
+ * <li>Mean Percentage of Pf Clusters Per Tile</li>
+ * <li>Standard Deviation of Percentage of Pf Clusters Per Tile</li>
+ * </ul>
+ */
 @CommandLineProgramProperties(
-        usage = CollectIlluminaBasecallingMetrics.USAGE_SUMMARY + CollectIlluminaBasecallingMetrics.USAGE_DETAILS,
-        usageShort = CollectIlluminaBasecallingMetrics.USAGE_SUMMARY,
+        summary = CollectIlluminaBasecallingMetrics.USAGE_SUMMARY + CollectIlluminaBasecallingMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectIlluminaBasecallingMetrics.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
+@DocumentedFeature
 public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Collects Illumina Basecalling metrics for a sequencing run.  ";
     static final String USAGE_DETAILS = "<p>This tool will produce per-barcode and per-lane basecall metrics for each sequencing run.  " +
@@ -71,7 +93,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
             "<p>The input barcode_list.txt file is a file containing all of the sample and molecular barcodes and can be obtained from the " +
             "<a href='http://broadinstitute.github.io/picard/command-line-overview.html#ExtractIlluminaBarcodes'>ExtractIlluminaBarcodes</a> " +
             "tool.  </p>" +
-            ""   +
+            "" +
             "Note: Metrics labeled as percentages are actually expressed as fractions!  " +
             "" +
             "<h4>Usage example:</h4>" +
@@ -87,35 +109,37 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
             "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaBasecallingMetrics'>definitions</a> " +
             "for a complete description of the metrics produced by this tool.  </p>" +
 
-            "<hr />"
-    ;
+            "<hr />";
     //Command Line Arguments
 
-    @Option(doc="The Illumina basecalls output directory from which data are read", shortName="B")
+    @Argument(doc = "The Illumina basecalls output directory from which data are read", shortName = "B")
     public File BASECALLS_DIR;
 
-    @Option(doc="The lane whose data will be read", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
+    @Argument(doc = "The barcodes directory with _barcode.txt files (generated by ExtractIlluminaBarcodes). If not set, use BASECALLS_DIR. ", shortName = "BCD", optional = true)
+    public File BARCODES_DIR;
+
+    @Argument(doc = "The lane whose data will be read", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
     // TODO: No longer optional after old workflows are through
-    @Option(doc="The file containing barcodes to expect from the run - barcodeData.#",shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, optional = true)
+    @Argument(doc = "The file containing barcodes to expect from the run - barcodeData.#", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, optional = true)
     public File INPUT;
 
-    @Option(doc=ReadStructure.PARAMETER_DOC, shortName="RS")
+    @Argument(doc = ReadStructure.PARAMETER_DOC, shortName = "RS")
     public String READ_STRUCTURE;
 
-    @Option(doc="The file to which the collected metrics are written", shortName= StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
+    @Argument(doc = "The file to which the collected metrics are written", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
     private int barcodeLength = 0;
-    private String unmatched_barcode;
+    private String unmatchedBarcode;
     private final SortedMap<String, IlluminaMetricCounts> barcodeToMetricCounts;
 
     private static final String BARCODE_NAME_COLUMN = "barcode_name";
     private static final String BARCODE_SEQUENCE_COLUMN_NAME_STUB = "barcode_sequence_";
 
     public CollectIlluminaBasecallingMetrics() {
-        this.barcodeToMetricCounts = new TreeMap<String, IlluminaMetricCounts>();
+        this.barcodeToMetricCounts = new TreeMap<>();
     }
 
     @Override
@@ -151,37 +175,100 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
                     barcodeToMetricCounts.put(barcode.toString(), new IlluminaMetricCounts(barcode.toString(), barcodeName, LANE));
                 }
             }
-
-            factory = barcodeToMetricCounts.isEmpty()
-                    ? new IlluminaDataProviderFactory(
+            if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
+                factory = new IlluminaDataProviderFactory(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure, bclQualityEvaluationStrategy);
+            } else {
+                factory = barcodeToMetricCounts.isEmpty()
+                        ? new IlluminaDataProviderFactory(
                         BASECALLS_DIR,
+                        BARCODES_DIR,
                         LANE,
                         readStructure,
                         bclQualityEvaluationStrategy,
                         IlluminaDataType.PF,
                         IlluminaDataType.Position)
-                    : new IlluminaDataProviderFactory(
+                        : new IlluminaDataProviderFactory(
                         BASECALLS_DIR,
+                        BARCODES_DIR,
                         LANE,
                         readStructure,
                         bclQualityEvaluationStrategy,
                         IlluminaDataType.PF,
                         IlluminaDataType.Position,
                         IlluminaDataType.Barcodes);
+            }
         }
 
-        unmatched_barcode = StringUtil.repeatCharNTimes('N', barcodeLength);
+        unmatchedBarcode = StringUtil.repeatCharNTimes('N', barcodeLength);
 
         //Initialize data provider, iterate over clusters, and collect statistics
-        final IlluminaDataProvider provider = factory.makeDataProvider();
+        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
+            setupNewDataProvider(factory);
+        } else {
+            final BaseIlluminaDataProvider provider = factory.makeDataProvider();
 
-        while (provider.hasNext()) {
-            final ClusterData cluster = provider.next();
-            addCluster(cluster);
+            while (provider.hasNext()) {
+                final ClusterData cluster = provider.next();
+                addCluster(cluster);
+            }
         }
 
         onComplete();
         return 0;
+    }
+
+    private void setupNewDataProvider(final IlluminaDataProviderFactory factory) {
+        final File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(LANE));
+
+        final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
+
+        //CBCLs
+        final List<File> cbcls = Arrays.stream(cycleDirs)
+                .flatMap(cycleDir -> Arrays.stream(IOUtil.getFilesMatchingRegexp(cycleDir,
+                        "^" + IlluminaFileUtil.longLaneStr(LANE) + "_(\\d{1,5}).cbcl$"))).collect(Collectors.toList());
+
+        if (cbcls.size() == 0) {
+            throw new PicardException("No CBCL files found.");
+        }
+
+        IOUtil.assertFilesAreReadable(cbcls);
+
+        //locs
+        final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
+        final File locsFile = new File(BASECALLS_DIR.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
+        IOUtil.assertFileIsReadable(locsFile);
+        try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
+            while (locsFileReader.hasNext()) {
+                locs.add(locsFileReader.next());
+            }
+        }
+
+        //filter
+        final Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
+                ParameterizedFileUtil.makeLaneTileRegex(".filter", LANE)));
+        final File[] filterFiles = NewIlluminaBasecallsConverter.getTiledFiles(laneDir, laneTileRegex);
+
+        IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
+        final Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
+                ParameterizedFileUtil.makeLaneTileRegex("_barcode.txt", LANE)));
+
+
+        final Map<Integer, File> barcodesFiles = new HashMap<>();
+        for (final File barcodeFile : NewIlluminaBasecallsConverter.getTiledFiles(laneDir, barcodeRegex)) {
+            final Matcher tileMatcher = barcodeRegex.matcher(barcodeFile.getName());
+            if (tileMatcher.matches()) {
+                IOUtil.assertFileIsReadable(barcodeFile);
+                barcodesFiles.put(Integer.valueOf(tileMatcher.group(1)), barcodeFile);
+            }
+        }
+
+        factory.getAvailableTiles().forEach(tile -> {
+            final File barcodeFile = barcodesFiles.get(tile);
+            final BaseIlluminaDataProvider provider = factory.makeDataProvider(cbcls, locs, filterFiles, tile, barcodeFile);
+            while (provider.hasNext()) {
+                addCluster(provider.next());
+            }
+        });
     }
 
     /***
@@ -190,16 +277,16 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     private void addCluster(final ClusterData cluster) {
         //compute hash of Barcode and Lane for key
         String barcode = cluster.getMatchedBarcode();
-        if (barcode == null) barcode = unmatched_barcode;
+        if (barcode == null) barcode = unmatchedBarcode;
 
         //increment counts
-        IlluminaMetricCounts counters =  barcodeToMetricCounts.get(barcode);
+        IlluminaMetricCounts counters = barcodeToMetricCounts.get(barcode);
         if (counters == null) {
-             counters = new IlluminaMetricCounts(barcode,null,LANE);
-             barcodeToMetricCounts.put(barcode, counters);
+            counters = new IlluminaMetricCounts(barcode, null, LANE);
+            barcodeToMetricCounts.put(barcode, counters);
         }
         final int tileNumber = cluster.getTile();
-        counters.incrementClusterCount(tileNumber,cluster.isPf());
+        counters.incrementClusterCount(tileNumber, cluster.isPf());
     }
 
     /**
@@ -214,7 +301,9 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
                 counts.addMetricsToFile(file);
                 allLaneCounts.addIlluminaMetricCounts(counts);
             }
-            if (! barcodeToMetricCounts.keySet().contains("")) allLaneCounts.addMetricsToFile(file);  // detect non-indexed case
+            if (!barcodeToMetricCounts.keySet().contains("")) {
+                allLaneCounts.addMetricsToFile(file);  // detect non-indexed case
+            }
             file.write(OUTPUT);
         } catch (final Exception ex) {
             throw new PicardException("Error writing output file " + OUTPUT.getPath(), ex);
@@ -237,8 +326,8 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
         final IlluminaBasecallingMetrics metrics;
 
         public IlluminaMetricCounts(final String barcode, final String barcodeName, final Integer laneNumber) {
-            this.tileToClusterHistogram = new Histogram<Integer>();
-            this.tileToPfClusterHistogram = new Histogram<Integer>();
+            this.tileToClusterHistogram = new Histogram<>();
+            this.tileToPfClusterHistogram = new Histogram<>();
             this.metrics = new IlluminaBasecallingMetrics();
             this.metrics.MOLECULAR_BARCODE_SEQUENCE_1 = barcode;
             this.metrics.MOLECULAR_BARCODE_NAME = barcodeName;
@@ -247,7 +336,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
 
         /*  Increments cluster count by 1 for a given tile number */
         public void incrementClusterCount(final int tileNumber, final boolean isPf) {
-            incrementClusterCount(tileNumber,1d, isPf);
+            incrementClusterCount(tileNumber, 1d, isPf);
         }
 
         /*  Increments cluster count by an amount for a given tile number */
@@ -263,31 +352,33 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
 
         /* Handles calculating final metrics and updating the metric object */
         private void onComplete() {
-            final double meanClustersPerTile =  tileToClusterHistogram.getMeanBinSize();
+            final double meanClustersPerTile = tileToClusterHistogram.getMeanBinSize();
             metrics.MEAN_CLUSTERS_PER_TILE = Math.round(meanClustersPerTile);
             metrics.SD_CLUSTERS_PER_TILE = Math.round(tileToClusterHistogram.getStandardDeviationBinSize(meanClustersPerTile));
 
-            final double meanPfClustersPerTile =  tileToPfClusterHistogram.getMeanBinSize();
+            final double meanPfClustersPerTile = tileToPfClusterHistogram.getMeanBinSize();
             metrics.MEAN_PF_CLUSTERS_PER_TILE = Math.round(meanPfClustersPerTile);
             metrics.SD_PF_CLUSTERS_PER_TILE = Math.round(tileToPfClusterHistogram.getStandardDeviationBinSize(meanPfClustersPerTile));
 
             final DecimalFormat decFormat = new DecimalFormat("#.##");
             final Histogram<Integer> laneToPctPfClusterHistogram = tileToPfClusterHistogram.divideByHistogram(tileToClusterHistogram);
             final double meanPctPfClustersPerTile = laneToPctPfClusterHistogram.getMeanBinSize();
-            metrics.MEAN_PCT_PF_CLUSTERS_PER_TILE = (Double.isNaN(meanPctPfClustersPerTile) ?  0 : Double.valueOf(decFormat.format(meanPctPfClustersPerTile * 100)));
+            metrics.MEAN_PCT_PF_CLUSTERS_PER_TILE = (Double.isNaN(meanPctPfClustersPerTile) ? 0 : Double.valueOf(decFormat.format(meanPctPfClustersPerTile * 100)));
             metrics.SD_PCT_PF_CLUSTERS_PER_TILE = Double.valueOf(decFormat.format(laneToPctPfClusterHistogram.getStandardDeviationBinSize(meanPctPfClustersPerTile) * 100));
 
             metrics.TOTAL_CLUSTERS = (long) this.tileToClusterHistogram.getSumOfValues();
-            metrics.PF_CLUSTERS    = (long) this.tileToPfClusterHistogram.getSumOfValues();
-            
+            metrics.PF_CLUSTERS = (long) this.tileToPfClusterHistogram.getSumOfValues();
+
             final ReadStructure readStructure = new ReadStructure(READ_STRUCTURE);
             int templateBaseCountPerCluster = 0;
-            for (int i = 0; i < readStructure.templates.length(); i++) templateBaseCountPerCluster += readStructure.templates.get(i).length;
+            for (int i = 0; i < readStructure.templates.length(); i++) {
+                templateBaseCountPerCluster += readStructure.templates.get(i).length;
+            }
             metrics.TOTAL_READS = metrics.TOTAL_CLUSTERS * readStructure.templates.length();
             metrics.PF_READS = metrics.PF_CLUSTERS * readStructure.templates.length();
             metrics.TOTAL_BASES = metrics.TOTAL_CLUSTERS * templateBaseCountPerCluster;
             metrics.PF_BASES = metrics.PF_CLUSTERS * templateBaseCountPerCluster;
-            
+
         }
 
         /* Computes final metric based on data counts and writes to output metric file */

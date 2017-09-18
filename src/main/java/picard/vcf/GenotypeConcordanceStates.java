@@ -1,5 +1,8 @@
 package picard.vcf;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static picard.vcf.GenotypeConcordanceStateCodes.*;
 /**
  * A class to store the various classifications for:
@@ -19,6 +22,10 @@ import static picard.vcf.GenotypeConcordanceStateCodes.*;
  * @author nhomer
  */
 public class GenotypeConcordanceStates {
+
+    static final Map<Integer, TruthState> truthMap = TruthState.getCodeMap();
+    static final Map<Integer, CallState> callMap   = CallState.getCodeMap();
+
     /**
      * These states represent the relationship between a truth genotype and the reference sequence.
      */
@@ -53,9 +60,18 @@ public class GenotypeConcordanceStates {
             return null;
         }
 
+        static Map<Integer, TruthState> getCodeMap() {
+            final Map<Integer, TruthState> map = new HashMap<>();
+            final TruthState truthValues[] = TruthState.values();
+            for (int i = 0; i < truthValues.length; i++) {
+                map.put(truthValues[i].code, truthValues[i]);
+            }
+            return map;
+        }
+
         private final int code;
 
-        private TruthState(final int code) {
+        TruthState(final int code) {
             this.code = code;
         }
 
@@ -127,6 +143,14 @@ public class GenotypeConcordanceStates {
             return null;
         }
 
+        static Map<Integer, CallState> getCodeMap() {
+            final Map<Integer, CallState> map = new HashMap<>();
+            final CallState callValues[] = CallState.values();
+            for (int i = 0; i < callValues.length; i++) {
+                map.put(callValues[i].code, callValues[i]);
+            }
+            return map;
+        }
         private final int code;
 
         private CallState(final int code) {

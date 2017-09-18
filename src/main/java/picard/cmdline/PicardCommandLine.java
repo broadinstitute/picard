@@ -1,8 +1,9 @@
 package picard.cmdline;
 
-import htsjdk.samtools.Defaults;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.CommandLineProgramGroup;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -15,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /*
  * The MIT License
@@ -107,37 +110,29 @@ public class PicardCommandLine {
 
     /** Returns the command line program specified, or prints the usage and exits with exit code 1 **/
     private static CommandLineProgram extractCommandLineProgram(final String[] args, final List<String> packageList, final String commandLineName) {
-        /** Get the set of classes that are our command line programs **/
-        final ClassFinder classFinder = new ClassFinder();
-        for (final String pkg : packageList) {
-            classFinder.find(pkg, CommandLineProgram.class);
-        }
-        String missingAnnotationClasses = "";
-
-        final Map<String, Class<?>> simpleNameToClass = new HashMap<String, Class<?>>();
-        for (final Class clazz : classFinder.getClasses()) {
-            // No interfaces, synthetic, primitive, local, or abstract classes.
-            if (!clazz.isInterface() && !clazz.isSynthetic() && !clazz.isPrimitive() && !clazz.isLocalClass()
-                    && !Modifier.isAbstract(clazz.getModifiers())) {
-                final CommandLineProgramProperties property = getProgramProperty(clazz);
-                // Check for missing annotations
-                if (null == property) {
-                    if (missingAnnotationClasses.isEmpty()) missingAnnotationClasses += clazz.getSimpleName();
-                    else missingAnnotationClasses += ", " + clazz.getSimpleName();
-                }
-                else if (!property.omitFromCommandLine()) { /** We should check for missing annotations later **/
-                    if (simpleNameToClass.containsKey(clazz.getSimpleName())) {
-                        throw new RuntimeException("Simple class name collision: " + clazz.getSimpleName());
+        final Map<String, Class<?>> simpleNameToClass = new HashMap<>();
+        final List<String> missingAnnotationClasses = new ArrayList<>();
+        processAllCommandLinePrograms(
+                packageList,
+                (Class<CommandLineProgram> clazz, CommandLineProgramProperties clProperties) -> {
+                    // Check for missing annotations
+                    if (null == clProperties) {
+                        missingAnnotationClasses.add(clazz.getSimpleName());
                     }
-                    simpleNameToClass.put(clazz.getSimpleName(), clazz);
+                    else if (!clProperties.omitFromCommandLine()) { /** We should check for missing annotations later **/
+                        if (simpleNameToClass.containsKey(clazz.getSimpleName())) {
+                            throw new RuntimeException("Simple class name collision: " + clazz.getSimpleName());
+                        }
+                        simpleNameToClass.put(clazz.getSimpleName(), clazz);
+                    }
                 }
-            }
-        }
+        );
         if (!missingAnnotationClasses.isEmpty()) {
-            throw new RuntimeException("The following classes are missing the required CommandLineProgramProperties annotation: " + missingAnnotationClasses);
+            throw new RuntimeException("The following classes are missing the required CommandLineProgramProperties annotation: " +
+                    missingAnnotationClasses.stream().collect(Collectors.joining((", "))));
         }
 
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
+        final Set<Class<?>> classes = new HashSet<>();
         classes.addAll(simpleNameToClass.values());
 
         if (args.length < 1) {
@@ -163,6 +158,27 @@ public class PicardCommandLine {
             }
         }
         return null;
+    }
+
+    /**
+     * Process each {@code CommandLineProgram}-derived class given a list of packages.
+     * @param packageList list of packages to search
+     * @param clpClassProcessor function to process each CommandLineProgram class found in {@code packageList} (note
+     *                          that the {@code CommandLineProgramProperties} argument may be null)
+     */
+    public static void processAllCommandLinePrograms(
+            final List<String> packageList,
+            final BiConsumer<Class<CommandLineProgram>, CommandLineProgramProperties> clpClassProcessor) {
+        final ClassFinder classFinder = new ClassFinder();
+        packageList.forEach(pkg -> classFinder.find(pkg, CommandLineProgram.class));
+
+        for (final Class clazz : classFinder.getClasses()) {
+            // No interfaces, synthetic, primitive, local, or abstract classes.
+            if (!clazz.isInterface() && !clazz.isSynthetic() && !clazz.isPrimitive() && !clazz.isLocalClass()
+                    && !Modifier.isAbstract(clazz.getModifiers())) {
+                clpClassProcessor.accept(clazz, PicardCommandLine.getProgramProperty(clazz));
+            }
+        }
     }
 
     public static CommandLineProgramProperties getProgramProperty(Class clazz) {
@@ -242,9 +258,9 @@ public class PicardCommandLine {
                 }
                 if (!commandListOnly) {
                     if (clazz.getSimpleName().length() >= 45) {
-                        builder.append(String.format("%s    %s    %s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
+                        builder.append(String.format("%s    %s    %s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.oneLineSummary(), KNRM));
                     } else {
-                        builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
+                        builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.oneLineSummary(), KNRM));
                     }
                 }
                 else {

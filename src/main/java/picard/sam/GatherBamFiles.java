@@ -10,9 +10,10 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -27,10 +28,10 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = GatherBamFiles.USAGE_SUMMARY + GatherBamFiles.USAGE_DETAILS,
-        usageShort = GatherBamFiles.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        summary = GatherBamFiles.USAGE_SUMMARY + GatherBamFiles.USAGE_DETAILS,
+        oneLineSummary = GatherBamFiles.USAGE_SUMMARY,
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class GatherBamFiles extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Concatenate one or more BAM files as efficiently as possible";
     static final String USAGE_DETAILS = "This tool performs a rapid \"gather\" operation on BAM files after scatter" +
@@ -49,11 +50,11 @@ public class GatherBamFiles extends CommandLineProgram {
             "     O=gathered_files.bam" +
             "</pre> " +
             "<hr />";
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "Two or more BAM files or text files containing lists of BAM files (one per line).")
     public List<File> INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output BAM file to write.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output BAM file to write.")
     public File OUTPUT;
 
     private static final Log log = Log.getInstance(GatherBamFiles.class);

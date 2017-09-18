@@ -24,9 +24,10 @@
 
 package picard.sam.markduplicates;
 
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IterableAdapter;
 import htsjdk.samtools.util.Log;
@@ -58,10 +59,10 @@ import java.util.*;
  * @author Nils Homer
  */
 @CommandLineProgramProperties(
-        usage = MarkDuplicatesWithMateCigar.USAGE_SUMMARY + MarkDuplicatesWithMateCigar.USAGE_DETAILS,
-        usageShort =  MarkDuplicatesWithMateCigar.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        summary = MarkDuplicatesWithMateCigar.USAGE_SUMMARY + MarkDuplicatesWithMateCigar.USAGE_DETAILS,
+        oneLineSummary =  MarkDuplicatesWithMateCigar.USAGE_SUMMARY,
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLineProgram {
     static final String USAGE_SUMMARY = "Identifies duplicate reads, accounting for mate CIGAR.  ";
     static final String USAGE_DETAILS = "This tool locates and tags duplicate reads (both PCR and optical) in a BAM or SAM file, where " +
@@ -89,14 +90,22 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
 
     private final Log log = Log.getInstance(MarkDuplicatesWithMateCigar.class);
 
-    @Option(doc = "The minimum distance to buffer records to account for clipping on the 5' end of the records." +
-            "Set this number to -1 to use twice the first read's read length (or 100, whichever is smaller).", optional = true)
+    @Argument(doc = "The minimum distance to buffer records to account for clipping on the 5' end of the records. " +
+            "For a given alignment, this parameter controls the width of the window to search for duplicates of that alignment. " +
+            "Due to 5' read clipping, duplicates do not necessarily have the same 5' alignment coordinates, so the algorithm " +
+            "needs to search around the neighborhood. For single end sequencing data, the neighborhood is only determined by " +
+            "the amount of clipping (assuming no split reads), thus setting MINIMUM_DISTANCE to twice the sequencing read length " +
+            "should be sufficient. For paired end sequencing, the neighborhood is also determined by the fragment insert size, " +
+            "so you may want to set MINIMUM_DISTANCE to something like twice the 99.5% percentile of the fragment insert size " +
+            "distribution (see CollectInsertSizeMetrics). Or you can set this number to -1 to use either a) twice the first read's " +
+            "read length, or b) 100, whichever is smaller. Note that the larger the window, the greater the RAM requirements, so " +
+            "you could run into performance limitations if you use a value that is unnecessarily large.", optional = true)
     public int MINIMUM_DISTANCE = -1;
 
-    @Option(doc = "Skip record pairs with no mate cigar and include them in the output.")
+    @Argument(doc = "Skip record pairs with no mate cigar and include them in the output.")
     boolean SKIP_PAIRS_WITH_NO_MATE_CIGAR = true;
 
-    @Option(doc = "The block size for use in the coordinate-sorted record buffer.", optional = true)
+    @Argument(doc = "The block size for use in the coordinate-sorted record buffer.", optional = true)
     public int BLOCK_SIZE = 100000;
 
     /** Warnings that will only be emitted once */
@@ -117,7 +126,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         IOUtil.assertFileIsWritable(METRICS_FILE);
 
         // Open the inputs
-        final SamHeaderAndIterator headerAndIterator = openInputs();
+        final SamHeaderAndIterator headerAndIterator = openInputs(true);
         final SAMFileHeader header = headerAndIterator.header;
 
         // Create the output header
@@ -192,7 +201,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
      * Updates the program record if necessary.
      */
     private void updateProgramRecord(final SAMRecord record, final Map<String, String> chainedPgIds) {
-        if (PROGRAM_RECORD_ID != null) {
+        if (PROGRAM_RECORD_ID != null && ADD_PG_TAG_TO_READS) {
             final String pgId = record.getStringAttribute(SAMTag.PG.name());
             if (null == pgId) {
                 if (!warnedNullProgramRecords) {

@@ -14,6 +14,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
+import static picard.analysis.GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -287,7 +288,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         output.read(new FileReader(outfile + ".gc_bias.summary_metrics"));
 
         for (final GcBiasSummaryMetrics metrics : output.getMetrics()) {
-            if (metrics.ACCUMULATION_LEVEL.equals("All Reads")) { //ALL_READS level
+            if (metrics.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS)) { //ALL_READS level
                 Assert.assertEquals(metrics.TOTAL_CLUSTERS, 300);
                 Assert.assertEquals(metrics.ALIGNED_READS, 600);
                 Assert.assertEquals(metrics.AT_DROPOUT, 7.234062);
@@ -316,7 +317,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
     private final static String library3 = "TestLibrary3";
 
     private final static File TEST_DIR = new File("testdata/picard/sam/CollectGcBiasMetrics/");
-    private final File dict = new File(TEST_DIR, "Mheader.dict");
+    private final File dict = new File("testdata/picard/quality/chrM.reference.dict");
 
     private File tempSamFile;
 
@@ -334,8 +335,10 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         final String flowCellBarcode = "TESTBARCODE";
 
         tempSamFile = File.createTempFile("CollectGcBias", ".bam", TEST_DIR);
+        final File tempSamIndex = new File(tempSamFile.getAbsolutePath().replace("bam", "bai"));
         final File tempSamFileUnsorted = File.createTempFile("CollectGcBias", ".bam", TEST_DIR);
         tempSamFileUnsorted.deleteOnExit();
+        tempSamIndex.deleteOnExit();
         tempSamFile.deleteOnExit();
 
         BufferedLineReader bufferedLineReader = null;

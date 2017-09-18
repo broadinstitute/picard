@@ -53,7 +53,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
     private final boolean isBisulfiteSequenced;
 
     //The minimum mapping quality a base has to meet in order to be considered high quality
-    private final int MAPPING_QUALITY_THRESOLD = 20;
+    private final int MAPPING_QUALITY_THRESHOLD = 20;
 
     //The minimum quality a base has to meet in order to be consider hq_20
     private final static int BASE_QUALITY_THRESHOLD = 20;
@@ -67,7 +67,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         this.doRefMetrics         = doRefMetrics;
         this.adapterUtility       = new AdapterUtility(adapterSequence);
         this.maxInsertSize        = maxInsertSize;
-        this.expectedOrientations  = expectedOrientations;
+        this.expectedOrientations = expectedOrientations;
         this.isBisulfiteSequenced = isBisulfiteSequenced;
         setup(accumulationLevels, samRgRecords);
     }
@@ -110,14 +110,12 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
             if (rec.getReadPairedFlag()) {
                 if (rec.getFirstOfPairFlag()) {
                     firstOfPairCollector.addRecord(rec, ref);
-                }
-                else {
+                } else {
                     secondOfPairCollector.addRecord(rec, ref);
                 }
 
                 pairCollector.addRecord(rec, ref);
-            }
-            else {
+            } else {
                 unpairedCollector.addRecord(rec, ref);
             }
         }
@@ -155,7 +153,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
          */
         private class IndividualAlignmentSummaryMetricsCollector {
             private long numPositiveStrand = 0;
-            private final Histogram<Integer> readLengthHistogram = new Histogram<Integer>();
+            private final Histogram<Integer> readLengthHistogram = new Histogram<>();
             private AlignmentSummaryMetrics metrics;
             private long chimeras;
             private long chimerasDenominator;
@@ -164,9 +162,9 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
             private long nonBisulfiteAlignedBases = 0;
             private long hqNonBisulfiteAlignedBases = 0;
-            private final Histogram<Long> mismatchHistogram = new Histogram<Long>();
-            private final Histogram<Long> hqMismatchHistogram = new Histogram<Long>();
-            private final Histogram<Integer> badCycleHistogram = new Histogram<Integer>();
+            private final Histogram<Long> mismatchHistogram = new Histogram<>();
+            private final Histogram<Long> hqMismatchHistogram = new Histogram<>();
+            private final Histogram<Integer> badCycleHistogram = new Histogram<>();
 
             public IndividualAlignmentSummaryMetricsCollector(final AlignmentSummaryMetrics.Category pairingCategory,
                                                               final String sample,
@@ -201,14 +199,15 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     metrics.BAD_CYCLES = 0;
                     for (final Histogram.Bin<Integer> cycleBin : badCycleHistogram.values()) {
                         final double badCyclePercentage = cycleBin.getValue() / metrics.TOTAL_READS;
-                        if (badCyclePercentage >= .8) {
+                        if (badCyclePercentage >= 0.8) {
                             metrics.BAD_CYCLES++;
                         }
                     }
 
                     if(doRefMetrics) {
                         if (metrics.PF_READS > 0)         metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
-                        if (metrics.PF_READS_ALIGNED > 0) metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS/ (double) metrics.PF_READS_ALIGNED;
+                        if (metrics.PF_READS_ALIGNED > 0) metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS / (double) metrics.PF_READS_ALIGNED;
+                        if (metrics.PF_READS_ALIGNED > 0) metrics.PCT_PF_READS_IMPROPER_PAIRS = (double) metrics.PF_READS_IMPROPER_PAIRS / (double) metrics.PF_READS_ALIGNED;
                         if (metrics.PF_READS_ALIGNED > 0) metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
                         if (this.chimerasDenominator > 0) metrics.PCT_CHIMERAS = this.chimeras / (double) this.chimerasDenominator;
 
@@ -239,16 +238,16 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                         if (adapterUtility.isAdapterSequence(readBases)) {
                             this.adapterReads++;
                         }
-                    }
-                    else if(doRefMetrics) {
+                    } else if(doRefMetrics) {
                         metrics.PF_READS_ALIGNED++;
+                        if (record.getReadPairedFlag() && !record.getProperPairFlag()) metrics.PF_READS_IMPROPER_PAIRS++;
                         if (!record.getReadNegativeStrandFlag()) numPositiveStrand++;
                         if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
                             metrics.READS_ALIGNED_IN_PAIRS++;
 
                             // Check that both ends have mapq > minimum
                             final Integer mateMq = record.getIntegerAttribute(SAMTag.MQ.toString());
-                            if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESOLD && record.getMappingQuality() >= MAPPING_QUALITY_THRESOLD) {
+                            if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESHOLD && record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
                                 ++this.chimerasDenominator;
 
                                 // With both reads mapped we can see if this pair is chimeric
@@ -256,10 +255,9 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                                     ++this.chimeras;
                                 }
                             }
-                        }
-                        else { // fragment reads or read pairs with one end that maps
+                        } else { // fragment reads or read pairs with one end that maps
                             // Consider chimeras that occur *within* the read using the SA tag
-                            if (record.getMappingQuality() >= MAPPING_QUALITY_THRESOLD) {
+                            if (record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
                                 ++this.chimerasDenominator;
                                 if (record.getAttribute(SAMTag.SA.toString()) != null) ++this.chimeras;
                             }
@@ -298,24 +296,16 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
                         for (int i=0; i<length && refIndex+i<refLength; ++i) {
                             final int readBaseIndex = readIndex + i;
-                            boolean mismatch = !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex+i]);
-                            boolean bisulfiteBase = false;
-                            if (mismatch && isBisulfiteSequenced &&
-                                    record.getReadNegativeStrandFlag() &&
-                                    (refBases[refIndex + i] == 'G' || refBases[refIndex + i] == 'g') &&
-                                    (readBases[readBaseIndex] == 'A' || readBases[readBaseIndex] == 'a')
-                                    || ((!record.getReadNegativeStrandFlag()) &&
-                                    (refBases[refIndex + i] == 'C' || refBases[refIndex + i] == 'c') &&
-                                    (readBases[readBaseIndex] == 'T') || readBases[readBaseIndex] == 't')) {
+                            boolean mismatch = !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex + i]);
+                            final boolean bisulfiteMatch = isBisulfiteSequenced && SequenceUtil.bisulfiteBasesEqual(record.getReadNegativeStrandFlag(), readBases[readBaseIndex], refBases[readBaseIndex]);
 
-                                bisulfiteBase = true;
-                                mismatch = false;
-                            }
+                            final boolean bisulfiteBase = mismatch && bisulfiteMatch;
+                            mismatch = mismatch && !bisulfiteMatch;
 
-                            if(mismatch) mismatchCount++;
+                            if (mismatch) mismatchCount++;
 
                             metrics.PF_ALIGNED_BASES++;
-                            if(!bisulfiteBase) nonBisulfiteAlignedBases++;
+                            if (!bisulfiteBase) nonBisulfiteAlignedBases++;
 
                             if (highQualityMapping) {
                                 metrics.PF_HQ_ALIGNED_BASES++;
@@ -348,7 +338,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
             private boolean isHighQualityMapping(final SAMRecord record) {
                 return !record.getReadFailsVendorQualityCheckFlag() &&
-                        record.getMappingQuality() >= MAPPING_QUALITY_THRESOLD;
+                        record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD;
             }
 
             public AlignmentSummaryMetrics getMetrics() {

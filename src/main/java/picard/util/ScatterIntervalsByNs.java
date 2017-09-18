@@ -1,32 +1,23 @@
 package picard.util;
 
-import htsjdk.samtools.util.SequenceUtil;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Intervals;
-import picard.cmdline.Option;
-import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.SequenceUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.programgroups.Intervals;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.Intervals;
 
 import java.io.File;
-import java.lang.Boolean;
-import java.lang.Override;
-import java.lang.String;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -37,10 +28,11 @@ import java.util.Set;
  */
 
 @CommandLineProgramProperties(
-        usage = ScatterIntervalsByNs.USAGE_SUMMARY + ScatterIntervalsByNs.USAGE_DETAILS,
-        usageShort = ScatterIntervalsByNs.USAGE_SUMMARY,
+        summary = ScatterIntervalsByNs.USAGE_SUMMARY + ScatterIntervalsByNs.USAGE_DETAILS,
+        oneLineSummary = ScatterIntervalsByNs.USAGE_SUMMARY,
         programGroup = Intervals.class
 )
+@DocumentedFeature
 public class ScatterIntervalsByNs extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Writes an interval list based on splitting a reference by Ns.  ";
     static final String USAGE_DETAILS = "This tool identifies positions in a reference where the bases are 'no-calls' and writes out an " +
@@ -55,16 +47,13 @@ public class ScatterIntervalsByNs extends CommandLineProgram {
             "      O=output.interval_list" +
             "</pre>" +
             "<hr />";
-    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence to use.")
-    public File REFERENCE;
-
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file for interval list.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file for interval list.")
     public File OUTPUT;
 
-    @Option(shortName = "OT", doc = "Type of intervals to output.", optional = true)
+    @Argument(shortName = "OT", doc = "Type of intervals to output.", optional = true)
     public OutputType OUTPUT_TYPE = OutputType.BOTH;
 
-    @Option(shortName = "N", doc = "Maximal number of contiguous N bases to tolerate, thereby continuing the current ACGT interval.", optional = true)
+    @Argument(shortName = "N", doc = "Maximal number of contiguous N bases to tolerate, thereby continuing the current ACGT interval.", optional = true)
     public int MAX_TO_MERGE = 1;
 
     //not using an enum since Interval.name is a String, and am using that to define the type of the Interval
@@ -96,12 +85,37 @@ public class ScatterIntervalsByNs extends CommandLineProgram {
         new ScatterIntervalsByNs().instanceMainWithExit(args);
     }
 
+    // return a custom argument collection since this tool uses a (required) argument name
+    // of "REFERENCE", not "REFERENCE_SEQUENCE"
+    @Override
+    protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
+        return new ScatterIntervalsByNReferenceArgumentCollection();
+    }
+
+    public static class ScatterIntervalsByNReferenceArgumentCollection implements ReferenceArgumentCollection {
+        @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence to use. " +
+                "Note: this tool requires that the reference fasta " +
+                "has both an associated index and a dictionary.")
+        public File REFERENCE;
+
+        @Override
+        public File getReferenceFile() {
+            return REFERENCE;
+        };
+    }
+
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(REFERENCE);
+        IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final ReferenceSequenceFile refFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE, true);
+        final ReferenceSequenceFile refFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE, true);
+        if (!refFile.isIndexed()) {
+            throw new IllegalStateException("Reference file must be indexed, but no index file was found");
+        }
+        if (refFile.getSequenceDictionary() == null) {
+            throw new IllegalStateException("Reference file must include a dictionary, but no dictionary file was found");
+        }
 
         // get the intervals
         final IntervalList intervals = segregateReference(refFile, MAX_TO_MERGE);

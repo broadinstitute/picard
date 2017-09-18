@@ -69,6 +69,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     @Test
     public void testTwoMappedPairsWithSoftClippingFirstOfPairOnly() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(76);
         // NB: no duplicates
         // 5'1: 2, 5'2:46+73M=118
         // 5'1: 2, 5'2:51+68M=118
@@ -100,6 +101,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
             final File outputSam = new File(outputDir, TEST_BASE_NAME + ".sam");
             args.add("OUTPUT=" + outputSam.getAbsolutePath());
             args.add("METRICS_FILE=" + new File(outputDir, TEST_BASE_NAME + ".duplicate_metrics").getAbsolutePath());
+            args.add("ADD_PG_TAG_TO_READS=true");
             if (suppressPg) args.add("PROGRAM_RECORD_ID=null");
 
             // I generally prefer to call doWork rather than invoking the argument parser, but it is necessary
@@ -238,6 +240,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     @Test
     public void testWithBarcodeDuplicate() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(68);
         tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         tester.addMatePair("RUNID:2:2:15993:13362", 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
@@ -251,6 +254,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     @Test
     public void testWithBarcodeComplex() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(68);
         final String readNameOne = "RUNID:1:1:15993:13361";
         final String readNameTwo = "RUNID:2:2:15993:13362";
         final String readNameThree = "RUNID:3:3:15993:13362";
@@ -276,6 +280,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     @Test
     public void testWithIndividualReadBarcodes() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(68);
         final String readNameOne = "RUNID:1:1:15993:13361";
         final String readNameTwo = "RUNID:2:2:15993:13362";
         final String readNameThree = "RUNID:3:3:15993:13362";

@@ -23,17 +23,21 @@
  */
 package picard.illumina;
 
+import htsjdk.samtools.fastq.FastqReader;
+import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.LineReader;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.samtools.util.TestUtil;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.illumina.parser.ReadStructure;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,8 +50,10 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/fastq");
     private static final File TEST_DATA_DIR_WITH_4M = new File("testdata/picard/illumina/25T8B25T/fastq_with_4M");
     private static final File TEST_DATA_DIR_WITH_4M4M = new File("testdata/picard/illumina/25T8B25T/fastq_with_4M4M");
+    private static final File TEST_DATA_DIR_WITH_CBCLS = new File("testdata/picard/illumina/151T8B8B151T_cbcl/Data/Intensities/BaseCalls");
 
     private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/fastq");
+    private static final File DUAL_CBCL_TEST_DATA_DIR = new File("testdata/picard/illumina/151T8B8B151T_cbcl/fastq");
 
     public String getCommandLineProgramName() {
         return IlluminaBasecallsToFastq.class.getSimpleName();
@@ -100,8 +106,8 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
             });
 
             final String[] filenames = new String[]{
-                filePrefix + ".1.fastq",
-                filePrefix + ".barcode_1.fastq"
+                    filePrefix + ".1.fastq",
+                    filePrefix + ".barcode_1.fastq"
             };
             for (final String filename : filenames) {
                 IOUtil.assertFilesEqual(new File(outputDir, filename), new File(TEST_DATA_DIR, filename));
@@ -132,18 +138,37 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
         runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
     }
 
+    @Test
+    public void testCbclConvert() throws Exception {
+        runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR);
+    }
+
+    private void compareFastqs(File testDataDir, File outputSam, String filename) {
+        File f1 = new File(outputSam.getParentFile(), filename);
+        File f2 = new File(testDataDir, filename);
+        FastqReader reader1 = new FastqReader(f1);
+        List<FastqRecord> reads = new ArrayList<>();
+        FastqReader reader2 = new FastqReader(f2);
+        for (FastqRecord record : reader1) {
+            reads.add(record);
+        }
+
+        for (FastqRecord record : reader2) {
+            Assert.assertTrue(reads.contains(record));
+        }
+    }
+
     /**
      * This test utility takes a libraryParamsFile and generates output sam files through IlluminaBasecallsToFastq to compare against
      * preloaded test data
      *
-     * @param lane lane number to use
-     * @param jobName name of job for the temp file
-     * @param libraryParamsFile the params file to use for the de-multiplexing
+     * @param lane                lane number to use
+     * @param jobName             name of job for the temp file
+     * @param libraryParamsFile   the params file to use for the de-multiplexing
      * @param concatNColumnFields how many columns to concatenate to get the barcode
      * @param readStructureString what read-structure string to use
-     * @param baseCallsDir what directory can I find the BCLs in
-     * @param testDataDir what directory can I find the expected resulting files
-     *
+     * @param baseCallsDir        what directory can I find the BCLs in
+     * @param testDataDir         what directory can I find the expected resulting files
      * @throws Exception
      */
 
@@ -160,22 +185,8 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
             final File libraryParams = new File(outputDir, libraryParamsFile);
             libraryParams.deleteOnExit();
             final List<File> outputPrefixes = new ArrayList<File>();
-            final LineReader reader = new BufferedLineReader(new FileInputStream(new File(testDataDir, libraryParamsFile)));
-            final PrintWriter writer = new PrintWriter(libraryParams);
-            final String header = reader.readLine();
-            writer.println(header + "\tOUTPUT_PREFIX");
-            while (true) {
-                final String line = reader.readLine();
-                if (line == null) {
-                    break;
-                }
-                final String[] fields = line.split("\t");
-                final File outputPrefix = new File(outputDir, StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)));
-                outputPrefixes.add(outputPrefix);
-                writer.println(line + "\t" + outputPrefix);
-            }
-            writer.close();
-            reader.close();
+            convertParamsFile(libraryParamsFile, concatNColumnFields, testDataDir, outputDir, libraryParams, outputPrefixes);
+
 
             runPicardCommandLine(new String[]{
                     "BASECALLS_DIR=" + baseCallsDir,
@@ -205,6 +216,25 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
             }
         } finally {
             TestUtil.recursiveDelete(outputDir);
+        }
+    }
+
+    private void convertParamsFile(String libraryParamsFile, int concatNColumnFields, File testDataDir, File outputDir, File libraryParams, List<File> outputPrefixes) throws FileNotFoundException {
+        try (LineReader reader = new BufferedLineReader(new FileInputStream(new File(testDataDir, libraryParamsFile)))) {
+            final PrintWriter writer = new PrintWriter(libraryParams);
+            final String header = reader.readLine();
+            writer.println(header + "\tOUTPUT_PREFIX");
+            while (true) {
+                final String line = reader.readLine();
+                if (line == null) {
+                    break;
+                }
+                final String[] fields = line.split("\t");
+                final File outputPrefix = new File(outputDir, StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)));
+                outputPrefixes.add(outputPrefix);
+                writer.println(line + "\t" + outputPrefix);
+            }
+            writer.close();
         }
     }
 }

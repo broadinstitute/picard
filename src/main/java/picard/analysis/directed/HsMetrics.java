@@ -121,6 +121,9 @@ public class HsMetrics extends MultilevelMetrics {
     /** The median coverage of a target region. */
     public double MEDIAN_TARGET_COVERAGE;
 
+    /** The maximum coverage of reads that mapped to target regions of an experiment. */
+    public long MAX_TARGET_COVERAGE;
+
     /** The number of aligned, de-duped, on-bait bases out of the PF bases available. */
     public double PCT_USABLE_BASES_ON_BAIT;
 

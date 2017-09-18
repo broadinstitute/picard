@@ -2,10 +2,11 @@ package picard.sam;
 
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.util.IOUtil;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
@@ -14,10 +15,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 @CommandLineProgramProperties(
-        usage = CalculateReadGroupChecksum.USAGE_SUMMARY + CalculateReadGroupChecksum.USAGE_DETAILS,
-        usageShort = CalculateReadGroupChecksum.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
-)
+        summary = CalculateReadGroupChecksum.USAGE_SUMMARY + CalculateReadGroupChecksum.USAGE_DETAILS,
+        oneLineSummary = CalculateReadGroupChecksum.USAGE_SUMMARY,
+        programGroup = SamOrBam.class)
+@DocumentedFeature
 public class CalculateReadGroupChecksum extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Creates a hash code based on the read groups (RG).  ";
     static final String USAGE_DETAILS = "This tool creates a hash code based on identifying information in the read groups " +
@@ -33,10 +34,10 @@ public class CalculateReadGroupChecksum extends CommandLineProgram {
             "<hr />";
     private static final String OUTPUT_FILE_EXTENSION = ".read_group_md5";
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file. ")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file. ")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The file to which the hash code should be written.", optional = true)
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The file to which the hash code should be written.", optional = true)
     public File OUTPUT;
 
     public static void main(final String[] args) {

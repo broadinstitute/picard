@@ -34,12 +34,13 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
@@ -49,10 +50,11 @@ import java.util.List;
 import java.util.Set;
 
 @CommandLineProgramProperties(
-        usage = CollectRnaSeqMetrics.USAGE_SUMMARY + CollectRnaSeqMetrics.USAGE_DETAILS,
-        usageShort = CollectRnaSeqMetrics.USAGE_SUMMARY,
+        summary = CollectRnaSeqMetrics.USAGE_SUMMARY + CollectRnaSeqMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectRnaSeqMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
+@DocumentedFeature
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 static final String USAGE_SUMMARY = "Produces RNA alignment metrics for a SAM or BAM file.  ";
 static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containing the aligned reads from an RNAseq experiment "+
@@ -72,11 +74,19 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 "<p>The sequence input must be a valid SAM/BAM file containing RNAseq data aligned by an RNAseq-aware genome aligner such a "+
 "<a href='http://github.com/alexdobin/STAR'>STAR</a> or <a href='http://ccb.jhu.edu/software/tophat/index.shtml'>TopHat</a>. "+
 "The tool also requires a REF_FLAT file, a tab-delimited file containing information about the location of RNA transcripts, "+
-"exon start and stop sites, etc. For more information on the REF_FLAT format, see the following "+
-"<a href='http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat'>description</a>.  "+
-"Build-specific REF_FLAT files can be obtained <a href='http://hgdownload.cse.ucsc.edu/goldenPath/'>here</a>.</p>"+
+"exon start and stop sites, etc. For an example refFlat file for GRCh38, see refFlat.txt.gz at "+
+"<a href='http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database'>http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database</a>.  "+
+"The first five lines of the tab-limited text file appear as follows.</p>"+
 
-"<pNote: Metrics labeled as percentages are actually expressed as fractions!</p>"+
+"<pre>" +
+"DDX11L1	NR_046018	chr1	+	11873	14409	14409	14409	3	11873,12612,13220,	12227,12721,14409," +
+"WASH7P	NR_024540	chr1	-	14361	29370	29370	29370	11	14361,14969,15795,16606,16857,17232,17605,17914,18267,24737,29320,	14829,15038,15947,16765,17055,17368,17742,18061,18366,24891,29370," +
+"DLGAP2-AS1	NR_103863	chr8_KI270926v1_alt	-	33083	35050	35050	35050	3	33083,33761,35028,	33281,33899,35050," +
+"MIR570	NR_030296	chr3	+	195699400	195699497	195699497	195699497	1	195699400,	195699497," +
+"MIR548A3	NR_030330	chr8	-	104484368	104484465	104484465	104484465	1	104484368,	104484465," +
+"</pre>" +
+
+"<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>"+
 "<h4>Usage example:</h4>"+
 "<pre>" +
 "java -jar picard.jar CollectRnaSeqMetrics \\<br />" +
@@ -94,32 +104,32 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
 
-    @Option(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
+    @Argument(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
     public File REF_FLAT;
 
-    @Option(doc="Location of rRNA sequences in genome, in interval_list format.  " +
+    @Argument(doc="Location of rRNA sequences in genome, in interval_list format.  " +
             "If not specified no bases will be identified as being ribosomal.  " +
             "Format described <a href=\"http://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalList.html\">here</a>:", optional = true)
     public File RIBOSOMAL_INTERVALS;
 
-    @Option(shortName = "STRAND", doc="For strand-specific library prep. " +
+    @Argument(shortName = "STRAND", doc="For strand-specific library prep. " +
             "For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND if the reads are expected to be on the transcription strand.")
     public RnaSeqMetricsCollector.StrandSpecificity STRAND_SPECIFICITY;
 
-    @Option(doc="When calculating coverage based values (e.g. CV of coverage) only use transcripts of this length or greater.")
+    @Argument(doc="When calculating coverage based values (e.g. CV of coverage) only use transcripts of this length or greater.")
     public int MINIMUM_LENGTH = 500;
 
-    @Option(doc="The PDF file to write out a plot of normalized position vs. coverage.", shortName="CHART", optional = true)
+    @Argument(doc="The PDF file to write out a plot of normalized position vs. coverage.", shortName="CHART", optional = true)
     public File CHART_OUTPUT;
 
-    @Option(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.  " +
+    @Argument(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.  " +
     "These reads are not counted as ")
     public Set<String> IGNORE_SEQUENCE = new HashSet<String>();
 
-    @Option(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair to be considered rRNA.")
+    @Argument(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair to be considered rRNA.")
     public double RRNA_FRAGMENT_PERCENTAGE = 0.8;
 
-    @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
+    @Argument(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
     private RnaSeqMetricsCollector collector;
@@ -135,6 +145,15 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     }
 
     @Override
+    protected String[] customCommandLineValidation() {
+        // No ribosomal intervals file and rRNA fragment percentage = 0
+        if ( RIBOSOMAL_INTERVALS == null && RRNA_FRAGMENT_PERCENTAGE == 0 ) {
+            throw new PicardException("Must use a RIBOSOMAL_INTERVALS file if RRNA_FRAGMENT_PERCENTAGE = 0.0");
+        }
+        return super.customCommandLineValidation();
+    }
+
+    @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
 
         if (CHART_OUTPUT != null) IOUtil.assertFileIsWritable(CHART_OUTPUT);
@@ -143,7 +162,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
 
         final Long ribosomalBasesInitialValue = RIBOSOMAL_INTERVALS != null ? 0L : null;
-        final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = RnaSeqMetricsCollector.makeOverlapDetector(samFile, header, RIBOSOMAL_INTERVALS);
+        final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = RnaSeqMetricsCollector.makeOverlapDetector(samFile, header, RIBOSOMAL_INTERVALS, LOG);
 
         final HashSet<Integer> ignoredSequenceIndices = RnaSeqMetricsCollector.makeIgnoredSequenceIndicesSet(header, IGNORE_SEQUENCE);
 

@@ -24,8 +24,10 @@
 
 package picard.sam.markduplicates.util;
 
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.*;
 import htsjdk.samtools.util.Log;
+import picard.sam.util.ReadOutputCommandLineProgram;
 
 /**
  * Abstract class that holds parameters and methods common to classes that optical duplicate detection.  We put them here so that
@@ -33,11 +35,11 @@ import htsjdk.samtools.util.Log;
  *
  * @author Tim Fennell
  */
-public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends CommandLineProgram {
+public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends ReadOutputCommandLineProgram {
     protected static Log LOG = Log.getInstance(AbstractOpticalDuplicateFinderCommandLineProgram.class);
 
 
-    @Option(doc = "Regular expression that can be used to parse read names in the incoming SAM file. Read names are " +
+    @Argument(doc = "Regular expression that can be used to parse read names in the incoming SAM file. Read names are " +
             "parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used " +
             "to estimate the rate of optical duplication in order to give a more accurate estimated library size. " +
             "Set this option to null to disable optical duplicate detection, e.g. for RNA-seq " +
@@ -52,17 +54,23 @@ public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends C
             optional = true)
     public String READ_NAME_REGEX = OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX;
 
-    @Option(doc = "The maximum offset between two duplicate clusters in order to consider them optical duplicates. The default " +
+    @Argument(doc = "The maximum offset between two duplicate clusters in order to consider them optical duplicates. The default " +
             "is appropriate for unpatterned versions of the Illumina platform. For the patterned flowcell models, 2500 is more" +
             "appropriate. For other platforms and models, users should experiment to find what works best.")
     public int OPTICAL_DUPLICATE_PIXEL_DISTANCE = OpticalDuplicateFinder.DEFAULT_OPTICAL_DUPLICATE_DISTANCE;
+
+    @Argument(doc = "This number is the maximum size of a set of duplicate reads for which we will attempt to determine " +
+            "which are optical duplicates.  Please be aware that if you raise this value too high and do encounter a very " +
+            "large set of duplicate reads, it will severely affect the runtime of this tool.  To completely disable this check, " +
+            "set the value to -1.")
+    public long MAX_OPTICAL_DUPLICATE_SET_SIZE = OpticalDuplicateFinder.DEFAULT_MAX_DUPLICATE_SET_SIZE;
 
     // The tool with which to find optical duplicates
     protected OpticalDuplicateFinder opticalDuplicateFinder = null;
 
     // Needed for testing
     public void setupOpticalDuplicateFinder() {
-        this.opticalDuplicateFinder = new OpticalDuplicateFinder(READ_NAME_REGEX, OPTICAL_DUPLICATE_PIXEL_DISTANCE, LOG);
+        this.opticalDuplicateFinder = new OpticalDuplicateFinder(READ_NAME_REGEX, OPTICAL_DUPLICATE_PIXEL_DISTANCE, MAX_OPTICAL_DUPLICATE_SET_SIZE, LOG);
     }
 
     @Override

@@ -24,28 +24,29 @@
 
 package picard.vcf;
 
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.Option;
-import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
-import htsjdk.variant.variantcontext.writer.VariantContextWriterFactory;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;
 import java.util.EnumSet;
 
 @CommandLineProgramProperties(
-        usage = RenameSampleInVcf.USAGE_SUMMARY + RenameSampleInVcf.USAGE_DETAILS,
-        usageShort = RenameSampleInVcf.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class
-)
+        summary = RenameSampleInVcf.USAGE_SUMMARY + RenameSampleInVcf.USAGE_DETAILS,
+        oneLineSummary = RenameSampleInVcf.USAGE_SUMMARY,
+        programGroup = VcfOrBcf.class)
+@DocumentedFeature
 public class RenameSampleInVcf extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Renames a sample within a VCF or BCF.  ";
     static final String USAGE_DETAILS = "This tool enables the user to rename a sample in either a VCF or BCF file.  " +
@@ -60,16 +61,16 @@ public class RenameSampleInVcf extends CommandLineProgram {
             "      NEW_SAMPLE_NAME=sample123" +
             "</pre>" +
             "<hr />";
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input single sample VCF.")
+    @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input single sample VCF.")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output single sample VCF.")
+    @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output single sample VCF.")
     public File OUTPUT;
 
-    @Option(doc="Existing name of sample in VCF; if provided, asserts that that is the name of the extant sample name", optional = true)
+    @Argument(doc="Existing name of sample in VCF; if provided, asserts that that is the name of the extant sample name", optional = true)
     public String OLD_SAMPLE_NAME = null;
 
-    @Option(doc="New name to give sample in output VCF.")
+    @Argument(doc="New name to give sample in output VCF.")
     public String NEW_SAMPLE_NAME;
 
 
@@ -93,11 +94,13 @@ public class RenameSampleInVcf extends CommandLineProgram {
             throw new IllegalArgumentException("Input VCF did not contain expected sample. Contained: " + header.getGenotypeSamples().get(0));
         }
 
-        final EnumSet<Options> options = EnumSet.copyOf(VariantContextWriterFactory.DEFAULT_OPTIONS);
+        final EnumSet<Options> options = EnumSet.copyOf(VariantContextWriterBuilder.DEFAULT_OPTIONS);
         if (CREATE_INDEX) options.add(Options.INDEX_ON_THE_FLY); else options.remove(Options.INDEX_ON_THE_FLY);
 
         final VCFHeader outHeader = new VCFHeader(header.getMetaDataInInputOrder(), CollectionUtil.makeList(NEW_SAMPLE_NAME));
-        final VariantContextWriter out = VariantContextWriterFactory.create(OUTPUT, outHeader.getSequenceDictionary(), options);
+        final VariantContextWriter out = new VariantContextWriterBuilder()
+                .setOptions(options)
+                .setOutputFile(OUTPUT).setReferenceDictionary(outHeader.getSequenceDictionary()).build();
         out.writeHeader(outHeader);
 
         for (final VariantContext ctx : in) {

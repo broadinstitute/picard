@@ -34,10 +34,10 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
     What do we need to store you ask?  Well, we need to store:
        - byte: orientation
        - short: libraryId, readGroup, tile, x, y, score
-       - int: read1ReferenceIndex, read1Coordinate, read2ReferenceIndex, read2Coordinate
+       - int: read1ReferenceIndex, read1Coordinate, read2ReferenceIndex, read2Coordinate, duplicateSetSize
        - long: read1IndexInFile, read2IndexInFile
      */
-    protected static final int SIZE_OF = (1 * 1) + (5 * 2) + (4 * 4) + (8 * 2) + 1
+    protected static final int SIZE_OF = (1 * 1) + (5 * 2) + (5 * 4) + (8 * 2) + 1
             + 8 + // last 8 == reference overhead
             13; // This is determined experimentally with JProfiler
 
@@ -48,6 +48,7 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
     public short score = 0;
     public long read1IndexInFile = -1;
     public long read2IndexInFile = -1;
+    public int duplicateSetSize = -1;
 
     public ReadEndsForMarkDuplicates() {}
 
@@ -76,4 +77,5 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
     public ReadEndsForMarkDuplicates clone() {
         return new ReadEndsForMarkDuplicates(this);
     }
+
 }

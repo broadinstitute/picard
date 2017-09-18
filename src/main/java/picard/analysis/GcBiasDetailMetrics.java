@@ -34,6 +34,8 @@ import picard.metrics.MultilevelMetrics;
  */
 public class GcBiasDetailMetrics extends MultilevelMetrics {
     public String ACCUMULATION_LEVEL;
+    /** This option is used to mark including or excluding duplicates. */
+    public String READS_USED;
     /** The G+C content of the reference sequence represented by this bin. Values are from 0% to 100% */
     public int GC;
 

@@ -1,3 +1,4 @@
+dist: trusty
 language: java
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
@@ -8,6 +9,7 @@ cache:
     - $HOME/.m2
 jdk:
   - oraclejdk8
+  - openjdk8
 before_install:
   - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
   - sudo apt-get -qq update
@@ -15,3 +17,6 @@ before_install:
 script: ./gradlew jacocoTestReport
 after_success:
   - ./gradlew coveralls
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+        ./gradlew uploadArchives;
+    fi

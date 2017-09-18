@@ -36,8 +36,8 @@ import picard.illumina.parser.readers.TileMetricsOutReader;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +84,7 @@ public class IlluminaFileUtil {
 	}
 
 
-	public IlluminaFileUtil(final File basecallDir, File barcodeDir, final int lane) {
+    public IlluminaFileUtil(final File basecallDir, final File barcodeDir, final int lane) {
         this.lane = lane;
         this.basecallDir = basecallDir;
         this.barcodeDir = barcodeDir;
@@ -171,7 +171,7 @@ public class IlluminaFileUtil {
         //Used just to ensure predictable ordering
         final TreeSet<Integer> expectedTiles = new TreeSet<Integer>();
 
-        final Iterator<TileMetricsOutReader.IlluminaTileMetrics> tileMetrics = new TileMetricsOutReader(tileMetricsOut);
+        final Iterator<TileMetricsOutReader.IlluminaTileMetrics> tileMetrics = new TileMetricsOutReader(tileMetricsOut, TileMetricsOutReader.TileMetricsVersion.TWO);
         while (tileMetrics.hasNext()) {
             final TileMetricsOutReader.IlluminaTileMetrics tileMetric = tileMetrics.next();
 
@@ -222,11 +222,11 @@ public class IlluminaFileUtil {
      * @return A long string representation of the name
      */
     public static String longLaneStr(final int lane) {
-        String lstr = String.valueOf(lane);
+        final StringBuilder lstr = new StringBuilder(String.valueOf(lane));
         final int zerosToAdd = 3 - lstr.length();
 
         for (int i = 0; i < zerosToAdd; i++) {
-            lstr = "0" + lstr;
+            lstr.insert(0, "0");
         }
         return "L" + lstr;
     }
@@ -237,27 +237,41 @@ public class IlluminaFileUtil {
             return "";
         }
 
-        String summary = String.valueOf(intList.get(0));
+        final StringBuilder summary = new StringBuilder(String.valueOf(intList.get(0)));
         for (int i = 1; i < intList.size(); i++) {
-            summary += ", " + String.valueOf(intList.get(i));
+            summary.append(", ").append(String.valueOf(intList.get(i)));
         }
 
-        return summary;
+        return summary.toString();
     }
 
     private String summarizeTileCounts(final List<SupportedIlluminaFormat> formats) {
-        String summary;
+        final StringBuilder summary;
         ParameterizedFileUtil pfu = getUtil(formats.get(0));
         List<Integer> tiles = pfu.getTiles();
-        summary = pfu.extension + "(" + liToStr(tiles) + ")";
+        summary = new StringBuilder(pfu.extension + "(" + liToStr(tiles) + ")");
 
         for (final SupportedIlluminaFormat format : formats) {
             pfu = getUtil(format);
             tiles = pfu.getTiles();
 
-            summary += ", " + pfu.extension + "(" + liToStr(tiles) + ")";
+            summary.append(", ").append(pfu.extension).append("(").append(liToStr(tiles)).append(")");
         }
 
-        return summary;
+        return summary.toString();
+    }
+
+    public static boolean hasCbcls(final File basecallDir, final int lane) {
+        final File laneDir = new File(basecallDir, IlluminaFileUtil.longLaneStr(lane));
+        final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
+
+        //CBCLs
+        final List<File> cbcls = new ArrayList<>();
+        Arrays.asList(cycleDirs)
+                .forEach(cycleDir -> cbcls.addAll(
+                        Arrays.asList(IOUtil.getFilesMatchingRegexp(
+                                cycleDir, "^" + IlluminaFileUtil.longLaneStr(lane) + "_(\\d{1,5}).cbcl$"))));
+
+        return cbcls.size() > 0;
     }
 }
