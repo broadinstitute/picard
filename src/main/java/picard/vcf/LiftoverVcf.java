@@ -339,6 +339,7 @@ public class LiftoverVcf extends CommandLineProgram {
         builder.log10PError(source.getLog10PError());
         builder.attributes(source.getAttributes());
         builder.id(source.getID());
+        builder.alleles(fixAlleles(source.getAlleles(), alleleMap));
 
         if (WRITE_ORIGINAL_POSITION) {
             builder.attribute(ORIGINAL_CONTIG, source.getContig());
@@ -463,6 +464,19 @@ public class LiftoverVcf extends CommandLineProgram {
         builder.log10PError(source.getLog10PError());
 
         return leftAlignVariant(builder.make(), referenceSequence);
+    }
+
+    protected static List<Allele> fixAlleles(final List<Allele> originals, final Map<Allele, Allele> alleleMap) {
+        if (alleleMap.isEmpty()) {
+            return originals;
+        }
+
+        final List<Allele> fixedAlleles = new ArrayList<>();
+        for (final Allele allele : originals) {
+            fixedAlleles.add(alleleMap.getOrDefault(allele, allele));
+        }
+
+        return fixedAlleles;
     }
 
     protected static GenotypesContext fixGenotypes(final GenotypesContext originals, final Map<Allele, Allele> alleleMap) {
