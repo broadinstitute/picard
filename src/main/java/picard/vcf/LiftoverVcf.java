@@ -473,7 +473,7 @@ public class LiftoverVcf extends CommandLineProgram {
 
         final List<Allele> fixedAlleles = new ArrayList<>();
         for (final Allele allele : originals) {
-            fixedAlleles.add(alleleMap.getOrDefault(allele, allele));
+            fixedAlleles.add(Allele.create(alleleMap.getOrDefault(allele, allele).getBases(), allele.isReference()));
         }
 
         return fixedAlleles;
