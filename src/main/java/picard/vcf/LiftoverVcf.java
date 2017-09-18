@@ -229,8 +229,6 @@ public class LiftoverVcf extends CommandLineProgram {
                 TMP_DIR);
 
         ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
-        // a mapping from original allele to reverse complemented allele
-        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(10);
 
         for (final VariantContext ctx : in) {
             ++total;
@@ -257,9 +255,20 @@ public class LiftoverVcf extends CommandLineProgram {
             final ReferenceSequence refSeq;
 
             // if the target is null OR (the target is reverse complemented AND the variant is a non-biallelic indel or mixed), then we cannot lift it over
-            if (target.isNegativeStrand() && (ctx.isMixed() || ctx.isIndel() && !ctx.isBiallelic())) {
-                rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_INDEL);
-
+            if (target.isNegativeStrand()) {
+                if (ctx.isMixed() || (ctx.isIndel() && !ctx.isBiallelic())){
+                    rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_INDEL);
+                }
+                else {
+                    refSeq = refSeqs.get(target.getContig());
+                    //flipping negative strand intervals:
+                    final VariantContext flippedVC = flipVC(ctx, refSeq, target);
+                    if (flippedVC == null) {
+                        throw new IllegalArgumentException("Unexpectedly found null VC. This should have not happened.");
+                    } else {
+                        tryToAddVariant(flippedVC, refSeq, ctx);
+                    }
+                }
             } else if (!refSeqs.containsKey(target.getContig())) {
                 rejectVariant(ctx, FILTER_NO_TARGET);
 
@@ -270,21 +279,11 @@ public class LiftoverVcf extends CommandLineProgram {
                     log.error(missingContigMessage);
                     return EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE;
                 }
-            } else if (target.isNegativeStrand() && ctx.isIndel() && ctx.isBiallelic()) {
-                refSeq = refSeqs.get(target.getContig());
-                //flipping indels:
-
-                final VariantContext flippedIndel = flipIndel(ctx, liftOver, refSeq);
-                if (flippedIndel == null) {
-                    throw new IllegalArgumentException("Unexpectedly found null VC. This should have not happened.");
-                } else {
-                    tryToAddVariant(flippedIndel, refSeq, reverseComplementAlleleMap, ctx);
-                }
             } else {
                 refSeq = refSeqs.get(target.getContig());
                 final VariantContext liftedVariant = liftSimpleVariant(ctx, target);
 
-                tryToAddVariant(liftedVariant, refSeq, reverseComplementAlleleMap, ctx);
+                tryToAddVariant(liftedVariant, refSeq, ctx);
             }
             progress.record(ctx.getContig(), ctx.getStart());
         }
@@ -326,20 +325,17 @@ public class LiftoverVcf extends CommandLineProgram {
      *
      * @param vc new {@link VariantContext}
      * @param refSeq {@link ReferenceSequence} of new reference
-     * @param alleleMap a {@link Map} mapping the old alleles to the new alleles (for fixing the genotypes)
      * @param source the original {@link VariantContext} to use for putting the original location information into vc
      * @return true if successful, false if failed due to mismatching reference allele.
      */
-    private void tryToAddVariant(final VariantContext vc, final ReferenceSequence refSeq, final Map<Allele, Allele> alleleMap, final VariantContext source) {
+    private void tryToAddVariant(final VariantContext vc, final ReferenceSequence refSeq, final VariantContext source) {
 
         final VariantContextBuilder builder = new VariantContextBuilder(vc);
 
-        builder.genotypes(fixGenotypes(source.getGenotypes(), alleleMap));
         builder.filters(source.getFilters());
         builder.log10PError(source.getLog10PError());
         builder.attributes(source.getAttributes());
         builder.id(source.getID());
-        builder.alleles(fixAlleles(source.getAlleles(), alleleMap));
 
         if (WRITE_ORIGINAL_POSITION) {
             builder.attribute(ORIGINAL_CONTIG, source.getContig());
@@ -413,15 +409,12 @@ public class LiftoverVcf extends CommandLineProgram {
 
     /**
      * @param source            original variant context
-     * @param liftOver          the LiftOver object to use for flipping
      * @param referenceSequence the reference sequence of the target
+     * @param target the target interval
      * @return a flipped variant-context.
      */
-    protected static VariantContext flipIndel(final VariantContext source, final LiftOver liftOver, final ReferenceSequence referenceSequence) {
-        if (!source.isBiallelic()) return null;  //only supporting biallelic indels, for now.
-
-        final Interval originalLocus = new Interval(source.getContig(), source.getStart(), source.getEnd());
-        final Interval target = liftOver.liftOver(originalLocus);
+    protected static VariantContext flipVC(final VariantContext source, final ReferenceSequence referenceSequence, final Interval target) {
+        if (source.isMixed() || (source.isIndel() && !source.isBiallelic())) return null;  //only supporting biallelic indels, for now.
 
         if (target == null) return null;
         if (!target.isNegativeStrand()) {
@@ -464,19 +457,6 @@ public class LiftoverVcf extends CommandLineProgram {
         builder.log10PError(source.getLog10PError());
 
         return leftAlignVariant(builder.make(), referenceSequence);
-    }
-
-    protected static List<Allele> fixAlleles(final List<Allele> originals, final Map<Allele, Allele> alleleMap) {
-        if (alleleMap.isEmpty()) {
-            return originals;
-        }
-
-        final List<Allele> fixedAlleles = new ArrayList<>();
-        for (final Allele allele : originals) {
-            fixedAlleles.add(Allele.create(alleleMap.getOrDefault(allele, allele).getBases(), allele.isReference()));
-        }
-
-        return fixedAlleles;
     }
 
     protected static GenotypesContext fixGenotypes(final GenotypesContext originals, final Map<Allele, Allele> alleleMap) {

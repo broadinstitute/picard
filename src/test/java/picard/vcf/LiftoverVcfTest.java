@@ -325,7 +325,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         final LiftOver liftOver = new LiftOver(CHAIN_FILE);
 
-        final VariantContext flipped = LiftoverVcf.flipIndel(source, liftOver, reference);
+        final Interval originalLocus = new Interval(source.getContig(), source.getStart(), source.getEnd());
+        final VariantContext flipped = LiftoverVcf.flipVC(source, reference, liftOver.liftOver(originalLocus));
 
         assertVcAreEqual(flipped, result);
     }
