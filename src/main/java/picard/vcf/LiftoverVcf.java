@@ -230,7 +230,6 @@ public class LiftoverVcf extends CommandLineProgram {
 
         ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
         // a mapping from original allele to reverse complemented allele
-        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(10);
 
         for (final VariantContext ctx : in) {
             ++total;
@@ -274,7 +273,8 @@ public class LiftoverVcf extends CommandLineProgram {
                 refSeq = refSeqs.get(target.getContig());
                 //flipping indels:
 
-                final VariantContext flippedIndel = flipIndel(ctx, liftOver, refSeq);
+                final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(10);
+                final VariantContext flippedIndel = flipIndel(ctx, liftOver, refSeq, reverseComplementAlleleMap);
                 if (flippedIndel == null) {
                     throw new IllegalArgumentException("Unexpectedly found null VC. This should have not happened.");
                 } else {
@@ -284,7 +284,7 @@ public class LiftoverVcf extends CommandLineProgram {
                 refSeq = refSeqs.get(target.getContig());
                 final VariantContext liftedVariant = liftSimpleVariant(ctx, target);
 
-                tryToAddVariant(liftedVariant, refSeq, reverseComplementAlleleMap, ctx);
+                tryToAddVariant(liftedVariant, refSeq, Collections.emptyMap(), ctx);
             }
             progress.record(ctx.getContig(), ctx.getStart());
         }
@@ -416,7 +416,7 @@ public class LiftoverVcf extends CommandLineProgram {
      * @param referenceSequence the reference sequence of the target
      * @return a flipped variant-context.
      */
-    protected static VariantContext flipIndel(final VariantContext source, final LiftOver liftOver, final ReferenceSequence referenceSequence) {
+    protected static VariantContext flipIndel(final VariantContext source, final LiftOver liftOver, final ReferenceSequence referenceSequence, final Map<Allele, Allele> reverseComplementAlleleMap) {
         if (!source.isBiallelic()) return null;  //only supporting biallelic indels, for now.
 
         final Interval originalLocus = new Interval(source.getContig(), source.getStart(), source.getEnd());
@@ -430,8 +430,6 @@ public class LiftoverVcf extends CommandLineProgram {
 
         // a boolean to protect against trying to access the -1 position in the reference array
         final boolean addToStart = target.getStart() > 1;
-
-        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(2);
 
         reverseComplementAlleleMap.clear();
         final List<Allele> alleles = new ArrayList<>();
