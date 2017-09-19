@@ -331,7 +331,6 @@ public class LiftoverVcf extends CommandLineProgram {
 
         final VariantContextBuilder builder = new VariantContextBuilder(vc);
 
-        builder.genotypes(source.getGenotypes());
         builder.filters(source.getFilters());
         builder.log10PError(source.getLog10PError());
         builder.attributes(source.getAttributes());
@@ -438,7 +437,6 @@ public class LiftoverVcf extends CommandLineProgram {
 
         final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(2);
 
-        reverseComplementAlleleMap.clear();
         final List<Allele> alleles = new ArrayList<>();
 
         for (final Allele oldAllele : source.getAlleles()) {
