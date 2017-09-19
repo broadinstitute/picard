@@ -54,6 +54,11 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         };
     }
 
+    @Test
+    public void liftoverReverseStrandSelftest() {
+        liftoverReverseStrand();
+    }
+
 
     @Test(dataProvider = "liftoverReverseStrand" )
     public void testReverseComplementedIndels(final String filename, final int expectedPassing, final int expectedFailing) {
@@ -87,6 +92,11 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 {false, LiftoverVcf.EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE},
                 {true, 0}
         };
+    }
+
+    @Test
+    public void dataTestHaplotypeProbabilitiesFromSequenceAddToProbsSelftest() {
+        dataTestHaplotypeProbabilitiesFromSequenceAddToProbs();
     }
 
     @Test(dataProvider = "dataTestMissingContigInReference")
@@ -153,6 +163,11 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         }
     }
 
+    @Test
+    public void indelFlipDataSelftest() {
+        indelFlipData();
+    }
+
     @DataProvider(name = "indelFlipData")
     public Iterator<Object[]> indelFlipData() {
 
@@ -192,6 +207,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final int CHAIN_SIZE = 540; // the length of the single chain in CHAIN_FILE
 
         final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1");
+        final GenotypeBuilder genotypeBuilder = new GenotypeBuilder("test1");
+        final GenotypeBuilder resultGenotypeBuilder = new GenotypeBuilder("test1");
         final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1");
 
         // simple deletion
@@ -200,14 +217,31 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         int stop = start + 2;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefTTT, T));
         result_builder.start(1).stop(3).alleles(CollectionUtil.makeList(RefCAA, C));
+
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
+
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
+
+
 
         //simple insertion
         // T*/TTT -> A*/AAA -> turns into left-aligned C*/CAA at position 1
         stop = start;
         builder.source("test2").alleles(CollectionUtil.makeList(RefT, TTT)).stop(stop);
         result_builder.alleles(CollectionUtil.makeList(RefC, CAA)).start(1).stop(1);
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
+
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
+
+        builder.noGenotypes();
+        result_builder.noGenotypes();
+
 
         // non-simple deletion
         //  ACGT(T)*/A(T) -> AACG(T)*/A(T)
@@ -217,6 +251,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         builder.source("test3").start(start).stop(stop).alleles(CollectionUtil.makeList(RefACGT, A));
         result_builder.start(CHAIN_SIZE - stop).stop(CHAIN_SIZE - start).alleles(CollectionUtil.makeList(RefAACG, A));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
         //  "CAAAAAAAAAACG---CGTACTCTCTCTCTACGT" -- Allele A
@@ -236,6 +274,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         stop = start;
         builder.source("test4").stop(stop).start(start).alleles(CollectionUtil.makeList(RefA, ACGT));
         result_builder.start(10).stop(10).alleles(CollectionUtil.makeList(RefA, AACG));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
         // just outside of chain & contig, testing that we do not read into negative indices
@@ -243,11 +285,19 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         start = stop = CHAIN_SIZE;
         builder.source("test5").stop(stop).start(start).alleles(CollectionUtil.makeList(RefG, GTT));
         result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, AAC));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
         // outside of chain
         start = stop = CHAIN_SIZE + 1;
         builder.source("test6").stop(stop).start(start).alleles(CollectionUtil.makeList(RefA, ACGT));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, null});
 
         // MNP
@@ -257,6 +307,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         stop = start + 2;
         builder.source("test7").stop(stop).start(start).alleles(CollectionUtil.makeList(RefGTT, ACGT));
         result_builder.start(11).stop(11).alleles(CollectionUtil.makeList(RefA, CG));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
         // MNP
@@ -266,6 +320,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         stop = start + 3;
         builder.source("test8").stop(stop).start(start).alleles(CollectionUtil.makeList(RefACGT, ATT));
         result_builder.start(CHAIN_SIZE - stop + 2).stop(CHAIN_SIZE - stop + 3).alleles(CollectionUtil.makeList(RefCG, A));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
         // needs left-aligning
@@ -275,6 +333,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         stop = start;
         builder.source("test9").stop(stop).start(start).alleles(CollectionUtil.makeList(RefT, TAG));
         result_builder.start(19).stop(19).alleles(CollectionUtil.makeList(RefA, ACT));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
         // insertion at end of section
@@ -288,6 +350,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefG, GA));
         result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, TC));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
         // insertion at end of section
@@ -301,6 +367,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefG, Allele.create("GG")));
         result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, Allele.create("CC")));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
         // insertion at end of section
@@ -314,6 +384,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(Allele.create("TTTT",true), Allele.create("TTTTG")));
         result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, Allele.create("CC")));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
 
@@ -328,6 +402,11 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final VariantContext flipped = LiftoverVcf.flipIndel(source, liftOver, reference);
 
         assertVcAreEqual(flipped, result);
+    }
+
+    @Test
+    public void leftAlignAllelesDataSelftest() {
+        leftAlignAllelesData();
     }
 
     @DataProvider(name = "leftAlignAllelesData")
@@ -365,6 +444,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1");
         final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1");
+        final GenotypeBuilder genotypeBuilder = new GenotypeBuilder("test1");
+        final GenotypeBuilder resultGenotypeBuilder = new GenotypeBuilder("test1");
 
         // left aligning at the edge of the reference
         // simple SNP
@@ -374,6 +455,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(Allele.create("CAAA",true), Allele.create("CCAAA") ));
 
         result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, Allele.create("CC")));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
 
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
@@ -385,6 +470,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.source("test1_5");
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefG, A));
         result_builder.start(stop).stop(start).alleles(CollectionUtil.makeList(RefG, A));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
 
 
@@ -395,6 +484,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                     Allele.create(reference.getBaseString().substring(start - 1, start), true),
                     reference.getBaseString().charAt(start - 1) == 'A' ? T : A));
 
+            genotypeBuilder.alleles(builder.getAlleles());
+            resultGenotypeBuilder.alleles(result_builder.getAlleles());
+            builder.genotypes(genotypeBuilder.make());
+            result_builder.genotypes(resultGenotypeBuilder.make());
             tests.add(new Object[]{builder.make(), reference, builder.make()});
         }
 
@@ -406,6 +499,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             builder.alleles(CollectionUtil.makeList(
                     RefAA, A));
 
+            genotypeBuilder.alleles(builder.getAlleles());
+            resultGenotypeBuilder.alleles(result_builder.getAlleles());
+            builder.genotypes(genotypeBuilder.make());
+            result_builder.genotypes(resultGenotypeBuilder.make());
             tests.add(new Object[]{builder.make(), reference, result_builder.make()});
         }
 
@@ -417,6 +514,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             builder.alleles(CollectionUtil.makeList(
                     RefA, AA));
 
+            genotypeBuilder.alleles(builder.getAlleles());
+            resultGenotypeBuilder.alleles(result_builder.getAlleles());
+            builder.genotypes(genotypeBuilder.make());
+            result_builder.genotypes(resultGenotypeBuilder.make());
             tests.add(new Object[]{builder.make(), reference, result_builder.make()});
         }
 
@@ -428,6 +529,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             builder.alleles(CollectionUtil.makeList(
                     RefCT, CTCT));
 
+            genotypeBuilder.alleles(builder.getAlleles());
+            resultGenotypeBuilder.alleles(result_builder.getAlleles());
+            builder.genotypes(genotypeBuilder.make());
+            result_builder.genotypes(resultGenotypeBuilder.make());
             tests.add(new Object[]{builder.make(), reference, result_builder.make()});
         }
 
@@ -438,6 +543,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             builder.alleles(CollectionUtil.makeList(
                     RefTC, TCTC));
 
+            genotypeBuilder.alleles(builder.getAlleles());
+            resultGenotypeBuilder.alleles(result_builder.getAlleles());
+            builder.genotypes(genotypeBuilder.make());
+            result_builder.genotypes(resultGenotypeBuilder.make());
             tests.add(new Object[]{builder.make(), reference, result_builder.make()});
         }
 
@@ -449,6 +558,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             builder.alleles(CollectionUtil.makeList(
                     RefCTCT, CT));
 
+            genotypeBuilder.alleles(builder.getAlleles());
+            resultGenotypeBuilder.alleles(result_builder.getAlleles());
+            builder.genotypes(genotypeBuilder.make());
+            result_builder.genotypes(resultGenotypeBuilder.make());
             tests.add(new Object[]{builder.make(), reference, result_builder.make()});
         }
 
@@ -459,6 +572,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             builder.alleles(CollectionUtil.makeList(
                     RefTCTC, TC));
 
+            genotypeBuilder.alleles(builder.getAlleles());
+            resultGenotypeBuilder.alleles(result_builder.getAlleles());
+            builder.genotypes(genotypeBuilder.make());
+            result_builder.genotypes(resultGenotypeBuilder.make());
             tests.add(new Object[]{builder.make(), reference, result_builder.make()});
         }
 
@@ -474,6 +591,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                         // -1 here due to reference string being 0-based.
                         reference.getBaseString().substring(start - 1, stop + 1 - 1),
                         reference.getBaseString().substring(start - 1, stop - 3 - 1)).start(start).stop(stop);
+                genotypeBuilder.alleles(builder.getAlleles());
+                resultGenotypeBuilder.alleles(result_builder.getAlleles());
+                builder.genotypes(genotypeBuilder.make());
+                result_builder.genotypes(resultGenotypeBuilder.make());
                 tests.add(new Object[]{builder.make(), reference, result_builder.make()});
             }
         }
@@ -516,11 +637,18 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         assertVcAreEqual(leftAlignVariant(source, reference), result);
     }
 
+    @Test
+    public void indelNoFlipDataSelftest() {
+        indelNoFlipData();
+    }
+
     @DataProvider(name = "indelNoFlipData")
     public Iterator<Object[]> indelNoFlipData() {
 
         final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1");
         final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1");
+        final GenotypeBuilder genotypeBuilder = new GenotypeBuilder("test1");
+        final GenotypeBuilder resultGenotypeBuilder = new GenotypeBuilder("test1");
         final List<Object[]> tests = new ArrayList<>();
 
         // some more tests with a more complicated chain File. this one has 2 intervals in the relevant block
@@ -547,30 +675,50 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.source("test1");
         builder.start(1).stop(1).alleles(CollectionUtil.makeList(CRef, A));
         result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(CRef, A));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
         // trivial case indel
         builder.source("test2");
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(CAAARef, CAA));
         result_builder.start(1).stop(4).alleles(CollectionUtil.makeList(CAAARef, CAA));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
         // near end of interval indel
         builder.source("test3");
         builder.start(537).stop(540).alleles(CollectionUtil.makeList(AAAARef, AAA));
         result_builder.start(537).stop(540).alleles(CollectionUtil.makeList(AAAARef, AAA));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
         // near end of interval snp
         builder.source("test4");
         builder.start(540).stop(540).alleles(CollectionUtil.makeList(ARef, T));
         result_builder.start(540).stop(540).alleles(CollectionUtil.makeList(ARef, T));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
         // straddling chains indel
         builder.source("test5");
         builder.start(538).stop(541).alleles(CollectionUtil.makeList(AAAARef, AAA));
         result_builder.start(537).stop(540).alleles(CollectionUtil.makeList(AAAARef, AAA));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), null});
 
         // near start of second interval snp
@@ -579,6 +727,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         offset = 5;
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(ARef, T));
         result_builder.start(start + offset).stop(start + offset).alleles(CollectionUtil.makeList(ARef, T));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
 
@@ -586,6 +738,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.source("test7");
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(ARef, T));
         result_builder.start(start + offset).stop(start + offset).alleles(CollectionUtil.makeList(ARef, T));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
         // near end of second interval snp
@@ -594,6 +750,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         offset = 5;
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(ARef, T));
         result_builder.start(start + offset).stop(start + offset).alleles(CollectionUtil.makeList(ARef, T));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
         // near end of second interval indel
@@ -602,6 +762,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         stop = 1040;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(AAAARef, AAA));
         result_builder.start(start + offset).stop(stop + offset).alleles(CollectionUtil.makeList(AAAARef, AAA));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
 
@@ -610,6 +774,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         start = 1038;
         stop = 1041;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(AAAARef, AAA));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), null});
 
         // straddling interval indel
@@ -617,6 +785,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         start = 1045;
         stop = 1048;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(AAAARef, AAA));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), null});
 
         // vanishing snp
@@ -624,6 +796,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         start = 1045;
         stop = 1045;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(ARef, T));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), null});
 
         //  after second interval indel
@@ -633,6 +809,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         offset = 0;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(AAAARef, AAA));
         result_builder.start(start + offset).stop(stop + offset).alleles(CollectionUtil.makeList(AAAARef, AAA));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
         // near start of second interval snp
@@ -640,6 +820,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         start = 1046;
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(ARef, T));
         result_builder.start(start + offset).stop(start + offset).alleles(CollectionUtil.makeList(ARef, T));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
         return tests.iterator();
