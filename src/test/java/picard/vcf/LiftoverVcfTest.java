@@ -54,13 +54,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         };
     }
 
-    @Test
-    public void liftoverReverseStrandSelftest() {
-        liftoverReverseStrand();
-    }
-
-
-    @Test(dataProvider = "liftoverReverseStrand" )
+    @Test(dataProvider = "liftoverReverseStrand")
     public void testReverseComplementedIndels(final String filename, final int expectedPassing, final int expectedFailing) {
         final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
         final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
@@ -92,11 +86,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 {false, LiftoverVcf.EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE},
                 {true, 0}
         };
-    }
-
-    @Test
-    public void dataTestHaplotypeProbabilitiesFromSequenceAddToProbsSelftest() {
-        dataTestHaplotypeProbabilitiesFromSequenceAddToProbs();
     }
 
     @Test(dataProvider = "dataTestMissingContigInReference")
@@ -163,11 +152,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         }
     }
 
-    @Test
-    public void indelFlipDataSelftest() {
-        indelFlipData();
-    }
-
     @DataProvider(name = "indelFlipData")
     public Iterator<Object[]> indelFlipData() {
 
@@ -197,7 +181,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Allele TTT = Allele.create("TTT", false);
         final Allele ATT = Allele.create("ATT", false);
         final Allele GTT = Allele.create("GTT", false);
-        final Allele AAC= Allele.create("AAC", false);
+        final Allele AAC = Allele.create("AAC", false);
         final Allele TAG = Allele.create("TAG", false);
         final Allele ACGT = Allele.create("ACGT", false);
         final Allele AACG = Allele.create("AACG", false);
@@ -213,7 +197,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         // simple deletion
         // TTT*/T -> AAA*/A turns into left-aligned CAA*/C at position 1
-        int start = CHAIN_SIZE - 3 ;
+        int start = CHAIN_SIZE - 3;
         int stop = start + 2;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefTTT, T));
         result_builder.start(1).stop(3).alleles(CollectionUtil.makeList(RefCAA, C));
@@ -224,8 +208,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         result_builder.genotypes(resultGenotypeBuilder.make());
 
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
-
-
 
         //simple insertion
         // T*/TTT -> A*/AAA -> turns into left-aligned C*/CAA at position 1
@@ -241,7 +223,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         builder.noGenotypes();
         result_builder.noGenotypes();
-
 
         // non-simple deletion
         //  ACGT(T)*/A(T) -> AACG(T)*/A(T)
@@ -382,14 +363,13 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         start = CHAIN_SIZE - 4;
         stop = CHAIN_SIZE - 1;
 
-        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(Allele.create("TTTT",true), Allele.create("TTTTG")));
+        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(Allele.create("TTTT", true), Allele.create("TTTTG")));
         result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, Allele.create("CC")));
         genotypeBuilder.alleles(builder.getAlleles());
         resultGenotypeBuilder.alleles(result_builder.getAlleles());
         builder.genotypes(genotypeBuilder.make());
         result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
-
 
         return tests.iterator();
     }
@@ -402,11 +382,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final VariantContext flipped = LiftoverVcf.flipIndel(source, liftOver, reference);
 
         assertVcAreEqual(flipped, result);
-    }
-
-    @Test
-    public void leftAlignAllelesDataSelftest() {
-        leftAlignAllelesData();
     }
 
     @DataProvider(name = "leftAlignAllelesData")
@@ -452,7 +427,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         // CAAA*/CCAAA -> C->CC
         int start = 1;
         int stop = 4;
-        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(Allele.create("CAAA",true), Allele.create("CCAAA") ));
+        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(Allele.create("CAAA", true), Allele.create("CCAAA")));
 
         result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, Allele.create("CC")));
         genotypeBuilder.alleles(builder.getAlleles());
@@ -461,7 +436,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         result_builder.genotypes(resultGenotypeBuilder.make());
 
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
-
 
         // simple SNP
         // G*/A -> G/A
@@ -475,7 +449,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.genotypes(genotypeBuilder.make());
         result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), reference, result_builder.make()});
-
 
         builder.source("test2");
         for (start = 1; start <= reference.getBases().length; start++) {
@@ -637,11 +610,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         assertVcAreEqual(leftAlignVariant(source, reference), result);
     }
 
-    @Test
-    public void indelNoFlipDataSelftest() {
-        indelNoFlipData();
-    }
-
     @DataProvider(name = "indelNoFlipData")
     public Iterator<Object[]> indelNoFlipData() {
 
@@ -733,7 +701,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
 
-
         // near start of second interval indel
         builder.source("test7");
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(ARef, T));
@@ -767,7 +734,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.genotypes(genotypeBuilder.make());
         result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{liftOver, twoIntervalChainReference, builder.make(), result_builder.make()});
-
 
         // straddling interval indel
         builder.source("test9");
@@ -830,7 +796,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "indelNoFlipData")
-    public void testLiftOverSimpleIndels( final LiftOver liftOver, final ReferenceSequence reference, final VariantContext source, final VariantContext result) {
+    public void testLiftOverSimpleIndels(final LiftOver liftOver, final ReferenceSequence reference, final VariantContext source, final VariantContext result) {
 
         final Interval target = liftOver.liftOver(new Interval(source.getContig(), source.getStart(), source.getEnd()), .95);
 
@@ -845,7 +811,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         }
 
         Assert.assertNotNull(actual, "null status");
-        Assert.assertEquals(actual.getContig(), expected.getContig(),"Different contigs: ");
+        Assert.assertEquals(actual.getContig(), expected.getContig(), "Different contigs: ");
         Assert.assertEquals(actual.getStart(), expected.getStart(), "Different starts: ");
         Assert.assertEquals(actual.getEnd(), expected.getEnd(), "Different ends: ");
 
@@ -861,7 +827,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         Assert.assertEquals(actual.getSampleNamesOrderedByName(), expected.getSampleNamesOrderedByName(), "Sample names differ");
 
         for (final String name : expected.getSampleNamesOrderedByName()) {
-            Assert.assertEquals(actual.get(name).getAlleles(), expected.get(name).getAlleles(),"Alleles differ for sample "+ name);
+            Assert.assertEquals(actual.get(name).getAlleles(), expected.get(name).getAlleles(), "Alleles differ for sample " + name);
         }
     }
 }
