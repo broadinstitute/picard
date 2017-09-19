@@ -326,7 +326,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final LiftOver liftOver = new LiftOver(CHAIN_FILE);
 
         final Interval originalLocus = new Interval(source.getContig(), source.getStart(), source.getEnd());
-        final VariantContext flipped = LiftoverVcf.flipVC(source, reference, liftOver.liftOver(originalLocus));
+        final VariantContext flipped = LiftoverVcf.flipIndel(source, reference, liftOver.liftOver(originalLocus), false);
 
         assertVcAreEqual(flipped, result);
     }
@@ -651,7 +651,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         final Interval target = liftOver.liftOver(new Interval(source.getContig(), source.getStart(), source.getEnd()), .95);
 
-        assertVcAreEqual(LiftoverVcf.liftSimpleVariant(source, target), result);
+        assertVcAreEqual(LiftoverVcf.liftSimpleVariant(source, target, false), result);
     }
 
     private void assertVcAreEqual(final VariantContext actual, final VariantContext expected) {

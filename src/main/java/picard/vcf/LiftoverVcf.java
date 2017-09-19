@@ -255,7 +255,10 @@ public class LiftoverVcf extends CommandLineProgram {
             final ReferenceSequence refSeq;
 
             // if the target is null OR (the target is reverse complemented AND the variant is a non-biallelic indel or mixed), then we cannot lift it over
-            if (!refSeqs.containsKey(target.getContig())) {
+            if (target.isNegativeStrand() && (ctx.isMixed() || ctx.isIndel() && !ctx.isBiallelic())) {
+                rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_INDEL);
+
+            } else if (!refSeqs.containsKey(target.getContig())) {
                 rejectVariant(ctx, FILTER_NO_TARGET);
 
                 final String missingContigMessage = "Encountered a contig, " + target.getContig() + " that is not part of the target reference.";
@@ -265,23 +268,19 @@ public class LiftoverVcf extends CommandLineProgram {
                     log.error(missingContigMessage);
                     return EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE;
                 }
-            } else if (target.isNegativeStrand()) {
-                if (ctx.isMixed() || (ctx.isIndel() && !ctx.isBiallelic())){
-                    rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_INDEL);
-                }
-                else {
-                    refSeq = refSeqs.get(target.getContig());
-                    //flipping negative strand intervals:
-                    final VariantContext flippedVC = flipVC(ctx, refSeq, target);
-                    if (flippedVC == null) {
-                        throw new IllegalArgumentException("Unexpectedly found null VC. This should have not happened.");
-                    } else {
-                        tryToAddVariant(flippedVC, refSeq, ctx);
-                    }
+            } else if (target.isNegativeStrand() && ctx.isIndel() && ctx.isBiallelic()) {
+                refSeq = refSeqs.get(target.getContig());
+                //flipping indels:
+
+                final VariantContext flippedIndel = flipIndel(ctx, refSeq, target, WRITE_ORIGINAL_POSITION);
+                if (flippedIndel == null) {
+                    throw new IllegalArgumentException("Unexpectedly found null VC. This should have not happened.");
+                } else {
+                    tryToAddVariant(flippedIndel, refSeq, ctx);
                 }
             } else {
                 refSeq = refSeqs.get(target.getContig());
-                final VariantContext liftedVariant = liftSimpleVariant(ctx, target);
+                final VariantContext liftedVariant = liftSimpleVariant(ctx, target, WRITE_ORIGINAL_POSITION);
 
                 tryToAddVariant(liftedVariant, refSeq, ctx);
             }
@@ -329,22 +328,9 @@ public class LiftoverVcf extends CommandLineProgram {
      * @return true if successful, false if failed due to mismatching reference allele.
      */
     private void tryToAddVariant(final VariantContext vc, final ReferenceSequence refSeq, final VariantContext source) {
-
-        final VariantContextBuilder builder = new VariantContextBuilder(vc);
-
-        builder.filters(source.getFilters());
-        builder.log10PError(source.getLog10PError());
-        builder.attributes(source.getAttributes());
-        builder.id(source.getID());
-
-        if (WRITE_ORIGINAL_POSITION) {
-            builder.attribute(ORIGINAL_CONTIG, source.getContig());
-            builder.attribute(ORIGINAL_START, source.getStart());
-        }
-
         // Check that the reference allele still agrees with the reference sequence
         boolean mismatchesReference = false;
-        for (final Allele allele : builder.getAlleles()) {
+        for (final Allele allele : vc.getAlleles()) {
             if (allele.isReference()) {
                 final byte[] ref = refSeq.getBases();
                 final String refString = StringUtil.bytesToString(ref, vc.getStart() - 1, vc.getEnd() - vc.getStart() + 1);
@@ -363,7 +349,7 @@ public class LiftoverVcf extends CommandLineProgram {
                     .make());
             failedAlleleCheck++;
         } else {
-            sorter.add(builder.make());
+            sorter.add(vc);
         }
     }
 
@@ -373,7 +359,7 @@ public class LiftoverVcf extends CommandLineProgram {
      * @param target
      * @return
      */
-    protected static VariantContext liftSimpleVariant(final VariantContext source, final Interval target) {
+    protected static VariantContext liftSimpleVariant(final VariantContext source, final Interval target, final boolean writeOriginalPosition) {
         // Fix the alleles if we went from positive to negative strand
 
         if (target == null) {
@@ -384,6 +370,7 @@ public class LiftoverVcf extends CommandLineProgram {
             return null;
         }
         final List<Allele> alleles = new ArrayList<>();
+        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>();
 
         for (final Allele oldAllele : source.getAlleles()) {
             if (target.isPositiveStrand() || oldAllele.isSymbolic()) {
@@ -391,6 +378,8 @@ public class LiftoverVcf extends CommandLineProgram {
             } else {
                 final Allele fixedAllele = Allele.create(SequenceUtil.reverseComplement(oldAllele.getBaseString()), oldAllele.isReference());
                 alleles.add(fixedAllele);
+
+                reverseComplementAlleleMap.put(oldAllele, fixedAllele);
             }
         }
 
@@ -402,9 +391,23 @@ public class LiftoverVcf extends CommandLineProgram {
                 target.getEnd(),
                 alleles);
 
-        builder.id(source.getID());
+        copyAttributes(builder, source, reverseComplementAlleleMap, writeOriginalPosition);
 
         return builder.make();
+    }
+
+    private static void copyAttributes(VariantContextBuilder builder, VariantContext source, Map<Allele, Allele> reverseComplementAlleleMap, final boolean writeOriginalPosition){
+        builder.id(source.getID());
+        builder.attributes(source.getAttributes());
+
+        builder.genotypes(fixGenotypes(source.getGenotypes(), reverseComplementAlleleMap));
+        builder.filters(source.getFilters());
+        builder.log10PError(source.getLog10PError());
+
+        if (writeOriginalPosition) {
+            builder.attribute(ORIGINAL_CONTIG, source.getContig());
+            builder.attribute(ORIGINAL_START, source.getStart());
+        }
     }
 
     /**
@@ -413,7 +416,7 @@ public class LiftoverVcf extends CommandLineProgram {
      * @param target the target interval
      * @return a flipped variant-context.
      */
-    protected static VariantContext flipVC(final VariantContext source, final ReferenceSequence referenceSequence, final Interval target) {
+    protected static VariantContext flipIndel(final VariantContext source, final ReferenceSequence referenceSequence, final Interval target, final boolean writeOriginalPosition) {
         if (source.isMixed() || (source.isIndel() && !source.isBiallelic())) return null;  //only supporting biallelic indels, for now.
 
         if (target == null) return null;
@@ -423,25 +426,18 @@ public class LiftoverVcf extends CommandLineProgram {
         }
 
         // a boolean to protect against trying to access the -1 position in the reference array
-        final boolean addToStart = source.isIndel() && target.getStart() > 1;
-
-        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(2);
-
-        reverseComplementAlleleMap.clear();
+        final boolean addToStart = target.getStart() > 1;
+        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>();
         final List<Allele> alleles = new ArrayList<>();
 
         for (final Allele oldAllele : source.getAlleles()) {
             // target.getStart is 1-based, reference bases are 0-based
             final StringBuilder alleleBuilder = new StringBuilder(target.getEnd() - target.getStart() + 1);
 
-            if (source.isIndel()) {
-                if (addToStart) alleleBuilder.append((char) referenceSequence.getBases()[target.getStart() - 2]);
-                alleleBuilder.append(SequenceUtil.reverseComplement(oldAllele.getBaseString().substring(1, oldAllele.length())));
-                if (!addToStart) alleleBuilder.append((char) referenceSequence.getBases()[target.getEnd() - 1]);
-            }
-            else {
-                alleleBuilder.append(SequenceUtil.reverseComplement(oldAllele.getBaseString().substring(0, oldAllele.length())));
-            }
+            if (addToStart) alleleBuilder.append((char) referenceSequence.getBases()[target.getStart() - 2]);
+            alleleBuilder.append(SequenceUtil.reverseComplement(oldAllele.getBaseString().substring(1, oldAllele.length())));
+            if (!addToStart) alleleBuilder.append((char) referenceSequence.getBases()[target.getEnd() - 1]);
+
             final Allele fixedAllele = Allele.create(alleleBuilder.toString(), oldAllele.isReference());
             alleles.add(fixedAllele);
             reverseComplementAlleleMap.put(oldAllele, fixedAllele);
@@ -453,12 +449,7 @@ public class LiftoverVcf extends CommandLineProgram {
                 target.getEnd() - (addToStart ? 1 : 0),
                 alleles);
 
-        builder.id(source.getID());
-        builder.attributes(source.getAttributes());
-
-        builder.genotypes(fixGenotypes(source.getGenotypes(), reverseComplementAlleleMap));
-        builder.filters(source.getFilters());
-        builder.log10PError(source.getLog10PError());
+        copyAttributes(builder, source, reverseComplementAlleleMap, writeOriginalPosition);
 
         return leftAlignVariant(builder.make(), referenceSequence);
     }
