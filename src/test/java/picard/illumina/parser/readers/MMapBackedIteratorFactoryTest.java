@@ -38,7 +38,6 @@ public class MMapBackedIteratorFactoryTest {
     }
 
     //Note these integers are different from the ones in fileAsBytes->bInts (because we're talking about 4 bytes at a time not one)
-    @DataProvider(name="passing_bin_asTdBuffer")
     public ByteBuffer headerAsByteBuffer(final int headerSize) {
         final byte [] bytes = fileAsBytes(0, headerSize-1);
         final ByteBuffer bb = ByteBuffer.allocate(bytes.length);
@@ -48,7 +47,6 @@ public class MMapBackedIteratorFactoryTest {
         return bb;
     }
 
-    @DataProvider(name="passing_bin_asTdBuffer")
     public ByteBuffer fileAsByteBuffer(final int headerSize) {
         final byte [] bytes = fileAsBytes(headerSize, FileLength-1);
         final ByteBuffer bb = ByteBuffer.allocate(bytes.length);
