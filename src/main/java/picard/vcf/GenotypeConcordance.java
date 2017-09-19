@@ -158,7 +158,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             "This flag can only be used with a high confidence interval list.")
     public boolean MISSING_SITES_HOM_REF = false;
 
-    @Argument(doc="Default is false. If true, filter status of sites will be ignored so that we include filtered sites when calculating sensitivity", optional = true)
+    @Argument(doc="Default is false. If true, filter status of sites will be ignored so that we include filtered sites when calculating genotype concordance. ", optional = true)
     public boolean IGNORE_FILTER_STATUS = false;
 
     private final Log log = Log.getInstance(GenotypeConcordance.class);
@@ -855,7 +855,7 @@ public class GenotypeConcordance extends CommandLineProgram {
         // TODO: what about getPloidy()
 
         // Get truth and call states if they are filtered or are not going to be compared (ex. depth is less than minDP).
-        GenotypeConcordanceStateCodes truthStateCode = getStateCode(truthContext, truthSample, minGq, minDp);
+        final GenotypeConcordanceStateCodes truthStateCode = getStateCode(truthContext, truthSample, minGq, minDp);
 
         if (null != truthStateCode) {
             truthState = GenotypeConcordanceStates.truthMap.get(truthStateCode.ordinal());

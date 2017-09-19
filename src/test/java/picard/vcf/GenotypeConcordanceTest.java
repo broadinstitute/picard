@@ -646,8 +646,8 @@ public class GenotypeConcordanceTest {
 
     @Test
     public void testIgnoreFilterStatus() throws Exception {
-        final File truthVcfPath = new File(TEST_DATA_PATH.getAbsolutePath(), "NIST_truth.vcf");
-        final File callVcfPath = new File(TEST_DATA_PATH.getAbsolutePath(), "vcf_with_filters.vcf");
+        final File truthVcfPath = new File(TEST_DATA_PATH.getAbsolutePath(), "NIST_subset_3sites.vcf");
+        final File callVcfPath = new File(TEST_DATA_PATH.getAbsolutePath(), "vcf_with_filtered_calls.vcf");
         final File ignoreFilterStatusOutputBaseFileName = new File(OUTPUT_DATA_PATH, "ignoreFilterStatus");
         final File doIgnoreMetrics = new File(ignoreFilterStatusOutputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
         doIgnoreMetrics.deleteOnExit();
@@ -672,17 +672,15 @@ public class GenotypeConcordanceTest {
         dontIgnore.OUTPUT_VCF = false;
         doIgnore.IGNORE_FILTER_STATUS = true;
 
-
         Assert.assertEquals(dontIgnore.instanceMain(new String[0]), 0);
         Assert.assertEquals(doIgnore.instanceMain(new String[0]), 0);
-
 
         final MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>> dontIgnoreOut = new MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>>();
         dontIgnoreOut.read(new FileReader(dontIgnoreMetrics));
 
         for (final GenotypeConcordanceContingencyMetrics metrics : dontIgnoreOut.getMetrics()) {
             if (metrics.VARIANT_TYPE == VariantContext.Type.SNP) {
-                Assert.assertEquals(metrics.TP_COUNT,   1);
+                Assert.assertEquals(metrics.TP_COUNT, 1);
                 Assert.assertEquals(metrics.TN_COUNT, 3);
                 Assert.assertEquals(metrics.FP_COUNT, 1);
                 Assert.assertEquals(metrics.FN_COUNT, 2);
@@ -690,12 +688,11 @@ public class GenotypeConcordanceTest {
             }
         }
 
-
         final MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>> doIgnoreOut = new MetricsFile<GenotypeConcordanceContingencyMetrics, Comparable<?>>();
         doIgnoreOut.read(new FileReader(doIgnoreMetrics));
         for (final GenotypeConcordanceContingencyMetrics metrics : doIgnoreOut.getMetrics()) {
             if (metrics.VARIANT_TYPE == VariantContext.Type.SNP) {
-                Assert.assertEquals(metrics.TP_COUNT,   3);
+                Assert.assertEquals(metrics.TP_COUNT, 3);
                 Assert.assertEquals(metrics.TN_COUNT, 3);
                 Assert.assertEquals(metrics.FP_COUNT, 1);
                 Assert.assertEquals(metrics.FN_COUNT, 0);
