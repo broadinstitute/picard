@@ -23,7 +23,7 @@ public class TestDataProviders {
 
 
     /**
-     * from:
+     * Taken from: https://stackoverflow.com/a/862130/360496
      *
      * Scans all classes accessible from the context class loader which belong
      * to the given package and subpackages.
@@ -81,10 +81,10 @@ public class TestDataProviders {
     public void testAllDataProviders() throws URISyntaxException, IOException, ClassNotFoundException, IllegalAccessException, InstantiationException, InvocationTargetException {
         int i = 0;
         for (Class testClass : getClasses("picard")) {
-            if(Modifier.isAbstract(testClass.getModifiers())) continue;
+            if (Modifier.isAbstract(testClass.getModifiers())) continue;
             for (final Method method : testClass.getMethods()) {
                 if (method.isAnnotationPresent(DataProvider.class)) {
-                    System.err.println("Method: "+ method.getName());
+                    System.err.println("Method: " + method.getName());
                     method.invoke(testClass.newInstance());
                     i++;
                 }
