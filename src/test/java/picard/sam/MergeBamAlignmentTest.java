@@ -1907,5 +1907,84 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         assertSamValid(mergedSam);
         IOUtil.assertFilesEqual(expectedSam, mergedSam);
     }
-}
 
+    @Test
+    public void testPairedReadsAreProcessedProperlyInAbsenceOfHitIndexTags () throws IOException {
+        final File unmappedSam = new File(TEST_DATA_DIR, "unmapped1.sam");
+        final File alignedSam = new File(TEST_DATA_DIR, "aligned.sam");
+        final File expectedSam = new File(TEST_DATA_DIR, "merged_expected.sam");
+        final File refFasta = new File(TEST_DATA_DIR, "reference.fasta");
+        final File mergedSam = File.createTempFile("merged", ".sam");
+        mergedSam.deleteOnExit();
+
+        doMergeAlignment(unmappedSam, Collections.singletonList(alignedSam),
+                null, null, null, null,
+                false, true, false, 1,
+                "0", "1.0", "align!", "myAligner",
+                true, refFasta, mergedSam,
+                null, null, null, null, true, SAMFileHeader.SortOrder.queryname);
+
+        assertSamValid(mergedSam);
+        IOUtil.assertFilesEqual(expectedSam, mergedSam);
+    }
+
+    @Test
+    public void testCoordinateByMateMethodWorksProperly () throws IOException {
+        final HitsForInsert hitsForInsert = new HitsForInsert();
+        final SAMFileHeader header = new SAMFileHeader();
+        header.setSortOrder(SAMFileHeader.SortOrder.queryname);
+
+        { // Both first and second of pair
+            final SAMRecord first = new SAMRecord(header);
+            final SAMRecord second = new SAMRecord(header);
+
+            first.setReferenceName("chrm1");
+            first.setAlignmentStart(20);
+            first.setMateReferenceName("chrm2");
+            first.setMateAlignmentStart(1);
+            second.setReferenceName("chrm2");
+            second.setAlignmentStart(1);
+            second.setMateReferenceName("chrm1");
+            second.setMateAlignmentStart(20);
+
+            hitsForInsert.addFirstOfPairOrFragment(first);
+            hitsForInsert.addSecondOfPair(second);
+        }
+
+        { // Only first
+            final SAMRecord first = new SAMRecord(header);
+
+            first.setReferenceName("chrm1");
+            first.setAlignmentStart(8);
+            first.setMateReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
+            first.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
+
+            hitsForInsert.addFirstOfPairOrFragment(first);
+        }
+
+        { // Only Second
+            final SAMRecord second = new SAMRecord(header);
+
+            second.setReferenceName("chrm2");
+            second.setAlignmentStart(15);
+            second.setMateReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
+            second.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
+
+            hitsForInsert.addFirstOfPairOrFragment(second);
+        }
+
+        for (int i = 0; i < 3; i++) {
+            final SAMRecord first = hitsForInsert.getFirstOfPair(i);
+            final SAMRecord second = hitsForInsert.getSecondOfPair(i);
+
+            if (first != null && second != null) {
+                Assert.assertEquals(first.getMateAlignmentStart(), second.getAlignmentStart());
+                Assert.assertEquals(second.getMateAlignmentStart(), first.getAlignmentStart());
+            } else if (first != null) {
+                Assert.assertEquals(first.getMateAlignmentStart(), SAMRecord.NO_ALIGNMENT_START);
+            } else {
+                Assert.assertEquals(second.getMateAlignmentStart(), SAMRecord.NO_ALIGNMENT_START);
+            }
+        }
+    }
+}

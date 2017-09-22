@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Holds all the hits (alignments) for a read or read pair.  For single-end reads, all the alignments are
@@ -217,8 +218,12 @@ class HitsForInsert {
                 secondOfPair.add(i, null);
             }
         }
+    }
 
-        // Now renumber any correlated alignments, and remove hit index if no correlated read.
+    /**
+     * Renumber any correlated alignments, and remove hit index if no correlated read.
+     */
+    private void renumberHitIndex() {
         int hi = 0;
         for (int i = 0; i < numHits(); ++i) {
             final SAMRecord first = getFirstOfPair(i);
@@ -233,6 +238,62 @@ class HitsForInsert {
                 second.setAttribute(SAMTag.HI.name(), null);
             }
         }
+    }
+
+    /**
+     * This method lines up alignments in firstOfPairOrFragment and secondOfPair lists so that the first and the second
+     * records of each pair have the same index.
+     */
+    void coordinateByMate() {
+        final List<SAMRecord> newFirstOfPairOrFragment = new ArrayList<>();
+        final List<SAMRecord> newSecondOfPair = new ArrayList<>();
+
+        for (int i = 0; i < firstOfPairOrFragment.size(); i++) {
+            final SAMRecord first = firstOfPairOrFragment.get(i);
+            newFirstOfPairOrFragment.add(i, first);
+            newSecondOfPair.add(null);
+
+            for (int k = 0; k < secondOfPair.size(); k++) {
+                final SAMRecord second = secondOfPair.get(k);
+                if (arePair(first, second)) {
+                    newSecondOfPair.set(i, second);
+                    secondOfPair.set(k, null);
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < secondOfPair.size(); i++) {
+            if (secondOfPair.get(i) != null) {
+                newFirstOfPairOrFragment.add(i, null);
+                newSecondOfPair.add(i, secondOfPair.get(i));
+            }
+        }
+
+        firstOfPairOrFragment.clear();
+        firstOfPairOrFragment.addAll(newFirstOfPairOrFragment);
+        secondOfPair.clear();
+        secondOfPair.addAll(newSecondOfPair);
+
+        renumberHitIndex();
+    }
+
+    /**
+     * Identifies weather records present pairwise alignment or not.
+     *
+     * It is unnecessary to check QNAME here cause an object of {@code HitsForInsert}
+     * presents only records with the same QNAME.
+     *
+     * @return {@code true} if records belong to the same pairwise alignment
+     */
+    private static boolean arePair(final SAMRecord first, final SAMRecord second) {
+        return first != null && second != null
+                && first.getMateAlignmentStart() == second.getAlignmentStart()
+                && first.getAlignmentStart() == second.getMateAlignmentStart()
+                && !SAMRecord.NO_ALIGNMENT_REFERENCE_NAME.equals(first.getMateReferenceName())
+                && !SAMRecord.NO_ALIGNMENT_REFERENCE_NAME.equals(second.getMateReferenceName())
+                && Objects.equals(first.getReferenceName(), second.getMateReferenceName())
+                && Objects.equals(first.getMateReferenceName(), second.getReferenceName());
     }
 
     /**
