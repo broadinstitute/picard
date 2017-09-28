@@ -1,6 +1,7 @@
 package picard;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.ClassFinder;
@@ -39,6 +40,12 @@ public class TestDataProviders {
         }
     }
 
+    @Test
+    public void IndependentTestOfDataProviderTest() throws IllegalAccessException, InvocationTargetException, InstantiationException {
+        testAllDataProvidersdata();
+    }
+
+
     @DataProvider(name = "DataprovidersThatDontTestThemselves")
     public Iterator<Object[]> testAllDataProvidersdata() throws IllegalAccessException, InstantiationException, InvocationTargetException {
         int i = 0;
@@ -66,6 +73,15 @@ public class TestDataProviders {
         final Class clazz = container.clazz;
         System.err.println("Method: " + method + " Class: " + clazz.getName());
 
-        method.invoke(clazz.newInstance());
+        Object instance = clazz.newInstance();
+
+        // Some tests assume that the @BeforeSuite methods will be called before the @DataProviders
+        for (final Method otherMethod : clazz.getMethods()) {
+            if (otherMethod.isAnnotationPresent(BeforeSuite.class)) {
+                otherMethod.invoke(instance);
+            }
+        }
+
+        method.invoke(instance);
     }
 }
