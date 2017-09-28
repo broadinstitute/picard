@@ -8,6 +8,9 @@ import picard.cmdline.ClassFinder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * This test is a mechanism to check that none of the data-providers fail to run.
@@ -19,23 +22,50 @@ import java.lang.reflect.Modifier;
  * @author Yossi Farjoun
  */
 public class TestDataProviders {
+    private static class Container {
+        public final Method method;
+        public final Class<?> clazz;
 
-    @Test
-    public void testAllDataProviders() throws IllegalAccessException, InstantiationException, InvocationTargetException {
+        // Encapsulation (of the Method) is required due to what seems to be a bug in TestNG.
+
+        public Container(Method method, Class clazz) {
+            this.method = method;
+            this.clazz = clazz;
+        }
+
+        @Override
+        public String toString() {
+            return clazz.getName() + "::" + method.getName();
+        }
+    }
+
+    @DataProvider(name = "DataprovidersThatDontTestThemselves")
+    public Iterator<Object[]> testAllDataProvidersdata() throws IllegalAccessException, InstantiationException, InvocationTargetException {
         int i = 0;
+        List<Object[]> data = new ArrayList<>();
         final ClassFinder classFinder = new ClassFinder();
         classFinder.find("picard", Object.class);
-        for (Class testClass : classFinder.getClasses()) {
+
+        for (final Class<?> testClass : classFinder.getClasses()) {
             if (Modifier.isAbstract(testClass.getModifiers())) continue;
             for (final Method method : testClass.getMethods()) {
                 if (method.isAnnotationPresent(DataProvider.class)) {
-                    System.err.println("Method: " + testClass.getName() + ":" + method.getName());
-                    method.invoke(testClass.newInstance());
-                    i++;
+                    data.add(new Object[]{new Container(method, testClass)});
                 }
             }
         }
-        Assert.assertNotSame(i,0);
-        System.err.println("Found: "+ i + " @DataProviders.");
+        Assert.assertTrue(data.size() > 1);
+        Assert.assertEquals(data.stream().filter(c -> ((Container) c[0]).method.getName().equals("testAllDataProvidersdata")).count(), 1);
+
+        return data.iterator();
+    }
+
+    @Test(dataProvider = "DataprovidersThatDontTestThemselves")
+    public void testDataProviderswithDP(final Container container) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+        final Method method = container.method;
+        final Class clazz = container.clazz;
+        System.err.println("Method: " + method + " Class: " + clazz.getName());
+
+        method.invoke(clazz.newInstance());
     }
 }
