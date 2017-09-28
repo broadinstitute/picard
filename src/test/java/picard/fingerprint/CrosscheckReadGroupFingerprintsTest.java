@@ -21,37 +21,36 @@ import static picard.fingerprint.FingerprintIdDetails.multipleValuesString;
  */
 public class CrosscheckReadGroupFingerprintsTest {
 
-    private final static File TEST_DIR = new File("testdata/picard/fingerprint/");
-    private final static File HAPLOTYPE_MAP = new File(TEST_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+    private static final File TEST_DIR = new File("testdata/picard/fingerprint/");
+    private static final File HAPLOTYPE_MAP = new File(TEST_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
 
-    static private final File NA12891_r1_sam = new File(TEST_DIR, "NA12891.over.fingerprints.r1.sam");
-    static private final File NA12891_r2_sam = new File(TEST_DIR, "NA12891.over.fingerprints.r2.sam");
+    private static final File NA12891_r1_sam = new File(TEST_DIR, "NA12891.over.fingerprints.r1.sam");
+    private static final File NA12891_r2_sam = new File(TEST_DIR, "NA12891.over.fingerprints.r2.sam");
 
     //this is a copy of a previous one, but with a different sample name
-    static private final File NA12891_named_NA12892_r1_sam = new File(TEST_DIR, "NA12891_named_NA12892.over.fingerprints.r1.sam");
+    private static final File NA12891_named_NA12892_r1_sam = new File(TEST_DIR, "NA12891_named_NA12892.over.fingerprints.r1.sam");
 
-    static private final File NA12892_r1_sam = new File(TEST_DIR, "NA12892.over.fingerprints.r1.sam");
-    static private final File NA12892_r2_sam = new File(TEST_DIR, "NA12892.over.fingerprints.r2.sam");
+    private static final File NA12892_r1_sam = new File(TEST_DIR, "NA12892.over.fingerprints.r1.sam");
+    private static final File NA12892_r2_sam = new File(TEST_DIR, "NA12892.over.fingerprints.r2.sam");
 
-    static private File NA12891_r1, NA12891_r2, NA12891_named_NA12892_r1, NA12892_r1, NA12892_r2;
+    private static File NA12891_r1, NA12891_r2, NA12891_named_NA12892_r1, NA12892_r1, NA12892_r2;
 
-    static private final int NA12891_r1_RGs = 27;
-    static private final int NA12891_r2_RGs = 26;
-    static private final int NA12892_r1_RGs = 25;
-    static private final int NA12892_r2_RGs = 26;
+    private static final int NA12891_r1_RGs = 27;
+    private static final int NA12891_r2_RGs = 26;
+    private static final int NA12892_r1_RGs = 25;
+    private static final int NA12892_r2_RGs = 26;
 
-    private static final Map<CrosscheckMetric.DataType, List<String>> lookupMap = new HashMap<>(4);
+    private final Map<CrosscheckMetric.DataType, List<String>> lookupMap = new HashMap<>(4);
 
     @BeforeTest
-    static public void setup() throws IOException {
+    public void setup() throws IOException {
         NA12891_r1 = SamTestUtils.createIndexedBam(NA12891_r1_sam, NA12891_r1_sam);
         NA12891_r2 = SamTestUtils.createIndexedBam(NA12891_r2_sam, NA12891_r2_sam);
         NA12891_named_NA12892_r1 = SamTestUtils.createIndexedBam(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam);
         NA12892_r1 = SamTestUtils.createIndexedBam(NA12892_r1_sam, NA12892_r1_sam);
         NA12892_r2 = SamTestUtils.createIndexedBam(NA12892_r2_sam, NA12892_r2_sam);
 
-        lookupMap.put(CrosscheckMetric.DataType.FILE, new ArrayList<>());
-        lookupMap.get(CrosscheckMetric.DataType.FILE).addAll(Arrays.asList("LEFT_FILE", "RIGHT_FILE"));
+        lookupMap.put(CrosscheckMetric.DataType.FILE, new ArrayList<>(Arrays.asList("LEFT_FILE", "RIGHT_FILE")));
 
         lookupMap.put(CrosscheckMetric.DataType.SAMPLE, new ArrayList<>());
         lookupMap.get(CrosscheckMetric.DataType.SAMPLE).addAll(Arrays.asList("LEFT_SAMPLE", "RIGHT_SAMPLE"));
@@ -70,24 +69,24 @@ public class CrosscheckReadGroupFingerprintsTest {
 
     @DataProvider(name = "bamFilesRGs")
     public Object[][] bamFilesRGs() {
-        return new Object[][] {
+        return new Object[][]{
                 {NA12891_r1, NA12891_r2, false, 0, (NA12891_r1_RGs + NA12891_r2_RGs) + 1},
                 {NA12891_r1, NA12892_r1, false, 0, (NA12891_r1_RGs + NA12892_r1_RGs) + 1},
                 {NA12891_r1, NA12892_r2, false, 0, (NA12891_r1_RGs + NA12892_r2_RGs) + 1},
                 {NA12892_r1, NA12892_r2, false, 0, (NA12892_r1_RGs + NA12892_r2_RGs) + 1},
                 {NA12892_r2, NA12891_r2, false, 0, (NA12892_r2_RGs + NA12891_r2_RGs) + 1},
                 {NA12892_r2, NA12891_r1, false, 0, (NA12892_r2_RGs + NA12891_r1_RGs) + 1},
-                {NA12891_r1, NA12891_r2, true,  0, (NA12891_r1_RGs + NA12891_r2_RGs) + 1},
-                {NA12891_r1, NA12892_r1, true,  1, (NA12891_r1_RGs + NA12892_r1_RGs) + 1},
-                {NA12891_r1, NA12892_r2, true,  1, (NA12891_r1_RGs + NA12892_r2_RGs) + 1},
-                {NA12892_r1, NA12892_r2, true,  0, (NA12892_r1_RGs + NA12892_r2_RGs) + 1},
-                {NA12892_r2, NA12891_r2, true,  1, (NA12892_r2_RGs + NA12891_r2_RGs) + 1},
-                {NA12892_r2, NA12891_r1, true,  1, (NA12892_r2_RGs + NA12891_r1_RGs) + 1}
+                {NA12891_r1, NA12891_r2, true, 0, (NA12891_r1_RGs + NA12891_r2_RGs) + 1},
+                {NA12891_r1, NA12892_r1, true, 1, (NA12891_r1_RGs + NA12892_r1_RGs) + 1},
+                {NA12891_r1, NA12892_r2, true, 1, (NA12891_r1_RGs + NA12892_r2_RGs) + 1},
+                {NA12892_r1, NA12892_r2, true, 0, (NA12892_r1_RGs + NA12892_r2_RGs) + 1},
+                {NA12892_r2, NA12891_r2, true, 1, (NA12892_r2_RGs + NA12891_r2_RGs) + 1},
+                {NA12892_r2, NA12891_r1, true, 1, (NA12892_r2_RGs + NA12891_r1_RGs) + 1}
         };
     }
 
     @Test(dataProvider = "bamFilesRGs")
-    public void testCrossCheckRGs(final File file1, final File file2, final boolean expectAllMatch, final int expectedRetVal, final int expectedNMetrics) throws IOException {
+    public void testCrossCheckRGs(final File file1, final File file2, final boolean expectAllMatch, final int expectedRetVal, final int expectedNMetrics) throws IOException, NoSuchFieldException {
 
         File metrics = File.createTempFile("Fingerprinting", "NA1291.RG.crosscheck_metrics");
         metrics.deleteOnExit();
@@ -101,17 +100,17 @@ public class CrosscheckReadGroupFingerprintsTest {
                 "EXPECT_ALL_GROUPS_TO_MATCH=" + expectAllMatch
         };
 
-        doTest(args, metrics, expectedRetVal, expectedNMetrics*(expectedNMetrics-1)/2, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
+        doTest(args, metrics, expectedRetVal, expectedNMetrics * (expectedNMetrics - 1) / 2, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
 
     @DataProvider(name = "bamFilesLBs")
     public Object[][] bamFilesLBs() {
 
         return new Object[][]{
-                {NA12891_r1, NA12891_r2,                   0, true},
-                {NA12891_r1, NA12892_r1,                   0, false},
-                {NA12892_r2, NA12891_r2,                   0, false},
-                {NA12892_r2, NA12891_r1,                   0, false},
+                {NA12891_r1, NA12891_r2, 0, true},
+                {NA12891_r1, NA12892_r1, 0, false},
+                {NA12892_r2, NA12891_r2, 0, false},
+                {NA12892_r2, NA12891_r1, 0, false},
                 {NA12891_r1, NA12891_named_NA12892_r1_sam, 1, true},
                 {NA12892_r1, NA12891_named_NA12892_r1_sam, 1, false},
                 {NA12891_r2, NA12891_named_NA12892_r1_sam, 1, true},
@@ -132,7 +131,7 @@ public class CrosscheckReadGroupFingerprintsTest {
                 "LOD_THRESHOLD=" + -1.0,
                 "CROSSCHECK_LIBRARIES=true"
         };
-        final int numLibs=2;
+        final int numLibs = 2;
         doMatrixTest(args, metrics, expectedRetVal, numLibs, expectAllMatch);
     }
 
@@ -140,10 +139,10 @@ public class CrosscheckReadGroupFingerprintsTest {
     public Object[][] bamFilesSources() {
 
         return new Object[][]{
-                {NA12891_r1, NA12891_r2,               0},
-                {NA12892_r1, NA12892_r2,               0},
-                {NA12891_r1, NA12892_r1,               0},
-                {NA12892_r2, NA12891_r2,               0},
+                {NA12891_r1, NA12891_r2, 0},
+                {NA12892_r1, NA12892_r2, 0},
+                {NA12891_r1, NA12892_r1, 0},
+                {NA12892_r2, NA12891_r2, 0},
                 {NA12892_r2, NA12891_named_NA12892_r1, 1}, // the two files contain different samples one has wrong name
                 {NA12891_r2, NA12891_named_NA12892_r1, 1}, // unexpected match
                 {NA12892_r1, NA12891_named_NA12892_r1, 1}, // the two files contain different samples one has wrong name
@@ -154,10 +153,10 @@ public class CrosscheckReadGroupFingerprintsTest {
     @DataProvider(name = "bamFilesSMs")
     public Object[][] bamFilesSMs() {
 
-        return new Object[][] {
-                {NA12891_r1, NA12891_r2,               0, 1, true},
-                {NA12891_r1, NA12892_r1,               0, 2, false},
-                {NA12892_r2, NA12891_r2,               0, 2, false},
+        return new Object[][]{
+                {NA12891_r1, NA12891_r2, 0, 1, true},
+                {NA12891_r1, NA12892_r1, 0, 2, false},
+                {NA12892_r2, NA12891_r2, 0, 2, false},
                 {NA12892_r2, NA12891_named_NA12892_r1, 0, 1, true}, // no error since only one sample in aggregate
                 {NA12891_r2, NA12891_named_NA12892_r1, 1, 2, true}, // unexpected match
                 {NA12892_r1, NA12891_named_NA12892_r1, 0, 1, true}, // no error since only one sample in aggregate
@@ -181,11 +180,7 @@ public class CrosscheckReadGroupFingerprintsTest {
         doMatrixTest(args, metrics, expectedRetVal, numberOfSamples, expectedAllMatch);
     }
 
-    private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType) throws IOException {
-        doTest(args, metrics, expectedRetVal, expectedNMetrics, expectedType, false);
-    }
-
-    private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType, final boolean expectAllMatch) throws IOException {
+    private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType, final boolean expectAllMatch) throws IOException, NoSuchFieldException {
 
         final CrosscheckReadGroupFingerprints crossChecker = new CrosscheckReadGroupFingerprints();
         Assert.assertEquals(crossChecker.instanceMain(args), expectedRetVal);
@@ -193,15 +188,15 @@ public class CrosscheckReadGroupFingerprintsTest {
         final MetricsFile<CrosscheckMetric, Comparable<?>> metricsOutput = new MetricsFile<>();
         metricsOutput.read(new FileReader(metrics));
 
-        Assert.assertFalse(metricsOutput.getMetrics().stream()
-                .anyMatch(m -> m.DATA_TYPE != expectedType));
+        Assert.assertTrue(metricsOutput.getMetrics().stream()
+                .allMatch(m -> m.DATA_TYPE == expectedType));
 
-        Assert.assertFalse(metricsOutput.getMetrics().stream()
-                .anyMatch(m-> m.LOD_SCORE_NORMAL_TUMOR == null));
-        Assert.assertFalse(metricsOutput.getMetrics().stream()
-                .anyMatch(m-> m.LOD_SCORE == null));
-        Assert.assertFalse(metricsOutput.getMetrics().stream()
-                .anyMatch(m-> m.LOD_SCORE_TUMOR_NORMAL == null));
+        Assert.assertTrue(metricsOutput.getMetrics().stream()
+                .allMatch(m -> m.LOD_SCORE_NORMAL_TUMOR != null));
+        Assert.assertTrue(metricsOutput.getMetrics().stream()
+                .allMatch(m -> m.LOD_SCORE != null));
+        Assert.assertTrue(metricsOutput.getMetrics().stream()
+                .allMatch(m -> m.LOD_SCORE_TUMOR_NORMAL != null));
 
         if (expectAllMatch) {
             Assert.assertTrue(metricsOutput.getMetrics().stream()
@@ -225,22 +220,16 @@ public class CrosscheckReadGroupFingerprintsTest {
         }
 
         //check that fields that should have an actual value, indeed do
-        for(final String fieldName : lookupMap.get(expectedType)) {
-            try {
-                final Field field = CrosscheckMetric.class.getField(fieldName);
-                Assert.assertTrue(metricsOutput.getMetrics().stream().allMatch(m -> {
-                    try {
-                        return field.get(m) != multipleValuesString && field.get(m) != null;
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                        return false;
-                    }
-                }));
-
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
-                assert false;
-            }
+        for (final String fieldName : lookupMap.get(expectedType)) {
+            final Field field = CrosscheckMetric.class.getField(fieldName);
+            Assert.assertTrue(metricsOutput.getMetrics().stream().allMatch(m -> {
+                try {
+                    return field.get(m) != multipleValuesString && field.get(m) != null;
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }));
         }
     }
 
@@ -257,13 +246,12 @@ public class CrosscheckReadGroupFingerprintsTest {
 
         if (expectAllMatch) {
             try (Stream<String> lines = Files.lines(metrics.toPath(), Charset.defaultCharset())) {
-                lines.skip(1).forEach(s->{
+                lines.skip(1).forEach(s -> {
                     final List<String> strings = Arrays.asList(s.split("\t"));
-                    strings.subList(1,strings.size()).forEach(str->Assert.assertTrue(Double.parseDouble(str)>0D, "expected positive value, found: " + str));
+                    strings.subList(1, strings.size()).forEach(str -> Assert.assertTrue(Double.parseDouble(str) > 0D, "expected positive value, found: " + str));
                 });
             }
         }
-
     }
 
     @Test
@@ -279,8 +267,8 @@ public class CrosscheckReadGroupFingerprintsTest {
 
     }
 
-    @DataProvider(name="newParametersData")
-    public Object[][]  newParametersData(){
+    @DataProvider(name = "newParametersData")
+    public Object[][] newParametersData() {
 
         return new Object[][]{
                 {"CROSSCHECK_BY=" + CrosscheckMetric.DataType.LIBRARY},
@@ -291,12 +279,12 @@ public class CrosscheckReadGroupFingerprintsTest {
     }
 
     @Test(dataProvider = "newParametersData")
-    public void testCannotUseNewParameters(final String extraParameter){
+    public void testCannotUseNewParameters(final String extraParameter) {
 
         final File file1 = NA12891_r1;
         final File file2 = NA12892_r1;
 
-        final String[] args = new String[] {
+        final String[] args = new String[]{
                 "INPUT=" + file1.getAbsolutePath(),
                 "INPUT=" + file2.getAbsolutePath(),
                 "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP,
