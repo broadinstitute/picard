@@ -7,7 +7,7 @@ import htsjdk.samtools.SamReaderFactory;
 
 import java.io.File;
 import java.io.IOException;
-
+// TODO: move this to an appropriate location
 public class SamTestUtils {
     /**
      * Useful test method.  Creates a (temporary) indexed BAM so that we can store a sam in the testdata set.

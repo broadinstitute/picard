@@ -39,6 +39,8 @@ public class FingerprintIdDetails {
     String molecularBarcode;
     String library;
     String file;
+    // for cases where the same file is read twice
+    Integer fileIndex = 0;
     String sample;
 
     String group;// not used for equals or hash since it's expected to be made up of one of the other fields..
@@ -75,6 +77,7 @@ public class FingerprintIdDetails {
             return false;
         if (library != null ? !library.equals(that.library) : that.library != null) return false;
         if (file != null ? !file.equals(that.file) : that.file != null) return false;
+        if (fileIndex != null ? !fileIndex.equals(that.fileIndex) : that.file != null) return false;
 
         return sample != null ? sample.equals(that.sample) : that.sample == null;
     }
@@ -87,6 +90,7 @@ public class FingerprintIdDetails {
         result = 31 * result + (molecularBarcode != null ? molecularBarcode.hashCode() : 0);
         result = 31 * result + (library != null ? library.hashCode() : 0);
         result = 31 * result + (file != null ? file.hashCode() : 0);
+        result = 31 * result + (fileIndex != null ? fileIndex.hashCode() : 0);
         result = 31 * result + (sample != null ? sample.hashCode() : 0);
         return result;
     }
@@ -97,9 +101,11 @@ public class FingerprintIdDetails {
         runBarcode       = equalValueOrElse(runBarcode,       other.runBarcode,       multipleValuesString);
         runLane          = equalValueOrElse(runLane,          other.runLane,          Integer.MIN_VALUE);
         library          = equalValueOrElse(library,          other.library,          multipleValuesString);
+        fileIndex        = equalValueOrElse(fileIndex,        other.fileIndex,        fileIndex);
         file             = equalValueOrElse(file,             other.file,             multipleValuesString);
         sample           = equalValueOrElse(sample,           other.sample,           multipleValuesString);
         molecularBarcode = equalValueOrElse(molecularBarcode, other.molecularBarcode, multipleValuesString);
+
 
         return this;
     }

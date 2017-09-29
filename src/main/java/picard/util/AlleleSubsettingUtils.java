@@ -20,7 +20,15 @@ import java.util.stream.Stream;
 
 public final class AlleleSubsettingUtils {
 
-    static final Allele NON_REF_ALLELE = Allele.create("<NON_REF>");
+    /**
+     * This constant holds the definition of the symbolic non-reference allele
+     * @deprecated from inception, as one should use a version of this from htsjdk.
+     * Will be deleted when htsjdk includes a replacement and that version is in picard.
+     */
+    @Deprecated
+    public static final Allele NON_REF_ALLELE = Allele.create("<NON_REF>");
+
+
     static List<Allele> DIPLOID_NO_CALL = Arrays.asList(Allele.NO_CALL, Allele.NO_CALL);
 
     /**

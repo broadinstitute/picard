@@ -25,11 +25,14 @@
 
 package picard.fingerprint;
 
+import freemarker.ext.beans.HashAdapter;
 import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -46,6 +49,7 @@ import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -268,8 +272,11 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     public File MATRIX_OUTPUT = null;
 
     @Argument(shortName = "H", doc = "The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
-            "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
-    public File HAPLOTYPE_MAP;
+            "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details." +
+            "Multiple Maps are allowed for cases where different files are based on different references. In this case it is " +
+            "vital that each file be endowed with a reference dictionary (VCF or SAM). The program will match the HAPLOYPE_MAP" +
+            "to use according to the sequence dictionaries.", minElements = 1 )
+    public List<File> HAPLOTYPE_MAP;
 
     @Argument(shortName = "LOD",
             doc = "If any two groups (with the same sample name) match with a LOD score lower than the threshold " +
@@ -358,12 +365,14 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
         }
     }
+    private AtomicInteger fileIndex = new AtomicInteger(0);
 
     @Override
     protected int doWork() {
         // Check inputs
 
-        IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
+        IOUtil.assertFilesAreReadable(HAPLOTYPE_MAP);
+
         if (OUTPUT != null) IOUtil.assertFileIsWritable(OUTPUT);
 
         if (!SECOND_INPUT.isEmpty() && CROSSCHECK_MODE == CHECK_SAME_SAMPLE) {
@@ -382,11 +391,15 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         if (INPUT_SAMPLE_MAP != null) IOUtil.assertFileIsReadable(INPUT_SAMPLE_MAP);
         if (SECOND_INPUT_SAMPLE_MAP != null) IOUtil.assertFileIsReadable(SECOND_INPUT_SAMPLE_MAP);
 
-        final HaplotypeMap map = new HaplotypeMap(HAPLOTYPE_MAP);
-        final FingerprintChecker checker = new FingerprintChecker(map);
+        final Map<SAMSequenceDictionary, HaplotypeMap> map = HAPLOTYPE_MAP.stream()
+                .map(HaplotypeMap::new)
+                .collect(Collectors.toMap(m -> m.getHeader().getSequenceDictionary(), m -> m));
 
-        checker.setAllowDuplicateReads(ALLOW_DUPLICATE_READS);
-        checker.setValidationStringency(VALIDATION_STRINGENCY);
+        final Map<SAMSequenceDictionary, FingerprintChecker> checker = map.entrySet()
+                .stream().collect(Collectors.toMap(Map.Entry::getKey, e -> new FingerprintChecker(e.getValue())));
+
+        checker.values().forEach(c -> c.setAllowDuplicateReads(ALLOW_DUPLICATE_READS));
+        checker.values().forEach(c -> c.setValidationStringency(VALIDATION_STRINGENCY));
 
         final List<String> extensions = new ArrayList<>();
 
@@ -408,27 +421,19 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final List<Path> unrolledFiles2 = IOUtil.unrollPaths(secondInputsPaths, extensions.toArray(new String[extensions.size()]));
         IOUtil.assertPathsAreReadable(unrolledFiles2);
 
-        log.info("Fingerprinting " + unrolledFiles.size() + " INPUT files.");
-        final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
-
-        if (INPUT_SAMPLE_MAP != null) {
-            remapFingerprints(fpMap, INPUT_SAMPLE_MAP, "INPUT_SAMPLE_MAP");
-        }
+        final Map<FingerprintIdDetails, Fingerprint> fpMap = getMappedFingerprintIdDetails(map, checker, unrolledFiles,INPUT_SAMPLE_MAP);
 
         final List<CrosscheckMetric> metrics = new ArrayList<>();
         final int numUnexpected;
 
         if (SECOND_INPUT.isEmpty()) {
-            log.info("Cross-checking all " + CROSSCHECK_BY + " against each other");
+            log.info("Cross-checking all " + CROSSCHECK_BY + "s against each other");
             numUnexpected = crossCheckGrouped(fpMap, fpMap, metrics, getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
         } else {
             log.info("Fingerprinting " + unrolledFiles2.size() + " SECOND_INPUT files.");
 
-            final Map<FingerprintIdDetails, Fingerprint> fpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
+            final Map<FingerprintIdDetails, Fingerprint> fpMap2 = getMappedFingerprintIdDetails(map, checker, unrolledFiles2, SECOND_INPUT_SAMPLE_MAP);
 
-            if (SECOND_INPUT_SAMPLE_MAP != null) {
-                remapFingerprints(fpMap2, SECOND_INPUT_SAMPLE_MAP, "SECOND_INPUT_SAMPLE_MAP");
-            }
             switch (CROSSCHECK_MODE) {
                 case CHECK_SAME_SAMPLE:
                     log.info("Checking each sample in INPUT with the same sample in SECOND_INPUT.");
@@ -464,12 +469,50 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
     }
 
+    private Map<FingerprintIdDetails, Fingerprint> getMappedFingerprintIdDetails(final Map<SAMSequenceDictionary, HaplotypeMap> map,
+                                                                                 final Map<SAMSequenceDictionary, FingerprintChecker> checker,
+                                                                                 List<Path> unrolledFiles,
+                                                                                 final File sampleMap) {
+        final Map<Path, SAMSequenceDictionary> tempDictionary = unrolledFiles.stream().distinct().collect(Collectors.toMap(Function.identity(), SAMSequenceDictionaryExtractor::extractDictionary));
+
+        // replace sequence dictionaries found in the files with those in the haplotype maps.
+        final Map<Path, SAMSequenceDictionary> mapFileToDictionary = tempDictionary.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getSameDictionary(e.getValue(), map.keySet())));
+
+        mapFileToDictionary.forEach((key, value) -> {
+            if (value == null) {
+                throw new RuntimeException("Couldn't find Haplotype Map with Dictionary equal to that from " + key.toUri().toString());
+            }
+        });
+
+        log.info("Fingerprinting " + unrolledFiles.size() + " INPUT files.");
+
+        final List<Map<FingerprintIdDetails, Fingerprint>> fpMapList =
+                mapFileToDictionary.entrySet().stream()
+                        .map(e -> checker.get(e.getValue())
+                                .fingerprintFiles(Collections.singletonList(e.getKey()), NUM_THREADS, 1, TimeUnit.DAYS))
+                        .collect(Collectors.toList());
+
+        final Map<FingerprintIdDetails, Fingerprint> fpMap = fpMapList.stream()
+                .flatMap(m ->
+                        m.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {
+                    log.error("found two entries with the same key: " + k1 + " and " + k2);
+                    throw new IllegalArgumentException("found two entries with the same key: " + k1 + " and " + k2);
+                }, HashMap::new));
+
+        if (sampleMap != null) {
+            return remapFingerprints(fpMap, sampleMap, "INPUT_SAMPLE_MAP");
+        } else {
+            return fpMap;
+        }
+    }
+
     /** Inspects the contents of sampleMapFile building a map of Sample->Sample.
      * Checks for sanity, and then replaces in the fpMap,
      * @param fpMap
      * @param sampleMapFile
      */
-    private void remapFingerprints(final Map<FingerprintIdDetails, Fingerprint> fpMap, final File sampleMapFile, final String inputFieldName) {
+    private Map<FingerprintIdDetails, Fingerprint> remapFingerprints(final Map<FingerprintIdDetails, Fingerprint> fpMap, final File sampleMapFile, final String inputFieldName) {
         final Map<String, String> sampleMap = new HashMap<>();
 
         final TabbedInputParser parser = new TabbedInputParser(false, sampleMapFile);
@@ -485,22 +528,22 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 throw new IllegalArgumentException("Strings in first column of the " + inputFieldName + " must be unique. found [" + strings[0] +
                         "] twice. Right before [" + parser.getCurrentLine() + "] in " + sampleMapFile.getAbsolutePath());
             }
-            sampleMap.put(strings[0],strings[1]);
+            sampleMap.put(strings[0], strings[1]);
         }
         // check that every key in the sample map is a sample in the fpMap, and warn otherwise
-        final Set<String> samplesInFpMap = fpMap.keySet().stream().map(id->id.sample).collect(Collectors.toSet());
+        final Set<String> samplesInFpMap = fpMap.keySet().stream().map(id -> id.sample).collect(Collectors.toSet());
         final Set<String> samplesNotInSampleMap = sampleMap.keySet().stream()
-                .filter(((Predicate<String>)samplesInFpMap::contains).negate())
+                .filter(((Predicate<String>) samplesInFpMap::contains).negate())
                 .collect(Collectors.toSet());
         if (!samplesNotInSampleMap.isEmpty()) {
             log.warn("Some samples in first column in the " + inputFieldName + " were not present as samples in fingerprinted file: [" +
-                      String.join(", ", samplesNotInSampleMap)+ "].");
+                    String.join(", ", samplesNotInSampleMap) + "].");
         }
 
         // verify that resulting sample-set is unique
         final List<String> resultingSamples = new ArrayList<>(samplesInFpMap);
-        sampleMap.keySet().forEach(s->{
-            if(resultingSamples.remove(s)){
+        sampleMap.keySet().forEach(s -> {
+            if (resultingSamples.remove(s)) {
                 resultingSamples.add(sampleMap.get(s));
             }
         });
@@ -519,16 +562,21 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         // replace samples with their mapped values:
         final Set<FingerprintIdDetails> ids = fpMap.keySet();
+        final Map<FingerprintIdDetails, Fingerprint> remappedFpMap = new HashMap<>(fpMap.size());
         ids.forEach(id -> {
             // if sample isn't in sampleMap, leave it alone
-            if (!sampleMap.containsKey(id.sample)) return;
-            // one needs to replace the item, not simply modify it so that it is placed correctly in the map (since the key is changing)
-            final Fingerprint fingerprint = fpMap.remove(id);
-            //update the key
-            id.sample = sampleMap.get(id.sample);
-            //put the fingerprint back in with the updates key
-            fpMap.put(id, fingerprint);
+            if (!sampleMap.containsKey(id.sample)) {
+                remappedFpMap.put(id, fpMap.get(id));
+            } else {
+                final Fingerprint fingerprint = fpMap.get(id);
+                // update the key
+                id.sample = sampleMap.get(id.sample);
+
+                // put the fingerprint with the updated key
+                remappedFpMap.put(id, fingerprint);
+            }
         });
+        return remappedFpMap;
     }
 
     private void writeMatrix() {
@@ -572,7 +620,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 groupByTemp = details -> details.sample + "::" + details.library;
                 break;
             case FILE:
-                groupByTemp = details -> details.file + "::" + details.sample;
+                groupByTemp = details -> details.fileIndex == 0 ? details.file + "::" + details.sample :
+                                         details.file + ":" + details.fileIndex + "::" + details.sample;
                 break;
             case SAMPLE:
                 groupByTemp = details -> details.sample;
@@ -612,7 +661,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
                         }, entry -> {
                             // merge the values by merging the fingerprints.
-
                             final FingerprintIdDetails firstDetail = entry.getValue().get(0).getKey();
                             //use the "by" function to determine the "info" part of the fingerprint
                             final Fingerprint sampleFp = new Fingerprint(firstDetail.sample, null, by.apply(firstDetail));
@@ -624,7 +672,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     /**
      * Method that crosschecks fingerprints from one list of fingerprints against those in another
-     * putting the results in a List of CrosscheckMetics.
+     * putting the results in a List of CrosscheckMetrics.
      */
     private int crossCheckGrouped(final Map<FingerprintIdDetails, Fingerprint> lhsFingerprints,
                                   final Map<FingerprintIdDetails, Fingerprint> rhsFingerprints,
@@ -650,7 +698,10 @@ public class CrosscheckFingerprints extends CommandLineProgram {
      * Method that pairwise checks every pair of groups and reports a LOD score for the two groups
      * coming from the same individual.
      */
-    private int crossCheckFingerprints(final Map<FingerprintIdDetails, Fingerprint> lhsFingerprints, final Map<FingerprintIdDetails, Fingerprint> rhsFingerprints, final CrosscheckMetric.DataType type, final List<CrosscheckMetric> metrics) {
+    private int crossCheckFingerprints(final Map<FingerprintIdDetails, Fingerprint> lhsFingerprints,
+                                       final Map<FingerprintIdDetails, Fingerprint> rhsFingerprints,
+                                       final CrosscheckMetric.DataType type,
+                                       final List<CrosscheckMetric> metrics) {
         int unexpectedResults = 0;
         long checksMade = 0;
 
@@ -693,7 +744,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
      * Method that checks each sample from fingerprints1 against that sample from fingerprints2 and reports a LOD score for the two groups
      * coming from the same individual.
      */
-    private int checkFingerprintsBySample(final Map<FingerprintIdDetails, Fingerprint> fingerprints1, final Map<FingerprintIdDetails, Fingerprint> fingerprints2,
+    private int checkFingerprintsBySample(final Map<FingerprintIdDetails, Fingerprint> fingerprints1,
+                                          final Map<FingerprintIdDetails, Fingerprint> fingerprints2,
                                           final List<CrosscheckMetric> metrics) {
         int unexpectedResults = 0;
 
@@ -738,7 +790,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
      * @param rightPuDetails right hand side FingerprintIdDetails
      * @return tab delimited string containing details about a possible match
      */
-    private CrosscheckMetric getMatchDetails(final FingerprintResult matchResult,
+    private static CrosscheckMetric getMatchDetails(final FingerprintResult matchResult,
                                              final MatchResults results,
                                              final FingerprintIdDetails leftPuDetails,
                                              final FingerprintIdDetails rightPuDetails,
@@ -760,6 +812,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         metric.LEFT_LIBRARY = leftPuDetails.library;
         metric.LEFT_SAMPLE = leftPuDetails.sample;
         metric.LEFT_FILE = leftPuDetails.file;
+        metric.LEFT_FILE_INDEX = leftPuDetails.fileIndex;
 
         metric.RIGHT_RUN_BARCODE = rightPuDetails.runBarcode;
         metric.RIGHT_LANE = rightPuDetails.runLane;
@@ -767,6 +820,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         metric.RIGHT_LIBRARY = rightPuDetails.library;
         metric.RIGHT_SAMPLE = rightPuDetails.sample;
         metric.RIGHT_FILE = rightPuDetails.file;
+        metric.RIGHT_FILE_INDEX = rightPuDetails.fileIndex;
 
         return metric;
     }
@@ -789,5 +843,16 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 return FingerprintResult.INCONCLUSIVE;
             }
         }
+    }
+
+    /**
+     * a method that will select using isSameDictionary the dictionary that isSameDictionary (not equal) to the provided one,
+     * or null if non exists
+     */
+    private static SAMSequenceDictionary getSameDictionary(final SAMSequenceDictionary dict,
+                                                    final Collection<SAMSequenceDictionary> dicts) {
+        final Optional<SAMSequenceDictionary> matchingDictionary = dicts.stream().filter(dict::isSameDictionary).findFirst();
+
+        return matchingDictionary.orElse(null);
     }
 }

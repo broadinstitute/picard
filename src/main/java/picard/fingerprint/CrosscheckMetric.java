@@ -60,18 +60,20 @@ public class CrosscheckMetric extends MetricBase {
     }
 
     public enum DataType {
-        FILE,
-        SAMPLE,
-        LIBRARY,
-        READGROUP
+        FILE, // meaning File and sample (from BAM or vcf)
+        SAMPLE, // meaning SM tag in BAM or column header in vcf
+        LIBRARY, // meaning LB and SM from BAM header 
+        READGROUP // meaning PU field from BAM header
     }
 
+    // The left group value that was used 
     public String LEFT_GROUP_VALUE;
+    // The right group value that was used 
     public String RIGHT_GROUP_VALUE;
 
     // The overall result of the match
     public FingerprintResult RESULT;
-    // The data type that was being compared
+    // The {@link DataType} that was being compared
     public DataType DATA_TYPE;
 
     // The resulting LOD score comparing LEFT and RIGHT data
@@ -83,7 +85,7 @@ public class CrosscheckMetric extends MetricBase {
 
     // The LEFT run barcode (PU field) expected to look like : D047KACXX110901.1.ACCAACTG
     public String LEFT_RUN_BARCODE;
-    // The LEFT lane
+    // The LEFT lane 
     public Integer LEFT_LANE;
     // The LEFT molecular (sample) barcode
     public String LEFT_MOLECULAR_BARCODE_SEQUENCE;
@@ -93,17 +95,22 @@ public class CrosscheckMetric extends MetricBase {
     public String LEFT_SAMPLE;
     // The LEFT file from which the fingerprint was obtained
     public String LEFT_FILE;
+    // The index of the LEFT file from which the fingerprint was obtained
+    public Integer LEFT_FILE_INDEX;
 
     // The RIGHT run barcode (PU field) expected to look like : D047KACXX110901.1.ACCAACTG
     public String RIGHT_RUN_BARCODE;
-    // The LEFT lane
+    // The RIGHT lane
     public Integer RIGHT_LANE;
-    // The LEFT molecular (sample) barcode
+    // The RIGHT molecular (sample) barcode
     public String RIGHT_MOLECULAR_BARCODE_SEQUENCE;
-    // The LEFT library identifier
+    // The RIGHT library identifier
     public String RIGHT_LIBRARY;
-    // The LEFT sample identifier
+    // The RIGHT sample identifier
     public String RIGHT_SAMPLE;
-    // The LEFT file from which the fingerprint was obtained
+    // The RIGHT file from which the fingerprint was obtained
     public String RIGHT_FILE;
+    // The index of the RIGHT file from which the fingerprint was obtained
+    public Integer RIGHT_FILE_INDEX;
+
 }

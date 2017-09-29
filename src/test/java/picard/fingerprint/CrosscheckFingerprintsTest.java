@@ -22,17 +22,18 @@ import java.util.stream.Stream;
  */
 public class CrosscheckFingerprintsTest {
 
-    private final File TEST_DATA_DIR = new File("testdata/picard/fingerprint/");
-    private final File HAPLOTYPE_MAP = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+    private final File TEST_DIR = new File("testdata/picard/fingerprint/");
+    private final File HAPLOTYPE_MAP_HG19 = new File(TEST_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+    private final File HAPLOTYPE_MAP_HG38 = new File(TEST_DIR, "Homo_sapiens_assembly38.haplotype_database.subset.txt");
 
-    private final File NA12891_r1_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam");
-    private final File NA12891_r2_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r2.sam");
+    private final File NA12891_r1_sam = new File(TEST_DIR, "NA12891.over.fingerprints.r1.sam");
+    private final File NA12891_r2_sam = new File(TEST_DIR, "NA12891.over.fingerprints.r2.sam");
 
     //this is a copy of a previous one, but with a different sample name
-    private final File NA12891_named_NA12892_r1_sam = new File(TEST_DATA_DIR, "NA12891_named_NA12892.over.fingerprints.r1.sam");
+    private final File NA12891_named_NA12892_r1_sam = new File(TEST_DIR, "NA12891_named_NA12892.over.fingerprints.r1.sam");
 
-    private final File NA12892_r1_sam = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r1.sam");
-    private final File NA12892_r2_sam = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r2.sam");
+    private final File NA12892_r1_sam = new File(TEST_DIR, "NA12892.over.fingerprints.r1.sam");
+    private final File NA12892_r2_sam = new File(TEST_DIR, "NA12892.over.fingerprints.r2.sam");
 
     private File NA12891_r1, NA12891_r2, NA12891_named_NA12892_r1, NA12892_r1, NA12892_r2;
 
@@ -41,21 +42,25 @@ public class CrosscheckFingerprintsTest {
     private final int NA12892_r1_RGs = 25;
     private final int NA12892_r2_RGs = 26;
 
-    private static File  NA12891_1_vcf;
-    private static File  NA12891_2_vcf;
-    private static File  NA12892_1_vcf;
-    private static File  NA12891_swapped_nonref_g_vcf;
-    private static File  NA12892_2_vcf;
-    private static File  NA12891_named_NA12892_vcf;
-    private static File  NA12891_g_vcf;
-    private static File  NA12892_g_vcf;
-    private static File  NA12892_and_NA123891_vcf;
-    private static File  NA12892_and_NA123891_part1_vcf;
-    private static File  NA12892_and_NA123891_part2_vcf;
-    private static File  NA12892_and_NA123891_part3_vcf;
+    private static File NA12891_1_hg38_vcf;
+    private static File NA12891_1_vcf;
+    private static File NA12891_2_vcf;
+    private static File NA12891_2_hg38_vcf;
+    private static File NA12892_1_vcf;
+    private static File NA12892_1_hg38_vcf;
+    private static File NA12892_2_hg38_vcf;
+    private static File NA12891_swapped_nonref_g_vcf;
+    private static File NA12892_2_vcf;
+    private static File NA12891_named_NA12892_vcf;
+    private static File NA12891_g_vcf;
+    private static File NA12892_g_vcf;
+    private static File NA12892_and_NA123891_vcf;
+    private static File NA12892_and_NA123891_part1_vcf;
+    private static File NA12892_and_NA123891_part2_vcf;
+    private static File NA12892_and_NA123891_part3_vcf;
 
     private static final Map<CrosscheckMetric.DataType, List<String>> lookupMap = new HashMap<>(4);
-    
+
     @BeforeClass
     public void setup() throws IOException {
         NA12891_r1 = SamTestUtils.createIndexedBam(NA12891_r1_sam, NA12891_r1_sam);
@@ -77,23 +82,30 @@ public class CrosscheckFingerprintsTest {
 
         lookupMap.put(CrosscheckMetric.DataType.READGROUP, new ArrayList<>());
         lookupMap.get(CrosscheckMetric.DataType.READGROUP).addAll(Arrays.asList("LEFT_RUN_BARCODE", "LEFT_LANE",
-                "LEFT_MOLECULAR_BARCODE_SEQUENCE","RIGHT_RUN_BARCODE",
+                "LEFT_MOLECULAR_BARCODE_SEQUENCE", "RIGHT_RUN_BARCODE",
                 "RIGHT_LANE", "RIGHT_MOLECULAR_BARCODE_SEQUENCE"));
         lookupMap.get(CrosscheckMetric.DataType.READGROUP).addAll(lookupMap.get(CrosscheckMetric.DataType.LIBRARY));
 
-        NA12891_1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891.vcf"), "fingerprint");
-        NA12891_2_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891.fp.vcf"), "fingerprint");
-        NA12891_named_NA12892_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891_named_NA12892.vcf"), "fingerprint");
-        NA12892_1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12892.vcf"), "fingerprint");
-        NA12892_2_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12892.fp.vcf"), "fingerprint");
-        NA12891_g_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891.g.vcf"), "fingerprint");
-        NA12891_swapped_nonref_g_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891.with_swapped_NON_REF.g.vcf"), "fingerprint");
+        NA12891_1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891.vcf"), "fingerprint");
+        NA12891_2_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891.fp.vcf"), "fingerprint");
+        NA12891_named_NA12892_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891_named_NA12892.vcf"), "fingerprint");
+        NA12892_1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12892.vcf"), "fingerprint");
+        NA12892_2_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12892.fp.vcf"), "fingerprint");
+        NA12891_g_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891.g.vcf"), "fingerprint");
+        NA12891_swapped_nonref_g_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891.with_swapped_NON_REF.g.vcf"), "fingerprint");
 
-        NA12892_g_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12892.g.vcf"), "fingerprint");
-        NA12892_and_NA123891_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891andNA12892.vcf"), "fingerprint");
-        NA12892_and_NA123891_part1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891andNA12892_part1.vcf"), "fingerprint");
-        NA12892_and_NA123891_part2_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891andNA12892_part2.vcf"), "fingerprint");
-        NA12892_and_NA123891_part3_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891andNA12892_part3.vcf"), "fingerprint");
+        NA12892_g_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12892.g.vcf"), "fingerprint");
+        NA12892_and_NA123891_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891andNA12892.vcf"), "fingerprint");
+        NA12892_and_NA123891_part1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891andNA12892_part1.vcf"), "fingerprint");
+        NA12892_and_NA123891_part2_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891andNA12892_part2.vcf"), "fingerprint");
+        NA12892_and_NA123891_part3_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891andNA12892_part3.vcf"), "fingerprint");
+
+
+        NA12891_1_hg38_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891_hg38.vcf"), "fingerprint");
+        NA12891_2_hg38_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891.fp_hg38.vcf"), "fingerprint");
+        NA12892_1_hg38_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12892_hg38.vcf"), "fingerprint");
+        NA12892_2_hg38_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12892.fp_hg38.vcf"), "fingerprint");
+
     }
 
     @DataProvider(name = "bamFilesRGs")
@@ -124,7 +136,8 @@ public class CrosscheckFingerprintsTest {
                 "INPUT=" + file1.getAbsolutePath(),
                 "INPUT=" + file2.getAbsolutePath(),
                 "OUTPUT=" + metrics.getAbsolutePath(),
-                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP,
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19,
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG38,
                 "LOD_THRESHOLD=" + -2.0,
                 "EXPECT_ALL_GROUPS_TO_MATCH=" + expectAllMatch
         };
@@ -136,14 +149,14 @@ public class CrosscheckFingerprintsTest {
     public Object[][] bamFilesLBs() {
 
         return new Object[][]{
-               {NA12891_r1, NA12891_r2,                   0},
-               {NA12891_r1, NA12892_r1,                   0},
-               {NA12892_r2, NA12891_r2,                   0},
-               {NA12892_r2, NA12891_r1,                   0},
-               {NA12891_r1, NA12891_named_NA12892_r1_sam, 1}, //error since expected match but found a mismatch
-               {NA12892_r1, NA12891_named_NA12892_r1_sam, 1}, //error since expected mismatch but found a match
-               {NA12891_r2, NA12891_named_NA12892_r1_sam, 1}, //error since expected match but found a mismatch
-               {NA12892_r2, NA12891_named_NA12892_r1_sam, 1}, //error since expected mismatch but found a match
+                {NA12891_r1, NA12891_r2, 0},
+                {NA12891_r1, NA12892_r1, 0},
+                {NA12892_r2, NA12891_r2, 0},
+                {NA12892_r2, NA12891_r1, 0},
+                {NA12891_r1, NA12891_named_NA12892_r1_sam, 1}, //error since expected match but found a mismatch
+                {NA12892_r1, NA12891_named_NA12892_r1_sam, 1}, //error since expected mismatch but found a match
+                {NA12891_r2, NA12891_named_NA12892_r1_sam, 1}, //error since expected match but found a mismatch
+                {NA12892_r2, NA12891_named_NA12892_r1_sam, 1}, //error since expected mismatch but found a match
         };
     }
 
@@ -160,7 +173,8 @@ public class CrosscheckFingerprintsTest {
                     "INPUT=" + NA12892_r2.getAbsolutePath(),
                     "INPUT=" + NA12891_named_NA12892_r1_sam.getAbsolutePath(),
                     "OUTPUT=" + metrics.getAbsolutePath(),
-                    "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP,
+                    "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19,
+                    "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG38,
                     "LOD_THRESHOLD=" + -1.0,
                     "CROSSCHECK_BY=LIBRARY"
             };
@@ -210,7 +224,8 @@ public class CrosscheckFingerprintsTest {
                 "INPUT=" + file1.getAbsolutePath(),
                 "INPUT=" + file2.getAbsolutePath(),
                 "OUTPUT=" + metrics.getAbsolutePath(),
-                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP,
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19,
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG38,
                 "LOD_THRESHOLD=" + -1.0,
                 "CROSSCHECK_BY=LIBRARY"
         };
@@ -218,23 +233,31 @@ public class CrosscheckFingerprintsTest {
         doTest(args, metrics, expectedRetVal, numLibs * numLibs, CrosscheckMetric.DataType.LIBRARY);
     }
 
-    @DataProvider(name = "bamFilesSources")
-    public Object[][] bamFilesSources() {
+    @DataProvider(name = "filesSources")
+    public Object[][] filesSources() {
 
         return new Object[][]{
-                {NA12891_r1, NA12891_r2,               0},
-                {NA12892_r1, NA12892_r2,               0},
-                {NA12891_r1, NA12892_r1,               0},
-                {NA12892_r2, NA12891_r2,               0},
-                {NA12892_r2, NA12891_named_NA12892_r1, 1}, // the two files contain different samples one has wrong name
-                {NA12891_r2, NA12891_named_NA12892_r1, 1}, // unexpected match
-                {NA12892_r1, NA12891_named_NA12892_r1, 1}, // the two files contain different samples one has wrong name
-                {NA12891_r1, NA12891_named_NA12892_r1, 1}, // unexpected match
+                {NA12891_r1, NA12891_r2, 0, 2*2},
+                {NA12892_r1, NA12892_r2, 0, 2*2},
+                {NA12891_r1, NA12892_r1, 0, 2*2},
+                {NA12892_r2, NA12891_r2, 0, 2*2},
+                {NA12892_r2, NA12891_named_NA12892_r1, 1, 2*2}, // the two files contain different samples one has wrong name
+                {NA12891_r2, NA12891_named_NA12892_r1, 1, 2*2}, // unexpected match
+                {NA12892_r1, NA12891_named_NA12892_r1, 1, 2*2}, // the two files contain different samples one has wrong name
+                {NA12891_r1, NA12891_named_NA12892_r1, 1, 2*2}, // unexpected match
+                {NA12891_1_vcf, NA12891_2_vcf, 0, 2*2},
+                {NA12891_2_vcf, NA12891_2_vcf, 0, 1},
+                {NA12891_1_vcf, NA12891_1_vcf, 0, 1},
+                {NA12892_1_vcf, NA12892_2_vcf, 0, 2*2},
+                {NA12892_1_vcf, NA12892_1_vcf, 0, 1},
+                {NA12892_2_vcf, NA12892_2_vcf, 0, 1},
+                {NA12891_2_vcf, NA12892_2_vcf, 0, 2*2},
+                {NA12892_1_vcf, NA12891_2_vcf, 0, 2*2}
         };
     }
 
-    @Test(dataProvider = "bamFilesSources")
-    public void testCrossCheckSources(final File file1, final File file2, final int expectedRetVal) throws IOException {
+    @Test(dataProvider = "filesSources")
+    public void testCrossCheckSources(final File file1, final File file2, final int expectedRetVal, final int expectedNResults) throws IOException {
         File metrics = File.createTempFile("Fingerprinting", "NA1291.Sources.crosscheck_metrics");
         metrics.deleteOnExit();
 
@@ -242,21 +265,65 @@ public class CrosscheckFingerprintsTest {
                 "INPUT=" + file1.getAbsolutePath(),
                 "INPUT=" + file2.getAbsolutePath(),
                 "OUTPUT=" + metrics.getAbsolutePath(),
-                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP,
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19,
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG38,
                 "LOD_THRESHOLD=" + -1.0,
                 "CROSSCHECK_BY=FILE"
         };
-
-        doTest(args, metrics, expectedRetVal, 2 * 2 , CrosscheckMetric.DataType.FILE);
+        doTest(args, metrics, expectedRetVal, expectedNResults, CrosscheckMetric.DataType.FILE);
     }
+
+    @DataProvider(name = "filesSourcesWithMultipleMaps")
+    public Iterator<Object[]> filesSourcesWithMultipleMaps() {
+        List<Object[]> tests=Arrays.asList(filesSources());
+
+        Object[][] newTests = new Object[][]{
+
+                {NA12891_1_hg38_vcf, NA12891_1_hg38_vcf, 0, 1},
+                {NA12891_2_hg38_vcf, NA12891_2_hg38_vcf, 0, 1},
+                {NA12892_1_hg38_vcf, NA12892_1_hg38_vcf, 0, 1},
+                {NA12892_2_hg38_vcf, NA12892_2_hg38_vcf, 0, 1},
+                {NA12891_1_vcf, NA12891_1_hg38_vcf, 0, 2 * 2},
+                {NA12891_2_vcf, NA12891_2_hg38_vcf, 0, 2 * 2},
+                {NA12892_1_vcf, NA12892_1_hg38_vcf, 0, 2 * 2},
+                {NA12892_2_vcf, NA12892_2_hg38_vcf, 0, 2 * 2},
+        };
+        final List<Object[]> allTests = new ArrayList<>();
+        allTests.addAll(tests);
+        allTests.addAll(Arrays.asList(newTests));
+        return allTests.iterator();
+    }
+
+    @Test
+    void check() {
+        filesSourcesWithMultipleMaps();
+    }
+
+    @Test(dataProvider = "filesSourcesWithMultipleMaps")
+    public void testCrossCheckSourcesWithMultipleMaps(final File file1, final File file2, final int expectedRetVal, final int expectedNResults) throws IOException {
+        File metrics = File.createTempFile("Fingerprinting", "NA1291.Sources.crosscheck_metrics");
+        metrics.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + file1.getAbsolutePath(),
+                "INPUT=" + file2.getAbsolutePath(),
+                "OUTPUT=" + metrics.getAbsolutePath(),
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG38,
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19,
+                "LOD_THRESHOLD=" + -1.0,
+                "CROSSCHECK_BY=FILE"
+        };
+        doTest(args, metrics, expectedRetVal, expectedNResults, CrosscheckMetric.DataType.FILE);
+    }
+
 
     @DataProvider(name = "bamFilesSMs")
     public Object[][] bamFilesSMs() {
 
-        return new Object[][] {
-                {NA12891_r1, NA12891_r2,               0, 1},
-                {NA12891_r1, NA12892_r1,               0, 2},
-                {NA12892_r2, NA12891_r2,               0, 2},
+        return new Object[][]{
+                {NA12891_r1, NA12891_r2, 0, 1},
+                {NA12891_r1, NA12892_r1, 0, 2},
+                {NA12892_r2, NA12891_r2, 0, 2},
                 {NA12892_r2, NA12891_named_NA12892_r1, 0, 1}, // no error since only one sample in aggregate
                 {NA12891_r2, NA12891_named_NA12892_r1, 1, 2}, // unexpected match
                 {NA12892_r1, NA12891_named_NA12892_r1, 0, 1}, // no error since only one sample in aggregate
@@ -277,7 +344,8 @@ public class CrosscheckFingerprintsTest {
                 "INPUT=" + file2.getAbsolutePath(),
                 "OUTPUT=" + metrics.getAbsolutePath(),
                 "MATRIX_OUTPUT=" + matrix.getAbsolutePath(),
-                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP,
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19,
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG38,
                 "LOD_THRESHOLD=" + -1.0,
                 "CROSSCHECK_BY=SAMPLE"
         };
@@ -295,7 +363,7 @@ public class CrosscheckFingerprintsTest {
         tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
         tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
         tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_part1_vcf, NA12892_and_NA123891_part2_vcf, NA12892_and_NA123891_part3_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
-        tests.add(new Object[]{Arrays.asList(NA12891_named_NA12892_vcf,NA12891_1_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 1, 2, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_named_NA12892_vcf, NA12891_1_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 1, 2, false});
         tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_2_vcf, NA12892_1_vcf), 0, 2, true});
         tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_2_vcf, NA12892_1_vcf), 0, 2, true});
         tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
@@ -324,20 +392,20 @@ public class CrosscheckFingerprintsTest {
     }
 
     @Test(dataProvider = "checkSamplesData")
-    public void testCheckSamples(final List<File> files1, final List<File> files2, final int expectedRetVal, final int numberOfSamples, boolean ExpectAllMatch) throws IOException {
+    public void testCheckSamples(final List<File> files1, final List<File> files2, final int expectedRetVal, final int numberOfSamples, boolean expectAllMatch) throws IOException {
         File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
         metrics.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
-        files1.forEach(f->args.add("INPUT="+f.getAbsolutePath()));
-        files2.forEach(f->args.add("SECOND_INPUT="+f.getAbsolutePath()));
+        files1.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
+        files2.forEach(f -> args.add("SECOND_INPUT=" + f.getAbsolutePath()));
 
-                args.add("OUTPUT=" + metrics.getAbsolutePath());
-                args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
-                args.add("LOD_THRESHOLD=" + -1.0);
-                args.add("CROSSCHECK_BY=SAMPLE");
+        args.add("OUTPUT=" + metrics.getAbsolutePath());
+        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19);
+        args.add("LOD_THRESHOLD=" + -1.0);
+        args.add("CROSSCHECK_BY=SAMPLE");
 
-        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
+        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples, CrosscheckMetric.DataType.SAMPLE, expectAllMatch);
     }
 
     @DataProvider(name = "checkSamplesCrosscheckAllData")
@@ -410,8 +478,8 @@ public class CrosscheckFingerprintsTest {
     public Iterator<Object[]> checkSamplesCrosscheckAllWithMappingData() {
         List<Object[]> tests = new ArrayList<>();
 
-        File NA12892_to_NA12891 = new File(TEST_DATA_DIR,"NA12892_to_NA12891.txt");
-        File NotThere_to_NA12892 = new File(TEST_DATA_DIR,"NotThere_to_NA12891.txt");
+        File NA12892_to_NA12891 = new File(TEST_DIR,"NA12892_to_NA12891.txt");
+        File NotThere_to_NA12892 = new File(TEST_DIR,"NotThere_to_NA12891.txt");
 
         tests.add(new Object[]{Arrays.asList( NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), NotThere_to_NA12892, null, 0, 1, 2, false});
         tests.add(new Object[]{Arrays.asList( NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), null, NotThere_to_NA12892, 0, 1, 2, false});
@@ -435,7 +503,7 @@ public class CrosscheckFingerprintsTest {
         files2.forEach(f->args.add("SECOND_INPUT="+f.getAbsolutePath()));
 
         args.add("OUTPUT=" + metrics.getAbsolutePath());
-        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
+        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19);
         args.add("LOD_THRESHOLD=" + -1.0);
         args.add("CROSSCHECK_BY=SAMPLE");
         args.add("CROSSCHECK_MODE=CHECK_ALL_OTHERS");
@@ -450,11 +518,11 @@ public class CrosscheckFingerprintsTest {
     public Iterator<Object[]> checkSampleMapFailuresData() {
         List<Object[]> tests = new ArrayList<>();
 
-        File NA12892_to_NA12891 = new File(TEST_DATA_DIR,"NA12892_to_NA12891.txt");
-        File NA12891_to_NA12892 = new File(TEST_DATA_DIR,"NA12891_to_NA12892.txt");
-        File tooManyFields = new File(TEST_DATA_DIR,"too_many_fields.txt");
-        File tooFewFields = new File(TEST_DATA_DIR,"too_few_fields.txt");
-        File duplicateKey = new File(TEST_DATA_DIR,"DuplicateKey.txt");
+        File NA12892_to_NA12891 = new File(TEST_DIR,"NA12892_to_NA12891.txt");
+        File NA12891_to_NA12892 = new File(TEST_DIR,"NA12891_to_NA12892.txt");
+        File tooManyFields = new File(TEST_DIR,"too_many_fields.txt");
+        File tooFewFields = new File(TEST_DIR,"too_few_fields.txt");
+        File duplicateKey = new File(TEST_DIR,"DuplicateKey.txt");
 
         tests.add(new Object[]{NA12891_to_NA12892, null});// NA12892 will become non-unique in first file
         tests.add(new Object[]{NA12892_to_NA12891, null});// NA12891 will become non-unique in first file
@@ -482,7 +550,7 @@ public class CrosscheckFingerprintsTest {
         files2.forEach(f->args.add("SECOND_INPUT="+f.getAbsolutePath()));
 
         args.add("OUTPUT=" + metrics.getAbsolutePath());
-        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
+        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19);
         args.add("LOD_THRESHOLD=" + -1.0);
         args.add("CROSSCHECK_BY=SAMPLE");
         args.add("CROSSCHECK_MODE=CHECK_ALL_OTHERS");
@@ -503,7 +571,7 @@ public class CrosscheckFingerprintsTest {
         files2.forEach(f->args.add("SECOND_INPUT="+f.getAbsolutePath()));
 
                 args.add("OUTPUT=" + metrics.getAbsolutePath());
-                args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
+                args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19);
                 args.add("LOD_THRESHOLD=" + -1.0);
                 args.add("CROSSCHECK_BY=SAMPLE");
                 args.add("CROSSCHECK_MODE=CHECK_ALL_OTHERS");
@@ -522,43 +590,57 @@ public class CrosscheckFingerprintsTest {
         tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf, NA12891_2_vcf, NA12892_1_vcf), 0, 3 * 3, false});
         tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf, NA12891_2_vcf, NA12892_1_vcf), 0, 4 * 4, false});
         tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf, NA12891_g_vcf, NA12891_named_NA12892_vcf), 1, 4 * 4, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf, NA12891_g_vcf, NA12892_g_vcf), 0, 4 * 4, false});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf, NA12891_g_vcf, NA12892_g_vcf), 0, 4 * 4, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_named_NA12892_vcf, NA12891_1_vcf, NA12891_g_vcf, NA12892_g_vcf), 1, 4 * 4, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf, NA12891_2_vcf, NA12892_1_vcf), 0, 3 * 3, false});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf, NA12891_2_vcf, NA12892_1_vcf), 0, 4 * 4, false});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf, NA12891_g_vcf, NA12891_named_NA12892_vcf), 1, 4 * 4, false});
 
         // SAM vs. VCF
         tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1, NA12891_r2, NA12892_r2, NA12891_g_vcf, NA12892_g_vcf), 0, 6 * 6, false});
-        tests.add(new Object[]{Arrays.asList(NA12891_named_NA12892_r1, NA12891_r1, NA12891_g_vcf, NA12891_1_vcf), 1, 4*4, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_named_NA12892_r1, NA12891_r1, NA12891_g_vcf, NA12891_1_vcf), 1, 4 * 4, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1, NA12891_r2, NA12892_r2, NA12891_g_vcf, NA12892_g_vcf), 0, 6 * 6, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_named_NA12892_r1, NA12891_r1, NA12891_g_vcf, NA12891_1_vcf), 1, 4 * 4, false});
 
-        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_r1, NA12891_r2, NA12892_1_vcf), 0, 4*4, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_r1, NA12891_r2, NA12892_1_vcf), 0, 4 * 4, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_r1, NA12891_r2, NA12892_1_vcf), 0, 4 * 4, true});
 
         // SAM tests
-        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1, NA12891_r2, NA12892_r2), 0, 4*4, true});
-        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1, NA12891_r2), 0, 3*3, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1, NA12891_r2, NA12892_r2), 0, 4 * 4, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1, NA12891_r2), 0, 3 * 3, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1, NA12891_r2, NA12892_r2), 0, 4 * 4, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1, NA12891_r2), 0, 3 * 3, true});
 
-        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12891_named_NA12892_r1, NA12891_r2, NA12892_r2), 1, 4*4, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12891_named_NA12892_r1, NA12891_r2, NA12892_r2), 1, 4 * 4, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12891_named_NA12892_r1, NA12891_r2, NA12892_r2), 1, 4 * 4, false});
 
         return tests.iterator();
     }
 
     @Test(dataProvider = "checkFilesData")
-    public void testCheckFiles(final List<File> files, final int expectedRetVal, final int numberOfSamples, boolean ExpectAllMatch) throws IOException {
+    public void testCheckFiles(final List<File> files, final int expectedRetVal, final int numberOfSamples, boolean expectAllMatch) throws IOException {
         File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
         metrics.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
+
+        files.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
         files.forEach(f->args.add("INPUT="+f.getAbsolutePath()));
 
         args.add("OUTPUT=" + metrics.getAbsolutePath());
-        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
+        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19);
         args.add("LOD_THRESHOLD=" + -1.0);
         args.add("CROSSCHECK_BY=FILE");
 
-        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.FILE, ExpectAllMatch);
+        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples, CrosscheckMetric.DataType.FILE, expectAllMatch);
     }
 
     @DataProvider(name = "checkPathsData")
     public Iterator<Object[]> checkPathsData() throws IOException {
         List<Object[]> tests = new ArrayList<>();
 
-        final File fofn = File.createTempFile("crosscheck",".fofn", TEST_DATA_DIR);
+        final File fofn = File.createTempFile("crosscheck",".fofn", TEST_DIR);
         fofn.deleteOnExit();
 
         PrintWriter writer = new PrintWriter(new FileWriter(fofn));
@@ -569,9 +651,9 @@ public class CrosscheckFingerprintsTest {
         writer.close();
 
         // VCF tests
-        tests.add(new Object[]{Stream.of(NA12891_1_vcf, NA12892_1_vcf, NA12891_g_vcf, NA12892_g_vcf).map(File::getAbsolutePath).collect(Collectors.toList()), HAPLOTYPE_MAP.getAbsolutePath(), 0, 4 * 4, false});
-        tests.add(new Object[]{Stream.of(NA12892_1_vcf, NA12891_g_vcf, NA12892_g_vcf).map(File::getAbsolutePath).collect(Collectors.toList()), HAPLOTYPE_MAP.getAbsolutePath(), 0, 3 * 3, false});
-        tests.add(new Object[]{Collections.singletonList(fofn.getAbsolutePath()), HAPLOTYPE_MAP.getAbsolutePath(), 0, fofnSize * fofnSize, false});
+        tests.add(new Object[]{Stream.of(NA12891_1_vcf, NA12892_1_vcf, NA12891_g_vcf, NA12892_g_vcf).map(File::getAbsolutePath).collect(Collectors.toList()), HAPLOTYPE_MAP_HG19.getAbsolutePath(), 0, 4 * 4, false});
+        tests.add(new Object[]{Stream.of(NA12892_1_vcf, NA12891_g_vcf, NA12892_g_vcf).map(File::getAbsolutePath).collect(Collectors.toList()), HAPLOTYPE_MAP_HG19.getAbsolutePath(), 0, 3 * 3, false});
+        tests.add(new Object[]{Collections.singletonList(fofn.getAbsolutePath()), HAPLOTYPE_MAP_HG19.getAbsolutePath(), 0, fofnSize * fofnSize, false});
 
         return tests.iterator();
     }
@@ -598,7 +680,7 @@ public class CrosscheckFingerprintsTest {
     }
 
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType, final boolean expectAllMatch) throws IOException {
-       
+
         final CrosscheckFingerprints crossChecker = new CrosscheckFingerprints();
         Assert.assertEquals(crossChecker.instanceMain(args), expectedRetVal);
 
@@ -609,11 +691,11 @@ public class CrosscheckFingerprintsTest {
                 .anyMatch(m -> m.DATA_TYPE != expectedType));
 
         Assert.assertFalse(metricsOutput.getMetrics().stream()
-                .anyMatch(m-> m.LOD_SCORE_NORMAL_TUMOR == null));
+                .anyMatch(m -> m.LOD_SCORE_NORMAL_TUMOR == null));
         Assert.assertFalse(metricsOutput.getMetrics().stream()
-                .anyMatch(m-> m.LOD_SCORE == null));
+                .anyMatch(m -> m.LOD_SCORE == null));
         Assert.assertFalse(metricsOutput.getMetrics().stream()
-                .anyMatch(m-> m.LOD_SCORE_TUMOR_NORMAL == null));
+                .anyMatch(m -> m.LOD_SCORE_TUMOR_NORMAL == null));
 
         if (expectAllMatch) {
             Assert.assertTrue(metricsOutput.getMetrics().stream()
@@ -632,12 +714,13 @@ public class CrosscheckFingerprintsTest {
 
         // at the readgroup level things aren't always conclusive...
         if (!metricsOutput.getMetrics().isEmpty() && expectedType != CrosscheckMetric.DataType.READGROUP) {
-            Assert.assertTrue(metricsOutput.getMetrics().stream()
-                    .anyMatch(m -> m.RESULT != CrosscheckMetric.FingerprintResult.INCONCLUSIVE));
+            final Optional<CrosscheckMetric> inconclusiveMaybe = metricsOutput.getMetrics().stream()
+                    .filter(m -> m.RESULT == CrosscheckMetric.FingerprintResult.INCONCLUSIVE).findFirst();
+            Assert.assertFalse(inconclusiveMaybe.isPresent(), "Expected no INCONCLUSIVE results. found: " + inconclusiveMaybe.orElseGet(CrosscheckMetric::new));
         }
 
         //check that fields that should have an actual value, indeed do
-        for(final String fieldName : lookupMap.get(expectedType)) {
+        for (final String fieldName : lookupMap.get(expectedType)) {
             try {
                 final Field field = CrosscheckMetric.class.getField(fieldName);
                 Assert.assertTrue(metricsOutput.getMetrics().stream().allMatch(m -> {
@@ -656,6 +739,39 @@ public class CrosscheckFingerprintsTest {
         }
     }
 
+    @DataProvider(name = "multipleReferenceFilesData")
+
+    public Iterator<Object[]> multipleReferenceFilesData(){
+        List<Object[]> tests = new ArrayList<>();
+
+        tests.add(new Object[]{Arrays.asList(NA12891_2_hg38_vcf, NA12892_g_vcf), 0, 2 * 2, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_2_hg38_vcf, NA12891_g_vcf), 0, 2 * 2, false});
+        tests.add(new Object[]{Arrays.asList(NA12892_1_hg38_vcf, NA12891_g_vcf), 0, 2 * 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12892_1_hg38_vcf, NA12892_g_vcf), 0, 2 * 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_2_hg38_vcf, NA12891_1_vcf), 0, 2 * 2, true});
+
+        return tests.iterator();
+    }
+    @Test(dataProvider = "multipleReferenceFilesData")
+    public void testFingerprintWithMultipleReferences(final List<File> files, final int expectedRetVal, final int numberOfSamples, boolean expectAllMatch) throws IOException {
+
+        File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
+        metrics.deleteOnExit();
+
+        final List<String> args = new ArrayList<>();
+
+        files.forEach(f->args.add("INPUT="+f.getAbsolutePath()));
+
+        args.add("OUTPUT=" + metrics.getAbsolutePath());
+        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG19);
+        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_HG38);
+        args.add("LOD_THRESHOLD=" + -1.0);
+        args.add("CROSSCHECK_BY=FILE");
+
+        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.FILE, expectAllMatch);
+    }
+
+    // TODO: move or delete this code. misplaced.
     @Test
     public void canWriteToDevNull() throws IOException {
         File f = new File("/dev/null");

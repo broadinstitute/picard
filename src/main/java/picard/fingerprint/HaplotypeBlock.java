@@ -39,7 +39,7 @@ import java.util.Map;
  */
 public class HaplotypeBlock implements Comparable<HaplotypeBlock> {
     private final double maf;
-    private final Map<String,Snp> snpsByName     = new HashMap<String,Snp>();
+    private final Map<String, Snp> snpsByName    = new HashMap<>();
     private final double[] haplotypeFrequencies  = new double[3];
 
     private Snp firstSnp;
@@ -116,7 +116,7 @@ public class HaplotypeBlock implements Comparable<HaplotypeBlock> {
     }
 
     /**
-     * Gets the frequency of the i'th diploid haplotype where haplotypes are ordered accorinding
+     * Gets the frequency of the i'th diploid haplotype where haplotypes are ordered according
      * to DiploidHaplotype.
      */
     public double getHaplotypeFrequency(final int i) {
@@ -161,7 +161,7 @@ public class HaplotypeBlock implements Comparable<HaplotypeBlock> {
     }
 
     @Override public int hashCode() {
-        return this.start;
+        return firstSnp.hashCode();
     }
 
     @Override public String toString() {
