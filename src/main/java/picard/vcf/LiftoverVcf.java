@@ -385,7 +385,6 @@ public class LiftoverVcf extends CommandLineProgram {
         final List<Allele> alleles = new ArrayList<>();
         final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(2);
 
-
         for (final Allele oldAllele : source.getAlleles()) {
             if (target.isPositiveStrand() || oldAllele.isSymbolic()) {
                 alleles.add(oldAllele);
@@ -406,7 +405,6 @@ public class LiftoverVcf extends CommandLineProgram {
 
         builder.id(source.getID());
         builder.attributes(source.getAttributes());
-
         builder.genotypes(fixGenotypes(source.getGenotypes(), reverseComplementAlleleMap));
         builder.filters(source.getFilters());
         builder.log10PError(source.getLog10PError());
