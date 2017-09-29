@@ -35,6 +35,7 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Fingerprinting;
+import picard.fingerprint.CrosscheckMetric.FingerprintResult;
 
 import java.io.*;
 import java.text.NumberFormat;
@@ -45,10 +46,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toSet;
-import static picard.fingerprint.CrosscheckMetric.FingerprintResult;
-import static picard.fingerprint.CrosscheckMetric.FingerprintResult.*;
 
 /**
  * Program to check that all fingerprints within the set of input files appear to come from the same
@@ -252,7 +249,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         };
     }
 
-    static public Map<FingerprintIdDetails, Fingerprint> mergeFingerprintsBy(
+    public static Map<FingerprintIdDetails, Fingerprint> mergeFingerprintsBy(
             final Map<FingerprintIdDetails, Fingerprint> fingerprints,
             final Function<FingerprintIdDetails, String> by){
 
@@ -279,7 +276,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                             final FingerprintIdDetails firstDetail = entry.getValue().get(0).getKey();
                             //use the "by" function to determine the "info" part of the fingerprint
                             final Fingerprint sampleFp = new Fingerprint(firstDetail.sample, null, by.apply(firstDetail));
-                            entry.getValue().stream().map(Map.Entry::getValue).collect(toSet()).forEach(sampleFp::merge);
+                            entry.getValue().stream().map(Map.Entry::getValue).collect(Collectors.toSet()).forEach(sampleFp::merge);
                             return sampleFp;
 
                         }));
@@ -324,12 +321,12 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
                 final MatchResults results = FingerprintChecker.calculateMatchResults(fingerprints.get(lhsRg), fingerprints.get(rhsRg), GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE);
 
-                final CrosscheckMetric.FingerprintResult result = getMatchResults(expectedToMatch, results);
+                final FingerprintResult result = getMatchResults(expectedToMatch, results);
 
                 if (!OUTPUT_ERRORS_ONLY || !result.isExpected()) {
                     metrics.add(getMatchDetails(result, results, lhsRg, rhsRg, type));
                 }
-                if (result != INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
+                if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
                 if (crosscheckMatrix != null) {
                     crosscheckMatrix[i][j] = results.getLOD();
                     crosscheckMatrix[j][i] = results.getLOD();
@@ -385,19 +382,19 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     private FingerprintResult getMatchResults(final boolean expectedToMatch, final MatchResults results) {
         if (expectedToMatch) {
             if (results.getLOD() < LOD_THRESHOLD) {
-                return UNEXPECTED_MISMATCH;
+                return FingerprintResult.UNEXPECTED_MISMATCH;
             } else if (results.getLOD() > -LOD_THRESHOLD) {
-                return EXPECTED_MATCH;
+                return FingerprintResult.EXPECTED_MATCH;
             } else {
-                return INCONCLUSIVE;
+                return FingerprintResult.INCONCLUSIVE;
             }
         } else {
             if (results.getLOD() > -LOD_THRESHOLD) {
-                return UNEXPECTED_MATCH;
+                return FingerprintResult.UNEXPECTED_MATCH;
             } else if (results.getLOD() < LOD_THRESHOLD) {
-                return EXPECTED_MISMATCH;
+                return FingerprintResult.EXPECTED_MISMATCH;
             } else {
-                return INCONCLUSIVE;
+                return FingerprintResult.INCONCLUSIVE;
             }
         }
     }

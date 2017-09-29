@@ -15,8 +15,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static picard.fingerprint.FingerprintIdDetails.multipleValuesString;
-
 /**
  * Tests for CrosscheckFingerprints
  */
@@ -313,7 +311,7 @@ public class CrosscheckFingerprintsTest {
                 final Field field = CrosscheckMetric.class.getField(fieldName);
                 Assert.assertTrue(metricsOutput.getMetrics().stream().allMatch(m -> {
                     try {
-                        return field.get(m) != multipleValuesString && field.get(m) != null;
+                        return field.get(m) != FingerprintIdDetails.multipleValuesString && field.get(m) != null;
                     } catch (IllegalAccessException e) {
                         e.printStackTrace();
                         return false;
