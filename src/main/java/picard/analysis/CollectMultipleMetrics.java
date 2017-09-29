@@ -108,9 +108,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             @Override
             public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectRrbsMetrics program = new CollectRrbsMetrics();
-                program.OUTPUT = new File(outbase + ".rrbc.detail_metrics" + outext);
-                program.SUMMARY_OUTPUT = new File(outbase + ".rrbc.summary_metrics" + outext);
-                program.CHART_OUTPUT = new File(outbase + ".rrbc.pdf");
+                program.OUTPUT = new File(outbase + ".rrbs.detail_metrics" + outext);
+                program.SUMMARY_OUTPUT = new File(outbase + ".rrbs.summary_metrics" + outext);
+                program.CHART_OUTPUT = new File(outbase + ".rrbs.pdf");
                 program.INPUT = input;
                 program.METRIC_ACCUMULATION_LEVEL = metricAccumulationLevel;
                 program.ASSUME_SORTED = false;

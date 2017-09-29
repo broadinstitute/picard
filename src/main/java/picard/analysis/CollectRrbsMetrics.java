@@ -81,11 +81,11 @@ public class CollectRrbsMetrics extends SinglePassSamProgram {
             "<h4>Usage example 1:</h4>" +
             "<pre>" +
             "java -jar picard.jar CollectRrbsMetrics \\<br />" +
+            "      R=reference_sequence.fasta \\<br />" +
             "      I=input.bam \\<br />" +
-            "      O=detail_output.bam \\<br />" +
+            "      O=detail_output.txt \\<br />" +
             "      CHART=chart_output.pdf \\<br />" +
-            "      S=summary_output.bam \\<br />" +
-            "      R=reference_sequence.fasta" +
+            "      S=summary_output.txt" +
             "</pre>" +
             "<h4>Usage example 2:</h4>" +
             "<pre>" +
