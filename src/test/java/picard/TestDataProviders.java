@@ -1,18 +1,18 @@
 package picard;
 
 import org.testng.Assert;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.NoInjection;
+import org.testng.annotations.*;
 import org.testng.annotations.Test;
+import org.testng.collections.Sets;
 import picard.cmdline.ClassFinder;
+import picard.util.TestNGUtil;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * This test is a mechanism to check that none of the data-providers fail to run.
@@ -26,46 +26,63 @@ import java.util.List;
 public class TestDataProviders {
 
     @Test
-    public void IndependentTestOfDataProviderTest() throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        testAllDataProvidersdata();
+    public void independentTestOfDataProviderTest() throws Exception {
+        final Iterator<Object[]> data = TestNGUtil.getDataProviders("picard");
+
+        Assert.assertTrue(data.hasNext(), "Found no data from testAllDataProvidersdata. Something is wrong.");
+
+        Assert.assertEquals( StreamSupport.stream(Spliterators.spliteratorUnknownSize(data, 0), false)
+                        .filter(c -> ((Method) c[0]).getName().equals("testAllDataProvidersdata")).count(), 1,
+                "getDataProviders didn't find testAllDataProvidersdata, which is in this class. Something is wrong.");
     }
 
     @DataProvider(name = "DataprovidersThatDontTestThemselves")
-    public Iterator<Object[]> testAllDataProvidersdata() throws IllegalAccessException, InstantiationException, InvocationTargetException {
-
-        List<Object[]> data = new ArrayList<>();
-        final ClassFinder classFinder = new ClassFinder();
-        classFinder.find("picard", Object.class);
-
-        for (final Class<?> testClass : classFinder.getClasses()) {
-            if (Modifier.isAbstract(testClass.getModifiers())) continue;
-            for (final Method method : testClass.getMethods()) {
-                if (method.isAnnotationPresent(DataProvider.class)) {
-                    data.add(new Object[]{method, testClass});
-                }
-            }
-        }
-        Assert.assertTrue(data.size() > 1);
-        Assert.assertEquals(data.stream().filter(c -> ((Method) c[0]).getName().equals("testAllDataProvidersdata")).count(), 1);
-
-        return data.iterator();
+    public Iterator<Object[]> testAllDataProvidersdata() throws Exception {
+        return TestNGUtil.getDataProviders("picard");
     }
+
+    // runs all the @DataProviders it gets from DataprovidersThatDontTestThemselves.
+    // runs the BeforeSuite and BeforeClass methods of the same class before it runs the provider itself.
 
     // @NoInjection annotations required according to this test:
     // https://github.com/cbeust/testng/blob/master/src/test/java/test/inject/NoInjectionTest.java
     @Test(dataProvider = "DataprovidersThatDontTestThemselves")
-    public void testDataProviderswithDP(@NoInjection final Method method, final Class clazz) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-        System.err.println("Method: " + method + " Class: " + clazz.getName());
+    public void testDataProviderswithDP(@NoInjection final Method method, final Class clazz) throws
+            IllegalAccessException, InstantiationException {
 
         Object instance = clazz.newInstance();
 
+        Set<Method> methodSet = Sets.newHashSet();
+        methodSet.addAll(Arrays.asList(clazz.getDeclaredMethods()));
+        methodSet.addAll(Arrays.asList(clazz.getMethods()));
+
         // Some tests assume that the @BeforeSuite methods will be called before the @DataProviders
-        for (final Method otherMethod : clazz.getMethods()) {
+        for (final Method otherMethod : methodSet) {
             if (otherMethod.isAnnotationPresent(BeforeSuite.class)) {
-                otherMethod.invoke(instance);
+                try {
+                    otherMethod.setAccessible(true);
+                    otherMethod.invoke(instance);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new IllegalStateException(String.format("@BeforeClass threw an exception (%s::%s). Dependent tests will be skipped. Please fix.", clazz.getName(), method.getName()), e);
+                }
+            }
+
+            if (otherMethod.isAnnotationPresent(BeforeClass.class)) {
+                try {
+                    otherMethod.setAccessible(true);
+                    otherMethod.invoke(instance);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new IllegalStateException(String.format("@BeforeSuite threw an exception (%s::%s). Dependent tests will be skipped. Please fix.", clazz.getName(), method.getName()), e);
+                }
             }
         }
 
-        method.invoke(instance);
+        try {
+            method.setAccessible(true);
+            method.invoke(instance);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new IllegalStateException(String.format("@DataProvider threw an exception (%s::%s). Dependent tests will be skipped. Please fix.", clazz.getName(), method.getName()), e);
+        }
     }
 }
+
