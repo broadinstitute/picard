@@ -182,6 +182,21 @@
       "options": []
     },
     {
+      "summary": "Read Group flow order",
+      "name": "--RGFO",
+      "synonyms": "-FO",
+      "type": "String",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Read Group ID",
       "name": "--RGID",
       "synonyms": "-ID",
@@ -189,6 +204,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "1",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Read Group key sequence",
+      "name": "--RGKS",
+      "synonyms": "-KS",
+      "type": "String",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",

@@ -98,7 +98,7 @@
       "type": "File",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "/Users/samn/picard/.",
+      "defaultValue": "/Users/drkaplan/.gradle/picard/.",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
