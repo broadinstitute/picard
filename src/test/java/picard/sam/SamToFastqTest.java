@@ -38,6 +38,7 @@ import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -451,10 +452,44 @@ public class SamToFastqTest extends CommandLineProgramTest {
         }
     }
 
-    private File newTempFastqFile(final String filename) throws IOException {
+    private File newTempFastqFile(final String filename, final String suffix) throws IOException {
         if(filename == null) return null;
-        final File file = File.createTempFile(filename,".fastq");
+        final File file = File.createTempFile(filename, suffix);
         file.deleteOnExit();
         return file; 
     }
+
+    private File newTempFastqFile(final String filename) throws IOException {
+        return newTempFastqFile(filename, ".fastq");
+    }
+
+    @Test(dataProvider =  "okFiles")
+    public void testFileCompression(final String samFilename) throws IOException {
+        final File samFile = new File(TEST_DATA_DIR,samFilename);
+        final File pair1File = newTempFastqFile("pair1", ".fastq.gz");
+        final File pair2File = newTempFastqFile("pair2", ".fastq.gz");
+
+        convertFile(new String[]{
+              "INPUT=" + samFile.getAbsolutePath(),
+              "FASTQ=" + pair1File.getAbsolutePath(),
+              "SECOND_END_FASTQ=" + pair2File.getAbsolutePath()
+        });
+
+        verifyFileIsGzCompressed(pair1File);
+        verifyFileIsGzCompressed(pair2File);
+        // Content verification. Picard automatically recognizes the compression from the .gz suffix
+        // (htsjdk.samtools.util.IOUtil#openFileForReading(java.nio.file.Path)).
+        verifyFastq(pair1File, pair2File, samFile);
+    }
+
+    private void verifyFileIsGzCompressed(final File file) throws IOException {
+        FileInputStream fis = new FileInputStream(file);
+        final byte[] expectedMagicNumber = { (byte) 0x1f, (byte) 0x8b};
+        byte[] observedMagicNumber = new byte[2];
+        fis.read(observedMagicNumber, 0, 2);
+        fis.close();
+        Assert.assertEquals(observedMagicNumber, expectedMagicNumber);
+    }
+
+
 }
