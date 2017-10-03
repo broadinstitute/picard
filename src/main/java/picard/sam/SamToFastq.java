@@ -85,19 +85,24 @@ public class SamToFastq extends CommandLineProgram {
     public File INPUT;
 
     @Argument(shortName = "F", doc = "Output FASTQ file (single-end fastq or, if paired, first end of the pair FASTQ).",
-            mutex = {"OUTPUT_PER_RG"})
+            mutex = {"OUTPUT_PER_RG", "COMPRESS_OUTPUTS_PER_RG"})
     public File FASTQ;
 
     @Argument(shortName = "F2", doc = "Output FASTQ file (if paired, second end of the pair FASTQ).", optional = true,
-            mutex = {"OUTPUT_PER_RG"})
+            mutex = {"OUTPUT_PER_RG", "COMPRESS_OUTPUTS_PER_RG"})
     public File SECOND_END_FASTQ;
 
-    @Argument(shortName = "FU", doc = "Output FASTQ file for unpaired reads; may only be provided in paired-FASTQ mode", optional = true, mutex = {"OUTPUT_PER_RG"})
+    @Argument(shortName = "FU", doc = "Output FASTQ file for unpaired reads; may only be provided in paired-FASTQ mode", optional = true,
+            mutex = {"OUTPUT_PER_RG", "COMPRESS_OUTPUTS_PER_RG"})
     public File UNPAIRED_FASTQ;
 
     @Argument(shortName = "OPRG", doc = "Output a FASTQ file per read group (two FASTQ files per read group if the group is paired).",
             optional = true, mutex = {"FASTQ", "SECOND_END_FASTQ", "UNPAIRED_FASTQ"})
     public boolean OUTPUT_PER_RG;
+
+    @Argument(shortName = "GZOPRG", doc = "Compress output FASTQ files per read group using gzip and append a .gz extension to the file names.",
+            optional = false, mutex = {"FASTQ", "SECOND_END_FASTQ", "UNPAIRED_FASTQ"})
+    public Boolean COMPRESS_OUTPUTS_PER_RG = false;
 
     @Argument(shortName="RGT", doc = "The read group tag (PU or ID) to be used to output a FASTQ file per read group.")
     public String RG_TAG = "PU";
@@ -286,7 +291,7 @@ public class SamToFastq extends CommandLineProgram {
         }
         fileName = IOUtil.makeFileNameSafe(fileName);
         if (preExtSuffix != null) fileName += preExtSuffix;
-        fileName += ".fastq";
+        fileName += COMPRESS_OUTPUTS_PER_RG ? ".fastq.gz" : ".fastq";
 
         final File result = (OUTPUT_DIR != null)
                 ? new File(OUTPUT_DIR, fileName)
