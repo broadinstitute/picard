@@ -15,36 +15,34 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static picard.fingerprint.FingerprintIdDetails.multipleValuesString;
-
 /**
  * Tests for CrosscheckFingerprints
  */
 public class CrosscheckFingerprintsTest {
 
-    private final static File TEST_DIR = new File("testdata/picard/fingerprint/");
-    private final static File HAPLOTYPE_MAP = new File(TEST_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+    private final File TEST_DIR = new File("testdata/picard/fingerprint/");
+    private final File HAPLOTYPE_MAP = new File(TEST_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
 
-    static private final File NA12891_r1_sam = new File(TEST_DIR, "NA12891.over.fingerprints.r1.sam");
-    static private final File NA12891_r2_sam = new File(TEST_DIR, "NA12891.over.fingerprints.r2.sam");
+    private final File NA12891_r1_sam = new File(TEST_DIR, "NA12891.over.fingerprints.r1.sam");
+    private final File NA12891_r2_sam = new File(TEST_DIR, "NA12891.over.fingerprints.r2.sam");
 
     //this is a copy of a previous one, but with a different sample name
-    static private final File NA12891_named_NA12892_r1_sam = new File(TEST_DIR, "NA12891_named_NA12892.over.fingerprints.r1.sam");
+    private final File NA12891_named_NA12892_r1_sam = new File(TEST_DIR, "NA12891_named_NA12892.over.fingerprints.r1.sam");
 
-    static private final File NA12892_r1_sam = new File(TEST_DIR, "NA12892.over.fingerprints.r1.sam");
-    static private final File NA12892_r2_sam = new File(TEST_DIR, "NA12892.over.fingerprints.r2.sam");
+    private final File NA12892_r1_sam = new File(TEST_DIR, "NA12892.over.fingerprints.r1.sam");
+    private final File NA12892_r2_sam = new File(TEST_DIR, "NA12892.over.fingerprints.r2.sam");
 
-    static private File NA12891_r1, NA12891_r2, NA12891_named_NA12892_r1, NA12892_r1, NA12892_r2;
+    private File NA12891_r1, NA12891_r2, NA12891_named_NA12892_r1, NA12892_r1, NA12892_r2;
 
-    static private final int NA12891_r1_RGs = 27;
-    static private final int NA12891_r2_RGs = 26;
-    static private final int NA12892_r1_RGs = 25;
-    static private final int NA12892_r2_RGs = 26;
+    private final int NA12891_r1_RGs = 27;
+    private final int NA12891_r2_RGs = 26;
+    private final int NA12892_r1_RGs = 25;
+    private final int NA12892_r2_RGs = 26;
 
     private static final Map<CrosscheckMetric.DataType, List<String>> lookupMap = new HashMap<>(4);
     
     @BeforeTest
-    static public void setup() throws IOException {
+    public void setup() throws IOException {
         NA12891_r1 = SamTestUtils.createIndexedBam(NA12891_r1_sam, NA12891_r1_sam);
         NA12891_r2 = SamTestUtils.createIndexedBam(NA12891_r2_sam, NA12891_r2_sam);
         NA12891_named_NA12892_r1 = SamTestUtils.createIndexedBam(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam);
@@ -172,7 +170,6 @@ public class CrosscheckFingerprintsTest {
 
         Assert.assertEquals(collect.get(0), (Long)3L); // 2*3/2
         Assert.assertEquals(collect.get(1), (Long)6L); // 3*4/2
-
     }
 
     @Test(dataProvider = "bamFilesLBs")
@@ -223,7 +220,6 @@ public class CrosscheckFingerprintsTest {
         };
 
         doTest(args, metrics, expectedRetVal, 2 * 3 / 2, CrosscheckMetric.DataType.FILE);
-
     }
 
     @DataProvider(name = "bamFilesSMs")
@@ -261,7 +257,6 @@ public class CrosscheckFingerprintsTest {
 
         TabbedTextFileWithHeaderParser matrixParser = new TabbedTextFileWithHeaderParser(matrix);
         Assert.assertEquals(matrixParser.columnLabelsList().size(), numberOfSamples + 1 );
-
     }
 
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType) throws IOException {
@@ -313,7 +308,7 @@ public class CrosscheckFingerprintsTest {
                 final Field field = CrosscheckMetric.class.getField(fieldName);
                 Assert.assertTrue(metricsOutput.getMetrics().stream().allMatch(m -> {
                     try {
-                        return field.get(m) != multipleValuesString && field.get(m) != null;
+                        return field.get(m) != FingerprintIdDetails.multipleValuesString && field.get(m) != null;
                     } catch (IllegalAccessException e) {
                         e.printStackTrace();
                         return false;
@@ -337,6 +332,5 @@ public class CrosscheckFingerprintsTest {
 
         writer.write("Just a test");
         writer.close();
-
     }
 }
