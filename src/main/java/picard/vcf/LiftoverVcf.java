@@ -229,8 +229,6 @@ public class LiftoverVcf extends CommandLineProgram {
                 TMP_DIR);
 
         ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
-        // a mapping from original allele to reverse complemented allele
-        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(10);
 
         for (final VariantContext ctx : in) {
             ++total;
@@ -278,13 +276,13 @@ public class LiftoverVcf extends CommandLineProgram {
                 if (flippedIndel == null) {
                     throw new IllegalArgumentException("Unexpectedly found null VC. This should have not happened.");
                 } else {
-                    tryToAddVariant(flippedIndel, refSeq, reverseComplementAlleleMap, ctx);
+                    tryToAddVariant(flippedIndel, refSeq, ctx);
                 }
             } else {
                 refSeq = refSeqs.get(target.getContig());
                 final VariantContext liftedVariant = liftSimpleVariant(ctx, target);
 
-                tryToAddVariant(liftedVariant, refSeq, reverseComplementAlleleMap, ctx);
+                tryToAddVariant(liftedVariant, refSeq, ctx);
             }
             progress.record(ctx.getContig(), ctx.getStart());
         }
@@ -326,15 +324,13 @@ public class LiftoverVcf extends CommandLineProgram {
      *
      * @param vc new {@link VariantContext}
      * @param refSeq {@link ReferenceSequence} of new reference
-     * @param alleleMap a {@link Map} mapping the old alleles to the new alleles (for fixing the genotypes)
      * @param source the original {@link VariantContext} to use for putting the original location information into vc
      * @return true if successful, false if failed due to mismatching reference allele.
      */
-    private void tryToAddVariant(final VariantContext vc, final ReferenceSequence refSeq, final Map<Allele, Allele> alleleMap, final VariantContext source) {
+    private void tryToAddVariant(final VariantContext vc, final ReferenceSequence refSeq,  final VariantContext source) {
 
         final VariantContextBuilder builder = new VariantContextBuilder(vc);
 
-        builder.genotypes(fixGenotypes(source.getGenotypes(), alleleMap));
         builder.filters(source.getFilters());
         builder.log10PError(source.getLog10PError());
         builder.attributes(source.getAttributes());
@@ -362,7 +358,7 @@ public class LiftoverVcf extends CommandLineProgram {
         if (mismatchesReference) {
             rejects.add(new VariantContextBuilder(source)
                     .filter(FILTER_MISMATCHING_REF_ALLELE)
-                    .attribute(ATTEMPTED_LOCUS, String.format("%s:%d-%d",vc.getContig(),vc.getStart(),vc.getEnd()))
+                    .attribute(ATTEMPTED_LOCUS, String.format("%s:%d-%d", vc.getContig(), vc.getStart(), vc.getEnd()))
                     .make());
             failedAlleleCheck++;
         } else {
@@ -387,12 +383,14 @@ public class LiftoverVcf extends CommandLineProgram {
             return null;
         }
         final List<Allele> alleles = new ArrayList<>();
+        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(2);
 
         for (final Allele oldAllele : source.getAlleles()) {
             if (target.isPositiveStrand() || oldAllele.isSymbolic()) {
                 alleles.add(oldAllele);
             } else {
                 final Allele fixedAllele = Allele.create(SequenceUtil.reverseComplement(oldAllele.getBaseString()), oldAllele.isReference());
+                reverseComplementAlleleMap.put(oldAllele, fixedAllele);
                 alleles.add(fixedAllele);
             }
         }
@@ -406,6 +404,10 @@ public class LiftoverVcf extends CommandLineProgram {
                 alleles);
 
         builder.id(source.getID());
+        builder.attributes(source.getAttributes());
+        builder.genotypes(fixGenotypes(source.getGenotypes(), reverseComplementAlleleMap));
+        builder.filters(source.getFilters());
+        builder.log10PError(source.getLog10PError());
 
         return builder.make();
     }
@@ -433,7 +435,6 @@ public class LiftoverVcf extends CommandLineProgram {
 
         final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<>(2);
 
-        reverseComplementAlleleMap.clear();
         final List<Allele> alleles = new ArrayList<>();
 
         for (final Allele oldAllele : source.getAlleles()) {
