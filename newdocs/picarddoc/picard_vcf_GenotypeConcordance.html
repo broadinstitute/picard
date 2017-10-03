@@ -426,6 +426,14 @@
 					<td>The name of the call sample within the call VCF. Not required if only one sample exists.</td>
 				</tr>
 				<tr>
+					<td><a href="#--IGNORE_FILTER_STATUS">--IGNORE_FILTER_STATUS</a><br />
+								&nbsp;<em>-</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Default is false. If true, filter status of sites will be ignored so that we include filtered sites when calculating genotype concordance. </td>
+				</tr>
+				<tr>
 					<td><a href="#--INTERSECT_INTERVALS">--INTERSECT_INTERVALS</a><br />
 								&nbsp;<em>-</em>
 					</td>
@@ -675,6 +683,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--IGNORE_FILTER_STATUS">--IGNORE_FILTER_STATUS </a>
+			 / <small>-</small>
+		</h3>
+		<p class="args">
+			<b>Default is false. If true, filter status of sites will be ignored so that we include filtered sites when calculating genotype concordance. </b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INTERSECT_INTERVALS">--INTERSECT_INTERVALS </a>
@@ -946,7 +966,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.13.1-SNAPSHOT built at 02-38-2017 12:38:06.
+        <p class="version">Picard version 2.13.2-SNAPSHOT built at 03-30-2017 01:30:41.
         </p>
 
 	</div>

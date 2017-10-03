@@ -92,6 +92,21 @@
       "options": []
     },
     {
+      "summary": "Default is false. If true, filter status of sites will be ignored so that we include filtered sites when calculating genotype concordance. ",
+      "name": "--IGNORE_FILTER_STATUS",
+      "synonyms": "-",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "If true, multiple interval lists will be intersected. If false multiple lists will be unioned.",
       "name": "--INTERSECT_INTERVALS",
       "synonyms": "-",

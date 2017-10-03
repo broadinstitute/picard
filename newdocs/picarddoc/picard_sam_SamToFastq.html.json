@@ -47,6 +47,21 @@
       "options": []
     },
     {
+      "summary": "Compress output FASTQ files per read group using gzip and append a .gz extension to the file names.",
+      "name": "--COMPRESS_OUTPUTS_PER_RG",
+      "synonyms": "-GZOPRG",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Compression level for all compressed files created (e.g. BAM and GELI).",
       "name": "--COMPRESSION_LEVEL",
       "synonyms": "-",

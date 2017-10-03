@@ -438,6 +438,14 @@
 					<td>When performing clipping with the CLIPPING_ATTRIBUTE and CLIPPING_ACTION parameters, ensure that the resulting reads after clipping are at least CLIPPING_MIN_LENGTH bases long. If the original read is shorter than CLIPPING_MIN_LENGTH then the original read length will be maintained.</td>
 				</tr>
 				<tr>
+					<td><a href="#--COMPRESS_OUTPUTS_PER_RG">--COMPRESS_OUTPUTS_PER_RG</a><br />
+								&nbsp;<em>-GZOPRG</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Compress output FASTQ files per read group using gzip and append a .gz extension to the file names.</td>
+				</tr>
+				<tr>
 					<td><a href="#--INCLUDE_NON_PF_READS">--INCLUDE_NON_PF_READS</a><br />
 								&nbsp;<em>-NON_PF</em>
 					</td>
@@ -692,6 +700,19 @@
 			&nbsp;<span class="label label-warning">∞ ] ]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--COMPRESS_OUTPUTS_PER_RG">--COMPRESS_OUTPUTS_PER_RG </a>
+			 / <small>-GZOPRG</small>
+		</h3>
+		<p class="args">
+			<b>Compress output FASTQ files per read group using gzip and append a .gz extension to the file names.</b><br />
+			
+		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>FASTQ, SECOND_END_FASTQ, UNPAIRED_FASTQ</code>.</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
 			 / <small>-</small>
 		</h3>
@@ -737,7 +758,7 @@
 			<b>Output FASTQ file (single-end fastq or, if paired, first end of the pair FASTQ).</b><br />
 			
 		</p>
-			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>OUTPUT_PER_RG, OPRG</code>.</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>OUTPUT_PER_RG, COMPRESS_OUTPUTS_PER_RG, OPRG, GZOPRG</code>.</p>
 		<p>
 				<span class="badge badge-important">R</span>
 		<span class="label label-info ">File</span>
@@ -963,7 +984,7 @@
 			<b>Output FASTQ file (if paired, second end of the pair FASTQ).</b><br />
 			
 		</p>
-			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>OUTPUT_PER_RG, OPRG</code>.</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>OUTPUT_PER_RG, COMPRESS_OUTPUTS_PER_RG, OPRG, GZOPRG</code>.</p>
 		<p>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
@@ -988,7 +1009,7 @@
 			<b>Output FASTQ file for unpaired reads; may only be provided in paired-FASTQ mode</b><br />
 			
 		</p>
-			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>OUTPUT_PER_RG, OPRG</code>.</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>OUTPUT_PER_RG, COMPRESS_OUTPUTS_PER_RG, OPRG, GZOPRG</code>.</p>
 		<p>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
@@ -1075,7 +1096,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.13.1-SNAPSHOT built at 02-38-2017 12:38:06.
+        <p class="version">Picard version 2.13.2-SNAPSHOT built at 03-30-2017 01:30:41.
         </p>
 
 	</div>
