@@ -77,7 +77,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             doc = "One or more input files (or lists of files) to compare fingerprints for.")
     public List<File> INPUT;
 
-    @Argument(shortName = "I2",
+    @Argument(shortName = "I2", optional = true,
             doc = "One or more input files (or lists of files) to compare fingerprints for. If this option is given " +
                     "the program to compare each sample in INPUT, with the sample from " +
                     "INPUT2 that have the same sample ID. When operating in this mode, each sample in " +
