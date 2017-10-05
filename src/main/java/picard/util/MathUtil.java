@@ -160,7 +160,7 @@ final public class MathUtil {
      * the earliest one in the array is returned.
      */
     public static int indexOfMax(final long[] nums) {
-        double max = nums[0];
+        long max = nums[0];
         int index  = 0;
         for (int i = 1; i < nums.length; ++i) {
             if (nums[i] > max) {
@@ -174,22 +174,13 @@ final public class MathUtil {
 
     /** Returns the smallest value stored in the array. */
     public static double min(final double[] nums) {
-        double min = nums[0];
-        for (int i = 1; i < nums.length; ++i) {
-            if (nums[i] < min) min = nums[i];
-        }
-
-        return min;
+        return nums[indexOfMin(nums)];
     }
 
     /** Returns the smallest value stored in the array. */
     public static int min(final int[] nums) {
-        int min = nums[0];
-        for (int i = 1; i < nums.length; ++i) {
-            if (nums[i] < min) min = nums[i];
-        }
+        return nums[indexOfMin(nums)];
 
-        return min;
     }
     
     /** Returns the smallest value stored in the array. */
@@ -212,6 +203,40 @@ final public class MathUtil {
         return min;
     }
 
+
+    /**
+     * Returns the index of the smallest element in the array.  If there are multiple equal minima then
+     * the earliest one in the array is returned.
+     */
+    public static int indexOfMin(final int[] nums) {
+        long min = nums[0];
+        int index  = 0;
+        for (int i = 1; i < nums.length; ++i) {
+            if (nums[i] < min) {
+                min = nums[i];
+                index = i;
+            }
+        }
+
+        return index;
+    }
+
+    /**
+     * Returns the index of the smallest element in the array.  If there are multiple equal minima then
+     * the earliest one in the array is returned.
+     */
+    public static int indexOfMin(final double[] nums) {
+        double min = nums[0];
+        int index  = 0;
+        for (int i = 1; i < nums.length; ++i) {
+            if (nums[i] < min) {
+                min = nums[i];
+                index = i;
+            }
+        }
+
+        return index;
+    }
     /** Mimic's R's seq() function to produce a sequence of equally spaced numbers. */
     public static double[] seq(final double from, final double to, final double by) {
         if (from < to && by <= 0) return new double[0];

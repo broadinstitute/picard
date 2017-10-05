@@ -326,6 +326,8 @@ public class FingerprintChecker {
      * ctx.isSnp doesn't always work if the genotype(s) are all monomorphic and the alternate allele isn't
      * listed.
      */
+    // Hack, this allele should be defined in htsjdk.
+    public static Allele NON_REF_ALLELE = Allele.create("<NON_REF>");
     public static boolean isUsableSnp(final VariantContext ctx) {
         if (ctx.isFiltered()) return false;
         if (ctx.isIndel()) return false;
@@ -333,7 +335,7 @@ public class FingerprintChecker {
 
         // Also check that all alleles are length 1
         for (final Allele a : ctx.getAlleles()) {
-            if (a.length() != 1) return false;
+            if (a.length() != 1 && !a.equals(NON_REF_ALLELE)) return false;
         }
 
         return true;
