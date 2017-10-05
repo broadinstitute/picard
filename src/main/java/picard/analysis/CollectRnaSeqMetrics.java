@@ -63,63 +63,64 @@ import java.util.stream.Stream;
 )
 @DocumentedFeature
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
-    static final String USAGE_SUMMARY = "Produces RNA alignment metrics for a SAM or BAM file.  ";
-    static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containing the aligned reads from an RNAseq experiment " +
-            "and produces metrics describing the distribution of the bases within the transcripts.  It calculates the total numbers and the " +
-            "fractions of nucleotides within specific genomic regions including untranslated regions (UTRs), introns, intergenic sequences " +
-            "(between discrete genes), and peptide-coding sequences (exons). This tool also determines the numbers of bases that pass quality filters " +
-            "that are specific to Illumina data (PF_BASES).  For more information please see the corresponding GATK " +
-            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>Dictionary</a> entry.</p>" +
+static final String USAGE_SUMMARY = "Produces RNA alignment metrics for a SAM or BAM file.  ";
+static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containing the aligned reads from an RNAseq experiment "+
+"and produces metrics describing the distribution of the bases within the transcripts.  It calculates the total numbers and the "+
+"fractions of nucleotides within specific genomic regions including untranslated regions (UTRs), introns, intergenic sequences "+
+"(between discrete genes), and peptide-coding sequences (exons). This tool also determines the numbers of bases that pass quality filters "+
+"that are specific to Illumina data (PF_BASES).  For more information please see the corresponding GATK "+
+"<a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>Dictionary</a> entry.</p>" +
 
-            "<p>Other metrics include the median coverage (depth), the ratios of 5 prime /3 prime-biases, and the numbers of reads with the " +
-            "correct/incorrect strand designation. The 5 prime /3 prime-bias results from errors introduced by reverse transcriptase enzymes " +
-            "during library construction, ultimately leading to the over-representation of either the 5 prime or 3 prime ends of transcripts.  " +
-            "Please see the CollectRnaSeqMetrics " +
-            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics'>definitions</a> " +
-            "for details on how these biases are calculated. </p>" +
+"<p>Other metrics include the median coverage (depth), the ratios of 5 prime /3 prime-biases, and the numbers of reads with the "+
+"correct/incorrect strand designation. The 5 prime /3 prime-bias results from errors introduced by reverse transcriptase enzymes "+
+"during library construction, ultimately leading to the over-representation of either the 5 prime or 3 prime ends of transcripts.  "+
+"Please see the CollectRnaSeqMetrics "+
+"<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics'>definitions</a> "+
+"for details on how these biases are calculated. </p>" +
 
-            "<p>The sequence input must be a valid SAM/BAM file containing RNAseq data aligned by an RNAseq-aware genome aligner such a " +
-            "<a href='http://github.com/alexdobin/STAR'>STAR</a> or <a href='http://ccb.jhu.edu/software/tophat/index.shtml'>TopHat</a>. " +
-            "The tool also requires a REF_FLAT file or GTF file. REF_FLAT is a tab-delimited file containing information about the location of RNA transcripts, " +
-            "exon start and stop sites, etc. For an example refFlat file for GRCh38, see refFlat.txt.gz at " +
-            "<a href='http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database'>http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database</a>.  " +
-            "The first five lines of the tab-limited text file appear as follows.</p>" +
+"<p>The sequence input must be a valid SAM/BAM file containing RNAseq data aligned by an RNAseq-aware genome aligner such a "+
+"<a href='http://github.com/alexdobin/STAR'>STAR</a> or <a href='http://ccb.jhu.edu/software/tophat/index.shtml'>TopHat</a>. "+
+"The tool also requires a REF_FLAT file, a tab-delimited file containing information about the location of RNA transcripts, "+
+"exon start and stop sites, etc. For an example refFlat file for GRCh38, see refFlat.txt.gz at "+
+"<a href='http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database'>http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database</a>.  "+
+"The first five lines of the tab-limited text file appear as follows.</p>"+
 
-            "<pre>" +
-            "DDX11L1	NR_046018	chr1	+	11873	14409	14409	14409	3	11873,12612,13220,	12227,12721,14409," +
-            "WASH7P	NR_024540	chr1	-	14361	29370	29370	29370	11	14361,14969,15795,16606,16857,17232,17605,17914,18267,24737,29320,	14829,15038,15947,16765,17055,17368,17742,18061,18366,24891,29370," +
-            "DLGAP2-AS1	NR_103863	chr8_KI270926v1_alt	-	33083	35050	35050	35050	3	33083,33761,35028,	33281,33899,35050," +
-            "MIR570	NR_030296	chr3	+	195699400	195699497	195699497	195699497	1	195699400,	195699497," +
-            "MIR548A3	NR_030330	chr8	-	104484368	104484465	104484465	104484465	1	104484368,	104484465," +
-            "</pre>" +
+"<pre>" +
+"DDX11L1	NR_046018	chr1	+	11873	14409	14409	14409	3	11873,12612,13220,	12227,12721,14409," +
+"WASH7P	NR_024540	chr1	-	14361	29370	29370	29370	11	14361,14969,15795,16606,16857,17232,17605,17914,18267,24737,29320,	14829,15038,15947,16765,17055,17368,17742,18061,18366,24891,29370," +
+"DLGAP2-AS1	NR_103863	chr8_KI270926v1_alt	-	33083	35050	35050	35050	3	33083,33761,35028,	33281,33899,35050," +
+"MIR570	NR_030296	chr3	+	195699400	195699497	195699497	195699497	1	195699400,	195699497," +
+"MIR548A3	NR_030330	chr8	-	104484368	104484465	104484465	104484465	1	104484368,	104484465," +
+"</pre>" +
 
-            "<p>GTF is also tab-delimeted file, based on GFF. GTF used to hold information about gene structure." +
-            "For an example GTF file see " +
-            "<a href='http://genome.ucsc.edu/cgi-bin/hgTables'>" +
-            "The first five of GTF file appear as follows.</p>" +
+"<p>GTF is also tab-delimeted file, based on GFF. GTF used to hold information about gene structure." +
+"For an example GTF file see " +
+"<a href='http://genome.ucsc.edu/cgi-bin/hgTables'>" +
+"The first five of GTF file appear as follows.</p>" +
 
-            "<pre>" +
-            "chr22\thg19_knownGene\texon\t44594501\t44594602\t0.000000\t+\t.\tgene_id \"uc021wrc.1\"; transcript_id \"uc021wrc.1\"; \n" +
-            "chr22\thg19_knownGene\tstop_codon\t44645565\t44645565\t0.000000\t-\t.\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; \n" +
-            "chr22\thg19_knownGene\tstop_codon\t44681308\t44681309\t0.000000\t-\t.\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; \n" +
-            "chr22\thg19_knownGene\texon\t44639557\t44645565\t0.000000\t-\t.\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; \n" +
-            "chr22\thg19_knownGene\tCDS\t44681310\t44681625\t0.000000\t-\t1\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; " +
-            "</pre>" +
+"<pre>" +
+"chr22\thg19_knownGene\texon\t44594501\t44594602\t0.000000\t+\t.\tgene_id \"uc021wrc.1\"; transcript_id \"uc021wrc.1\"; \n" +
+"chr22\thg19_knownGene\tstop_codon\t44645565\t44645565\t0.000000\t-\t.\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; \n" +
+"chr22\thg19_knownGene\tstop_codon\t44681308\t44681309\t0.000000\t-\t.\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; \n" +
+"chr22\thg19_knownGene\texon\t44639557\t44645565\t0.000000\t-\t.\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; \n" +
+"chr22\thg19_knownGene\tCDS\t44681310\t44681625\t0.000000\t-\t1\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; " +
+"</pre>" +
 
-            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar CollectRnaSeqMetrics \\<br />" +
-            "      I=input.bam \\<br />" +
-            "      O=output.RNA_Metrics \\<br />" +
-            "      REF_FLAT=ref_flat.txt \\<br />" +
-            "      STRAND=SECOND_READ_TRANSCRIPTION_STRAND \\<br />" +
-            "      RIBOSOMAL_INTERVALS=ribosomal.interval_list" +
-            "</pre>" +
-            "Please see the CollectRnaSeqMetrics " +
-            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics'>definitions</a> " +
-            "for a complete description of the metrics produced by this tool." +
-            "<hr />";
+"<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>"+
+"<h4>Usage example:</h4>"+
+"<pre>" +
+"java -jar picard.jar CollectRnaSeqMetrics \\<br />" +
+"      I=input.bam \\<br />" +
+"      O=output.RNA_Metrics \\<br />" +
+"      REF_FLAT=ref_flat.txt \\<br />" +
+"      STRAND=SECOND_READ_TRANSCRIPTION_STRAND \\<br />" +
+"      RIBOSOMAL_INTERVALS=ribosomal.interval_list" +
+"</pre>" +
+"Please see the CollectRnaSeqMetrics " +
+"<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics'>definitions</a> " +
+"for a complete description of the metrics produced by this tool." +
+"<hr />"
+;
 
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
 
