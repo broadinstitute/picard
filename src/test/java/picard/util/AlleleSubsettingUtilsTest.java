@@ -12,8 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-
-public class AlleleSubsettingUtilsTest  {
+public class AlleleSubsettingUtilsTest {
 
     private static final Allele Aref = Allele.create("A", true);
     private static final Allele C = Allele.create("C");
@@ -36,7 +35,7 @@ public class AlleleSubsettingUtilsTest  {
                         selectedVCwithGTs.getAlleles());
 
         Assert.assertEquals(actual.size(), expectedGenotypes.size());
-        for ( final Genotype expected : expectedGenotypes ) {
+        for (final Genotype expected : expectedGenotypes) {
             final Genotype actualGT = actual.get(expected.getSampleName());
             Assert.assertNotNull(actualGT);
 
@@ -49,18 +48,18 @@ public class AlleleSubsettingUtilsTest  {
         List<Object[]> tests = new ArrayList<>();
 
         final List<Allele> AA = Arrays.asList(Aref, Aref);
-        final List<Allele> AC = Arrays.asList(Aref,C);
-        final List<Allele> CC = Arrays.asList(C,C);
-        final List<Allele> AG = Arrays.asList(Aref,G);
-        final List<Allele> GG = Arrays.asList(G,G);
-        final List<Allele> ACG = Arrays.asList(Aref,C,G);
+        final List<Allele> AC = Arrays.asList(Aref, C);
+        final List<Allele> CC = Arrays.asList(C, C);
+        final List<Allele> AG = Arrays.asList(Aref, G);
+        final List<Allele> GG = Arrays.asList(G, G);
+        final List<Allele> ACG = Arrays.asList(Aref, C, G);
 
-        int i=0;
+        int i = 0;
         final VariantContext vcBase = new VariantContextBuilder("test", "20", 10, 10, AC).make();
 
         final double[] homRefPL = new double[]{0, 10, 100};
-        final double[] hetPL = new double[]{10,0,100};
-        final double[] homVarPL = new double[]{100,10,0};
+        final double[] hetPL = new double[]{10, 0, 100};
+        final double[] homVarPL = new double[]{100, 10, 0};
         final double[] uninformative = new double[]{0, 0, 0};
 
         final Genotype base = new GenotypeBuilder("NA12878").DP(10).GQ(100).make();
@@ -95,52 +94,49 @@ public class AlleleSubsettingUtilsTest  {
         final int[] hetCG3AllelesAD = new int[]{0, 12, 11}; // AA, AC, CC, AG, CG, GG
         final int[] homG3AllelesAD = new int[]{0, 1, 21};  // AA, AC, CC, AG, CG, GG
 
-
         tests.add(new Object[]{
-                new VariantContextBuilder(vcBase).source("test-"+i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(homRef3AllelesAD).PL(homRef3AllelesPL).make()).make(),
-                new VariantContextBuilder(vcBase).source("test-"+i).alleles(AC).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(homRef3AllelesAD).PL(homRef3AllelesPL).make()).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i).alleles(AC).make(),
                 Collections.singletonList(new GenotypeBuilder(base).alleles(AA).PL(new double[]{0, -10, -20}).AD(new int[]{20, 0}).GQ(100).make())});
 
         tests.add(new Object[]{
-                new VariantContextBuilder(vcBase).source("test-"+i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(hetRefC3AllelesAD).PL(hetRefC3AllelesPL).make()).make(),
-                new VariantContextBuilder(vcBase).source("test-"+i).alleles(AC).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(hetRefC3AllelesAD).PL(hetRefC3AllelesPL).make()).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i).alleles(AC).make(),
                 Collections.singletonList(new GenotypeBuilder(base).alleles(AC).PL(new double[]{-10, 0, -20}).AD(new int[]{10, 10}).GQ(100).make())});
 
         tests.add(new Object[]{
-                new VariantContextBuilder(vcBase).source("test-"+i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(homC3AllelesAD).PL(homC3AllelesPL).make()).make(),
-                new VariantContextBuilder(vcBase).source("test-"+i).alleles(AC).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(homC3AllelesAD).PL(homC3AllelesPL).make()).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i).alleles(AC).make(),
                 Collections.singletonList(new GenotypeBuilder(base).alleles(CC).PL(new double[]{-20, -10, 0}).AD(new int[]{0, 20}).GQ(100).make())});
 
         tests.add(new Object[]{
-                new VariantContextBuilder(vcBase).source("test-"+i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(hetRefG3AllelesAD).PL(hetRefG3AllelesPL).make()).make(),
-                new VariantContextBuilder(vcBase).source("test-"+i).alleles(AG).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(hetRefG3AllelesAD).PL(hetRefG3AllelesPL).make()).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i).alleles(AG).make(),
                 Collections.singletonList(new GenotypeBuilder(base).alleles(AG).PL(new double[]{-20, 0, -50}).AD(new int[]{10, 11}).GQ(200).make())});
 
         tests.add(new Object[]{
-                new VariantContextBuilder(vcBase).source("test-"+i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(hetCG3AllelesAD).PL(hetCG3AllelesPL).make()).make(),
-                new VariantContextBuilder(vcBase).source("test-"+i).alleles(AG).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(hetCG3AllelesAD).PL(hetCG3AllelesPL).make()).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i).alleles(AG).make(),
                 Collections.singletonList(new GenotypeBuilder(base).alleles(AA).PL(new double[]{0, -20, -30}).AD(new int[]{0, 11}).GQ(200).make())});
 
         tests.add(new Object[]{
-                new VariantContextBuilder(vcBase).source("test-"+i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(homG3AllelesAD).PL(homG3AllelesPL).make()).make(),
-                new VariantContextBuilder(vcBase).source("test-"+i).alleles(AG).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(homG3AllelesAD).PL(homG3AllelesPL).make()).make(),
+                new VariantContextBuilder(vcBase).source("test-" + i).alleles(AG).make(),
                 Collections.singletonList(new GenotypeBuilder(base).alleles(GG).PL(new double[]{-20, -40, 0}).AD(new int[]{0, 21}).GQ(200).make())});
 
         return tests.toArray(new Object[][]{});
     }
 
-
     @DataProvider
-    public Object[][] getAllelesWithScores(){
+    public Object[][] getAllelesWithScores() {
         return new Object[][]{
-                {1, Arrays.asList(Aref, C, G), new double[]{0,5,2}, Arrays.asList(Aref, C)}, //first is best
-                {1, Arrays.asList(Aref, C, G), new double[]{0,2,5}, Arrays.asList(Aref, G)}, //second is best
-                {1, Arrays.asList(Aref, C, G), new double[]{0,1,1}, Arrays.asList(Aref, C)}, //tie chooses first
-                {1, Arrays.asList(Aref, C, G), new double[]{5,1,1}, Arrays.asList(Aref, C)}, //ref score is ignored chooses first
-                {2, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE, G), new double[]{0,5,0,2}, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE, G) }, //keep NON_REF in order
-                {1, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE, G), new double[]{0,5,0,2}, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE)}, //keep NON_REF in order when trimming
-                {1, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE, G), new double[]{0,5,0,2}, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE)}, //keep NON_REF in order when trimming
+                {1, Arrays.asList(Aref, C, G), new double[]{0, 5, 2}, Arrays.asList(Aref, C)}, //first is best
+                {1, Arrays.asList(Aref, C, G), new double[]{0, 2, 5}, Arrays.asList(Aref, G)}, //second is best
+                {1, Arrays.asList(Aref, C, G), new double[]{0, 1, 1}, Arrays.asList(Aref, C)}, //tie chooses first
+                {1, Arrays.asList(Aref, C, G), new double[]{5, 1, 1}, Arrays.asList(Aref, C)}, //ref score is ignored chooses first
+                {2, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE, G), new double[]{0, 5, 0, 2}, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE, G)}, //keep NON_REF in order
+                {1, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE, G), new double[]{0, 5, 0, 2}, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE)}, //keep NON_REF in order when trimming
+                {1, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE, G), new double[]{0, 5, 0, 2}, Arrays.asList(Aref, C, FingerprintChecker.NON_REF_ALLELE)}, //keep NON_REF in order when trimming
         };
     }
-
 }

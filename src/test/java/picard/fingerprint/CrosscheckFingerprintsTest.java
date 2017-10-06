@@ -290,37 +290,34 @@ public class CrosscheckFingerprintsTest {
     public Iterator<Object[]> checkSamplesData() {
         List<Object[]> tests = new ArrayList<>();
 
+        // VCF tests
         tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
         tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
         tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_part1_vcf, NA12892_and_NA123891_part2_vcf, NA12892_and_NA123891_part3_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
-
         tests.add(new Object[]{Arrays.asList(NA12891_named_NA12892_vcf,NA12891_1_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 1, 2, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_2_vcf, NA12892_1_vcf), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_2_vcf, NA12892_1_vcf), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12891_named_NA12892_vcf), 1, 2, false});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_part1_vcf, NA12892_and_NA123891_part2_vcf, NA12892_and_NA123891_part3_vcf), Arrays.asList(NA12891_2_vcf, NA12892_r1), 0, 2, true});
 
+        // SAM vs. VCF
         tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1, NA12891_r2, NA12892_r2), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
         tests.add(new Object[]{Arrays.asList(NA12891_named_NA12892_r1, NA12891_r1), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 1, 2, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_1_vcf), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12891_named_NA12892_r1), Arrays.asList(NA12891_r2, NA12892_2_vcf), 1, 2, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_2_vcf, NA12891_named_NA12892_r1), 1, 2, false});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_2_vcf, NA12891_named_NA12892_r1), 1, 2, false});
 
+        // SAM tests
         tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 0, 2, true});
         tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1), Arrays.asList(NA12891_r2), 1, 1, true});
         tests.add(new Object[]{Arrays.asList(NA12891_r1), Arrays.asList(NA12891_r2, NA12892_r2), 1, 1, true});
         tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12891_named_NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 1, 2, false});
         tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1), Arrays.asList(NA12891_r1, NA12891_named_NA12892_r1), 1, 2, false});
 
-        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_1_vcf), 0, 2, true});
-        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_2_vcf, NA12892_1_vcf), 0, 2, true});
-
-        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12891_named_NA12892_r1), Arrays.asList(NA12891_r2, NA12892_2_vcf), 1, 2, false});
-        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_2_vcf, NA12891_named_NA12892_r1), 1, 2, false});
-
-        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_2_vcf, NA12892_1_vcf), 0, 2, true});
-        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
-        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12891_named_NA12892_vcf), 1, 2, false});
-        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_2_vcf, NA12891_named_NA12892_r1), 1, 2, false});
-
-        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_part1_vcf, NA12892_and_NA123891_part2_vcf, NA12892_and_NA123891_part3_vcf), Arrays.asList(NA12891_2_vcf, NA12892_r1), 0, 2, true});
-
         return tests.iterator();
     }
-
 
     @Test(dataProvider = "checkSamplesData")
     public void testCheckSamples(final List<File> files1, final List<File> files2, final int expectedRetVal, final int numberOfSamples, boolean ExpectAllMatch) throws IOException {
@@ -341,7 +338,6 @@ public class CrosscheckFingerprintsTest {
 
         doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
     }
-
 
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType) throws IOException {
         doTest(args, metrics, expectedRetVal, expectedNMetrics, expectedType, false);

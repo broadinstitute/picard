@@ -180,7 +180,6 @@ final public class MathUtil {
     /** Returns the smallest value stored in the array. */
     public static int min(final int[] nums) {
         return nums[indexOfMin(nums)];
-
     }
     
     /** Returns the smallest value stored in the array. */
