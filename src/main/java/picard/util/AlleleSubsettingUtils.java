@@ -4,8 +4,8 @@ import htsjdk.variant.variantcontext.*;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -16,10 +16,49 @@ import java.util.stream.Stream;
  * genotypes after subsetting.
  *
  * @author David Benjamin davidben@broadinstitute.org;
+ * @author Yossi Farjoun farjoun@broadinstitute.org;
+ *
  */
 
 public final class AlleleSubsettingUtils {
     private AlleleSubsettingUtils() {}  // prevent instantiation
+
+
+    public static VariantContext subsetAlleles(final VariantContext originalVc,final List<Allele> allelesToKeep){
+        VariantContextBuilder vcBuilder = new VariantContextBuilder(originalVc).alleles(allelesToKeep);
+
+        GenotypesContext newGenotypes = subsetAlleles(originalVc.getGenotypes(),originalVc.getAlleles(),allelesToKeep);
+        vcBuilder.genotypes(newGenotypes);
+        return vcBuilder.make();
+    }
+
+    /** swaps one of the alleles in a VC (and it's genotypes) with another.
+     *
+     */
+    public static VariantContext swapAlleles(final VariantContext originalVc, final Allele oldAllele, final Allele newAllele) {
+        if (!originalVc.getAlleles().contains(oldAllele)) return originalVc;
+
+        final LinkedList<Allele> alleles = new LinkedList<>(originalVc.getAlleles());
+        alleles.set(alleles.indexOf(oldAllele), newAllele);
+
+        VariantContextBuilder vcBuilder = new VariantContextBuilder(originalVc).alleles(alleles);
+        GenotypesContext newGTs = GenotypesContext.create(originalVc.getGenotypes().size());
+
+        for(final Genotype g : originalVc.getGenotypes()){
+            if (!g.getAlleles().contains(oldAllele)) {
+                newGTs.add(g);
+            } else {
+                final GenotypeBuilder gb = new GenotypeBuilder(g);
+                final LinkedList<Allele> genotypeAlleles = new LinkedList<>(g.getAlleles());
+                genotypeAlleles.set(genotypeAlleles.indexOf(oldAllele), newAllele);
+                gb.alleles(genotypeAlleles);
+                newGTs.add(gb.make());
+            }
+        }
+        vcBuilder.genotypes(newGTs);
+        return vcBuilder.make();
+    }
+
 
     /**
      * Create the new GenotypesContext with the subsetted PLs and ADs
@@ -29,18 +68,22 @@ public final class AlleleSubsettingUtils {
      * @param originalGs               the original GenotypesContext
      * @param originalAlleles          the original alleles
      * @param allelesToKeep            the subset of alleles to use with the new Genotypes
-     * @param depth                    the original variant DP or 0 if there was no DP
      * @return                         a new non-null GenotypesContext
      */
     public static GenotypesContext subsetAlleles(final GenotypesContext originalGs,
                                                  final List<Allele> originalAlleles,
-                                                 final List<Allele> allelesToKeep,
-                                                 final int depth) {
+                                                 final List<Allele> allelesToKeep) {
         nonNull(originalGs, "original GenotypesContext must not be null");
         nonNull(allelesToKeep, "allelesToKeep is null");
         nonEmpty(allelesToKeep, "must keep at least one allele");
         validateTrue(allelesToKeep.get(0).isReference(), "First allele must be the reference allele");
         validateTrue(allelesToKeep.stream().allMatch(originalAlleles::contains),"OriginalAlleles must contain allelesToKeep");
+
+        int indexOfLast=-1;
+        for(Allele a :allelesToKeep) {
+            validateTrue(indexOfLast < originalAlleles.indexOf(a),"alleles to keep must maintain the order of the original alleles");
+            indexOfLast = originalAlleles.indexOf(a);
+        }
 
         final int allelesIndex[] = allelesToKeep.stream().mapToInt(originalAlleles::indexOf).toArray();
 
@@ -50,31 +93,32 @@ public final class AlleleSubsettingUtils {
         for (final Genotype g : originalGs) {
             validateTrue(g.getPloidy()==2,"only implemented for ploidy 2 for now");
 
-            final int expectedNumLikelihoods = GenotypeLikelihoods.numLikelihoods(originalAlleles.size(), 2);
+            final int expectedNumLikelihoods = GenotypeLikelihoods.numLikelihoods(allelesToKeep.size(), 2);
             // create the new likelihoods array from the alleles we are allowed to use
-            double[] newLikelihoods = null;
+            int[] newPLs = null;
             double newLog10GQ = -1;
             if (g.hasLikelihoods()) {
 
-                double[] originalLikelihoods = g.getLikelihoods().getAsVector();
+                int[] originalPLs = g.getPL();
 
-                if (originalLikelihoods.length != expectedNumLikelihoods) {
-                    newLikelihoods = Arrays.stream(subsettedLikelihoodIndices)
-                            .mapToDouble(idx -> originalLikelihoods[idx]).toArray();
-                    final double minPl = MathUtil.min(newLikelihoods);
+                if (originalPLs.length != expectedNumLikelihoods) {
+                    newPLs = Arrays.stream(subsettedLikelihoodIndices)
+                            .map(idx -> originalPLs[idx]).toArray();
+                    final int minLikelihood = MathUtil.min(newPLs);
                     for (int i = 0; i < expectedNumLikelihoods; i++) {
-                        newLikelihoods[i] = newLikelihoods[i] - minPl;
+                        newPLs[i] = newPLs[i] - minLikelihood;
                     }
-                    final int PLindex = MathUtil.indexOfMax(newLikelihoods);
-                    newLog10GQ = GenotypeLikelihoods.getGQLog10FromLikelihoods(PLindex, newLikelihoods);
+                    final int PLindex = MathUtil.indexOfMin(newPLs);
+                    newLog10GQ = GenotypeLikelihoods.getGQLog10FromLikelihoods(PLindex, GenotypeLikelihoods.fromPLs(newPLs).getAsVector());
+
                 } else {
-                    newLikelihoods = null;
+                    newPLs = null;
                 }
             }
 
-            final boolean useNewLikelihoods = newLikelihoods != null;
-            final GenotypeBuilder gb = useNewLikelihoods ? new GenotypeBuilder(g).PL(newLikelihoods).log10PError(newLog10GQ) : new GenotypeBuilder(g).noPL().noGQ();
-            GenotypeLikelihoods.GenotypeLikelihoodsAllelePair allelePair = GenotypeLikelihoods.getAllelePair(MathUtil.indexOfMin(newLikelihoods));
+            final boolean useNewLikelihoods = newPLs != null;
+            final GenotypeBuilder gb = useNewLikelihoods ? new GenotypeBuilder(g).PL(newPLs).log10PError(newLog10GQ) : new GenotypeBuilder(g).noPL().noGQ();
+            GenotypeLikelihoods.GenotypeLikelihoodsAllelePair allelePair = GenotypeLikelihoods.getAllelePair(MathUtil.indexOfMin(newPLs));
             gb.alleles(Stream.of(allelePair.alleleIndex1, allelePair.alleleIndex2).map(allelesToKeep::get).collect(Collectors.toList()));
             // restrict AD to the new allele subset
             if(g.hasAD()) {

@@ -291,27 +291,33 @@ public class CrosscheckFingerprintsTest {
     public Iterator<Object[]> checkSamplesData() {
         List<Object[]> tests = new ArrayList<>();
 
-        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
-//        tests.add(new Object[]{Arrays.asList(NA12891_named_NA12892_r1, NA12891_r1), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 1, 2, false});
-//
-//        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 0, 2, true});
-//        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1), Arrays.asList(NA12891_r2), 1, 1, true});
-//        tests.add(new Object[]{Arrays.asList(NA12891_r1), Arrays.asList(NA12891_r2, NA12892_r2), 1, 1, true});
-//        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12891_named_NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 1, 2, false});
-//        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1), Arrays.asList(NA12891_r1, NA12891_named_NA12892_r1), 1, 2, false});
-//
-//        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_1_vcf), 0, 2, true});
-//        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_2_vcf, NA12892_1_vcf), 0, 2, true});
-//
-//        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12891_named_NA12892_r1), Arrays.asList(NA12891_r2, NA12892_2_vcf), 1, 2, false});
-//        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_2_vcf, NA12891_named_NA12892_r1), 1, 2, false});
-//
-//        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_2_vcf, NA12892_1_vcf), 0, 2, true});
-//        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
-//        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12891_named_NA12892_vcf), 1, 2, false});
-//        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_2_vcf, NA12891_named_NA12892_r1), 1, 2, false});
-//
-//        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_part1_vcf, NA12892_and_NA123891_part2_vcf, NA12892_and_NA123891_part3_vcf), Arrays.asList(NA12891_2_vcf, NA12892_r1), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_part1_vcf, NA12892_and_NA123891_part2_vcf, NA12892_and_NA123891_part3_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
+
+        tests.add(new Object[]{Arrays.asList(NA12891_named_NA12892_vcf,NA12891_1_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 1, 2, false});
+
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1, NA12891_r2, NA12892_r2), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_named_NA12892_r1, NA12891_r1), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 1, 2, false});
+
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1), Arrays.asList(NA12891_r2), 1, 1, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_r1), Arrays.asList(NA12891_r2, NA12892_r2), 1, 1, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12891_named_NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 1, 2, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1), Arrays.asList(NA12891_r1, NA12891_named_NA12892_r1), 1, 2, false});
+
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_1_vcf), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_2_vcf, NA12892_1_vcf), 0, 2, true});
+
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12891_named_NA12892_r1), Arrays.asList(NA12891_r2, NA12892_2_vcf), 1, 2, false});
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_2_vcf, NA12891_named_NA12892_r1), 1, 2, false});
+
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_2_vcf, NA12892_1_vcf), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12892_g_vcf), 0, 2, true});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_g_vcf, NA12891_named_NA12892_vcf), 1, 2, false});
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_vcf), Arrays.asList(NA12891_2_vcf, NA12891_named_NA12892_r1), 1, 2, false});
+
+        tests.add(new Object[]{Arrays.asList(NA12892_and_NA123891_part1_vcf, NA12892_and_NA123891_part2_vcf, NA12892_and_NA123891_part3_vcf), Arrays.asList(NA12891_2_vcf, NA12892_r1), 0, 2, true});
 
         return tests.iterator();
     }
