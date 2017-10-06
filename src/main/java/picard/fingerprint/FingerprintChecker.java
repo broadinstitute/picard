@@ -58,10 +58,10 @@ public class FingerprintChecker {
     public static final int DEFAULT_MAXIMAL_PL_DIFFERENCE = 30;
 
     private final HaplotypeMap haplotypes;
-    private int minimumBaseQuality = DEFAULT_MINIMUM_BASE_QUALITY;
-    private int minimumMappingQuality = DEFAULT_MINIMUM_MAPPING_QUALITY;
-    private double genotypingErrorRate = DEFAULT_GENOTYPING_ERROR_RATE;
-    private int maximalPLDifference = DEFAULT_MAXIMAL_PL_DIFFERENCE;
+    private int minimumBaseQuality      = DEFAULT_MINIMUM_BASE_QUALITY;
+    private int minimumMappingQuality   = DEFAULT_MINIMUM_MAPPING_QUALITY;
+    private double genotypingErrorRate  = DEFAULT_GENOTYPING_ERROR_RATE;
+    private int maximalPLDifference     = DEFAULT_MAXIMAL_PL_DIFFERENCE;
 
     public ValidationStringency getValidationStringency() {
         return validationStringency;
@@ -86,37 +86,26 @@ public class FingerprintChecker {
         this.haplotypes = new HaplotypeMap(haplotypeData);
     }
 
-    /**
-     * Creates a fingerprint checker that will work with the set of haplotyped provided.
-     */
+    /** Creates a fingerprint checker that will work with the set of haplotyped provided. */
     public FingerprintChecker(final HaplotypeMap haplotypes) {
         this.haplotypes = haplotypes;
     }
 
-    /**
-     * Sets the minimum base quality for bases used when computing a fingerprint from sequence data.
-     */
+    /** Sets the minimum base quality for bases used when computing a fingerprint from sequence data. */
     public void setMinimumBaseQuality(final int minimumBaseQuality) {
         this.minimumBaseQuality = minimumBaseQuality;
     }
 
-    /**
-     * Sets the minimum mapping quality for reads used when computing fingerprints from sequence data.
-     */
+    /** Sets the minimum mapping quality for reads used when computing fingerprints from sequence data. */
     public void setMinimumMappingQuality(final int minimumMappingQuality) {
         this.minimumMappingQuality = minimumMappingQuality;
     }
 
-    /**
-     * Sets the assumed genotyping error rate used when accurate error rates are not available.
-     */
+    /** Sets the assumed genotyping error rate used when accurate error rates are not available. */
     public void setGenotypingErrorRate(final double genotypingErrorRate) {
         this.genotypingErrorRate = genotypingErrorRate;
     }
-
-    /**
-     * Sets the maximal difference in PL scores considered when reading PLs from a VCF.
-     */
+    /** Sets the maximal difference in PL scores considered when reading PLs from a VCF. */
     public void setmaximalPLDifference(final int maximalPLDifference) {
         this.maximalPLDifference = maximalPLDifference;
     }
@@ -124,12 +113,10 @@ public class FingerprintChecker {
     public SAMFileHeader getHeader() {
         return haplotypes.getHeader();
     }
-
     /**
      * Sets whether duplicate reads should be allowed when calling genotypes from SAM files. This is
      * useful when comparing read groups within a SAM file and individual read groups show artifactually
      * high duplication (e.g. a single-ended read group mixed in with paired-end read groups).
-     *
      * @param allowDuplicateReads should fingerprinting use duplicate reads?
      */
     public void setAllowDuplicateReads(final boolean allowDuplicateReads) {
@@ -146,8 +133,8 @@ public class FingerprintChecker {
      * Map of Sample->Fingerprint.
      *
      * @param fingerprintFile - VCF file containing genotypes for one or more samples
-     * @param specificSample  - null to load genotypes for all samples contained in the file or the name
-     *                        of an individual sample to load (and exclude all others).
+     * @param specificSample - null to load genotypes for all samples contained in the file or the name
+     *                         of an individual sample to load (and exclude all others).
      * @return a Map of Sample name to Fingerprint
      */
     public Map<String, Fingerprint> loadFingerprints(final File fingerprintFile, final String specificSample) {
@@ -255,11 +242,11 @@ public class FingerprintChecker {
         return fingerprints;
     }
 
+
     /**
      * Adds the fingerprints found in the variant Context to the map.
-     *
      * @param fingerprints a map from Sample to fingerprint
-     * @param ctx          the VC from which to extract (part of ) a fingerprint
+     * @param ctx the VC from which to extract (part of ) a fingerprint
      */
     private void getFingerprintFromVc(final Map<String, Fingerprint> fingerprints, final VariantContext ctx) throws IllegalArgumentException {
         final HaplotypeBlock h = this.haplotypes.getHaplotype(ctx.getContig(), ctx.getStart());
@@ -406,7 +393,7 @@ public class FingerprintChecker {
     public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final File vcfFile) {
         final Map<FingerprintIdDetails, Fingerprint> fpIdMap = new HashMap<>();
 
-        final Map<String, Fingerprint> sampleFpMap = loadFingerprints(vcfFile, null);
+        final Map< String, Fingerprint> sampleFpMap = loadFingerprints(vcfFile, null);
 
         sampleFpMap.forEach((key, value) -> {
             final FingerprintIdDetails fpId = new FingerprintIdDetails();
@@ -486,7 +473,7 @@ public class FingerprintChecker {
                     final FingerprintIdDetails unknownFPDetails = createUnknownFP(samFile, rec.getRecord());
                     fingerprintIdDetailsMap.put(null, unknownFPDetails);
 
-                    final Fingerprint fp = new Fingerprint(unknownFPDetails.sample, new File(unknownFPDetails.file), unknownFPDetails.platformUnit);
+                    final Fingerprint fp =  new Fingerprint(unknownFPDetails.sample, new File(unknownFPDetails.file), unknownFPDetails.platformUnit);
                     fingerprintsByReadGroup.put(unknownFPDetails, fp);
 
                     for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
@@ -618,7 +605,7 @@ public class FingerprintChecker {
      * A small utility function to choose n random elements (un-shuffled) from a list
      *
      * @param list A list of elements
-     * @param n    a number of elements requested from list
+     * @param n a number of elements requested from list
      * @return a list of n randomly chosen (but in the original order) elements from list.
      * If the list has less than n elements it is returned in its entirety.
      */
@@ -634,19 +621,19 @@ public class FingerprintChecker {
                 shortList.add(aList);
                 stillNeeded--;
             }
-            if (stillNeeded == 0) break; // fast out if do not need more elements
+            if (stillNeeded == 0 ) break; // fast out if do not need more elements
             availableElements--;
         }
 
         return shortList;
     }
 
-    /**
-     * Fingerprints one or more SAM/BAM/VCF files at all available loci within the haplotype map, using multiple threads
-     * to speed up the processing.
-     */
+        /**
+         * Fingerprints one or more SAM/BAM/VCF files at all available loci within the haplotype map, using multiple threads
+         * to speed up the processing.
+         */
     public Map<FingerprintIdDetails, Fingerprint> fingerprintFiles(final Collection<File> files, final int threads,
-                                                                   final int waitTime, final TimeUnit waitTimeUnit) {
+                                                                    final int waitTime, final TimeUnit waitTimeUnit) {
 
         // Generate fingerprints from each file
         final AtomicInteger filesRead = new AtomicInteger(0);
@@ -668,7 +655,7 @@ public class FingerprintChecker {
                     if (filesRead.incrementAndGet() % 100 == 0) {
                         log.info("Processed " + filesRead.get() + " out of " + files.size());
                     }
-                } catch (final Exception e) {
+                } catch(final Exception e){
                     log.warn("Exception thrown in thread:" + e.getMessage());
                     throw e;
                 }
@@ -676,14 +663,11 @@ public class FingerprintChecker {
         }
 
         executor.shutdown();
-        try {
-            executor.awaitTermination(waitTime, waitTimeUnit);
-        } catch (final InterruptedException ie) {
-            log.warn(ie, "Interrupted while waiting for executor to terminate.");
-        }
+        try { executor.awaitTermination(waitTime, waitTimeUnit); }
+        catch (final InterruptedException ie) { log.warn(ie, "Interrupted while waiting for executor to terminate."); }
 
         for (final Map.Entry<Future<?>, File> futureFileEntry : futures.entrySet()) {
-            try {
+           try {
                 futureFileEntry.getKey().get();
             } catch (InterruptedException | ExecutionException e) {
                 log.error("Failed to fingerprint on file: " + futureFileEntry.getValue());
@@ -698,9 +682,9 @@ public class FingerprintChecker {
      * Top level method to take a set of one or more SAM files and one or more Genotype files and compare
      * each read group in each SAM file to each set of fingerprint genotypes.
      *
-     * @param samFiles         the list of SAM files to fingerprint
-     * @param genotypeFiles    the list of genotype files from which to pull fingerprint genotypes
-     * @param specificSample   an optional single sample who's genotypes to load from the supplied files
+     * @param samFiles the list of SAM files to fingerprint
+     * @param genotypeFiles the list of genotype files from which to pull fingerprint genotypes
+     * @param specificSample an optional single sample who's genotypes to load from the supplied files
      * @param ignoreReadGroups aggregate data into one fingerprint per file, instead of splitting by RG
      */
     public List<FingerprintResults> checkFingerprints(final List<File> samFiles,
@@ -758,8 +742,8 @@ public class FingerprintChecker {
      *
      * @param observedGenotypeFiles The list of genotype files containing observed calls, from which to pull fingerprint genotypes
      * @param expectedGenotypeFiles The list of genotype files containing expected calls, from which to pull fingerprint genotypes
-     * @param observedSample        an optional single sample whose genotypes to load from the observed genotype file (if null, use all)
-     * @param expectedSample        an optional single sample whose genotypes to load from the expected genotype file (if null, use all)
+     * @param observedSample an optional single sample whose genotypes to load from the observed genotype file (if null, use all)
+     * @param expectedSample an optional single sample whose genotypes to load from the expected genotype file (if null, use all)
      */
     public List<FingerprintResults> checkFingerprints(final List<File> observedGenotypeFiles,
                                                       final List<File> expectedGenotypeFiles,
@@ -796,21 +780,22 @@ public class FingerprintChecker {
         return resultsList;
     }
 
+
     /**
      * Compares two fingerprints and calculates a MatchResults object which contains detailed
      * information about the match (or mismatch) between fingerprints including the LOD score
      * for whether or not the two are likely from the same sample.
-     * <p>
+     *
      * If comparing sequencing data to genotype data then the sequencing data should be passed
      * as the observedFp and the genotype data as the expectedFp in order to get the best output.
-     * <p>
+     *
      * In the cases where the most likely genotypes from the two fingerprints do not match the
      * lExpectedSample is Max(actualpExpectedSample, minPExpected).
      */
     public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp, final double minPExpected, final double pLoH) {
         final List<LocusResult> locusResults = new ArrayList<>();
 
-        double llThisSample = 0;
+        double llThisSample  = 0;
         double llOtherSample = 0;
 
         double lodExpectedSampleTumorNormal = 0;
@@ -841,12 +826,13 @@ public class FingerprintChecker {
                     // random sample log-likelihood
                     probs1.shiftedLogEvidenceProbability(),
 
-                    // probs1 is tumor probs2 is normal, correct sample lod
-                    prob1AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2) -
-                            prob1AssumingDataFromTumor.shiftedLogEvidenceProbability(),
+            // probs1 is tumor probs2 is normal, correct sample lod
+            prob1AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2) -
+                    prob1AssumingDataFromTumor.shiftedLogEvidenceProbability(),
                     // probs1 is normal probs2 is tumor, correct sample lod
                     probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(prob2AssumingDataFromTumor) -
                             probs1.shiftedLogEvidenceProbability());
+
 
             locusResults.add(lr);
 
@@ -855,7 +841,7 @@ public class FingerprintChecker {
                 //TODO: what's the mathematics behind the lminPexpected?
                 final double lExpected = Math.max(lminPExpected, lr.lExpectedSample());
 
-                llThisSample += lExpected;
+                llThisSample  += lExpected;
                 llOtherSample += lRandom;
                 lodExpectedSampleTumorNormal += lr.getLodExpectedSampleTumorNormal();
                 lodExpectedSampleNormalTumor += lr.getLodExpectedSampleNormalTumor();
@@ -870,7 +856,7 @@ public class FingerprintChecker {
      * Compares two fingerprints and calculates a MatchResults object which contains detailed
      * information about the match (or mismatch) between fingerprints including the LOD score
      * for whether or not the two are likely from the same sample.
-     * <p>
+     *
      * If comparing sequencing data to genotype data then the sequencing data should be passed
      * as the observedFp and the genotype data as the expectedFp in order to get the best output.
      */
@@ -878,10 +864,10 @@ public class FingerprintChecker {
         return calculateMatchResults(observedFp, expectedFp, 0, 0);
     }
 
-    private static boolean isQueryable(final SAMSequenceDictionary dict, final VCFFileReader reader) {
+    private static boolean isQueryable(final SAMSequenceDictionary dict, final VCFFileReader reader){
 
         try {
-            reader.query(dict.getSequence(0).getSequenceName(), 0, 0);
+            reader.query(dict.getSequence(0).getSequenceName(),0,0);
         } catch (final RuntimeException e) {
             return false;
         }

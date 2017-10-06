@@ -45,13 +45,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.toMap;
-import static picard.fingerprint.CrosscheckMetric.FingerprintResult.INCONCLUSIVE;
-
 /**
  * Program to check that all fingerprints within the set of input files appear to come from the same
  * individual. Can be used to cross-check readgroups, libraries, samples, or files.
- * Operates on bams/sams and vcfs.
+ * Operates on bams/sams and vcfs (including gvcfs).
  *
  * @author Tim Fennell
  * @author Yossi Farjoun
@@ -148,8 +145,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     private double[][] crosscheckMatrix = null;
     private final List<String> matrixKeys = new ArrayList<>();
 
-
-
     @Override
     protected int doWork() {
         // Check inputs
@@ -160,7 +155,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         if (OUTPUT != null) IOUtil.assertFileIsWritable(OUTPUT);
 
         if (!INPUT2.isEmpty()) {
-            log.warn("INPUT2 is not empty. NOT doing cross-check. Will only compare each SAMPLE in INPUT1 against that sample in INPUT2");
+            log.info("INPUT2 is not empty. NOT doing cross-check. Will only compare each SAMPLE in INPUT1 against that sample in INPUT2");
             if (CROSSCHECK_BY != CrosscheckMetric.DataType.SAMPLE) {
                 log.warn("CROSSCHECK_BY is not SAMPLE, This doesn't make sense in non-crosscheck mode. Ignoring.");
                 CROSSCHECK_BY = CrosscheckMetric.DataType.SAMPLE;
@@ -184,6 +179,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         extensions.addAll(Arrays.asList(IOUtil.VCF_EXTENSIONS));
 
         final List<File> unrolledFiles = IOUtil.unrollFiles(INPUT, extensions.toArray(new String[extensions.size()]));
+        IOUtil.assertFilesAreReadable(unrolledFiles);
+
         final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
 
         log.info("Finished generating fingerprints from files, moving on to cross-checking.");
@@ -195,6 +192,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             numUnexpected = crossCheckGrouped(fpMap, metrics, getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
         } else {
             final List<File> unrolledFiles2 = IOUtil.unrollFiles(INPUT2, extensions.toArray(new String[extensions.size()]));
+            IOUtil.assertFilesAreReadable(unrolledFiles2);
             final Map<FingerprintIdDetails, Fingerprint> fpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
 
             numUnexpected = checkFingerprintsbySample(fpMap, fpMap2, metrics);
@@ -365,7 +363,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         return unexpectedResults;
     }
 
-
     /**
      * Method that checks each sample from fingerprints1 against that sample from fingerprints2 and reports a LOD score for the two groups
      * coming from the same individual.
@@ -377,46 +374,36 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final Map<FingerprintIdDetails, Fingerprint> fingerprints1BySample = mergeFingerprintsBy(fingerprints1, getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
         final Map<FingerprintIdDetails, Fingerprint> fingerprints2BySample = mergeFingerprintsBy(fingerprints2, getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
 
-        final Map<String, FingerprintIdDetails> sampleToDetail1 = fingerprints1BySample.keySet().stream().collect(toMap(id->id.group, id -> id));
-        final Map<String, FingerprintIdDetails> sampleToDetail2 = fingerprints2BySample.keySet().stream().collect(toMap(id->id.group, id -> id));
+        final Map<String, FingerprintIdDetails> sampleToDetail1 = fingerprints1BySample.keySet().stream().collect(Collectors.toMap(id->id.group, id -> id));
+        final Map<String, FingerprintIdDetails> sampleToDetail2 = fingerprints2BySample.keySet().stream().collect(Collectors.toMap(id->id.group, id -> id));
 
         Set<String> samples = new HashSet<>();
         samples.addAll(sampleToDetail1.keySet());
         samples.addAll(sampleToDetail2.keySet());
 
         for (final String sample : samples) {
-
             final FingerprintIdDetails lhsID = sampleToDetail1.get(sample);
             final FingerprintIdDetails rhsID = sampleToDetail2.get(sample);
 
-            if (lhsID == null) {
-                log.error(String.format("sample %s is missing from LEFT group", sample));
-                unexpectedResults++;
-                continue;
-            }
-            if (rhsID == null) {
-                log.error(String.format("sample %s is missing from RIGHT group", sample));
+            if (lhsID == null || rhsID == null) {
+                log.error(String.format("sample %s is missing from %s group", sample, lhsID == null ? "LEFT" : "RIGHT"));
                 unexpectedResults++;
                 continue;
             }
 
             final MatchResults results = FingerprintChecker.calculateMatchResults(fingerprints1BySample.get(lhsID), fingerprints2BySample.get(rhsID), GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE);
-
             final CrosscheckMetric.FingerprintResult result = getMatchResults(true, results);
 
             if (!OUTPUT_ERRORS_ONLY || !result.isExpected()) {
                 metrics.add(getMatchDetails(result, results, lhsID, rhsID, CrosscheckMetric.DataType.SAMPLE));
             }
-            if (result != INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
-
+            if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
         }
-
         return unexpectedResults;
     }
 
-
     /**
-     * Generates tab delimited string containing details about a possible match between fingerprints on two different SAMReadGroupRecords
+     * Generates tab-delimited string containing details about a possible match between fingerprints on two different SAMReadGroupRecords
      *
      * @param matchResult    String describing the match type.
      * @param results        MatchResults object
@@ -458,6 +445,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     }
 
     private FingerprintResult getMatchResults(final boolean expectedToMatch, final MatchResults results) {
+
         if (expectedToMatch) {
             if (results.getLOD() < LOD_THRESHOLD) {
                 return FingerprintResult.UNEXPECTED_MISMATCH;
