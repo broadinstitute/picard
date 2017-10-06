@@ -77,12 +77,13 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             doc = "One or more input files (or lists of files) to compare fingerprints for.")
     public List<File> INPUT;
 
-    @Argument(shortName = "I2", optional = true,
+    @Argument(shortName = "I2", optional = true, mutex={"MATRIX_OUTPUT"},
             doc = "One or more input files (or lists of files) to compare fingerprints for. If this option is given " +
-                    "the program to compare each sample in INPUT, with the sample from " +
-                    "INPUT2 that have the same sample ID. When operating in this mode, each sample in " +
+                    "the program compares each sample in INPUT with the sample from INPUT2 that has the same sample ID." +
+                    " In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY."+
+                    " When operating in this mode, each sample in " +
                     "INPUT must also have a corresponding sample in INPUT2. If this is violated, the program will proceed to check the matching samples, but report " +
-                    "the missing samples and return a non-zero error-code. In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY." )
+                    "the missing samples and return a non-zero error-code." )
     public List<File> INPUT2;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
@@ -92,7 +93,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(shortName = "MO", optional = true,
             doc = "Optional output file to write matrix of LOD scores to. This is less informative than the metrics output " +
                     "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity). " +
-                    "It is however sometimes easier to use visually.")
+                    "It is however sometimes easier to use visually.", mutex = {"INPUT2"})
     public File MATRIX_OUTPUT = null;
 
     @Argument(shortName = "H", doc = "The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
@@ -160,10 +161,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         if (!INPUT2.isEmpty()) {
             log.warn("INPUT2 is not empty. NOT doing cross-check. Will only compare each SAMPLE in INPUT1 against that sample in INPUT2");
-            if (MATRIX_OUTPUT != null) {
-                log.warn("MATRIX_OUTPUT is not null, This doesn't make sense in non-crosscheck mode. Ignoring.");
-                MATRIX_OUTPUT = null;
-            }
             if (CROSSCHECK_BY != CrosscheckMetric.DataType.SAMPLE) {
                 log.warn("CROSSCHECK_BY is not SAMPLE, This doesn't make sense in non-crosscheck mode. Ignoring.");
                 CROSSCHECK_BY = CrosscheckMetric.DataType.SAMPLE;
@@ -187,10 +184,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         extensions.addAll(Arrays.asList(IOUtil.VCF_EXTENSIONS));
 
         final List<File> unrolledFiles = IOUtil.unrollFiles(INPUT, extensions.toArray(new String[extensions.size()]));
-        final List<File> unrolledFiles2 = IOUtil.unrollFiles(INPUT2, extensions.toArray(new String[extensions.size()]));
-
         final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
-        final Map<FingerprintIdDetails, Fingerprint> fpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
 
         log.info("Finished generating fingerprints from files, moving on to cross-checking.");
 
@@ -200,6 +194,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         if (INPUT2.isEmpty()) {
             numUnexpected = crossCheckGrouped(fpMap, metrics, getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
         } else {
+            final List<File> unrolledFiles2 = IOUtil.unrollFiles(INPUT2, extensions.toArray(new String[extensions.size()]));
+            final Map<FingerprintIdDetails, Fingerprint> fpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
+
             numUnexpected = checkFingerprintsbySample(fpMap, fpMap2, metrics);
         }
 
@@ -212,7 +209,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
 
         if (MATRIX_OUTPUT != null) {
-             writeMatrix();
+            writeMatrix();
         }
 
         if (numUnexpected > 0) {
