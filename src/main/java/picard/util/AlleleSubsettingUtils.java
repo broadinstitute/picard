@@ -1,11 +1,9 @@
 package picard.util;
 
 import htsjdk.variant.variantcontext.*;
+import picard.fingerprint.Snp;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -22,6 +20,61 @@ import java.util.stream.Stream;
 public final class AlleleSubsettingUtils {
     private AlleleSubsettingUtils() {
     }  // prevent instantiation
+
+    @Deprecated // use {@link Allele.NON_REF} (once released and htsjdk is properly reved in picard
+    public static Allele NON_REF_ALLELE = Allele.create("<NON_REF>");
+
+    /**
+     * Method to subset the alleles in the VariantContext to those in the input snp.
+     * Will also subset appropriately the AD and PL fields in all the genotypes, and in
+     * the case of a monomorphic variant with a NON_REF allele, will replace the NON_REF
+     * allele with the non-reference allele from snp.
+     * <p>
+     * returns null if it is not possible to subset ctx to the alleles in snp.
+     *
+     * @param ctx The VariantContext to subset.
+     * @param snp Snp whose alleles are used for subsetting ctx.
+     * @return a VariantContext subsetted to the alleles in snp, or null if unable.
+     */
+    public static VariantContext subsetVCToMatchSnp(final VariantContext ctx, final Snp snp) {
+        if (ctx.isFiltered()) return null;
+
+        // we can use this VC if it contains both alleles in snp as alleles, one of which is the reference,
+        // or if it contains the NON_REF_ALLELE and one of the snp's alleles, and its reference allele is length 1.
+
+        //TODO: figure out a way to identify the allele corresponding to the snp in the presence of a deletion
+
+        if (ctx.getReference().length() != 1) return null;
+
+        // one of the alleles in snp must match the reference allele
+        final Optional<Byte> referenceAlleleMaybe = Stream.of(snp.getAllele1(), snp.getAllele2())
+                .filter(b -> b == ctx.getReference().getBases()[0]).findAny();
+        if (!referenceAlleleMaybe.isPresent()) return null;
+
+        final byte refAllele = referenceAlleleMaybe.get();
+        final byte otherAllele = snp.getAllele1() == refAllele ? snp.getAllele2() : snp.getAllele1();
+
+        // do we have otherAllele in ctx?
+        final Optional<Allele> altAlleleMaybe = ctx.getAlternateAlleles()
+                .stream()
+                .filter(a -> a.length() == 1 && a.getBases()[0] == otherAllele)
+                .findAny();
+
+        if (altAlleleMaybe.isPresent()) {
+            if (ctx.getAlleles().size() == 2) return ctx;
+
+            return AlleleSubsettingUtils.subsetAlleles(ctx, Arrays.asList(ctx.getReference(), altAlleleMaybe.get()));
+        }
+
+        // if not, perhaps we have NON_REF_ALLELE
+        final Optional<Allele> nonRefAlleleMaybe = ctx.getAlternateAlleles().stream().filter(a -> a.equals(NON_REF_ALLELE)).findAny();
+        if (nonRefAlleleMaybe.isPresent()) {
+
+            final VariantContext vcSubsetted = ctx.getAlleles().size() == 2 ? ctx : AlleleSubsettingUtils.subsetAlleles(ctx, Arrays.asList(ctx.getReference(), nonRefAlleleMaybe.get()));
+            return AlleleSubsettingUtils.swapAlleles(vcSubsetted, NON_REF_ALLELE, Allele.create(otherAllele));
+        }
+        return null;
+    }
 
     public static VariantContext subsetAlleles(final VariantContext originalVc, final List<Allele> allelesToKeep) {
         VariantContextBuilder vcBuilder = new VariantContextBuilder(originalVc).alleles(allelesToKeep);
@@ -160,11 +213,10 @@ public final class AlleleSubsettingUtils {
     }
 
     /**
-     * Checks that a boolea is true and returns the same object or throws an {@link IllegalArgumentException}
+     * Checks that a boolean is true and returns the same object or throws an {@link IllegalArgumentException}
      *
-     * @param condition  any Object
-     * @param msg the text message that would be passed to the exception thrown when {@code !condition}.
-     *
+     * @param condition any Object
+     * @param msg       the text message that would be passed to the exception thrown when {@code !condition}.
      * @throws IllegalArgumentException if a {@code !condition}
      */
     public static void validateTrue(final boolean condition, final String msg) {

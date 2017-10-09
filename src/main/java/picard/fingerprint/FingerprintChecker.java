@@ -253,7 +253,7 @@ public class FingerprintChecker {
         final Snp snp = this.haplotypes.getSnp(ctx.getContig(), ctx.getStart());
         if (h == null) return;
 
-        final VariantContext usableSnp = subsetVCToMatchSnp(ctx, snp);
+        final VariantContext usableSnp = AlleleSubsettingUtils.subsetVCToMatchSnp(ctx, snp);
         if (usableSnp == null) {
             return;
         }
@@ -321,53 +321,6 @@ public class FingerprintChecker {
                 fp.add(new HaplotypeProbabilitiesFromGenotype(snp, h, probs[0], probs[1], probs[2]));
             }
         }
-    }
-
-    // Hack, this allele should be defined in htsjdk.
-    @Deprecated
-    public static Allele NON_REF_ALLELE = Allele.create("<NON_REF>");
-
-    /**
-     * Method to check and see if the variant context represents a usable SNP variant. Unfortunately
-     * ctx.isSnp doesn't always work if the genotype(s) are all monomorphic and the alternate allele isn't
-     * listed.
-     */
-
-    public static VariantContext subsetVCToMatchSnp(final VariantContext ctx, final Snp snp) {
-        if (ctx.isFiltered()) return null;
-//        if (ctx.isMixed()) return null;
-
-        // we can use this VC if it contains both alleles in snp as alleles, one of which is the reference,
-        // or if it contains the NON_REF_ALLELE and one of the snp's alleles, and it's reference allele is length 1.
-
-        //TODO: figure out a way to identify the allele corresponding to the snp in the presence of a deletion
-
-        if (ctx.getReference().length() != 1) return null;
-
-        // one of the alleles in snp must match the reference allele
-        final Optional<Byte> referenceAlleleMaybe = Stream.of(snp.getAllele1(), snp.getAllele2())
-                .filter(b -> b == ctx.getReference().getBases()[0]).findAny();
-        if (!referenceAlleleMaybe.isPresent()) return null;
-
-        final byte refAllele = referenceAlleleMaybe.get();
-        final byte otherAllele = snp.getAllele1() == refAllele ? snp.getAllele2() : snp.getAllele1();
-
-        // do we have otherAllele in ctx?
-        final Optional<Allele> altAlleleMaybe = ctx.getAlternateAlleles().stream().filter(a -> a.length() == 1).filter(a -> a.getBases()[0] == otherAllele).findAny();
-        if (altAlleleMaybe.isPresent()) {
-            if (ctx.getAlleles().size() == 2) return ctx;
-
-            return AlleleSubsettingUtils.subsetAlleles(ctx, Arrays.asList(ctx.getReference(), altAlleleMaybe.get()));
-        }
-
-        // if not, perhaps we have NON_REF_ALLELE
-        final Optional<Allele> nonRefAlleleMaybe = ctx.getAlternateAlleles().stream().filter(a -> a.equals( NON_REF_ALLELE)).findAny();
-        if (nonRefAlleleMaybe.isPresent()) {
-
-            final VariantContext vcSubsetted = ctx.getAlleles().size() == 2 ? ctx : AlleleSubsettingUtils.subsetAlleles(ctx, Arrays.asList(ctx.getReference(), nonRefAlleleMaybe.get()));
-            return AlleleSubsettingUtils.swapAlleles(vcSubsetted, NON_REF_ALLELE, Allele.create(otherAllele));
-        }
-        return null;
     }
 
     /**
