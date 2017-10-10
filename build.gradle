@@ -31,21 +31,6 @@ repositories {
     }
 }
 
-jacocoTestReport {
-    dependsOn test
-    group = "Reporting"
-    description = "Generate Jacoco coverage reports after running tests."
-    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
-
-    reports {
-        xml.enabled = true // coveralls plugin depends on xml format report
-        html.enabled = true
-    }
-}
-
-jacoco {
-    toolVersion = "0.7.5.201505241946"
-}
 
 final htsjdkVersion = System.getProperty('htsjdk.version', '2.12.0')
 
@@ -274,6 +259,22 @@ tasks.withType(Test) {
             }
         }
     }
+}
+
+jacocoTestReport {
+    dependsOn legacyTest
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports after running tests."
+    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
+
+    reports {
+        xml.enabled = true // coveralls plugin depends on xml format report
+        html.enabled = true
+    }
+}
+
+jacoco {
+    toolVersion = "0.7.5.201505241946"
 }
 
 task wrapper(type: Wrapper) {

@@ -7,6 +7,10 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
     - $HOME/.m2
+env:
+  matrix:
+    - RUN_BARCLAY_TESTS=true
+    - RUN_BARCLAY_TESTS=false
 jdk:
   - oraclejdk8
   - openjdk8
@@ -14,7 +18,14 @@ before_install:
   - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
   - sudo apt-get -qq update
   - sudo apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
-script: ./gradlew jacocoTestReport
+script:
+  - if [[ $RUN_BARCLAY_TESTS == true ]]; then
+      echo "Running tests using the Barclay command line parser.";
+      ./gradlew barclayTest;
+    else
+      echo "Running tests using the legacy Picard command line parser.";
+      ./gradlew jacocoTestReport;
+    fi
 after_success:
   - ./gradlew coveralls
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
