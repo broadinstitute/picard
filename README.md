@@ -10,7 +10,7 @@ sequencing data such as [SAM][2] and [VCF][3].
 
 As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last version to support Java 1.7 was release 1.141.
 
-####Building Picard
+#### Building Picard
 
 * First, clone the repo:
 ```
@@ -45,7 +45,7 @@ As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last ver
     ./gradlew clean
 ```
 
-####Running Tests
+#### Running Tests
 
 * To run all tests, the command is:
 ```
@@ -57,7 +57,7 @@ As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last ver
     ./gradlew test -Dtest.single=TestClassName 
 ```
 
-####Changing the released version of HTSJDK that Picard depends on
+#### Changing the released version of HTSJDK that Picard depends on
 
 To switch Picard's HTSJDK dependency to a different released version:
 
@@ -68,7 +68,7 @@ To switch Picard's HTSJDK dependency to a different released version:
 ```
 * Open a pull request with this change
 
-####Building Picard with a Custom Version of HTSJDK
+#### Building Picard with a Custom Version of HTSJDK
 
 During development in Picard, it is sometimes necessary to build locally against an unreleased version or branch of HTSJDK. 
 
@@ -81,7 +81,7 @@ During development in Picard, it is sometimes necessary to build locally against
     * Run `./gradlew install printVersion` in your htsjdk clone to install that version to your local maven repository. Take note of the version number that gets printed at the end.
     * Switch back to your Picard clone, and run `./gradlew shadowJar -Dhtsjdk.version=VERSION`, where VERSION is the version of HTSJDK you installed to your local maven repository.
 
-####Releasing Picard
+#### Releasing Picard
 
 Full instructions on how to create a new release of Picard are [here](https://github.com/broadinstitute/picard/wiki/How-to-release-Picard)
 
