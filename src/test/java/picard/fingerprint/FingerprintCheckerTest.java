@@ -197,4 +197,19 @@ public class FingerprintCheckerTest {
 
         new CrosscheckFingerprints().instanceMain(args);
     }
+
+    @DataProvider(name="queryableData")
+    public Iterator<Object[]> queryableData() throws IOException {
+        List<Object[]> tests = new ArrayList<>();
+        tests.add(new Object[]{new File(TEST_DATA_DIR, "NA12891.fp.vcf"), false});
+        tests.add(new Object[]{new File(TEST_DATA_DIR, "NA12891.vcf"), false});
+        tests.add(new Object[]{VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891.vcf"), "fingerprintcheckertest.tmp."), true});
+        tests.add(new Object[]{new File(TEST_DATA_DIR, "NA12891.vcf.gz"), true});
+
+        return tests.iterator();
+    }
+    @Test(dataProvider = "queryableData")
+    public void testQueriable(final File vcf, boolean expectedQueryable){
+        Assert.assertEquals(FingerprintChecker.isQueryable(vcf),expectedQueryable);
+    }
 }

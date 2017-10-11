@@ -170,7 +170,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         checker.setAllowDuplicateReads(ALLOW_DUPLICATE_READS);
         checker.setValidationStringency(VALIDATION_STRINGENCY);
 
-        log.info("Done checking input files, moving onto fingerprinting files.");
+        log.info("Fingerprinting INPUT files.");
 
         final List<String> extensions = new ArrayList<>();
 
@@ -181,20 +181,24 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final List<File> unrolledFiles = IOUtil.unrollFiles(INPUT, extensions.toArray(new String[extensions.size()]));
         IOUtil.assertFilesAreReadable(unrolledFiles);
 
-        final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
+        // unroll and check readable here, as it can be annoying to fingerprint INPUT files and only then desciver a problem
+        // in a file in INPUT2
+        final List<File> unrolledFiles2 = IOUtil.unrollFiles(INPUT2, extensions.toArray(new String[extensions.size()]));
+        IOUtil.assertFilesAreReadable(unrolledFiles2);
 
-        log.info("Finished generating fingerprints from files, moving on to cross-checking.");
+        final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
 
         final List<CrosscheckMetric> metrics = new ArrayList<>();
         final int numUnexpected;
 
         if (INPUT2.isEmpty()) {
+            log.info("Cross-checking all " + CROSSCHECK_BY + " against each other");
             numUnexpected = crossCheckGrouped(fpMap, metrics, getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
         } else {
-            final List<File> unrolledFiles2 = IOUtil.unrollFiles(INPUT2, extensions.toArray(new String[extensions.size()]));
-            IOUtil.assertFilesAreReadable(unrolledFiles2);
-            final Map<FingerprintIdDetails, Fingerprint> fpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
+            log.info("Fingerprinting INPUT2 files.");
 
+            final Map<FingerprintIdDetails, Fingerprint> fpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
+            log.info("Checking each sample in INPUT with the same sample in INPUT2.");
             numUnexpected = checkFingerprintsbySample(fpMap, fpMap2, metrics);
         }
 

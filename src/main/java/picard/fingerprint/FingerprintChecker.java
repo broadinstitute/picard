@@ -29,6 +29,7 @@ import htsjdk.samtools.*;
 import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.util.*;
+import htsjdk.tribble.TribbleException;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeLikelihoods;
@@ -145,7 +146,7 @@ public class FingerprintChecker {
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
                 VCFFileReader.getSequenceDictionary(fingerprintFile));
 
-        if (isQueryable(this.getHeader().getSequenceDictionary(), reader)) {
+        if (isQueryable(fingerprintFile)) {
             reader.close();
             return loadFingerprintsFromIndexedVcf(fingerprintFile, specificSample);
         } else {
@@ -608,10 +609,16 @@ public class FingerprintChecker {
                         retval.putAll(fingerprintVcf(f));
                     }
 
-                    if (filesRead.incrementAndGet() % 100 == 0) {
-                        log.info("Processed " + filesRead.get() + " out of " + files.size());
+                    synchronized (log) {
+                        log.debug("Processed file: " + f.getAbsolutePath() + " (" + filesRead.get() + ")");
                     }
-                } catch(final Exception e){
+
+                    if (filesRead.incrementAndGet() % 100 == 0) {
+                        synchronized (log) {
+                            log.info("Processed " + filesRead.get() + " out of " + files.size());
+                        }
+                    }
+                } catch(final Exception e) {
                     log.warn("Exception thrown in thread:" + e.getMessage());
                     throw e;
                 }
@@ -820,11 +827,12 @@ public class FingerprintChecker {
         return calculateMatchResults(observedFp, expectedFp, 0, 0);
     }
 
-    private static boolean isQueryable(final SAMSequenceDictionary dict, final VCFFileReader reader){
+    static boolean isQueryable(final File vcf){
+        final VCFFileReader reader = new VCFFileReader(vcf, false);
 
         try {
-            reader.query(dict.getSequence(0).getSequenceName(),0,0);
-        } catch (final RuntimeException e) {
+            reader.query(reader.getFileHeader().getSequenceDictionary().getSequence(0).getSequenceName(),1,1);
+        } catch (final TribbleException e) {
             return false;
         }
         return true;
