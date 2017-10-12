@@ -20,10 +20,15 @@
     function explainFlags() {
         var flagValue = parseInt(document.getElementById('tb').value); //returns 0 or NaN if can't parse
         var summary = "";
+        var pairedRead = lstFlags[0][1] & flagValue;
         for(var i = 0; i < lstFlags.length; i++) {
             var checkbox = document.getElementById('cb' + i)
             if(lstFlags[i][1] & flagValue) {
-                summary  += " &nbsp; &nbsp; " + lstFlags[i][0] + "<br>";
+                if (!pairedRead && i < 8){
+                    summary = " &nbsp; &nbsp; <b>Invalid flag: read not paired</b><br>";
+                } else {
+                    summary  += " &nbsp; &nbsp; " + lstFlags[i][0] + "<br>";
+                }
                 checkbox.checked = true;
             } else {
                 checkbox.checked = false;
