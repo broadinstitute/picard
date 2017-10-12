@@ -21,8 +21,8 @@ public final class AlleleSubsettingUtils {
     private AlleleSubsettingUtils() {
     }  // prevent instantiation
 
-    @Deprecated // use {@link Allele.NON_REF} (once released and htsjdk is properly reved in picard
-    public static Allele NON_REF_ALLELE = Allele.create("<NON_REF>");
+    @Deprecated // use {@link Allele.NON_REF} (once released and htsjdk is properly reved in picard)
+    public static final Allele NON_REF_ALLELE = Allele.create("<NON_REF>");
 
     /**
      * Method to subset the alleles in the VariantContext to those in the input snp.
@@ -61,7 +61,7 @@ public final class AlleleSubsettingUtils {
                 .findAny();
 
         if (altAlleleMaybe.isPresent()) {
-            if (ctx.getAlleles().size() == 2) return ctx;
+            if (ctx.isBiallelic()) return ctx;
 
             return AlleleSubsettingUtils.subsetAlleles(ctx, Arrays.asList(ctx.getReference(), altAlleleMaybe.get()));
         }
@@ -70,7 +70,7 @@ public final class AlleleSubsettingUtils {
         final Optional<Allele> nonRefAlleleMaybe = ctx.getAlternateAlleles().stream().filter(a -> a.equals(NON_REF_ALLELE)).findAny();
         if (nonRefAlleleMaybe.isPresent()) {
 
-            final VariantContext vcSubsetted = ctx.getAlleles().size() == 2 ? ctx : AlleleSubsettingUtils.subsetAlleles(ctx, Arrays.asList(ctx.getReference(), nonRefAlleleMaybe.get()));
+            final VariantContext vcSubsetted = ctx.isBiallelic() ? ctx : AlleleSubsettingUtils.subsetAlleles(ctx, Arrays.asList(ctx.getReference(), nonRefAlleleMaybe.get()));
             return AlleleSubsettingUtils.swapAlleles(vcSubsetted, NON_REF_ALLELE, Allele.create(otherAllele));
         }
         return null;
@@ -85,12 +85,20 @@ public final class AlleleSubsettingUtils {
     }
 
     /**
-     * swaps one of the alleles in a VC (and its genotypes) with another.
+     * Swaps one of the alleles in a VC (and its genotypes) with another.
+     *
+     * @param originalVc The {@link VariantContext} whose oldAllele will be swapped for newAllele.
+     * @param oldAllele The {@link Allele} in originalVc that needs to be replaced.
+     * @param newAllele The new {@link Allele} to use instead of oldAllele.
+     *
+     * @return A new {@link VariantContext} with newAllele swapped in for oldAllele.
+     * @throws IllegalArgumentException if originalVc doesn't contain oldAllele.
      */
-    public static VariantContext swapAlleles(final VariantContext originalVc, final Allele oldAllele, final Allele newAllele) {
-        if (!originalVc.getAlleles().contains(oldAllele)) return originalVc;
+    public static VariantContext swapAlleles(final VariantContext originalVc, final Allele oldAllele, final Allele newAllele) throws IllegalArgumentException{
+        if (!originalVc.getAlleles().contains(oldAllele)) throw new IllegalArgumentException("Couldn't find allele " +
+                oldAllele + " in VariantContext " + originalVc);
 
-        final LinkedList<Allele> alleles = new LinkedList<>(originalVc.getAlleles());
+        final List<Allele> alleles = new ArrayList<>(originalVc.getAlleles());
         alleles.set(alleles.indexOf(oldAllele), newAllele);
 
         VariantContextBuilder vcBuilder = new VariantContextBuilder(originalVc).alleles(alleles);
@@ -101,9 +109,7 @@ public final class AlleleSubsettingUtils {
                 newGTs.add(g);
             } else {
                 final GenotypeBuilder gb = new GenotypeBuilder(g);
-                final LinkedList<Allele> genotypeAlleles = new LinkedList<>(g.getAlleles());
-                genotypeAlleles.set(genotypeAlleles.indexOf(oldAllele), newAllele);
-                gb.alleles(genotypeAlleles);
+                gb.alleles(g.getAlleles().stream().map(a -> a.equals(oldAllele) ? newAllele : a).collect(Collectors.toList()));
                 newGTs.add(gb.make());
             }
         }
@@ -113,8 +119,9 @@ public final class AlleleSubsettingUtils {
 
     /**
      * Create the new GenotypesContext with the subsetted PLs and ADs
+     * Expects allelesToKeep to be in the same order
+     * in which they are in originalAlleles.
      * <p>
-     * Will reorder subsetted alleles according to the ordering provided by the list allelesToKeep
      *
      * @param originalGs      the original GenotypesContext
      * @param originalAlleles the original alleles
@@ -124,24 +131,24 @@ public final class AlleleSubsettingUtils {
     public static GenotypesContext subsetAlleles(final GenotypesContext originalGs,
                                                  final List<Allele> originalAlleles,
                                                  final List<Allele> allelesToKeep) {
-        nonNull(originalGs, "original GenotypesContext must not be null");
-        nonNull(allelesToKeep, "allelesToKeep is null");
-        nonEmpty(allelesToKeep, "must keep at least one allele");
-        validateTrue(allelesToKeep.get(0).isReference(), "First allele must be the reference allele");
-        validateTrue(allelesToKeep.stream().allMatch(originalAlleles::contains), "OriginalAlleles must contain allelesToKeep");
+        nonNull(originalGs, "original GenotypesContext must not be null.");
+        nonNull(allelesToKeep, "allelesToKeep is null.");
+        nonEmpty(allelesToKeep, "must keep at least one allele.");
+        validateTrue(allelesToKeep.get(0).isReference(), "First allele must be the reference allele.");
+        validateTrue(allelesToKeep.stream().allMatch(originalAlleles::contains), "OriginalAlleles must contain allelesToKeep.");
 
         int indexOfLast = -1;
         for (Allele a : allelesToKeep) {
-            validateTrue(indexOfLast < originalAlleles.indexOf(a), "alleles to keep must maintain the order of the original alleles");
+            validateTrue(indexOfLast < originalAlleles.indexOf(a), "alleles to keep must maintain the order of the original alleles.");
             indexOfLast = originalAlleles.indexOf(a);
         }
 
-        final int allelesIndex[] = allelesToKeep.stream().mapToInt(originalAlleles::indexOf).toArray();
+        final int[] allelesIndex = allelesToKeep.stream().mapToInt(originalAlleles::indexOf).toArray();
         final GenotypesContext newGTs = GenotypesContext.create(originalGs.size());
         int[] subsettedLikelihoodIndices = subsettedPLIndices(originalAlleles, allelesToKeep);
 
         for (final Genotype g : originalGs) {
-            validateTrue(g.getPloidy() == 2, "only implemented for ploidy 2 for now");
+            validateTrue(g.getPloidy() == 2, "only implemented for ploidy 2 for now.");
 
             final int expectedNumLikelihoods = GenotypeLikelihoods.numLikelihoods(allelesToKeep.size(), 2);
             // create the new likelihoods array from the alleles we are to use
@@ -158,9 +165,9 @@ public final class AlleleSubsettingUtils {
                     for (int i = 0; i < expectedNumLikelihoods; i++) {
                         newPLs[i] = newPLs[i] - minLikelihood;
                     }
-                    final int PLindex = MathUtil.indexOfMin(newPLs);
+                    final int indexOfMostLikely = MathUtil.indexOfMin(newPLs);
 
-                    newLog10GQ = GenotypeLikelihoods.getGQLog10FromLikelihoods(PLindex, GenotypeLikelihoods.fromPLs(newPLs).getAsVector());
+                    newLog10GQ = GenotypeLikelihoods.getGQLog10FromLikelihoods(indexOfMostLikely, GenotypeLikelihoods.fromPLs(newPLs).getAsVector());
                 } else {
                     newPLs = null;
                 }
@@ -219,7 +226,7 @@ public final class AlleleSubsettingUtils {
      * @param msg       the text message that would be passed to the exception thrown when {@code !condition}.
      * @throws IllegalArgumentException if a {@code !condition}
      */
-    public static void validateTrue(final boolean condition, final String msg) {
+    private static void validateTrue(final boolean condition, final String msg) {
         if (!condition) {
             throw new IllegalArgumentException(msg);
         }
@@ -233,7 +240,7 @@ public final class AlleleSubsettingUtils {
      * @return the same object
      * @throws IllegalArgumentException if a {@code o == null}
      */
-    public static <T> T nonNull(final T object, String message) {
+    private static <T> T nonNull(final T object, String message) {
         if (object == null) {
             throw new IllegalArgumentException(message);
         }
@@ -249,7 +256,7 @@ public final class AlleleSubsettingUtils {
      * @return the original collection
      * @throws IllegalArgumentException if collection is null or empty
      */
-    public static <I, T extends Collection<I>> T nonEmpty(T collection, String message) {
+    private static <I, T extends Collection<I>> T nonEmpty(T collection, String message) {
         nonNull(collection, "The collection is null: " + message);
         if (collection.isEmpty()) {
             throw new IllegalArgumentException("The collection is empty: " + message);

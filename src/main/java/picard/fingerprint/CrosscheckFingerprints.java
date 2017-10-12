@@ -74,14 +74,14 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             doc = "One or more input files (or lists of files) to compare fingerprints for.")
     public List<File> INPUT;
 
-    @Argument(shortName = "I2", optional = true, mutex={"MATRIX_OUTPUT"},
+    @Argument(shortName = "SI", optional = true, mutex={"MATRIX_OUTPUT"},
             doc = "One or more input files (or lists of files) to compare fingerprints for. If this option is given " +
-                    "the program compares each sample in INPUT with the sample from INPUT2 that has the same sample ID." +
+                    "the program compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID." +
                     " In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY."+
                     " When operating in this mode, each sample in " +
-                    "INPUT must also have a corresponding sample in INPUT2. If this is violated, the program will proceed to check the matching samples, but report " +
+                    "INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the program will proceed to check the matching samples, but report " +
                     "the missing samples and return a non-zero error-code." )
-    public List<File> INPUT2;
+    public List<File> SECOND_INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
             doc = "Optional output file to write metrics to. Default is to write to stdout.")
@@ -90,7 +90,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(shortName = "MO", optional = true,
             doc = "Optional output file to write matrix of LOD scores to. This is less informative than the metrics output " +
                     "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity). " +
-                    "It is however sometimes easier to use visually.", mutex = {"INPUT2"})
+                    "It is however sometimes easier to use visually.", mutex = {"SECOND_INPUT"})
     public File MATRIX_OUTPUT = null;
 
     @Argument(shortName = "H", doc = "The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
@@ -149,15 +149,15 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     protected int doWork() {
         // Check inputs
         IOUtil.assertFilesAreReadable(INPUT);
-        IOUtil.assertFilesAreReadable(INPUT2);
+        IOUtil.assertFilesAreReadable(SECOND_INPUT);
 
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
         if (OUTPUT != null) IOUtil.assertFileIsWritable(OUTPUT);
 
-        if (!INPUT2.isEmpty()) {
-            log.info("INPUT2 is not empty. NOT doing cross-check. Will only compare each SAMPLE in INPUT1 against that sample in INPUT2");
+        if (!SECOND_INPUT.isEmpty()) {
+            log.info("SECOND_INPUT is not empty. NOT doing cross-check. Will only compare each SAMPLE in INPUT against that sample in SECOND_INPUT.");
             if (CROSSCHECK_BY != CrosscheckMetric.DataType.SAMPLE) {
-                log.warn("CROSSCHECK_BY is not SAMPLE, This doesn't make sense in non-crosscheck mode. Ignoring.");
+                log.warn("CROSSCHECK_BY is not SAMPLE, This doesn't make sense in non-crosscheck mode. Setting CROSSCHECK_BY to SAMPLE.");
                 CROSSCHECK_BY = CrosscheckMetric.DataType.SAMPLE;
             }
         }
@@ -170,7 +170,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         checker.setAllowDuplicateReads(ALLOW_DUPLICATE_READS);
         checker.setValidationStringency(VALIDATION_STRINGENCY);
 
-        log.info("Fingerprinting INPUT files.");
 
         final List<String> extensions = new ArrayList<>();
 
@@ -181,25 +180,26 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final List<File> unrolledFiles = IOUtil.unrollFiles(INPUT, extensions.toArray(new String[extensions.size()]));
         IOUtil.assertFilesAreReadable(unrolledFiles);
 
-        // unroll and check readable here, as it can be annoying to fingerprint INPUT files and only then desciver a problem
-        // in a file in INPUT2
-        final List<File> unrolledFiles2 = IOUtil.unrollFiles(INPUT2, extensions.toArray(new String[extensions.size()]));
+        // unroll and check readable here, as it can be annoying to fingerprint INPUT files and only then discover a problem
+        // in a file in SECOND_INPUT
+        final List<File> unrolledFiles2 = IOUtil.unrollFiles(SECOND_INPUT, extensions.toArray(new String[extensions.size()]));
         IOUtil.assertFilesAreReadable(unrolledFiles2);
 
+        log.info("Fingerprinting INPUT files.");
         final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
 
         final List<CrosscheckMetric> metrics = new ArrayList<>();
         final int numUnexpected;
 
-        if (INPUT2.isEmpty()) {
+        if (SECOND_INPUT.isEmpty()) {
             log.info("Cross-checking all " + CROSSCHECK_BY + " against each other");
             numUnexpected = crossCheckGrouped(fpMap, metrics, getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
         } else {
-            log.info("Fingerprinting INPUT2 files.");
+            log.info("Fingerprinting SECOND_INPUT files.");
 
             final Map<FingerprintIdDetails, Fingerprint> fpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
-            log.info("Checking each sample in INPUT with the same sample in INPUT2.");
-            numUnexpected = checkFingerprintsbySample(fpMap, fpMap2, metrics);
+            log.info("Checking each sample in INPUT with the same sample in SECOND_INPUT.");
+            numUnexpected = checkFingerprintsBySample(fpMap, fpMap2, metrics);
         }
 
         final MetricsFile<CrosscheckMetric, ?> metricsFile = getMetricsFile();
@@ -371,7 +371,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
      * Method that checks each sample from fingerprints1 against that sample from fingerprints2 and reports a LOD score for the two groups
      * coming from the same individual.
      */
-    private int checkFingerprintsbySample(final Map<FingerprintIdDetails, Fingerprint> fingerprints1, final Map<FingerprintIdDetails, Fingerprint> fingerprints2,
+    private int checkFingerprintsBySample(final Map<FingerprintIdDetails, Fingerprint> fingerprints1, final Map<FingerprintIdDetails, Fingerprint> fingerprints2,
                                           final List<CrosscheckMetric> metrics) {
         int unexpectedResults = 0;
 
@@ -449,7 +449,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     }
 
     private FingerprintResult getMatchResults(final boolean expectedToMatch, final MatchResults results) {
-
         if (expectedToMatch) {
             if (results.getLOD() < LOD_THRESHOLD) {
                 return FingerprintResult.UNEXPECTED_MISMATCH;

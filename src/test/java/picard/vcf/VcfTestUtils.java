@@ -1,11 +1,13 @@
 package picard.vcf;
 
+import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import org.testng.Assert;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,10 +47,14 @@ public class VcfTestUtils {
      * @return File a vcf file (index file is created in same path).
      */
     public static File createTemporaryIndexedVcfFromInput(final File vcfFile, final String tempFilePrefix) throws IOException {
-        final File output = File.createTempFile(tempFilePrefix, ".vcf");
-        output.deleteOnExit();
-        final File indexFile = new File(output.getAbsolutePath() + ".idx");
-        indexFile.deleteOnExit();
+        final String extension;
+
+        if (vcfFile.getAbsolutePath().endsWith(".vcf") ) extension = ".vcf";
+        else if (vcfFile.getAbsolutePath().endsWith(".vcf.gz") ) extension = ".vcf.gz";
+        else throw new IllegalArgumentException("couldn't find a .vcf or .vcf.gz ending for input file " + vcfFile.getAbsolutePath());
+
+        File output = createTemporaryIndexedVcfFile(tempFilePrefix, extension);
+
         final VCFFileReader in = new VCFFileReader(vcfFile, false);
         final VCFHeader header = in.getFileHeader();
 
@@ -63,5 +69,33 @@ public class VcfTestUtils {
         out.close();
         in.close();
         return output;
+    }
+
+    public static void assertEquals(final VariantContext actual, final VariantContext expected) {
+
+        if (expected == null) {
+            Assert.assertNull(actual);
+            return;
+        }
+
+        Assert.assertNotNull(actual, "null status");
+        Assert.assertEquals(actual.getContig(), expected.getContig(), "Different contigs: ");
+        Assert.assertEquals(actual.getStart(), expected.getStart(), "Different starts: ");
+        Assert.assertEquals(actual.getEnd(), expected.getEnd(), "Different ends: ");
+
+        Assert.assertTrue(actual.hasSameAllelesAs(expected), "Alleles differ between " + actual + " and " + expected + ": ");
+        assertEquals(actual.getGenotypes(), expected.getGenotypes());
+    }
+
+    public static void assertEquals(final GenotypesContext actual, final GenotypesContext expected) {
+        if (expected == null) {
+            Assert.assertNull(actual);
+            return;
+        }
+        Assert.assertEquals(actual.getSampleNamesOrderedByName(), expected.getSampleNamesOrderedByName(), "Sample names differ");
+
+        for (final String name : expected.getSampleNamesOrderedByName()) {
+            Assert.assertEquals(actual.get(name).getAlleles(), expected.get(name).getAlleles(), "Alleles differ for sample " + name);
+        }
     }
 }

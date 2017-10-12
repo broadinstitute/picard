@@ -3,7 +3,7 @@ package picard.fingerprint;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
-import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.util.TabbedTextFileWithHeaderParser;
@@ -43,6 +43,7 @@ public class CrosscheckFingerprintsTest {
     private static File  NA12891_1_vcf;
     private static File  NA12891_2_vcf;
     private static File  NA12892_1_vcf;
+    private static File  NA12891_swapped_nonref_g_vcf;
     private static File  NA12892_2_vcf;
     private static File  NA12891_named_NA12892_vcf;
     private static File  NA12891_g_vcf;
@@ -54,7 +55,7 @@ public class CrosscheckFingerprintsTest {
 
     private static final Map<CrosscheckMetric.DataType, List<String>> lookupMap = new HashMap<>(4);
     
-    @BeforeSuite
+    @BeforeClass
     public void setup() throws IOException {
         NA12891_r1 = SamTestUtils.createIndexedBam(NA12891_r1_sam, NA12891_r1_sam);
         NA12891_r2 = SamTestUtils.createIndexedBam(NA12891_r2_sam, NA12891_r2_sam);
@@ -86,6 +87,8 @@ public class CrosscheckFingerprintsTest {
         NA12892_1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12892.vcf"), "fingerprint");
         NA12892_2_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12892.fp.vcf"), "fingerprint");
         NA12891_g_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891.g.vcf"), "fingerprint");
+        NA12891_swapped_nonref_g_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891.with_swapped_NON_REF.g.vcf"), "fingerprint");
+
         NA12892_g_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12892.g.vcf"), "fingerprint");
         NA12892_and_NA123891_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891andNA12892.vcf"), "fingerprint");
         NA12892_and_NA123891_part1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DIR, "NA12891andNA12892_part1.vcf"), "fingerprint");
@@ -316,6 +319,9 @@ public class CrosscheckFingerprintsTest {
         tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12891_named_NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 1, 2, false});
         tests.add(new Object[]{Arrays.asList(NA12891_r1, NA12892_r1), Arrays.asList(NA12891_r1, NA12891_named_NA12892_r1), 1, 2, false});
 
+        // Swapped Non-ref gvcf
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf, NA12892_1_vcf), Arrays.asList(NA12891_swapped_nonref_g_vcf, NA12892_g_vcf), 1, 2, false});
+
         return tests.iterator();
     }
 
@@ -324,12 +330,9 @@ public class CrosscheckFingerprintsTest {
         File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
         metrics.deleteOnExit();
 
-        File matrix = File.createTempFile("Fingerprinting", "test.matrix");
-        matrix.deleteOnExit();
-
         final List<String> args = new ArrayList<>();
         files1.forEach(f->args.add("INPUT="+f.getAbsolutePath()));
-        files2.forEach(f->args.add("INPUT2="+f.getAbsolutePath()));
+        files2.forEach(f->args.add("SECOND_INPUT="+f.getAbsolutePath()));
 
                 args.add("OUTPUT=" + metrics.getAbsolutePath());
                 args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);

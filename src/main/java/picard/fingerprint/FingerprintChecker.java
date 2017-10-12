@@ -141,16 +141,12 @@ public class FingerprintChecker {
      * @return a Map of Sample name to Fingerprint
      */
     public Map<String, Fingerprint> loadFingerprints(final File fingerprintFile, final String specificSample) {
-        final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
-
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
                 VCFFileReader.getSequenceDictionary(fingerprintFile));
 
         if (isQueryable(fingerprintFile)) {
-            reader.close();
             return loadFingerprintsFromIndexedVcf(fingerprintFile, specificSample);
         } else {
-            reader.close();
             log.warn("Couldn't find index for file " + fingerprintFile + " going to read through it all.");
             return loadFingerprintsFromNonIndexedVcf(fingerprintFile, specificSample);
         }
@@ -827,10 +823,10 @@ public class FingerprintChecker {
         return calculateMatchResults(observedFp, expectedFp, 0, 0);
     }
 
-    static boolean isQueryable(final File vcf){
-        final VCFFileReader reader = new VCFFileReader(vcf, false);
+    static boolean isQueryable(final File vcf) {
+        if (!vcf.isFile()) return false;
 
-        try {
+        try(final VCFFileReader reader = new VCFFileReader(vcf, false)){
             reader.query(reader.getFileHeader().getSequenceDictionary().getSequence(0).getSequenceName(),1,1);
         } catch (final TribbleException e) {
             return false;

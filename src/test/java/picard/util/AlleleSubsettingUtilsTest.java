@@ -4,11 +4,9 @@ import htsjdk.variant.variantcontext.*;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.vcf.VcfTestUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static picard.util.AlleleSubsettingUtils.NON_REF_ALLELE;
 
@@ -17,6 +15,13 @@ public class AlleleSubsettingUtilsTest {
     private static final Allele Aref = Allele.create("A", true);
     private static final Allele C = Allele.create("C");
     private static final Allele G = Allele.create("G");
+
+    final List<Allele> AA = Arrays.asList(Aref, Aref);
+    final List<Allele> AC = Arrays.asList(Aref, C);
+    final List<Allele> CC = Arrays.asList(C, C);
+    final List<Allele> AG = Arrays.asList(Aref, G);
+    final List<Allele> GG = Arrays.asList(G, G);
+    final List<Allele> ACG = Arrays.asList(Aref, C, G);
 
     @Test(dataProvider = "updatePLsAndADData")
     public void testUpdatePLsAndADData(final VariantContext originalVC,
@@ -47,12 +52,6 @@ public class AlleleSubsettingUtilsTest {
     public Object[][] makeUpdatePLsAndADData() {
         List<Object[]> tests = new ArrayList<>();
 
-        final List<Allele> AA = Arrays.asList(Aref, Aref);
-        final List<Allele> AC = Arrays.asList(Aref, C);
-        final List<Allele> CC = Arrays.asList(C, C);
-        final List<Allele> AG = Arrays.asList(Aref, G);
-        final List<Allele> GG = Arrays.asList(G, G);
-        final List<Allele> ACG = Arrays.asList(Aref, C, G);
 
         int i = 0;
         final VariantContext vcBase = new VariantContextBuilder("test", "20", 10, 10, AC).make();
@@ -127,16 +126,37 @@ public class AlleleSubsettingUtilsTest {
         return tests.toArray(new Object[][]{});
     }
 
-    @DataProvider
-    public Object[][] getAllelesWithScores() {
-        return new Object[][]{
-                {1, Arrays.asList(Aref, C, G), new double[]{0, 5, 2}, Arrays.asList(Aref, C)}, //first is best
-                {1, Arrays.asList(Aref, C, G), new double[]{0, 2, 5}, Arrays.asList(Aref, G)}, //second is best
-                {1, Arrays.asList(Aref, C, G), new double[]{0, 1, 1}, Arrays.asList(Aref, C)}, //tie chooses first
-                {1, Arrays.asList(Aref, C, G), new double[]{5, 1, 1}, Arrays.asList(Aref, C)}, //ref score is ignored chooses first
-                {2, Arrays.asList(Aref, C, NON_REF_ALLELE, G), new double[]{0, 5, 0, 2}, Arrays.asList(Aref, C, NON_REF_ALLELE, G)}, //keep NON_REF in order
-                {1, Arrays.asList(Aref, C, NON_REF_ALLELE, G), new double[]{0, 5, 0, 2}, Arrays.asList(Aref, C, NON_REF_ALLELE)}, //keep NON_REF in order when trimming
-                {1, Arrays.asList(Aref, C, NON_REF_ALLELE, G), new double[]{0, 5, 0, 2}, Arrays.asList(Aref, C, NON_REF_ALLELE)}, //keep NON_REF in order when trimming
-        };
+    @DataProvider(name="swapAlleleData")
+    Iterator<Object[]> swapAlleleData(){
+        List<Object[]> tests = new ArrayList<>();
+
+        final VariantContext vcBase = new VariantContextBuilder("test", "20", 10, 10, AC).make();
+        final Genotype base = new GenotypeBuilder("NA12878").DP(10).GQ(100).make();
+
+        tests.add(new Object[]{vcBase, C, G, new VariantContextBuilder(vcBase).alleles(AG).make(), true});
+        tests.add(new Object[]{new VariantContextBuilder(vcBase).genotypes(new GenotypeBuilder(base).alleles(AC).make()).make(), C, G,
+                new VariantContextBuilder(vcBase).alleles(AG).genotypes(new GenotypeBuilder(base).alleles(AG).make()).make(), true});
+        tests.add(new Object[]{new VariantContextBuilder(vcBase).genotypes(new GenotypeBuilder(base).alleles(AA).make()).make(), C, G,
+                new VariantContextBuilder(vcBase).alleles(AG).genotypes(new GenotypeBuilder(base).alleles(AA).make()).make(), true});
+        tests.add(new Object[]{new VariantContextBuilder(vcBase).genotypes(new GenotypeBuilder(base).alleles(CC).make()).make(), C, G,
+                new VariantContextBuilder(vcBase).alleles(AG).genotypes(new GenotypeBuilder(base).alleles(GG).make()).make(), true});
+
+        tests.add(new Object[]{vcBase, NON_REF_ALLELE, G, null, false});
+
+
+        return tests.iterator();
+    }
+
+    @Test(dataProvider = "swapAlleleData")
+    void testSwapAlleles(final VariantContext ctx, final Allele oldAllele, final Allele newAllele, final VariantContext result, final boolean shouldSucceed){
+        try {
+            final VariantContext newVc = AlleleSubsettingUtils.swapAlleles(ctx, oldAllele, newAllele);
+            VcfTestUtils.assertEquals(newVc, result);
+        } catch (Exception e){
+            if (shouldSucceed){
+                throw e;
+            } else return;
+        }
+
     }
 }
