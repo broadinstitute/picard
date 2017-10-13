@@ -95,7 +95,7 @@ public class FilterApplyingVariantIterator implements CloseableIterator<VariantC
         }
 
         // If all genotypes are filtered apply a site level filter
-        if (gtFilterStrings.keySet().containsAll(variantSamples)) {
+        if (!variantSamples.isEmpty() && gtFilterStrings.keySet().containsAll(variantSamples)) {
             filterStrings.add(ALL_GTS_FILTERED);
         }
 
