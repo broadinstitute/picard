@@ -29,6 +29,7 @@ import htsjdk.samtools.util.ListMap;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.vcf.VcfTestUtils;
@@ -43,11 +44,23 @@ import java.util.TreeSet;
  * Tests for VCF filtration
  */
 public class TestFilterVcf {
-    private final File INPUT = new File("testdata/picard/vcf/filter/testFiltering.vcf");
-    private final File BAD_INPUT = new File("testdata/picard/vcf/filter/testFilteringNoSeqDictionary.vcf");
+    private final File TEST_DATA_DIR=new File("testdata/picard/vcf/filter/");
+    private final File INPUT = new File(TEST_DATA_DIR,"testFiltering.vcf");
+    private final File BAD_INPUT = new File(TEST_DATA_DIR, "testFilteringNoSeqDictionary.vcf");
+    private final File SITES_ONLY_INPUT = new File(TEST_DATA_DIR, "testFilteringSitesOnly.vcf");
+
+
+    @DataProvider(name="goodInputVcfs")
+    public Object[][] goodInputVcfs(){
+        return new Object[][]{
+                {INPUT},
+                {SITES_ONLY_INPUT}
+        };
+    }
+
 
     /* write content of javascript in the returned file */
-    private File quickJavascriptFilter(String content) throws Exception {
+    private File quickJavascriptFilter(final String content) throws Exception {
         final File out = File.createTempFile("jsfilter", ".js");
         out.deleteOnExit();
         try (final PrintWriter pw = new PrintWriter(out)) {
@@ -56,11 +69,11 @@ public class TestFilterVcf {
         return out;
     }
 
-    @Test
-    public void testJavaScript() throws Exception {
+    @Test(dataProvider = "goodInputVcfs")
+    public void testJavaScript(final File input) throws Exception {
         final File out = VcfTestUtils.createTemporaryIndexedVcfFile("filterVcfTestJS.", ".vcf");
         final FilterVcf filterer = new FilterVcf();
-        filterer.INPUT = INPUT;
+        filterer.INPUT = input;
         filterer.OUTPUT = out;
         filterer.JAVASCRIPT_FILE = quickJavascriptFilter("variant.getStart()%5 != 0");
 
@@ -85,15 +98,15 @@ public class TestFilterVcf {
      * Returns a sorted copy of the supplied set, for safer comparison.
      */
     <T extends Comparable> SortedSet<T> sorted(Set<T> in) {
-        return new TreeSet<T>(in);
+        return new TreeSet<>(in);
     }
 
     /**
      * Tests that all records get PASS set as their filter when extreme values are used for filtering.
      */
-    @Test
-    public void testNoFiltering() throws Exception {
-        final File out = testFiltering(INPUT, ".vcf.gz", 0, 0, 0, Double.MAX_VALUE);
+    @Test(dataProvider = "goodInputVcfs")
+    public void testNoFiltering(final File input) throws Exception {
+        final File out = testFiltering(input, ".vcf.gz", 0, 0, 0, Double.MAX_VALUE);
         final VCFFileReader in = new VCFFileReader(out, false);
         for (final VariantContext ctx : in) {
             if (!ctx.filtersWereApplied() || ctx.isFiltered()) {
@@ -163,10 +176,10 @@ public class TestFilterVcf {
     /**
      * Tests that genotypes with DP < 18 are marked as failed, but not >= 18.
      */
-    @Test
-    public void testFsFiltering() throws Exception {
+    @Test(dataProvider = "goodInputVcfs")
+    public void testFsFiltering(final File input) throws Exception {
         final Set<String> fails = CollectionUtil.makeSet("rs13303033", "rs28548431", "rs2799066");
-        final File out = testFiltering(INPUT, ".vcf.gz", 0, 0, 0, 5.0d);
+        final File out = testFiltering(input, ".vcf.gz", 0, 0, 0, 5.0d);
         final ListMap<String, String> filters = slurpFilters(out);
         Assert.assertEquals(sorted(filters.keySet()), sorted(fails), "Failed sites did not match expected set of failed sites.");
     }
@@ -226,7 +239,7 @@ public class TestFilterVcf {
      * Consumes a VCF and returns a ListMap where each they keys are the IDs of filtered out sites and the values are the set of filters.
      */
     private ListMap<String, String> slurpFilters(final File vcf) {
-        final ListMap<String, String> map = new ListMap<String, String>();
+        final ListMap<String, String> map = new ListMap<>();
         final VCFFileReader in = new VCFFileReader(vcf, false);
         for (final VariantContext ctx : in) {
             if (ctx.isNotFiltered()) continue;
