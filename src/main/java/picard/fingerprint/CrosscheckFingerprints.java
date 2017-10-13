@@ -344,8 +344,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         for (int i = 0; i < fingerprintIdDetails.size(); i++) {
             final FingerprintIdDetails lhsRg = fingerprintIdDetails.get(i);
-            matrixKeys.add(by.apply(lhsRg));
-
+            if (MATRIX_OUTPUT !=null) {
+                matrixKeys.add(by.apply(lhsRg));
+            }
             for (int j = i; j < fingerprintIdDetails.size(); j++) {
                 final FingerprintIdDetails rhsRg = fingerprintIdDetails.get(j);
                 final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsRg.sample.equals(rhsRg.sample);
@@ -354,7 +355,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
                 final FingerprintResult result = getMatchResults(expectedToMatch, results);
 
-                if (!OUTPUT_ERRORS_ONLY || !result.isExpected()) {
+                if (!OUTPUT_ERRORS_ONLY || result == FingerprintResult.INCONCLUSIVE || !result.isExpected()) {
                     metrics.add(getMatchDetails(result, results, lhsRg, rhsRg, type));
                 }
                 if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) unexpectedResults++;

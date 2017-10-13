@@ -18,10 +18,13 @@ import java.util.stream.Stream;
  */
 
 public final class AlleleSubsettingUtils {
-    private AlleleSubsettingUtils() {
-    }  // prevent instantiation
 
-    @Deprecated // use {@link Allele.NON_REF} (once released and htsjdk is properly reved in picard)
+    /**
+     * This constant holds the definition of the symbolic non-reference allele
+     * @deprecated from inception, as one should use a version of this from htsjdk.
+     * Will be deleted when htsjdk includes a replacement and that version is in picard.
+     */
+    @Deprecated
     public static final Allele NON_REF_ALLELE = Allele.create("<NON_REF>");
 
     /**
