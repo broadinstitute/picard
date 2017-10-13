@@ -19,23 +19,28 @@
         ["supplementary alignment", 0x800]];
     function explainFlags() {
         var flagValue = parseInt(document.getElementById('tb').value); //returns 0 or NaN if can't parse
-        var summary = "";
+        var summary  = ""; 
+        var badFlags = ""; // Stores the flags that don't make sense with unpaired reads
+        var asterix  = ""; // indicator for the user which flags are invalid with unpaired reads
         var pairedRead = lstFlags[0][1] & flagValue;
         for(var i = 0; i < lstFlags.length; i++) {
             var checkbox = document.getElementById('cb' + i)
             if(lstFlags[i][1] & flagValue) {
-                if (!pairedRead && i < 8){
-                    summary = " &nbsp; &nbsp; <b>Invalid flag: read not paired</b><br>";
+                if (!pairedRead && (lstFlags[i][1] & 235)) {
+                    badFlags += " " + lstFlags[i][1];
+                    asterix = "<b>*</b>";
                 } else {
-                    summary  += " &nbsp; &nbsp; " + lstFlags[i][0] + "<br>";
+                    asterix = "";
                 }
+                summary  += " &nbsp; &nbsp; " + lstFlags[i][0] + asterix + "<br>";
                 checkbox.checked = true;
             } else {
                 checkbox.checked = false;
             }
         }
-        document.getElementById('summary').innerHTML = summary;
-    }
+        if (badFlags != ""){
+            summary += "<br> &nbsp; &nbsp; <b>*Warning:</b> Flag(s)" + badFlags + " cannot be set when read is not paired";
+        }
     function checkboxClicked() {
         //compute the new flag value
         var newFlagValue = 0;
