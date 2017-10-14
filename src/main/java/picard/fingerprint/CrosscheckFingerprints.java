@@ -185,7 +185,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final List<File> unrolledFiles2 = IOUtil.unrollFiles(SECOND_INPUT, extensions.toArray(new String[extensions.size()]));
         IOUtil.assertFilesAreReadable(unrolledFiles2);
 
-        log.info("Fingerprinting INPUT files.");
+        log.info("Fingerprinting " + unrolledFiles.size() + " INPUT files.");
         final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
 
         final List<CrosscheckMetric> metrics = new ArrayList<>();
@@ -195,7 +195,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             log.info("Cross-checking all " + CROSSCHECK_BY + " against each other");
             numUnexpected = crossCheckGrouped(fpMap, metrics, getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
         } else {
-            log.info("Fingerprinting SECOND_INPUT files.");
+            log.info("Fingerprinting " + unrolledFiles2.size() + " SECOND_INPUT files.");
 
             final Map<FingerprintIdDetails, Fingerprint> fpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
             log.info("Checking each sample in INPUT with the same sample in SECOND_INPUT.");
