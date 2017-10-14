@@ -41,6 +41,8 @@
         if (badFlags != ""){
             summary += "<br> &nbsp; &nbsp; <b>*Warning:</b> Flag(s)" + badFlags + " cannot be set when read is not paired";
         }
+        document.getElementById('summary').innerHTML = summary;
+    }
     function checkboxClicked() {
         //compute the new flag value
         var newFlagValue = 0;
