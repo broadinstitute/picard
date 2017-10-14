@@ -264,7 +264,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 groupByTemp = details -> details.sample + "::" + details.library;
                 break;
             case FILE:
-                groupByTemp = details -> details.file;
+                groupByTemp = details -> details.file + "::" + details.sample;
                 break;
             case SAMPLE:
                 groupByTemp = details -> details.sample;
