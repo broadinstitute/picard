@@ -29,6 +29,7 @@ import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -339,8 +340,17 @@ public class CrosscheckFingerprints extends CommandLineProgram {
      */
     private int crossCheckFingerprints(final Map<FingerprintIdDetails, Fingerprint> fingerprints, final CrosscheckMetric.DataType type, final List<CrosscheckMetric> metrics, Function<FingerprintIdDetails, String> by) {
         int unexpectedResults = 0;
+        long checksMade = 0;
+
+        // TODO: create a general-use logger in htsjdk (not one that is tied to Chrom/Pos) and use that
+        // TODO: to record progress
+
+        final int logEvery = 100_000;
 
         final List<FingerprintIdDetails> fingerprintIdDetails = new ArrayList<>(fingerprints.keySet());
+
+        // use 1L to promote size() to a long and avoid possible overflow
+        final long totalChecks = fingerprintIdDetails.size() * (fingerprintIdDetails.size() + 1L) / 2;
 
         for (int i = 0; i < fingerprintIdDetails.size(); i++) {
             final FingerprintIdDetails lhsRg = fingerprintIdDetails.get(i);
@@ -352,7 +362,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsRg.sample.equals(rhsRg.sample);
 
                 final MatchResults results = FingerprintChecker.calculateMatchResults(fingerprints.get(lhsRg), fingerprints.get(rhsRg), GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE);
-
                 final FingerprintResult result = getMatchResults(expectedToMatch, results);
 
                 if (!OUTPUT_ERRORS_ONLY || result == FingerprintResult.INCONCLUSIVE || !result.isExpected()) {
@@ -362,6 +371,10 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 if (crosscheckMatrix != null) {
                     crosscheckMatrix[i][j] = results.getLOD();
                     crosscheckMatrix[j][i] = results.getLOD();
+                }
+
+                if (++checksMade % logEvery == 0) {
+                    log.info("Compared " + checksMade + " of " + totalChecks);
                 }
             }
         }
