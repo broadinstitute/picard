@@ -20,18 +20,18 @@
     function explainFlags() {
         var flagValue = parseInt(document.getElementById('tb').value); //returns 0 or NaN if can't parse
         var summary  = ""; 
-        var badFlags = []; // Stores the flags that don't make sense with unpaired reads
-        var asterix  = ""; // indicator for the user which flags are invalid with unpaired reads
+        var badFlags = [];   // Stores the flags that don't make sense with unpaired reads
+        var hexString  = ""; // indicator for the user which flags are invalid with unpaired reads
         var pairedRead = lstFlags[0][1] & flagValue;
         for(var i = 0; i < lstFlags.length; i++) {
             var checkbox = document.getElementById('cb' + i)
             if(lstFlags[i][1] & flagValue) {
-                asterix = " (0x" + lstFlags[i][1].toString(16) + ")";
+                hexString = " (0x" + lstFlags[i][1].toString(16) + ")";
                 if (!pairedRead && (lstFlags[i][1] & 235)) {
                     badFlags.push(" 0x" + lstFlags[i][1].toString(16));
-                    asterix += "<b>*</b>";
+                    hexString += "<b>*</b>";
                 }
-                summary  += " &nbsp; &nbsp; " + lstFlags[i][0] + asterix + "<br>";
+                summary  += " &nbsp; &nbsp; " + lstFlags[i][0] + hexString + "<br>";
                 checkbox.checked = true;
             } else {
                 checkbox.checked = false;
