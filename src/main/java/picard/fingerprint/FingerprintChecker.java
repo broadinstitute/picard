@@ -34,17 +34,14 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeLikelihoods;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCF3Codec;
 import htsjdk.variant.vcf.VCFFileReader;
 import picard.PicardException;
 import picard.util.AlleleSubsettingUtils;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 import static htsjdk.samtools.SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES;
 
