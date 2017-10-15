@@ -20,17 +20,16 @@
     function explainFlags() {
         var flagValue = parseInt(document.getElementById('tb').value); //returns 0 or NaN if can't parse
         var summary  = ""; 
-        var badFlags = ""; // Stores the flags that don't make sense with unpaired reads
+        var badFlags = []; // Stores the flags that don't make sense with unpaired reads
         var asterix  = ""; // indicator for the user which flags are invalid with unpaired reads
         var pairedRead = lstFlags[0][1] & flagValue;
         for(var i = 0; i < lstFlags.length; i++) {
             var checkbox = document.getElementById('cb' + i)
             if(lstFlags[i][1] & flagValue) {
+                asterix = " (0x" + lstFlags[i][1].toString(16) + ")";
                 if (!pairedRead && (lstFlags[i][1] & 235)) {
-                    badFlags += " " + lstFlags[i][1];
-                    asterix = "<b>*</b>";
-                } else {
-                    asterix = "";
+                    badFlags.push(" 0x" + lstFlags[i][1].toString(16));
+                    asterix += "<b>*</b>";
                 }
                 summary  += " &nbsp; &nbsp; " + lstFlags[i][0] + asterix + "<br>";
                 checkbox.checked = true;
@@ -38,7 +37,12 @@
                 checkbox.checked = false;
             }
         }
-        if (badFlags != ""){
+        if (badFlags.length > 0){
+            if (badFlags.length == 2){
+                badFlags = badFlags.join(" and ");
+            } else {
+                badFlags[badFlags.length - 1] = " and" + badFlags[badFlags.length - 1];
+            }
             summary += "<br> &nbsp; &nbsp; <b>*Warning:</b> Flag(s)" + badFlags + " cannot be set when read is not paired";
         }
         document.getElementById('summary').innerHTML = summary;
