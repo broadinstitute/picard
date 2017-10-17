@@ -37,7 +37,7 @@ public class TestDataProviders {
     }
 
     @DataProvider(name = "DataprovidersThatDontTestThemselves")
-    public Iterator<Object[]> testAllDataProvidersdata() throws Exception {
+    public Iterator<Object[]> testAllDataProvidersData() throws Exception {
         return TestNGUtil.getDataProviders("picard");
     }
 
@@ -52,8 +52,8 @@ public class TestDataProviders {
 
         Object instance = clazz.newInstance();
 
-        Set<Method> methodSet = Sets.newHashSet();
-        methodSet.addAll(Arrays.asList(clazz.getDeclaredMethods()));
+        Set<Method> methodSet = new HashSet<>();
+        methodSet.addAll(Arrays.asList(clazz.getInMethods()));
         methodSet.addAll(Arrays.asList(clazz.getMethods()));
 
         // Some tests assume that the @BeforeSuite methods will be called before the @DataProviders
