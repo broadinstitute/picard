@@ -65,9 +65,9 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
             "<p>This tool is NOT intended to be used on data without UMIs; for marking duplicates in non-UMI data, see MarkDuplicates or " +
             "MarkDuplicatesWithMateCigar. Mixed data (where some reads have UMIs and others do not) is not supported.</p>" +
             "" +
-            "Note also that this tool will not work with alignments that have large gaps or deletions, such as those from RNA-seq data.  " +
+            "<p>Note also that this tool will not work with alignments that have large gaps or deletions, such as those from RNA-seq data.  " +
             "This is due to the need to buffer small genomic windows to ensure integrity of the duplicate marking, while large skips " +
-            "(ex. skipping introns) in the alignment records would force making that window very large, thus exhausting memory. <br />" +
+            "(ex. skipping introns) in the alignment records would force making that window very large, thus exhausting memory. </p>" +
             "" +
             "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
             "<h4>Usage example:</h4>" +
@@ -76,7 +76,7 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
             "java -jar picard.jar UmiAwareMarkDuplicatesWithMateCigar \\<br />" +
             "      I=input.bam \\<br />" +
             "      O=umi_aware_mark_dups_w_mate_cig.bam \\<br />" +
-            "      M=umi_aware_mark_dups_w_mate_cig_duplicate_metrics.txt" +
+            "      M=umi_aware_mark_dups_w_mate_cig_duplicate_metrics.txt \\<br />" +
             "      UMI_METRICS=umi_aware_mark_dups_w_mate_cig_umi_metrics.txt" +
             "</pre>" +
             "<hr />";
