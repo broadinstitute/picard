@@ -79,9 +79,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             doc = "One or more input files (or lists of files) to compare fingerprints for. If this option is given " +
                     "the program compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID." +
                     " In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY."+
-                    " When operating in this mode, each sample in " +
-                    "INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the program will proceed to check the matching samples, but report " +
-                    "the missing samples and return a non-zero error-code." )
+                    " When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. " +
+                    "If this is violated, the program will proceed to check the matching samples, but report the missing samples" +
+                    " and return a non-zero error-code." )
     public List<File> SECOND_INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
