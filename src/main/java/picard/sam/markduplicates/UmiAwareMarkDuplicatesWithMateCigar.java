@@ -63,7 +63,23 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
             "argument MAX_EDIT_DISTANCE_TO_JOIN, which sets the edit distance between UMIs that will be considered to be part of the same " +
             "original molecule. This logic allows for sequencing errors in UMIs.</p>" +
             "<p>This tool is NOT intended to be used on data without UMIs; for marking duplicates in non-UMI data, see MarkDuplicates or " +
-            "MarkDuplicatesWithMateCigar. Mixed data (where some reads have UMIs and others do not) is not supported.</p>";
+            "MarkDuplicatesWithMateCigar. Mixed data (where some reads have UMIs and others do not) is not supported.</p>" +
+            "" +
+            "Note also that this tool will not work with alignments that have large gaps or deletions, such as those from RNA-seq data.  " +
+            "This is due to the need to buffer small genomic windows to ensure integrity of the duplicate marking, while large skips " +
+            "(ex. skipping introns) in the alignment records would force making that window very large, thus exhausting memory. <br />" +
+            "" +
+            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "" +
+            "java -jar picard.jar UmiAwareMarkDuplicatesWithMateCigar \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=umi_aware_mark_dups_w_mate_cig.bam \\<br />" +
+            "      M=umi_aware_mark_dups_w_mate_cig_duplicate_metrics.txt" +
+            "      UMI_METRICS=umi_aware_mark_dups_w_mate_cig_umi_metrics.txt" +
+            "</pre>" +
+            "<hr />";
 
     @Argument(shortName = "MAX_EDIT_DISTANCE_TO_JOIN", doc = "Largest edit distance that UMIs must have in order to be considered as coming from distinct source molecules.", optional = true)
     public int MAX_EDIT_DISTANCE_TO_JOIN = 1;
