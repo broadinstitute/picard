@@ -400,7 +400,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             if (this.REMOVE_SEQUENCING_DUPLICATES && isOpticalDuplicate) {
                 continue;
             }
-            if (PROGRAM_RECORD_ID != null && ADD_PG_TAG_TO_READS) {
+            if (PROGRAM_RECORD_ID != null && pgTagArgumentCollection.ADD_PG_TAG_TO_READS) {
                 rec.setAttribute(SAMTag.PG.name(), chainedPgIds.get(rec.getStringAttribute(SAMTag.PG.name())));
             }
             out.addAlignment(rec);
