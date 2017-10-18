@@ -98,14 +98,14 @@ public class TestNGUtil {
     /** A Method that returns all the Methods that are annotated with @DataProvider
      * in a given package. Should be moved to htsjdk and used from there
      *
-     * @param pakkage the package under hwich to look for classes and methods
+     * @param packageName the package under which to look for classes and methods
      * @return an iterator to collection of Object[]'s consisting of {Method method, Class clazz} pair.
      * where method has the @DataProviderAnnotation and is a member of clazz.
      */
-    public static Iterator<Object[]> getDataProviders(final String pakkage) {
+    public static Iterator<Object[]> getDataProviders(final String packageName) {
         List<Object[]> data = new ArrayList<>();
         final ClassFinder classFinder = new ClassFinder();
-        classFinder.find(pakkage, Object.class);
+        classFinder.find(packageName, Object.class);
 
         for (final Class<?> testClass : classFinder.getClasses()) {
             if (Modifier.isAbstract(testClass.getModifiers()) || Modifier.isInterface(testClass.getModifiers()))

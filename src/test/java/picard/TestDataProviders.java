@@ -41,7 +41,7 @@ public class TestDataProviders {
         return TestNGUtil.getDataProviders("picard");
     }
 
-    // runs all the @DataProviders it gets from DataprovidersThatDontTestThemselves.
+    // runs all the @DataProviders it gets from DataProvidersThatDontTestThemselves.
     // runs the BeforeSuite and BeforeClass methods of the same class before it runs the provider itself.
 
     // @NoInjection annotations required according to this test:
@@ -53,26 +53,21 @@ public class TestDataProviders {
         Object instance = clazz.newInstance();
 
         Set<Method> methodSet = new HashSet<>();
-        methodSet.addAll(Arrays.asList(clazz.getInMethods()));
+        methodSet.addAll(Arrays.asList(clazz.getDeclaredMethods()));
         methodSet.addAll(Arrays.asList(clazz.getMethods()));
 
         // Some tests assume that the @BeforeSuite methods will be called before the @DataProviders
-        for (final Method otherMethod : methodSet) {
-            if (otherMethod.isAnnotationPresent(BeforeSuite.class)) {
-                try {
-                    otherMethod.setAccessible(true);
-                    otherMethod.invoke(instance);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new IllegalStateException(String.format("@BeforeClass threw an exception (%s::%s). Dependent tests will be skipped. Please fix.", clazz.getName(), method.getName()), e);
-                }
-            }
+        // However, it might be problematic to invoke @BeforeSuite twice, thus if a class has @BeforeSuite
+        // method, we will skip testing for that @DataProvider.
+        if (methodSet.stream().anyMatch(m->m.isAnnotationPresent(BeforeSuite.class))) return;
 
+        for (final Method otherMethod : methodSet) {
             if (otherMethod.isAnnotationPresent(BeforeClass.class)) {
                 try {
                     otherMethod.setAccessible(true);
                     otherMethod.invoke(instance);
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new IllegalStateException(String.format("@BeforeSuite threw an exception (%s::%s). Dependent tests will be skipped. Please fix.", clazz.getName(), method.getName()), e);
+                    throw new IllegalStateException(String.format("@BeforeClass threw an exception (%s::%s). Dependent tests will be skipped. Please fix.", clazz.getName(), method.getName()), e);
                 }
             }
         }
