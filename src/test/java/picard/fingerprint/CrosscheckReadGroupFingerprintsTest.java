@@ -272,7 +272,8 @@ public class CrosscheckReadGroupFingerprintsTest {
                 {"CROSSCHECK_BY=" + CrosscheckMetric.DataType.LIBRARY},
                 {"CROSSCHECK_BY=" + CrosscheckMetric.DataType.SAMPLE},
                 {"CROSSCHECK_BY=" + CrosscheckMetric.DataType.FILE},
-                {"MATRIX_OUTPUT=matrix.file"}
+                {"MATRIX_OUTPUT=matrix.file"},
+                {"SECOND_INPUT="+"/dev/stdin"}
         };
     }
 

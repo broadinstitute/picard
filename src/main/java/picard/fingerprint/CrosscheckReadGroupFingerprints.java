@@ -79,7 +79,7 @@ public class CrosscheckReadGroupFingerprints extends CrosscheckFingerprints {
                     "Use CrosscheckFingerprints if you would like to do that.");
         }
 
-        if (SECOND_INPUT != null) {
+        if (!SECOND_INPUT.isEmpty()) {
             errors.add("When calling CrosscheckReadGroupFingerprints, please refrain from supplying a SECOND_INPUT argument.\n" +
                     "(Found value " + SECOND_INPUT + "\n" +
                     "Use CrosscheckFingerprints if you would like to do that.");
