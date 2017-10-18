@@ -42,8 +42,8 @@ public class CrosscheckMetric extends MetricBase {
         UNEXPECTED_MISMATCH(false, false),
         INCONCLUSIVE(null, null);
 
-        final private Boolean isExpected;
-        final private Boolean isMatch;
+        private final Boolean isExpected;
+        private final Boolean isMatch;
 
         FingerprintResult(Boolean isExpected, Boolean isMatch) {
             this.isExpected = isExpected;

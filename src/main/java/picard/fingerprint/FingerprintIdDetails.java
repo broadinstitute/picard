@@ -45,8 +45,7 @@ public class FingerprintIdDetails {
 
     static final String multipleValuesString = "<MULTIPLE_VALUES>";
 
-    public FingerprintIdDetails() {
-    }
+    public FingerprintIdDetails() {}
 
     // If platformUnit is not populated, or "improperly" formatted (or missing), then fields will be initialized as
     // flowcellBarcode="?", lane=-1, molecularBarcode="?"
@@ -94,12 +93,12 @@ public class FingerprintIdDetails {
 
     public FingerprintIdDetails merge(final FingerprintIdDetails other) {
 
-        platformUnit = equalValueOrElse(platformUnit, other.platformUnit, multipleValuesString);
-        runBarcode = equalValueOrElse(runBarcode, other.runBarcode, multipleValuesString);
-        runLane = equalValueOrElse(runLane, other.runLane, Integer.MIN_VALUE);
-        library = equalValueOrElse(library, other.library, multipleValuesString);
-        file = equalValueOrElse(file, other.file, multipleValuesString);
-        sample = equalValueOrElse(sample, other.sample, multipleValuesString);
+        platformUnit     = equalValueOrElse(platformUnit,     other.platformUnit,     multipleValuesString);
+        runBarcode       = equalValueOrElse(runBarcode,       other.runBarcode,       multipleValuesString);
+        runLane          = equalValueOrElse(runLane,          other.runLane,          Integer.MIN_VALUE);
+        library          = equalValueOrElse(library,          other.library,          multipleValuesString);
+        file             = equalValueOrElse(file,             other.file,             multipleValuesString);
+        sample           = equalValueOrElse(sample,           other.sample,           multipleValuesString);
         molecularBarcode = equalValueOrElse(molecularBarcode, other.molecularBarcode, multipleValuesString);
 
         return this;
