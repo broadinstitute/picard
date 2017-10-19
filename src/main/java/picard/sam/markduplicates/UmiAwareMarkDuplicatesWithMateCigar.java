@@ -62,6 +62,10 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
             "they must also have sufficiently similar UMIs. In this context, 'sufficiently similar' is parameterized by the command line " +
             "argument MAX_EDIT_DISTANCE_TO_JOIN, which sets the edit distance between UMIs that will be considered to be part of the same " +
             "original molecule. This logic allows for sequencing errors in UMIs.</p>" +
+            "<p> If UMIs contain dashes, the dashes will be ignored. If UMIs contain Ns, these UMIs will not contribute to UMI metrics " +
+            "associated with each record. If the MAX_EDIT_DISTANCE_TO_JOIN allows, UMIs with Ns will be included in the duplicate set and" +
+            "the UMI metrics associated with each duplicate set. Ns are counted as an edit distance from other bases {ATCG}, but are not" +
+            "considered different from each other.</p>" +
             "<p>This tool is NOT intended to be used on data without UMIs; for marking duplicates in non-UMI data, see MarkDuplicates or " +
             "MarkDuplicatesWithMateCigar. Mixed data (where some reads have UMIs and others do not) is not supported.</p>" +
             "" +
