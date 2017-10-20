@@ -3,15 +3,11 @@ package picard;
 import org.testng.Assert;
 import org.testng.annotations.*;
 import org.testng.annotations.Test;
-import org.testng.collections.Sets;
-import picard.cmdline.ClassFinder;
 import picard.util.TestNGUtil;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
