@@ -32,8 +32,8 @@ public class TestDataProviders {
         Assert.assertTrue(data.hasNext(), "Found no data from testAllDataProvidersdata. Something is wrong.");
 
         Assert.assertEquals( StreamSupport.stream(Spliterators.spliteratorUnknownSize(data, 0), false)
-                        .filter(c -> ((Method) c[0]).getName().equals("testAllDataProvidersdata")).count(), 1,
-                "getDataProviders didn't find testAllDataProvidersdata, which is in this class. Something is wrong.");
+                        .filter(c -> ((Method) c[0]).getName().equals("testAllDataProvidersData")).count(), 1,
+                "getDataProviders didn't find testAllDataProvidersData, which is in this class. Something is wrong.");
     }
 
     @DataProvider(name = "DataprovidersThatDontTestThemselves")
