@@ -3,6 +3,7 @@ package picard.analysis.artifacts;
 import htsjdk.samtools.util.SequenceUtil;
 
 import java.util.Arrays;
+import java.util.function.Supplier;
 
 /**
  * Enum representation of a transition from one base to any other.
@@ -25,8 +26,30 @@ public enum Transition {
         this.call = call;
     }
 
+    /**
+     * Gets a the enum representing the transition from a 'reference" got a 'call' base.
+     *
+     * <p>For example, a transtion from 'A' to 'T' would return {@link #AtoT}.
+     *
+     * @param ref reference base.
+     * @param call call base.
+     *
+     * @return enum representation for the transition-
+     */
     public static Transition transitionOf(final char ref, final char call) {
-        return transitionIndexMap[baseIndexMap[ref]][baseIndexMap[call]];
+        return transitionIndexMap[baseIndexOf(ref, () -> "ref")][baseIndexOf(call, () -> "call")];
+    }
+
+    private static int baseIndexOf(final char base, final Supplier<String> paramName) {
+        try {
+            final int index = baseIndexMap[base];
+            if (index == -1) {
+                throw new IllegalArgumentException("invalid '" + paramName.get() + "' base: " + base);
+            }
+            return index;
+        } catch (IndexOutOfBoundsException e) {
+            throw new IllegalArgumentException("invalid '" + paramName.get() + "' base: " + base);
+        }
     }
 
     /**
@@ -41,8 +64,10 @@ public enum Transition {
         return transitionOf((char) SequenceUtil.complement((byte) this.ref), (char) SequenceUtil.complement((byte) this.call));
     }
 
+    /** Gets the reference for the transition. */
     public char ref() { return this.ref; }
 
+    /** Gets the call for the transition. */
     public char call() { return this.call; }
 
     @Override
