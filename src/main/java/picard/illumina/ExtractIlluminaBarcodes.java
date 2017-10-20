@@ -91,6 +91,16 @@ import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
 )
 @DocumentedFeature
 public class ExtractIlluminaBarcodes extends CommandLineProgram {
+
+    /** Column header for the first barcode sequence (preferred). */
+    public static final String BARCODE_SEQUENCE_COLUMN = "barcode_sequence";
+    /** Column header for the first barcode sequence. */
+    public static final String BARCODE_SEQUENCE_1_COLUMN = "barcode_sequence_1";
+    /** Column header for the barcode name. */
+    public static final String BARCODE_NAME_COLUMN = "barcode_name";
+    /** Column header for the library name. */
+    public static final String LIBRARY_NAME_COLUMN = "library_name";
+
     static final String USAGE_SUMMARY = "Tool determines the barcode for each read in an Illumina lane.  ";
     static final String USAGE_DETAILS = "<p>This tool determines the numbers of reads containing barcode-matching sequences and provides " +
             "statistics on the quality of these barcode matches.</p> " +
@@ -100,8 +110,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             "sample (B) and not molecular barcodes (M).</p>" +
             "" +
             "<p>Barcodes can be provided in the form of a list (BARCODE_FILE) or a string representing the barcode (BARCODE).  " +
-            "The BARCODE_FILE contains multiple fields including 'barcode_sequence_1', 'barcode_sequence_2' (optional), " +
-            "'barcode_name', and 'library_name'.  In contrast, the BARCODE argument is used for runs with reads containing a single " +
+            "The BARCODE_FILE contains multiple fields including '" + BARCODE_SEQUENCE_COLUMN + "' (or '"+ BARCODE_SEQUENCE_1_COLUMN + "'), " +
+            "'barcode_sequence_2' (optional), '" + BARCODE_NAME_COLUMN + "', and '" + LIBRARY_NAME_COLUMN + "'. " +
+            "In contrast, the BARCODE argument is used for runs with reads containing a single " +
             "barcode (nonmultiplexed) and can be added directly as a string of text e.g. BARCODE=CAATAGCG.</p>" +
             "" +
             "<p>Data is output per lane/tile within the BaseCalls directory with the file name format of 's_{lane}_{tile}_barcode.txt'.  " +
@@ -155,8 +166,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     public List<String> BARCODE = new ArrayList<>();
 
     @Argument(doc = "Tab-delimited file of barcode sequences, barcode name and, optionally, library name.  " +
-            "Barcodes must be unique and all the same length.  Column headers must be 'barcode_sequence_1', " +
-            "'barcode_sequence_2' (optional), 'barcode_name', and 'library_name'.", mutex = {"BARCODE"})
+            "Barcodes must be unique and all the same length.  Column headers must be '" + BARCODE_SEQUENCE_COLUMN + "' (or '"+ BARCODE_SEQUENCE_1_COLUMN + "'), " +
+            "'barcode_sequence_2' (optional), '" + BARCODE_NAME_COLUMN + "', and '" + LIBRARY_NAME_COLUMN + "'." , mutex = {"BARCODE"})
     public File BARCODE_FILE;
 
     @Argument(doc = "Per-barcode and per-lane metrics written to this file.", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME)
@@ -475,11 +486,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     public static void main(final String[] argv) {
         new ExtractIlluminaBarcodes().instanceMainWithExit(argv);
     }
-
-    private static final String BARCODE_SEQUENCE_COLUMN = "barcode_sequence";
-    private static final String BARCODE_SEQUENCE_1_COLUMN = "barcode_sequence_1";
-    private static final String BARCODE_NAME_COLUMN = "barcode_name";
-    private static final String LIBRARY_NAME_COLUMN = "library_name";
 
     private void parseBarcodeFile(final ArrayList<String> messages) {
         final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE);
