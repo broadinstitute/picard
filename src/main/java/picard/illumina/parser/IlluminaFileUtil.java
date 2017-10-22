@@ -265,6 +265,11 @@ public class IlluminaFileUtil {
         final File laneDir = new File(basecallDir, IlluminaFileUtil.longLaneStr(lane));
         final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
 
+        // Either the lane or the cycle directory do not exist!
+        if (cycleDirs == null) {
+            return false;
+        }
+
         //CBCLs
         final List<File> cbcls = new ArrayList<>();
         Arrays.asList(cycleDirs)
