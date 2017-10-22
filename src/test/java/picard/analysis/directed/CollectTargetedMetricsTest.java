@@ -18,6 +18,7 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
 import picard.util.TestNGUtil;
+import picard.vcf.VcfTestUtils;
 
 import java.io.File;
 import java.io.FileReader;
@@ -25,25 +26,24 @@ import java.io.IOException;
 import java.util.Random;
 
 public class CollectTargetedMetricsTest extends CommandLineProgramTest {
-    private final static File TEST_DIR = new File("testdata/picard/sam/CollectGcBiasMetrics/");
 
-    private final File dict = new File("testdata/picard/quality/chrM.reference.dict");
+    private final String TEST_DATA_DIR = "testdata/picard/quality/";
+    private final File dict = new File(TEST_DATA_DIR+"chrM.reference.dict");
     private File tempSamFile;
-    private File tempSamFileIndex;
     private File outfile;
     private File perTargetOutfile;
-    private final static int LENGTH = 99;
+    private static final int LENGTH = 99;
 
-    final String referenceFile = "testdata/picard/quality/chrM.reference.fasta";
-    final String emptyIntervals = "testdata/picard/quality/chrM.empty.interval_list";
-    final String singleIntervals = "testdata/picard/quality/chrM.single.interval_list";
+    final String referenceFile = TEST_DATA_DIR + "chrM.reference.fasta";
+    final String emptyIntervals = TEST_DATA_DIR + "chrM.empty.interval_list";
+    final String singleIntervals = TEST_DATA_DIR + "chrM.single.interval_list";
 
 
-    private final static String sample = "TestSample1";
-    private final static String readGroupId = "TestReadGroup1";
-    private final static String platform = "ILLUMINA";
-    private final static String library = "TestLibrary1";
-    private final static int numReads = 40000;
+    private static final String sample = "TestSample1";
+    private static final String readGroupId = "TestReadGroup1";
+    private static final String platform = "ILLUMINA";
+    private static final String library = "TestLibrary1";
+    private static final int numReads = 40000;
 
     @Override
     public String getCommandLineProgramName() {
@@ -56,12 +56,9 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         final String readName = "TESTBARCODE";
 
         //Create Sam Files
-        tempSamFile = File.createTempFile("CollectTargetedMetrics", ".bam", TEST_DIR);
-        tempSamFileIndex = new File(tempSamFile.toString().replaceAll("\\.bam$",".bai"));
-        final File tempSamFileUnsorted = File.createTempFile("CollectTargetedMetrics", ".bam", TEST_DIR);
-        tempSamFileUnsorted.deleteOnExit();
-        tempSamFile.deleteOnExit();
-        tempSamFileIndex.deleteOnExit();
+        tempSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectTargetedMetrics", ".bam");
+        final File tempSamFileUnsorted = VcfTestUtils.createTemporaryIndexedFile("CollectTargetedMetrics", ".bam");
+
         final SAMFileHeader header = new SAMFileHeader();
 
         //Check that dictionary file is readable and then set header dictionary
@@ -160,10 +157,9 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         }
     }
 
-
     @Test()
     public void testRawBqDistributionWithSoftClips() throws IOException {
-        final String input="testdata/picard/quality/chrMReadsWithClips.sam";
+        final String input = TEST_DATA_DIR + "chrMReadsWithClips.sam";
 
         final File outFile = File.createTempFile("test", ".TargetedMetrics_Coverage");
         outFile.deleteOnExit();

@@ -253,6 +253,11 @@ public class IntervalListTools extends CommandLineProgram {
             IntervalList act(final List<IntervalList> list, final List<IntervalList> __) {
                 return IntervalList.concatenate(list);
             }
+
+            @Override
+            public boolean takesSecondInput() {
+                return false;
+            }
         },
         UNION("Like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all INPUTS, " +
                 "with overlapping and abutting intervals merged into one.") {
@@ -260,17 +265,32 @@ public class IntervalListTools extends CommandLineProgram {
             IntervalList act(final List<IntervalList> list, final List<IntervalList> __) {
                 return IntervalList.union(list);
             }
+
+            @Override
+            public boolean takesSecondInput() {
+                return false;
+            }
         },
         INTERSECT("The sorted and merged set of all loci that are contained in all of the INPUTs.") {
-            @Override
-            IntervalList act(final List<IntervalList> list, final List<IntervalList> __) {
+            @Override IntervalList act(final List<IntervalList> list, final List<IntervalList> __) {
                 return IntervalList.intersection(list);
+            }
+
+            @Override
+            public boolean takesSecondInput() {
+                return false;
             }
         },
         SUBTRACT("Subtracts the intervals in SECOND_INPUT from those in INPUT. The resulting loci are those in INPUT that are not in SECOND_INPUT.") {
             @Override
             IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
                 return IntervalList.subtract(list1, list2);
+
+            }
+
+            @Override
+            public boolean takesSecondInput() {
+                return true;
             }
         },
         SYMDIFF("Results in loci that are in INPUT or SECOND_INPUT but are not in both.") {
@@ -278,12 +298,22 @@ public class IntervalListTools extends CommandLineProgram {
             IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
                 return IntervalList.difference(list1, list2);
             }
+
+            @Override
+            public boolean takesSecondInput() {
+                return true;
+            }
         },
         OVERLAPS("Outputs the entire intervals from INPUT that have bases which overlap any interval from SECOND_INPUT. " +
                 "Note that this is different than INTERSECT in that each original interval is either emitted in its entirety, or not at all.") {
             @Override
             IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
                 return IntervalList.overlaps(list1, list2);
+            }
+
+            @Override
+            public boolean takesSecondInput() {
+                return true;
             }
         };
 
@@ -299,6 +329,8 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         abstract IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2);
+
+        public abstract boolean takesSecondInput();
     }
 
     @Override
@@ -431,11 +463,11 @@ public class IntervalListTools extends CommandLineProgram {
         if (BREAK_BANDS_AT_MULTIPLES_OF < 0) {
             errorMsgs.add("BREAK_BANDS_AT_MULTIPLES_OF must be greater than or equal to 0.");
         }
-
-        if (CollectionUtil.makeSet(Action.CONCAT, Action.UNION, Action.INTERSECT).contains(ACTION)
-                && SECOND_INPUT != null && !SECOND_INPUT.isEmpty()) {
-            errorMsgs.add(String.format("SECOND_LIST must be null when ACTION is %s, found %s. " +
-                            "Please put all the inputs in INPUT for this ACTION.", ACTION.name(), SECOND_INPUT));
+        if (SECOND_INPUT.isEmpty() && ACTION.takesSecondInput()) {
+            errorMsgs.add("SECOND_INPUT was not provided but action " + ACTION + " requires a second input.");
+        }
+        if (!SECOND_INPUT.isEmpty() && !ACTION.takesSecondInput()) {
+            errorMsgs.add("SECOND_INPUT was provided but action " + ACTION + " doesn't take a second input.");
         }
 
         return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
@@ -463,7 +495,6 @@ public class IntervalListTools extends CommandLineProgram {
     public static File getScatteredFileName(final File scatterDirectory, final long scatterTotal, final String formattedIndex) {
         return new File(scatterDirectory.getAbsolutePath() + "/temp_" + formattedIndex + "_of_" +
                 scatterTotal + "/scattered" + IntervalList.INTERVAL_LIST_FILE_EXTENSION);
-
     }
 
     private static File createDirectoryAndGetScatterFile(final File outputDirectory, final long scatterCount, final String formattedIndex) {
@@ -503,7 +534,7 @@ public class IntervalListTools extends CommandLineProgram {
             applicableExtensions = extensions;
         }
 
-        abstract protected IntervalList getIntervalListInternal(final File file, final boolean includeFiltered);
+        protected abstract IntervalList getIntervalListInternal(final File file, final boolean includeFiltered);
 
         static IntervalListInputType forFile(final File intervalListExtractable) {
             for (final IntervalListInputType intervalListInputType : IntervalListInputType.values()) {
@@ -516,7 +547,7 @@ public class IntervalListTools extends CommandLineProgram {
             throw new SAMException("Cannot figure out type of file " + intervalListExtractable.getAbsolutePath() + " from extension. Current implementation understands the following types: " + Arrays.toString(IntervalListInputType.values()));
         }
 
-        static public IntervalList getIntervalList(final  File file, final boolean includeFiltered){
+        public static IntervalList getIntervalList(final  File file, final boolean includeFiltered){
             return forFile(file).getIntervalListInternal(file, includeFiltered);
         }
 

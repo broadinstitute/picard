@@ -33,7 +33,6 @@ import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import picard.util.FileChannelJDKBugWorkAround;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -222,8 +221,6 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
     @Override
     public void doTileProcessing() {
         try {
-            // TODO: Eliminate this when switch to JDK 7
-            FileChannelJDKBugWorkAround.doBugWorkAround();
 
             // Generate the list of tiles that will be processed
             final List<Tile> tiles = new ArrayList<>();

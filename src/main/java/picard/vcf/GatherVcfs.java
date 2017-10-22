@@ -41,11 +41,11 @@ import java.util.TreeSet;
 @DocumentedFeature
 public class GatherVcfs extends CommandLineProgram {
 
-    @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,  doc="Input VCF file(s).")
-	public List<File> INPUT;
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF file(s).")
+    public List<File> INPUT;
 
-    @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output VCF file.")
-	public File OUTPUT;
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF file.")
+    public File OUTPUT;
 
     private static final Log log = Log.getInstance(GatherVcfs.class);
 
@@ -61,32 +61,38 @@ public class GatherVcfs extends CommandLineProgram {
     protected int doWork() {
         log.info("Checking inputs.");
         INPUT = IOUtil.unrollFiles(INPUT, IOUtil.VCF_EXTENSIONS);
-        for (final File f: INPUT) IOUtil.assertFileIsReadable(f);
+        for (final File f : INPUT) IOUtil.assertFileIsReadable(f);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-		final SAMSequenceDictionary sequenceDictionary = VCFFileReader.getSequenceDictionary(INPUT.get(0));
+        final SAMSequenceDictionary sequenceDictionary = VCFFileReader.getSequenceDictionary(INPUT.get(0));
 
         if (CREATE_INDEX && sequenceDictionary == null) {
             throw new PicardException("In order to index the resulting VCF input VCFs must contain ##contig lines.");
         }
 
         log.info("Checking file headers and first records to ensure compatibility.");
-        assertSameSamplesAndValidOrdering(INPUT);
-
-        if (areAllBlockCompressed(INPUT) && areAllBlockCompressed(CollectionUtil.makeList(OUTPUT))) {
-            log.info("Gathering by copying gzip blocks. Will not be able to validate position non-overlap of files.");
-            if (CREATE_INDEX) log.warn("Index creation not currently supported when gathering block compressed VCFs.");
-            gatherWithBlockCopying(INPUT, OUTPUT);
-        }
-        else {
-            log.info("Gathering by conventional means.");
-            gatherConventionally(sequenceDictionary, CREATE_INDEX, INPUT, OUTPUT);
+        try {
+            assertSameSamplesAndValidOrdering(INPUT);
+            if (areAllBlockCompressed(INPUT) && areAllBlockCompressed(CollectionUtil.makeList(OUTPUT))) {
+                log.info("Gathering by copying gzip blocks. Will not be able to validate position non-overlap of files.");
+                if (CREATE_INDEX)
+                    log.warn("Index creation not currently supported when gathering block compressed VCFs.");
+                gatherWithBlockCopying(INPUT, OUTPUT);
+            } else {
+                log.info("Gathering by conventional means.");
+                gatherConventionally(sequenceDictionary, CREATE_INDEX, INPUT, OUTPUT);
+            }
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            return 1;
         }
 
         return 0;
     }
 
-    /** Checks (via filename checking) that all files appear to be block compressed files. */
+    /**
+     * Checks (via filename checking) that all files appear to be block compressed files.
+     */
     private boolean areAllBlockCompressed(final List<File> input) {
         for (final File f : input) {
             if (VCFFileReader.isBCF(f) || !AbstractFeatureReader.hasBlockCompressedExtension(f)) return false;
@@ -95,7 +101,9 @@ public class GatherVcfs extends CommandLineProgram {
         return true;
     }
 
-    /** Validates that all headers contain the same set of genotyped samples and that files are in order by position of first record. */
+    /**
+     * Validates that all headers contain the same set of genotyped samples and that files are in order by position of first record.
+     */
     private static void assertSameSamplesAndValidOrdering(final List<File> inputFiles) {
         final VCFHeader header = new VCFFileReader(inputFiles.get(0), false).getFileHeader();
         final SAMSequenceDictionary dict = header.getSequenceDictionary();
@@ -129,20 +137,22 @@ public class GatherVcfs extends CommandLineProgram {
                 }
 
                 lastContext = currentContext;
-                lastFile    = f;
+                lastFile = f;
             }
 
             CloserUtil.close(in);
         }
     }
 
-    /** Code for gathering multiple VCFs that works regardless of input format and output format, but can be slow. */
+    /**
+     * Code for gathering multiple VCFs that works regardless of input format and output format, but can be slow.
+     */
     private static void gatherConventionally(final SAMSequenceDictionary sequenceDictionary,
-                                      final boolean createIndex,
-                                      final List<File> inputFiles,
-                                      final File outputFile) {
+                                             final boolean createIndex,
+                                             final List<File> inputFiles,
+                                             final File outputFile) {
         final EnumSet<Options> options = EnumSet.copyOf(VariantContextWriterBuilder.DEFAULT_OPTIONS);
-        if (createIndex){
+        if (createIndex) {
             options.add(Options.INDEX_ON_THE_FLY);
         } else {
             options.remove(Options.INDEX_ON_THE_FLY);
@@ -174,8 +184,8 @@ public class GatherVcfs extends CommandLineProgram {
             if (lastContext != null && variantIterator.hasNext()) {
                 final VariantContext vc = variantIterator.peek();
                 if (comparator.compare(vc, lastContext) <= 0) {
-                    throw new IllegalStateException("First variant in file " + f.getAbsolutePath() + " is at " + vc.getSource() +
-                            " but last variant in earlier file " + lastFile.getAbsolutePath() + " is at " + lastContext.getSource());
+                    throw new IllegalArgumentException("First variant in file " + f.getAbsolutePath() + " is at " + vc.getContig() + ":" + vc.getStart() +
+                            " but last variant in earlier file " + lastFile.getAbsolutePath() + " is at " + lastContext.getContig() + ":" + lastContext.getStart());
                 }
             }
 
@@ -211,7 +221,8 @@ public class GatherVcfs extends CommandLineProgram {
 
                 // a) It's good to check that the end of the file is valid and b) we need to know if there's a terminator block and not copy it
                 final BlockCompressedInputStream.FileTermination term = BlockCompressedInputStream.checkTermination(f);
-                if (term == BlockCompressedInputStream.FileTermination.DEFECTIVE) throw new PicardException(f.getAbsolutePath() + " does not have a valid GZIP block at the end of the file.");
+                if (term == BlockCompressedInputStream.FileTermination.DEFECTIVE)
+                    throw new PicardException(f.getAbsolutePath() + " does not have a valid GZIP block at the end of the file.");
 
                 if (!isFirstFile) {
                     final BlockCompressedInputStream blockIn = new BlockCompressedInputStream(in, false);
@@ -223,11 +234,12 @@ public class GatherVcfs extends CommandLineProgram {
                         final int blockLength = blockIn.available();
                         final byte[] blockContents = new byte[blockLength];
                         final int read = blockIn.read(blockContents);
-                        if (blockLength == 0 || read != blockLength) throw new IllegalStateException("Could not read available bytes from BlockCompressedInputStream.");
+                        if (blockLength == 0 || read != blockLength)
+                            throw new IllegalStateException("Could not read available bytes from BlockCompressedInputStream.");
 
                         // Scan forward within the block to see if we can find the end of the header within this block
                         int firstNonHeaderByteIndex = -1;
-                        for (int i=0; i<read; ++i) {
+                        for (int i = 0; i < read; ++i) {
                             final byte b = blockContents[i];
                             final boolean thisByteNewline = (b == '\n' || b == '\r');
 
@@ -254,8 +266,8 @@ public class GatherVcfs extends CommandLineProgram {
 
                 // Copy remainder of input stream into output stream
                 final long currentPos = in.getChannel().position();
-                final long length     = f.length();
-                final long skipLast   = (term == BlockCompressedInputStream.FileTermination.HAS_TERMINATOR_BLOCK) ?
+                final long length = f.length();
+                final long skipLast = (term == BlockCompressedInputStream.FileTermination.HAS_TERMINATOR_BLOCK) ?
                         BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length : 0;
                 final long bytesToWrite = length - skipLast - currentPos;
 
@@ -267,8 +279,7 @@ public class GatherVcfs extends CommandLineProgram {
             // And lastly add the Terminator block and close up
             out.write(BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK);
             out.close();
-        }
-        catch (final IOException ioe) {
+        } catch (final IOException ioe) {
             throw new RuntimeIOException(ioe);
         }
     }

@@ -48,14 +48,14 @@ public class CompareSAMsTest extends CommandLineProgramTest {
         // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
         CompareSAMs compareSAMs = new CompareSAMs();
         compareSAMs.instanceMain(samFiles);
-        Assert.assertEquals(areEqual, compareSAMs.areEqual());
-        Assert.assertEquals(expectedMatch, compareSAMs.getMappingsMatch());
-        Assert.assertEquals(expectedDiffer, compareSAMs.getMappingsDiffer());
-        Assert.assertEquals(expectedUnmappedBoth, compareSAMs.getUnmappedBoth());
-        Assert.assertEquals(expectedUnmappedLeft, compareSAMs.getUnmappedLeft());
-        Assert.assertEquals(expectedUnmappedRight, compareSAMs.getUnmappedRight());
-        Assert.assertEquals(expectedMissingLeft, compareSAMs.getMissingLeft());
-        Assert.assertEquals(expectedMissingRight, compareSAMs.getMissingRight());
+        Assert.assertEquals(compareSAMs.areEqual(), areEqual);
+        Assert.assertEquals(compareSAMs.getMappingsMatch(), expectedMatch);
+        Assert.assertEquals(compareSAMs.getMappingsDiffer(), expectedDiffer);
+        Assert.assertEquals(compareSAMs.getUnmappedBoth(), expectedUnmappedBoth);
+        Assert.assertEquals(compareSAMs.getUnmappedLeft(), expectedUnmappedLeft);
+        Assert.assertEquals(compareSAMs.getUnmappedRight(), expectedUnmappedRight);
+        Assert.assertEquals(compareSAMs.getMissingLeft(), expectedMissingLeft);
+        Assert.assertEquals(compareSAMs.getMissingRight(), expectedMissingRight);
 
         final String[] samFilesReversed = {
                 new File(TEST_FILES_DIR, f2).getAbsolutePath(),
@@ -63,14 +63,14 @@ public class CompareSAMsTest extends CommandLineProgramTest {
         };
         compareSAMs = new CompareSAMs();
         compareSAMs.instanceMain(samFilesReversed);
-        Assert.assertEquals(areEqual, compareSAMs.areEqual());
-        Assert.assertEquals(expectedMatch, compareSAMs.getMappingsMatch());
-        Assert.assertEquals(expectedDiffer, compareSAMs.getMappingsDiffer());
-        Assert.assertEquals(expectedUnmappedBoth, compareSAMs.getUnmappedBoth());
-        Assert.assertEquals(expectedUnmappedRight, compareSAMs.getUnmappedLeft());
-        Assert.assertEquals(expectedUnmappedLeft, compareSAMs.getUnmappedRight());
-        Assert.assertEquals(expectedMissingRight, compareSAMs.getMissingLeft());
-        Assert.assertEquals(expectedMissingLeft, compareSAMs.getMissingRight());
+        Assert.assertEquals(compareSAMs.areEqual(), areEqual);
+        Assert.assertEquals(compareSAMs.getMappingsMatch(), expectedMatch);
+        Assert.assertEquals(compareSAMs.getMappingsDiffer(), expectedDiffer);
+        Assert.assertEquals(compareSAMs.getUnmappedBoth(), expectedUnmappedBoth);
+        Assert.assertEquals(compareSAMs.getUnmappedLeft(), expectedUnmappedRight);
+        Assert.assertEquals(compareSAMs.getUnmappedRight(), expectedUnmappedLeft);
+        Assert.assertEquals(compareSAMs.getMissingLeft(), expectedMissingRight);
+        Assert.assertEquals(compareSAMs.getMissingRight(), expectedMissingLeft);
     }
 
     @Test
@@ -140,6 +140,16 @@ public class CompareSAMsTest extends CommandLineProgramTest {
     @Test
     public void testUnmapped4() {
         testHelper("unmapped_first.sam", "unmapped_first.sam", 1, 0, 1, 0, 0, 0, 0, true);
+    }
+
+    @Test
+    public void testUnsorted1() {
+        testHelper("unsorted.sam", "unsorted.sam", 2, 0, 0, 0, 0, 0, 0, true);
+    }
+
+    @Test
+    public void testUnsorted2() {
+        testHelper("unsorted.sam", "unsorted2.sam", 0, 1, 0, 0, 0, 0, 1, false);
     }
 
 }
