@@ -178,8 +178,7 @@ public class LiftoverUtils {
             for (final Allele allele : genotype.getAlleles()) {
                 if (allele.isSymbolic() || allele.isNoCall()) {
                     fixedAlleles.add(allele);
-                }
-                else {
+                } else {
                     Allele newAllele = alleleMap.get(allele);
                     if (newAllele == null) {
                         throw new IllegalStateException("Allele not found: " + allele.toString() + ", " + originalAlleles + "/ " + newAlleles);
