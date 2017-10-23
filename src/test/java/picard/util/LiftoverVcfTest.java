@@ -386,7 +386,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         final VariantContext flipped = LiftoverUtils.liftVariant(source, target, reference, false);
 
-        assertVcAreEqual(flipped, result);
+        VcfTestUtils.assertEquals(flipped, result);
     }
 
     @DataProvider(name = "leftAlignAllelesData")
@@ -616,7 +616,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         LiftoverUtils.leftAlignVariant(vcb, source.getStart(), source.getEnd(), source.getAlleles(), reference);
         vcb.genotypes(LiftoverUtils.fixGenotypes(source.getGenotypes(), source.getAlleles(), vcb.getAlleles()));
 
-        assertVcAreEqual(vcb.make(), result);
+        VcfTestUtils,assertVcAreEqual(vcb.make(), result);
     }
 
     @DataProvider(name = "indelNoFlipData")
@@ -810,34 +810,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Interval target = liftOver.liftOver(new Interval(source.getContig(), source.getStart(), source.getEnd()), .95);
 
         VariantContextBuilder vcb = LiftoverUtils.liftSimpleVariantContext(source, target);
-        assertVcAreEqual(vcb == null ? null : vcb.make(), result);
+        VcfTestUtils.assertVcAreEqual(vcb == null ? null : vcb.make(), result);
     }
 
-    private void assertVcAreEqual(final VariantContext actual, final VariantContext expected) {
-
-        if (expected == null) {
-            Assert.assertNull(actual);
-            return;
-        }
-
-        Assert.assertNotNull(actual, "null status");
-        Assert.assertEquals(actual.getContig(), expected.getContig(), "Different contigs: ");
-        Assert.assertEquals(actual.getStart(), expected.getStart(), "Different starts: ");
-        Assert.assertEquals(actual.getEnd(), expected.getEnd(), "Different ends: ");
-
-        Assert.assertTrue(actual.hasSameAllelesAs(expected), "Alleles differ between " + actual + " and " + expected + ": ");
-        assertGenotypeContextsAreEquals(actual.getGenotypes(), expected.getGenotypes());
-    }
-
-    private void assertGenotypeContextsAreEquals(final GenotypesContext actual, final GenotypesContext expected) {
-        if (expected == null) {
-            Assert.assertNull(actual);
-            return;
-        }
-        Assert.assertEquals(actual.getSampleNamesOrderedByName(), expected.getSampleNamesOrderedByName(), "Sample names differ");
-
-        for (final String name : expected.getSampleNamesOrderedByName()) {
-            Assert.assertEquals(actual.get(name).getAlleles(), expected.get(name).getAlleles(), "Alleles differ for sample " + name);
-        }
-    }
 }

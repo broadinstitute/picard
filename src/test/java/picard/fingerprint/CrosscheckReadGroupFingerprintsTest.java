@@ -2,9 +2,7 @@ package picard.fingerprint;
 
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 import picard.vcf.SamTestUtils;
 
 import java.io.*;
@@ -42,7 +40,7 @@ public class CrosscheckReadGroupFingerprintsTest {
 
     private final Map<CrosscheckMetric.DataType, List<String>> lookupMap = new HashMap<>(4);
 
-    @BeforeTest
+    @BeforeClass
     public void setup() throws IOException {
         NA12891_r1 = SamTestUtils.createIndexedBam(NA12891_r1_sam, NA12891_r1_sam);
         NA12891_r2 = SamTestUtils.createIndexedBam(NA12891_r2_sam, NA12891_r2_sam);
@@ -274,7 +272,8 @@ public class CrosscheckReadGroupFingerprintsTest {
                 {"CROSSCHECK_BY=" + CrosscheckMetric.DataType.LIBRARY},
                 {"CROSSCHECK_BY=" + CrosscheckMetric.DataType.SAMPLE},
                 {"CROSSCHECK_BY=" + CrosscheckMetric.DataType.FILE},
-                {"MATRIX_OUTPUT=matrix.file"}
+                {"MATRIX_OUTPUT=matrix.file"},
+                {"SECOND_INPUT="+"/dev/stdin"}
         };
     }
 

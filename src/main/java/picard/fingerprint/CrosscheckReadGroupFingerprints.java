@@ -67,15 +67,21 @@ public class CrosscheckReadGroupFingerprints extends CrosscheckFingerprints {
     protected String[] customCommandLineValidation() {
         final List<String> errors = new ArrayList<>();
 
+
         if (CROSSCHECK_BY != CrosscheckMetric.DataType.READGROUP) {
             errors.add("When calling CrosscheckReadGroupFingerprints, please refrain from supplying a CROSSCHECK_BY argument. " +
                             "(Found value " + CROSSCHECK_BY + "\n" +
                     "Use CrosscheckFingerprints if you would like to do that.");
         }
-
         if (MATRIX_OUTPUT != null) {
             errors.add("When calling CrosscheckReadGroupFingerprints, please refrain from supplying a MATRIX_OUTPUT argument.\n" +
                     "(Found value " + MATRIX_OUTPUT + "\n" +
+                    "Use CrosscheckFingerprints if you would like to do that.");
+        }
+
+        if (!SECOND_INPUT.isEmpty()) {
+            errors.add("When calling CrosscheckReadGroupFingerprints, please refrain from supplying a SECOND_INPUT argument.\n" +
+                    "(Found value " + SECOND_INPUT + "\n" +
                     "Use CrosscheckFingerprints if you would like to do that.");
         }
 
