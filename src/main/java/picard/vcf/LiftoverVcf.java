@@ -1,5 +1,29 @@
 package picard.vcf;
 
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2015 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.ValidationStringency;
@@ -7,15 +31,17 @@ import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.*;
-import htsjdk.variant.variantcontext.*;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.*;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.VcfOrBcf;
@@ -24,8 +50,9 @@ import picard.util.LiftoverUtils;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Tool for lifting over a VCF to another genome build and producing a properly header'd,
@@ -248,7 +275,7 @@ public class LiftoverVcf extends CommandLineProgram {
             // if the sizes of target and ctx do not match, it means that the interval grew or shrank during
             // liftover which must be due to straddling multiple intervals in the liftover chain.
             // This would invalidate the indel as it isn't clear what the resulting alleles should be.
-            if (ctx.getReference().length() != target.length()){
+            if (ctx.getReference().length() != target.length()) {
                 rejectVariant(ctx, FILTER_INDEL_STRADDLES_TWO_INTERVALS);
                 continue;
             }
