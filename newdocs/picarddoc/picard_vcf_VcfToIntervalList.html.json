@@ -62,6 +62,21 @@
       "options": []
     },
     {
+      "summary": "Include variants that were filtered in the output interval list.",
+      "name": "--INCLUDE_FILTERED",
+      "synonyms": "-IF",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "The BCF or VCF input file. The file format is determined by file extension.",
       "name": "--INPUT",
       "synonyms": "-I",

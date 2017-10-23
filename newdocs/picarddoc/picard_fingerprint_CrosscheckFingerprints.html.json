@@ -319,6 +319,21 @@
       "options": []
     },
     {
+      "summary": "One or more input files (or lists of files) to compare fingerprints for. If this option is given the program compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the program will proceed to check the matching samples, but report the missing samples and return a non-zero error-code.",
+      "name": "--SECOND_INPUT",
+      "synonyms": "-SI",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "-",
@@ -424,7 +439,7 @@
       ]
     }
   ],
-  "description": "Program to check that all fingerprints within the set of input files appear to come from the same\n individual. Can be used to cross-check readgroups, libraries, samples, or files.\n Operates on bams/sams and vcfs.",
+  "description": "Program to check that all fingerprints within the set of input files appear to come from the same\n individual. Can be used to cross-check readgroups, libraries, samples, or files.\n Operates on bams/sams and vcfs (including gvcfs).",
   "name": "CrosscheckFingerprints",
   "group": "Fingerprinting Tools"
 }

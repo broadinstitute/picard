@@ -17,7 +17,7 @@
       "options": []
     },
     {
-      "summary": "Tab-delimited file of barcode sequences, barcode name and, optionally, library name.  Barcodes must be unique and all the same length.  Column headers must be \u0027barcode_sequence_1\u0027, \u0027barcode_sequence_2\u0027 (optional), \u0027barcode_name\u0027, and \u0027library_name\u0027.",
+      "summary": "Tab-delimited file of barcode sequences, barcode name and, optionally, library name.  Barcodes must be unique and all the same length.  Column headers must be \u0027barcode_sequence\u0027 (or \u0027barcode_sequence_1\u0027), \u0027barcode_sequence_2\u0027 (optional), \u0027barcode_name\u0027, and \u0027library_name\u0027.",
       "name": "--BARCODE_FILE",
       "synonyms": "-",
       "type": "File",

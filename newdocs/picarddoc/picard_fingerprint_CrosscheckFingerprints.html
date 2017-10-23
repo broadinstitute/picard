@@ -373,7 +373,7 @@
 		<h2>Overview</h2>
 		Program to check that all fingerprints within the set of input files appear to come from the same
  individual. Can be used to cross-check readgroups, libraries, samples, or files.
- Operates on bams/sams and vcfs.
+ Operates on bams/sams and vcfs (including gvcfs).
 
 
 				<h3>CrosscheckFingerprints specific arguments</h3>
@@ -498,6 +498,14 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>If true then only groups that do not relate to each other as expected will have their LODs reported.</td>
+				</tr>
+				<tr>
+					<td><a href="#--SECOND_INPUT">--SECOND_INPUT</a><br />
+								&nbsp;<em>-SI</em>
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>One or more input files (or lists of files) to compare fingerprints for. If this option is given the program compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the program will proceed to check the matching samples, but report the missing samples and return a non-zero error-code.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -794,6 +802,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 			<b>Optional output file to write matrix of LOD scores to. This is less informative than the metrics output and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity). It is however sometimes easier to use visually.</b><br />
 			
 		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>SECOND_INPUT</code>.</p>
 		<p>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
@@ -873,6 +882,19 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		<p>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--SECOND_INPUT">--SECOND_INPUT </a>
+			 / <small>-SI</small>
+		</h3>
+		<p class="args">
+			<b>One or more input files (or lists of files) to compare fingerprints for. If this option is given the program compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the program will proceed to check the matching samples, but report the missing samples and return a non-zero error-code.</b><br />
+			
+		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>MATRIX_OUTPUT, MO</code>.</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
@@ -968,7 +990,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.13.2-SNAPSHOT built at 03-30-2017 01:30:41.
+        <p class="version">Picard version 2.14-SNAPSHOT built at 23-36-2017 12:36:33.
         </p>
 
 	</div>
