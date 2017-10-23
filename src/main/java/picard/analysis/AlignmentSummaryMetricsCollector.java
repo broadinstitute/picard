@@ -79,7 +79,9 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
     @Override
     public void acceptRecord(final SAMRecord rec, final ReferenceSequence ref) {
+        if (!rec.getNotPrimaryAlignmentFlag()){
             super.acceptRecord(rec, ref);
+        }
     }
 
     private class GroupAlignmentSummaryMetricsPerUnitMetricCollector implements PerUnitMetricCollector<AlignmentSummaryMetrics, Comparable<?>, SAMRecordAndReference> {
@@ -268,12 +270,13 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                 // NB: for read count metrics, do not include supplementary records, but for base count metrics, do include supplementary records.
 
                 // If the read isn't an aligned PF read then look at the read for no-calls
-                if (!record.getSupplementaryAlignmentFlag() &&
-                        (record.getReadUnmappedFlag() || record.getReadFailsVendorQualityCheckFlag() || !doRefMetrics)) {
-                    final byte[] readBases = record.getReadBases();
-                    for (int i = 0; i < readBases.length; i++) {
-                        if (SequenceUtil.isNoCall(readBases[i])) {
-                            badCycleHistogram.increment(CoordMath.getCycle(record.getReadNegativeStrandFlag(), readBases.length, i));
+                if (record.getReadUnmappedFlag() || record.getReadFailsVendorQualityCheckFlag() || !doRefMetrics) {
+                    if (!record.getSupplementaryAlignmentFlag()) {
+                        final byte[] readBases = record.getReadBases();
+                        for (int i = 0; i < readBases.length; i++) {
+                            if (SequenceUtil.isNoCall(readBases[i])) {
+                                badCycleHistogram.increment(CoordMath.getCycle(record.getReadNegativeStrandFlag(), readBases.length, i));
+                            }
                         }
                     }
                 }
