@@ -3,7 +3,6 @@ package picard.analysis.artifacts;
 import htsjdk.samtools.util.SequenceUtil;
 
 import java.util.Arrays;
-import java.util.function.Supplier;
 
 /**
  * Enum representation of a transition from one base to any other.
@@ -27,28 +26,20 @@ public enum Transition {
     }
 
     /**
-     * Gets a the enum representing the transition from a 'reference" got a 'call' base.
+     * Gets a the enum representing the transition from a 'reference" to a 'call' base.
      *
      * <p>For example, a transtion from 'A' to 'T' would return {@link #AtoT}.
      *
-     * @param ref reference base.
-     * @param call call base.
+     * @param ref reference base (one of of {A, C, T, G}).
+     * @param call call base (one of of {A, C, T, G}).
      *
-     * @return enum representation for the transition-
+     * @return enum representation for the transition.
      */
     public static Transition transitionOf(final char ref, final char call) {
-        return transitionIndexMap[baseIndexOf(ref, () -> "ref")][baseIndexOf(call, () -> "call")];
-    }
-
-    private static int baseIndexOf(final char base, final Supplier<String> paramName) {
         try {
-            final int index = baseIndexMap[base];
-            if (index == -1) {
-                throw new IllegalArgumentException("invalid '" + paramName.get() + "' base: " + base);
-            }
-            return index;
+            return transitionIndexMap[baseIndexMap[ref]][baseIndexMap[call]];
         } catch (IndexOutOfBoundsException e) {
-            throw new IllegalArgumentException("invalid '" + paramName.get() + "' base: " + base);
+            throw new IllegalArgumentException(String.format("Base params should be one of {A, C, T, G} but ref=%s and call=%s", ref, call));
         }
     }
 
