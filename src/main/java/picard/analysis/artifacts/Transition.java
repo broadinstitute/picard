@@ -26,7 +26,7 @@ public enum Transition {
     }
 
     /**
-     * Gets a the enum representing the transition from a 'reference" to a 'call' base.
+     * Gets a the enum representing the transition from a 'reference' to a 'call' base.
      *
      * <p>For example, a transtion from 'A' to 'T' would return {@link #AtoT}.
      *
