@@ -3,7 +3,7 @@ package picard.util;
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -152,8 +152,7 @@ public class LiftoverUtils {
             }
 
             return Allele.create(alleleBuilder.toString(), oldAllele.isReference());
-        }
-        else {
+        } else {
             return Allele.create(SequenceUtil.reverseComplement(oldAllele.getBaseString()), oldAllele.isReference());
         }
     }
