@@ -24,13 +24,12 @@
 
 package picard.fingerprint;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import htsjdk.samtools.*;
 import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.util.*;
-import htsjdk.tribble.TribbleException;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeLikelihoods;
@@ -42,6 +41,7 @@ import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -153,58 +153,18 @@ public class FingerprintChecker {
      *                        of an individual sample to load (and exclude all others).
      * @return a Map of Sample name to Fingerprint
      */
-    public Map<String, Fingerprint> loadFingerprints(final File fingerprintFile, final String specificSample) {
+    public Map<String, Fingerprint> loadFingerprints(final Path fingerprintFile, final String specificSample) {
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
                 VCFFileReader.getSequenceDictionary(fingerprintFile));
 
-        if (isQueryable(fingerprintFile)) {
-            return loadFingerprintsFromIndexedVcf(fingerprintFile, specificSample);
-        } else {
-            log.warn("Couldn't find index for file " + fingerprintFile + " going to read through it all.");
-            return loadFingerprintsFromNonIndexedVcf(fingerprintFile, specificSample);
-        }
-    }
-
-    /**
-     * Loads genotypes from the supplied file into one or more Fingerprint objects and returns them in a
-     * Map of Sample->Fingerprint.
-     *
-     * @param fingerprintFile - VCF file containing genotypes for one or more samples
-     * @param specificSample  - null to load genotypes for all samples contained in the file or the name
-     *                        of an individual sample to load (and exclude all others).
-     * @return a Map of Sample name to Fingerprint
-     */
-    public Map<String, Fingerprint> loadFingerprintsFromNonIndexedVcf(final File fingerprintFile, final String specificSample) {
         final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
 
-        final Map<String, Fingerprint> fingerprints = new HashMap<>();
-        Set<String> samples = null;
-
-        for (final VariantContext ctx : reader) {
-            // Setup the sample names set if needed
-
-            if (samples == null) {
-                if (specificSample != null) {
-                    samples = new HashSet<>();
-                    samples.add(specificSample);
-                } else {
-                    samples = ctx.getSampleNames();
-                    if (samples == null) {
-                        log.warn("No samples found in file " + fingerprintFile + ". Skipping file.");
-                        return Collections.emptyMap();
-                    }
-                }
-
-                samples.forEach(s -> fingerprints.put(s, new Fingerprint(s, fingerprintFile, null)));
-            }
-            try {
-                getFingerprintFromVc(fingerprints, ctx);
-            } catch (final IllegalArgumentException e) {
-                log.warn("There was a genotyping error in File: " + fingerprintFile + "\n" + e.getMessage());
-            }
+        if (reader.isQueryable()) {
+            return loadFingerprintsFromQueriableReader(reader, specificSample, fingerprintFile);
+        } else {
+            log.warn("Couldn't find index for file " + fingerprintFile + " going to read through it all.");
+            return loadFingerprintsFromVariantContexts(reader, specificSample, fingerprintFile);
         }
-
-        return fingerprints;
     }
 
     /**
@@ -215,20 +175,32 @@ public class FingerprintChecker {
      * @param specificSample  - null to load genotypes for all samples contained in the file or the name
      *                        of an individual sample to load (and exclude all others).
      * @return a Map of Sample name to Fingerprint
+     *
      */
-    public Map<String, Fingerprint> loadFingerprintsFromIndexedVcf(final File fingerprintFile, final String specificSample) {
-        final VCFFileReader reader = new VCFFileReader(fingerprintFile, true);
+    public Map<String, Fingerprint> loadFingerprintsFromNonIndexedVcf(final Path fingerprintFile, final String specificSample) {
+        final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
+        SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(), SAMSequenceDictionaryExtractor.extractDictionary(fingerprintFile));
 
-        SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
-                VCFFileReader.getSequenceDictionary(fingerprintFile));
+        return loadFingerprintsFromVariantContexts(reader, specificSample, fingerprintFile);
+    }
 
-        final SortedSet<Snp> snps = new TreeSet<>(haplotypes.getAllSnps());
+    /**
+     * Loads genotypes from the supplied file into one or more Fingerprint objects and returns them in a
+     * Map of Sample->Fingerprint.
+     *
+     * @param iterable       - an iterable over variantContexts containing genotypes for one or more samples
+     * @param specificSample - null to load genotypes for all samples contained in the file or the name
+     *                       of an individual sample to load (and exclude all others).
+     * @param source         The path of the source file used. used to emit errors, and annotate the fingerprints.
+     * @return a Map of Sample name to Fingerprint
+     */
+    public Map<String, Fingerprint> loadFingerprintsFromVariantContexts(final Iterable<VariantContext> iterable, final String specificSample, final Path source) {
 
         final Map<String, Fingerprint> fingerprints = new HashMap<>();
         Set<String> samples = null;
 
-        for (final Snp snp : snps) {
-            final VariantContext ctx = reader.query(snp.getChrom(), snp.getPos(), snp.getPos()).next();
+        for (final VariantContext ctx : iterable) {
+            // Setup the sample names set if needed
             if (ctx == null) continue;
 
             if (samples == null) {
@@ -238,21 +210,63 @@ public class FingerprintChecker {
                 } else {
                     samples = ctx.getSampleNames();
                     if (samples == null) {
-                        log.warn("No samples found in file " + fingerprintFile + ". Skipping file.");
+                        log.warn("No samples found in file: " + source.toUri().toString() + ". Skipping.");
                         return Collections.emptyMap();
                     }
                 }
 
-                samples.forEach(s -> fingerprints.put(s, new Fingerprint(s, fingerprintFile, null)));
+                samples.forEach(s -> fingerprints.put(s, new Fingerprint(s, source, null)));
             }
             try {
                 getFingerprintFromVc(fingerprints, ctx);
             } catch (final IllegalArgumentException e) {
-                log.warn("There was a genotyping error in File: " + fingerprintFile + "\n" + e.getMessage());
+                log.warn("There was a genotyping error in File: " + source.toUri().toString() + "\n" + e.getMessage());
             }
         }
 
         return fingerprints;
+    }
+
+    /**
+     * Loads genotypes from the supplied file into one or more Fingerprint objects and returns them in a
+     * Map of Sample->Fingerprint.
+     *
+     * @param fingerprintFile - VCF file containing genotypes for one or more samples
+     * @param specificSample  - null to load genotypes for all samples contained in the file or the name
+     *                        of an individual sample to load (and exclude all others).
+     * @return a Map of Sample name to Fingerprint
+     */
+    public Map<String, Fingerprint> loadFingerprintsFromIndexedVcf(final Path fingerprintFile, final String specificSample) {
+        final VCFFileReader reader = new VCFFileReader(fingerprintFile, true);
+        return loadFingerprintsFromQueriableReader(reader, specificSample, fingerprintFile);
+    }
+
+    /**
+     * Loads genotypes from the supplied reader into one or more Fingerprint objects and returns them in a
+     * Map of Sample->Fingerprint.
+     *
+     * @param reader         - VCF reader containing genotypes for one or more samples
+     * @param specificSample - null to load genotypes for all samples contained in the file or the name
+     *                       of an individual sample to load (and exclude all others).
+     * @param source         The path of the source file used. used to emit errors.
+     * @return a Map of Sample name to Fingerprint
+     */
+    public Map<String, Fingerprint> loadFingerprintsFromQueriableReader(final VCFFileReader reader, final String specificSample, final Path source) {
+
+        SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
+                reader.getFileHeader().getSequenceDictionary());
+
+        final SortedSet<Snp> snps = new TreeSet<>(haplotypes.getAllSnps());
+
+        return loadFingerprintsFromVariantContexts(() ->
+                        snps.stream().map(snp -> {
+                            try {
+                                return reader.query(snp.getChrom(), snp.getPos(), snp.getPos()).next();
+                            } catch (NoSuchElementException e) {
+                                return null;
+                            }
+                        }).iterator(),
+                specificSample, source);
     }
 
     /**
@@ -263,8 +277,9 @@ public class FingerprintChecker {
      */
     private void getFingerprintFromVc(final Map<String, Fingerprint> fingerprints, final VariantContext ctx) throws IllegalArgumentException {
         final HaplotypeBlock h = this.haplotypes.getHaplotype(ctx.getContig(), ctx.getStart());
-        final Snp snp = this.haplotypes.getSnp(ctx.getContig(), ctx.getStart());
         if (h == null) return;
+
+        final Snp snp = this.haplotypes.getSnp(ctx.getContig(), ctx.getStart());
 
         final VariantContext usableSnp = AlleleSubsettingUtils.subsetVCToMatchSnp(ctx, snp);
         if (usableSnp == null) {
@@ -341,8 +356,6 @@ public class FingerprintChecker {
      * Takes a set of fingerprints and returns an IntervalList containing all the loci that
      * can be productively examined in sequencing data to compare to one or more of the
      * fingerprints.
-     *
-     *
      */
     public IntervalList getLociToGenotype(final Collection<Fingerprint> fingerprints) {
         final IntervalList intervals = new IntervalList(this.haplotypes.getHeader());
@@ -359,7 +372,7 @@ public class FingerprintChecker {
         return intervals.uniqued();
     }
 
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final File vcfFile) {
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final Path vcfFile) {
         final Map<FingerprintIdDetails, Fingerprint> fpIdMap = new HashMap<>();
 
         final Map<String, Fingerprint> sampleFpMap = loadFingerprints(vcfFile, null);
@@ -367,7 +380,7 @@ public class FingerprintChecker {
         sampleFpMap.forEach((key, value) -> {
             final FingerprintIdDetails fpId = new FingerprintIdDetails();
             fpId.sample = key;
-            fpId.file = vcfFile.getAbsolutePath();
+            fpId.file = vcfFile.toUri().toString();
 
             fpIdMap.put(fpId, value);
         });
@@ -378,7 +391,7 @@ public class FingerprintChecker {
      * Generates a Fingerprint per read group in the supplied SAM file using the loci provided in
      * the interval list.
      */
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final File samFile, final IntervalList loci) {
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final IntervalList loci) {
         final SamReader in = SamReaderFactory.makeDefault()
                 .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
                 .open(samFile);
@@ -404,7 +417,7 @@ public class FingerprintChecker {
         final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = new HashMap<>();
 
         for (final SAMReadGroupRecord rg : in.getFileHeader().getReadGroups()) {
-            final FingerprintIdDetails id = new FingerprintIdDetails(rg.getPlatformUnit(), samFile.getAbsolutePath());
+            final FingerprintIdDetails id = new FingerprintIdDetails(rg.getPlatformUnit(), samFile.toUri().toString());
             id.library = rg.getLibrary();
             id.sample = rg.getSample();
             fingerprintIdDetailsMap.put(rg, id);
@@ -442,7 +455,7 @@ public class FingerprintChecker {
                     final FingerprintIdDetails unknownFPDetails = createUnknownFP(samFile, rec.getRecord());
                     fingerprintIdDetailsMap.put(null, unknownFPDetails);
 
-                    final Fingerprint fp = new Fingerprint(unknownFPDetails.sample, new File(unknownFPDetails.file), unknownFPDetails.platformUnit);
+                    final Fingerprint fp = new Fingerprint(unknownFPDetails.sample, samFile, unknownFPDetails.platformUnit);
                     fingerprintsByReadGroup.put(unknownFPDetails, fp);
 
                     for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
@@ -474,10 +487,10 @@ public class FingerprintChecker {
         return fingerprintsByReadGroup;
     }
 
-    private FingerprintIdDetails createUnknownFP(final File samFile, final SAMRecord rec) {
+    private FingerprintIdDetails createUnknownFP(final Path samFile, final SAMRecord rec) {
         final PicardException e = new PicardException("Found read with no readgroup: " + rec.getReadName() + " in file: " + samFile);
         if (validationStringency != ValidationStringency.STRICT) {
-            final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("<UNKNOWN>:::" + samFile.getAbsolutePath());
+            final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("<UNKNOWN>:::" + samFile.toUri().toString());
             readGroupRecord.setLibrary("<UNKNOWN>");
             readGroupRecord.setSample("<UNKNOWN>");
             readGroupRecord.setPlatformUnit("<UNKNOWN>.0.ZZZ");
@@ -487,7 +500,7 @@ public class FingerprintChecker {
                 log.warn("further messages from this file will be suppressed");
             }
 
-            return new FingerprintIdDetails(readGroupRecord, samFile.getAbsolutePath());
+            return new FingerprintIdDetails(readGroupRecord, samFile.toUri().toString());
         } else {
             log.error(e);
             throw e;
@@ -498,7 +511,7 @@ public class FingerprintChecker {
      * Generates a per-sample Fingerprint for the contaminant in the supplied SAM file.
      * Data is aggregated by sample, not read-group.
      */
-    public Map<String, Fingerprint> identifyContaminant(final File samFile, final double contamination, final int locusMaxReads) {
+    public Map<String, Fingerprint> identifyContaminant(final Path samFile, final double contamination, final int locusMaxReads) {
         final Map<String, Fingerprint> fingerprintsBySample = new HashMap<>();
 
         try (final SamReader in = SamReaderFactory.makeDefault().enable(CACHE_FILE_BASED_INDEXES).open(samFile)) {
@@ -604,35 +617,36 @@ public class FingerprintChecker {
      * Fingerprints one or more SAM/BAM/VCF files at all available loci within the haplotype map, using multiple threads
      * to speed up the processing.
      */
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintFiles(final Collection<File> files, final int threads,
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintFiles(final Collection<Path> files, final int threads,
                                                                    final int waitTime, final TimeUnit waitTimeUnit) {
 
         // Generate fingerprints from each file
         final AtomicInteger filesRead = new AtomicInteger(0);
 
         final ExecutorService executor = new ThreadPoolExecutorWithExceptions(threads);
-        final ExecutorCompletionService<File> executorCompletionService = new ExecutorCompletionService<>(executor);
+        final ExecutorCompletionService<Path> executorCompletionService = new ExecutorCompletionService<>(executor);
         final IntervalList intervals = this.haplotypes.getIntervalList();
         final Map<FingerprintIdDetails, Fingerprint> retval = new ConcurrentHashMap<>();
 
-        for (final File f : files) {
+        for (final Path p : files) {
             executorCompletionService.submit(() -> {
-                    if (CheckFingerprint.isBamOrSamFile(f)) {
-                        retval.putAll(fingerprintSamFile(f, intervals));
-                    } else {
-                        retval.putAll(fingerprintVcf(f));
-                    }
 
-                    log.debug("Processed file: " + f.getAbsolutePath() + " (" + filesRead.get() + ")");
-                    if (filesRead.incrementAndGet() % 100 == 0) {
-                        log.info("Processed " + filesRead.get() + " out of " + files.size());
-                    }
-                return f;
-            });
+                if (CheckFingerprint.isBamOrSam(p)) {
+                    retval.putAll(fingerprintSamFile(p, intervals));
+                } else {
+                    retval.putAll(fingerprintVcf(p));
+                }
+
+                log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
+                if (filesRead.incrementAndGet() % 100 == 0) {
+                    log.info("Processed " + filesRead.get() + " out of " + files.size());
+                }
+            }, p);
         }
 
         executor.shutdown();
         try {
+
             executor.awaitTermination(waitTime, waitTimeUnit);
         } catch (final InterruptedException ie) {
             throw new PicardException("Interrupted while waiting for executor to terminate.", ie);
@@ -658,14 +672,14 @@ public class FingerprintChecker {
      * @param specificSample   an optional single sample who's genotypes to load from the supplied files
      * @param ignoreReadGroups aggregate data into one fingerprint per file, instead of splitting by RG
      */
-    public List<FingerprintResults> checkFingerprints(final List<File> samFiles,
-                                                      final List<File> genotypeFiles,
+    public List<FingerprintResults> checkFingerprints(final List<Path> samFiles,
+                                                      final List<Path> genotypeFiles,
                                                       final String specificSample,
                                                       final boolean ignoreReadGroups) {
         // Load the fingerprint genotypes
         final List<Fingerprint> expectedFingerprints = new LinkedList<>();
-        for (final File f : genotypeFiles) {
-            expectedFingerprints.addAll(loadFingerprints(f, specificSample).values());
+        for (final Path p : genotypeFiles) {
+            expectedFingerprints.addAll(loadFingerprints(p, specificSample).values());
         }
 
         if (expectedFingerprints.isEmpty()) {
@@ -676,14 +690,14 @@ public class FingerprintChecker {
         final IntervalList intervals = getLociToGenotype(expectedFingerprints);
 
         // Fingerprint the SAM files and calculate the results
-        for (final File f : samFiles) {
-            final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(f, intervals);
+        for (final Path p : samFiles) {
+            final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(p, intervals);
 
             if (ignoreReadGroups) {
-                final Fingerprint combinedFp = new Fingerprint(specificSample, f, null);
+                final Fingerprint combinedFp = new Fingerprint(specificSample, p, null);
                 fingerprintsByReadGroup.values().forEach(combinedFp::merge);
 
-                final FingerprintResults results = new FingerprintResults(f, null, specificSample);
+                final FingerprintResults results = new FingerprintResults(p, null, specificSample);
                 for (final Fingerprint expectedFp : expectedFingerprints) {
                     final MatchResults result = calculateMatchResults(combinedFp, expectedFp, 0, pLossofHet);
                     results.addResults(result);
@@ -693,7 +707,7 @@ public class FingerprintChecker {
 
             } else {
                 for (final FingerprintIdDetails rg : fingerprintsByReadGroup.keySet()) {
-                    final FingerprintResults results = new FingerprintResults(f, rg.platformUnit, rg.sample);
+                    final FingerprintResults results = new FingerprintResults(p, rg.platformUnit, rg.sample);
                     for (final Fingerprint expectedFp : expectedFingerprints) {
                         final MatchResults result = calculateMatchResults(fingerprintsByReadGroup.get(rg), expectedFp, 0, pLossofHet);
                         results.addResults(result);
@@ -716,15 +730,15 @@ public class FingerprintChecker {
      * @param observedSample        an optional single sample whose genotypes to load from the observed genotype file (if null, use all)
      * @param expectedSample        an optional single sample whose genotypes to load from the expected genotype file (if null, use all)
      */
-    public List<FingerprintResults> checkFingerprints(final List<File> observedGenotypeFiles,
-                                                      final List<File> expectedGenotypeFiles,
-                                                      final String observedSample,
-                                                      final String expectedSample) {
+    public List<FingerprintResults> checkFingerprintsFromPaths(final List<Path> observedGenotypeFiles,
+                                                               final List<Path> expectedGenotypeFiles,
+                                                               final String observedSample,
+                                                               final String expectedSample) {
 
         // Load the expected fingerprint genotypes
         final List<Fingerprint> expectedFingerprints = new ArrayList<>();
-        for (final File f : expectedGenotypeFiles) {
-            expectedFingerprints.addAll(loadFingerprints(f, expectedSample).values());
+        for (final Path p : expectedGenotypeFiles) {
+            expectedFingerprints.addAll(loadFingerprints(p, expectedSample).values());
         }
 
         if (expectedFingerprints.isEmpty()) {
@@ -733,14 +747,14 @@ public class FingerprintChecker {
 
         final List<FingerprintResults> resultsList = new ArrayList<>();
 
-        for (final File f : observedGenotypeFiles) {
-            final Map<String, Fingerprint> observedFingerprintsBySample = loadFingerprints(f, observedSample);
+        for (final Path p : observedGenotypeFiles) {
+            final Map<String, Fingerprint> observedFingerprintsBySample = loadFingerprints(p, observedSample);
             if (observedFingerprintsBySample.isEmpty()) {
                 throw new IllegalStateException("Found no fingerprints in observed genotypes file: " + observedGenotypeFiles);
             }
 
             for (final String sample : observedFingerprintsBySample.keySet()) {
-                final FingerprintResults results = new FingerprintResults(f, null, sample);
+                final FingerprintResults results = new FingerprintResults(p, null, sample);
                 for (final Fingerprint expectedFp : expectedFingerprints) {
                     final MatchResults result = calculateMatchResults(observedFingerprintsBySample.get(sample), expectedFp, 0, pLossofHet);
                     results.addResults(result);
@@ -749,6 +763,11 @@ public class FingerprintChecker {
             }
         }
         return resultsList;
+    }
+
+    public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp, final double minPExpected, final double pLoH) {
+        return calculateMatchResults(observedFp, expectedFp, minPExpected, pLoH, true, true);
+
     }
 
     /**
@@ -762,8 +781,8 @@ public class FingerprintChecker {
      * In the cases where the most likely genotypes from the two fingerprints do not match the
      * lExpectedSample is Max(actualpExpectedSample, minPExpected).
      */
-    public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp, final double minPExpected, final double pLoH) {
-        final List<LocusResult> locusResults = new ArrayList<>();
+    public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp, final double minPExpected, final double pLoH, final boolean calculateLocusInfo, final boolean calculateTumorAwareLod) {
+        final List<LocusResult> locusResults = calculateLocusInfo ? new ArrayList<>() : null;
 
         double llThisSample = 0;
         double llOtherSample = 0;
@@ -778,42 +797,55 @@ public class FingerprintChecker {
             final HaplotypeProbabilities probs1 = observedFp.get(haplotypeBlock);
             if (probs1 == null) continue;
 
-            final HaplotypeProbabilityOfNormalGivenTumor prob1AssumingDataFromTumor = new HaplotypeProbabilityOfNormalGivenTumor(probs1, pLoH);
-            final HaplotypeProbabilityOfNormalGivenTumor prob2AssumingDataFromTumor = new HaplotypeProbabilityOfNormalGivenTumor(probs2, pLoH);
+            final HaplotypeProbabilityOfNormalGivenTumor prob1AssumingDataFromTumor;
+            final HaplotypeProbabilityOfNormalGivenTumor prob2AssumingDataFromTumor;
+            if (calculateTumorAwareLod) {
+                prob1AssumingDataFromTumor = new HaplotypeProbabilityOfNormalGivenTumor(probs1, pLoH);
+                prob2AssumingDataFromTumor = new HaplotypeProbabilityOfNormalGivenTumor(probs2, pLoH);
+            } else {
+                prob1AssumingDataFromTumor = null;
+                prob2AssumingDataFromTumor = null;
+            }
 
             // If one is from genotype data we'd like to report the output relative
             // to the genotyped SNP instead of against a random SNP from the haplotype
             final Snp snp = probs2.getRepresentativeSnp();
-            final DiploidGenotype externalGenotype = probs2.getMostLikelyGenotype(snp);
-            final LocusResult lr = new LocusResult(snp,
-                    externalGenotype,
-                    probs1.getMostLikelyGenotype(snp),
-                    probs1.getObsAllele1(),
-                    probs1.getObsAllele2(),
-                    probs1.getLodMostProbableGenotype(),
-                    // expected sample log-likelihood
-                    probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2),
-                    // random sample log-likelihood
-                    probs1.shiftedLogEvidenceProbability(),
+            if (calculateLocusInfo) {
+                final DiploidGenotype externalGenotype = probs2.getMostLikelyGenotype(snp);
+                final LocusResult lr = new LocusResult(snp,
+                        externalGenotype,
+                        probs1.getMostLikelyGenotype(snp),
+                        probs1.getObsAllele1(),
+                        probs1.getObsAllele2(),
+                        probs1.getLodMostProbableGenotype(),
+                        // expected sample log-likelihood
+                        probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2),
+                        // random sample log-likelihood
+                        probs1.shiftedLogEvidenceProbability(),
 
-                    // probs1 is tumor probs2 is normal, correct sample lod
-                    prob1AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2) -
-                            prob1AssumingDataFromTumor.shiftedLogEvidenceProbability(),
-                    // probs1 is normal probs2 is tumor, correct sample lod
-                    probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(prob2AssumingDataFromTumor) -
-                            probs1.shiftedLogEvidenceProbability());
+                        // probs1 is tumor probs2 is normal, correct sample lod
+                        calculateTumorAwareLod ? prob1AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2) -
+                                prob1AssumingDataFromTumor.shiftedLogEvidenceProbability() : 0,
+                        // probs1 is normal probs2 is tumor, correct sample lod
+                        calculateTumorAwareLod ? probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(prob2AssumingDataFromTumor) -
+                                probs1.shiftedLogEvidenceProbability() : 0);
 
-            locusResults.add(lr);
-
+                locusResults.add(lr);
+            }
             if (probs1.hasEvidence() && probs2.hasEvidence()) {
-                final double lRandom = lr.lRandomSample();
                 //TODO: what's the mathematics behind the lminPexpected?
-                final double lExpected = Math.max(lminPExpected, lr.lExpectedSample());
+                llThisSample += Math.max(lminPExpected,
+                        probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2));
 
-                llThisSample += lExpected;
-                llOtherSample += lRandom;
-                lodExpectedSampleTumorNormal += lr.getLodExpectedSampleTumorNormal();
-                lodExpectedSampleNormalTumor += lr.getLodExpectedSampleNormalTumor();
+                llOtherSample += probs1.shiftedLogEvidenceProbability();
+
+                if (calculateTumorAwareLod) {
+                    lodExpectedSampleTumorNormal += prob1AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2) -
+                            prob1AssumingDataFromTumor.shiftedLogEvidenceProbability();
+
+                    lodExpectedSampleNormalTumor += probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(prob2AssumingDataFromTumor) -
+                            probs1.shiftedLogEvidenceProbability();
+                }
             }
         }
 
@@ -831,16 +863,5 @@ public class FingerprintChecker {
      */
     public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp) {
         return calculateMatchResults(observedFp, expectedFp, 0, 0);
-    }
-
-    static boolean isQueryable(final File vcf) {
-        if (!vcf.isFile()) return false;
-
-        try (final VCFFileReader reader = new VCFFileReader(vcf, false)) {
-            reader.query(reader.getFileHeader().getSequenceDictionary().getSequence(0).getSequenceName(), 1, 1);
-        } catch (final TribbleException e) {
-            return false;
-        }
-        return true;
     }
 }

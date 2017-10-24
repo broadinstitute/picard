@@ -47,6 +47,8 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
@@ -169,7 +171,7 @@ public class CheckFingerprint extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file SAM/BAM or VCF.  If a VCF is used, " +
             "it must have at least one sample.  If there are more than one samples in the VCF, the parameter OBSERVED_SAMPLE_ALIAS must " +
             "be provided in order to indicate which sample's data to use.  If there are no samples in the VCF, an exception will be thrown.")
-    public File INPUT;
+    public String INPUT;
 
     @Argument(optional = true, doc = "If the input is a VCF, this parameters used to select which sample's data in the VCF to use.")
     public String OBSERVED_SAMPLE_ALIAS;
@@ -187,7 +189,7 @@ public class CheckFingerprint extends CommandLineProgram {
 
     @Argument(shortName = "G", doc = "File of genotypes (VCF) to be used in comparison. May contain " +
             "any number of genotypes; CheckFingerprint will use only those that are usable for fingerprinting.")
-    public File GENOTYPES;
+    public String GENOTYPES;
 
     @Argument(shortName = "SAMPLE_ALIAS", optional = true, doc = "This parameter can be used to specify which sample's genotypes to use from the " +
             "expected VCF file (the GENOTYPES file).  If it is not supplied, the sample name from the input " +
@@ -212,10 +214,8 @@ public class CheckFingerprint extends CommandLineProgram {
     public static final String FINGERPRINT_SUMMARY_FILE_SUFFIX = "fingerprinting_summary_metrics";
     public static final String FINGERPRINT_DETAIL_FILE_SUFFIX = "fingerprinting_detail_metrics";
 
-    // Stock main method
-    public static void main(final String[] args) {
-        new CheckFingerprint().instanceMainWithExit(args);
-    }
+    private Path inputPath;
+    private Path genotypesPath;
 
     @Override
     protected int doWork() {
@@ -229,9 +229,15 @@ public class CheckFingerprint extends CommandLineProgram {
             outputSummaryMetricsFile = new File(OUTPUT + FINGERPRINT_SUMMARY_FILE_SUFFIX);
         }
 
-        IOUtil.assertFileIsReadable(INPUT);
+        try {
+            inputPath = IOUtil.getPath(INPUT);
+            genotypesPath = IOUtil.getPath(GENOTYPES);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+        IOUtil.assertFileIsReadable(inputPath);
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
-        IOUtil.assertFileIsReadable(GENOTYPES);
+        IOUtil.assertFileIsReadable(genotypesPath);
         IOUtil.assertFileIsWritable(outputDetailMetricsFile);
         IOUtil.assertFileIsWritable(outputSummaryMetricsFile);
 
@@ -239,18 +245,18 @@ public class CheckFingerprint extends CommandLineProgram {
         List<FingerprintResults> results;
 
         String observedSampleAlias = null;
-        final boolean isBamOrSamFile = isBamOrSamFile(INPUT);
+        final boolean isBamOrSamFile = isBamOrSam(inputPath);
         if (isBamOrSamFile) {
-            SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(INPUT.toPath()), SAMSequenceDictionaryExtractor.extractDictionary(GENOTYPES.toPath()), true);
-            SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(INPUT.toPath()), checker.getHeader().getSequenceDictionary(), true);
+            SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), SAMSequenceDictionaryExtractor.extractDictionary(genotypesPath), true);
+            SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), checker.getHeader().getSequenceDictionary(), true);
 
             // Verify that there's only one sample in the SAM/BAM.
-            final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT.toPath());
+            final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(inputPath);
             for (final SAMReadGroupRecord rec : in.getFileHeader().getReadGroups()) {
                 if (observedSampleAlias == null) {
                     observedSampleAlias = rec.getSample();
                 } else if (!observedSampleAlias.equals(rec.getSample())) {
-                    throw new PicardException("INPUT SAM/BAM file must not contain data from multiple samples.");
+                    throw new PicardException("inputPath SAM/BAM file must not contain data from multiple samples.");
                 }
             }
             CloserUtil.close(in);
@@ -261,28 +267,28 @@ public class CheckFingerprint extends CommandLineProgram {
             }
 
             results = checker.checkFingerprints(
-                    Collections.singletonList(INPUT),
-                    Collections.singletonList(GENOTYPES),
+                    Collections.singletonList(inputPath),
+                    Collections.singletonList(genotypesPath),
                     EXPECTED_SAMPLE_ALIAS,
                     IGNORE_READ_GROUPS);
         } else {            // Input is a VCF
             // Note that FingerprintChecker.loadFingerprints() verifies that the VCF's Sequence Dictionaries agree with that of the Haplotye Map File
 
             // Verify that there is only one sample in the VCF
-            final VCFFileReader fileReader = new VCFFileReader(INPUT, false);
+            final VCFFileReader fileReader = new VCFFileReader(inputPath, false);
             final VCFHeader fileHeader = fileReader.getFileHeader();
             if (fileHeader.getNGenotypeSamples() < 1) {
-                throw new PicardException("INPUT VCF file must contain at least one sample.");
+                throw new PicardException("inputPath VCF file must contain at least one sample.");
             }
             if ((fileHeader.getNGenotypeSamples() > 1) && (OBSERVED_SAMPLE_ALIAS == null)) {
-                throw new PicardException("INPUT VCF file contains multiple samples and yet the OBSERVED_SAMPLE_ALIAS parameter is not set.");
+                throw new PicardException("inputPath VCF file contains multiple samples and yet the OBSERVED_SAMPLE_ALIAS parameter is not set.");
             }
             // set observedSampleAlias to the parameter, if set.  Otherwise, if here, this must be a single sample VCF, get it's sample
             observedSampleAlias = (OBSERVED_SAMPLE_ALIAS != null) ? OBSERVED_SAMPLE_ALIAS : fileHeader.getGenotypeSamples().get(0);
 
             // Now verify that observedSampleAlias is, in fact, in the VCF
             if (!fileHeader.getGenotypeSamples().contains(observedSampleAlias)) {
-                throw new PicardException("INPUT VCF file does not contain OBSERVED_SAMPLE_ALIAS: " + observedSampleAlias);
+                throw new PicardException("inputPath VCF file does not contain OBSERVED_SAMPLE_ALIAS: " + observedSampleAlias);
             }
 
             if (OBSERVED_SAMPLE_ALIAS == null) {
@@ -295,9 +301,9 @@ public class CheckFingerprint extends CommandLineProgram {
                 EXPECTED_SAMPLE_ALIAS = observedSampleAlias;
             }
 
-            results = checker.checkFingerprints(
-                    Collections.singletonList(INPUT),
-                    Collections.singletonList(GENOTYPES),
+            results = checker.checkFingerprintsFromPaths(
+                    Collections.singletonList(inputPath),
+                    Collections.singletonList(genotypesPath),
                     observedSampleAlias,
                     EXPECTED_SAMPLE_ALIAS);
         }
@@ -368,19 +374,26 @@ public class CheckFingerprint extends CommandLineProgram {
     }
 
     protected String[] customCommandLineValidation() {
-        IOUtil.assertFileIsReadable(INPUT);
 
-        boolean isBamOrSamFile = isBamOrSamFile(INPUT);
-        if (!isBamOrSamFile && IGNORE_READ_GROUPS) {
-            return new String[]{"The parameter IGNORE_READ_GROUPS can only be used with BAM/SAM inputs."};
-        }
-        if (isBamOrSamFile && OBSERVED_SAMPLE_ALIAS != null) {
-            return new String[]{"The parameter OBSERVED_SAMPLE_ALIAS can only be used with a VCF input."};
+        try {
+            final boolean isBamOrSamFile = isBamOrSam(IOUtil.getPath(INPUT));
+            if (!isBamOrSamFile && IGNORE_READ_GROUPS) {
+                return new String[]{"The parameter IGNORE_READ_GROUPS can only be used with BAM/SAM inputs."};
+            }
+            if (isBamOrSamFile && OBSERVED_SAMPLE_ALIAS != null) {
+                return new String[]{"The parameter OBSERVED_SAMPLE_ALIAS can only be used with a VCF input."};
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return super.customCommandLineValidation();
     }
 
-    static boolean isBamOrSamFile(final File f) {
-        return (BamFileIoUtils.isBamFile(f) || f.getName().endsWith(IOUtil.SAM_FILE_EXTENSION));
+    static boolean isBamOrSam(final File f) {
+        return isBamOrSam(f.toPath());
+    }
+
+    static boolean isBamOrSam(final Path p) {
+        return (p.toUri().getRawPath().endsWith(BamFileIoUtils.BAM_FILE_EXTENSION) || p.toUri().getRawPath().endsWith(IOUtil.SAM_FILE_EXTENSION));
     }
 }
