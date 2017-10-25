@@ -176,7 +176,7 @@ public class LiftoverUtils {
         for (final Genotype genotype : originals) {
             final List<Allele> fixedAlleles = new ArrayList<>();
             for (final Allele allele : genotype.getAlleles()) {
-                if (allele.isSymbolic() || allele.isNoCall()) {
+                if (allele.isNoCall()) {
                     fixedAlleles.add(allele);
                 } else {
                     Allele newAllele = alleleMap.get(allele);
