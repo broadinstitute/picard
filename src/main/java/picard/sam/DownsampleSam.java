@@ -118,11 +118,11 @@ public class DownsampleSam extends CommandLineProgram {
             log.warn("Running DownsampleSam with PROBABILITY=1! This will likely just recreate the input file.");
         }
 
-        final Random r = RANDOM_SEED == null ? new Random() : new Random(RANDOM_SEED);
+        final Integer seed = RANDOM_SEED == null ? new Random().nextInt() : RANDOM_SEED;
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
-        final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
+        final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, seed);
         final QualityYieldMetricsCollector metricsCollector = new QualityYieldMetricsCollector(true, false, false);
 
         while (iterator.hasNext()) {
