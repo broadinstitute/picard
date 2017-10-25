@@ -35,6 +35,7 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeLikelihoods;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import org.apache.commons.lang3.tuple.Pair;
 import picard.PicardException;
 import picard.util.AlleleSubsettingUtils;
 
@@ -62,6 +63,10 @@ public class FingerprintChecker {
     private int minimumMappingQuality = DEFAULT_MINIMUM_MAPPING_QUALITY;
     private double genotypingErrorRate = DEFAULT_GENOTYPING_ERROR_RATE;
     private int maximalPLDifference = DEFAULT_MAXIMAL_PL_DIFFERENCE;
+
+    // in order to give each file a unique index;
+    final AtomicInteger totalFilesRead = new AtomicInteger(0);
+    private int nThreads = 1;
 
     public ValidationStringency getValidationStringency() {
         return validationStringency;
@@ -114,6 +119,13 @@ public class FingerprintChecker {
         this.genotypingErrorRate = genotypingErrorRate;
     }
 
+    public void setnThreads(final int nThreads) {
+        this.nThreads = nThreads;
+    }
+
+    public int getnThreads() {
+        return nThreads;
+    }
     /**
      * Sets the maximal difference in PL scores considered when reading PLs from a VCF.
      */
@@ -289,6 +301,12 @@ public class FingerprintChecker {
         for (final String sample : fingerprints.keySet()) {
             final Fingerprint fp = fingerprints.get(sample);
 
+            // TODO: check that the sample's alleles are consistent with those of the HP.
+
+            // TODO: subset the genotype context to the alleles in the HP. In the case that
+            // TODO: the sample is genotyped as HOM for an allele that is in the HP, we take
+            // TODO: the rest of the evidence and put it on the other allele.
+
             //PLs are preferred over GTs
             //TODO: this code is replicated in various places (ReconstructTriosFromVCF for example). Needs refactoring.
             //TODO: add a way to force using GTs when both are available (why?)
@@ -353,7 +371,7 @@ public class FingerprintChecker {
         return intervals.uniqued();
     }
 
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final File vcfFile) {
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final File vcfFile, final int fileIndex) {
         final Map<FingerprintIdDetails, Fingerprint> fpIdMap = new HashMap<>();
 
         final Map<String, Fingerprint> sampleFpMap = loadFingerprints(vcfFile, null);
@@ -372,7 +390,7 @@ public class FingerprintChecker {
      * Generates a Fingerprint per read group in the supplied SAM file using the loci provided in
      * the interval list.
      */
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final File samFile, final IntervalList loci) {
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final File samFile, final IntervalList loci, final int fileIndex) {
         final SamReader in = SamReaderFactory.makeDefault()
                 .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
                 .open(samFile);
@@ -387,7 +405,7 @@ public class FingerprintChecker {
 
         // In some cases it is useful to allow duplicate reads to be used - the most common is in single-end
         // sequence data where the duplicate marking may have been overly aggressive, and there is useful
-        // non-redundant data in the reads marked as "duplicates'.
+        // non-redundant data in the reads marked as "duplicates".
         if (this.allowDuplicateReads) {
             final List<SamRecordFilter> filters = new ArrayList<>(1);
             filters.add(new NotPrimaryAlignmentFilter());
@@ -610,9 +628,9 @@ public class FingerprintChecker {
             futures.put(executor.submit(() -> {
                 try {
                     if (CheckFingerprint.isBamOrSamFile(f)) {
-                        retval.putAll(fingerprintSamFile(f, intervals));
+                        retval.putAll(fingerprintSamFile(f, intervals, totalFilesRead.getAndIncrement()));
                     } else {
-                        retval.putAll(fingerprintVcf(f));
+                        retval.putAll(fingerprintVcf(f, totalFilesRead.getAndIncrement()));
                     }
 
                     log.debug("Processed file: " + f.getAbsolutePath() + " (" + filesRead.get() + ")");
@@ -671,36 +689,56 @@ public class FingerprintChecker {
         final List<FingerprintResults> resultsList = new ArrayList<>();
         final IntervalList intervals = getLociToGenotype(expectedFingerprints);
 
+        final ExecutorService executor = Executors.newFixedThreadPool(getnThreads(), new ThreadFactoryBuilder().setDaemon(true).build());
+        final Map<File,Future<List<FingerprintResults>>> futures = new HashMap<>(samFiles.size());
+
         // Fingerprint the SAM files and calculate the results
+        int fileIndex = 0;
         for (final File f : samFiles) {
-            final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(f, intervals);
 
-            if (ignoreReadGroups) {
-                final Fingerprint combinedFp = new Fingerprint(specificSample, f, null);
-                fingerprintsByReadGroup.values().forEach(combinedFp::merge);
+            final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(f, intervals, fileIndex++);
 
-                final FingerprintResults results = new FingerprintResults(f, null, specificSample);
-                for (final Fingerprint expectedFp : expectedFingerprints) {
-                    final MatchResults result = calculateMatchResults(combinedFp, expectedFp, 0, pLossofHet);
-                    results.addResults(result);
+            final Fingerprint combinedFp = new Fingerprint(specificSample, f, null);
+            fingerprintsByReadGroup.values().forEach(combinedFp::merge);
+
+            futures.put(f, executor.submit(() -> {
+                        if (ignoreReadGroups) {
+                            final FingerprintResults results = new FingerprintResults(f, null, specificSample);
+                            for (final Fingerprint expectedFp : expectedFingerprints) {
+                                final MatchResults result = calculateMatchResults(combinedFp, expectedFp, 0, pLossofHet);
+                                results.addResults(result);
+                            }
+                            return Collections.singletonList(results);
+                        } else {
+                            final List<FingerprintResults> innerResultsList=new ArrayList<>(fingerprintsByReadGroup.size());
+                            for (final FingerprintIdDetails rg : fingerprintsByReadGroup.keySet()) {
+                                final FingerprintResults results = new FingerprintResults(f, rg.platformUnit, rg.sample);
+                                for (final Fingerprint expectedFp : expectedFingerprints) {
+                                    final MatchResults result = calculateMatchResults(fingerprintsByReadGroup.get(rg), expectedFp, 0, pLossofHet);
+                                    results.addResults(result);
+                                }
+                                innerResultsList.add(results);
+                            }
+                        return innerResultsList;
+                        }
+                    }));
                 }
-
-                resultsList.add(results);
-
-            } else {
-                for (final FingerprintIdDetails rg : fingerprintsByReadGroup.keySet()) {
-                    final FingerprintResults results = new FingerprintResults(f, rg.platformUnit, rg.sample);
-                    for (final Fingerprint expectedFp : expectedFingerprints) {
-                        final MatchResults result = calculateMatchResults(fingerprintsByReadGroup.get(rg), expectedFp, 0, pLossofHet);
-                        results.addResults(result);
-                    }
-
-                    resultsList.add(results);
-                }
-            }
+        executor.shutdown();
+        try {
+            executor.awaitTermination(1, TimeUnit.DAYS);
+        } catch (final InterruptedException ie) {
+            log.warn(ie, "Interrupted while waiting for executor to terminate.");
         }
 
-        return resultsList;
+        for (Map.Entry<File, Future<List<FingerprintResults>>> fileFutureEntry : futures.entrySet()) {
+            try {
+                resultsList.addAll(fileFutureEntry.getValue().get());
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Failed to fingerprint on file: " + fileFutureEntry.getKey());
+                throw new RuntimeException(e);
+            }
+        }
+         return resultsList;
     }
 
     /**
@@ -771,7 +809,21 @@ public class FingerprintChecker {
 
         for (final HaplotypeProbabilities probs2 : expectedFp.values()) {
             final HaplotypeBlock haplotypeBlock = probs2.getHaplotype();
-            final HaplotypeProbabilities probs1 = observedFp.get(haplotypeBlock);
+
+
+            final HaplotypeProbabilities probs1;
+
+            if (observedFp.containsKey(haplotypeBlock)) {
+                probs1 = observedFp.get(haplotypeBlock);
+            } else {
+                // in the case that there are two haplotype maps (from different builds)
+                // we find the matching hapltype block by the id of the "firstSnp"
+                // this is slower so we only do this when the hashmap lookup has failed.
+                final Optional<HaplotypeBlock> matchingHaploBlock = observedFp.keySet().stream().filter(
+                        k -> k.getFirstSnp().getName().equals(haplotypeBlock.getFirstSnp().getName())).findAny();
+                probs1 = matchingHaploBlock.map(k -> observedFp.get(k)).orElse(null);
+            }
+
             if (probs1 == null) continue;
 
             final HaplotypeProbabilityOfNormalGivenTumor prob1AssumingDataFromTumor = new HaplotypeProbabilityOfNormalGivenTumor(probs1, pLoH);
@@ -839,4 +891,6 @@ public class FingerprintChecker {
         }
         return true;
     }
+
+
 }

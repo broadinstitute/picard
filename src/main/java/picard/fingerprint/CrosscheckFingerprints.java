@@ -38,10 +38,12 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Fingerprinting;
 import picard.fingerprint.CrosscheckMetric.FingerprintResult;
+import sun.jvm.hotspot.utilities.Assert;
 
 import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -282,7 +284,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         };
     }
 
-    public static Map<FingerprintIdDetails, Fingerprint> mergeFingerprintsBy(
+    public Map<FingerprintIdDetails, Fingerprint> mergeFingerprintsBy(
             final Map<FingerprintIdDetails, Fingerprint> fingerprints,
             final Function<FingerprintIdDetails, String> by){
 
@@ -290,7 +292,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         final Map<String, List<Map.Entry<FingerprintIdDetails, Fingerprint>>> collection =
                 fingerprints.entrySet()
-                        .stream()
+                        .parallelStream()
                         .collect(Collectors.groupingBy(entry -> by.apply(entry.getKey())));
 
         return collection.entrySet().stream()

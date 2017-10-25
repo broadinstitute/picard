@@ -179,6 +179,7 @@ public class CheckFingerprint extends CommandLineProgram {
                     Collections.singletonList(GENOTYPES),
                     EXPECTED_SAMPLE_ALIAS,
                     IGNORE_READ_GROUPS);
+
         } else {            // Input is a VCF
             // Note that FingerprintChecker.loadFingerprints() verifies that the VCF's Sequence Dictionaries agree with that of the Haplotye Map File
 
