@@ -176,10 +176,15 @@ public final class AlleleSubsettingUtils {
                 }
             }
 
-            final boolean useNewLikelihoods = newPLs != null;
-            final GenotypeBuilder gb = useNewLikelihoods ? new GenotypeBuilder(g).PL(newPLs).log10PError(newLog10GQ) : new GenotypeBuilder(g).noPL().noGQ();
-            GenotypeLikelihoods.GenotypeLikelihoodsAllelePair allelePair = GenotypeLikelihoods.getAllelePair(MathUtil.indexOfMin(newPLs));
-            gb.alleles(Stream.of(allelePair.alleleIndex1, allelePair.alleleIndex2).map(allelesToKeep::get).collect(Collectors.toList()));
+            final GenotypeBuilder gb;
+            if (newPLs == null) {
+                gb = new GenotypeBuilder(g).noPL().noGQ().alleles(Arrays.asList(Allele.NO_CALL, Allele.NO_CALL));
+            } else {
+                gb = new GenotypeBuilder(g).PL(newPLs).log10PError(newLog10GQ);
+                GenotypeLikelihoods.GenotypeLikelihoodsAllelePair allelePair = GenotypeLikelihoods.getAllelePair(MathUtil.indexOfMin(newPLs));
+                gb.alleles(Stream.of(allelePair.alleleIndex1, allelePair.alleleIndex2).map(allelesToKeep::get).collect(Collectors.toList()));
+            }
+
             // restrict AD to the new allele subset
             if (g.hasAD()) {
                 final int[] oldAD = g.getAD();
