@@ -8,8 +8,6 @@ import picard.vcf.VcfTestUtils;
 
 import java.util.*;
 
-import static picard.util.AlleleSubsettingUtils.NON_REF_ALLELE;
-
 public class AlleleSubsettingUtilsTest {
 
     private static final Allele Aref = Allele.create("A", true);
@@ -19,7 +17,6 @@ public class AlleleSubsettingUtilsTest {
     final List<Allele> AA = Arrays.asList(Aref, Aref);
     final List<Allele> AC = Arrays.asList(Aref, C);
     final List<Allele> CC = Arrays.asList(C, C);
-    final List<Allele> noCall = Arrays.asList(Allele.NO_CALL, Allele.NO_CALL);
     final List<Allele> AG = Arrays.asList(Aref, G);
     final List<Allele> GG = Arrays.asList(G, G);
     final List<Allele> ACG = Arrays.asList(Aref, C, G);
@@ -127,9 +124,7 @@ public class AlleleSubsettingUtilsTest {
         tests.add(new Object[]{
                 new VariantContextBuilder(vcBase).source("test-" + i++).alleles(ACG).genotypes(new GenotypeBuilder(base).alleles(AA).AD(homG3AllelesAD).noPL().make()).make(),
                 new VariantContextBuilder(vcBase).source("test-" + i).alleles(AG).make(),
-                Collections.singletonList(new GenotypeBuilder(base).alleles(noCall).noPL().AD(new int[]{0, 21}).noGQ().make())});
-
-
+                Collections.singletonList(new GenotypeBuilder(base).alleles(AlleleSubsettingUtils.DIPLOID_NO_CALL).noPL().AD(new int[]{0, 21}).noGQ().make())});
 
         return tests.toArray(new Object[][]{});
     }
@@ -149,7 +144,7 @@ public class AlleleSubsettingUtilsTest {
         tests.add(new Object[]{new VariantContextBuilder(vcBase).genotypes(new GenotypeBuilder(base).alleles(CC).make()).make(), C, G,
                 new VariantContextBuilder(vcBase).alleles(AG).genotypes(new GenotypeBuilder(base).alleles(GG).make()).make(), true});
 
-        tests.add(new Object[]{vcBase, NON_REF_ALLELE, G, null, false});
+        tests.add(new Object[]{vcBase, AlleleSubsettingUtils.NON_REF_ALLELE, G, null, false});
 
 
         return tests.iterator();
