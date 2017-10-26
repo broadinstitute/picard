@@ -38,13 +38,13 @@ import java.io.IOException;
 /**
  * Tests for SAMSplitter
  */
-public class SAMSplitterTest extends CommandLineProgramTest {
+public class SplitSamBySizeTest extends CommandLineProgramTest {
     private static final String TEST_DATA_DIR = "testdata/picard/sam/bam2fastq";
     private static final File PAIRED_FILE = new File(TEST_DATA_DIR + "/paired/ok/sorted-pair.sam");
     private static final ValidateSamTester VALIDATE_SAM_TESTER = new ValidateSamTester();
 
     public String getCommandLineProgramName() {
-        return SAMSplitter.class.getSimpleName();
+        return SplitSamBySize.class.getSimpleName();
     }
 
     @Test

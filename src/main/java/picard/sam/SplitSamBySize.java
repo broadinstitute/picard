@@ -51,18 +51,18 @@ import java.util.Map;
  * intended for unmapped input files, all secondary and supplementary reads will be removed.
  */
 @CommandLineProgramProperties(
-        summary = SAMSplitter.USAGE_SUMMARY + SAMSplitter.USAGE_DETAILS,
-        oneLineSummary = SAMSplitter.USAGE_SUMMARY,
+        summary = SplitSamBySize.USAGE_SUMMARY + SplitSamBySize.USAGE_DETAILS,
+        oneLineSummary = SplitSamBySize.USAGE_SUMMARY,
         programGroup = SamOrBam.class)
 @DocumentedFeature
-public class SAMSplitter extends CommandLineProgram {
+public class SplitSamBySize extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Splits a SAM or BAM file to multiple BAMs.";
     static final String USAGE_DETAILS = "This tool splits the input SAM/BAM file into multiple BAM files " +
             "This can be used to split a large unmapped BAM in order to parallelize alignment."+
             "<br />" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
-            "java -jar picard.jar SAMSplitter \\<br />" +
+            "java -jar picard.jar SplitSamBySize \\<br />" +
             "     I=paired_unmapped_input.bam \\<br />" +
             "     OUTPUT_DIR=out_dir \\ <br />" +
             "     TOTAL_READS_IN_INPUT=800000000" +
@@ -85,10 +85,10 @@ public class SAMSplitter extends CommandLineProgram {
             "each template is assumed to contain two reads (rather than one for unpaired inputs).")
     public boolean PAIRED_INPUT = true;
 
-    private final Log log = Log.getInstance(SAMSplitter.class);
+    private final Log log = Log.getInstance(SplitSamBySize.class);
 
     public static void main(final String[] argv) {
-        System.exit(new SAMSplitter().instanceMain(argv));
+        System.exit(new SplitSamBySize().instanceMain(argv));
     }
 
     protected int doWork() {
