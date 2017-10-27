@@ -25,11 +25,11 @@
 
 package picard.fingerprint;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -38,13 +38,11 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Fingerprinting;
 import picard.fingerprint.CrosscheckMetric.FingerprintResult;
-import sun.jvm.hotspot.utilities.Assert;
 
 import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -77,13 +75,13 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             doc = "One or more input files (or lists of files) to compare fingerprints for.")
     public List<File> INPUT;
 
-    @Argument(shortName = "SI", optional = true, mutex={"MATRIX_OUTPUT"},
+    @Argument(shortName = "SI", optional = true, mutex = {"MATRIX_OUTPUT"},
             doc = "One or more input files (or lists of files) to compare fingerprints for. If this option is given " +
                     "the program compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID." +
-                    " In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY."+
+                    " In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY." +
                     " When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. " +
                     "If this is violated, the program will proceed to check the matching samples, but report the missing samples" +
-                    " and return a non-zero error-code." )
+                    " and return a non-zero error-code.")
     public List<File> SECOND_INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
@@ -148,6 +146,11 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     private double[][] crosscheckMatrix = null;
     private final List<String> matrixKeys = new ArrayList<>();
 
+    private Map<FingerprintIdDetails, Fingerprint> fingerprints = null;
+    private Map<FingerprintIdDetails, Fingerprint> fingerprints2 = null;
+
+    final private int logEvery = 100_000;
+
     @Override
     protected int doWork() {
         // Check inputs
@@ -172,7 +175,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         checker.setAllowDuplicateReads(ALLOW_DUPLICATE_READS);
         checker.setValidationStringency(VALIDATION_STRINGENCY);
-
 
         final List<String> extensions = new ArrayList<>();
 
@@ -286,13 +288,13 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     public Map<FingerprintIdDetails, Fingerprint> mergeFingerprintsBy(
             final Map<FingerprintIdDetails, Fingerprint> fingerprints,
-            final Function<FingerprintIdDetails, String> by){
+            final Function<FingerprintIdDetails, String> by) {
 
         // collect the various entries according to the grouping "by"
 
         final Map<String, List<Map.Entry<FingerprintIdDetails, Fingerprint>>> collection =
                 fingerprints.entrySet()
-                        .parallelStream()
+                        .stream()
                         .collect(Collectors.groupingBy(entry -> by.apply(entry.getKey())));
 
         return collection.entrySet().stream()
@@ -321,85 +323,126 @@ public class CrosscheckFingerprints extends CommandLineProgram {
      * Method that combines the fingerprint evidence across all the read groups for the same sample
      * and then produces a matrix of LOD scores for comparing every sample with every other sample.
      */
-    private int crossCheckGrouped(final Map<FingerprintIdDetails, Fingerprint> fingerprints, final List<CrosscheckMetric> metrics,
+    private int crossCheckGrouped(final Map<FingerprintIdDetails, Fingerprint> ungroupedFingerprints, final List<CrosscheckMetric> metrics,
                                   final Function<FingerprintIdDetails, String> by,
                                   final CrosscheckMetric.DataType type) {
 
-        final Map<FingerprintIdDetails, Fingerprint> fingerprintsByGroup = mergeFingerprintsBy(fingerprints, by);
+        fingerprints = mergeFingerprintsBy(ungroupedFingerprints, by);
+        // we point the other map to the same object so that we can use the same getCrossCheckMetric method for both this
+        // method and checkFingerprintsBySample
+        fingerprints2 = mergeFingerprintsBy(ungroupedFingerprints, by);
 
         if (MATRIX_OUTPUT != null) {
-            crosscheckMatrix = new double[fingerprintsByGroup.size()][];
-            for (int i = 0; i < fingerprintsByGroup.size(); i++) {
-                crosscheckMatrix[i] = new double[fingerprintsByGroup.size()];
+            crosscheckMatrix = new double[fingerprints.size()][];
+            for (int i = 0; i < fingerprints.size(); i++) {
+                crosscheckMatrix[i] = new double[fingerprints.size()];
             }
         }
-        return crossCheckFingerprints(fingerprintsByGroup, type, metrics, by);
+        return crossCheckFingerprints(type, metrics, by);
     }
 
     /**
      * Method that pairwise checks every pair of groups and reports a LOD score for the two groups
      * coming from the same individual.
      */
-    private int crossCheckFingerprints(final Map<FingerprintIdDetails, Fingerprint> fingerprints, final CrosscheckMetric.DataType type, final List<CrosscheckMetric> metrics, Function<FingerprintIdDetails, String> by) {
+    private int crossCheckFingerprints(final CrosscheckMetric.DataType type, final List<CrosscheckMetric> metrics, Function<FingerprintIdDetails, String> by) {
         int unexpectedResults = 0;
         long checksMade = 0;
 
         // TODO: create a general-use logger in htsjdk (not one that is tied to Chrom/Pos) and use that
         // TODO: to record progress
 
-        final int logEvery = 100_000;
 
         final List<FingerprintIdDetails> fingerprintIdDetails = new ArrayList<>(fingerprints.keySet());
-
-        // use 1L to promote size() to a long and avoid possible overflow
+        // use 1L to promote size() to a long and avoid possible integer overflow
         final long totalChecks = fingerprintIdDetails.size() * (fingerprintIdDetails.size() + 1L) / 2;
+        final ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS, new ThreadFactoryBuilder().setDaemon(true).build());
+
+        final Map<Future<CrosscheckMetric>, String> futures = new HashMap<>();
 
         for (int i = 0; i < fingerprintIdDetails.size(); i++) {
+            final int ii = i; //for lambda
             final FingerprintIdDetails lhsRg = fingerprintIdDetails.get(i);
-            if (MATRIX_OUTPUT !=null) {
+            if (MATRIX_OUTPUT != null) {
                 matrixKeys.add(by.apply(lhsRg));
             }
             for (int j = i; j < fingerprintIdDetails.size(); j++) {
+                final int jj = j; //for lambda
                 final FingerprintIdDetails rhsRg = fingerprintIdDetails.get(j);
                 final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsRg.sample.equals(rhsRg.sample);
 
-                final MatchResults results = FingerprintChecker.calculateMatchResults(fingerprints.get(lhsRg), fingerprints.get(rhsRg), GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE);
-                final FingerprintResult result = getMatchResults(expectedToMatch, results);
-
-                if (!OUTPUT_ERRORS_ONLY || result == FingerprintResult.INCONCLUSIVE || !result.isExpected()) {
-                    metrics.add(getMatchDetails(result, results, lhsRg, rhsRg, type));
-                }
-                if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
-                if (crosscheckMatrix != null) {
-                    crosscheckMatrix[i][j] = results.getLOD();
-                    crosscheckMatrix[j][i] = results.getLOD();
-                }
+                futures.put(executor.submit(() -> getCrosscheckMetric(lhsRg, rhsRg, ii, jj, expectedToMatch, type)), rhsRg.group + " vs. " + lhsRg.group);
 
                 if (++checksMade % logEvery == 0) {
                     log.info("Compared " + checksMade + " of " + totalChecks);
                 }
             }
         }
+
+        executor.shutdown();
+        try {
+            executor.awaitTermination(1, TimeUnit.DAYS);
+        } catch (final InterruptedException ie) {
+            log.warn(ie, "Interrupted while waiting for executor to terminate.");
+        }
+
+        for (final Map.Entry<Future<CrosscheckMetric>, String> futureStringEntry : futures.entrySet()) {
+            try {
+                final CrosscheckMetric results = futureStringEntry.getKey().get();
+
+                if (results != null) {
+                    metrics.add(results);
+                    if (results.RESULT.isExpected() != null && !results.RESULT.isExpected()) unexpectedResults++;
+                }
+
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Failed to fingerprint samples: " + futureStringEntry.getValue());
+                throw new RuntimeException(e);
+            }
+        }
         return unexpectedResults;
+    }
+
+
+    private CrosscheckMetric getCrosscheckMetric(FingerprintIdDetails lhs, FingerprintIdDetails rhs, final int lhsIndex, final int rhsIndex, boolean expectedToMatch, final CrosscheckMetric.DataType type) {
+        final MatchResults results = FingerprintChecker.calculateMatchResults(fingerprints.get(lhs), fingerprints2.get(rhs), GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE);
+        final FingerprintResult result = getMatchResults(expectedToMatch, results);
+
+        if (crosscheckMatrix != null) {
+            synchronized (crosscheckMatrix) {
+                crosscheckMatrix[lhsIndex][rhsIndex] = results.getLOD();
+                crosscheckMatrix[rhsIndex][lhsIndex] = results.getLOD();
+            }
+        }
+
+        if (!OUTPUT_ERRORS_ONLY || result == FingerprintResult.INCONCLUSIVE || !result.isExpected()) {
+            return getMatchDetails(result, results, lhs, rhs, type);
+        }
+        return null;
     }
 
     /**
      * Method that checks each sample from fingerprints1 against that sample from fingerprints2 and reports a LOD score for the two groups
      * coming from the same individual.
      */
-    private int checkFingerprintsBySample(final Map<FingerprintIdDetails, Fingerprint> fingerprints1, final Map<FingerprintIdDetails, Fingerprint> fingerprints2,
+    private int checkFingerprintsBySample(final Map<FingerprintIdDetails, Fingerprint> origFingerprints1, final Map<FingerprintIdDetails, Fingerprint> origFingerprints2,
                                           final List<CrosscheckMetric> metrics) {
         int unexpectedResults = 0;
+        long checksMade = 0;
 
-        final Map<FingerprintIdDetails, Fingerprint> fingerprints1BySample = mergeFingerprintsBy(fingerprints1, getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
-        final Map<FingerprintIdDetails, Fingerprint> fingerprints2BySample = mergeFingerprintsBy(fingerprints2, getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
+        fingerprints  = mergeFingerprintsBy(origFingerprints1, getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
+        fingerprints2 = mergeFingerprintsBy(origFingerprints2, getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
 
-        final Map<String, FingerprintIdDetails> sampleToDetail1 = fingerprints1BySample.keySet().stream().collect(Collectors.toMap(id->id.group, id -> id));
-        final Map<String, FingerprintIdDetails> sampleToDetail2 = fingerprints2BySample.keySet().stream().collect(Collectors.toMap(id->id.group, id -> id));
+        final Map<String, FingerprintIdDetails> sampleToDetail1 = fingerprints.keySet().stream().collect(Collectors.toMap(id -> id.group, id -> id));
+        final Map<String, FingerprintIdDetails> sampleToDetail2 = fingerprints2.keySet().stream().collect(Collectors.toMap(id -> id.group, id -> id));
 
         Set<String> samples = new HashSet<>();
         samples.addAll(sampleToDetail1.keySet());
         samples.addAll(sampleToDetail2.keySet());
+
+        final ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS, new ThreadFactoryBuilder().setDaemon(true).build());
+        final Map<Future<CrosscheckMetric>, String> futures = new HashMap<>();
+
 
         for (final String sample : samples) {
             final FingerprintIdDetails lhsID = sampleToDetail1.get(sample);
@@ -411,13 +454,33 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 continue;
             }
 
-            final MatchResults results = FingerprintChecker.calculateMatchResults(fingerprints1BySample.get(lhsID), fingerprints2BySample.get(rhsID), GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE);
-            final CrosscheckMetric.FingerprintResult result = getMatchResults(true, results);
+            futures.put(executor.submit(() -> getCrosscheckMetric(lhsID, rhsID, -1, -1,true, CrosscheckMetric.DataType.SAMPLE)), rhsID.group + " vs. " + rhsID.group);
 
-            if (!OUTPUT_ERRORS_ONLY || !result.isExpected()) {
-                metrics.add(getMatchDetails(result, results, lhsID, rhsID, CrosscheckMetric.DataType.SAMPLE));
+            if (++checksMade % logEvery == 0) {
+                log.info("Compared " + checksMade + " of " + samples.size());
             }
-            if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
+        }
+
+        executor.shutdown();
+        try {
+            executor.awaitTermination(1, TimeUnit.DAYS);
+        } catch (final InterruptedException ie) {
+            log.warn(ie, "Interrupted while waiting for executor to terminate.");
+        }
+
+        for (final Map.Entry<Future<CrosscheckMetric>, String> futureStringEntry : futures.entrySet()) {
+            try {
+                final CrosscheckMetric results = futureStringEntry.getKey().get();
+
+                if (results != null) {
+                    metrics.add(results);
+                    if (results.RESULT.isExpected() != null && !results.RESULT.isExpected()) unexpectedResults++;
+                }
+
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Failed to fingerprint samples: " + futureStringEntry.getValue());
+                throw new RuntimeException(e);
+            }
         }
         return unexpectedResults;
     }

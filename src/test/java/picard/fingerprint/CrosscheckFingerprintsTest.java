@@ -133,6 +133,25 @@ public class CrosscheckFingerprintsTest {
         doTest(args, metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
 
+    @Test(dataProvider = "bamFilesRGs")
+    public void testCrossCheckRGsMultiThreaded(final File file1, final File file2, final boolean expectAllMatch, final int expectedRetVal, final int expectedNMetrics) throws IOException {
+
+        File metrics = File.createTempFile("Fingerprinting", "NA1291.RG.crosscheck_metrics");
+        metrics.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + file1.getAbsolutePath(),
+                "INPUT=" + file2.getAbsolutePath(),
+                "OUTPUT=" + metrics.getAbsolutePath(),
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP,
+                "LOD_THRESHOLD=" + -2.0,
+                "NUM_THREADS=10",
+                "EXPECT_ALL_GROUPS_TO_MATCH=" + expectAllMatch
+        };
+
+        doTest(args, metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
+    }
+
     @DataProvider(name = "bamFilesLBs")
     public Object[][] bamFilesLBs() {
 
@@ -341,6 +360,26 @@ public class CrosscheckFingerprintsTest {
 
         doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
     }
+
+    @Test(dataProvider = "checkSamplesData")
+    public void testCheckSamplesMultiThreaded(final List<File> files1, final List<File> files2, final int expectedRetVal, final int numberOfSamples, boolean ExpectAllMatch) throws IOException {
+        File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
+        metrics.deleteOnExit();
+
+        final List<String> args = new ArrayList<>();
+        files1.forEach(f->args.add("INPUT="+f.getAbsolutePath()));
+        files2.forEach(f->args.add("SECOND_INPUT="+f.getAbsolutePath()));
+
+        args.add("OUTPUT=" + metrics.getAbsolutePath());
+        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
+        args.add("LOD_THRESHOLD=" + -1.0);
+        args.add("CROSSCHECK_BY=SAMPLE");
+        args.add("NUM_THREADS=5");
+
+        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
+    }
+
+
 
     @DataProvider(name = "checkFilesData")
     public Iterator<Object[]> checkFilesData() {

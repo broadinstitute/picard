@@ -689,56 +689,37 @@ public class FingerprintChecker {
         final List<FingerprintResults> resultsList = new ArrayList<>();
         final IntervalList intervals = getLociToGenotype(expectedFingerprints);
 
-        final ExecutorService executor = Executors.newFixedThreadPool(getnThreads(), new ThreadFactoryBuilder().setDaemon(true).build());
-        final Map<File,Future<List<FingerprintResults>>> futures = new HashMap<>(samFiles.size());
-
         // Fingerprint the SAM files and calculate the results
         int fileIndex = 0;
         for (final File f : samFiles) {
+            final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(f, intervals, fileIndex);
 
-            final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(f, intervals, fileIndex++);
+            if (ignoreReadGroups) {
+                final Fingerprint combinedFp = new Fingerprint(specificSample, f, null);
+                fingerprintsByReadGroup.values().forEach(combinedFp::merge);
 
-            final Fingerprint combinedFp = new Fingerprint(specificSample, f, null);
-            fingerprintsByReadGroup.values().forEach(combinedFp::merge);
-
-            futures.put(f, executor.submit(() -> {
-                        if (ignoreReadGroups) {
-                            final FingerprintResults results = new FingerprintResults(f, null, specificSample);
-                            for (final Fingerprint expectedFp : expectedFingerprints) {
-                                final MatchResults result = calculateMatchResults(combinedFp, expectedFp, 0, pLossofHet);
-                                results.addResults(result);
-                            }
-                            return Collections.singletonList(results);
-                        } else {
-                            final List<FingerprintResults> innerResultsList=new ArrayList<>(fingerprintsByReadGroup.size());
-                            for (final FingerprintIdDetails rg : fingerprintsByReadGroup.keySet()) {
-                                final FingerprintResults results = new FingerprintResults(f, rg.platformUnit, rg.sample);
-                                for (final Fingerprint expectedFp : expectedFingerprints) {
-                                    final MatchResults result = calculateMatchResults(fingerprintsByReadGroup.get(rg), expectedFp, 0, pLossofHet);
-                                    results.addResults(result);
-                                }
-                                innerResultsList.add(results);
-                            }
-                        return innerResultsList;
-                        }
-                    }));
+                final FingerprintResults results = new FingerprintResults(f, null, specificSample);
+                for (final Fingerprint expectedFp : expectedFingerprints) {
+                    final MatchResults result = calculateMatchResults(combinedFp, expectedFp, 0, pLossofHet);
+                    results.addResults(result);
                 }
-        executor.shutdown();
-        try {
-            executor.awaitTermination(1, TimeUnit.DAYS);
-        } catch (final InterruptedException ie) {
-            log.warn(ie, "Interrupted while waiting for executor to terminate.");
-        }
 
-        for (Map.Entry<File, Future<List<FingerprintResults>>> fileFutureEntry : futures.entrySet()) {
-            try {
-                resultsList.addAll(fileFutureEntry.getValue().get());
-            } catch (InterruptedException | ExecutionException e) {
-                log.error("Failed to fingerprint on file: " + fileFutureEntry.getKey());
-                throw new RuntimeException(e);
+                resultsList.add(results);
+
+            } else {
+                for (final FingerprintIdDetails rg : fingerprintsByReadGroup.keySet()) {
+                    final FingerprintResults results = new FingerprintResults(f, rg.platformUnit, rg.sample);
+                    for (final Fingerprint expectedFp : expectedFingerprints) {
+                        final MatchResults result = calculateMatchResults(fingerprintsByReadGroup.get(rg), expectedFp, 0, pLossofHet);
+                        results.addResults(result);
+                    }
+
+                    resultsList.add(results);
+                }
             }
         }
-         return resultsList;
+
+        return resultsList;
     }
 
     /**
