@@ -19,13 +19,8 @@ import java.util.stream.Stream;
 
 public final class AlleleSubsettingUtils {
 
-    /**
-     * This constant holds the definition of the symbolic non-reference allele
-     * @deprecated from inception, as one should use a version of this from htsjdk.
-     * Will be deleted when htsjdk includes a replacement and that version is in picard.
-     */
-    @Deprecated
-    public static final Allele NON_REF_ALLELE = Allele.create("<NON_REF>");
+    static final Allele NON_REF_ALLELE = Allele.create("<NON_REF>");
+    static List<Allele> DIPLOID_NO_CALL = Arrays.asList(Allele.NO_CALL, Allele.NO_CALL);
 
     /**
      * Method to subset the alleles in the VariantContext to those in the input snp.
@@ -176,10 +171,15 @@ public final class AlleleSubsettingUtils {
                 }
             }
 
-            final boolean useNewLikelihoods = newPLs != null;
-            final GenotypeBuilder gb = useNewLikelihoods ? new GenotypeBuilder(g).PL(newPLs).log10PError(newLog10GQ) : new GenotypeBuilder(g).noPL().noGQ();
-            GenotypeLikelihoods.GenotypeLikelihoodsAllelePair allelePair = GenotypeLikelihoods.getAllelePair(MathUtil.indexOfMin(newPLs));
-            gb.alleles(Stream.of(allelePair.alleleIndex1, allelePair.alleleIndex2).map(allelesToKeep::get).collect(Collectors.toList()));
+            final GenotypeBuilder gb;
+            if (newPLs == null) {
+                gb = new GenotypeBuilder(g).noPL().noGQ().alleles(DIPLOID_NO_CALL);
+            } else {
+                gb = new GenotypeBuilder(g).PL(newPLs).log10PError(newLog10GQ);
+                final List<Integer> originalDiploidAlleles = GenotypeLikelihoods.getAlleles(MathUtil.indexOfMin(newPLs), 2);
+                gb.alleles(originalDiploidAlleles.stream().map(allelesToKeep::get).collect(Collectors.toList()));
+            }
+
             // restrict AD to the new allele subset
             if (g.hasAD()) {
                 final int[] oldAD = g.getAD();
