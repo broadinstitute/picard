@@ -45,7 +45,7 @@ public class SplitSamBySizeTest extends CommandLineProgramTest {
     private static final File PAIRED_FILE = new File(TEST_DATA_DIR + "/sorted-pair.sam");
     private static final File THREE_READ_TEMPLATE = new File(TEST_DATA_DIR + "/sorted-triplet.sam");
     private final ValidateSamTester VALIDATE_SAM_TESTER = new ValidateSamTester();
-    
+
     public String getCommandLineProgramName() {
         return SplitSamBySize.class.getSimpleName();
     }
@@ -58,7 +58,7 @@ public class SplitSamBySizeTest extends CommandLineProgramTest {
                 "INPUT=" + PAIRED_FILE.getAbsolutePath(),
                 "TOTAL_READS_IN_INPUT=10",
                 "SPLIT_TO_N_READS=5",
-                "OUTPUT_DIR=" + tmpDir
+                "OUTPUT=" + tmpDir
         };
 
         runPicardCommandLine(args);
@@ -88,7 +88,7 @@ public class SplitSamBySizeTest extends CommandLineProgramTest {
                 "INPUT=" + PAIRED_FILE.getAbsolutePath(),
                 "TOTAL_READS_IN_INPUT=10",
                 "SPLIT_TO_N_FILES=2",
-                "OUTPUT_DIR=" + tmpDir
+                "OUTPUT=" + tmpDir
         };
 
         runPicardCommandLine(args);
@@ -116,7 +116,7 @@ public class SplitSamBySizeTest extends CommandLineProgramTest {
                 "INPUT=" + PAIRED_FILE.getAbsolutePath(),
                 "TOTAL_READS_IN_INPUT=10",
                 "SPLIT_TO_N_READS=10",
-                "OUTPUT_DIR=" + tmpDir
+                "OUTPUT=" + tmpDir
         };
 
         runPicardCommandLine(args);
@@ -137,7 +137,7 @@ public class SplitSamBySizeTest extends CommandLineProgramTest {
                 "INPUT=" + THREE_READ_TEMPLATE.getAbsolutePath(),
                 "TOTAL_READS_IN_INPUT=11",
                 "SPLIT_TO_N_READS=2",
-                "OUTPUT_DIR=" + tmpDir
+                "OUTPUT=" + tmpDir
         };
 
         runPicardCommandLine(args);
