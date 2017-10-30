@@ -30,12 +30,14 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
-import picard.sam.util.ReadOutputCommandLineProgram;
+import picard.sam.util.PGTagArgumentCollection;
 
 import java.io.File;
 import java.util.*;
@@ -53,7 +55,7 @@ import java.util.*;
         programGroup = SamOrBam.class
 )
 @DocumentedFeature
-public class MergeBamAlignment extends ReadOutputCommandLineProgram {
+public class MergeBamAlignment extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Merge alignment data from a SAM or BAM with data in an unmapped BAM file.  ";
     static final String USAGE_DETAILS = "This tool produces a new SAM or BAM file that includes all aligned and unaligned reads and also carries " +
             "forward additional read attributes from the unmapped BAM (attributes that are otherwise lost in the process of alignment)." +
@@ -72,6 +74,9 @@ public class MergeBamAlignment extends ReadOutputCommandLineProgram {
             "      R=reference_sequence.fasta" +
             "</pre> " +
             "<hr />";
+
+    @ArgumentCollection
+    public final PGTagArgumentCollection pgTagArgumentCollection = new PGTagArgumentCollection();
 
     @Argument(shortName = "UNMAPPED",
             doc = "Original SAM or BAM file of unmapped reads, which must be in queryname order.")
@@ -282,7 +287,7 @@ public class MergeBamAlignment extends ReadOutputCommandLineProgram {
         merger.setIncludeSecondaryAlignments(INCLUDE_SECONDARY_ALIGNMENTS);
         merger.setAttributesToReverse(ATTRIBUTES_TO_REVERSE);
         merger.setAttributesToReverseComplement(ATTRIBUTES_TO_REVERSE_COMPLEMENT);
-        merger.setAddPGTagToReads(ADD_PG_TAG_TO_READS);
+        merger.setAddPGTagToReads(pgTagArgumentCollection.ADD_PG_TAG_TO_READS);
         merger.mergeAlignment(REFERENCE_SEQUENCE);
         merger.close();
 

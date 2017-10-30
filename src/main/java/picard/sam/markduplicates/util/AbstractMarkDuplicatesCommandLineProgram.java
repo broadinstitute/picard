@@ -37,9 +37,11 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Histogram;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import picard.PicardException;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.sam.DuplicationMetrics;
+import picard.sam.util.PGTagArgumentCollection;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -56,6 +58,9 @@ import java.util.Set;
  * @author Nils Homer
  */
 public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractOpticalDuplicateFinderCommandLineProgram {
+
+    @ArgumentCollection
+    protected final PGTagArgumentCollection pgTagArgumentCollection = new PGTagArgumentCollection();
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more input SAM or BAM files to analyze. Must be coordinate sorted.")
