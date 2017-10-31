@@ -89,9 +89,14 @@ public class SplitSamBySize extends CommandLineProgram {
         IOUtil.assertDirectoryIsWritable(OUTPUT);
         final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         final SAMFileHeader header = reader.getFileHeader();
+
         if (header.getSortOrder() == SAMFileHeader.SortOrder.coordinate) {
             log.warn("Splitting a coordinate sorted bam may result in invalid bams " +
                     "that do not always contain each read's mate in the same bam.");
+        }
+        if (!header.getVersion().equals(SAMFileHeader.CURRENT_VERSION)) {
+            log.warn(String.format("Input file's version is %s, but the current SAM format version is %s. Outputs will be written " +
+                    "with current version.", header.getVersion(), SAMFileHeader.CURRENT_VERSION));
         }
 
         final SAMFileWriterFactory factory = new SAMFileWriterFactory();
