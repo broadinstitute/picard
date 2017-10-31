@@ -23,10 +23,7 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -71,8 +68,13 @@ public class SplitSamBySizeTest extends CommandLineProgramTest {
         final SAMRecordIterator inputIter = input.iterator();
         final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
         final SamReader reader2 = SamReaderFactory.makeDefault().open(out2);
+        final SAMFileHeader inputHeader = input.getFileHeader();
+        final SAMFileHeader reader1Header = reader1.getFileHeader();
 
-        Assert.assertEquals(input.getFileHeader(), reader1.getFileHeader());
+        // The output BAM versions might not match the input header version if the input is outdated.
+        inputHeader.setAttribute(SAMFileHeader.VERSION_TAG, reader1Header.getVersion());
+
+        Assert.assertEquals(inputHeader, reader1Header);
         Assert.assertEquals(reader1.getFileHeader(), reader2.getFileHeader());
         VALIDATE_SAM_TESTER.assertSamValid(out1);
         VALIDATE_SAM_TESTER.assertSamValid(out2);
