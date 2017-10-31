@@ -1,4 +1,4 @@
-package picard.vcf;
+package picard.util;
 
 import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.FastaSequenceFile;
@@ -13,11 +13,14 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.vcf.LiftoverVcf;
+import picard.vcf.VcfTestUtils;
 
 import java.io.File;
-import java.util.*;
-
-import static picard.vcf.LiftoverVcf.leftAlignVariant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Test class for LiftoverVcf.
@@ -378,8 +381,13 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
     public void testFlipIndel(final VariantContext source, final ReferenceSequence reference, final VariantContext result) {
 
         final LiftOver liftOver = new LiftOver(CHAIN_FILE);
+        final Interval originalLocus = new Interval(source.getContig(), source.getStart(), source.getEnd());
+        final Interval target = liftOver.liftOver(originalLocus);
+        if (target != null && !target.isNegativeStrand()){
+            throw new RuntimeException("not reversed");
+        }
 
-        final VariantContext flipped = LiftoverVcf.flipIndel(source, liftOver, reference);
+        final VariantContext flipped = LiftoverUtils.liftVariant(source, target, reference, false);
 
         VcfTestUtils.assertEquals(flipped, result);
     }
@@ -606,8 +614,12 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "leftAlignAllelesData")
     public void testLeftAlignVariants(final VariantContext source, final ReferenceSequence reference, final VariantContext result) {
+        VariantContextBuilder vcb = new VariantContextBuilder(source);
 
-        VcfTestUtils.assertEquals(leftAlignVariant(source, reference), result);
+        LiftoverUtils.leftAlignVariant(vcb, source.getStart(), source.getEnd(), source.getAlleles(), reference);
+        vcb.genotypes(LiftoverUtils.fixGenotypes(source.getGenotypes(), source.getAlleles(), vcb.getAlleles()));
+
+        VcfTestUtils.assertEquals(vcb.make(), result);
     }
 
     @DataProvider(name = "indelNoFlipData")
@@ -800,7 +812,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         final Interval target = liftOver.liftOver(new Interval(source.getContig(), source.getStart(), source.getEnd()), .95);
 
-        VcfTestUtils.assertEquals(LiftoverVcf.liftSimpleVariant(source, target), result);
+        VariantContextBuilder vcb = LiftoverUtils.liftSimpleVariantContext(source, target);
+        VcfTestUtils.assertEquals(vcb == null ? null : vcb.make(), result);
     }
 
 }
