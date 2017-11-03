@@ -130,19 +130,6 @@ public class SplitSamBySizeTest extends CommandLineProgramTest {
         compareInputWithOutputs(reader1, reader2, inputIter, 5);
     }
 
-    @Test
-    public void testOther() throws IOException {
-        final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
-
-        final String[] args = new String[]{
-                "INPUT=/Users/mshand/Downloads/mshand%2Fsmall_NA12878_unmapped%2FH06JUADXX130110.1.ATCACGAT.20k_reads.bam",
-                "SPLIT_TO_N_FILES=3",
-                "OUTPUT=" + tmpDir
-        };
-
-        runPicardCommandLine(args);
-    }
-
     private void compareInputWithOutputs (final SamReader reader1, final SamReader reader2, final SAMRecordIterator inputIterator, final int expectedFirstSize) {
         int count = 0;
         for (SAMRecord rec : reader1) {
