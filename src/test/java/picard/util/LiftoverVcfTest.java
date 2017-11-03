@@ -17,10 +17,7 @@ import picard.vcf.LiftoverVcf;
 import picard.vcf.VcfTestUtils;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Test class for LiftoverVcf.
@@ -31,6 +28,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
     private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
     private static final File CHAIN_FILE = new File(TEST_DATA_PATH, "test.over.chain");
+    private static final File POSITIVE_CHAIN_FILE = new File(TEST_DATA_PATH, "test.positive.over.chain");
     private static final File TWO_INTERVAL_CHAIN_FILE = new File(TEST_DATA_PATH, "test.two.block.over.chain");
 
     private static final File CHAIN_FILE_WITH_BAD_CONTIG = new File(TEST_DATA_PATH, "test.over.badContig.chain");
@@ -140,7 +138,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 "WRITE_ORIGINAL_POSITION=" + shouldWriteOriginalPosition
         };
 
-        runPicardCommandLine(args);
+        Assert.assertEquals(runPicardCommandLine(args),0);
 
         try (final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, false)) {
             for (final VariantContext vc : liftReader) {
@@ -154,6 +152,38 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             }
         }
     }
+
+    @Test
+    public void testWriteVcfWithFlippedAlleles() {
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
+        final File input = new File(TEST_DATA_PATH, "testLiftoverMismatchingSnps.vcf");
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "CREATE_INDEX=false"
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args),0);
+
+
+        try (final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, false)) {
+            Assert.assertTrue(liftReader.getFileHeader().hasInfoLine(LiftoverUtils.SWAPPED_ALLELES));
+            for (final VariantContext vc : liftReader) {
+                    Assert.assertFalse(vc.hasAttribute(LiftoverVcf.ORIGINAL_CONTIG));
+                    Assert.assertFalse(vc.hasAttribute(LiftoverVcf.ORIGINAL_START));
+
+            }
+        }
+    }
+
 
     @DataProvider(name = "indelFlipData")
     public Iterator<Object[]> indelFlipData() {
@@ -391,6 +421,77 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         VcfTestUtils.assertEquals(flipped, result);
     }
+
+
+    @DataProvider(name = "snpWithChangedRef")
+    public Iterator<Object[]> snpWithChangedRef() {
+
+        final ReferenceSequence reference = new ReferenceSequence("chr1", 0,
+                "CAAAAAAAAAACGTACGTACTCTCTCTCTACGT".getBytes());
+        //       123456789 123456789 123456789 123
+
+        final Allele RefT = Allele.create("T", true);
+        final Allele RefA = Allele.create("A", true);
+        final Allele RefC = Allele.create("C", true);
+        final Allele RefG = Allele.create("G", true);
+
+        final Allele A = Allele.create("A", false);
+        final Allele T = Allele.create("T", false);
+        final Allele C = Allele.create("C", false);
+        final Allele G = Allele.create("G", false);
+
+        final List<Object[]> tests = new ArrayList<>();
+
+        final int CHAIN_SIZE = 540; // the length of the single chain in POSITIVE_CHAIN_FILE
+
+        final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1");
+        final GenotypeBuilder genotypeBuilder = new GenotypeBuilder("test1");
+        final GenotypeBuilder resultGenotypeBuilder = new GenotypeBuilder("test1");
+        final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1");
+
+        // simple snp
+        int start = 12;
+        int stop = 12;
+        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefA, C));
+        result_builder.start(start).stop(stop).alleles(CollectionUtil.makeList(A, RefC));
+
+        genotypeBuilder.alleles(builder.getAlleles()).AD(new int[]{5, 4}).PL(new int[]{40, 0, 60});
+        resultGenotypeBuilder.alleles(result_builder.getAlleles()).AD(new int[]{4, 5}).PL(new int[]{60, 0, 40});
+
+
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
+
+        tests.add(new Object[]{builder.make(), reference, result_builder.make()});
+
+
+        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefA, C));
+        result_builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefC, A));
+
+        genotypeBuilder.alleles(Arrays.asList(C,C)).AD(new int[]{0, 10}).PL(new int[]{400, 40, 0});
+        resultGenotypeBuilder.alleles(Arrays.asList(RefC,RefC)).AD(new int[]{10, 0}).PL(new int[]{0, 40, 400});
+
+
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
+
+        tests.add(new Object[]{builder.make(), reference, result_builder.make()});
+        return tests.iterator();
+    }
+
+
+        @Test(dataProvider = "snpWithChangedRef")
+        public void snpWithChangedRef(final VariantContext source, final ReferenceSequence reference, final VariantContext result) {
+
+        final LiftOver liftOver = new LiftOver(POSITIVE_CHAIN_FILE);
+        final Interval originalLocus = new Interval(source.getContig(), source.getStart(), source.getEnd());
+        final Interval target = liftOver.liftOver(originalLocus);
+
+        final VariantContext flipped = LiftoverUtils.swapRefAlt(source);
+
+        VcfTestUtils.assertEquals(flipped, result);
+    }
+
 
     @DataProvider(name = "leftAlignAllelesData")
     public Iterator<Object[]> leftAlignAllelesData() {

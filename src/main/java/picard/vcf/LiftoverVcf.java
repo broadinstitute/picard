@@ -31,9 +31,7 @@ import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.*;
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -50,9 +48,7 @@ import picard.util.LiftoverUtils;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Tool for lifting over a VCF to another genome build and producing a properly header'd,
@@ -161,13 +157,14 @@ public class LiftoverVcf extends CommandLineProgram {
      */
     public static final String ATTEMPTED_LOCUS = "AttemptedLocus";
 
+
     /**
      * Metadata to be added to the Passing file.
      */
     private static final List<VCFInfoHeaderLine> ATTRS = CollectionUtil.makeList(
             new VCFInfoHeaderLine(ORIGINAL_CONTIG, 1, VCFHeaderLineType.String, "The name of the source contig/chromosome prior to liftover."),
             new VCFInfoHeaderLine(ORIGINAL_START, 1, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover.")
-    );
+            );
 
     private VariantContextWriter rejects;
     private final Log log = Log.getInstance(LiftoverVcf.class);
@@ -226,6 +223,12 @@ public class LiftoverVcf extends CommandLineProgram {
         if (WRITE_ORIGINAL_POSITION) {
             for (final VCFInfoHeaderLine line : ATTRS) outHeader.addMetaDataLine(line);
         }
+
+        outHeader.addMetaDataLine(new VCFInfoHeaderLine(LiftoverUtils.SWAPPED_ALLELES, 0, VCFHeaderLineType.Flag,
+                "The REF and the ALT alleles have been swapped due to changes in the reference. " +
+                "NOTA BENE: No INFO field annotations reflect this swap, and in the genotypes, " +
+                "only the GT, PL, and AD fields have been modified. All the other fields have been kept unchanged."));
+
         final VariantContextWriter out = new VariantContextWriterBuilder()
                 .setOption(Options.INDEX_ON_THE_FLY)
                 .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
@@ -248,7 +251,7 @@ public class LiftoverVcf extends CommandLineProgram {
         // collection.
         ////////////////////////////////////////////////////////////////////////
         long total = 0;
-        log.info("Lifting variants over and sorting.");
+        log.info("Lifting variants over and sorting (not yet writing the output file.)");
 
         sorter = SortingCollection.newInstance(VariantContext.class,
                 new VCFRecordCodec(outHeader, ALLOW_MISSING_FIELDS_IN_HEADER || VALIDATION_STRINGENCY != ValidationStringency.STRICT),
@@ -331,6 +334,7 @@ public class LiftoverVcf extends CommandLineProgram {
             progress.record(ctx.getContig(), ctx.getStart());
         }
         out.close();
+
         sorter.cleanup();
 
         return 0;
@@ -349,8 +353,8 @@ public class LiftoverVcf extends CommandLineProgram {
      * @param source the original {@link VariantContext} to use for putting the original location information into vc
      * @return true if successful, false if failed due to mismatching reference allele.
      */
-    private void tryToAddVariant(final VariantContext vc, final ReferenceSequence refSeq,  final VariantContext source) {
-        if (!refSeq.getName().equals(vc.getContig())){
+    private void tryToAddVariant(final VariantContext vc, final ReferenceSequence refSeq, final VariantContext source) {
+        if (!refSeq.getName().equals(vc.getContig())) {
             throw new IllegalStateException("The contig of the VariantContext, " + vc.getContig() + ", doesnt match the ReferenceSequence: " + refSeq.getName());
         }
 
@@ -362,6 +366,13 @@ public class LiftoverVcf extends CommandLineProgram {
                 final String refString = StringUtil.bytesToString(ref, vc.getStart() - 1, vc.getEnd() - vc.getStart() + 1);
 
                 if (!refString.equalsIgnoreCase(allele.getBaseString())) {
+                    // consider that the ref and the alt may have been swapped in a simple biallelic SNP
+                    if (vc.getAlleles().size() == 2 &&
+                            vc.getAlleles().stream().map(Allele::length).allMatch(l -> l == 1) &&
+                            refString.equalsIgnoreCase(vc.getAlleles().stream().filter(Allele::isNonReference).findFirst().get().getBaseString())) {
+                        sorter.add(LiftoverUtils.swapRefAlt(vc));
+                        return;
+                    }
                     mismatchesReference = true;
                 }
                 break;

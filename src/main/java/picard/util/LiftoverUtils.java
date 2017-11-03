@@ -27,6 +27,7 @@ package picard.util;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.*;
 import picard.vcf.LiftoverVcf;
 
@@ -35,6 +36,13 @@ import java.util.stream.Collectors;
 
 
 public class LiftoverUtils {
+
+    /**
+     * Attribute used to store the fact that the alt and ref alleles of the variant have been swapped, while all the INFO annotations have not.
+     */
+    public static final String SWAPPED_ALLELES = "SwappedAlleles";
+
+
     /**
      * This will take an input VariantContext and lift to the provided interval.
      * If this interval is in the opposite orientation, all alleles and genotypes will be reverse complemented
@@ -192,6 +200,59 @@ public class LiftoverUtils {
     }
 
     /**
+     * method to swap the reference and alt alleles of a bi-allelic, SNP
+     *
+     * @param vc
+     * @return
+     */
+    public static VariantContext swapRefAlt(final VariantContext vc) {
+        //TODO: assert vc is a biallelic snp
+
+        final VariantContextBuilder swappedBuilder = new VariantContextBuilder(vc);
+
+        swappedBuilder.attribute(SWAPPED_ALLELES, true);
+
+        // You need to get the baseString in order to forget who's reference and who's variant
+        swappedBuilder.alleles(Arrays.asList(vc.getAlleles().get(1).getBaseString(), vc.getAlleles().get(0).getBaseString()));
+
+
+        final Map<Allele, Allele> alleleMap = new HashMap<>();
+        for (int idx = 0; idx < vc.getAlleles().size(); idx++) {
+            // The index of the allele changed from 1 to 0 and vice versa, but the bases remain the same.
+            alleleMap.put(vc.getAlleles().get(idx), swappedBuilder.getAlleles().get(1 - idx));
+        }
+
+        final GenotypesContext swappedGenotypes = GenotypesContext.create(vc.getGenotypes().size());
+        for (final Genotype genotype : vc.getGenotypes()) {
+            final List<Allele> swappedAlleles = new ArrayList<>();
+            for (final Allele allele : genotype.getAlleles()) {
+                if (allele.isNoCall()) {
+                    swappedAlleles.add(allele);
+                } else {
+                    swappedAlleles.add(alleleMap.get(allele));
+                }
+            }
+            // Flip AD
+            final GenotypeBuilder builder = new GenotypeBuilder(genotype).alleles(swappedAlleles);
+            if (genotype.hasAD() && genotype.getAD().length == 2) {
+                final int[] origAD = genotype.getAD();
+                builder.AD(new int[]{origAD[1], origAD[0]});
+            }
+
+            //Flip PL
+            if (genotype.hasPL() && genotype.getPL().length == 3) {
+                final int[] origPL = genotype.getPL();
+                builder.PL(new int[]{origPL[2], origPL[1], origPL[0]});
+            }
+            swappedGenotypes.add(builder.make());
+        }
+        swappedBuilder.genotypes(swappedGenotypes);
+
+        return swappedBuilder.make();
+    }
+
+
+    /**
      *    Normalizes and left aligns a {@link VariantContextBuilder}.
      *    Note: this will modify the start/stop and alleles of this builder
      *
@@ -208,6 +269,16 @@ public class LiftoverUtils {
 
         int theStart = start;
         int theEnd = end;
+
+        final String refString = StringUtil.bytesToString(referenceSequence.getBases(), start, end - start + 1);
+        //make sure that referenceAllele matches reference
+        final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElse(null);
+        if(refAllele==null) throw new RuntimeException("How did that happen? No reference allele?");
+        if (!refString.equalsIgnoreCase(refAllele.getBaseString())) {
+            throw new IllegalArgumentException(
+                    String.format("Reference allele doesn't match reference: Allele= %s, at %s:%d-%d, ref=%s",
+                            refAllele.toString(), referenceSequence.getName(),start,end,refString));
+        }
 
         // 1. while changes in alleles do
         while (changesInAlleles) {
