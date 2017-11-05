@@ -1,0 +1,9 @@
+@HD	VN:1.0	SO:unsorted
+@SQ	SN:chr1	LN:10100	UR:header.fasta
+@SQ	SN:chr2	LN:10100	UR:header.fasta
+@SQ	SN:chr3	LN:10100	UR:header.fasta
+@SQ	SN:chr4	LN:10100	UR:header.fasta
+@SQ	SN:chr5	LN:10100	UR:header.fasta
+@SQ	SN:chr6	LN:10100	UR:header.fasta
+@SQ	SN:chr7	LN:40400	UR:header.fasta
+@SQ	SN:chr8	LN:20200	UR:header.fasta

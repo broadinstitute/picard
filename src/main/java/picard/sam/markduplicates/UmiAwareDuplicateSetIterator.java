@@ -138,24 +138,31 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
             String inferredUmi = representativeRead.getStringAttribute(inferredUmiTag);
 
             for (SAMRecord rec : records) {
-                String currentUmi = rec.getStringAttribute(umiTag);
+                String currentUmi = UmiUtil.getSanitizedUMI(rec, umiTag);
 
                 if (currentUmi != null) {
                     // All UMIs should be the same length, the code presently does not support variable length UMIs
                     // TODO: Add support for variable length UMIs
-                    if (!haveWeSeenFirstRead) {
-                        metrics.MEAN_UMI_LENGTH = currentUmi.length();
-                        haveWeSeenFirstRead = true;
+                    // If the UMI contains a N, we don't want to include it in our other metrics
+                    // but still want to keep track of it
+                    if (currentUmi.contains("N")) {
+                        metrics.addUmiObservationN();
                     } else {
-                        if (metrics.MEAN_UMI_LENGTH != currentUmi.length()) {
-                            throw new PicardException("UMIs of differing lengths were found.");
+                        if (!haveWeSeenFirstRead) {
+                            metrics.MEAN_UMI_LENGTH = currentUmi.length();
+                            haveWeSeenFirstRead = true;
+                        } else {
+                            if (metrics.MEAN_UMI_LENGTH != currentUmi.length()) {
+                                throw new PicardException("UMIs of differing lengths were found.");
+                            }
                         }
-                    }
 
-                    // Update UMI metrics associated with each record
-                    metrics.OBSERVED_BASE_ERRORS += hammingDistance(currentUmi, inferredUmi);
-                    observedUmiBases += currentUmi.length();
-                    metrics.addUmiObservation(currentUmi, inferredUmi);
+                        // Update UMI metrics associated with each record
+                        // The hammingDistance between N and a base is a distance of 1. Comparing N to N is 0 distance.
+                        metrics.OBSERVED_BASE_ERRORS += hammingDistance(currentUmi, inferredUmi);
+                        observedUmiBases += currentUmi.length();
+                        metrics.addUmiObservation(currentUmi, inferredUmi);
+                    }
                 }
             }
         }

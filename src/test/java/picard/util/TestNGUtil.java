@@ -3,12 +3,13 @@ package picard.util;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
 
 import org.testng.Assert;
+import org.testng.collections.Sets;
+import picard.cmdline.ClassFinder;
 
 import static java.lang.Math.abs;
 
@@ -18,7 +19,8 @@ import static java.lang.Math.abs;
 public class TestNGUtil {
 
     static final double EPSILON = 1e-300; //a constant near the smallest possible positive value representable in double,
-    // not actually the smallest possible value on purpose, since that would be indistinguishable from 0 and then useless.
+
+     // not actually the smallest possible value on purpose, since that would be indistinguishable from 0 and then useless.
     // This is small enough to be meaningless, but representable.
 
 
@@ -92,5 +94,42 @@ public class TestNGUtil {
         for (int i = 0; i < lhs.length; ++i) {
             Assert.assertTrue(compareDoubleWithAccuracy(lhs[i], rhs[i], accuracy), "Arrays disagree at position " + i + ":  " + lhs[i] + " vs. " + rhs[i] + ". ");
         }
+    }
+
+    /** A Method that returns all the Methods that are annotated with @DataProvider
+     * in a given package. Should be moved to htsjdk and used from there
+     *
+     * @param packageName the package under which to look for classes and methods
+     * @return an iterator to collection of Object[]'s consisting of {Method method, Class clazz} pair.
+     * where method has the @DataProviderAnnotation and is a member of clazz.
+     */
+    public static Iterator<Object[]> getDataProviders(final String packageName) {
+        List<Object[]> data = new ArrayList<>();
+        final ClassFinder classFinder = new ClassFinder();
+        classFinder.find(packageName, Object.class);
+
+        for (final Class<?> testClass : classFinder.getClasses()) {
+            if (Modifier.isAbstract(testClass.getModifiers()) || Modifier.isInterface(testClass.getModifiers()))
+                continue;
+            Set<Method> methodSet = Sets.newHashSet();
+            methodSet.addAll(Arrays.asList(testClass.getDeclaredMethods()));
+            methodSet.addAll(Arrays.asList(testClass.getMethods()));
+
+            for (final Method method : methodSet) {
+                if (method.isAnnotationPresent(DataProvider.class)) {
+                    data.add(new Object[]{method, testClass});
+                }
+            }
+        }
+
+        return data.iterator();
+    }
+
+    static public void assertGreaterThan(final double lhs, final double rhs) {
+        Assert.assertTrue(lhs > rhs, String.format("Expected inequality is not true: %g > %g", lhs, rhs));
+    }
+
+    static public void assertLessThan(final double lhs, final double rhs) {
+        Assert.assertTrue(lhs < rhs, String.format("Expected inequality is not true: %g < %g", lhs, rhs));
     }
 }

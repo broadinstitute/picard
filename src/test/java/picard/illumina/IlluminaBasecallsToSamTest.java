@@ -229,6 +229,26 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testNonBarcodedTileSubset() throws Exception {
+        final File outputBam = File.createTempFile("nonBarcoded.", ".sam");
+        outputBam.deleteOnExit();
+        final int lane = 1;
+
+        Assert.assertEquals(runPicardCommandLine(new String[]{
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=25S8S25T",
+                "OUTPUT=" + outputBam,
+                "RUN_BARCODE=HiMom",
+                "SAMPLE_ALIAS=HiDad",
+                "LIBRARY_NAME=Hello, World",
+                "FIRST_TILE=1201",
+                "TILE_LIMIT=1"
+        }), 0);
+        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedTileSubset.sam"));
+    }
+
+    @Test
     public void testMultiplexed() throws Exception {
         runStandardTest(1, "multiplexedBarcode.", "barcode.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR);
     }

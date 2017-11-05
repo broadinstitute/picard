@@ -47,7 +47,8 @@ public class FingerprintIdDetails {
 
     public FingerprintIdDetails() {}
 
-    // If platformUnit is not populated, then fields will be initialized as flowcellBarcode="?", lane=-1, molecularBarcode="?"
+    // If platformUnit is not populated, or "improperly" formatted (or missing), then fields will be initialized as
+    // flowcellBarcode="?", lane=-1, molecularBarcode="?"
     public FingerprintIdDetails(final String platformUnit, final String file) {
         getPlatformUnitDetails(platformUnit);
         this.platformUnit = platformUnit;
@@ -125,18 +126,21 @@ public class FingerprintIdDetails {
      */
     private void getPlatformUnitDetails(final String puString) {
 
-        final String[] tmp = puString.split("\\."); // Expect to look like: D047KACXX110901.1.ACCAACTG
         this.runBarcode = "?";
         this.runLane = -1;
         this.molecularBarcode = "?";
-        try {
-            if ((tmp.length == 3) || (tmp.length == 2)) {
-                this.runBarcode = tmp[0];
+
+        if (puString == null) return;
+
+        final String[] tmp = puString.split("\\."); // Expect to look like: D047KACXX110901.1.ACCAACTG
+        if ((tmp.length == 3) || (tmp.length == 2)) {
+            this.runBarcode = tmp[0];
+            this.molecularBarcode = (tmp.length == 3) ? tmp[2] : "";  // In older BAMS there may be no molecular barcode sequence
+            try {
                 this.runLane = Integer.parseInt(tmp[1]);
-                this.molecularBarcode = (tmp.length == 3) ? tmp[2] : "";  // In older BAMS there may be no molecular barcode sequence
+            } catch (final NumberFormatException e) {
+                //no-op. return with whatever was parsed
             }
-        } catch (final NumberFormatException e) {
-            throw new IllegalArgumentException("Unexpected format " + puString + " for PU attribute");
         }
     }
 }

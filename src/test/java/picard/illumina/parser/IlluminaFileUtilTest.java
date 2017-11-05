@@ -9,11 +9,7 @@ import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -514,6 +510,45 @@ public class IlluminaFileUtilTest {
         final int[] cycles = cycleRange(9, 16);
         final CycleIlluminaFileMap cfm = pcfu.getFiles(cycles);
         cfm.assertValid(DEFAULT_TILES, cycles);
+    }
+
+    @Test(dataProvider = "testHasCbclsDataProvider")
+    public void testHasCbcls(final int lane,
+                             final boolean createCbclDir,
+                             final boolean createCbcl,
+                             final boolean expectedResult) throws IOException {
+
+        final File basecallsDir = IOUtil.createTempDir("basecalls", "");
+        basecallsDir.deleteOnExit();
+
+        if (0 < lane) {
+            final File laneDir = new File(basecallsDir, IlluminaFileUtil.longLaneStr(lane));
+            Assert.assertTrue(laneDir.mkdir());
+
+            if (createCbclDir) {
+                final File cbclDir = new File(laneDir, "C1.1");
+                cbclDir.mkdirs();
+                cbclDir.deleteOnExit();
+
+                if (createCbcl) {
+                    final File cbcl = new File(cbclDir, IlluminaFileUtil.longLaneStr(lane) + "_42.cbcl");
+                    new FileOutputStream(cbcl).close();
+                    cbcl.deleteOnExit();
+                }
+            }
+        }
+
+        Assert.assertEquals(IlluminaFileUtil.hasCbcls(basecallsDir, lane), expectedResult);
+    }
+
+    @DataProvider(name = "testHasCbclsDataProvider")
+    public Object[][] testHasCbclsDataProvider() {
+        return new Object[][]{
+                {1, true, true, true},    // lane directory, cbcl dir, and one cbcl
+                {1, true, false, false} , // lane directory, cbcl dir, but no cbcl
+                {1, false, false, false}, // lane directory, but neither cbcl dir nor cbcl
+                {-1, false, false, false} // no lane directory, cbcl dir, or cbcl
+        };
     }
 
 
