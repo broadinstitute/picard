@@ -3,6 +3,7 @@ package picard.util;
 import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.FastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
@@ -16,6 +17,7 @@ import picard.cmdline.CommandLineProgramTest;
 import picard.vcf.LiftoverVcf;
 import picard.vcf.VcfTestUtils;
 
+import java.io.Closeable;
 import java.io.File;
 import java.util.*;
 
@@ -51,7 +53,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         return new Object[][]{
                 {"testLiftoverBiallelicIndels.vcf", 3, 0},
                 {"testLiftoverMultiallelicIndels.vcf", 0, 2},
-                {"testLiftoverFailingVariants.vcf", 0, 3},
+                {"testLiftoverFailingVariants.vcf", 3, 0},
         };
     }
 
@@ -80,6 +82,47 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final VCFFileReader rejectReader = new VCFFileReader(rejectOutputFile, false);
         Assert.assertEquals(rejectReader.iterator().stream().count(), expectedFailing, "The wrong number of variants was lifted over");
     }
+
+    @Test
+    public void testChangingInfoFields() {
+        final String filename = "testLiftoverFailingVariants.vcf";
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
+        final File input = new File(TEST_DATA_PATH, filename);
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "CREATE_INDEX=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, false);
+        final CloseableIterator<VariantContext> iterator = liftReader.iterator();
+        while(iterator.hasNext()){
+            final VariantContext vc=iterator.next();
+            Assert.assertTrue(vc.hasAttribute("AF"));
+
+            Assert.assertEquals(vc.hasAttribute(LiftoverUtils.SWAPPED_ALLELES), vc.hasAttribute("FLIPPED_AF"),vc.toString());
+            Assert.assertEquals(!vc.hasAttribute(LiftoverUtils.SWAPPED_ALLELES), vc.hasAttribute("MAX_AF")&&vc.getAttribute("MAX_AF")!=null,vc.toString());
+
+            if (vc.hasAttribute(LiftoverUtils.SWAPPED_ALLELES)) {
+                final double af = vc.getAttributeAsDouble("AF", -1.0);
+                final double flippedAf = vc.getAttributeAsDouble("FLIPPED_AF", -2.0);
+
+                Assert.assertTrue(TestNGUtil.compareDoubleWithAccuracy(af, flippedAf, 0.01),
+                        "Error while comparing AF. expected " + flippedAf + " but found " + af);
+
+            }
+        }
+    }
+
 
     @DataProvider(name = "dataTestMissingContigInReference")
     public Object[][] dataTestHaplotypeProbabilitiesFromSequenceAddToProbs() {
@@ -487,7 +530,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Interval originalLocus = new Interval(source.getContig(), source.getStart(), source.getEnd());
         final Interval target = liftOver.liftOver(originalLocus);
 
-        final VariantContext flipped = LiftoverUtils.swapRefAlt(source);
+        final VariantContext flipped = LiftoverUtils.swapRefAlt(source, LiftoverUtils.DEFAULT_TAGS_TO_REVERSE, LiftoverUtils.DEFAULT_TAGS_TO_DROP);
 
         VcfTestUtils.assertEquals(flipped, result);
     }

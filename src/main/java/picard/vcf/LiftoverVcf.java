@@ -108,6 +108,13 @@ public class LiftoverVcf extends CommandLineProgram {
     @Argument(doc = "Allow INFO and FORMAT in the records that are not found in the header", optional = true)
     public boolean ALLOW_MISSING_FIELDS_IN_HEADER = false;
 
+    @Argument(doc = "INFO field annotations that behave like an Allele Frequency and should be transformed with x->1-x " +
+            "when swapping reference with variant alleles.", optional = true)
+    public Collection<String> TAGS_TO_REVERSE = LiftoverUtils.DEFAULT_TAGS_TO_REVERSE;
+
+    @Argument(doc = "INFO field annotations that should be deleted when swapping reference with variant alleles.", optional = true)
+    public Collection<String> TAGS_TO_DROP = LiftoverUtils.DEFAULT_TAGS_TO_DROP;
+
     // When a contig used in the chain is not in the reference, exit with this value instead of 0.
     public static int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE = 1;
 
@@ -370,7 +377,7 @@ public class LiftoverVcf extends CommandLineProgram {
                     if (vc.getAlleles().size() == 2 &&
                             vc.getAlleles().stream().map(Allele::length).allMatch(l -> l == 1) &&
                             refString.equalsIgnoreCase(vc.getAlleles().stream().filter(Allele::isNonReference).findFirst().get().getBaseString())) {
-                        sorter.add(LiftoverUtils.swapRefAlt(vc));
+                        sorter.add(LiftoverUtils.swapRefAlt(vc,TAGS_TO_REVERSE, TAGS_TO_DROP));
                         return;
                     }
                     mismatchesReference = true;

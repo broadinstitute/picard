@@ -26,6 +26,7 @@ package picard.util;
 
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.*;
@@ -40,9 +41,13 @@ public class LiftoverUtils {
     /**
      * Attribute used to store the fact that the alt and ref alleles of the variant have been swapped, while all the INFO annotations have not.
      */
+
+    public static final Collection<String> DEFAULT_TAGS_TO_REVERSE = Arrays.asList("AF");
+    public static final Collection<String> DEFAULT_TAGS_TO_DROP = Arrays.asList("MAX_AF");
+
     public static final String SWAPPED_ALLELES = "SwappedAlleles";
 
-
+    public static Log log = Log.getInstance(LiftoverUtils.class);
     /**
      * This will take an input VariantContext and lift to the provided interval.
      * If this interval is in the opposite orientation, all alleles and genotypes will be reverse complemented
@@ -73,6 +78,8 @@ public class LiftoverUtils {
         builder.filters(source.getFilters());
         builder.log10PError(source.getLog10PError());
         builder.attributes(source.getAttributes());
+        // make sure that the variant isn't mistakenly set as "SwappedAlleles"
+        builder.attribute(SWAPPED_ALLELES, false);
         builder.id(source.getID());
 
         if (writeOriginalPosition) {
@@ -205,7 +212,7 @@ public class LiftoverUtils {
      * @param vc
      * @return
      */
-    public static VariantContext swapRefAlt(final VariantContext vc) {
+    public static VariantContext swapRefAlt(final VariantContext vc, final Collection<String> annotationsToReverse, final Collection<String> annotationsToDrop) {
         //TODO: assert vc is a biallelic snp
 
         final VariantContextBuilder swappedBuilder = new VariantContextBuilder(vc);
@@ -247,6 +254,28 @@ public class LiftoverUtils {
             swappedGenotypes.add(builder.make());
         }
         swappedBuilder.genotypes(swappedGenotypes);
+
+        for (String key : vc.getAttributes().keySet()) {
+            if (annotationsToDrop.contains(key)) {
+                swappedBuilder.rmAttribute(key);
+            }
+
+            if (annotationsToReverse.contains(key)) {
+                final double afLikeAttribute = vc.getAttributeAsDouble(key, -1);
+
+                if (afLikeAttribute == -1) {
+                    log.warn("Trying to reverse attribute " + key +
+                            "but found value that parsable as a double (" + vc.getAttribute(key, "") +
+                            ") in variant " + vc + "results might be wrong.");
+                }
+
+                if (afLikeAttribute < 0 || afLikeAttribute > 1) {
+                    log.warn("Trying to reverse attribute " + key +
+                            "but found value that isn't between 0 and 1 (" + afLikeAttribute + ") in variant " + vc + "results might be wrong.");
+                }
+                swappedBuilder.attribute(key, 1 - afLikeAttribute);
+            }
+        }
 
         return swappedBuilder.make();
     }
