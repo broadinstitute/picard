@@ -270,14 +270,14 @@ public class LiftoverUtils {
         int theStart = start;
         int theEnd = end;
 
-        final String refString = StringUtil.bytesToString(referenceSequence.getBases(), start, end - start + 1);
+        final String refString = StringUtil.bytesToString(referenceSequence.getBases(), start-1, end - start + 1);
         //make sure that referenceAllele matches reference
         final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElse(null);
-        if(refAllele==null) throw new RuntimeException("How did that happen? No reference allele?");
+        if (refAllele == null) throw new RuntimeException("How did that happen? No reference allele?");
         if (!refString.equalsIgnoreCase(refAllele.getBaseString())) {
             throw new IllegalArgumentException(
                     String.format("Reference allele doesn't match reference: Allele= %s, at %s:%d-%d, ref=%s",
-                            refAllele.toString(), referenceSequence.getName(),start,end,refString));
+                            refAllele.toString(), referenceSequence.getName(), start, end, refString));
         }
 
         // 1. while changes in alleles do
@@ -341,7 +341,7 @@ public class LiftoverUtils {
                 .collect(Collectors.toMap(Map.Entry::getKey, me -> Allele.create(me.getValue(), me.getKey().isReference())));
 
         //retain original order:
-        List<Allele> fixedAlleles = alleles.stream().map(a -> fixedAlleleMap.get(a)).collect(Collectors.toList());
+        List<Allele> fixedAlleles = alleles.stream().map(fixedAlleleMap::get).collect(Collectors.toList());
 
         builder.alleles(fixedAlleles);
     }
