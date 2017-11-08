@@ -47,7 +47,7 @@ public class LiftoverUtils {
 
     public static final String SWAPPED_ALLELES = "SwappedAlleles";
 
-    public static Log log = Log.getInstance(LiftoverUtils.class);
+    public static final Log log = Log.getInstance(LiftoverUtils.class);
     /**
      * This will take an input VariantContext and lift to the provided interval.
      * If this interval is in the opposite orientation, all alleles and genotypes will be reverse complemented
@@ -209,11 +209,16 @@ public class LiftoverUtils {
     /**
      * method to swap the reference and alt alleles of a bi-allelic, SNP
      *
-     * @param vc
-     * @return
+     * @param vc the {@link VariantContext} (bi-allelic SNP) that needs to have it's REF and ALT alleles swapped.
+     * @param annotationsToReverse INFO field annotations (of double value) that will be reversed (x->1-x)
+     * @param annotationsToDrop INFO field annotations that will be dropped from the result since they are invalid when REF and ALT are swapped
+     * @return a new {@link VariantContext} with alleles swapped, INFO fields modified and in the genotypes, GT, AD and PL corrected appropriately
      */
     public static VariantContext swapRefAlt(final VariantContext vc, final Collection<String> annotationsToReverse, final Collection<String> annotationsToDrop) {
-        //TODO: assert vc is a biallelic snp
+
+        if (!vc.isBiallelic() || !vc.isSNP() ) {
+            throw new IllegalArgumentException("swapRefAlt can only process biallelic, SNPS, found " + vc.toString() );
+        }
 
         final VariantContextBuilder swappedBuilder = new VariantContextBuilder(vc);
 
@@ -222,12 +227,11 @@ public class LiftoverUtils {
         // You need to get the baseString in order to forget who's reference and who's variant
         swappedBuilder.alleles(Arrays.asList(vc.getAlleles().get(1).getBaseString(), vc.getAlleles().get(0).getBaseString()));
 
-
         final Map<Allele, Allele> alleleMap = new HashMap<>();
-        for (int idx = 0; idx < vc.getAlleles().size(); idx++) {
-            // The index of the allele changed from 1 to 0 and vice versa, but the bases remain the same.
-            alleleMap.put(vc.getAlleles().get(idx), swappedBuilder.getAlleles().get(1 - idx));
-        }
+
+        // The index of the allele changed from 1 to 0 and vice versa, but the bases remain the same.
+        alleleMap.put(vc.getAlleles().get(0), swappedBuilder.getAlleles().get(1));
+        alleleMap.put(vc.getAlleles().get(1), swappedBuilder.getAlleles().get(0));
 
         final GenotypesContext swappedGenotypes = GenotypesContext.create(vc.getGenotypes().size());
         for (final Genotype genotype : vc.getGenotypes()) {
@@ -258,20 +262,18 @@ public class LiftoverUtils {
         for (String key : vc.getAttributes().keySet()) {
             if (annotationsToDrop.contains(key)) {
                 swappedBuilder.rmAttribute(key);
-            }
-
-            if (annotationsToReverse.contains(key)) {
+            } else if (annotationsToReverse.contains(key)) {
                 final double afLikeAttribute = vc.getAttributeAsDouble(key, -1);
 
                 if (afLikeAttribute == -1) {
                     log.warn("Trying to reverse attribute " + key +
-                            "but found value that parsable as a double (" + vc.getAttribute(key, "") +
-                            ") in variant " + vc + "results might be wrong.");
+                            "but found value that isn't parsable as a double: (" + vc.getAttribute(key, "") +
+                            ") in variant " + vc + ". Results might be wrong.");
                 }
 
                 if (afLikeAttribute < 0 || afLikeAttribute > 1) {
                     log.warn("Trying to reverse attribute " + key +
-                            "but found value that isn't between 0 and 1 (" + afLikeAttribute + ") in variant " + vc + "results might be wrong.");
+                            "but found value that isn't between 0 and 1: (" + afLikeAttribute + ") in variant " + vc + ". Results might be wrong.");
                 }
                 swappedBuilder.attribute(key, 1 - afLikeAttribute);
             }
@@ -301,8 +303,8 @@ public class LiftoverUtils {
 
         final String refString = StringUtil.bytesToString(referenceSequence.getBases(), start-1, end - start + 1);
         //make sure that referenceAllele matches reference
-        final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElse(null);
-        if (refAllele == null) throw new RuntimeException("How did that happen? No reference allele?");
+        final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElseThrow(()->new RuntimeException("How did that happen? No reference allele?"));
+
         if (!refString.equalsIgnoreCase(refAllele.getBaseString())) {
             throw new IllegalArgumentException(
                     String.format("Reference allele doesn't match reference: Allele= %s, at %s:%d-%d, ref=%s",
