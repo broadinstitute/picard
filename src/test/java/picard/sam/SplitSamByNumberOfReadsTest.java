@@ -51,7 +51,7 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
     public void testOkFile() throws IOException {
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
 
-        final String [] args = new String[]{
+        final String[] args = new String[]{
                 "INPUT=" + PAIRED_FILE.getAbsolutePath(),
                 "TOTAL_READS_IN_INPUT=10",
                 "SPLIT_TO_N_READS=5",
@@ -86,7 +86,7 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
     public void testNoTotalReads() throws IOException {
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
 
-        final String [] args = new String[]{
+        final String[] args = new String[]{
                 "INPUT=" + PAIRED_FILE.getAbsolutePath(),
                 "SPLIT_TO_N_READS=5",
                 "OUTPUT=" + tmpDir
@@ -120,7 +120,7 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
     public void testNFiles() throws IOException {
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
 
-        final String [] args = new String[]{
+        final String[] args = new String[]{
                 "INPUT=" + PAIRED_FILE.getAbsolutePath(),
                 "TOTAL_READS_IN_INPUT=10",
                 "SPLIT_TO_N_FILES=2",
@@ -148,7 +148,7 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
     public void testOneOutput() throws IOException {
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
 
-        final String [] args = new String[]{
+        final String[] args = new String[]{
                 "INPUT=" + PAIRED_FILE.getAbsolutePath(),
                 "TOTAL_READS_IN_INPUT=10",
                 "SPLIT_TO_N_READS=10",
@@ -169,7 +169,7 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
     public void testWrongTotalReads() throws IOException {
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
 
-        final String [] args = new String[]{
+        final String[] args = new String[]{
                 "INPUT=" + PAIRED_FILE.getAbsolutePath(),
                 "TOTAL_READS_IN_INPUT=20",
                 "SPLIT_TO_N_READS=5",
@@ -197,7 +197,7 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
     public void testThreeReadTemplate() throws IOException {
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
 
-        final String [] args = new String[] {
+        final String[] args = new String[]{
                 "INPUT=" + THREE_READ_TEMPLATE.getAbsolutePath(),
                 "TOTAL_READS_IN_INPUT=11",
                 "SPLIT_TO_N_READS=2",
@@ -223,7 +223,7 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
         compareInputWithOutputs(reader1, reader2, inputIter, 3);
     }
 
-    private void compareInputWithOutputs (final SamReader reader1, final SamReader reader2, final SAMRecordIterator inputIterator, final int expectedFirstSize) {
+    private void compareInputWithOutputs(final SamReader reader1, final SamReader reader2, final SAMRecordIterator inputIterator, final int expectedFirstSize) {
         int count = 0;
         for (SAMRecord rec : reader1) {
             SAMRecord inputRec = inputIterator.next();
