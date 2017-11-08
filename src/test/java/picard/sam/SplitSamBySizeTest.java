@@ -53,15 +53,16 @@ public class SplitSamBySizeTest extends CommandLineProgramTest {
 
         final String [] args = new String[]{
                 "INPUT=" + PAIRED_FILE.getAbsolutePath(),
-                "SPLIT_TO_N_FILES=2",
+                "TOTAL_READS_IN_INPUT=10",
+                "SPLIT_TO_N_READS=5",
                 "OUTPUT=" + tmpDir
         };
 
         runPicardCommandLine(args);
 
-        final File out1 = new File(tmpDir, "shard_1.bam");
+        final File out1 = new File(tmpDir, "shard_0001.bam");
         out1.deleteOnExit();
-        final File out2 = new File(tmpDir, "shard_2.bam");
+        final File out2 = new File(tmpDir, "shard_0002.bam");
         out2.deleteOnExit();
         final SamReader input = SamReaderFactory.makeDefault().open(PAIRED_FILE);
         final SAMRecordIterator inputIter = input.iterator();
@@ -82,18 +83,81 @@ public class SplitSamBySizeTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void testOneOutput() throws IOException {
+    public void testNoTotalReads() throws IOException {
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
 
         final String [] args = new String[]{
                 "INPUT=" + PAIRED_FILE.getAbsolutePath(),
-                "SPLIT_TO_N_FILES=1",
+                "SPLIT_TO_N_READS=5",
                 "OUTPUT=" + tmpDir
         };
 
         runPicardCommandLine(args);
 
-        final File out = new File(tmpDir, "shard_1.bam");
+        final File out1 = new File(tmpDir, "shard_0001.bam");
+        out1.deleteOnExit();
+        final File out2 = new File(tmpDir, "shard_0002.bam");
+        out2.deleteOnExit();
+        final SamReader input = SamReaderFactory.makeDefault().open(PAIRED_FILE);
+        final SAMRecordIterator inputIter = input.iterator();
+        final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
+        final SamReader reader2 = SamReaderFactory.makeDefault().open(out2);
+        final SAMFileHeader inputHeader = input.getFileHeader();
+        final SAMFileHeader reader1Header = reader1.getFileHeader();
+
+        // The output BAM versions might not match the input header version if the input is outdated.
+        inputHeader.setAttribute(SAMFileHeader.VERSION_TAG, reader1Header.getVersion());
+
+        Assert.assertEquals(inputHeader, reader1Header);
+        Assert.assertEquals(reader1.getFileHeader(), reader2.getFileHeader());
+        VALIDATE_SAM_TESTER.assertSamValid(out1);
+        VALIDATE_SAM_TESTER.assertSamValid(out2);
+
+        compareInputWithOutputs(reader1, reader2, inputIter, 6);
+    }
+
+    @Test
+    public void testNFiles() throws IOException {
+        final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
+
+        final String [] args = new String[]{
+                "INPUT=" + PAIRED_FILE.getAbsolutePath(),
+                "TOTAL_READS_IN_INPUT=10",
+                "SPLIT_TO_N_FILES=2",
+                "OUTPUT=" + tmpDir
+        };
+
+        runPicardCommandLine(args);
+
+        final File out1 = new File(tmpDir, "shard_0001.bam");
+        out1.deleteOnExit();
+        final File out2 = new File(tmpDir, "shard_0002.bam");
+        out2.deleteOnExit();
+        final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().open(PAIRED_FILE).iterator();
+        final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
+        final SamReader reader2 = SamReaderFactory.makeDefault().open(out2);
+
+        Assert.assertEquals(reader1.getFileHeader(), reader2.getFileHeader());
+        VALIDATE_SAM_TESTER.assertSamValid(out1);
+        VALIDATE_SAM_TESTER.assertSamValid(out2);
+
+        compareInputWithOutputs(reader1, reader2, inputIter, 6);
+    }
+
+    @Test
+    public void testOneOutput() throws IOException {
+        final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
+
+        final String [] args = new String[]{
+                "INPUT=" + PAIRED_FILE.getAbsolutePath(),
+                "TOTAL_READS_IN_INPUT=10",
+                "SPLIT_TO_N_READS=10",
+                "OUTPUT=" + tmpDir
+        };
+
+        runPicardCommandLine(args);
+
+        final File out = new File(tmpDir, "shard_0001.bam");
         out.deleteOnExit();
         final SamReader outReader = SamReaderFactory.makeDefault().open(out);
         final SamReader inReader = SamReaderFactory.makeDefault().open(PAIRED_FILE);
@@ -102,22 +166,51 @@ public class SplitSamBySizeTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void testThreeReadTemplate() throws IOException {
+    public void testWrongTotalReads() throws IOException {
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
 
-        final String [] args = new String[] {
-                "INPUT=" + THREE_READ_TEMPLATE.getAbsolutePath(),
-                "SPLIT_TO_N_FILES=3",
+        final String [] args = new String[]{
+                "INPUT=" + PAIRED_FILE.getAbsolutePath(),
+                "TOTAL_READS_IN_INPUT=20",
+                "SPLIT_TO_N_READS=5",
                 "OUTPUT=" + tmpDir
         };
 
         runPicardCommandLine(args);
 
-        final File out1 = new File(tmpDir, "shard_1.bam");
+        final File out1 = new File(tmpDir, "shard_0001.bam");
         out1.deleteOnExit();
-        final File out2 = new File(tmpDir, "shard_2.bam");
+        final File out2 = new File(tmpDir, "shard_0002.bam");
         out2.deleteOnExit();
-        final File out3 = new File(tmpDir, "shard_3.bam");
+        final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().open(PAIRED_FILE).iterator();
+        final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
+        final SamReader reader2 = SamReaderFactory.makeDefault().open(out2);
+
+        Assert.assertEquals(reader1.getFileHeader(), reader2.getFileHeader());
+        VALIDATE_SAM_TESTER.assertSamValid(out1);
+        VALIDATE_SAM_TESTER.assertSamValid(out2);
+
+        compareInputWithOutputs(reader1, reader2, inputIter, 6);
+    }
+
+    @Test
+    public void testThreeReadTemplate() throws IOException {
+        final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
+
+        final String [] args = new String[] {
+                "INPUT=" + THREE_READ_TEMPLATE.getAbsolutePath(),
+                "TOTAL_READS_IN_INPUT=11",
+                "SPLIT_TO_N_READS=2",
+                "OUTPUT=" + tmpDir
+        };
+
+        runPicardCommandLine(args);
+
+        final File out1 = new File(tmpDir, "shard_0001.bam");
+        out1.deleteOnExit();
+        final File out2 = new File(tmpDir, "shard_0002.bam");
+        out2.deleteOnExit();
+        final File out3 = new File(tmpDir, "shard_0003.bam");
         out3.deleteOnExit();
         final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().open(THREE_READ_TEMPLATE).iterator();
         final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
@@ -127,7 +220,7 @@ public class SplitSamBySizeTest extends CommandLineProgramTest {
         VALIDATE_SAM_TESTER.assertSamValid(out1);
         VALIDATE_SAM_TESTER.assertSamValid(out2);
 
-        compareInputWithOutputs(reader1, reader2, inputIter, 5);
+        compareInputWithOutputs(reader1, reader2, inputIter, 3);
     }
 
     private void compareInputWithOutputs (final SamReader reader1, final SamReader reader2, final SAMRecordIterator inputIterator, final int expectedFirstSize) {

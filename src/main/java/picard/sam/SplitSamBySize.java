@@ -25,7 +25,6 @@
 package picard.sam;
 
 import htsjdk.samtools.*;
-import htsjdk.samtools.seekablestream.SeekablePathStream;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -37,16 +36,15 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 
 /**
  * <p/>
  * Splits the input queryname sorted or query-grouped SAM/BAM file and writes it into
- * multiple BAM files, each approximately the same size in bytes. This will retain the sort order
+ * multiple BAM files, each with an approximately equal number of reads. This will retain the sort order
  * within each output BAM and if the BAMs are concatenated in order (output files are named
- * numerically) the order of the reads will match the original BAM.
+ * numerically) the order of the reads will match the original BAM. It will traverse the bam twice unless
+ * TOTAL_READS_IN_INPUT is provided.
  */
 @CommandLineProgramProperties(
         summary = SplitSamBySize.USAGE_SUMMARY + SplitSamBySize.USAGE_DETAILS,
@@ -57,6 +55,7 @@ public class SplitSamBySize extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Splits a SAM or BAM file to multiple BAMs.";
     static final String USAGE_DETAILS = "This tool splits the input query-grouped SAM/BAM file into multiple BAM files " +
             "while maintaining the sort order. This can be used to split a large unmapped BAM in order to parallelize alignment." +
+            "It will traverse the bam twice unless TOTAL_READS_IN_INPUT is provided." +
             "<br />" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
@@ -70,8 +69,15 @@ public class SplitSamBySize extends CommandLineProgram {
     @Argument(doc = "Input SAM/BAM file to split", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Argument(shortName = "N_FILES", doc = "Split to N files.")
+    @Argument(shortName = "N_READS", doc = "Split to have approximately N reads per output file.", mutex = {"SPLIT_TO_N_FILES"})
+    public int SPLIT_TO_N_READS;
+
+    @Argument(shortName = "N_FILES", doc = "Split to N files.", mutex = {"SPLIT_TO_N_READS"})
     public int SPLIT_TO_N_FILES;
+
+    @Argument(shortName = "TOTAL_READS", doc = "Total number of reads in the input file. If this is not provided, the " +
+            "input will be read twice, the first time to get a count of the total reads.", optional = true)
+    public long TOTAL_READS_IN_INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Directory in which to output the split BAM files.")
     public File OUTPUT;
@@ -84,15 +90,8 @@ public class SplitSamBySize extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertDirectoryIsWritable(OUTPUT);
-        SeekablePathStream inStream;
-        try {
-            inStream = new SeekablePathStream(INPUT.toPath());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return 1;
-        }
-        final SamInputResource inResource = SamInputResource.of(inStream);
-        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(inResource);
+        final SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+        final SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         final SAMFileHeader header = reader.getFileHeader();
 
         if (header.getSortOrder() == SAMFileHeader.SortOrder.coordinate) {
@@ -104,77 +103,63 @@ public class SplitSamBySize extends CommandLineProgram {
                     "with current version.", header.getVersion(), SAMFileHeader.CURRENT_VERSION));
         }
 
-        final SAMFileWriterFactory factory = new SAMFileWriterFactory();
+        final ProgressLogger firstPassProgress = new ProgressLogger(log, 1000000, "Counted");
+        if (TOTAL_READS_IN_INPUT == 0) {
+            final SamReader firstPass = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+            log.info("First pass traversal to count number of reads is beginning. If number of reads " +
+                    "is known, use TOTAL_READS_IN_INPUT to skip first traversal.");
+            for (final SAMRecord rec : firstPass) {
+                firstPassProgress.record(rec);
+            }
+            log.info(String.format("First pass traversal to count number of reads ended, found %s total reads.", firstPassProgress.getCount()));
+        }
+        final long totalReads = TOTAL_READS_IN_INPUT == 0 ? firstPassProgress.getCount() : TOTAL_READS_IN_INPUT;
 
-        final long totalCompressedBytes = INPUT.length();
-        final int inputBytesPerFile = (int) Math.ceil(totalCompressedBytes / (double) SPLIT_TO_N_FILES);
-        final SAMFileWriter[] writers = generateWriters(factory, header, SPLIT_TO_N_FILES);
+        final SAMFileWriterFactory writerFactory = new SAMFileWriterFactory();
+        final DecimalFormat fileNameFormatter = new DecimalFormat(OUT_PREFIX + "_" + String.format("0000") + BamFileIoUtils.BAM_FILE_EXTENSION);
 
-        int writerIndex = 0;
+        final int splitToNFiles = SPLIT_TO_N_FILES != 0 ? SPLIT_TO_N_FILES : (int) Math.ceil(totalReads / (double) SPLIT_TO_N_READS);
+        final int readsPerFile = (int) Math.ceil(totalReads / (double) splitToNFiles);
+
+        int readsWritten = 0;
+        int fileIndex = 1;
+        SAMFileWriter currentWriter = writerFactory.makeSAMOrBAMWriter(header, true, new File(OUTPUT, fileNameFormatter.format(fileIndex++)));
         String lastReadName = "";
-        ArrayList<SAMRecord> blockRecords = new ArrayList();
-        long bufferedBlockEnd = 0;
-        long bufferedBlockStart = 0;
-        final SAMRecordIterator iterator = reader.iterator();
         final ProgressLogger progress = new ProgressLogger(log);
-        // Iterate through the input file, buffer each block's worth of reads so we can split within a block
-        while (iterator.hasNext()) {
-            final SAMRecord currentRecord = iterator.next();
-            final long currentBlockEnd;
-            try {
-                currentBlockEnd = inStream.position();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return 1;
+        for (final SAMRecord currentRecord : reader) {
+            if (readsWritten >= readsPerFile && !lastReadName.equals(currentRecord.getReadName())) {
+                currentWriter.close();
+                currentWriter = writerFactory.makeSAMOrBAMWriter(header, true, new File(OUTPUT, fileNameFormatter.format(fileIndex++)));
+                readsWritten = 0;
             }
-            if (!iterator.hasNext()) {
-                // This is the last record of the bam, add it to the previous block so it gets written out
-                blockRecords.add(currentRecord);
-            }
-
-            // We finished the block, write it out
-            if (currentBlockEnd != bufferedBlockEnd || !iterator.hasNext()) {
-                int idxInBlock = 0;
-                final long bufferedBlockSize = bufferedBlockEnd - bufferedBlockStart;
-                for (final SAMRecord record : blockRecords) {
-                    // Estimate the current position in bytes by subdividing the buffered block by the number of records in it
-                    final long currentPosition = bufferedBlockStart + ((idxInBlock * bufferedBlockSize) / blockRecords.size());
-                    if (currentPosition >= inputBytesPerFile * (writerIndex + 1) && !lastReadName.equals(record.getReadName())) {
-                        writerIndex++;
-                    }
-                    writers[writerIndex].addAlignment(record);
-                    progress.record(record);
-                    lastReadName = record.getReadName();
-                    idxInBlock++;
-                }
-                blockRecords.clear();
-                bufferedBlockStart = bufferedBlockEnd;
-                bufferedBlockEnd = currentBlockEnd;
-            }
-            blockRecords.add(currentRecord);
+            currentWriter.addAlignment(currentRecord);
+            lastReadName = currentRecord.getReadName();
+            readsWritten++;
+            progress.record(currentRecord);
         }
 
-        for (final SAMFileWriter w : writers) {
-            w.close();
+        if (progress.getCount() != totalReads) {
+            log.warn(String.format("The totalReads (%s) provided does not match the reads found in the " +
+                    "input file (%s). Files may not be split evenly or number of files may not " +
+                    "match what was requested.", totalReads, progress.getCount())
+            );
         }
+
+        currentWriter.close();
         return 0;
     }
 
-    private SAMFileWriter[] generateWriters(final SAMFileWriterFactory factory, final SAMFileHeader header, final int splitToNFiles) {
-        final int digits = String.valueOf(splitToNFiles).length();
-        final DecimalFormat fileNameFormatter = new DecimalFormat(OUT_PREFIX + "_" + String.format("%0" + digits + "d", 0) + BamFileIoUtils.BAM_FILE_EXTENSION);
-        int fileIndex = 1;
-        final SAMFileWriter[] writers = new SAMFileWriter[splitToNFiles];
-        for (int i = 0; i < splitToNFiles; i++) {
-            writers[i] = factory.makeSAMOrBAMWriter(header, true, new File(OUTPUT, fileNameFormatter.format(fileIndex++)));
-        }
-        return writers;
-    }
-
     protected String[] customCommandLineValidation() {
-        if (SPLIT_TO_N_FILES < 1) {
+        if (TOTAL_READS_IN_INPUT < 0) {
             return new String[]{
-                    String.format("Cannot set SPLIT_TO_N_FILES to a number less than 1, found %s.", SPLIT_TO_N_FILES)
+                    String.format("Cannot set TOTAL_READS_IN_INPUT to a number less than 1, found %s.", TOTAL_READS_IN_INPUT)
+            };
+        }
+
+        if (SPLIT_TO_N_FILES <= 1 && SPLIT_TO_N_READS <= 1) {
+            return new String[]{
+                    String.format("One of SPLIT_TO_N_FILES or SPLIT_TO_N_READS must be greater than 0. " +
+                            "Found SPLIT_TO_N_FILES is %s and SPLIT_TO_N_READS is %s.", SPLIT_TO_N_FILES, SPLIT_TO_N_READS)
             };
         }
 
