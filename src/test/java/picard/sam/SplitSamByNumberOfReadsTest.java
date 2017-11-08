@@ -37,14 +37,14 @@ import java.io.IOException;
 /**
  * Tests for SAMSplitter
  */
-public class SplitSamBySizeTest extends CommandLineProgramTest {
-    private static final String TEST_DATA_DIR = "testdata/picard/sam/SplitSamBySize";
+public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
+    private static final String TEST_DATA_DIR = "testdata/picard/sam/SplitSamByNumberOfReads";
     private static final File PAIRED_FILE = new File(TEST_DATA_DIR + "/sorted-pair.sam");
     private static final File THREE_READ_TEMPLATE = new File(TEST_DATA_DIR + "/sorted-triplet.sam");
     private final ValidateSamTester VALIDATE_SAM_TESTER = new ValidateSamTester();
 
     public String getCommandLineProgramName() {
-        return SplitSamBySize.class.getSimpleName();
+        return SplitSamByNumberOfReads.class.getSimpleName();
     }
 
     @Test

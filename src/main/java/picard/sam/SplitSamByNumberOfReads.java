@@ -47,11 +47,11 @@ import java.text.DecimalFormat;
  * TOTAL_READS_IN_INPUT is provided.
  */
 @CommandLineProgramProperties(
-        summary = SplitSamBySize.USAGE_SUMMARY + SplitSamBySize.USAGE_DETAILS,
-        oneLineSummary = SplitSamBySize.USAGE_SUMMARY,
+        summary = SplitSamByNumberOfReads.USAGE_SUMMARY + SplitSamByNumberOfReads.USAGE_DETAILS,
+        oneLineSummary = SplitSamByNumberOfReads.USAGE_SUMMARY,
         programGroup = SamOrBam.class)
 @DocumentedFeature
-public class SplitSamBySize extends CommandLineProgram {
+public class SplitSamByNumberOfReads extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Splits a SAM or BAM file to multiple BAMs.";
     static final String USAGE_DETAILS = "This tool splits the input query-grouped SAM/BAM file into multiple BAM files " +
             "while maintaining the sort order. This can be used to split a large unmapped BAM in order to parallelize alignment." +
@@ -59,7 +59,7 @@ public class SplitSamBySize extends CommandLineProgram {
             "<br />" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
-            "java -jar picard.jar SplitSamBySize \\<br />" +
+            "java -jar picard.jar SplitSamByNumberOfReads \\<br />" +
             "     I=paired_unmapped_input.bam \\<br />" +
             "     OUTPUT=out_dir \\ <br />" +
             "     TOTAL_READS_IN_INPUT=800000000 \\ <br />" +
@@ -85,7 +85,7 @@ public class SplitSamBySize extends CommandLineProgram {
     @Argument(shortName = "OUT_PREFIX", doc = "Output files will be named <OUT_PREFIX>_N.bam, where N enumerates the output file.")
     public String OUT_PREFIX = "shard";
 
-    private final Log log = Log.getInstance(SplitSamBySize.class);
+    private final Log log = Log.getInstance(SplitSamByNumberOfReads.class);
 
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
