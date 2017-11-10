@@ -32,7 +32,10 @@ import picard.sam.testers.ValidateSamTester;
 import com.google.common.collect.Iterators;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 /**
  * Tests for SAMSplitter
@@ -191,6 +194,29 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
         VALIDATE_SAM_TESTER.assertSamValid(out2);
 
         compareInputWithOutputs(reader1, reader2, inputIter, 6);
+    }
+
+    @Test
+    public void testStreamWithoutTotalReads() throws IOException, NoSuchFieldException, IllegalAccessException {
+        final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
+        FileInputStream stream = new FileInputStream(PAIRED_FILE);
+
+        // Ugliness required to read from a stream given as a string on the commandline.
+        // Since the actual fd number is private inside FileDescriptor, need reflection
+        // in order to pull it out.
+
+        final Field fdField = FileDescriptor.class.getDeclaredField("fd");
+        fdField.setAccessible(true);
+        final File inputStream = new File("/dev/fd/" + fdField.getInt(stream.getFD()));
+
+        final String[] args = new String[]{
+                "INPUT=" + inputStream,
+                "SPLIT_TO_N_READS=5",
+                "OUTPUT=" + tmpDir
+        };
+
+        final int rc = runPicardCommandLine(args);
+        Assert.assertEquals(rc, 1);
     }
 
     @Test

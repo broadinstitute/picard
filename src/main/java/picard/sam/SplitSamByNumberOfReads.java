@@ -25,6 +25,7 @@
 package picard.sam;
 
 import htsjdk.samtools.*;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -69,7 +70,9 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
     @Argument(doc = "Input SAM/BAM file to split", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Argument(shortName = "N_READS", doc = "Split to have approximately N reads per output file.", mutex = {"SPLIT_TO_N_FILES"})
+    @Argument(shortName = "N_READS", doc = "Split to have approximately N reads per output file. The actual number of " +
+            "reads per output file will vary by no more than the number of output files times one minus the maximum " +
+            "number of reads with the same queryname.", mutex = {"SPLIT_TO_N_FILES"})
     public int SPLIT_TO_N_READS;
 
     @Argument(shortName = "N_FILES", doc = "Split to N files.", mutex = {"SPLIT_TO_N_READS"})
@@ -92,6 +95,7 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
         IOUtil.assertDirectoryIsWritable(OUTPUT);
         final SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         final SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        final SAMRecordIterator readerIterator = reader.iterator();
         final SAMFileHeader header = reader.getFileHeader();
 
         if (header.getSortOrder() == SAMFileHeader.SortOrder.coordinate) {
@@ -106,11 +110,17 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
         final ProgressLogger firstPassProgress = new ProgressLogger(log, 1000000, "Counted");
         if (TOTAL_READS_IN_INPUT == 0) {
             final SamReader firstPass = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+            final SAMRecordIterator firstPassIterator = firstPass.iterator();
+            if (readerIterator.hasNext() && !firstPassIterator.hasNext()) {
+                log.error("Could not traverse the INPUT twice. If TOTAL_READS_IN_INPUT is not supplied, INPUT cannot be a stream.");
+                return 1;
+            }
             log.info("First pass traversal to count number of reads is beginning. If number of reads " +
                     "is known, use TOTAL_READS_IN_INPUT to skip first traversal.");
-            for (final SAMRecord rec : firstPass) {
-                firstPassProgress.record(rec);
+            while (firstPassIterator.hasNext()) {
+                firstPassProgress.record(firstPassIterator.next());
             }
+            CloserUtil.close(firstPass);
             log.info(String.format("First pass traversal to count number of reads ended, found %s total reads.", firstPassProgress.getCount()));
         }
         final long totalReads = TOTAL_READS_IN_INPUT == 0 ? firstPassProgress.getCount() : TOTAL_READS_IN_INPUT;
@@ -126,7 +136,8 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
         SAMFileWriter currentWriter = writerFactory.makeSAMOrBAMWriter(header, true, new File(OUTPUT, fileNameFormatter.format(fileIndex++)));
         String lastReadName = "";
         final ProgressLogger progress = new ProgressLogger(log);
-        for (final SAMRecord currentRecord : reader) {
+        while (readerIterator.hasNext()) {
+            final SAMRecord currentRecord = readerIterator.next();
             if (readsWritten >= readsPerFile && !lastReadName.equals(currentRecord.getReadName())) {
                 currentWriter.close();
                 currentWriter = writerFactory.makeSAMOrBAMWriter(header, true, new File(OUTPUT, fileNameFormatter.format(fileIndex++)));
@@ -137,15 +148,18 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
             readsWritten++;
             progress.record(currentRecord);
         }
+        currentWriter.close();
+        CloserUtil.close(reader);
 
         if (progress.getCount() != totalReads) {
             log.warn(String.format("The totalReads (%s) provided does not match the reads found in the " +
-                    "input file (%s). Files may not be split evenly or number of files may not " +
-                    "match what was requested.", totalReads, progress.getCount())
+                            "input file (%s). Files may not be split evenly or number of files may not " +
+                            "match what was requested. There were %s files generated each with around %s " +
+                            "reads except the last file which contained %s reads.",
+                    totalReads, progress.getCount(), fileIndex - 1, readsPerFile, readsWritten)
             );
         }
 
-        currentWriter.close();
         return 0;
     }
 
