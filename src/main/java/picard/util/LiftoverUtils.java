@@ -41,11 +41,14 @@ public class LiftoverUtils {
     /**
      * Attribute used to store the fact that the alt and ref alleles of the variant have been swapped, while all the INFO annotations have not.
      */
+    public static final String SWAPPED_ALLELES = "SwappedAlleles";
 
+    /**
+     * Default list of attributes that need to be reversed or dropped from the INFO field when alleles have been swapped.
+     */
     public static final Collection<String> DEFAULT_TAGS_TO_REVERSE = Arrays.asList("AF");
     public static final Collection<String> DEFAULT_TAGS_TO_DROP = Arrays.asList("MAX_AF");
 
-    public static final String SWAPPED_ALLELES = "SwappedAlleles";
 
     public static final Log log = Log.getInstance(LiftoverUtils.class);
     /**
