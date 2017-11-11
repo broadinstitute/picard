@@ -71,8 +71,8 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
     public File INPUT;
 
     @Argument(shortName = "N_READS", doc = "Split to have approximately N reads per output file. The actual number of " +
-            "reads per output file will vary by no more than the number of output files times one minus the maximum " +
-            "number of reads with the same queryname.", mutex = {"SPLIT_TO_N_FILES"})
+            "reads per output file will vary by no more than the number of output files * (the maximum " +
+            "number of reads with the same queryname - 1).", mutex = {"SPLIT_TO_N_FILES"})
     public int SPLIT_TO_N_READS;
 
     @Argument(shortName = "N_FILES", doc = "Split to N files.", mutex = {"SPLIT_TO_N_READS"})
@@ -109,6 +109,10 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
 
         final ProgressLogger firstPassProgress = new ProgressLogger(log, 1000000, "Counted");
         if (TOTAL_READS_IN_INPUT == 0) {
+            // Check if the input file is a stream. Do this by opening a second reader on the same input (which we can
+            // also use to find the total number of reads). If the input is a stream, the second reader's iterator won't
+            // read anything and hasNext() will be false. If the input is a file, both iterators will have no problem
+            // reading and both will have hasNext() == true.
             final SamReader firstPass = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
             final SAMRecordIterator firstPassIterator = firstPass.iterator();
             if (readerIterator.hasNext() && !firstPassIterator.hasNext()) {
