@@ -138,6 +138,10 @@ public class ReorderSam extends CommandLineProgram {
 
             // write the reads in contig order
             for (final SAMSequenceRecord contig : refDict.getSequences()) {
+                if (in.getFileHeader().getSequenceDictionary().getSequenceIndex(contig.getSequenceName()) == -1) {
+                    log.error("Reference dictionary doesn't contain contig name found in input: " + contig.getSequenceName());
+                    throw new IllegalArgumentException("Reference dictionary doesn't contain contig name found in input: " + contig.getSequenceName());
+                }
                 final SAMRecordIterator it = in.query(contig.getSequenceName(), 0, 0, false);
                 writeReads(out, it, newOrder, contig.getSequenceName());
             }
