@@ -164,7 +164,6 @@ public class LiftoverVcf extends CommandLineProgram {
      */
     public static final String ATTEMPTED_LOCUS = "AttemptedLocus";
 
-
     /**
      * Metadata to be added to the Passing file.
      */
@@ -232,9 +231,10 @@ public class LiftoverVcf extends CommandLineProgram {
         }
 
         outHeader.addMetaDataLine(new VCFInfoHeaderLine(LiftoverUtils.SWAPPED_ALLELES, 0, VCFHeaderLineType.Flag,
-                "The REF and the ALT alleles have been swapped due to changes in the reference. " +
-                "NOTA BENE: No INFO field annotations reflect this swap, and in the genotypes, " +
-                "only the GT, PL, and AD fields have been modified. All the other fields have been kept unchanged."));
+                "The REF and the ALT alleles have been swapped in liftover due to changes in the reference. " +
+                "It is possible that not all INFO annotations reflect this swap, and in the genotypes, " +
+                "only the GT, PL, and AD fields have been modified. You should check the TAGS_TO_REVERSE parameter that was used " +
+                        "during the LiftOver to be sure."));
 
         final VariantContextWriter out = new VariantContextWriterBuilder()
                 .setOption(Options.INDEX_ON_THE_FLY)
@@ -374,10 +374,9 @@ public class LiftoverVcf extends CommandLineProgram {
 
                 if (!refString.equalsIgnoreCase(allele.getBaseString())) {
                     // consider that the ref and the alt may have been swapped in a simple biallelic SNP
-                    if (vc.getAlleles().size() == 2 &&
-                            vc.getAlleles().stream().map(Allele::length).allMatch(l -> l == 1) &&
-                            refString.equalsIgnoreCase(vc.getAlleles().stream().filter(Allele::isNonReference).findFirst().get().getBaseString())) {
-                        sorter.add(LiftoverUtils.swapRefAlt(vc,TAGS_TO_REVERSE, TAGS_TO_DROP));
+                    if (vc.isBiallelic() && vc.isSNP() &&
+                            refString.equalsIgnoreCase(vc.getAlternateAllele(0).getBaseString())) {
+                        sorter.add(LiftoverUtils.swapRefAlt(vc, TAGS_TO_REVERSE, TAGS_TO_DROP));
                         return;
                     }
                     mismatchesReference = true;

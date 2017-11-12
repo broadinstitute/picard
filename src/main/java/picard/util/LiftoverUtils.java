@@ -30,6 +30,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.*;
+import org.apache.commons.lang3.ArrayUtils;
 import picard.vcf.LiftoverVcf;
 
 import java.util.*;
@@ -227,12 +228,13 @@ public class LiftoverUtils {
 
         swappedBuilder.attribute(SWAPPED_ALLELES, true);
 
-        // You need to get the baseString in order to forget who's reference and who's variant
+        // Use getBaseString() (rather than the Allele itself) in order to create new Alleles with swapped
+        // reference and non-variant attributes
         swappedBuilder.alleles(Arrays.asList(vc.getAlleles().get(1).getBaseString(), vc.getAlleles().get(0).getBaseString()));
 
         final Map<Allele, Allele> alleleMap = new HashMap<>();
 
-        // The index of the allele changed from 1 to 0 and vice versa, but the bases remain the same.
+        // A mapping from the old allele to the new allele, to be used when fixing the genotypes
         alleleMap.put(vc.getAlleles().get(0), swappedBuilder.getAlleles().get(1));
         alleleMap.put(vc.getAlleles().get(1), swappedBuilder.getAlleles().get(0));
 
@@ -249,36 +251,42 @@ public class LiftoverUtils {
             // Flip AD
             final GenotypeBuilder builder = new GenotypeBuilder(genotype).alleles(swappedAlleles);
             if (genotype.hasAD() && genotype.getAD().length == 2) {
-                final int[] origAD = genotype.getAD();
-                builder.AD(new int[]{origAD[1], origAD[0]});
+                final int[] ad = ArrayUtils.clone(genotype.getAD());
+                ArrayUtils.reverse(ad);
+                builder.AD(ad);
+            } else {
+                builder.noAD();
             }
 
             //Flip PL
             if (genotype.hasPL() && genotype.getPL().length == 3) {
-                final int[] origPL = genotype.getPL();
-                builder.PL(new int[]{origPL[2], origPL[1], origPL[0]});
+                final int[] pl = ArrayUtils.clone(genotype.getPL());
+                ArrayUtils.reverse(pl);
+                builder.PL(pl);
+            } else {
+                builder.noPL();
             }
             swappedGenotypes.add(builder.make());
         }
         swappedBuilder.genotypes(swappedGenotypes);
 
-        for (String key : vc.getAttributes().keySet()) {
+        for (final String key : vc.getAttributes().keySet()) {
             if (annotationsToDrop.contains(key)) {
                 swappedBuilder.rmAttribute(key);
             } else if (annotationsToReverse.contains(key)) {
-                final double afLikeAttribute = vc.getAttributeAsDouble(key, -1);
+                final double attributeToReverse = vc.getAttributeAsDouble(key, -1);
 
-                if (afLikeAttribute == -1) {
+                if (attributeToReverse == -1) {
                     log.warn("Trying to reverse attribute " + key +
                             "but found value that isn't parsable as a double: (" + vc.getAttribute(key, "") +
                             ") in variant " + vc + ". Results might be wrong.");
                 }
 
-                if (afLikeAttribute < 0 || afLikeAttribute > 1) {
+                if (attributeToReverse < 0 || attributeToReverse > 1) {
                     log.warn("Trying to reverse attribute " + key +
-                            "but found value that isn't between 0 and 1: (" + afLikeAttribute + ") in variant " + vc + ". Results might be wrong.");
+                            "but found value that isn't between 0 and 1: (" + attributeToReverse + ") in variant " + vc + ". Results might be wrong.");
                 }
-                swappedBuilder.attribute(key, 1 - afLikeAttribute);
+                swappedBuilder.attribute(key, 1 - attributeToReverse);
             }
         }
 
@@ -304,9 +312,9 @@ public class LiftoverUtils {
         int theStart = start;
         int theEnd = end;
 
-        final String refString = StringUtil.bytesToString(referenceSequence.getBases(), start-1, end - start + 1);
+        final String refString = StringUtil.bytesToString(referenceSequence.getBases(), start - 1, end - start + 1);
         //make sure that referenceAllele matches reference
-        final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElseThrow(()->new RuntimeException("How did that happen? No reference allele?"));
+        final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElseThrow(() -> new RuntimeException("How did that happen? No reference allele?"));
 
         if (!refString.equalsIgnoreCase(refAllele.getBaseString())) {
             throw new IllegalArgumentException(
