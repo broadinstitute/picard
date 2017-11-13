@@ -210,7 +210,6 @@ public class ValidateSamFile extends CommandLineProgram {
             validator.setErrorsToIgnore(IGNORE);
             validator.setSkipMateValidation(SKIP_MATE_VALIDATION);
             validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
-
             validator.setIgnoreWarnings(IGNORE_WARNINGS);
 
             if (MODE == Mode.SUMMARY) {
