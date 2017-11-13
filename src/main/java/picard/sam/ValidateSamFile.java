@@ -208,20 +208,15 @@ public class ValidateSamFile extends CommandLineProgram {
 
             final SamFileValidator validator = new SamFileValidator(out, MAX_OPEN_TEMP_FILES);
             validator.setErrorsToIgnore(IGNORE);
+            validator.setSkipMateValidation(SKIP_MATE_VALIDATION);
+            validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
 
-            if (IGNORE_WARNINGS) {
-                validator.setIgnoreWarnings(IGNORE_WARNINGS);
-            }
+            validator.setIgnoreWarnings(IGNORE_WARNINGS);
+
             if (MODE == Mode.SUMMARY) {
                 validator.setVerbose(false, 0);
             } else {
                 validator.setVerbose(true, MAX_OUTPUT);
-            }
-            if (SKIP_MATE_VALIDATION) {
-                validator.setSkipMateValidation(SKIP_MATE_VALIDATION);
-            }
-            if (IS_BISULFITE_SEQUENCED) {
-                validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
             }
             if (VALIDATE_INDEX) {
                 validator.setIndexValidationStringency(VALIDATE_INDEX ? IndexValidationStringency.EXHAUSTIVE : IndexValidationStringency.NONE);
