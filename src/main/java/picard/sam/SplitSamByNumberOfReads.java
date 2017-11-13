@@ -95,11 +95,11 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
 
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertDirectoryIsWritable(OUTPUT);
-        if (!Files.isRegularFile(INPUT.toPath())) {
-            log.error("File is either empty or you are using a stream. If TOTAL_READS_IN_INPUT is not supplied, INPUT cannot be a stream.");
+        if (TOTAL_READS_IN_INPUT == 0 && !Files.isRegularFile(INPUT.toPath())) {
+            log.error("INPUT is not a regular file. If TOTAL_READS_IN_INPUT is not supplied, INPUT cannot be a stream.");
             return 1;
         }
+        IOUtil.assertDirectoryIsWritable(OUTPUT);
         final SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         final SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         final SAMRecordIterator readerIterator = reader.iterator();
@@ -116,16 +116,8 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
 
         final ProgressLogger firstPassProgress = new ProgressLogger(log, 1000000, "Counted");
         if (TOTAL_READS_IN_INPUT == 0) {
-            // Check if the input file is a stream. Do this by opening a second reader on the same input (which we can
-            // also use to find the total number of reads). If the input is a stream, the second reader's iterator won't
-            // read anything and hasNext() will be false. If the input is a file, both iterators will have no problem
-            // reading and both will have hasNext() == true.
             final SamReader firstPass = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
             final SAMRecordIterator firstPassIterator = firstPass.iterator();
-            if (!readerIterator.hasNext() || !firstPassIterator.hasNext()) {
-                log.error("File is either empty or you are using a stream. If TOTAL_READS_IN_INPUT is not supplied, INPUT cannot be a stream.");
-                return 1;
-            }
             log.info("First pass traversal to count number of reads is beginning. If number of reads " +
                     "is known, use TOTAL_READS_IN_INPUT to skip first traversal.");
             while (firstPassIterator.hasNext()) {
