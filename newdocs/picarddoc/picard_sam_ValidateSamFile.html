@@ -464,6 +464,14 @@
 					<td>Output file or standard out if missing</td>
 				</tr>
 				<tr>
+					<td><a href="#--SKIP_MATE_VALIDATION">--SKIP_MATE_VALIDATION</a><br />
+								&nbsp;<em>-SMV</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>If true, this tool will not attempt to validate mate information. In general cases, this option should not be used.  However, in cases where samples have very high duplication or chimerism rates (> 10%), the mate validation process often requires extremely large amounts of memory to run, so this flag allows you to forego that check.</td>
+				</tr>
+				<tr>
 					<td><a href="#--VALIDATE_INDEX">--VALIDATE_INDEX</a><br />
 								&nbsp;<em>-</em>
 					</td>
@@ -797,6 +805,18 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--SKIP_MATE_VALIDATION">--SKIP_MATE_VALIDATION </a>
+			 / <small>-SMV</small>
+		</h3>
+		<p class="args">
+			<b>If true, this tool will not attempt to validate mate information. In general cases, this option should not be used.  However, in cases where samples have very high duplication or chimerism rates (> 10%), the mate validation process often requires extremely large amounts of memory to run, so this flag allows you to forego that check.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
 			 / <small>-</small>
 		</h3>
@@ -902,7 +922,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.1-SNAPSHOT built at 06-22-2017 12:22:44.
+        <p class="version">Picard version 2.15.0-SNAPSHOT built at 13-26-2017 04:26:01.
         </p>
 
 	</div>
