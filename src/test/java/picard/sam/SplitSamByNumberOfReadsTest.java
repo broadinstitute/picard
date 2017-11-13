@@ -199,18 +199,9 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
     @Test
     public void testStreamWithoutTotalReads() throws IOException, NoSuchFieldException, IllegalAccessException {
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
-        FileInputStream stream = new FileInputStream(PAIRED_FILE);
-
-        // Ugliness required to read from a stream given as a string on the commandline.
-        // Since the actual fd number is private inside FileDescriptor, need reflection
-        // in order to pull it out.
-
-        final Field fdField = FileDescriptor.class.getDeclaredField("fd");
-        fdField.setAccessible(true);
-        final File inputStream = new File("/dev/fd/" + fdField.getInt(stream.getFD()));
 
         final String[] args = new String[]{
-                "INPUT=" + inputStream,
+                "INPUT=/dev/stdin",
                 "SPLIT_TO_N_READS=5",
                 "OUTPUT=" + tmpDir
         };

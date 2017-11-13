@@ -37,6 +37,9 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
 
 /**
@@ -93,6 +96,10 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertDirectoryIsWritable(OUTPUT);
+        if (!Files.isRegularFile(INPUT.toPath())) {
+            log.error("File is either empty or you are using a stream. If TOTAL_READS_IN_INPUT is not supplied, INPUT cannot be a stream.");
+            return 1;
+        }
         final SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         final SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         final SAMRecordIterator readerIterator = reader.iterator();
