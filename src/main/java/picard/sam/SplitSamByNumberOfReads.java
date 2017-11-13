@@ -92,17 +92,11 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
 
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
-        INPUT.isFile();
         IOUtil.assertDirectoryIsWritable(OUTPUT);
         final SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         final SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         final SAMRecordIterator readerIterator = reader.iterator();
         final SAMFileHeader header = reader.getFileHeader();
-
-        if (!readerIterator.hasNext()) {
-            log.error("INPUT file is empty.");
-            return 3;
-        }
 
         if (header.getSortOrder() == SAMFileHeader.SortOrder.coordinate) {
             log.warn("Splitting a coordinate sorted bam may result in invalid bams " +
@@ -121,8 +115,8 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
             // reading and both will have hasNext() == true.
             final SamReader firstPass = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
             final SAMRecordIterator firstPassIterator = firstPass.iterator();
-            if (readerIterator.hasNext() && !firstPassIterator.hasNext()) {
-                log.error("Could not traverse the INPUT twice. If TOTAL_READS_IN_INPUT is not supplied, INPUT cannot be a stream.");
+            if (!readerIterator.hasNext() || !firstPassIterator.hasNext()) {
+                log.error("File is either empty or you are using a stream. If TOTAL_READS_IN_INPUT is not supplied, INPUT cannot be a stream.");
                 return 1;
             }
             log.info("First pass traversal to count number of reads is beginning. If number of reads " +
