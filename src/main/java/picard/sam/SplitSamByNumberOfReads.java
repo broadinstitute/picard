@@ -92,11 +92,17 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
 
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
+        INPUT.isFile();
         IOUtil.assertDirectoryIsWritable(OUTPUT);
         final SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         final SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         final SAMRecordIterator readerIterator = reader.iterator();
         final SAMFileHeader header = reader.getFileHeader();
+
+        if (!readerIterator.hasNext()) {
+            log.error("INPUT file is empty.");
+            return 3;
+        }
 
         if (header.getSortOrder() == SAMFileHeader.SortOrder.coordinate) {
             log.warn("Splitting a coordinate sorted bam may result in invalid bams " +
