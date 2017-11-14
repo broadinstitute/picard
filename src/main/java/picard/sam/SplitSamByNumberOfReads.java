@@ -25,10 +25,7 @@
 package picard.sam;
 
 import htsjdk.samtools.*;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -37,9 +34,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
 
 /**
@@ -58,7 +53,7 @@ import java.text.DecimalFormat;
 public class SplitSamByNumberOfReads extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Splits a SAM or BAM file to multiple BAMs.";
     static final String USAGE_DETAILS = "This tool splits the input query-grouped SAM/BAM file into multiple BAM files " +
-            "while maintaining the sort order. This can be used to split a large unmapped BAM in order to parallelize alignment." +
+            "while maintaining the sort order. This can be used to split a large unmapped BAM in order to parallelize alignment. " +
             "It will traverse the bam twice unless TOTAL_READS_IN_INPUT is provided." +
             "<br />" +
             "<h4>Usage example:</h4>" +
@@ -96,13 +91,13 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         if (TOTAL_READS_IN_INPUT == 0 && !Files.isRegularFile(INPUT.toPath())) {
-            log.error("INPUT is not a regular file. If TOTAL_READS_IN_INPUT is not supplied, INPUT cannot be a stream.");
+            log.error(String.format("INPUT is not a regular file: %s. " +
+                    "If TOTAL_READS_IN_INPUT is not supplied, INPUT cannot be a stream.", INPUT));
             return 1;
         }
         IOUtil.assertDirectoryIsWritable(OUTPUT);
         final SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         final SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-        final SAMRecordIterator readerIterator = reader.iterator();
         final SAMFileHeader header = reader.getFileHeader();
 
         if (header.getSortOrder() == SAMFileHeader.SortOrder.coordinate) {
@@ -116,15 +111,14 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
 
         final ProgressLogger firstPassProgress = new ProgressLogger(log, 1000000, "Counted");
         if (TOTAL_READS_IN_INPUT == 0) {
-            final SamReader firstPass = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-            final SAMRecordIterator firstPassIterator = firstPass.iterator();
+            final SamReader firstPassReader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
             log.info("First pass traversal to count number of reads is beginning. If number of reads " +
                     "is known, use TOTAL_READS_IN_INPUT to skip first traversal.");
-            while (firstPassIterator.hasNext()) {
-                firstPassProgress.record(firstPassIterator.next());
+            for (SAMRecord rec : firstPassReader) {
+                firstPassProgress.record(rec);
             }
-            CloserUtil.close(firstPass);
-            log.info(String.format("First pass traversal to count number of reads ended, found %s total reads.", firstPassProgress.getCount()));
+            CloserUtil.close(firstPassReader);
+            log.info(String.format("First pass traversal to count number of reads ended, found %d total reads.", firstPassProgress.getCount()));
         }
         final long totalReads = TOTAL_READS_IN_INPUT == 0 ? firstPassProgress.getCount() : TOTAL_READS_IN_INPUT;
 
@@ -139,8 +133,7 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
         SAMFileWriter currentWriter = writerFactory.makeSAMOrBAMWriter(header, true, new File(OUTPUT, fileNameFormatter.format(fileIndex++)));
         String lastReadName = "";
         final ProgressLogger progress = new ProgressLogger(log);
-        while (readerIterator.hasNext()) {
-            final SAMRecord currentRecord = readerIterator.next();
+        for (SAMRecord currentRecord : reader) {
             if (readsWritten >= readsPerFile && !lastReadName.equals(currentRecord.getReadName())) {
                 currentWriter.close();
                 currentWriter = writerFactory.makeSAMOrBAMWriter(header, true, new File(OUTPUT, fileNameFormatter.format(fileIndex++)));
@@ -155,10 +148,10 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
         CloserUtil.close(reader);
 
         if (progress.getCount() != totalReads) {
-            log.warn(String.format("The totalReads (%s) provided does not match the reads found in the " +
-                            "input file (%s). Files may not be split evenly or number of files may not " +
-                            "match what was requested. There were %s files generated each with around %s " +
-                            "reads except the last file which contained %s reads.",
+            log.warn(String.format("The totalReads (%d) provided does not match the reads found in the " +
+                            "input file (%d). Files may not be split evenly or number of files may not " +
+                            "match what was requested. There were %d files generated each with around %d " +
+                            "reads except the last file which contained %d reads.",
                     totalReads, progress.getCount(), fileIndex - 1, readsPerFile, readsWritten)
             );
         }
@@ -169,14 +162,14 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         if (TOTAL_READS_IN_INPUT < 0) {
             return new String[]{
-                    String.format("Cannot set TOTAL_READS_IN_INPUT to a number less than 1, found %s.", TOTAL_READS_IN_INPUT)
+                    String.format("Cannot set TOTAL_READS_IN_INPUT to a number less than 1, found %d.", TOTAL_READS_IN_INPUT)
             };
         }
 
         if (SPLIT_TO_N_FILES <= 1 && SPLIT_TO_N_READS <= 1) {
             return new String[]{
                     String.format("One of SPLIT_TO_N_FILES or SPLIT_TO_N_READS must be greater than 0. " +
-                            "Found SPLIT_TO_N_FILES is %s and SPLIT_TO_N_READS is %s.", SPLIT_TO_N_FILES, SPLIT_TO_N_READS)
+                            "Found SPLIT_TO_N_FILES is %d and SPLIT_TO_N_READS is %d.", SPLIT_TO_N_FILES, SPLIT_TO_N_READS)
             };
         }
 

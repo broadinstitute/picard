@@ -32,10 +32,7 @@ import picard.sam.testers.ValidateSamTester;
 import com.google.common.collect.Iterators;
 
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
 
 /**
  * Tests for SAMSplitter
@@ -197,7 +194,7 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void testStreamWithoutTotalReads() throws IOException, NoSuchFieldException, IllegalAccessException {
+    public void testStreamWithoutTotalReads() throws IOException {
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath();
 
         final String[] args = new String[]{
