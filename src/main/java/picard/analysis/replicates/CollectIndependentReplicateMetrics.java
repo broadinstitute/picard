@@ -58,6 +58,8 @@ import htsjdk.variant.vcf.VCFContigHeaderLine;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.BetaFeature;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
@@ -100,12 +102,13 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
  * @author Yossi Farjoun
  *
  */
-
+@DocumentedFeature
+@BetaFeature
 @CommandLineProgramProperties(
         summary = "Estimates the rate of independent replication rate of reads within a bam. \n" +
                 "That is, it estimates the fraction of the reads which would be marked as duplicates but " +
                 "are actually biological replicates, independent observations of the data. ",
-        oneLineSummary = "Estimates the rate of independent replication of reads within a bam.",
+        oneLineSummary = "(Experimental) Estimates the rate of independent replication of reads within a bam.",
         programGroup = Alpha.class
 )
 public class CollectIndependentReplicateMetrics extends CommandLineProgram {
