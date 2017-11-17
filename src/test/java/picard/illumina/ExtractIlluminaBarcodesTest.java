@@ -30,6 +30,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
@@ -333,5 +334,21 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> retval = new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer>();
         retval.read(new FileReader(metricsFile));
         return retval;
+    }
+
+    @Test(expectedExceptions=PicardException.class)
+    public void testBarcodeLengthMismatch() throws Exception {
+        final File metricsFile = File.createTempFile("dual.", ".metrics");
+        metricsFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "BASECALLS_DIR=" + dual.getAbsolutePath(),
+                "LANE=" + 1,
+                "METRICS_FILE=" + metricsFile.getPath(),
+                "READ_STRUCTURE=" + "25T8B9B25T",
+                "BARCODE=" + "CAATAGTCCGACTCTC"
+        };
+
+        runPicardCommandLine(args);
     }
 }
