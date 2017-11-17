@@ -228,9 +228,17 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         // Create BarcodeMetric for counting reads that don't match any barcode
         final String[] noMatchBarcode = new String[readStructure.sampleBarcodes.length()];
         int index = 0;
+        int barcodeLength = 0;
         for (final ReadDescriptor d : readStructure.descriptors) {
             if (d.type == ReadType.Barcode) {
                 noMatchBarcode[index++] = StringUtil.repeatCharNTimes('N', d.length);
+                barcodeLength += d.length;
+            }
+        }
+
+        for (final String barcode : barcodeToMetrics.keySet()) {
+            if (barcode.length() != barcodeLength) {
+                throw new PicardException("Barcode '" + barcode + "' with length '" + barcode.length() + "' in the barcodes file did not match the expected number of sample barcode bases '" + barcodeLength + "'");
             }
         }
 
