@@ -96,6 +96,8 @@ public class VcfTestUtils {
 
         for (final String name : expected.getSampleNamesOrderedByName()) {
             Assert.assertEquals(actual.get(name).getAlleles(), expected.get(name).getAlleles(), "Alleles differ for sample " + name);
+            Assert.assertEquals(actual.get(name).getAD(), expected.get(name).getAD());
+            Assert.assertEquals(actual.get(name).getPL(), expected.get(name).getPL());
         }
     }
 }
