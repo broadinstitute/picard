@@ -25,12 +25,14 @@
 package picard.sam;
 
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.programgroups.SamOrBam;
 
 /**
  * @author Yossi Farjoun
  */
 @Deprecated
+@DocumentedFeature
 @CommandLineProgramProperties(
         summary = SetNmAndUqTags.USAGE_SUMMARY + SetNmMdAndUqTags.USAGE_DETAILS,
         oneLineSummary = SetNmAndUqTags.USAGE_SUMMARY,

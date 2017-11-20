@@ -31,6 +31,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.programgroups.Alpha;
 
 import java.io.File;
@@ -48,6 +49,7 @@ import java.io.File;
  *
  * @author fleharty
  */
+@DocumentedFeature
 @CommandLineProgramProperties(
         summary = UmiAwareMarkDuplicatesWithMateCigar.USAGE_SUMMARY + UmiAwareMarkDuplicatesWithMateCigar.USAGE_DETAILS,
         oneLineSummary = UmiAwareMarkDuplicatesWithMateCigar.USAGE_SUMMARY,

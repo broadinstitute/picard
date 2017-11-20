@@ -27,6 +27,7 @@ package picard.fingerprint;
 
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.programgroups.Fingerprinting;
 
 import java.io.File;
@@ -41,6 +42,7 @@ import java.util.List;
  *
  * @deprecated 6/6/2017 Use {@link CrosscheckFingerprints} instead.
  */
+@DocumentedFeature
 @CommandLineProgramProperties(
         summary = "DEPRECATED: USE CrosscheckFingerprints. Checks if all read groups within a set of BAM files appear to come from the same individual",
         oneLineSummary = "DEPRECATED: USE CrosscheckFingerprints. Checks if all read groups appear to come from the same individual.",
