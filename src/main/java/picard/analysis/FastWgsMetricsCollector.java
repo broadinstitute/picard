@@ -111,12 +111,21 @@ public class FastWgsMetricsCollector extends AbstractWgsMetricsCollector<EdgingR
         }
         if (!referenceBaseN) {
             final int readNamesSize = pileupSize.get(info.getPosition());
-            final int highQualityDepth = Math.min(readNamesSize, coverageCap);
+            int depth = unfilteredDepthSize.get(info.getPosition());
+            int highQualityDepth = readNamesSize;
+
+            this.maxDepth = Math.max(this.maxDepth,depth);
+            this.maxHighQualityDepth = Math.max(this.maxHighQualityDepth, highQualityDepth);
+
+            // cap it
+            depth = Math.min(depth, coverageCap);
+            highQualityDepth = Math.min(highQualityDepth, coverageCap);
+
             if (highQualityDepth < readNamesSize) {
                 basesExcludedByCapping += readNamesSize - coverageCap;
             }
             highQualityDepthHistogramArray[highQualityDepth]++;
-            unfilteredDepthHistogramArray[unfilteredDepthSize.get(info.getPosition())]++;
+            unfilteredDepthHistogramArray[depth]++;
         }
     }
 
@@ -136,8 +145,8 @@ public class FastWgsMetricsCollector extends AbstractWgsMetricsCollector<EdgingR
             } else {
                 if (unfilteredDepthSize.get(index) < coverageCap) {
                     unfilteredBaseQHistogramArray[quality]++;
-                    unfilteredDepthSize.increment(index);
                 }
+                unfilteredDepthSize.increment(index);
                 if (quality < collectWgsMetrics.MINIMUM_BASE_QUALITY || SequenceUtil.isNoCall(bases[i + record.getOffset()])){
                     basesExcludedByBaseq++;
                 } else {

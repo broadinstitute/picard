@@ -40,7 +40,7 @@ public class WgsMetricsTest {
         return new CollectWgsMetrics.WgsMetrics(
                 buildIntervalList(-1, -1),
                 emptyDepthHistogram(), emptyDepthHistogram(),
-                0, 0, 0, 0, 0, 0, 0, 1000000,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 1000000,
                 null, -1
         );
     }
@@ -55,6 +55,7 @@ public class WgsMetricsTest {
                 10d * countScale / count, 20d * countScale / count, 30d * countScale / count,
                 40d * countScale / count, 50d * countScale / count, 60d * countScale / count,
                 totalExcluded / (double) (count + totalExcluded),
+                0, 0,
                 1000000,
                 null, -1
         );
@@ -75,6 +76,7 @@ public class WgsMetricsTest {
                 10d * countScale / count, 20d * countScale / count, 30d * countScale / count,
                 40d * countScale / count, 50d * countScale / count, 60d * countScale / count,
                 totalExcluded / (double) (count + totalExcluded),
+                0, 0,
                 100000,
                 null, -1
         );

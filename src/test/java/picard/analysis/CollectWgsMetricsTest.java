@@ -109,6 +109,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
             Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.0);
             Assert.assertEquals(metrics.PCT_EXC_CAPPED, 0.519542, .001);
             Assert.assertEquals(metrics.PCT_EXC_TOTAL, 0.919537, .001);
+            Assert.assertEquals(metrics.MAX_DEPTH, 3508, 10);
+            Assert.assertEquals(metrics.MAX_HQ_DEPTH, 2286, 10);
             Assert.assertEquals(metrics.PCT_1X, 0.056364, .0001);
             Assert.assertEquals(metrics.PCT_5X, 0.056364, .0001);
             Assert.assertEquals(metrics.PCT_10X, 0.056364, .0001);

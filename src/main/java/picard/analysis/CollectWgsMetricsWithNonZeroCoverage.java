@@ -101,11 +101,13 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
                                              final double pctExcludedByOverlap,
                                              final double pctExcludedByCapping,
                                              final double pctTotal,
+                                             final long maxDepth,
+                                             final long maxHighQualityDepth,
                                              final int coverageCap,
                                              final Histogram<Integer> unfilteredBaseQHistogram,
                                              final int sampleSize) {
             super(intervals, highQualityDepthHistogram, unfilteredDepthHistogram, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
-                    pctExcludedByOverlap, pctExcludedByCapping, pctTotal, coverageCap, unfilteredBaseQHistogram, sampleSize);
+                    pctExcludedByOverlap, pctExcludedByCapping, pctTotal, maxDepth, maxHighQualityDepth, coverageCap, unfilteredBaseQHistogram, sampleSize);
         }
     }
 
@@ -162,6 +164,8 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
                                             final double pctExcludedByOverlap,
                                             final double pctExcludedByCapping,
                                             final double pctTotal,
+                                            final long maxDepth,
+                                            final long maxHighQualityDepth,
                                             final int coverageCap,
                                             final Histogram<Integer> unfilteredBaseQHistogram,
                                             final int sampleSize) {
@@ -176,6 +180,8 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
                 pctExcludedByOverlap,
                 pctExcludedByCapping,
                 pctTotal,
+                maxDepth,
+                maxHighQualityDepth,
                 coverageCap,
                 unfilteredBaseQHistogram,
                 sampleSize);

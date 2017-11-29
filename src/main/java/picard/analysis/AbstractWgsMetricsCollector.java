@@ -79,6 +79,15 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
      */
     protected final int coverageCap;
 
+    /**
+     * The maximum coverage encountered.
+     */
+    protected long maxDepth = 0;
+    /**
+     * The maximum coverage encountered, excluding bases with low base quality and no-calls.
+     */
+    protected long maxHighQualityDepth = 0;
+
     protected final IntervalList intervals;
     /**
      * This value indicates that processing will stop after specified int the metric amount of genomic bases.
@@ -182,6 +191,8 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
                 basesExcludedByBaseq,
                 basesExcludedByOverlap,
                 basesExcludedByCapping,
+                maxDepth,
+                maxHighQualityDepth,
                 coverageCap,
                 getUnfilteredBaseQHistogram(),
                 collectWgsMetrics.SAMPLE_SIZE

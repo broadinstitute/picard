@@ -209,6 +209,8 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
          * @param pctExcludedByOverlap the fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads.
          * @param pctExcludedByCapping the fraction of aligned bases that were filtered out because they would have raised coverage above the capped value.
          * @param pctExcludeTotal the fraction of bases excluded across all filters.
+         * @param maxDepth the maximum depth at any genomic position.
+         * @param maxHighQualityDepth the maximum depth at any genomic position.  Excludes bases with quality below MINIMUM_BASE_QUALITY.
          * @param coverageCap Treat positions with coverage exceeding this value as if they had coverage at this value.
          * @param unfilteredBaseQHistogram the count of bases observed with a given quality. Includes all but quality 2 bases.
          * @param theoreticalHetSensitivitySampleSize the sample size used for theoretical het sensitivity sampling.
@@ -223,6 +225,8 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                           final double pctExcludedByOverlap,
                           final double pctExcludedByCapping,
                           final double pctExcludeTotal,
+                          final long maxDepth,
+                          final long maxHighQualityDepth,
                           final int coverageCap,
                           final Histogram<Integer> unfilteredBaseQHistogram,
                           final int theoreticalHetSensitivitySampleSize) {
@@ -240,6 +244,9 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             PCT_EXC_OVERLAP  = pctExcludedByOverlap;
             PCT_EXC_CAPPED   = pctExcludedByCapping;
             PCT_EXC_TOTAL    = pctExcludeTotal;
+
+            MAX_DEPTH    = maxDepth;
+            MAX_HQ_DEPTH = maxHighQualityDepth;
 
             calculateDerivedFields();
         }
@@ -259,6 +266,13 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         /** The median absolute deviation of coverage of the genome after all filters are applied. */
         @NoMergingIsDerived
         public double MAD_COVERAGE;
+
+        /** The maximum depth at any genomic position. */
+        @MergingIsManual
+        public long MAX_DEPTH;
+        /** The maximum depth at any genomic position after all filters are applied. */
+        @MergingIsManual
+        public long MAX_HQ_DEPTH;
 
         /** The fraction of aligned bases that were filtered out because they were in reads with low mapping quality (default is < 20). */
         @NoMergingIsDerived
@@ -377,6 +391,9 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                 PCT_EXC_CAPPED   = (PCT_EXC_CAPPED * thisTotalWithExcludes + otherMetric.PCT_EXC_CAPPED * otherTotalWithExcludes) / totalWithExcludes;
                 PCT_EXC_TOTAL    = (totalWithExcludes - total) / totalWithExcludes;
             }
+
+            MAX_DEPTH    = Math.max(MAX_DEPTH, otherMetric.MAX_DEPTH);
+            MAX_HQ_DEPTH = Math.max(MAX_HQ_DEPTH, otherMetric.MAX_HQ_DEPTH);
 
             // do any merging that are dictated by the annotations.
             super.merge(other);
@@ -533,6 +550,8 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                                             final double pctExcludedByOverlap,
                                             final double pctExcludedByCapping,
                                             final double pctTotal,
+                                            final long maxDepth,
+                                            final long maxHighQualityDepth,
                                             final int coverageCap,
                                             final Histogram<Integer> unfilteredBaseQHistogram,
                                             final int theoreticalHetSensitivitySampleSize) {
@@ -547,6 +566,8 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                 pctExcludedByOverlap,
                 pctExcludedByCapping,
                 pctTotal,
+                maxDepth,
+                maxHighQualityDepth,
                 coverageCap,
                 unfilteredBaseQHistogram,
                 theoreticalHetSensitivitySampleSize
@@ -562,6 +583,8 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                                           final long basesExcludedByBaseq,
                                           final long basesExcludedByOverlap,
                                           final long basesExcludedByCapping,
+                                          final long maxDepth,
+                                          final long maxHighQualityDepth,
                                           final int coverageCap,
                                           final Histogram<Integer> unfilteredBaseQHistogram,
                                           final int theoreticalHetSensitivitySampleSize) {
@@ -587,6 +610,8 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                 pctExcludedByOverlap,
                 pctExcludedByCapping,
                 pctTotal,
+                maxDepth,
+                maxHighQualityDepth,
                 coverageCap,
                 unfilteredBaseQHistogram,
                 theoreticalHetSensitivitySampleSize
@@ -647,8 +672,8 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             }
             // Figure out the coverage while not counting overlapping reads twice, and excluding various things
             final HashSet<String> readNames = new HashSet<>(info.getRecordAndOffsets().size());
-            int pileupSize = 0;
             int unfilteredDepth = 0;
+            int highQualityDepth = 0;
 
             for (final SamLocusIterator.RecordAndOffset recs : info.getRecordAndOffsets()) {
                 if (recs.getBaseQuality() <= 2) { ++basesExcludedByBaseq;   continue; }
@@ -657,16 +682,21 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                 // the raw depth may exceed the coverageCap before the high-quality depth does. So stop counting once we reach the coverage cap.
                 if (unfilteredDepth < coverageCap) {
                     unfilteredBaseQHistogramArray[recs.getRecord().getBaseQualities()[recs.getOffset()]]++;
-                    unfilteredDepth++;
                 }
+                unfilteredDepth++;
 
                 if (recs.getBaseQuality() < collectWgsMetrics.MINIMUM_BASE_QUALITY ||
                         SequenceUtil.isNoCall(recs.getReadBase()))                  { ++basesExcludedByBaseq;   continue; }
                 if (!readNames.add(recs.getRecord().getReadName()))                 { ++basesExcludedByOverlap; continue; }
-                pileupSize++;
+                highQualityDepth++;
             }
-            final int highQualityDepth = Math.min(pileupSize, coverageCap);
-            if (highQualityDepth < pileupSize) basesExcludedByCapping += pileupSize - coverageCap;
+            if (coverageCap < highQualityDepth) basesExcludedByCapping += highQualityDepth - coverageCap;
+
+            maxDepth            = Math.max(unfilteredDepth, maxDepth);
+            maxHighQualityDepth = Math.max(highQualityDepth, maxHighQualityDepth);
+
+            highQualityDepth = Math.min(highQualityDepth, coverageCap);
+            unfilteredDepth  = Math.min(unfilteredDepth, coverageCap);
             highQualityDepthHistogramArray[highQualityDepth]++;
             unfilteredDepthHistogramArray[unfilteredDepth]++;
         }
