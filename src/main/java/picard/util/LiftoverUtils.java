@@ -26,8 +26,11 @@ package picard.util;
 
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.*;
+import org.apache.commons.lang3.ArrayUtils;
 import picard.vcf.LiftoverVcf;
 
 import java.util.*;
@@ -35,6 +38,20 @@ import java.util.stream.Collectors;
 
 
 public class LiftoverUtils {
+
+    /**
+     * Attribute used to store the fact that the alt and ref alleles of the variant have been swapped, while all the INFO annotations have not.
+     */
+    public static final String SWAPPED_ALLELES = "SwappedAlleles";
+
+    /**
+     * Default list of attributes that need to be reversed or dropped from the INFO field when alleles have been swapped.
+     */
+    public static final Collection<String> DEFAULT_TAGS_TO_REVERSE = Arrays.asList("AF");
+    public static final Collection<String> DEFAULT_TAGS_TO_DROP = Arrays.asList("MAX_AF");
+
+
+    public static final Log log = Log.getInstance(LiftoverUtils.class);
     /**
      * This will take an input VariantContext and lift to the provided interval.
      * If this interval is in the opposite orientation, all alleles and genotypes will be reverse complemented
@@ -65,6 +82,8 @@ public class LiftoverUtils {
         builder.filters(source.getFilters());
         builder.log10PError(source.getLog10PError());
         builder.attributes(source.getAttributes());
+        // make sure that the variant isn't mistakenly set as "SwappedAlleles"
+        builder.attribute(SWAPPED_ALLELES, false);
         builder.id(source.getID());
 
         if (writeOriginalPosition) {
@@ -192,6 +211,90 @@ public class LiftoverUtils {
     }
 
     /**
+     * method to swap the reference and alt alleles of a bi-allelic, SNP
+     *
+     * @param vc the {@link VariantContext} (bi-allelic SNP) that needs to have it's REF and ALT alleles swapped.
+     * @param annotationsToReverse INFO field annotations (of double value) that will be reversed (x->1-x)
+     * @param annotationsToDrop INFO field annotations that will be dropped from the result since they are invalid when REF and ALT are swapped
+     * @return a new {@link VariantContext} with alleles swapped, INFO fields modified and in the genotypes, GT, AD and PL corrected appropriately
+     */
+    public static VariantContext swapRefAlt(final VariantContext vc, final Collection<String> annotationsToReverse, final Collection<String> annotationsToDrop) {
+
+        if (!vc.isBiallelic() || !vc.isSNP() ) {
+            throw new IllegalArgumentException("swapRefAlt can only process biallelic, SNPS, found " + vc.toString() );
+        }
+
+        final VariantContextBuilder swappedBuilder = new VariantContextBuilder(vc);
+
+        swappedBuilder.attribute(SWAPPED_ALLELES, true);
+
+        // Use getBaseString() (rather than the Allele itself) in order to create new Alleles with swapped
+        // reference and non-variant attributes
+        swappedBuilder.alleles(Arrays.asList(vc.getAlleles().get(1).getBaseString(), vc.getAlleles().get(0).getBaseString()));
+
+        final Map<Allele, Allele> alleleMap = new HashMap<>();
+
+        // A mapping from the old allele to the new allele, to be used when fixing the genotypes
+        alleleMap.put(vc.getAlleles().get(0), swappedBuilder.getAlleles().get(1));
+        alleleMap.put(vc.getAlleles().get(1), swappedBuilder.getAlleles().get(0));
+
+        final GenotypesContext swappedGenotypes = GenotypesContext.create(vc.getGenotypes().size());
+        for (final Genotype genotype : vc.getGenotypes()) {
+            final List<Allele> swappedAlleles = new ArrayList<>();
+            for (final Allele allele : genotype.getAlleles()) {
+                if (allele.isNoCall()) {
+                    swappedAlleles.add(allele);
+                } else {
+                    swappedAlleles.add(alleleMap.get(allele));
+                }
+            }
+            // Flip AD
+            final GenotypeBuilder builder = new GenotypeBuilder(genotype).alleles(swappedAlleles);
+            if (genotype.hasAD() && genotype.getAD().length == 2) {
+                final int[] ad = ArrayUtils.clone(genotype.getAD());
+                ArrayUtils.reverse(ad);
+                builder.AD(ad);
+            } else {
+                builder.noAD();
+            }
+
+            //Flip PL
+            if (genotype.hasPL() && genotype.getPL().length == 3) {
+                final int[] pl = ArrayUtils.clone(genotype.getPL());
+                ArrayUtils.reverse(pl);
+                builder.PL(pl);
+            } else {
+                builder.noPL();
+            }
+            swappedGenotypes.add(builder.make());
+        }
+        swappedBuilder.genotypes(swappedGenotypes);
+
+        for (final String key : vc.getAttributes().keySet()) {
+            if (annotationsToDrop.contains(key)) {
+                swappedBuilder.rmAttribute(key);
+            } else if (annotationsToReverse.contains(key)) {
+                final double attributeToReverse = vc.getAttributeAsDouble(key, -1);
+
+                if (attributeToReverse == -1) {
+                    log.warn("Trying to reverse attribute " + key +
+                            "but found value that isn't parsable as a double: (" + vc.getAttribute(key, "") +
+                            ") in variant " + vc + ". Results might be wrong.");
+                }
+
+                if (attributeToReverse < 0 || attributeToReverse > 1) {
+                    log.warn("Trying to reverse attribute " + key +
+                            "but found value that isn't between 0 and 1: (" + attributeToReverse + ") in variant " + vc + ". Results might be wrong.");
+                }
+                swappedBuilder.attribute(key, 1 - attributeToReverse);
+            }
+        }
+
+        return swappedBuilder.make();
+    }
+
+
+    /**
      *    Normalizes and left aligns a {@link VariantContextBuilder}.
      *    Note: this will modify the start/stop and alleles of this builder
      *
@@ -208,6 +311,16 @@ public class LiftoverUtils {
 
         int theStart = start;
         int theEnd = end;
+
+        final String refString = StringUtil.bytesToString(referenceSequence.getBases(), start - 1, end - start + 1);
+        //make sure that referenceAllele matches reference
+        final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElseThrow(() -> new RuntimeException("How did that happen? No reference allele?"));
+
+        if (!refString.equalsIgnoreCase(refAllele.getBaseString())) {
+            throw new IllegalArgumentException(
+                    String.format("Reference allele doesn't match reference: Allele= %s, at %s:%d-%d, ref=%s",
+                            refAllele.toString(), referenceSequence.getName(), start, end, refString));
+        }
 
         // 1. while changes in alleles do
         while (changesInAlleles) {
@@ -270,7 +383,7 @@ public class LiftoverUtils {
                 .collect(Collectors.toMap(Map.Entry::getKey, me -> Allele.create(me.getValue(), me.getKey().isReference())));
 
         //retain original order:
-        List<Allele> fixedAlleles = alleles.stream().map(a -> fixedAlleleMap.get(a)).collect(Collectors.toList());
+        List<Allele> fixedAlleles = alleles.stream().map(fixedAlleleMap::get).collect(Collectors.toList());
 
         builder.alleles(fixedAlleles);
     }

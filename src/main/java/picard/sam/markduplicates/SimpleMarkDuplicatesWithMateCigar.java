@@ -33,6 +33,8 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordDuplicateComparator;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.util.*;
+import org.broadinstitute.barclay.argparser.BetaFeature;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Testing;
@@ -61,10 +63,12 @@ import java.util.Set;
  *
  * @author nhomer
  */
+@DocumentedFeature
+@BetaFeature
 @CommandLineProgramProperties(
         summary = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
                 "All records are then written to the output file with the duplicate records flagged.",
-        oneLineSummary = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.",
+        oneLineSummary = "(Experimental) Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.",
         programGroup = Testing.class
 )
 public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {

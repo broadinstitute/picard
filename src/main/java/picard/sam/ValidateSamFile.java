@@ -132,6 +132,13 @@ public class ValidateSamFile extends CommandLineProgram {
             "This number can be found by executing the 'ulimit -n' command on a Unix system.")
     public int MAX_OPEN_TEMP_FILES = 8000;
 
+    @Argument(shortName = "SMV",
+            doc = "If true, this tool will not attempt to validate mate information. " +
+            "In general cases, this option should not be used.  However, in cases where samples have very " +
+            "high duplication or chimerism rates (> 10%), the mate validation process often requires extremely " +
+            "large amounts of memory to run, so this flag allows you to forego that check.")
+    public boolean SKIP_MATE_VALIDATION = false;
+
     public static void main(final String[] args) {
         System.exit(new ValidateSamFile().instanceMain(args));
     }
@@ -201,17 +208,14 @@ public class ValidateSamFile extends CommandLineProgram {
 
             final SamFileValidator validator = new SamFileValidator(out, MAX_OPEN_TEMP_FILES);
             validator.setErrorsToIgnore(IGNORE);
+            validator.setSkipMateValidation(SKIP_MATE_VALIDATION);
+            validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
+            validator.setIgnoreWarnings(IGNORE_WARNINGS);
 
-            if (IGNORE_WARNINGS) {
-                validator.setIgnoreWarnings(IGNORE_WARNINGS);
-            }
             if (MODE == Mode.SUMMARY) {
                 validator.setVerbose(false, 0);
             } else {
                 validator.setVerbose(true, MAX_OUTPUT);
-            }
-            if (IS_BISULFITE_SEQUENCED) {
-                validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
             }
             if (VALIDATE_INDEX) {
                 validator.setIndexValidationStringency(VALIDATE_INDEX ? IndexValidationStringency.EXHAUSTIVE : IndexValidationStringency.NONE);
