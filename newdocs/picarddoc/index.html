@@ -17,12 +17,42 @@
 
 
 <h1 id="top">Picard Tool Documentation Index
-    <small>2.15.0-SNAPSHOT</small>
+    <small>2.16.0-SNAPSHOT</small>
 </h1>
 <div class="accordion" id="index">
 		<br />
 		<br />
 		<br />
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#AlphaTools">
+                <h4>Alpha Tools</h4>
+            </a>
+        </div>
+        <div class="accordion-body collapse" id="AlphaTools">
+            <div class="accordion-inner">
+                <p class="lead">Tools that are currently UNSUPPORTED until further testing and maturation.</p>
+                <table class="table table-striped table-bordered table-condensed">
+                    <tr>
+                        <th>Name</th>
+                        <th>Summary</th>
+                    </tr>
+                            <tr>
+                                <td><a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a></td>
+                                <td>(Experimental) Estimates the rate of independent replication of reads within a bam.</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a></td>
+                                <td>(Experimental) Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.  </td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a></td>
+                                <td>Identifies duplicate reads using information from read positions and UMIs. </td>
+                            </tr>
+                </table>
+            </div>
+        </div>
+    </div>
     <div class="accordion-group">
         <div class="accordion-heading">
             <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#Fasta">
@@ -82,6 +112,10 @@
                             <tr>
                                 <td><a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a></td>
                                 <td>Checks if all fingerprints appear to come from the same individual.</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a></td>
+                                <td>DEPRECATED: USE CrosscheckFingerprints. Checks if all read groups appear to come from the same individual.</td>
                             </tr>
                 </table>
             </div>
@@ -422,6 +456,10 @@
                                 <td>Converts a SAM or BAM file to FASTQ.  </td>
                             </tr>
                             <tr>
+                                <td><a href="picard_sam_SetNmAndUqTags.html">SetNmAndUqTags</a></td>
+                                <td>DEPRECATED: Use SetNmMdAndUqTags instead.</td>
+                            </tr>
+                            <tr>
                                 <td><a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a></td>
                                 <td>Fixes the NM, MD, and UQ tags in a SAM file.  </td>
                             </tr>
@@ -434,12 +472,38 @@
                                 <td>Splits a SAM or BAM file into individual files by library</td>
                             </tr>
                             <tr>
+                                <td><a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a></td>
+                                <td>Splits a SAM or BAM file to multiple BAMs.</td>
+                            </tr>
+                            <tr>
                                 <td><a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a></td>
                                 <td>Validates a SAM or BAM file.  </td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_ViewSam.html">ViewSam</a></td>
                                 <td>Prints a SAM or BAM file to the screen</td>
+                            </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#UnitTesting">
+                <h4>Unit Testing</h4>
+            </a>
+        </div>
+        <div class="accordion-body collapse" id="UnitTesting">
+            <div class="accordion-inner">
+                <p class="lead">Unit testing</p>
+                <table class="table table-striped table-bordered table-condensed">
+                    <tr>
+                        <th>Name</th>
+                        <th>Summary</th>
+                    </tr>
+                            <tr>
+                                <td><a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a></td>
+                                <td>(Experimental) Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.</td>
                             </tr>
                 </table>
             </div>
@@ -531,7 +595,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.15.0-SNAPSHOT built at 13-26-2017 04:26:01.
+        <p class="version">Picard version 2.16.0-SNAPSHOT built at 05-07-2017 01:07:33.
         </p>
 
 </div></div>
