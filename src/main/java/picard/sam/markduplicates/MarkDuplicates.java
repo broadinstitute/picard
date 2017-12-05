@@ -186,6 +186,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     private SortingCollection<ReadEndsForMarkDuplicates> fragSort;
     private SortingLongCollection duplicateIndexes;
     private SortingLongCollection opticalDuplicateIndexes;
+    private SortingLongCollection duplicateIndexesForRemoveDuplicates;
+    private Set<String> nonProperlyMappedPairDuplicatesNames;
+
     private SortingCollection<RepresentativeReadIndexer> representativeReadIndicesForDuplicates;
 
     private int numDuplicateIndices = 0;
@@ -289,6 +292,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
         String duplicateQueryName = null;
         String opticalDuplicateQueryName = null;
+
+        if (REMOVE_DUPLICATES) {
+            nonProperlyMappedPairDuplicatesNames = getNonProperlyMappedPairDuplicatesNames(nextDuplicateIndex);
+        }
 
         while (iterator.hasNext()) {
             final SAMRecord rec = iterator.next();
@@ -397,7 +404,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             if (this.REMOVE_DUPLICATES && rec.getDuplicateReadFlag()) {
                 continue;
             }
-            if (this.REMOVE_SEQUENCING_DUPLICATES && isOpticalDuplicate) {
+            // If read is secondary, supplementary or unmapped and it is in duplicate set - it is not included into result file
+            if (this.REMOVE_DUPLICATES
+                    && (rec.getReadUnmappedFlag() || rec.isSecondaryOrSupplementary())
+                    && nonProperlyMappedPairDuplicatesNames.contains(rec.getReadName())) {
+                continue;
+            }
+            if (REMOVE_SEQUENCING_DUPLICATES && isOpticalDuplicate) {
+
                 continue;
             }
             if (PROGRAM_RECORD_ID != null && pgTagArgumentCollection.ADD_PG_TAG_TO_READS) {
@@ -656,6 +670,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      */
     private void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
         final int entryOverhead;
+
+
         if (TAG_DUPLICATE_SET_MEMBERS) {
             // Memory requirements for RepresentativeReadIndexer:
             // three int entries + overhead: (3 * 4) + 4 = 16 bytes
@@ -673,6 +689,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
         log.info("Will retain up to " + maxInMemory + " duplicate indices before spilling to disk.");
         this.duplicateIndexes = new SortingLongCollection(maxInMemory, TMP_DIR.toArray(new File[TMP_DIR.size()]));
+
+        if (REMOVE_DUPLICATES) {
+            duplicateIndexesForRemoveDuplicates = new SortingLongCollection(maxInMemory, TMP_DIR.toArray(new File[TMP_DIR.size()]));
+        }
         if (TAG_DUPLICATE_SET_MEMBERS) {
             final RepresentativeReadIndexerCodec representativeIndexCodec = new RepresentativeReadIndexerCodec();
             this.representativeReadIndicesForDuplicates = SortingCollection.newInstance(RepresentativeReadIndexer.class,
@@ -935,5 +955,42 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             return compareDifference;
         }
     }
+    private Set<String> getNonProperlyMappedPairDuplicatesNames(long nextDuplicateIndex) {
+        final Set<String> duplicatesNames = new HashSet<>();
+        final SamHeaderAndIterator headerAndIteratorForRemoveDuplicates = openInputs(false);
+        final SAMFileHeader header = headerAndIteratorForRemoveDuplicates.header;
+        final SAMFileHeader.SortOrder sortOrder = header.getSortOrder();
 
+        long recordInFileIndex = 0;
+        String duplicateQueryName = null;
+
+        final CloseableIterator<SAMRecord> iteratorForRemoveDuplicates = headerAndIteratorForRemoveDuplicates.iterator;
+        while (iteratorForRemoveDuplicates.hasNext()) {
+            final SAMRecord rec = iteratorForRemoveDuplicates.next();
+
+            final boolean nextDuplicateIndexIsNecessary = recordInFileIndex > nextDuplicateIndex &&
+                    (sortOrder == SAMFileHeader.SortOrder.coordinate || !rec.getReadName().equals(duplicateQueryName));
+
+            if (nextDuplicateIndexIsNecessary) {
+                nextDuplicateIndex = (duplicateIndexes.hasNext() ? duplicateIndexes.next() : NO_SUCH_INDEX);
+                duplicateIndexesForRemoveDuplicates.add(nextDuplicateIndex);
+            }
+
+            final boolean isDuplicate = recordInFileIndex == nextDuplicateIndex ||
+                    (sortOrder == SAMFileHeader.SortOrder.queryname &&
+                            recordInFileIndex > nextDuplicateIndex && rec.getReadName().equals(duplicateQueryName));
+            if (isDuplicate) {
+                duplicateQueryName = rec.getReadName();
+                duplicatesNames.add(duplicateQueryName);
+            }
+            recordInFileIndex++;
+        }
+
+        iteratorForRemoveDuplicates.close();
+        duplicateIndexes.cleanup();
+        duplicateIndexesForRemoveDuplicates.doneAddingStartIteration();
+        duplicateIndexes = duplicateIndexesForRemoveDuplicates;
+        return duplicatesNames;
+    }
 }
+
