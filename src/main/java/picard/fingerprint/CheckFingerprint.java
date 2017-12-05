@@ -51,11 +51,53 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Attempts to check the sample identity of the sequence/genotype data in the provided file (SAM/BAM or VCF)
- * against a set of known genotypes in the supplied genotype file (in either GELI or VCF format).
+ * Check the sample identity of the sequence/genotype data in the provided file (SAM/BAM or VCF)
+ * against a set of known genotypes in the supplied genotype file (in VCF format).
+ *
+ * <h4> Summary </h4>
+ * Computes a fingerprint from the supplied input file (SAM/BAM or VCF) file and
+ * compares it to the expected fingerprint genotypes provided. The key output is a LOD score
+ * which represents the relative likelihood of the sequence data originating from the same
+ * sample as the genotypes vs. from a random sample.  Two outputs are produced: (1) a summary
+ * metrics file that gives metrics of fingerprint match when comparing the input to a set of
+ * genotypes for the expected sample.  at the single sample level (if the input was a VCF) or at the read
+ * level (lane or index within a lane) (if the input was a SAM/BAM) and (2) a detail metrics file that
+ * contains an individual SNP/Haplotype comparison within a fingerprint comparison.  The two
+ * files may be specified individually using the SUMMARY_OUTPUT and DETAIL_OUTPUT options.
+ * Alternatively the OUTPUT option may be used instead to give the base of the two output
+ * files, with the summary metrics having a file extension ".fingerprint_summary_metrics"
+ * and the detail metrics having a file extension ".fingerprint_summary_metrics"
+ * <p>
+ * <h4>Example:</h4>
+ * <h3>Comparing a bam against known genotypes:</h3>
+ * <pre>
+ *     java -jar picard.jar CheckFingerprint \\ <br />
+ *          INPUT=sample.bam \\ <br />
+ *          GENOTYPES=sample_genotypes.vcf <br />
+ *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\ <br />
+ *          OUTPUT=sample_fingerprinting
+ * </pre>
+ * <p>
+ * <h4> Detailed Explanation</h4>
+ *
+ * This tool calculates a single number that reports the LOD score for identity check between the INPUT
+ * and the GENOTYPES. A positive value indicates that the data seems to have come from the same individual
+ * or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates
+ * that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates
+ * that the data do not match. A score that is near zero is inconclusive and can result from low coverage
+ * or non-informative genotypes.
+ *
+ * The identity check makes use of haplotype blocks defined in the HAPLOTYPE_MAP file to enable it to have higher
+ * statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This
+ * enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).
+ *
+ * When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that
+ * it finds.
  *
  * @author Tim Fennell
  */
+
+
 @CommandLineProgramProperties(
         summary = CheckFingerprint.USAGE_DETAILS,
         oneLineSummary = "Computes a fingerprint from the supplied input (SAM/BAM or VCF) file and compares it to the provided genotypes",
@@ -68,14 +110,14 @@ public class CheckFingerprint extends CommandLineProgram {
             "compares it to the expected fingerprint genotypes provided. The key output is a LOD score " +
             "which represents the relative likelihood of the sequence data originating from the same " +
             "sample as the genotypes vs. from a random sample.  Two outputs are produced: (1) a summary " +
-            "metrics file that gives metrics at the single sample level (if the input was a VCF) or at the read " +
-            "level (lane or index within a lane) (if the input was a SAM/BAM) " +
-            "versus a set of known genotypes for the expected sample, and (2) a detail metrics file that " +
+            "metrics file that gives metrics of fingerprint match when comparing the input to a set of " +
+            "genotypes for the expected sample.  at the single sample level (if the input was a VCF) or at the read " +
+            "level (lane or index within a lane) (if the input was a SAM/BAM) and (2) a detail metrics file that " +
             "contains an individual SNP/Haplotype comparison within a fingerprint comparison.  The two " +
             "files may be specified individually using the SUMMARY_OUTPUT and DETAIL_OUTPUT options.  " +
             "Alternatively the OUTPUT option may be used instead to give the base of the two output " +
             "files, with the summary metrics having a file extension '" + CheckFingerprint.FINGERPRINT_SUMMARY_FILE_SUFFIX + "' " +
-            "and the detail metrics having a file extension '" + CheckFingerprint.FINGERPRINT_DETAIL_FILE_SUFFIX + "'.";
+            "and the detail metrics having a file extension '" + CheckFingerprint.FINGERPRINT_DETAIL_FILE_SUFFIX + "'." ;
 
     @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file SAM/BAM or VCF.  If a VCF is used, " +
             "it must have at least one sample.  If there are more than one samples in the VCF, the parameter OBSERVED_SAMPLE_ALIAS must " +
