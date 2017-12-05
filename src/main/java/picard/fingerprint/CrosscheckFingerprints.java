@@ -47,9 +47,37 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Program to check that all fingerprints within the set of input files appear to come from the same
+ * Program to check that all data in the set of input files appear to come from the same
  * individual. Can be used to cross-check readgroups, libraries, samples, or files.
  * Operates on bams/sams and vcfs (including gvcfs).
+ *
+ * <h3>Summary</h3>
+ * Checks if all the genetic data within a set of files appear to come from the same individual.
+ * The program collects "fingerprints" at the finest level available in the data (readgroup for SAM files
+ * and sample for VCF files) and can be aggregated by library, sample or file, to increase power and provide
+ * results at the desired resolution. Output is in a "Moltenized" format, one row per comparison.
+ * In this format the output will include the LOD score and also tumor-aware LOD score which can
+ * help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could
+ * othewise fail to notice that samples are from the same individual.)
+ * A matrix output is also available to facilitate visual inspection of crosscheck results.
+ *
+ * <h4> Detailed Explanation</h4>
+ *
+ * This tool calculates the LOD score for identity check between "groups" of data in the INPUT files as defined by
+ * the CROSSCHECK_BY argument. A positive value indicates that the data seems to have come from the same individual
+ * or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates
+ * that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates
+ * that the data do not match. A score that is near zero is inconclusive and can result from low coverage
+ * or non-informative genotypes. Each group is assigned a sample identifier (for SAM this is taken from the SM tag in
+ * readgroup header-lines.
+ *
+ * The identity check makes use of haplotype blocks defined in the HAPLOTYPE_MAP file to enable it to have higher
+ * statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This
+ * enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).
+ *
+ * When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that
+ * it finds.
+ *
  *
  * @author Tim Fennell
  * @author Yossi Farjoun
@@ -65,7 +93,7 @@ import java.util.stream.Collectors;
                 "\n" +
                 "A separate CLP, ClusterCrosscheckMetrics, can cluster the results as a connected graph " +
                 "according to LOD greater than a threshold. ",
-        oneLineSummary = "Checks if all fingerprints appear to come from the same individual.",
+        oneLineSummary = "Program to check that all data in the input files appear to have come from the same individual.",
         programGroup = Fingerprinting.class
 )
 @DocumentedFeature

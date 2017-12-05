@@ -94,7 +94,7 @@ import java.util.List;
  * When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that
  * it finds.
  *
- * @author Tim Fennell
+ *  @author Tim Fennell
  */
 
 
