@@ -1029,3 +1029,18 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         Assert.assertEquals(vc.getAttribute(LiftoverVcf.ORIGINAL_START), source.getStart());
     }
 }
+
+    @Test(dataProvider = "noCallAndSymbolicData")
+    public void testLiftOverNoCallAndSymbolic(final LiftOver liftOver, final VariantContext source, final VariantContext result, final boolean expectReversed) {
+
+        final Interval target = liftOver.liftOver(new Interval(source.getContig(), source.getStart(), source.getEnd()), .95);
+
+        Assert.assertEquals(target.isNegativeStrand(), expectReversed);
+
+        VariantContext vc = LiftoverUtils.liftVariant(source, target, REFERENCE, true);
+        VcfTestUtils.assertEquals(vc, result);
+
+        Assert.assertEquals(vc.getAttribute(LiftoverVcf.ORIGINAL_CONTIG), source.getContig());
+        Assert.assertEquals(vc.getAttribute(LiftoverVcf.ORIGINAL_START), source.getStart());
+    }
+}
