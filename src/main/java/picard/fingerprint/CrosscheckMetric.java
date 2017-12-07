@@ -34,6 +34,9 @@ import htsjdk.samtools.metrics.MetricBase;
  */
 public class CrosscheckMetric extends MetricBase {
 
+    public enum Test{
+        TEST
+    }
     // An enum representing whether the result of the fingerprinting was expected and whether it was a match.
     public enum FingerprintResult {
         EXPECTED_MATCH(true, true),

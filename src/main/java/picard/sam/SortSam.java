@@ -51,7 +51,7 @@ import java.io.File;
         programGroup = SamOrBam.class)
 @DocumentedFeature
 public class SortSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Sorts a SAM or BAM file.  ";
+    static final String USAGE_SUMMARY = "Sorts a SAM or BAM file. ";
     static final String USAGE_DETAILS = "This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property " +
             "of the SAM record. The SortOrder of a SAM/BAM file is found in the SAM file header tag @HD in the field labeled SO.  " +
             "" +

@@ -62,13 +62,14 @@ import java.util.List;
  * metrics file that gives metrics of fingerprint match when comparing the input to a set of
  * genotypes for the expected sample.  at the single sample level (if the input was a VCF) or at the read
  * level (lane or index within a lane) (if the input was a SAM/BAM) and (2) a detail metrics file that
- * contains an individual SNP/Haplotype comparison within a fingerprint comparison.  The two
- * files may be specified individually using the SUMMARY_OUTPUT and DETAIL_OUTPUT options.
+ * contains an individual SNP/Haplotype comparison within a fingerprint comparison.  The metrics files
+ * fill the fields of the classes {@link FingerprintingSummaryMetrics} and {@link FingerprintingDetailMetrics}.
+ * The output files may be specified individually using the SUMMARY_OUTPUT and DETAIL_OUTPUT options.
  * Alternatively the OUTPUT option may be used instead to give the base of the two output
- * files, with the summary metrics having a file extension ".fingerprint_summary_metrics"
- * and the detail metrics having a file extension ".fingerprint_summary_metrics"
+ * files, with the summary metrics having a file extension ".{@value CheckFingerprint#FINGERPRINT_SUMMARY_FILE_SUFFIX}",
+ * and the detail metrics having a file extension ".{@value CheckFingerprint#FINGERPRINT_DETAIL_FILE_SUFFIX}".
  * <p>
- * <h4>Example:</h4>
+ * <h4>Example</h4>
  * <h3>Comparing a bam against known genotypes:</h3>
  * <pre>
  *     java -jar picard.jar CheckFingerprint \\ <br />
@@ -78,7 +79,7 @@ import java.util.List;
  *          OUTPUT=sample_fingerprinting
  * </pre>
  * <p>
- * <h4> Detailed Explanation</h4>
+ * <h4>Detailed Explanation</h4>
  *
  * This tool calculates a single number that reports the LOD score for identity check between the INPUT
  * and the GENOTYPES. A positive value indicates that the data seems to have come from the same individual
@@ -100,7 +101,7 @@ import java.util.List;
 
 @CommandLineProgramProperties(
         summary = CheckFingerprint.USAGE_DETAILS,
-        oneLineSummary = "Computes a fingerprint from the supplied input (SAM/BAM or VCF) file and compares it to the provided genotypes",
+        oneLineSummary = "Computes a fingerprint from the supplied input (SAM/BAM or VCF) file and compares it to the provided genotypes.",
         programGroup = Fingerprinting.class
 )
 @DocumentedFeature
@@ -138,7 +139,7 @@ public class CheckFingerprint extends CommandLineProgram {
     @Argument(shortName = "D", doc = "The text file to which to write detail metrics.",  mutex = {"OUTPUT"})
     public File DETAIL_OUTPUT;
 
-    @Argument(shortName="G", doc = "File of genotypes (VCF or GELI) to be used in comparison. May contain " +
+    @Argument(shortName="G", doc = "File of genotypes (VCF) to be used in comparison. May contain " +
             "any number of genotypes; CheckFingerprint will use only those that are usable for fingerprinting.")
     public File GENOTYPES;
 

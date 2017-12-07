@@ -29,7 +29,6 @@ import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -55,11 +54,49 @@ import java.util.stream.Collectors;
  * Checks if all the genetic data within a set of files appear to come from the same individual.
  * The program collects "fingerprints" at the finest level available in the data (readgroup for SAM files
  * and sample for VCF files) and can be aggregated by library, sample or file, to increase power and provide
- * results at the desired resolution. Output is in a "Moltenized" format, one row per comparison.
+ * results at the desired resolution. Output is in a "Moltenized" format, one row per comparison. The results will
+ * be emitted into a metric file for the class {@link CrosscheckMetric}.
  * In this format the output will include the LOD score and also tumor-aware LOD score which can
  * help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could
- * othewise fail to notice that samples are from the same individual.)
+ * otherwise fail to notice that samples are from the same individual.)
  * A matrix output is also available to facilitate visual inspection of crosscheck results.
+ *
+ * Since there can be many rows of output in the metric file, we recommend the use of {@link ClusterCrosscheckMetrics}
+ * as a follow-up step to running CrosscheckFingerprints.
+ *
+ * There are cases where one would like to identify a few groups out of a collection of many possible groups (say
+ * to link a bam to it's correct sample in a multi-sample vcf. In this case one would not case for the cross-checking
+ * of the various samples in the VCF against each other, but only in checking the identiy of the bam against the various
+ * samples in the vcf. The SECOND_INPUT is provided for this use-case. With SECOND_INPUT provided, CrosscheckFingerprints
+ * does the following:
+ * - aggregation of data happens independently for the input files in INPUT and SECOND_INPUT.
+ * - aggregation of data happens at the SAMPLE level
+ * - each samples from INPUT will only be compared to that same sample in SECOND_INPUT.
+ * - MATRIX_OUTPUT is disabled.
+ *
+ *
+ * <h4>Examples</h4>
+ * <h3>Check that all the readgroups from a sample match each other</h3>
+ * <pre>
+ *     java -jar picard.jar CrosscheckFingerprints \\ <br   />
+ *          INPUT=sample.with.many.readgroups.bam \\ <br />
+ *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\ <br />
+ *          LOD_THRESHOLD=-5 \\ <br />
+ *          OUTPUT=sample.crosscheck_metrics
+ * </pre>
+ *
+ *
+ * <h3>Check that all the readgroups match as expected when providing reads from two samples from the same individual</h3>
+ * <pre>
+ *     java -jar picard.jar CrosscheckFingerprints \\ <br   />
+ *          INPUT=sample.one.with.many.readgroups.bam \\ <br />
+ *          INPUT=sample.two.with.many.readgroups.bam \\ <br />
+ *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\ <br />
+ *          LOD_THRESHOLD=-5 \\ <br />
+ *          EXPECT_ALL_GROUPS_TO_MATCH=true \\ <br />
+ *          OUTPUT=sample.crosscheck_metrics
+ * </pre>
+ *
  *
  * <h4> Detailed Explanation</h4>
  *
@@ -69,7 +106,13 @@ import java.util.stream.Collectors;
  * that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates
  * that the data do not match. A score that is near zero is inconclusive and can result from low coverage
  * or non-informative genotypes. Each group is assigned a sample identifier (for SAM this is taken from the SM tag in
- * readgroup header-lines.
+ * the appropriate readgroup header line, for VCF this is taken from the column label in the file-header.
+ * After combining all the data from the same "group" together, an all-against-all comparison is performed. Results are
+ * categorized as one of EXPECTED_MATCH, EXPECTED_MISMATCH, UNEXPECTED_MATCH, UNEXPECTED_MISMATCH, or AMBIGUOUS depending
+ * on the LOD score and on whether the sample identifiers of the groups agree: LOD scores that are less than LOD_THRESHOLD
+ * are considered mismatches, and those greater than -LOD_THRESHOLD are matches (between is ambiguous).
+ * If the sample identifiers are equal, the groups are expected to match. They are expected to mismatch otherwise.
+ *
  *
  * The identity check makes use of haplotype blocks defined in the HAPLOTYPE_MAP file to enable it to have higher
  * statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This
@@ -77,6 +120,7 @@ import java.util.stream.Collectors;
  *
  * When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that
  * it finds.
+ *
  *
  *
  * @author Tim Fennell

@@ -60,7 +60,7 @@ import java.util.*;
 )
 @DocumentedFeature
 public class ScatterIntervalsByNs extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Writes an interval list based on splitting a reference by Ns.  ";
+    static final String USAGE_SUMMARY = "Writes an interval list based on splitting a reference by Ns.";
     static final String USAGE_DETAILS = "A Program for breaking up a reference into intervals of alternating regions of N and ACGT bases." +
             "<p>" +
             "<p>" +
@@ -79,7 +79,7 @@ public class ScatterIntervalsByNs extends CommandLineProgram {
             "<p>" +
             "<p>" +
             "<h4>Usage example:</h4>" +
-            "<h3>Create an interval list of intervals that do not contain any N blockS for use with haplotype caller on short reads</h3>" +
+            "<h3>Create an interval list of intervals that do not contain any N blocks for use with haplotype caller on short reads</h3>" +
             "<pre>" +
             "java -jar picard.jar ScatterIntervalsByNs \\\\<br />\n" +
             "      REFERENCE=reference_sequence.fasta \\\\<br />\n" +
