@@ -56,7 +56,6 @@ import picard.util.PropertyUtils;
 import java.io.File;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -167,6 +166,11 @@ public abstract class CommandLineProgram {
     private String commandLine;
 
     /**
+     * Original list of program arguments.
+     */
+    private String[] originalArgs;
+
+    /**
     * Do the work after command line has been parsed. RuntimeException may be
     * thrown by this method, and are reported appropriately.
     * @return program exit status.
@@ -188,6 +192,7 @@ public abstract class CommandLineProgram {
     }
 
     public int instanceMain(final String[] argv) {
+        originalArgs = argv;
         String actualArgs[] = argv;
 
         if (System.getProperty(PROPERTY_CONVERT_LEGACY_COMMAND_LINE, "false").equals("true")) {
@@ -393,6 +398,10 @@ public abstract class CommandLineProgram {
 
     public String getCommandLine() {
         return commandLine;
+    }
+
+    public String[] getOriginalArgs() {
+        return originalArgs;
     }
 
     public void setDefaultHeaders(final List<Header> headers) {
