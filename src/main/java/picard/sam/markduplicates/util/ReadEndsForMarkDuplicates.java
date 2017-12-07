@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,7 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
        - int: read1ReferenceIndex, read1Coordinate, read2ReferenceIndex, read2Coordinate, duplicateSetSize
        - long: read1IndexInFile, read2IndexInFile
      */
-    protected static final int SIZE_OF = (1 * 1) + (5 * 2) + (5 * 4) + (8 * 2) + 1
+    protected static final int SIZE_OF = (1 * 1) + (5 * 2) + (5 * 4) + (8 * 2) + 1 + 1
             + 8 + // last 8 == reference overhead
             13; // This is determined experimentally with JProfiler
 
@@ -49,6 +49,7 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
     public long read1IndexInFile = -1;
     public long read2IndexInFile = -1;
     public int duplicateSetSize = -1;
+    public boolean firstOfPair;
 
     public ReadEndsForMarkDuplicates() {}
 
@@ -59,6 +60,7 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
         this.read1Coordinate = read.read1Coordinate;
         this.read2ReferenceIndex = read.read2ReferenceIndex;
         this.read2Coordinate = read.read2Coordinate;
+        this.firstOfPair = read.firstOfPair;
 
         this.readGroup = read.getReadGroup();
         this.tile = read.getTile();

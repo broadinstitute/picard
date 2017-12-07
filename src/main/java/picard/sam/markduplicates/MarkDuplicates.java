@@ -546,52 +546,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                         pairedEnds = fragmentEnd.clone();
                         pairedWithNoMate.put(pairedEnds.read2ReferenceIndex, key, pairedEnds);
                     } else {
-                        final int matesRefIndex = fragmentEnd.read1ReferenceIndex;
-                        final int matesCoordinate = fragmentEnd.read1Coordinate;
-
-                        // Set orientationForOpticalDuplicates, which always goes by the first then the second end for the strands.  NB: must do this
-                        // before updating the orientation later.
-                        if (rec.getFirstOfPairFlag()) {
-                            pairedEnds.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(rec.getReadNegativeStrandFlag(), pairedEnds.orientation == ReadEnds.R);
-                            if (useBarcodes)
-                                ((ReadEndsForMarkDuplicatesWithBarcodes) pairedEnds).readOneBarcode = getReadOneBarcodeValue(rec);
-                        } else {
-                            pairedEnds.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(pairedEnds.orientation == ReadEnds.R, rec.getReadNegativeStrandFlag());
-                            if (useBarcodes)
-                                ((ReadEndsForMarkDuplicatesWithBarcodes) pairedEnds).readTwoBarcode = getReadTwoBarcodeValue(rec);
-                        }
-
-                        // If the other read is actually later, simply add the other read's data as read2, else flip the reads
-                        if (matesRefIndex > pairedEnds.read1ReferenceIndex ||
-                                (matesRefIndex == pairedEnds.read1ReferenceIndex && matesCoordinate >= pairedEnds.read1Coordinate)) {
-                            pairedEnds.read2ReferenceIndex = matesRefIndex;
-                            pairedEnds.read2Coordinate = matesCoordinate;
-                            pairedEnds.read2IndexInFile = indexForRead;
-                            pairedEnds.orientation = ReadEnds.getOrientationByte(pairedEnds.orientation == ReadEnds.R,
-                                    rec.getReadNegativeStrandFlag());
-
-                            // if the two read ends are in the same position, pointing in opposite directions,
-                            // the orientation is undefined and the procedure above
-                            // will depend on the order of the reads in the file.
-                            // To avoid this, we set it explicitly (to FR):
-                            if (pairedEnds.read2ReferenceIndex == pairedEnds.read1ReferenceIndex &&
-                                    pairedEnds.read2Coordinate == pairedEnds.read1Coordinate &&
-                                    pairedEnds.orientation == ReadEnds.RF) {
-                                        pairedEnds.orientation = ReadEnds.FR;
-                                    }
-                        } else {
-                            pairedEnds.read2ReferenceIndex = pairedEnds.read1ReferenceIndex;
-                            pairedEnds.read2Coordinate = pairedEnds.read1Coordinate;
-                            pairedEnds.read2IndexInFile = pairedEnds.read1IndexInFile;
-                            pairedEnds.read1ReferenceIndex = matesRefIndex;
-                            pairedEnds.read1Coordinate = matesCoordinate;
-                            pairedEnds.read1IndexInFile = indexForRead;
-                            pairedEnds.orientation = ReadEnds.getOrientationByte(rec.getReadNegativeStrandFlag(),
-                                    pairedEnds.orientation == ReadEnds.R);
-                        }
-
-                        pairedEnds.score += DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY);
-                        this.pairSort.add(pairedEnds);
+                        this.pairSort.add(combinePairEnds(pairedEnds, fragmentEnd));
                     }
                 }
             }
@@ -615,6 +570,58 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         this.fragSort.doneAdding();
     }
 
+    ReadEndsForMarkDuplicates combinePairEnds(ReadEndsForMarkDuplicates mate1, ReadEndsForMarkDuplicates mate2) {
+        final int matesRefIndex = mate2.read1ReferenceIndex;
+        final int matesCoordinate = mate2.read1Coordinate;
+
+        // Set orientationForOpticalDuplicates, which always goes by the first then the second end for the strands.  NB: must do this
+        // before updating the orientation later.
+        if (mate2.firstOfPair) {
+            mate1.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(mate2.orientation == ReadEnds.R, mate1.orientation == ReadEnds.R);
+            if (useBarcodes) {
+                ((ReadEndsForMarkDuplicatesWithBarcodes) mate1).readOneBarcode = ((ReadEndsForMarkDuplicatesWithBarcodes) mate2).readOneBarcode;
+            }
+        } else {
+            mate1.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(mate1.orientation == ReadEnds.R, mate2.orientation == ReadEnds.R);
+            if (useBarcodes) {
+                ((ReadEndsForMarkDuplicatesWithBarcodes) mate1).readTwoBarcode = ((ReadEndsForMarkDuplicatesWithBarcodes) mate2).readTwoBarcode;
+            }
+        }
+
+        // If the other read is actually later, simply add the other read's data as read2, else flip the reads
+        if (matesRefIndex > mate1.read1ReferenceIndex ||
+                (matesRefIndex == mate1.read1ReferenceIndex && matesCoordinate >= mate1.read1Coordinate)) {
+            mate1.read2ReferenceIndex = matesRefIndex;
+            mate1.read2Coordinate = matesCoordinate;
+            mate1.read2IndexInFile = mate2.read1IndexInFile;
+            mate1.orientation = ReadEnds.getOrientationByte(mate1.orientation == ReadEnds.R,
+                    mate2.orientation == ReadEnds.R);
+
+            // if the two read ends are in the same position, pointing in opposite directions,
+            // the orientation is undefined and the procedure above
+            // will depend on the order of the reads in the file.
+            // To avoid this, we set it explicitly (to FR):
+            if (mate1.read2ReferenceIndex == mate1.read1ReferenceIndex &&
+                    mate1.read2Coordinate == mate1.read1Coordinate &&
+                    mate1.orientation == ReadEnds.RF) {
+                mate1.orientation = ReadEnds.FR;
+            }
+        } else {
+            mate1.read2ReferenceIndex = mate1.read1ReferenceIndex;
+            mate1.read2Coordinate = mate1.read1Coordinate;
+            mate1.read2IndexInFile = mate1.read1IndexInFile;
+            mate1.read1ReferenceIndex = matesRefIndex;
+            mate1.read1Coordinate = matesCoordinate;
+            mate1.read1IndexInFile = mate2.read1IndexInFile;
+            mate1.orientation = ReadEnds.getOrientationByte(mate2.orientation == ReadEnds.R,
+                    mate1.orientation == ReadEnds.R);
+        }
+
+        mate1.score += mate2.score;
+
+        return mate1;
+    }
+
     /** Builds a read ends object that represents a single read. */
     private ReadEndsForMarkDuplicates buildReadEnds(final SAMFileHeader header, final long index, final SAMRecord rec, final boolean useBarcodes) {
         final ReadEndsForMarkDuplicates ends;
@@ -629,6 +636,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         ends.orientation = rec.getReadNegativeStrandFlag() ? ReadEnds.R : ReadEnds.F;
         ends.read1IndexInFile = index;
         ends.score = DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY);
+        ends.firstOfPair = rec.getReadPairedFlag() ? rec.getFirstOfPairFlag() : true;
 
         // Doing this lets the ends object know that it's part of a pair
         if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
