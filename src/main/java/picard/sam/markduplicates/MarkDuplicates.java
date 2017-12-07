@@ -563,10 +563,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         log.info("Read " + index + " records. " + pairedWithNoMate.size() + " pairs never matched.");
         iterator.close();
 
-        freeUpMemory();
+        freeUpSortingCollectionsMemory();
     }
 
-    void freeUpMemory() {
+    void freeUpSortingCollectionsMemory() {
         // Tell these collections to free up memory if possible.
         this.pairSort.doneAdding();
         this.fragSort.doneAdding();

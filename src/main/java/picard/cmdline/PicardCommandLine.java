@@ -173,12 +173,16 @@ public class PicardCommandLine {
         packageList.forEach(pkg -> classFinder.find(pkg, CommandLineProgram.class));
 
         for (final Class clazz : classFinder.getClasses()) {
-            // No interfaces, synthetic, primitive, local, anonymous or abstract classes.
+            // No interfaces, synthetic, primitive, local, anonymous, abstract or inner classes.
             if (!clazz.isInterface() && !clazz.isSynthetic() && !clazz.isPrimitive() && !clazz.isLocalClass()
-                    && !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isAnonymousClass()) {
+                    && !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isAnonymousClass()  && !isInner(clazz)) {
                 clpClassProcessor.accept(clazz, PicardCommandLine.getProgramProperty(clazz));
             }
         }
+    }
+
+    private static boolean isInner(Class clazz) {
+        return clazz.isMemberClass() && !Modifier.isStatic(clazz.getModifiers());
     }
 
     public static CommandLineProgramProperties getProgramProperty(Class clazz) {

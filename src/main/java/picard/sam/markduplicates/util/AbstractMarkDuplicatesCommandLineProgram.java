@@ -241,7 +241,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         }
     }
 
-    private void fetchReaders(boolean eagerlyDecode) {
+    protected void fetchReaders(boolean eagerlyDecode) {
         if (readersByEagerlyDecode.containsKey(eagerlyDecode)) {
             return;
         }
