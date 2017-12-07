@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@
  */
 package picard.sam.markduplicates.util;
 
+import htsjdk.samtools.util.CloseableIterator;
 import picard.PicardException;
 import htsjdk.samtools.CoordinateSortedPairInfoMap;
 
@@ -54,7 +55,11 @@ public class DiskBasedReadEndsForMarkDuplicatesMap implements ReadEndsForMarkDup
     private final CoordinateSortedPairInfoMap<String, ReadEndsForMarkDuplicates> pairInfoMap;
 
     public DiskBasedReadEndsForMarkDuplicatesMap(int maxOpenFiles, final ReadEndsForMarkDuplicatesCodec readEndsForMarkDuplicatesCodec) {
-        pairInfoMap = new CoordinateSortedPairInfoMap<String, ReadEndsForMarkDuplicates>(maxOpenFiles, new Codec(readEndsForMarkDuplicatesCodec));
+        pairInfoMap = new CoordinateSortedPairInfoMap<>(maxOpenFiles, new Codec(readEndsForMarkDuplicatesCodec));
+    }
+
+    public CloseableIterator<Map.Entry<String, ReadEndsForMarkDuplicates>> iterator() {
+        return pairInfoMap.iterator();
     }
 
     public ReadEndsForMarkDuplicates remove(int mateSequenceIndex, String key) {
@@ -92,7 +97,7 @@ public class DiskBasedReadEndsForMarkDuplicatesMap implements ReadEndsForMarkDup
             try {
                 final String key = readEndsForMarkDuplicatesCodec.getInputStream().readUTF();
                 final ReadEndsForMarkDuplicates record = readEndsForMarkDuplicatesCodec.decode();
-                return new AbstractMap.SimpleEntry<java.lang.String, ReadEndsForMarkDuplicates>(key, record);
+                return new AbstractMap.SimpleEntry<>(key, record);
             } catch (IOException e) {
                 throw new PicardException("Error loading ReadEndsForMarkDuplicatesMap from disk", e);
             }
@@ -107,5 +112,4 @@ public class DiskBasedReadEndsForMarkDuplicatesMap implements ReadEndsForMarkDup
             }
         }
     }
-
 }
