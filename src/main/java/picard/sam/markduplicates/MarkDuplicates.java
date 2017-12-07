@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -182,11 +182,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     @Argument(doc= "Clear DT tag from input SAM records. Should be set to false if input SAM doesn't have this tag.  Default true")
     public boolean CLEAR_DT = true;
 
-    private SortingCollection<ReadEndsForMarkDuplicates> pairSort;
-    private SortingCollection<ReadEndsForMarkDuplicates> fragSort;
-    private SortingLongCollection duplicateIndexes;
-    private SortingLongCollection opticalDuplicateIndexes;
-    private SortingCollection<RepresentativeReadIndexer> representativeReadIndicesForDuplicates;
+    SortingCollection<ReadEndsForMarkDuplicates> pairSort;
+    SortingCollection<ReadEndsForMarkDuplicates> fragSort;
+    SortingLongCollection duplicateIndexes;
+    SortingLongCollection opticalDuplicateIndexes;
+    SortingCollection<RepresentativeReadIndexer> representativeReadIndicesForDuplicates;
+
+    DiskBasedReadEndsForMarkDuplicatesMap pairedWithNoMate;
+    boolean useBarcodes;
 
     private int numDuplicateIndices = 0;
     static private final long NO_SUCH_INDEX = Long.MAX_VALUE; // needs to be large so that that >= test fails for query-sorted traversal
@@ -225,13 +228,13 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(METRICS_FILE);
 
-        final boolean useBarcodes = (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG);
+        useBarcodes = (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG);
 
         reportMemoryStats("Start of doWork");
         log.info("Reading input file and constructing read end information.");
-        buildSortedReadEndLists(useBarcodes);
+        buildSortedReadEndLists();
         reportMemoryStats("After buildSortedReadEndLists");
-        generateDuplicateIndexes(useBarcodes, this.REMOVE_SEQUENCING_DUPLICATES || this.TAGGING_POLICY != DuplicateTaggingPolicy.DontTag);
+        generateDuplicateIndexes(this.REMOVE_SEQUENCING_DUPLICATES || this.TAGGING_POLICY != DuplicateTaggingPolicy.DontTag);
         reportMemoryStats("After generateDuplicateIndexes");
         log.info("Marking " + this.numDuplicateIndices + " records as duplicates.");
 
@@ -241,6 +244,15 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             log.info("Found " + (this.libraryIdGenerator.getNumberOfOpticalDuplicateClusters()) + " optical duplicate clusters.");
         }
 
+        writeFileAndCalculateMetric();
+
+        // Write out the metrics
+        finalizeAndWriteMetrics(libraryIdGenerator);
+
+        return 0;
+    }
+
+    void writeFileAndCalculateMetric() {
         final SamHeaderAndIterator headerAndIterator = openInputs(false);
         final SAMFileHeader header = headerAndIterator.header;
         final SAMFileHeader.SortOrder sortOrder = header.getSortOrder();
@@ -276,7 +288,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         int duplicateSetSize = -1;
         int nextRepresentativeIndex = -1;
         if (TAG_DUPLICATE_SET_MEMBERS) {
-            representativeReadIterator = this.representativeReadIndicesForDuplicates.iterator();
+            representativeReadIterator = representativeReadIndicesIterator();
             if (representativeReadIterator.hasNext()) {
                 rri = representativeReadIterator.next();
                 nextRepresentativeIndex = rri.readIndexInFile;
@@ -293,24 +305,24 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         while (iterator.hasNext()) {
             final SAMRecord rec = iterator.next();
 
-                final String library = LibraryIdGenerator.getLibraryName(header, rec);
-                DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
-                if (metrics == null) {
-                    metrics = new DuplicationMetrics();
-                    metrics.LIBRARY = library;
-                    libraryIdGenerator.addMetricsByLibrary(library, metrics);
-                }
+            final String library = LibraryIdGenerator.getLibraryName(header, rec);
+            DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
+            if (metrics == null) {
+                metrics = new DuplicationMetrics();
+                metrics.LIBRARY = library;
+                libraryIdGenerator.addMetricsByLibrary(library, metrics);
+            }
 
-                // First bring the simple metrics up to date
-                if (rec.getReadUnmappedFlag()) {
-                    ++metrics.UNMAPPED_READS;
-                } else if(rec.isSecondaryOrSupplementary()) {
-                    ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
-                } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
-                    ++metrics.UNPAIRED_READS_EXAMINED;
-                } else {
-                    ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
-                }
+            // First bring the simple metrics up to date
+            if (rec.getReadUnmappedFlag()) {
+                ++metrics.UNMAPPED_READS;
+            } else if(rec.isSecondaryOrSupplementary()) {
+                ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
+            } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+                ++metrics.UNPAIRED_READS_EXAMINED;
+            } else {
+                ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
+            }
 
             // Now try and figure out the next duplicate index (if going by coordinate. if going by query name, only do this
             // if the query name has changed.
@@ -418,11 +430,11 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         reportMemoryStats("Before output close");
         out.close();
         reportMemoryStats("After output close");
+    }
 
-        // Write out the metrics
-        finalizeAndWriteMetrics(libraryIdGenerator);
-
-        return 0;
+    // To be overrode in parallel implementation
+    CloseableIterator<RepresentativeReadIndexer> representativeReadIndicesIterator() {
+        return this.representativeReadIndicesForDuplicates.iterator();
     }
 
     /**
@@ -443,7 +455,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      * hold the necessary information (reference sequence, 5' read coordinate) to do
      * duplication, caching to disk as necessary to sort them.
      */
-    private void buildSortedReadEndLists(final boolean useBarcodes) {
+    void buildSortedReadEndLists() {
         final int sizeInBytes;
         if (useBarcodes) {
             sizeInBytes = ReadEndsForMarkDuplicatesWithBarcodes.getSizeOf();
@@ -480,7 +492,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         final SamHeaderAndIterator headerAndIterator = openInputs(true);
         final SAMFileHeader.SortOrder assumedSortOrder = headerAndIterator.header.getSortOrder();
         final SAMFileHeader header = headerAndIterator.header;
-        final ReadEndsForMarkDuplicatesMap tmp = new DiskBasedReadEndsForMarkDuplicatesMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP, diskCodec);
+        pairedWithNoMate = new DiskBasedReadEndsForMarkDuplicatesMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP, diskCodec);
         long index = 0;
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
         final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
@@ -525,14 +537,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                 if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
                     final String key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + ":" + rec.getReadName();
-                    ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key);
+                    ReadEndsForMarkDuplicates pairedEnds = pairedWithNoMate.remove(rec.getReferenceIndex(), key);
 
                     // See if we've already seen the first end or not
                     if (pairedEnds == null) {
                         // at this point pairedEnds and fragmentEnd are the same, but we need to make
                         // a copy since pairedEnds will be modified when the mate comes along.
                         pairedEnds = fragmentEnd.clone();
-                        tmp.put(pairedEnds.read2ReferenceIndex, key, pairedEnds);
+                        pairedWithNoMate.put(pairedEnds.read2ReferenceIndex, key, pairedEnds);
                     } else {
                         final int matesRefIndex = fragmentEnd.read1ReferenceIndex;
                         final int matesCoordinate = fragmentEnd.read1Coordinate;
@@ -587,13 +599,17 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             // Print out some stats every 1m reads
             ++index;
             if (progress.record(rec)) {
-                log.info("Tracking " + tmp.size() + " as yet unmatched pairs. " + tmp.sizeInRam() + " records in RAM.");
+                log.info("Tracking " + pairedWithNoMate.size() + " as yet unmatched pairs. " + pairedWithNoMate.sizeInRam() + " records in RAM.");
             }
         }
 
-        log.info("Read " + index + " records. " + tmp.size() + " pairs never matched.");
+        log.info("Read " + index + " records. " + pairedWithNoMate.size() + " pairs never matched.");
         iterator.close();
 
+        freeUpMemory();
+    }
+
+    void freeUpMemory() {
         // Tell these collections to free up memory if possible.
         this.pairSort.doneAdding();
         this.fragSort.doneAdding();
@@ -654,8 +670,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      * Goes through the accumulated ReadEndsForMarkDuplicates objects and determines which of them are
      * to be marked as duplicates.
      */
-    private void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
-        final int entryOverhead;
+    void generateDuplicateIndexes(final boolean indexOpticalDuplicates) {
+        int entryOverhead;
         if (TAG_DUPLICATE_SET_MEMBERS) {
             // Memory requirements for RepresentativeReadIndexer:
             // three int entries + overhead: (3 * 4) + 4 = 16 bytes
@@ -665,7 +681,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             entryOverhead = SortingLongCollection.SIZEOF;
         }
         // Keep this number from getting too large even if there is a huge heap.
-        int maxInMemory = (int) Math.min((Runtime.getRuntime().maxMemory() * 0.25) / entryOverhead, (double) (Integer.MAX_VALUE - 5));
+        int maxInMemory = maxInMemoryForDuplicateIndexes(entryOverhead);
         // If we're also tracking optical duplicates, reduce maxInMemory, since we'll need two sorting collections
         if (indexOpticalDuplicates) {
             maxInMemory /= ((entryOverhead + SortingLongCollection.SIZEOF) / entryOverhead);
@@ -738,6 +754,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         this.fragSort.cleanup();
         this.fragSort = null;
 
+        doneAddingDuplicateIndexes();
+    }
+
+    int maxInMemoryForDuplicateIndexes(int entryOverhead) {
+        return (int) Math.min((Runtime.getRuntime().maxMemory() * 0.25) / entryOverhead, (double) (Integer.MAX_VALUE - 5));
+    }
+
+    void doneAddingDuplicateIndexes() {
         log.info("Sorting list of duplicate records.");
         this.duplicateIndexes.doneAddingStartIteration();
         if (this.opticalDuplicateIndexes != null) {
