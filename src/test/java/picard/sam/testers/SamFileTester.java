@@ -1,3 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2017 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package picard.sam.testers;
 
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
@@ -190,6 +214,32 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                 false, defaultQualityScore);
     }
 
+    public void addMappedPair(final int referenceSequenceIndex1,
+                              final int referenceSequenceIndex2,
+                              final int alignmentStart1,
+                              final int alignmentStart2,
+                              final boolean isDuplicate1,
+                              final boolean isDuplicate2,
+                              final int defaultQualityScore) {
+        addMatePair("READ" + readNameCounter++,
+                referenceSequenceIndex1,
+                referenceSequenceIndex2,
+                alignmentStart1,
+                alignmentStart2,
+                false,
+                false,
+                isDuplicate1,
+                isDuplicate2,
+                null,
+                null,
+                false,
+                true,
+                false,
+                false,
+                false,
+                defaultQualityScore);
+    }
+
     public void addMappedPair(final int referenceSequenceIndex,
                               final int alignmentStart1,
                               final int alignmentStart2,
@@ -216,6 +266,37 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                               final int defaultQualityScore) {
         addMatePair(referenceSequenceIndex, alignmentStart1, alignmentStart2, false, false, isDuplicate1, isDuplicate2, cigar1, cigar2,
                 strand1, strand2, firstOnly, false, false, defaultQualityScore);
+    }
+
+    public void addMappedPair(final int referenceSequenceIndex1,
+                              final int referenceSequenceIndex2,
+                              final int alignmentStart1,
+                              final int alignmentStart2,
+                              final boolean isDuplicate1,
+                              final boolean isDuplicate2,
+                              final String cigar1,
+                              final String cigar2,
+                              final boolean strand1,
+                              final boolean strand2,
+                              final boolean firstOnly,
+                              final int defaultQualityScore) {
+        addMatePair("READ" + readNameCounter++,
+                referenceSequenceIndex1,
+                referenceSequenceIndex2,
+                alignmentStart1,
+                alignmentStart2,
+                false,
+                false,
+                isDuplicate1,
+                isDuplicate2,
+                cigar1,
+                cigar2,
+                strand1,
+                strand2,
+                firstOnly,
+                false,
+                false,
+                defaultQualityScore);
     }
 
     public void addMatePair(final int referenceSequenceIndex,

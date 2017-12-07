@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,7 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IterableAdapter;
+import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -41,6 +42,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -207,7 +209,9 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     public Object[][] testOpticalDuplicateDetectionDataProvider() {
         return new Object[][] {
                 {new File(TEST_DATA_DIR, "optical_dupes.sam"), 1L},
+                {new File(TEST_DATA_DIR, "optical_dupes_diff_chr.sam"), 4L},
                 {new File(TEST_DATA_DIR, "optical_dupes_casava.sam"), 1L},
+                {new File(TEST_DATA_DIR, "optical_dupes_casava_diff_chrs.sam"), 1L},
         };
     }
 
@@ -237,12 +241,12 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.runTest();
     }
 
-    @Test
-    public void testWithBarcodeDuplicate() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testWithBarcodeDuplicate(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(68);
-        tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMatePair("RUNID:2:2:15993:13362", 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:1:1:15993:13361", 1, refSequenceIndex2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:2:2:15993:13362", 1, refSequenceIndex2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
             record.setAttribute(barcodeTag, "Barcode1");
@@ -251,8 +255,8 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.runTest();
     }
 
-    @Test
-    public void testWithBarcodeComplex() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testWithBarcodeComplex(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(68);
         final String readNameOne = "RUNID:1:1:15993:13361";
@@ -260,9 +264,9 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         final String readNameThree = "RUNID:3:3:15993:13362";
 
         // first two reads have the same barcode, third read has a different barcode
-        tester.addMatePair(readNameOne, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMatePair(readNameTwo, 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY); // same barcode as the first
-        tester.addMatePair(readNameThree, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readNameOne, 1, refSequenceIndex2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readNameTwo, 1, refSequenceIndex2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY); // same barcode as the first
+        tester.addMatePair(readNameThree, 1, refSequenceIndex2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
 
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
@@ -277,8 +281,8 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.runTest();
     }
 
-    @Test
-    public void testWithIndividualReadBarcodes() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testWithIndividualReadBarcodes(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(68);
         final String readNameOne = "RUNID:1:1:15993:13361";
@@ -286,9 +290,9 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         final String readNameThree = "RUNID:3:3:15993:13362";
 
         // first two reads have the same barcode (all three), third read has a different barcode for the second end
-        tester.addMatePair(readNameOne, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMatePair(readNameTwo, 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY); // same barcode as the first
-        tester.addMatePair(readNameThree, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readNameOne, 1, refSequenceIndex2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readNameTwo, 1, refSequenceIndex2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY); // same barcode as the first
+        tester.addMatePair(readNameThree, 1, refSequenceIndex2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
 
         final String barcodeTag = "BC";
         final String readOneBarcodeTag = "BX"; // want the same tag as the second end, since this is allowed
@@ -311,5 +315,139 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addArg("READ_TWO_BARCODE_TAG=" + readTwoBarcodeTag);
 
         tester.runTest();
+    }
+
+    @DataProvider(name="testDuplicateSetTagging")
+    public Object[][] testOpticalDuplicateTagDIDSDataProvider() {
+        return new Object[][] {
+        { new File(TEST_DATA_DIR, "optical_dupes.sam"),
+                new int[][] {
+                    /* DI= */ {0, 0, 0, 0},
+                    /* DS= */ {2, 2, 2, 2}
+        }},
+        { new File(TEST_DATA_DIR, "optical_dupes_diff_chr.sam"),
+                new int[][] {
+                    /* DI= */ {0, 0, 2, 2, 2, 2, 6, 6, 8, 8, 8, 8, 6, 6, 0, 0},
+                    /* DS= */ {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
+        }},
+        { new File(TEST_DATA_DIR, "optical_dupes_casava.sam"),
+                new int[][] {
+                    /* DI= */ {0, 0, 0, 0},
+                    /* DS= */ {2, 2, 2, 2}
+        }},
+        { new File(TEST_DATA_DIR, "optical_dupes_casava_diff_chrs.sam"),
+                new int[][] {
+                    /* DI= */ {0, 0, 0, 0},
+                    /* DS= */ {2, 2, 2, 2}
+        }}
+    };
+    }
+    @Test(dataProvider = "testDuplicateSetTagging")
+    public void testDuplicateSetTagging(final File sam, final int[][] expectedDIDSTags) {
+        final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".", ".tmp");
+        outputDir.deleteOnExit();
+        final File outputSam = new File(outputDir, TEST_BASE_NAME + ".sam");
+        outputSam.deleteOnExit();
+        final File metricsFile = new File(outputDir, TEST_BASE_NAME + ".duplicate_metrics");
+        metricsFile.deleteOnExit();
+
+        final MarkDuplicates markDuplicates =
+                prepareMarkDuplicatesWithDuplicateSetTagging(sam, outputDir, outputSam, metricsFile);
+
+        Assert.assertEquals(markDuplicates.doWork(), 0);
+
+        int recCount = 0;
+        try(SamReader reader = SamReaderFactory.makeDefault().open(outputSam)){
+            for (SAMRecord samRecord : reader) {
+                Assert.assertEquals(samRecord.getAttribute("DI"), expectedDIDSTags[0][recCount]);
+                Assert.assertEquals(samRecord.getAttribute("DS"), expectedDIDSTags[1][recCount]);
+
+                recCount++;
+            }
+        } catch (IOException e) {
+            throw new RuntimeIOException(e);
+        }
+
+        TestUtil.recursiveDelete(outputDir);
+    }
+
+    @DataProvider(name="testDuplicateTagDTDataProvider")
+    public Object[][] testDuplicateTagDTDataProvider() {
+        return new Object[][] {
+                {new File(TEST_DATA_DIR, "optical_dupes.sam"), 2L, "All"},
+                {new File(TEST_DATA_DIR, "optical_dupes_diff_chr.sam"), 8L, "All"},
+                {new File(TEST_DATA_DIR, "optical_dupes_casava.sam"), 2L, "All"},
+                {new File(TEST_DATA_DIR, "optical_dupes_casava_diff_chrs.sam"),2L, "All"},
+                {new File(TEST_DATA_DIR, "optical_dupes.sam"), 2L, "OpticalOnly"},
+                {new File(TEST_DATA_DIR, "optical_dupes_diff_chr.sam"), 8L, "OpticalOnly"},
+                {new File(TEST_DATA_DIR, "optical_dupes_casava.sam"), 2L, "OpticalOnly"},
+                {new File(TEST_DATA_DIR, "optical_dupes_casava_diff_chrs.sam"), 2L, "OpticalOnly"},
+        };
+    }
+
+    @Test(dataProvider = "testDuplicateTagDTDataProvider")
+    public void testDuplicateTagDTDataProvider(final File sam, final long expectedDTRagCount, final String taggingPolicy) {
+        final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".", ".tmp");
+        outputDir.deleteOnExit();
+        final File outputSam = new File(outputDir, TEST_BASE_NAME + ".sam");
+        outputSam.deleteOnExit();
+        final File metricsFile = new File(outputDir, TEST_BASE_NAME + ".duplicate_metrics");
+        metricsFile.deleteOnExit();
+
+        MarkDuplicates markDuplicates =
+                prepareMarkDuplicatesWithTaggingPolicy(sam, outputDir, outputSam, metricsFile, taggingPolicy);
+
+        Assert.assertEquals(markDuplicates.doWork(), 0);
+
+        long countDT = 0;
+        try(SamReader reader = SamReaderFactory.makeDefault().open(outputSam)){
+            for (SAMRecord samRecord : reader) {
+                countDT += samRecord.getAttribute("DT") != null ? 1 : 0;
+            }
+        } catch (IOException e) {
+            throw new RuntimeIOException(e);
+        }
+
+        Assert.assertEquals(countDT, expectedDTRagCount);
+        TestUtil.recursiveDelete(outputDir);
+    }
+
+    protected MarkDuplicates prepareMarkDuplicatesWithDuplicateSetTagging(File sam, File outputDir, File outputSam,
+                                                                          File metricsFile) {
+        final MarkDuplicates markDuplicates = new MarkDuplicates() {
+            //to test with SortingCollection spilling to disk
+            @Override
+            int maxInMemoryForDuplicateIndexes(int entryOverhead) {
+                return 2;
+            }
+        };
+        markDuplicates.setupOpticalDuplicateFinder();
+        markDuplicates.INPUT =  CollectionUtil.makeList(sam.getAbsolutePath());
+        markDuplicates.OUTPUT = outputSam;
+        markDuplicates.METRICS_FILE = metricsFile;
+        markDuplicates.TAG_DUPLICATE_SET_MEMBERS = true;
+        markDuplicates.PROGRAM_RECORD_ID = null;
+        markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
+        return markDuplicates;
+    }
+
+    protected MarkDuplicates prepareMarkDuplicatesWithTaggingPolicy(File sam, File outputDir, File outputSam,
+                                                                    File metricsFile, String taggingPolicy) {
+        final MarkDuplicates markDuplicates = new MarkDuplicates() {
+            //to test with SortingCollection spilling to disk
+            @Override
+            int maxInMemoryForDuplicateIndexes(int entryOverhead) {
+                return 2;
+            }
+        };
+        markDuplicates.setupOpticalDuplicateFinder();
+        markDuplicates.INPUT =  CollectionUtil.makeList(sam.getAbsolutePath());
+        markDuplicates.OUTPUT = outputSam;
+        markDuplicates.METRICS_FILE = metricsFile;
+        markDuplicates.TAGGING_POLICY = MarkDuplicates.DuplicateTaggingPolicy.valueOf(taggingPolicy);
+        markDuplicates.PROGRAM_RECORD_ID = null;
+        markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
+
+        return markDuplicates;
     }
 }

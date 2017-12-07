@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,13 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
 
     protected boolean markUnmappedRecordsLikeTheirMates() { return false; }
 
+    @DataProvider(name = "secondMateSequenceIndex")
+    public Object[][] secondMateSequenceIndex() {
+        return new Object[][] {
+                {1}, {2}, {5}
+        };
+    }
+
     @Test
     public void testSingleUnmappedFragment() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -84,78 +91,78 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
-    @Test
-    public void testSingleMappedPair() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testSingleMappedPair(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
-        tester.addMappedPair(1, 1, 100, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, false, false, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
 
-    @Test
-    public void testSingleMappedFragmentAndSingleMappedPair() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testSingleMappedFragmentAndSingleMappedPair(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.addMappedFragment(1, 1, true, DEFAULT_BASE_QUALITY); // duplicate!!!
-        tester.addMappedPair(1, 1, 100, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, false, false, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
 
-    @Test
-    public void testTwoMappedPairs() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testTwoMappedPairs(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
-        tester.addMappedPair(1, 1, 100, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMappedPair(1, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
         tester.runTest();
     }
 
-    @Test
-    public void testThreeMappedPairs() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testThreeMappedPairs(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
-        tester.addMappedPair(1, 1, 100, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMappedPair(1, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
-        tester.addMappedPair(1, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
         tester.runTest();
     }
 
-    @Test
-    public void testSingleMappedFragmentAndTwoMappedPairs() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testSingleMappedFragmentAndTwoMappedPairs(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.addMappedFragment(1, 1, true, DEFAULT_BASE_QUALITY); // duplicate!!!
-        tester.addMappedPair(1, 1, 100, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMappedPair(1, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
         tester.runTest();
     }
 
-    @Test
-    public void testTwoMappedPairsAndTerminalUnmappedFragment() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testTwoMappedPairsAndTerminalUnmappedFragment(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
-        tester.addMappedPair(1, 1, 100, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMappedPair(1, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
         tester.addUnmappedFragment(-1, DEFAULT_BASE_QUALITY); // unmapped fragment at end of file
         tester.runTest();
     }
-    
-    @Test
-    public void testTwoMappedPairsAndTerminalUnmappedPair() {
+
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testTwoMappedPairsAndTerminalUnmappedPair(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
-        tester.addMappedPair(1, 1, 100, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMappedPair(1, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
         tester.addUnmappedPair(-1, DEFAULT_BASE_QUALITY); // unmapped pair at end of file
         tester.runTest();
     }
 
-    @Test
-    public void testOpticalDuplicateFinding() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testOpticalDuplicateFinding(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
 
         // explicitly creating 1 expected optical duplicate pair
         tester.setExpectedOpticalDuplicate(1);
 
         // pass in the read names manually, in order to control duplicates vs optical duplicates
-        tester.addMatePair("READ0:1:1:1:1", 1, 1, 100, false, false, false, false, "50M", "50M", false, true, false,
+        tester.addMatePair("READ0:1:1:1:1", 1, refSequenceIndex2, 1, 100, false, false, false, false, "50M", "50M", false, true, false,
                            false, false, DEFAULT_BASE_QUALITY); // non-duplicate mapped pair to start
-        tester.addMatePair("READ1:1:1:1:300", 1, 1, 100, false, false, true, true, "50M", "50M", false, true, false,
+        tester.addMatePair("READ1:1:1:1:300", 1, refSequenceIndex2, 1, 100, false, false, true, true, "50M", "50M", false, true, false,
                            false, false, DEFAULT_BASE_QUALITY); // duplicate pair, NOT optical duplicate (delta-Y > 100)
-        tester.addMatePair("READ2:1:1:1:50", 1, 1, 100, false, false, true, true, "50M", "50M", false, true, false,
+        tester.addMatePair("READ2:1:1:1:50", 1, refSequenceIndex2, 1, 100, false, false, true, true, "50M", "50M", false, true, false,
                            false, false, DEFAULT_BASE_QUALITY); // duplicate pair, expected optical duplicate (delta-X and delta-Y < 100)
         tester.runTest();
     }
@@ -169,7 +176,17 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.addMatePair("RUNID:7:1203:2884:16834", 1, 485253, 485253, false, false, false, false, "59S42M", "42M59S", true, false, false, false, false, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
-    
+
+    @Test
+    public void testOpticalDuplicateClusterSamePositionNoOpticalDuplicatesOnDiffChr() {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(101);
+        tester.setExpectedOpticalDuplicate(0);
+        tester.addMatePair("RUNID:7:1203:2886:82292", 1, 2, 485253, 123568, false, false, true, true, "42M59S", "50S51M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:7:1203:2884:16834", 2, 1, 123568, 485253, false, false, false, false, "50S51M", "42M59S", true, false, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.runTest();
+    }
+
     @Test
     public void testOpticalDuplicateClusterSamePositionNoOpticalDuplicatesWithinPixelDistance() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -181,22 +198,32 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
     }
 
     @Test
-    public void testOpticalDuplicateClusterSamePositionOneOpticalDuplicatesWithinPixelDistance() {
+    public void testOpticalDuplicateClusterSamePositionNoOpticalDuplicatesWithinPixelDistanceOnDiffChr() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
-        tester.getSamRecordSetBuilder().setReadLength(45);
-        tester.setExpectedOpticalDuplicate(1);
-        tester.addMatePair("RUNID:7:1203:2886:16834", 1, 485253, 485253, false, false, true, true, "45M", "45M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMatePair("RUNID:7:1203:2884:16835", 1, 485253, 485253, false, false, false, false, "45M", "45M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.getSamRecordSetBuilder().setReadLength(101);
+        tester.setExpectedOpticalDuplicate(0);
+        tester.addMatePair("RUNID:7:1203:2886:16834", 1, 2, 485253, 123568, false, false, true, true, "42M59S", "50S51M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:7:1203:2884:16835", 2, 1, 123568, 485253, false, false, false, false, "50S51M", "42M59S", true, false, false, false, false, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
 
-    @Test
-    public void testOpticalDuplicateClusterOneEndSamePositionOneCluster() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testOpticalDuplicateClusterSamePositionOneOpticalDuplicatesWithinPixelDistance(int refSequenceIndex2) {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(45);
+        tester.setExpectedOpticalDuplicate(1);
+        tester.addMatePair("RUNID:7:1203:2886:16834", 1, refSequenceIndex2, 485253, 123568, false, false, true, true, "45M", "45M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:7:1203:2884:16835", 1, refSequenceIndex2, 485253, 123568, false, false, false, false, "45M", "45M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.runTest();
+    }
+
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testOpticalDuplicateClusterOneEndSamePositionOneCluster(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(101);
         tester.setExpectedOpticalDuplicate(1);
-        tester.addMatePair("RUNID:7:2205:17939:39728", 1, 485328, 485312, false, false, false, false, "55M46S", "30S71M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMatePair("RUNID:7:2205:17949:39745", 1, 485328, 485328, false, false, true, true, "55M46S", "46S55M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:7:2205:17939:39728", 1, refSequenceIndex2, 485328, 485312, false, false, false, false, "55M46S", "30S71M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:7:2205:17949:39745", 1, refSequenceIndex2, 485328, 485328, false, false, true, true, "55M46S", "46S55M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
 
@@ -222,11 +249,11 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
-    @Test
-    public void testTwoMappedPairsAndMappedSecondaryFragment() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testTwoMappedPairsAndMappedSecondaryFragment(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
-        tester.addMappedPair(1, 1, 100, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMappedPair(1, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
         tester.addMappedFragment(1, 200, false, DEFAULT_BASE_QUALITY, true); // mapped non-primary fragment
         tester.runTest();
     }
@@ -235,29 +262,29 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
     public void testMappedFragmentAndMappedPairFirstOfPairNonPrimary() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(76);
-        tester.addMappedFragment(1, 1, false,DEFAULT_BASE_QUALITY);
+        tester.addMappedFragment(1, 1, false, DEFAULT_BASE_QUALITY);
         tester.addMatePair(1, 200, 0, false, true, false, false, "54M22S", null, false, false, true, true, false, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
 
-    @Test
-    public void testTwoMappedPairsMatesSoftClipped() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testTwoMappedPairsMatesSoftClipped(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(76);
-        tester.addMappedPair(1, 10022, 10051, false, false, "76M", "8S68M", false, true, false, DEFAULT_BASE_QUALITY);
-        tester.addMappedPair(1, 10022, 10063, false, false, "76M", "5S71M", false, true, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 10022, 10051, false, false, "76M", "8S68M", false, true, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 10022, 10063, false, false, "76M", "5S71M", false, true, false, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
 
-    @Test
-    public void testTwoMappedPairsWithSoftClipping() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testTwoMappedPairsWithSoftClipping(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(76);
         // NB: no duplicates
         // 5'1: 2, 5'2:46+73M=118
         // 5'1: 2, 5'2:51+68M=118
-        tester.addMappedPair(1, 2, 46, false, false, "6S42M28S", "3S73M", false, DEFAULT_BASE_QUALITY);
-        tester.addMappedPair(1, 2, 51, true, true, "6S42M28S", "8S68M", false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 2, 46, false, false, "6S42M28S", "3S73M", false, true, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 2, 51, true, true, "6S42M28S", "8S68M", false, true, false, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
 
@@ -274,17 +301,17 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
-    @Test
-    public void testTwoMappedPairsWithSoftClippingBoth() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testTwoMappedPairsWithSoftClippingBoth(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(76);
         // mapped reference length: 73 + 42 = 115
-        tester.addMappedPair(1, 10046, 10002, true, true, "3S73M", "6S42M28S", true, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 10046, 10002, true, true, "3S73M", "6S42M28S", true, false, false, DEFAULT_BASE_QUALITY);
         // mapped reference length: 68 + 48 = 116
-        tester.addMappedPair(1, 10051, 10002, false, false, "8S68M", "6S48M22S", true, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedPair(1, refSequenceIndex2, 10051, 10002, false, false, "8S68M", "6S48M22S", true, false, false, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
-    
+
     @Test
     public void testMatePairSecondUnmapped() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -357,7 +384,6 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
-
     @Test
     public void testMappedPairAndMappedFragmentAndMatePairSecondUnmapped() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -380,38 +406,38 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
-    @Test
-    public void testTwoMappedPairsWithOppositeOrientations() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testTwoMappedPairsWithOppositeOrientations(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(76);
-        tester.addMappedPair(1, 10182, 10038, true, true, "32S44M", "66M10S", true, false, false, DEFAULT_BASE_QUALITY); // -/+
-        tester.addMappedPair(1, 10038, 10182, false, false, "70M6S", "32S44M", false, true, false, DEFAULT_BASE_QUALITY); // +/-, both are duplicates
+        tester.addMappedPair(refSequenceIndex2, 1, 10182, 10038, true, true, "32S44M", "66M10S", true, false, false, DEFAULT_BASE_QUALITY); // -/+
+        tester.addMappedPair(1, refSequenceIndex2, 10038, 10182, false, false, "70M6S", "32S44M", false, true, false, DEFAULT_BASE_QUALITY); // +/-, both are duplicates
         tester.runTest();
     }
 
-    @Test
-    public void testTwoMappedPairsWithOppositeOrientationsNumberTwo() {
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testTwoMappedPairsWithOppositeOrientationsNumberTwo(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(76);
-        tester.addMappedPair(1, 10038, 10182, false, false, "70M6S", "32S44M", false, true, false, DEFAULT_BASE_QUALITY); // +/-, both are duplicates
-        tester.addMappedPair(1, 10182, 10038, true, true, "32S44M", "66M10S", true, false, false, DEFAULT_BASE_QUALITY); // -/+
+        tester.addMappedPair(refSequenceIndex2, 1, 10038, 10182, false, false, "70M6S", "32S44M", false, true, false, DEFAULT_BASE_QUALITY); // +/-, both are duplicates
+        tester.addMappedPair(1, refSequenceIndex2, 10182, 10038, true, true, "32S44M", "66M10S", true, false, false, DEFAULT_BASE_QUALITY); // -/+
         tester.runTest();
     }
-    
-    @Test
-    public void testThreeMappedPairsWithMatchingSecondMate() {
+
+    @Test(dataProvider = "secondMateSequenceIndex")
+    public void testThreeMappedPairsWithMatchingSecondMate(int refSequenceIndex2) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(76);
         // Read0 and Read2 are duplicates
         // 10181+41=10220, 10058
-        tester.addMappedPair(1, 10181, 10058, false, false, "41S35M", "47M29S", true, false, false, DEFAULT_BASE_QUALITY); // -/+
+        tester.addMappedPair(1, refSequenceIndex2, 10181, 10058, false, false, "41S35M", "47M29S", true, false, false, DEFAULT_BASE_QUALITY); // -/+
         // 10181+37=10216, 10058
-        tester.addMappedPair(1, 10181, 10058, true, true, "37S39M", "44M32S", true, false, false, DEFAULT_BASE_QUALITY); // -/+
+        tester.addMappedPair(1, refSequenceIndex2, 10181, 10058, true, true, "37S39M", "44M32S", true, false, false, DEFAULT_BASE_QUALITY); // -/+
         // 10180+36=10216, 10058
-        tester.addMappedPair(1, 10180, 10058, false, false, "36S40M", "50M26S", true, false, false, DEFAULT_BASE_QUALITY); // -/+, both are duplicates
+        tester.addMappedPair(1, refSequenceIndex2, 10180, 10058, false, false, "36S40M", "50M26S", true, false, false, DEFAULT_BASE_QUALITY); // -/+, both are duplicates
         tester.runTest();
     }
-    
+
     @Test
     public void testMappedPairWithSamePosition() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -630,12 +656,34 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
     }
 
     @Test(dataProvider = "secondarySupplementaryData")
+    public void testTwoMappedPairsWithSupplementaryReadsOnDiffChr(final Boolean additionalFragSecondary, final Boolean additionalFragSupplementary, final Boolean fragLikeFirst) {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(68);
+        tester.setExpectedOpticalDuplicate(1);
+        tester.addMatePair("RUNID:1:1:15993:13361", 1, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:1:1:16020:13352", 1, 2, 41212324, 41212319, false, false, true, true, "33S35M", "28S40M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedFragment(fragLikeFirst ? "RUNID:1:1:15993:13361" : "RUNID:1:1:16020:13352", 1, 400, markSecondaryAndSupplementaryRecordsLikeTheCanonical() && !fragLikeFirst, null, null, additionalFragSecondary, additionalFragSupplementary, DEFAULT_BASE_QUALITY);
+        tester.runTest();
+    }
+
+    @Test(dataProvider = "secondarySupplementaryData")
     public void testTwoMappedPairsWithSupplementaryReadsAfterCanonical(final Boolean additionalFragSecondary, final Boolean additionalFragSupplementary, final Boolean fragLikeFirst) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(68);
         tester.setExpectedOpticalDuplicate(1);
         tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         tester.addMatePair("RUNID:1:1:16020:13352", 2, 41212324, 41212319, false, false, true, true, "33S35M", "28S40M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMappedFragment(fragLikeFirst ? "RUNID:1:1:15993:13361" : "RUNID:1:1:16020:13352", 1, 400, markSecondaryAndSupplementaryRecordsLikeTheCanonical() && !fragLikeFirst, null, null, additionalFragSecondary, additionalFragSupplementary, DEFAULT_BASE_QUALITY);
+        tester.runTest();
+    }
+
+    @Test(dataProvider = "secondarySupplementaryData")
+    public void testTwoMappedPairsWithSupplementaryReadsAfterCanonicalOnDiffChr(final Boolean additionalFragSecondary, final Boolean additionalFragSupplementary, final Boolean fragLikeFirst) {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(68);
+        tester.setExpectedOpticalDuplicate(1);
+        tester.addMatePair("RUNID:1:1:15993:13361", 1, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:1:1:16020:13352", 1, 2, 41212324, 41212319, false, false, true, true, "33S35M", "28S40M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         tester.addMappedFragment(fragLikeFirst ? "RUNID:1:1:15993:13361" : "RUNID:1:1:16020:13352", 1, 400, markSecondaryAndSupplementaryRecordsLikeTheCanonical() && !fragLikeFirst, null, null, additionalFragSecondary, additionalFragSupplementary, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
