@@ -49,7 +49,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
 
     protected final SAMRecordSetBuilder samRecordSetBuilder;
     protected final Map<String, Boolean> duplicateFlags = new HashMap<>();
-    private File outputDir;
+    protected File outputDir;
     private File output;
     private int readNameCounter = 0;
     protected boolean noMateCigars = false;
@@ -412,7 +412,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         test();
     }
 
-    private File createInputFile() {
+    protected File createInputFile() {
         // Create the input file
         final File input = new File(outputDir, "input.sam");
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(samRecordSetBuilder.getHeader(), true, input);
