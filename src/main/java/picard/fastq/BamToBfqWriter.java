@@ -135,7 +135,7 @@ public class BamToBfqWriter {
         final Iterator<SAMRecord> iterator = reader.iterator();
 
         // Filter out noise reads and reads that fail the quality filter
-        final TagFilter tagFilter = new TagFilter(ReservedTagConstants.XN, 1, false);
+        final TagFilter tagFilter = new TagFilter(ReservedTagConstants.XN, 1);
         final FailsVendorReadQualityFilter qualityFilter = new FailsVendorReadQualityFilter();
         final WholeReadClippedFilter clippedFilter = new WholeReadClippedFilter();
 
@@ -393,7 +393,7 @@ public class BamToBfqWriter {
         if (!this.pairedReads) {
             // Filter out noise reads and reads that fail the quality filter
             final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
-            filters.add(new TagFilter(ReservedTagConstants.XN, 1, false));
+            filters.add(new TagFilter(ReservedTagConstants.XN, 1));
             if (!this.includeNonPfReads) {
                 filters.add(new FailsVendorReadQualityFilter());
             }
