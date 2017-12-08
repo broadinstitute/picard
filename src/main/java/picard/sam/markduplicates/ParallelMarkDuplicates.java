@@ -45,6 +45,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.programgroups.SamOrBam;
 import picard.sam.DuplicationMetrics;
+import picard.sam.markduplicates.util.ArgsPreparer;
 import picard.sam.markduplicates.util.DiskBasedReadEndsForMarkDuplicatesMap;
 import picard.sam.markduplicates.util.LibraryIdGenerator;
 import picard.sam.markduplicates.util.OpticalDuplicateFinder;
@@ -57,7 +58,6 @@ import picard.sam.util.RepresentativeReadIndexer;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -257,20 +257,18 @@ public class ParallelMarkDuplicates extends MarkDuplicates {
     }
 
     private String[] prepareArgsForMDInstances(String[] argv, String input) {
-        return Arrays.stream(argv)
-                // remove PARALLELISM, QUIET and INPUT arguments if presented
-                .filter(arg -> !(arg.startsWith("PARALLELISM=") || arg.startsWith("TH=") || arg.startsWith("SORTING_COLLECTION_SIZE_FACTOR"))
-                        && !arg.startsWith("QUIET=")
-                        && !(arg.startsWith("INPUT=") || arg.startsWith("I=")))
-                // add QUIET=true and INPUT arguments
-                .toArray(length -> {
-                    String[] args = new String[length + 2];
-
-                    args[length] = "INPUT=" + input;
-                    args[length + 1] = "QUIET=true";
-
-                    return args;
-                });
+        return new ArgsPreparer(argv)
+                /* those only for parallel version */
+                .exclude("PARALLELISM").exclude("TH")
+                .exclude("SORTING_COLLECTION_SIZE_FACTOR")
+                .exclude("SPLIT_FACTOR")
+                /* to be sure QUIET=true */
+                .exclude("QUIET")
+                .add("QUIET", "true")
+                /* input should be changed */
+                .exclude("INPUT").exclude("I")
+                .add("INPUT", input)
+                .toArray();
     }
 
     /**
@@ -300,26 +298,26 @@ public class ParallelMarkDuplicates extends MarkDuplicates {
                 md1.pairedWithNoMate.iterator();
         while (map1Iterator.hasNext()) {
             Map.Entry<String, ReadEndsForMarkDuplicates> entry1 = map1Iterator.next();
-            ReadEndsForMarkDuplicates mate1 = entry1.getValue();
+            ReadEndsForMarkDuplicates end1 = entry1.getValue();
             String key1 = entry1.getKey();
 
-            if (mate1.read1ReferenceIndex != sequenceId) {
+            if (end1.read1ReferenceIndex != sequenceId) {
                 // skip all mates which are not from the current sequence
                 // note: iteration is in arbitrary order
                 continue;
             }
 
-            if (!md2.containsSequenceInProcess(mate1.read2ReferenceIndex)) {
-                md2 = pickMDForReferenceIndex(mate1.read2ReferenceIndex);
+            if (!md2.containsSequenceInProcess(end1.read2ReferenceIndex)) {
+                md2 = pickMDForReferenceIndex(end1.read2ReferenceIndex);
             }
-            ReadEndsForMarkDuplicates mate2 =
-                    md2.pairedWithNoMate.remove(mate1.read1ReferenceIndex, key1);
+            ReadEndsForMarkDuplicates end2 =
+                    md2.pairedWithNoMate.remove(end1.read1ReferenceIndex, key1);
 
-            if (mate2 == null) {
+            if (end2 == null) {
                 throw new IllegalStateException("Missing of a mate");
             }
 
-            mergePairToBothMDInstances(md1, md2, mate1, mate2);
+            mergePairToBothMDInstances(md1, md2, end1, end2);
         }
         map1Iterator.close();
     }

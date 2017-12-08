@@ -572,56 +572,56 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         this.fragSort.doneAdding();
     }
 
-    ReadEndsForMarkDuplicates combinePairEnds(ReadEndsForMarkDuplicates mate1, ReadEndsForMarkDuplicates mate2) {
-        final int matesRefIndex = mate2.read1ReferenceIndex;
-        final int matesCoordinate = mate2.read1Coordinate;
+    ReadEndsForMarkDuplicates combinePairEnds(ReadEndsForMarkDuplicates end1, ReadEndsForMarkDuplicates end2) {
+        final int matesRefIndex = end2.read1ReferenceIndex;
+        final int matesCoordinate = end2.read1Coordinate;
 
         // Set orientationForOpticalDuplicates, which always goes by the first then the second end for the strands.  NB: must do this
         // before updating the orientation later.
-        if (mate2.firstOfPair) {
-            mate1.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(mate2.orientation == ReadEnds.R, mate1.orientation == ReadEnds.R);
+        if (end2.firstOfPair) {
+            end1.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(end2.orientation == ReadEnds.R, end1.orientation == ReadEnds.R);
             if (useBarcodes) {
-                ((ReadEndsForMarkDuplicatesWithBarcodes) mate1).readOneBarcode = ((ReadEndsForMarkDuplicatesWithBarcodes) mate2).readOneBarcode;
+                ((ReadEndsForMarkDuplicatesWithBarcodes) end1).readOneBarcode = ((ReadEndsForMarkDuplicatesWithBarcodes) end2).readOneBarcode;
             }
         } else {
-            mate1.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(mate1.orientation == ReadEnds.R, mate2.orientation == ReadEnds.R);
+            end1.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(end1.orientation == ReadEnds.R, end2.orientation == ReadEnds.R);
             if (useBarcodes) {
-                ((ReadEndsForMarkDuplicatesWithBarcodes) mate1).readTwoBarcode = ((ReadEndsForMarkDuplicatesWithBarcodes) mate2).readTwoBarcode;
+                ((ReadEndsForMarkDuplicatesWithBarcodes) end1).readTwoBarcode = ((ReadEndsForMarkDuplicatesWithBarcodes) end2).readTwoBarcode;
             }
         }
 
         // If the other read is actually later, simply add the other read's data as read2, else flip the reads
-        if (matesRefIndex > mate1.read1ReferenceIndex ||
-                (matesRefIndex == mate1.read1ReferenceIndex && matesCoordinate >= mate1.read1Coordinate)) {
-            mate1.read2ReferenceIndex = matesRefIndex;
-            mate1.read2Coordinate = matesCoordinate;
-            mate1.read2IndexInFile = mate2.read1IndexInFile;
-            mate1.orientation = ReadEnds.getOrientationByte(mate1.orientation == ReadEnds.R,
-                    mate2.orientation == ReadEnds.R);
+        if (matesRefIndex > end1.read1ReferenceIndex ||
+                (matesRefIndex == end1.read1ReferenceIndex && matesCoordinate >= end1.read1Coordinate)) {
+            end1.read2ReferenceIndex = matesRefIndex;
+            end1.read2Coordinate = matesCoordinate;
+            end1.read2IndexInFile = end2.read1IndexInFile;
+            end1.orientation = ReadEnds.getOrientationByte(end1.orientation == ReadEnds.R,
+                    end2.orientation == ReadEnds.R);
 
             // if the two read ends are in the same position, pointing in opposite directions,
             // the orientation is undefined and the procedure above
             // will depend on the order of the reads in the file.
             // To avoid this, we set it explicitly (to FR):
-            if (mate1.read2ReferenceIndex == mate1.read1ReferenceIndex &&
-                    mate1.read2Coordinate == mate1.read1Coordinate &&
-                    mate1.orientation == ReadEnds.RF) {
-                mate1.orientation = ReadEnds.FR;
+            if (end1.read2ReferenceIndex == end1.read1ReferenceIndex &&
+                    end1.read2Coordinate == end1.read1Coordinate &&
+                    end1.orientation == ReadEnds.RF) {
+                end1.orientation = ReadEnds.FR;
             }
         } else {
-            mate1.read2ReferenceIndex = mate1.read1ReferenceIndex;
-            mate1.read2Coordinate = mate1.read1Coordinate;
-            mate1.read2IndexInFile = mate1.read1IndexInFile;
-            mate1.read1ReferenceIndex = matesRefIndex;
-            mate1.read1Coordinate = matesCoordinate;
-            mate1.read1IndexInFile = mate2.read1IndexInFile;
-            mate1.orientation = ReadEnds.getOrientationByte(mate2.orientation == ReadEnds.R,
-                    mate1.orientation == ReadEnds.R);
+            end1.read2ReferenceIndex = end1.read1ReferenceIndex;
+            end1.read2Coordinate = end1.read1Coordinate;
+            end1.read2IndexInFile = end1.read1IndexInFile;
+            end1.read1ReferenceIndex = matesRefIndex;
+            end1.read1Coordinate = matesCoordinate;
+            end1.read1IndexInFile = end2.read1IndexInFile;
+            end1.orientation = ReadEnds.getOrientationByte(end2.orientation == ReadEnds.R,
+                    end1.orientation == ReadEnds.R);
         }
 
-        mate1.score += mate2.score;
+        end1.score += end2.score;
 
-        return mate1;
+        return end1;
     }
 
     /** Builds a read ends object that represents a single read. */
