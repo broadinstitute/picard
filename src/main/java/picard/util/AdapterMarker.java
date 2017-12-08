@@ -72,7 +72,7 @@ public class AdapterMarker {
     private int numAdaptersSeen = 0;
     private final CollectionUtil.DefaultingMap<AdapterPair, Integer> seenCounts = new CollectionUtil.DefaultingMap<AdapterPair, Integer>(0);
 
-    //Store all the sam records we have seen prior to choosing and adapter so that we can go back and fix the ones
+    //Store all the sam records we have seen prior to choosing an adapter so that we can go back and fix the ones
     //that have clipping tags for adapters that were not chosen.
     private Map<AdapterPair, List<SAMRecord>> preAdapterPrunedRecords = new HashMap<>();
     /**
@@ -196,14 +196,18 @@ public class AdapterMarker {
      */
     public AdapterPair adapterTrimIlluminaSingleRead(final SAMRecord read, final int minMatchBases, final double maxErrorRate) {
         final AdapterPair ret = ClippingUtility.adapterTrimIlluminaSingleRead(read, minMatchBases, maxErrorRate, adapters.get());
+        tallyAndFixAdapters(ret, read);
+        return ret;
+    }
+
+    private void tallyAndFixAdapters(AdapterPair ret, SAMRecord... reads) {
         if (ret != null && !thresholdReached) {
             if(!preAdapterPrunedRecords.containsKey(ret)) {
                 preAdapterPrunedRecords.put(ret, new ArrayList<>());
             }
-            preAdapterPrunedRecords.get(ret).add(read);
+            Arrays.stream(reads).forEach(read -> preAdapterPrunedRecords.get(ret).add(read));
             tallyFoundAdapter(ret);
         }
-        return ret;
     }
 
     /**
@@ -212,14 +216,7 @@ public class AdapterMarker {
     public AdapterPair adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2,
                                                              final int minMatchBases, final double maxErrorRate) {
         final AdapterPair ret = ClippingUtility.adapterTrimIlluminaPairedReads(read1, read2, minMatchBases, maxErrorRate, adapters.get());
-        if (ret != null && !thresholdReached) {
-            if(!preAdapterPrunedRecords.containsKey(ret)) {
-                preAdapterPrunedRecords.put(ret, new ArrayList<>());
-            }
-            preAdapterPrunedRecords.get(ret).add(read1);
-            preAdapterPrunedRecords.get(ret).add(read2);
-            tallyFoundAdapter(ret);
-        }
+        tallyAndFixAdapters(ret, read1, read2);
         return ret;
     }
 
@@ -302,7 +299,7 @@ public class AdapterMarker {
         //remove all the reads for the selected adapters
         Arrays.stream(adapters.get()).forEach(adapter -> preAdapterPrunedRecords.remove(adapter));
         //anything left is marked with the incorrect adapter and needs its XT tag removed
-        (preAdapterPrunedRecords.values()).forEach(readList -> readList.parallelStream().forEach(read -> {
+        preAdapterPrunedRecords.values().forEach(readList -> readList.parallelStream().forEach(read -> {
             Stream<SAMRecord.SAMTagAndValue> filterAttributes = read.getAttributes().stream().filter(tag -> !tag.tag.equals(ReservedTagConstants.XT));
             read.clearAttributes();
             filterAttributes.forEach(tag -> read.setAttribute(tag.tag, tag.value));
