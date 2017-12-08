@@ -23,16 +23,21 @@
  */
 package picard.util;
 
+import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 /**
  * Store one or more AdapterPairs to use to mark adapter sequence of SAMRecords.  This is a very compute-intensive process, so
@@ -66,6 +71,9 @@ public class AdapterMarker {
     private int numAdaptersSeen = 0;
     private final CollectionUtil.DefaultingMap<AdapterPair, Integer> seenCounts = new CollectionUtil.DefaultingMap<AdapterPair, Integer>(0);
 
+    //Store all the sam records we have seen prior to choosing an adapter so that we can go back and fix the ones
+    //that have clipping tags for adapters that were not chosen.
+    private Map<AdapterPair, List<SAMRecord>> preAdapterPrunedRecords = new HashMap<>();
     /**
      * Truncates adapters to DEFAULT_ADAPTER_LENGTH
      * @param originalAdapters These should be in order from longest & most likely to shortest & least likely.
@@ -187,8 +195,18 @@ public class AdapterMarker {
      */
     public AdapterPair adapterTrimIlluminaSingleRead(final SAMRecord read, final int minMatchBases, final double maxErrorRate) {
         final AdapterPair ret = ClippingUtility.adapterTrimIlluminaSingleRead(read, minMatchBases, maxErrorRate, adapters.get());
-        if (ret != null) tallyFoundAdapter(ret);
+        tallyAndFixAdapters(ret, read);
         return ret;
+    }
+
+    private void tallyAndFixAdapters(AdapterPair ret, SAMRecord... reads) {
+        if (ret != null && !thresholdReached) {
+            if(!preAdapterPrunedRecords.containsKey(ret)) {
+                preAdapterPrunedRecords.put(ret, new ArrayList<>());
+            }
+            Arrays.stream(reads).forEach(read -> preAdapterPrunedRecords.get(ret).add(read));
+            tallyFoundAdapter(ret);
+        }
     }
 
     /**
@@ -197,7 +215,7 @@ public class AdapterMarker {
     public AdapterPair adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2,
                                                              final int minMatchBases, final double maxErrorRate) {
         final AdapterPair ret = ClippingUtility.adapterTrimIlluminaPairedReads(read1, read2, minMatchBases, maxErrorRate, adapters.get());
-        if (ret != null) tallyFoundAdapter(ret);
+        tallyAndFixAdapters(ret, read1, read2);
         return ret;
     }
 
@@ -231,8 +249,6 @@ public class AdapterMarker {
         // If caller does not want adapter pruning, do nothing.
         if (thresholdForSelectingAdaptersToKeep < 1) return;
         synchronized (this) {
-            // Already pruned adapter list, so nothing more to do.
-            if (thresholdReached) return;
 
             // Tally this adapter
             seenCounts.put(foundAdapter, seenCounts.get(foundAdapter) + 1);
@@ -273,8 +289,21 @@ public class AdapterMarker {
                 // Replace the existing list with the pruned list.
                 thresholdReached = true;
                 adapters.set(bestAdapters.toArray(new AdapterPair[bestAdapters.size()]));
+                fixAlreadySeenReads();
             }
         }
+    }
+
+    private void fixAlreadySeenReads() {
+        //remove all the reads for the selected adapters
+        Arrays.stream(adapters.get()).forEach(adapter -> preAdapterPrunedRecords.remove(adapter));
+        //anything left is marked with the incorrect adapter and needs its XT tag removed
+        preAdapterPrunedRecords.values().forEach(readList -> readList.parallelStream().forEach(read -> {
+            Stream<SAMRecord.SAMTagAndValue> filterAttributes = read.getAttributes().stream().filter(tag -> !tag.tag.equals(ReservedTagConstants.XT));
+            read.clearAttributes();
+            filterAttributes.forEach(tag -> read.setAttribute(tag.tag, tag.value));
+        }));
+        preAdapterPrunedRecords.clear();
     }
 
     private static final class TruncatedAdapterPair implements AdapterPair {
