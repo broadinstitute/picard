@@ -30,11 +30,11 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetrics;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetricsCollector;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
@@ -46,9 +46,51 @@ import java.text.NumberFormat;
 import java.util.Random;
 
 /**
- * Class to randomly downsample a BAM file while respecting that we should either retain or discard
- * all of the reads for a template - i.e. all reads with the same name, whether first or second of
- * pair, secondary or supplementary, all travel together.
+ *
+ * <h4>Summary</h4>
+ * This tool applies a downsampling algorithm to a SAM or BAM file to retain only a (deterministically random) subset of
+ * the reads. Reads from the same template (e.g. read-pairs, secondary and supplemantary reads) are all either kept or
+ * discarded as a unit, with the goal of retaining reads from {@link #PROBABILITY} * input <b>templates<b/>. While this
+ * will usually result in approximately {@link #PROBABILITY} * input reads being retained also, for very small probabilities
+ * this may not be the case.
+ *
+ * A number of different downsampling strategies are supported using the STRATEGY option:
+ * ConstantMemory:   {@value DownsamplingIteratorFactory#CONSTANT_MEMORY_DESCRPTION}
+ * HighAccuracy:     {@value DownsamplingIteratorFactory#HIGH_ACCURACY_DESCRIPTION}
+ * Chained:          {@value DownsamplingIteratorFactory#CHAINED_DESCRIPTION
+ *
+ * The number of records written can be output to a {@link QualityYieldMetrics} metrics file via the {@link #METRICS_FILE}.
+ *
+ * <h4>Usage examples:</h4>
+ * <h3>Downsample file, keeping about 10% of the reads</h3>
+ * <pre>
+ * java -jar picard.jar DownsampleSam \\<br />
+ *       I=input.bam \\<br />
+ *       O=downsampled.bam \\<br />
+ *       P=0.1
+ * <hr/
+ * </pre>
+ * <h3>Downsample file, keeping 2% of the reads </h3>
+ * <pre>
+ * java -jar picard.jar DownsampleSam \\<br />
+ *       I=input.bam \\<br />
+ *       O=downsampled.bam \\<br />
+ *       STRATEGY=Chained \\ <br/>
+ *       P=0.02 \\ <br/>
+ *       ACCURACY=0.0001
+ * </pre>
+ * <hr /
+ * </pre>
+ * <h3>Downsample file, keeping 0.001% of the reads (may require more memory)</h3>
+ * <pre>
+ * java -jar picard.jar DownsampleSam \\<br />
+ *       I=input.bam \\<br />
+ *       O=downsampled.bam \\<br />
+ *       STRATEGY=HighAccuracy \\ <br/>
+ *       P=0.00001 \\ <br/>
+ *       ACCURACY=0.0000001
+ * </pre>
+ * <hr />
  *
  * @author Tim Fennell
  */
@@ -58,24 +100,46 @@ import java.util.Random;
         programGroup = SamOrBam.class)
 @DocumentedFeature
 public class DownsampleSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Downsample a SAM or BAM file.  ";
-    static final String USAGE_DETAILS = "This tool applies a random downsampling algorithm to a SAM or BAM file to retain " +
-            "only a random subset of the reads. Reads in a mate-pair are either both kept or both discarded. Reads marked as not primary " +
-            "alignments are all discarded. Each read is given a probability P of being retained so that runs performed with the exact " +
-            "same input in the same order and with the same value for RANDOM_SEED will produce the same results." +
-            "All reads for a template are kept or discarded as a unit, with the goal of retaining reads" +
-            "from PROBABILITY * input templates. While this will usually result in approximately " +
+    static final String USAGE_SUMMARY = "Downsample a SAM or BAM file. ";
+    static final String USAGE_DETAILS = "This tool applies a downsampling algorithm to a SAM or BAM file to retain " +
+            "only a (deterministically random) subset of the reads. Reads from the same template (e.g. read-pairs, secondary " +
+            "and supplemantary reads) are all either kept or discarded as a unit, with the goal of retaining reads" +
+            "from PROBABILITY * input <b>templates<b/>. While this will usually result in approximately " +
             "PROBABILITY * input reads being retained also, for very small PROBABILITIES this may not " +
             "be the case.\n" +
             "A number of different downsampling strategies are supported using the STRATEGY option:\n\n" +
             "ConstantMemory: " + DownsamplingIteratorFactory.CONSTANT_MEMORY_DESCRPTION + "\n\n" +
             "HighAccuracy: " + DownsamplingIteratorFactory.HIGH_ACCURACY_DESCRIPTION + "\n\n" +
             "Chained: " + DownsamplingIteratorFactory.CHAINED_DESCRIPTION + "\n\n" +
-            "<h4>Usage example:</h4>" +
+            "<hr/"+
+            "<h4>Usage examples:</h4>" +
+            "<h3>Downsample file, keeping about 10% of the reads</h3>"+
             "<pre>" +
             "java -jar picard.jar DownsampleSam \\<br />" +
             "      I=input.bam \\<br />" +
-            "      O=downsampled.bam" +
+            "      O=downsampled.bam \\<br />" +
+            "      P=0.2"+
+            "<hr/>"+
+            "</pre>" +
+            "<h3>Downsample file, keeping about 2% of the reads </h3>"+
+            "<pre>" +
+            "java -jar picard.jar DownsampleSam \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=downsampled.bam \\<br />" +
+            "      STRATEGY=Chained \\ <br/>" +
+            "      P=0.02" +
+            "      ACCURACY=0.0001" +
+            "</pre>" +
+            "<hr />"+
+            "</pre>" +
+            "<h3>Downsample file, keeping about 0.001% of the reads (may require more memory)</h3>"+
+            "<pre>" +
+            "java -jar picard.jar DownsampleSam \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=downsampled.bam \\<br />" +
+            "      STRATEGY=HighAccuracy \\ <br/>" +
+            "      P=0.00001" +
+            "      ACCURACY=0.0000001" +
             "</pre>" +
             "<hr />";
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
@@ -87,7 +151,7 @@ public class DownsampleSam extends CommandLineProgram {
     @Argument(shortName="S", doc="The downsampling strategy to use. See usage for discussion.")
     public Strategy STRATEGY = Strategy.ConstantMemory;
 
-    @Argument(shortName = "R", doc = "Random seed to use if deterministic behavior is desired.  " +
+    @Argument(shortName = "R", doc = "Random seed used for deterministic results. " +
             "Setting to null will cause multiple invocations to produce different results.")
     public Integer RANDOM_SEED = 1;
 
@@ -99,13 +163,17 @@ public class DownsampleSam extends CommandLineProgram {
             "Higher accuracy will generally require more memory.")
     public double ACCURACY = 0.0001;
 
-    @Argument(shortName = "M", doc = "The file to write metrics to (QualityYieldMetrics)", optional=true)
+    @Argument(shortName = "M", doc = "The file to write metrics to (of type QualityYieldMetrics)", optional=true)
     public File METRICS_FILE;
 
     private final Log log = Log.getInstance(DownsampleSam.class);
 
-    public static void main(final String[] args) {
-        new DownsampleSam().instanceMainWithExit(args);
+    @Override
+    protected String[] customCommandLineValidation() {
+        if (PROBABILITY < 0 || PROBABILITY > 1)
+            return new String[]{"Downsampling requires 0<=PROBABILITY<=1. Found invalid value: " + PROBABILITY};
+
+        return super.customCommandLineValidation();
     }
 
     @Override
@@ -113,12 +181,21 @@ public class DownsampleSam extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        // Warn the user if they are running with P=1; 0 <= P <= 1 is checked by the DownsamplingIteratorFactory
+        // Warn the user if they are running with P=1 or P=0 (which are legal, but odd)
         if (PROBABILITY == 1) {
             log.warn("Running DownsampleSam with PROBABILITY=1! This will likely just recreate the input file.");
         }
 
-        final Random r = RANDOM_SEED == null ? new Random() : new Random(RANDOM_SEED);
+        if (PROBABILITY == 0) {
+            log.warn("Running DownsampleSam with PROBABILITY=0! This will create an empty file.");
+        }
+
+        if (RANDOM_SEED == null) {
+            RANDOM_SEED = new Random().nextInt();
+            log.info("A Null RANDOM_SEED was provided, so drawing a random one. If results need to be " +
+                    "reproduced use this one: " + RANDOM_SEED);
+        }
+
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
@@ -161,5 +238,4 @@ public class DownsampleSam extends CommandLineProgram {
             }
         };
     }
-
 }
