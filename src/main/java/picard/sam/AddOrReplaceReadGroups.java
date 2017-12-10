@@ -23,10 +23,40 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Replaces read groups in a BAM file
+ * Assigns all the reads in a file to a single new readgroup.
+ *
+ * <h4>Summary</h4>
+ * <br /><br />
+ * Many tools (Picard and GATK for example) require or assume the presence of at least one RG tag, defining a "readgroup"
+ * to which each read can be assigned (as specified in the RG tag in the SAM record).
+ * This tool enables the user to assign all the reads in the {@link #INPUT} to a single new readgroup.
+ * For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>
+ * GATK Dictionary entry.</a> <br /><br />
+ * This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation).
+ * <h4>Usage example:</h4>
+ * <pre>
+ * java -jar picard.jar AddOrReplaceReadGroups \\<br />
+ *       I=input.bam \\<br />
+ *       O=output.bam \\<br />
+ *       RGID=4 \\<br />
+ *       RGLB=lib1 \\<br />
+ *       RGPL=illumina \\<br />
+ *       RGPU=unit1 \\<br />
+ *       RGSM=20
+ * </pre>
+ * <br/>
+ * <h4>Caveats</h4>
+ * The value of the tags must adhere (according to the <a href=\"https://samtools.github.io/hts-specs/SAMv1.pdf\"> SAM-spec</a>)
+ * with the regex '^[ -~]+$' In particular &lt;Space&gt; is the only non-printing character allowed.
+ * <br/>
+ * The program only enables the wholesale assignment of all the reads in the {@link #INPUT} to a single readgroup. If your file
+ * already has reads assigned to multiple readgroups, the original RG value will be lost.
+ * <hr />
  *
  * @author mdepristo
  */
@@ -36,9 +66,9 @@ import java.util.Arrays;
         programGroup = SamOrBam.class)
 @DocumentedFeature
 public class AddOrReplaceReadGroups extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Replace read groups in a BAM file.";
-    static final String USAGE_DETAILS = "This tool enables the user to replace all read groups in the INPUT file with a single new read " +
-            "group and assign all reads to this read group in the OUTPUT BAM file.<br /><br />" +
+    static final String USAGE_SUMMARY = "Add (if missing) or replaces the read groups in a BAM file with a new one.";
+    static final String USAGE_DETAILS = "This tool enables the user to assign all the reads in the INPUT file to a single new readgroup." +
+            "<br /><br />" +
             "For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>" +
             "GATK Dictionary entry.</a> <br /><br /> " +
             "This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation)." +
@@ -51,9 +81,17 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
             "      RGLB=lib1 \\<br />" +
             "      RGPL=illumina \\<br />" +
             "      RGPU=unit1 \\<br />" +
-            "      RGSM=20" +
+            "      RGSM=20 " +
             "</pre>" +
+            "<br/>" +
+            "<h4>Caveats</h4>" +
+            "The value of the tags must adhere (according to the <a href=\"https://samtools.github.io/hts-specs/SAMv1.pdf\"> SAM-spec</a>) " +
+            "with the RegEx '^[ -~]+$' In particular <Space> is the only non-printing character allowed." +
+            "<br/> " +
+            "The program only enables the wholesale assignment of all the reads in the INPUT to a single readgroup. If your file" +
+            "already has reads assigned to multiple readgroups, the original RG value will be lost." +
             "<hr />" ;
+
     @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (BAM or SAM or a GA4GH url).")
     public String INPUT = null;
 
@@ -105,11 +143,6 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
 
     private final Log log = Log.getInstance(AddOrReplaceReadGroups.class);
 
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        new AddOrReplaceReadGroups().instanceMainWithExit(argv);
-    }
-
     protected int doWork() {
         IOUtil.assertInputIsValid(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
@@ -138,7 +171,7 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
         // create the new header and output file
         final SAMFileHeader inHeader = in.getFileHeader();
         final SAMFileHeader outHeader = inHeader.clone();
-        outHeader.setReadGroups(Arrays.asList(rg));
+        outHeader.setReadGroups(Collections.singletonList(rg));
         if (SORT_ORDER != null) outHeader.setSortOrder(SORT_ORDER);
 
         final SAMFileWriter outWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader,
@@ -156,5 +189,45 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
         CloserUtil.close(in);
         outWriter.close();
         return 0;
+    }
+
+    @Override
+    protected String[] customCommandLineValidation() {
+        final List<String> values = new ArrayList<>();
+
+        checkTagValue("RGID", RGID).ifPresent(values::add);
+        checkTagValue("RGLB", RGLB).ifPresent(values::add);
+        checkTagValue("RGPL", RGPL).ifPresent(values::add);
+        checkTagValue("RGPU", RGPU).ifPresent(values::add);
+        checkTagValue("RGSM", RGSM).ifPresent(values::add);
+        checkTagValue("RGCN", RGCN).ifPresent(values::add);
+        checkTagValue("RGDS", RGDS).ifPresent(values::add);
+        checkTagValue("RGKS", RGKS).ifPresent(values::add);
+        checkTagValue("RGFO", RGFO).ifPresent(values::add);
+        checkTagValue("RGPG", RGPG).ifPresent(values::add);
+        checkTagValue("RGPM", RGPM).ifPresent(values::add);
+
+        if (!values.isEmpty()) {
+            return values.toArray(new String[values.size()]);
+        }
+
+        return super.customCommandLineValidation();
+    }
+
+    private final Pattern pattern = Pattern.compile("^[ -~]+$");
+
+    private Optional<String> checkTagValue(final String tagName, final String value) {
+        if (value == null) {
+            return Optional.empty();
+        }
+
+        final Matcher matcher = pattern.matcher(value);
+
+        if (matcher.matches()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(String.format("The values of tags in a Sam header must adhere to the regex \"^[ -~]+$\", " +
+                    "but the value provided for %s, '%s', doesn't.", tagName, value));
+        }
     }
 }
