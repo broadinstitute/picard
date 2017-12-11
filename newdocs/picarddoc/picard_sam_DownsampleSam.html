@@ -373,45 +373,47 @@
 		<h2>Overview</h2>
 		<h4>Summary</h4>
  This tool applies a downsampling algorithm to a SAM or BAM file to retain only a (deterministically random) subset of
- the reads. Reads from the same template (e.g. read-pairs, secondary and supplemantary reads) are all either kept or
- discarded as a unit, with the goal of retaining reads from #PROBABILITY * input <b>templates<b/>. While this
+ the reads. Reads from the same template (e.g. read-pairs, secondary and supplementary reads) are all either kept or
+ discarded as a unit, with the goal of retaining reads from #PROBABILITY * input <b>templates</b>. While this
  will usually result in approximately #PROBABILITY * input reads being retained also, for very small probabilities
  this may not be the case.
 
- A number of different downsampling strategies are supported using the STRATEGY option:
- ConstantMemory:   htsjdk.samtools.DownsamplingIteratorFactory#CONSTANT_MEMORY_DESCRPTION
- HighAccuracy:     htsjdk.samtools.DownsamplingIteratorFactory#HIGH_ACCURACY_DESCRIPTION
- Chained:          #CHAINED_DESCRIPTION
+ A number of different downsampling strategies are supported using the #STRATEGY option:
+ <ul>
+ <li>ConstantMemory:   htsjdk.samtools.DownsamplingIteratorFactory#CONSTANT_MEMORY_DESCRPTION</li>
+ <li>HighAccuracy:     htsjdk.samtools.DownsamplingIteratorFactory#HIGH_ACCURACY_DESCRIPTION</li>
+ <li>Chained:          &le; </li>
+ </ul>
 
  The number of records written can be output to a QualityYieldMetrics metrics file via the #METRICS_FILE.
 
  <h4>Usage examples:</h4>
  <h3>Downsample file, keeping about 10% of the reads</h3>
  <pre>
- java -jar picard.jar DownsampleSam \\<br />
-       I=input.bam \\<br />
-       O=downsampled.bam \\<br />
+ java -jar picard.jar DownsampleSam \\
+       I=input.bam \\
+       O=downsampled.bam \\
        P=0.1
- <hr/
+ <hr/>
  </pre>
  <h3>Downsample file, keeping 2% of the reads </h3>
  <pre>
- java -jar picard.jar DownsampleSam \\<br />
+ java -jar picard.jar DownsampleSam \\
        I=input.bam \\<br />
-       O=downsampled.bam \\<br />
-       STRATEGY=Chained \\ <br/>
-       P=0.02 \\ <br/>
+       O=downsampled.bam \\
+       STRATEGY=Chained \\
+       P=0.02 \\
        ACCURACY=0.0001
  </pre>
- <hr /
+ <hr />
  </pre>
  <h3>Downsample file, keeping 0.001% of the reads (may require more memory)</h3>
  <pre>
- java -jar picard.jar DownsampleSam \\<br />
-       I=input.bam \\<br />
-       O=downsampled.bam \\<br />
-       STRATEGY=HighAccuracy \\ <br/>
-       P=0.00001 \\ <br/>
+ java -jar picard.jar DownsampleSam \\
+       I=input.bam \\
+       O=downsampled.bam \\
+       STRATEGY=HighAccuracy \\
+       P=0.00001 \\
        ACCURACY=0.0000001
  </pre>
  <hr />
@@ -879,7 +881,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.0-3-g127b6bf-SNAPSHOT built at 11-06-2017 12:06:23.
+        <p class="version">Picard version 2.14.0-3-g127b6bf-SNAPSHOT built at 11-19-2017 02:19:13.
         </p>
 
 	</div>
