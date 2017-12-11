@@ -33,22 +33,6 @@
         		<hr>
         		<hr>
         		<hr>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#AlphaTools">Alpha Tools</a>
-							<div id="AlphaTools"
-								<?php echo ($group == 'Alpha Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
-											</li>
-											<li>
-												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
-											</li>
-											<li>
-												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
-											</li>
-								</ul>
-							</div>
-						</li>
 						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
 							<div id="Fasta"
 								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
@@ -80,9 +64,6 @@
 											</li>
 											<li>
 												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
 											</li>
 								</ul>
 							</div>
@@ -306,9 +287,6 @@
 												<a href="picard_sam_SamToFastq.html">SamToFastq</a>
 											</li>
 											<li>
-												<a href="picard_sam_SetNmAndUqTags.html">SetNmAndUqTags</a>
-											</li>
-											<li>
 												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
 											</li>
 											<li>
@@ -318,23 +296,10 @@
 												<a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a>
 											</li>
 											<li>
-												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
-											</li>
-											<li>
 												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
 											</li>
 											<li>
 												<a href="picard_sam_ViewSam.html">ViewSam</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#UnitTesting">Unit Testing</a>
-							<div id="UnitTesting"
-								<?php echo ($group == 'Unit Testing')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
 											</li>
 								</ul>
 							</div>
@@ -399,16 +364,57 @@
 
 		<h1>DownsampleSam</h1>
 
-		<p class="lead">Downsample a SAM or BAM file.  </p>
+		<p class="lead">Downsample a SAM or BAM file. </p>
 
 			<h3>Category
 				<small> SAM/BAM</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		Class to randomly downsample a BAM file while respecting that we should either retain or discard
- all of the reads for a template - i.e. all reads with the same name, whether first or second of
- pair, secondary or supplementary, all travel together.
+		<h4>Summary</h4>
+ This tool applies a downsampling algorithm to a SAM or BAM file to retain only a (deterministically random) subset of
+ the reads. Reads from the same template (e.g. read-pairs, secondary and supplemantary reads) are all either kept or
+ discarded as a unit, with the goal of retaining reads from #PROBABILITY * input <b>templates<b/>. While this
+ will usually result in approximately #PROBABILITY * input reads being retained also, for very small probabilities
+ this may not be the case.
+
+ A number of different downsampling strategies are supported using the STRATEGY option:
+ ConstantMemory:   DownsamplingIteratorFactory#CONSTANT_MEMORY_DESCRPTION
+ HighAccuracy:     DownsamplingIteratorFactory#HIGH_ACCURACY_DESCRIPTION
+ Chained:          DownsamplingIteratorFactory#CHAINED_DESCRIPTION
+
+ The number of records written can be output to a {@link QualityYieldMetrics} metrics file via the {@link #METRICS_FILE}.
+
+ <h4>Usage examples:</h4>
+ <h3>Downsample file, keeping about 10% of the reads</h3>
+ <pre>
+ java -jar picard.jar DownsampleSam \\<br />
+       I=input.bam \\<br />
+       O=downsampled.bam \\<br />
+       P=0.1
+ <hr/
+ </pre>
+ <h3>Downsample file, keeping 2% of the reads </h3>
+ <pre>
+ java -jar picard.jar DownsampleSam \\<br />
+       I=input.bam \\<br />
+       O=downsampled.bam \\<br />
+       STRATEGY=Chained \\ <br/>
+       P=0.02 \\ <br/>
+       ACCURACY=0.0001
+ </pre>
+ <hr /
+ </pre>
+ <h3>Downsample file, keeping 0.001% of the reads (may require more memory)</h3>
+ <pre>
+ java -jar picard.jar DownsampleSam \\<br />
+       I=input.bam \\<br />
+       O=downsampled.bam \\<br />
+       STRATEGY=HighAccuracy \\ <br/>
+       P=0.00001 \\ <br/>
+       ACCURACY=0.0000001
+ </pre>
+ <hr />
 
 
 				<h3>DownsampleSam specific arguments</h3>
@@ -458,7 +464,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The file to write metrics to (QualityYieldMetrics)</td>
+					<td>The file to write metrics to (of type QualityYieldMetrics)</td>
 				</tr>
 				<tr>
 					<td><a href="#--PROBABILITY">--PROBABILITY</a><br />
@@ -474,7 +480,7 @@
 					</td>
 					<!--<td>Integer</td> -->
 					<td>1</td>
-					<td>Random seed to use if deterministic behavior is desired.  Setting to null will cause multiple invocations to produce different results.</td>
+					<td>Random seed used for deterministic results. Setting to null will cause multiple invocations to produce different results.</td>
 				</tr>
 				<tr>
 					<td><a href="#--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE</a><br />
@@ -684,7 +690,7 @@
 			 / <small>-M</small>
 		</h3>
 		<p class="args">
-			<b>The file to write metrics to (QualityYieldMetrics)</b><br />
+			<b>The file to write metrics to (of type QualityYieldMetrics)</b><br />
 			
 		</p>
 		<p>
@@ -735,7 +741,7 @@
 			 / <small>-R</small>
 		</h3>
 		<p class="args">
-			<b>Random seed to use if deterministic behavior is desired.  Setting to null will cause multiple invocations to produce different results.</b><br />
+			<b>Random seed used for deterministic results. Setting to null will cause multiple invocations to produce different results.</b><br />
 			
 		</p>
 		<p>
@@ -873,7 +879,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.16.0-SNAPSHOT built at 05-07-2017 01:07:33.
+        <p class="version">Picard version 2.14.0-3-g127b6bf-SNAPSHOT built at 11-20-2017 10:20:15.
         </p>
 
 	</div>

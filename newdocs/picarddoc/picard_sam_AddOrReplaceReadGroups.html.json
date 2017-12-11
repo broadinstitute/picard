@@ -1,5 +1,5 @@
 {
-  "summary": "Replace read groups in a BAM file.",
+  "summary": "Add (if missing) or replaces the read groups in a BAM file with a new one.",
   "arguments": [
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and GELI).",
@@ -473,7 +473,7 @@
       ]
     }
   ],
-  "description": "Replaces read groups in a BAM file",
+  "description": "Assigns all the reads in a file to a single new readgroup.\n\n \u003ch4\u003eSummary\u003c/h4\u003e\n \u003cbr /\u003e\u003cbr /\u003e\n Many tools (Picard and GATK for example) require or assume the presence of at least one RG tag, defining a \"readgroup\"\n to which each read can be assigned (as specified in the RG tag in the SAM record).\n This tool enables the user to assign all the reads in the #INPUT to a single new readgroup.\n For more information about read groups, see the \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6472\u0027\u003e\n GATK Dictionary entry.\u003c/a\u003e \u003cbr /\u003e\u003cbr /\u003e\n This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation).\n \u003ch4\u003eUsage example:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar AddOrReplaceReadGroups \\\\\u003cbr /\u003e\n       I\u003dinput.bam \\\\\u003cbr /\u003e\n       O\u003doutput.bam \\\\\u003cbr /\u003e\n       RGID\u003d4 \\\\\u003cbr /\u003e\n       RGLB\u003dlib1 \\\\\u003cbr /\u003e\n       RGPL\u003dillumina \\\\\u003cbr /\u003e\n       RGPU\u003dunit1 \\\\\u003cbr /\u003e\n       RGSM\u003d20\n \u003c/pre\u003e\n \u003cbr/\u003e\n \u003ch4\u003eCaveats\u003c/h4\u003e\n The value of the tags must adhere (according to the \u003ca href\u003d\\\"https://samtools.github.io/hts-specs/SAMv1.pdf\\\"\u003e SAM-spec\u003c/a\u003e)\n with the regex \u0027^[ -~]+$\u0027 In particular \u0026lt;Space\u0026gt; is the only non-printing character allowed.\n \u003cbr/\u003e\n The program only enables the wholesale assignment of all the reads in the #INPUT to a single readgroup. If your file\n already has reads assigned to multiple readgroups, the original RG value will be lost.\n \u003chr /\u003e",
   "name": "AddOrReplaceReadGroups",
   "group": "SAM/BAM"
 }

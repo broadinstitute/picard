@@ -33,22 +33,6 @@
         		<hr>
         		<hr>
         		<hr>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#AlphaTools">Alpha Tools</a>
-							<div id="AlphaTools"
-								<?php echo ($group == 'Alpha Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
-											</li>
-											<li>
-												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
-											</li>
-											<li>
-												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
-											</li>
-								</ul>
-							</div>
-						</li>
 						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
 							<div id="Fasta"
 								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
@@ -80,9 +64,6 @@
 											</li>
 											<li>
 												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
 											</li>
 								</ul>
 							</div>
@@ -306,9 +287,6 @@
 												<a href="picard_sam_SamToFastq.html">SamToFastq</a>
 											</li>
 											<li>
-												<a href="picard_sam_SetNmAndUqTags.html">SetNmAndUqTags</a>
-											</li>
-											<li>
 												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
 											</li>
 											<li>
@@ -318,23 +296,10 @@
 												<a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a>
 											</li>
 											<li>
-												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
-											</li>
-											<li>
 												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
 											</li>
 											<li>
 												<a href="picard_sam_ViewSam.html">ViewSam</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#UnitTesting">Unit Testing</a>
-							<div id="UnitTesting"
-								<?php echo ($group == 'Unit Testing')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
 											</li>
 								</ul>
 							</div>
@@ -399,7 +364,7 @@
 
 		<h1>FilterSamReads</h1>
 
-		<p class="lead">Subset read data from a SAM or BAM file</p>
+		<p class="lead">Subsets reads from a SAM or BAM file by applying one of several filters.</p>
 
 			<h3>Category
 				<small> SAM/BAM</small>
@@ -432,7 +397,7 @@
 					</td>
 					<!--<td>Filter</td> -->
 					<td>null</td>
-					<td>Filter.</td>
+					<td>Which filter to use.</td>
 				</tr>
 				<tr>
 					<td><a href="#--INPUT">--INPUT</a><br />
@@ -459,7 +424,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Interval List File containing intervals that will be included or excluded from the OUTPUT SAM or BAM file.</td>
+					<td>Interval List File containing intervals that will be included from the OUTPUT if using FILTER=includePairedIntervals</td>
 				</tr>
 				<tr>
 					<td><a href="#--JAVASCRIPT_FILE">--JAVASCRIPT_FILE</a><br />
@@ -467,7 +432,10 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Filters a SAM or BAM file with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context:  'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and  'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ). Last value of the script should be a boolean to tell wether we should accept or reject the record.</td>
+					<td>Filters the INPUT with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context: 
+ 'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and 
+  'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ).
+ all the public members of SamRecord and SAMFileHeader are accessible. A record is accepted if the last value of the script evaluates to true.</td>
 				</tr>
 				<tr>
 					<td><a href="#--READ_LIST_FILE">--READ_LIST_FILE</a><br />
@@ -475,7 +443,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Read List File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.</td>
+					<td>File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SORT_ORDER">--SORT_ORDER</a><br />
@@ -491,7 +459,7 @@
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
-					<td>Create .reads files (for debugging purposes)</td>
+					<td>Create .reads files (from the OUTPUT filename) containing names of reads from INPUT *and* OUTPUT (for debugging purposes.)</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -640,7 +608,7 @@
 			 / <small>-</small>
 		</h3>
 		<p class="args">
-			<b>Filter.</b><br />
+			<b>Which filter to use.</b><br />
 			
 		</p>
 			<p>
@@ -695,7 +663,7 @@
 			 / <small>-IL</small>
 		</h3>
 		<p class="args">
-			<b>Interval List File containing intervals that will be included or excluded from the OUTPUT SAM or BAM file.</b><br />
+			<b>Interval List File containing intervals that will be included from the OUTPUT if using FILTER=includePairedIntervals</b><br />
 			
 		</p>
 		<p>
@@ -707,7 +675,10 @@
 			 / <small>-JS</small>
 		</h3>
 		<p class="args">
-			<b>Filters a SAM or BAM file with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context:  'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and  'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ). Last value of the script should be a boolean to tell wether we should accept or reject the record.</b><br />
+			<b>Filters the INPUT with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context: 
+ 'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and 
+  'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ).
+ all the public members of SamRecord and SAMFileHeader are accessible. A record is accepted if the last value of the script evaluates to true.</b><br />
 			
 		</p>
 		<p>
@@ -758,7 +729,7 @@
 			 / <small>-RLF</small>
 		</h3>
 		<p class="args">
-			<b>Read List File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.</b><br />
+			<b>File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.</b><br />
 			
 		</p>
 		<p>
@@ -893,7 +864,7 @@
 			 / <small>-</small>
 		</h3>
 		<p class="args">
-			<b>Create .reads files (for debugging purposes)</b><br />
+			<b>Create .reads files (from the OUTPUT filename) containing names of reads from INPUT *and* OUTPUT (for debugging purposes.)</b><br />
 			
 		</p>
 		<p>
@@ -910,7 +881,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.16.0-SNAPSHOT built at 05-07-2017 01:07:33.
+        <p class="version">Picard version 2.14.0-3-g127b6bf-SNAPSHOT built at 11-20-2017 10:20:15.
         </p>
 
 	</div>
