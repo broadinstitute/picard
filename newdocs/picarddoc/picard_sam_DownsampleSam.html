@@ -382,12 +382,12 @@
  <ul>
  <li>ConstantMemory:   htsjdk.samtools.DownsamplingIteratorFactory#CONSTANT_MEMORY_DESCRPTION</li>
  <li>HighAccuracy:     htsjdk.samtools.DownsamplingIteratorFactory#HIGH_ACCURACY_DESCRIPTION</li>
- <li>Chained:          "Attempts to provide a compromise strategy that offers some of the advantages of both the ConstantMemory and HighAccuracy strategies. " +
- "Uses a ConstantMemory strategy to downsample the incoming stream to approximately the desired proportion, and then a HighAccuracy " +
- "strategy to finish. Works in a single pass, and will provide accuracy close to (but often not as good as) HighAccuracy while requiring " +
- "memory proportional to the set of reads emitted from the ConstantMemory strategy to the HighAccuracy strategy. Works well when downsampling " +
- "large inputs to small proportions (e.g. downsampling hundreds of millions of reads and retaining only 2%. Should be accurate 99.9% of the time " +
- "when the input contains >= 50,000 templates (read names). For smaller inputs, HighAccuracy is recommended instead."
+ <li>Chained:          "Attempts to provide a compromise strategy that offers some of the advantages of both the ConstantMemory and HighAccuracy strategies.
+ Uses a ConstantMemory strategy to downsample the incoming stream to approximately the desired proportion, and then a HighAccuracy
+ strategy to finish. Works in a single pass, and will provide accuracy close to (but often not as good as) HighAccuracy while requiring
+ memory proportional to the set of reads emitted from the ConstantMemory strategy to the HighAccuracy strategy. Works well when downsampling
+ large inputs to small proportions (e.g. downsampling hundreds of millions of reads and retaining only 2%. Should be accurate 99.9% of the time
+ when the input contains >= 50,000 templates (read names). For smaller inputs, HighAccuracy is recommended instead."
  </ul>
 
  The number of records written can be output to a QualityYieldMetrics metrics file via the #METRICS_FILE.
@@ -404,7 +404,7 @@
  <h3>Downsample file, keeping 2% of the reads </h3>
  <pre>
  java -jar picard.jar DownsampleSam \\
-       I=input.bam \\<br />
+       I=input.bam \\
        O=downsampled.bam \\
        STRATEGY=Chained \\
        P=0.02 \\
@@ -886,7 +886,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.0-3-g127b6bf-SNAPSHOT built at 11-27-2017 02:27:45.
+        <p class="version">Picard version 2.14.0-5-g441d28a-SNAPSHOT built at 12-21-2017 03:21:28.
         </p>
 
 	</div>
