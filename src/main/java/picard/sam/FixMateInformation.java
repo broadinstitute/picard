@@ -62,8 +62,8 @@ import java.util.List;
  * This tool ensures that all mate-pair information is in sync between each read
  * and its mate pair.  If no {@link #OUTPUT} file is supplied then the output is written to a temporary file
  * and then copied over the {@link #INPUT} file (with the original placed in a .old file.)
- * Reads marked with the secondary alignment flag are written
- * to the output file unchanged. However <b>supplemental</b> alignments are corrected so that they point to the primary,
+ * Reads marked with the secondary alignment flag are written to the output file unchanged.
+ * However, <b>supplementary</b> reads are corrected so that they point to the primary,
  * non-supplemental mate record.
  *
  * <h4>Usage example:</h4>
@@ -89,7 +89,7 @@ public class FixMateInformation extends CommandLineProgram {
     static final String USAGE_DETAILS = "This tool ensures that all mate-pair information is in sync between each read " +
             "and its mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +
             "and then copied over the INPUT file (with the original placed in a .old file.)  Reads marked with the secondary alignment flag are written " +
-            "to the output file unchanged. However <b>supplemental</b> alignments are corrected so that they point to the primary, " +
+            "to the output file unchanged. However <b>supplementary</b> reads are corrected so that they point to the primary, " +
             "non-supplemental mate record." +
             "" +
             "<h4>Usage example:</h4>" +
