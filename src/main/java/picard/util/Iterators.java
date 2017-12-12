@@ -1,8 +1,8 @@
 package picard.util;
 
-import com.google.common.base.Optional;
 
 import java.util.Iterator;
+import java.util.Optional;
 
 /**
  * @author mccowan
@@ -14,12 +14,9 @@ public class Iterators {
 
     public static <E> AtomicIterator<E> atomicIteratorOf(final Iterator<E> backingIterator) {
         final Object monitor = new Object();
-        return new AtomicIterator<E>() {
-            @Override
-            public Optional<E> next() {
-                synchronized (monitor) {
-                    return backingIterator.hasNext() ? Optional.fromNullable(backingIterator.next()) : Optional.<E>absent();
-                }
+        return () -> {
+            synchronized (monitor) {
+                return backingIterator.hasNext() ? Optional.ofNullable(backingIterator.next()) : Optional.empty();
             }
         };
     }

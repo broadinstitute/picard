@@ -57,7 +57,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
     @DataProvider(name = "dataTestJsFilter")
     public Object[][] dataTestJsFilter() {
         return new Object[][]{
-                {"testdata/picard/sam/aligned.sam", "testdata/picard/sam/FilterSamReads/filterOddStarts.js",3},
+                {"testdata/picard/sam/aligned.sam", "testdata/picard/sam/FilterSamReads/filterOddStarts.js", 3},
                 {"testdata/picard/sam/aligned.sam", "testdata/picard/sam/FilterSamReads/filterReadsWithout5primeSoftClip.js", 0}
         };
     }

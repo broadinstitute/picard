@@ -379,7 +379,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
     }
 
     /**
-     * For now, we only ignore those alignments that have more than {@link maxGaps} insertions
+     * For now, we only ignore those alignments that have more than {@link #maxGaps} insertions
      * or deletions.
      */
     protected boolean ignoreAlignment(final SAMRecord sam) {

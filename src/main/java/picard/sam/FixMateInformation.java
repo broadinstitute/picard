@@ -59,9 +59,24 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Class to fix mate pair information for all reads in a SAM file.  Will run in fairly limited
- * memory unless there are lots of mate pairs that are far apart from each other in the file.
+ * This tool ensures that all mate-pair information is in sync between each read
+ * and its mate pair.  If no {@link #OUTPUT} file is supplied then the output is written to a temporary file
+ * and then copied over the {@link #INPUT} file (with the original placed in a .old file.)
+ * Reads marked with the secondary alignment flag are written
+ * to the output file unchanged. However <b>supplemental</b> alignments are corrected so that they point to the primary,
+ * non-supplemental mate record.
  *
+ * <h4>Usage example:</h4>
+ * <pre>
+ * java -jar picard.jar FixMateInformation \\
+ *       I=input.bam \\
+ *       O=fixed_mate.bam \\
+ *       ADD_MATE_CIGAR=true
+ * </pre>
+ * <h4>Caveats</h4
+ * The program should run with fairly limited memory unless there are many mate pairs that are missing or far apart
+ * from each other in the file, as it keeps track of the unmatched mates
+ * <hr />"
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
@@ -73,16 +88,21 @@ public class FixMateInformation extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Verify mate-pair information between mates and fix if needed.";
     static final String USAGE_DETAILS = "This tool ensures that all mate-pair information is in sync between each read " +
             "and its mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +
-            "and then copied over the INPUT file.  Reads marked with the secondary alignment flag are written " +
-            "to the output file unchanged." +
+            "and then copied over the INPUT file (with the original placed in a .old file.)  Reads marked with the secondary alignment flag are written " +
+            "to the output file unchanged. However <b>supplemental</b> alignments are corrected so that they point to the primary, " +
+            "non-supplemental mate record." +
             "" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
-            "java -jar picard.jar FixMateInformation \\<br /> " +
-            "      I=input.bam \\ <br /> " +
-            "      O=fixed_mate.bam" +
+            "java -jar picard.jar FixMateInformation \\" +
+            "      I=input.bam \\ " +
+            "      O=fixed_mate.bam \\" +
+            "      ADD_MATE_CIGAR=true" +
             "</pre> " +
-            "<hr />";
+            "<h4>Caveats</h4>"+
+            "The program should run with fairly limited memory unless there are many mate pairs that are missing or far apart " +
+            "from each other in the file, as it keeps track of the unmatched mates."+
+            "<hr />" ;
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input file to check and fix.")
     public List<File> INPUT;
 
@@ -115,7 +135,7 @@ public class FixMateInformation extends CommandLineProgram {
     protected int doWork() {
         // Open up the input
         boolean allQueryNameSorted = true;
-        final List<SamReader> readers = new ArrayList<SamReader>();
+        final List<SamReader> readers = new ArrayList<>();
         for (final File f : INPUT) {
             IOUtil.assertFileIsReadable(f);
             final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(f);
@@ -152,7 +172,7 @@ public class FixMateInformation extends CommandLineProgram {
             // Deal with merging if necessary
             final Iterator<SAMRecord> tmp;
             if (INPUT.size() > 1) {
-                final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(readers.size());
+                final List<SAMFileHeader> headers = new ArrayList<>(readers.size());
                 for (final SamReader reader : readers) {
                     headers.add(reader.getFileHeader());
                 }
@@ -167,7 +187,7 @@ public class FixMateInformation extends CommandLineProgram {
 
             // And now deal with re-sorting if necessary
             if (ASSUME_SORTED || allQueryNameSorted) {
-                iterator = new SamPairUtil.SetMateInfoIterator(new PeekableIterator<SAMRecord>(tmp), ADD_MATE_CIGAR, IGNORE_MISSING_MATES);
+                iterator = new SamPairUtil.SetMateInfoIterator(new PeekableIterator<>(tmp), ADD_MATE_CIGAR, IGNORE_MISSING_MATES);
             } else {
                 log.info("Sorting input into queryname order.");
                 final SortingCollection<SAMRecord> sorter = SortingCollection.newInstance(SAMRecord.class,
