@@ -324,6 +324,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             pool.shutdown();
             // Wait a while for existing tasks to terminate
             if (!pool.awaitTermination(6, TimeUnit.HOURS)) {
+                LOG.error("Barcode extractor thread pool timeout exceeded... shutting down.");
                 pool.shutdownNow(); // Cancel any still-executing tasks
                 // Wait a while for tasks to respond to being cancelled
                 if (!pool.awaitTermination(60, TimeUnit.SECONDS))
