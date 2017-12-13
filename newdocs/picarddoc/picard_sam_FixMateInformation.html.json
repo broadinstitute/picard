@@ -323,7 +323,7 @@
       ]
     }
   ],
-  "description": "This tool ensures that all mate-pair information is in sync between each read\n and its mate pair.  If no #OUTPUT file is supplied then the output is written to a temporary file\n and then copied over the #INPUT file (with the original placed in a .old file.)\n Reads marked with the secondary alignment flag are written to the output file unchanged.\n However, \u003cb\u003esupplementary\u003c/b\u003e reads are corrected so that they point to the primary,\n non-supplemental mate record.\n\n \u003ch4\u003eUsage example:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar FixMateInformation \\\\\n       I\u003dinput.bam \\\\\n       O\u003dfixed_mate.bam \\\\\n       ADD_MATE_CIGAR\u003dtrue\n \u003c/pre\u003e\n \u003ch4\u003eCaveats\u003c/h4\n The program should run with fairly limited memory unless there are many mate pairs that are missing or far apart\n from each other in the file, as it keeps track of the unmatched mates\n \u003chr /\u003e\"",
+  "description": "Class to fix mate pair information for all reads in a SAM file.  Will run in fairly limited\n memory unless there are lots of mate pairs that are far apart from each other in the file.",
   "name": "FixMateInformation",
   "group": "SAM/BAM"
 }

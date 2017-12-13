@@ -364,42 +364,14 @@
 
 		<h1>AddOrReplaceReadGroups</h1>
 
-		<p class="lead">Add (if missing) or replaces the read groups in a BAM file with a new one.</p>
+		<p class="lead">Replace read groups in a BAM file.</p>
 
 			<h3>Category
 				<small> SAM/BAM</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		Assigns all the reads in a file to a single new readgroup.
-
- <h4>Summary</h4>
- <br /><br />
- Many tools (Picard and GATK for example) require or assume the presence of at least one RG tag, defining a "readgroup"
- to which each read can be assigned (as specified in the RG tag in the SAM record).
- This tool enables the user to assign all the reads in the #INPUT to a single new readgroup.
- For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>
- GATK Dictionary entry.</a> <br /><br />
- This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation).
- <h4>Usage example:</h4>
- <pre>
- java -jar picard.jar AddOrReplaceReadGroups \\<br />
-       I=input.bam \\<br />
-       O=output.bam \\<br />
-       RGID=4 \\<br />
-       RGLB=lib1 \\<br />
-       RGPL=illumina \\<br />
-       RGPU=unit1 \\<br />
-       RGSM=20
- </pre>
- <br/>
- <h4>Caveats</h4>
- The value of the tags must adhere (according to the <a href=\"https://samtools.github.io/hts-specs/SAMv1.pdf\"> SAM-spec</a>)
- with the regex '^[ -~]+$' In particular &lt;Space&gt; is the only non-printing character allowed.
- <br/>
- The program only enables the wholesale assignment of all the reads in the #INPUT to a single readgroup. If your file
- already has reads assigned to multiple readgroups, the original RG value will be lost.
- <hr />
+		Replaces read groups in a BAM file
 
 
 				<h3>AddOrReplaceReadGroups specific arguments</h3>
@@ -1046,7 +1018,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.0-5-g441d28a-SNAPSHOT built at 12-39-2017 03:39:37.
+        <p class="version">Picard version 2.14.0-4-g4b09f8e-SNAPSHOT built at 13-58-2017 10:58:19.
         </p>
 
 	</div>

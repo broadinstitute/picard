@@ -364,7 +364,7 @@
 
 		<h1>FilterSamReads</h1>
 
-		<p class="lead">Subsets reads from a SAM or BAM file by applying one of several filters.</p>
+		<p class="lead">Subset read data from a SAM or BAM file</p>
 
 			<h3>Category
 				<small> SAM/BAM</small>
@@ -397,7 +397,7 @@
 					</td>
 					<!--<td>Filter</td> -->
 					<td>null</td>
-					<td>Which filter to use.</td>
+					<td>Filter.</td>
 				</tr>
 				<tr>
 					<td><a href="#--INPUT">--INPUT</a><br />
@@ -424,7 +424,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Interval List File containing intervals that will be included from the OUTPUT if using FILTER=includePairedIntervals</td>
+					<td>Interval List File containing intervals that will be included or excluded from the OUTPUT SAM or BAM file.</td>
 				</tr>
 				<tr>
 					<td><a href="#--JAVASCRIPT_FILE">--JAVASCRIPT_FILE</a><br />
@@ -432,10 +432,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Filters the INPUT with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context: 
- 'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and 
-  'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ).
- all the public members of SamRecord and SAMFileHeader are accessible. A record is accepted if the last value of the script evaluates to true.</td>
+					<td>Filters a SAM or BAM file with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context:  'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and  'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ). Last value of the script should be a boolean to tell wether we should accept or reject the record.</td>
 				</tr>
 				<tr>
 					<td><a href="#--READ_LIST_FILE">--READ_LIST_FILE</a><br />
@@ -443,7 +440,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.</td>
+					<td>Read List File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SORT_ORDER">--SORT_ORDER</a><br />
@@ -459,7 +456,7 @@
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
-					<td>Create .reads files (from the OUTPUT filename) containing names of reads from INPUT *and* OUTPUT (for debugging purposes.)</td>
+					<td>Create .reads files (for debugging purposes)</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -608,7 +605,7 @@
 			 / <small>-</small>
 		</h3>
 		<p class="args">
-			<b>Which filter to use.</b><br />
+			<b>Filter.</b><br />
 			
 		</p>
 			<p>
@@ -663,7 +660,7 @@
 			 / <small>-IL</small>
 		</h3>
 		<p class="args">
-			<b>Interval List File containing intervals that will be included from the OUTPUT if using FILTER=includePairedIntervals</b><br />
+			<b>Interval List File containing intervals that will be included or excluded from the OUTPUT SAM or BAM file.</b><br />
 			
 		</p>
 		<p>
@@ -675,10 +672,7 @@
 			 / <small>-JS</small>
 		</h3>
 		<p class="args">
-			<b>Filters the INPUT with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context: 
- 'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and 
-  'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ).
- all the public members of SamRecord and SAMFileHeader are accessible. A record is accepted if the last value of the script evaluates to true.</b><br />
+			<b>Filters a SAM or BAM file with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context:  'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and  'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ). Last value of the script should be a boolean to tell wether we should accept or reject the record.</b><br />
 			
 		</p>
 		<p>
@@ -729,7 +723,7 @@
 			 / <small>-RLF</small>
 		</h3>
 		<p class="args">
-			<b>File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.</b><br />
+			<b>Read List File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.</b><br />
 			
 		</p>
 		<p>
@@ -864,7 +858,7 @@
 			 / <small>-</small>
 		</h3>
 		<p class="args">
-			<b>Create .reads files (from the OUTPUT filename) containing names of reads from INPUT *and* OUTPUT (for debugging purposes.)</b><br />
+			<b>Create .reads files (for debugging purposes)</b><br />
 			
 		</p>
 		<p>
@@ -881,7 +875,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.0-5-g441d28a-SNAPSHOT built at 12-39-2017 03:39:37.
+        <p class="version">Picard version 2.14.0-4-g4b09f8e-SNAPSHOT built at 13-58-2017 10:58:19.
         </p>
 
 	</div>

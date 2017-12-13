@@ -1,5 +1,5 @@
 {
-  "summary": "Subsets reads from a SAM or BAM file by applying one of several filters.",
+  "summary": "Subset read data from a SAM or BAM file",
   "arguments": [
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and GELI).",
@@ -47,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Which filter to use.",
+      "summary": "Filter.",
       "name": "--FILTER",
       "synonyms": "-",
       "type": "Filter",
@@ -117,7 +117,7 @@
       "options": []
     },
     {
-      "summary": "Interval List File containing intervals that will be included from the OUTPUT if using FILTER\u003dincludePairedIntervals",
+      "summary": "Interval List File containing intervals that will be included or excluded from the OUTPUT SAM or BAM file.",
       "name": "--INTERVAL_LIST",
       "synonyms": "-IL",
       "type": "File",
@@ -132,7 +132,7 @@
       "options": []
     },
     {
-      "summary": "Filters the INPUT with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context: \n \u0027record\u0027 a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and \n  \u0027header\u0027 a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ).\n all the public members of SamRecord and SAMFileHeader are accessible. A record is accepted if the last value of the script evaluates to true.",
+      "summary": "Filters a SAM or BAM file with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context:  \u0027record\u0027 a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and  \u0027header\u0027 a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ). Last value of the script should be a boolean to tell wether we should accept or reject the record.",
       "name": "--JAVASCRIPT_FILE",
       "synonyms": "-JS",
       "type": "File",
@@ -192,7 +192,7 @@
       "options": []
     },
     {
-      "summary": "File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.",
+      "summary": "Read List File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.",
       "name": "--READ_LIST_FILE",
       "synonyms": "-RLF",
       "type": "File",
@@ -363,7 +363,7 @@
       ]
     },
     {
-      "summary": "Create .reads files (from the OUTPUT filename) containing names of reads from INPUT *and* OUTPUT (for debugging purposes.)",
+      "summary": "Create .reads files (for debugging purposes)",
       "name": "--WRITE_READS_FILES",
       "synonyms": "-",
       "type": "boolean",

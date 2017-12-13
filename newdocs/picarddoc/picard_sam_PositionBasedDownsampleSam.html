@@ -371,59 +371,22 @@
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		<h4>Summary</h4>
- Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with DownsampleSam, all the
- reads with the same queryname are either kept or dropped as a unit.
+		Class to downsample a BAM file while respecting that we should either get rid
+ of both ends of a pair or neither end of the pair. In addition, this program uses the read-name
+ and extracts the position within the tile whence the read came from. The downsampling is based on this position.
  <p/>
-
- <h4>Details</h4>
- The downsampling is <b>not</b> random (and there is no random seed). It is deterministically determined by the position
- of each read within its "tile". Specifically, it draws an ellipse that covers a #FRACTION of the total tile's
- area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads
- with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the
- same for all of them. The main concern of this downsampling method is that due to "optical duplicates" downsampling
- randomly can create a result that has a different optical duplciate rate, and therefore a different estimated library
- size (when running mark-duplicates) THe downsampling method done keeps (physically) close reads together, so that (except
- for the reads near the boundary of the circle) optical duplicates are kept or dropped as a group.
-
- By default the program expects the read names to have 5 or 7 fields separated by colons (:) and it takes the last two
- to indicate the x and y coordinates of the reads within the "tile" from whence it was sequenced. See
- ReadNameParser#DEFAULT_READ_NAME_REGEX for more detail. The program traverses the #INPUT twice. First
- to find out the size of each of the tiles, and next to perform the downsampling.
-
- Downsampling invalidates the duplicate flag (as reads marked as duplicates prior to downsampling might not be duplicates
- afterwards.) Thus, the default setting also removes the duplicate information.
-
-<h4>Example</h4>
- <pre>
- java -jar picard.jar PositionBasedDownsampleSam \\
-       I=input.bam \\
-       O=downsampled.bam \\
-       FRACTION=0.1
- <hr/>
- </pre>
-<h4>Caveats</h4>
-
- Note 1:
- This method is <b>technology and read-name dependent</b>. If the read-names do not have coordinate information
- embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines)
- this will not work properly. It has been designed to work with Illumina MiSeq/HiSeq technology and reads-names. Consider
- modifying #READ_NAME_REGEX in other cases.
+ Note 1: This is technology and read-name dependent. If your read-names do not have coordinate information, or if your
+ BAM contains reads from multiple technologies (flowcell versions, sequencing machines) this will not work properly.
+ This has been designed with Illumina MiSeq/HiSeq in mind.
  <p/>
- Note 2:
- The code has been designed to simulate, as accurately as possible, sequencing less, <b>not</b> for getting an exact
- downsampled fraction (Use DownsampleSam for that.) In particular, since the reads may be distributed non-evenly
- within the lanes/tiles, the resulting downsampling percentage will not be accurately determined by the input argument
- #FRACTION.
+ Note 2: The downsampling is _not_ random. It is deterministically dependent on the position of the read within its tile. Specifically,
+ it draws out an ellipse that covers a FRACTION fraction of the area and each of the edges and uses this to determine whether to keep the
+ record. Since reads with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the same for all of them.
  <p/>
- Note 3:
- Consider running MarkDuplicates after downsampling in order to "expose" the duplicates whose representative has
+ Finally, the code has been designed to simulate sequencing less as accurately as possible, not for getting an exact downsample fraction.
+ In particular, since the reads may be distributed non-evenly within the lanes/tiles, the resulting downsampling percentage will not be accurately
+ determined by the input argument FRACTION. One should re-MarkDuplicates after downsampling in order to "expose" the duplicates whose representative has
  been downsampled away.
- Note 4:
- Due to the way the downsampling it performed, it assumes a uniform distribution of reads in the flowcell. This is violated
- if one uses an input that was already downsampled with PositionBasedDownsampleSam. To guard against this, a
- PG record is placed in the header ouf the output and if the input is found to contain this record, the program will
- abort.
 
 
 				<h3>PositionBasedDownsampleSam specific arguments</h3>
@@ -462,7 +425,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The output, downsampled, SAM or BAM file.</td>
+					<td>The output, downsampled, SAM or BAM file to write.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -474,14 +437,6 @@
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Allow Downsampling again despite this being a bad idea with possibly unexpected results.</td>
-				</tr>
-				<tr>
-					<td><a href="#--READ_NAME_REGEX">--READ_NAME_REGEX</a><br />
-								&nbsp;<em>-</em>
-					</td>
-					<!--<td>String</td> -->
-					<td><optimized capture of last three ':' separated fields as numeric values></td>
-					<td>Regular expression that can be used to parse read names in the incoming SAM file. Read names are parsed to extract three variables: tile/region, x coordinate and y coordinate. The x and y coordinates are used to determine the downsample decision. Set this option to null to disable optical duplicate detection, e.g. for RNA-seq The regular expression should contain three capture groups for the three variables, in order. It must match the entire read name. Note that if the default regex is specified, a regex match is not actually done, but instead the read name  is split on colon character. For 5 element names, the 3rd, 4th and 5th elements are assumed to be tile, x and y values. For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values.</td>
 				</tr>
 				<tr>
 					<td><a href="#--REMOVE_DUPLICATE_INFORMATION">--REMOVE_DUPLICATE_INFORMATION</a><br />
@@ -710,7 +665,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>The output, downsampled, SAM or BAM file.</b><br />
+			<b>The output, downsampled, SAM or BAM file to write.</b><br />
 			
 		</p>
 		<p>
@@ -729,18 +684,6 @@
 		<p>
 		<span class="label label-info ">Boolean</span>
 			&nbsp;<span class="label">false</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--READ_NAME_REGEX">--READ_NAME_REGEX </a>
-			 / <small>-</small>
-		</h3>
-		<p class="args">
-			<b>Regular expression that can be used to parse read names in the incoming SAM file. Read names are parsed to extract three variables: tile/region, x coordinate and y coordinate. The x and y coordinates are used to determine the downsample decision. Set this option to null to disable optical duplicate detection, e.g. for RNA-seq The regular expression should contain three capture groups for the three variables, in order. It must match the entire read name. Note that if the default regex is specified, a regex match is not actually done, but instead the read name  is split on colon character. For 5 element names, the 3rd, 4th and 5th elements are assumed to be tile, x and y values. For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label"><optimized capture of last three ':' separated fields as numeric values></span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE </a>
@@ -872,7 +815,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.0-5-g441d28a-SNAPSHOT built at 12-39-2017 03:39:37.
+        <p class="version">Picard version 2.14.0-4-g4b09f8e-SNAPSHOT built at 13-58-2017 10:58:19.
         </p>
 
 	</div>

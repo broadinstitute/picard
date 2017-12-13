@@ -62,7 +62,7 @@
       "options": []
     },
     {
-      "summary": "The cross-check metrics file to be clustered",
+      "summary": "The cross-check metrics file to be clustered.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -107,7 +107,7 @@
       "options": []
     },
     {
-      "summary": "Optional output file to write metrics to. Default is to write to stdout.",
+      "summary": "Output file to write metrics to. Will write to stdout if null.",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",
@@ -257,7 +257,7 @@
       ]
     }
   ],
-  "description": "Program to check that all (read-)groups within the set of input files appear to come from the same\n individual. Can be used to cross-check libraries, samples, or files.",
+  "description": "\u003ch4\u003eSummary\u003c/h4\u003e\n Clusters the results from a CrosscheckFingerprints run according to the LOD score. The resulting metric file\n can be used to assist diagnosing results from CrosscheckFingerprints. It clusters the connectivity graph between the\n different groups. Two groups are connected if they have a LOD score greater than the #LOD_THRESHOLD.\n\n\n \u003ch4\u003eDetails\u003c/h4\u003e\n The results of running CrosscheckFingerprints can be difficult to analyze, especially when many groups are\n related (meaning LOD greater than #LOD_THRESHOLD) in non-transitive manner (A is related to B, B is related to C,\n but A doesn\u0027t seem to be related to C.) ClusterCrosscheckMetrics clusters the metrics from CrosscheckFingerprints\n so that all the groups in a cluster are related to each other either directly, or indirectly (thus A, B and C would\n end up in one cluster.) Two samples can only be in two different clusters if all the samples from these two clusters\n do not get high LOD scores when compared to each other.\n\n \u003ch4\u003eExample\u003c/h4\u003e\n \u003cpre\u003e\n     java -jar picard.jar ClusterCrosscheckMetrics \\\\ \u003chr /\u003e\n              INPUT\u003dsample.crosscheck_metrics \\\\ \u003chr /\u003e\n              LOD_THRESHOLD\u003d3 \\\\ \u003chr /\u003e\n              OUTPUT\u003dsample.clustered.crosscheck_metrics\n \u003c/pre\u003e\n\n The resulting file, consists of the ClusteredCrosscheckMetric class and contains the original crosscheck metric\n values, for groups that end-up in the same clusters (regardless of LOD score of each comparison). In addition it notes\n the ClusteredCrosscheckMetric#CLUSTER identifier and the size of the cluster (in ClusteredCrosscheckMetric#CLUSTER_SIZE.)\n Groups that do not have high LOD scores with any other group (including\n itself!) will not be included in the metric file. Note that cross-group comparisons are not included in the metric file.",
   "name": "ClusterCrosscheckMetrics",
   "group": "Fingerprinting Tools"
 }

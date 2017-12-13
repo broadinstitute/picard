@@ -371,30 +371,7 @@
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		This tool adjusts the coordinates in an interval list on one reference to its homologous interval list on another
- reference, based on a chain file that describes the correspondence between the two references. It is based on the
- UCSC liftOver tool (see: http://genome.ucsc.edu/cgi-bin/hgLiftOver) and uses a UCSC chain file to guide its operation.
- It accepts both Picard interval_list files or VCF files as interval inputs.
- <br />
- <h4>Usage example:</h4>
- <pre>
- java -jar picard.jar LiftOverIntervalList \\<br />
-       I=input.interval_list \\<br />
-       O=output.interval_list \\<br />
-       SD=reference_sequence.dict \\<br />
-       CHAIN=build.chain
- </pre>
- <hr />
- <h4>Return codes</h4>
- If all the intervals lifted over successfully, program will return 0. It will return 1 otherwise.
-
- <h4>Caveats</h4>
- Intervals are "lifted" in their entirety, but they might intersect (a "hit") with multiple chain-blocks which would attempt to
- place it in different places. In this case, The interval is lifted over using the first hit that passes the threshold
- of #MIN_LIFTOVER_PCT. For large enough #MIN_LIFTOVER_PCT this is non-ambiguous, but if one uses small values of #MIN_LIFTOVER_PCT
- (perhaps in order to increase the rate of successful hits...) the liftover could end up going to the smaller of two
- good hits. On the other hand, if none of the hits pass the threshold a warning will be emitted and the interval will
- not be lifted.
+		
 
 
 				<h3>LiftOverIntervalList specific arguments</h3>
@@ -417,7 +394,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Chain file that guides the LiftOver process.</td>
+					<td>Chain file that guides LiftOver.</td>
 				</tr>
 				<tr>
 					<td><a href="#--INPUT">--INPUT</a><br />
@@ -425,7 +402,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The input Interval list that is to be lifted over.</td>
+					<td>Interval list to be lifted over.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -433,7 +410,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The output interval list file.</td>
+					<td>Where to write lifted-over interval list.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SEQUENCE_DICTIONARY">--SEQUENCE_DICTIONARY</a><br />
@@ -441,7 +418,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Sequence dictionary to place in the output interval list. (This should be the dictionary of the target reference.)</td>
+					<td>Sequence dictionary to write into the output interval list.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -452,7 +429,7 @@
 					</td>
 					<!--<td>double</td> -->
 					<td>0.95</td>
-					<td>Minimum percentage of bases in each input interval that must map to output interval for liftover of that interval to occur. If the program fails to find a good target for an interval, a warning will be emitted and the interval will be dropped from the output. </td>
+					<td>Minimum percentage of bases in each input interval that must map to output interval.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -563,7 +540,7 @@
 			 / <small>-</small>
 		</h3>
 		<p class="args">
-			<b>Chain file that guides the LiftOver process.</b><br />
+			<b>Chain file that guides LiftOver.</b><br />
 			
 		</p>
 		<p>
@@ -626,7 +603,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>The input Interval list that is to be lifted over.</b><br />
+			<b>Interval list to be lifted over.</b><br />
 			
 		</p>
 		<p>
@@ -653,7 +630,7 @@
 			 / <small>-</small>
 		</h3>
 		<p class="args">
-			<b>Minimum percentage of bases in each input interval that must map to output interval for liftover of that interval to occur. If the program fails to find a good target for an interval, a warning will be emitted and the interval will be dropped from the output. </b><br />
+			<b>Minimum percentage of bases in each input interval that must map to output interval.</b><br />
 			
 		</p>
 		<p>
@@ -667,7 +644,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>The output interval list file.</b><br />
+			<b>Where to write lifted-over interval list.</b><br />
 			
 		</p>
 		<p>
@@ -704,7 +681,7 @@
 			 / <small>-SD</small>
 		</h3>
 		<p class="args">
-			<b>Sequence dictionary to place in the output interval list. (This should be the dictionary of the target reference.)</b><br />
+			<b>Sequence dictionary to write into the output interval list.</b><br />
 			
 		</p>
 		<p>
@@ -806,7 +783,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.0-5-g441d28a-SNAPSHOT built at 12-39-2017 03:39:37.
+        <p class="version">Picard version 2.14.0-4-g4b09f8e-SNAPSHOT built at 13-58-2017 10:58:19.
         </p>
 
 	</div>

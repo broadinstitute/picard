@@ -1,5 +1,5 @@
 {
-  "summary": "Sorts a SAM or BAM file.  ",
+  "summary": "Sorts a SAM or BAM file. ",
   "arguments": [
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and GELI).",

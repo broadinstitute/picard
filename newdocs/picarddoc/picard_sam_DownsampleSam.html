@@ -364,64 +364,16 @@
 
 		<h1>DownsampleSam</h1>
 
-		<p class="lead">Downsample a SAM or BAM file. </p>
+		<p class="lead">Downsample a SAM or BAM file.  </p>
 
 			<h3>Category
 				<small> SAM/BAM</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		<h4>Summary</h4>
- This tool applies a downsampling algorithm to a SAM or BAM file to retain only a (deterministically random) subset of
- the reads. Reads from the same template (e.g. read-pairs, secondary and supplementary reads) are all either kept or
- discarded as a unit, with the goal of retaining reads from #PROBABILITY * input <b>templates</b>. While this
- will usually result in approximately #PROBABILITY * input reads being retained also, for very small probabilities
- this may not be the case.
-
- A number of different downsampling strategies are supported using the #STRATEGY option:
- <ul>
- <li>ConstantMemory:   htsjdk.samtools.DownsamplingIteratorFactory#CONSTANT_MEMORY_DESCRPTION</li>
- <li>HighAccuracy:     htsjdk.samtools.DownsamplingIteratorFactory#HIGH_ACCURACY_DESCRIPTION</li>
- <li>Chained:          "Attempts to provide a compromise strategy that offers some of the advantages of both the ConstantMemory and HighAccuracy strategies.
- Uses a ConstantMemory strategy to downsample the incoming stream to approximately the desired proportion, and then a HighAccuracy
- strategy to finish. Works in a single pass, and will provide accuracy close to (but often not as good as) HighAccuracy while requiring
- memory proportional to the set of reads emitted from the ConstantMemory strategy to the HighAccuracy strategy. Works well when downsampling
- large inputs to small proportions (e.g. downsampling hundreds of millions of reads and retaining only 2%. Should be accurate 99.9% of the time
- when the input contains >= 50,000 templates (read names). For smaller inputs, HighAccuracy is recommended instead."
- </ul>
-
- The number of records written can be output to a QualityYieldMetrics metrics file via the #METRICS_FILE.
-
- <h4>Usage examples:</h4>
- <h3>Downsample file, keeping about 10% of the reads</h3>
- <pre>
- java -jar picard.jar DownsampleSam \\
-       I=input.bam \\
-       O=downsampled.bam \\
-       P=0.1
- <hr/>
- </pre>
- <h3>Downsample file, keeping 2% of the reads </h3>
- <pre>
- java -jar picard.jar DownsampleSam \\
-       I=input.bam \\
-       O=downsampled.bam \\
-       STRATEGY=Chained \\
-       P=0.02 \\
-       ACCURACY=0.0001
- </pre>
- <hr />
- </pre>
- <h3>Downsample file, keeping 0.001% of the reads (may require more memory)</h3>
- <pre>
- java -jar picard.jar DownsampleSam \\
-       I=input.bam \\
-       O=downsampled.bam \\
-       STRATEGY=HighAccuracy \\
-       P=0.00001 \\
-       ACCURACY=0.0000001
- </pre>
- <hr />
+		Class to randomly downsample a BAM file while respecting that we should either retain or discard
+ all of the reads for a template - i.e. all reads with the same name, whether first or second of
+ pair, secondary or supplementary, all travel together.
 
 
 				<h3>DownsampleSam specific arguments</h3>
@@ -471,7 +423,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The file to write metrics to (of type QualityYieldMetrics)</td>
+					<td>The file to write metrics to (QualityYieldMetrics)</td>
 				</tr>
 				<tr>
 					<td><a href="#--PROBABILITY">--PROBABILITY</a><br />
@@ -487,7 +439,7 @@
 					</td>
 					<!--<td>Integer</td> -->
 					<td>1</td>
-					<td>Random seed used for deterministic results. Setting to null will cause multiple invocations to produce different results.</td>
+					<td>Random seed to use if deterministic behavior is desired.  Setting to null will cause multiple invocations to produce different results.</td>
 				</tr>
 				<tr>
 					<td><a href="#--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE</a><br />
@@ -697,7 +649,7 @@
 			 / <small>-M</small>
 		</h3>
 		<p class="args">
-			<b>The file to write metrics to (of type QualityYieldMetrics)</b><br />
+			<b>The file to write metrics to (QualityYieldMetrics)</b><br />
 			
 		</p>
 		<p>
@@ -748,7 +700,7 @@
 			 / <small>-R</small>
 		</h3>
 		<p class="args">
-			<b>Random seed used for deterministic results. Setting to null will cause multiple invocations to produce different results.</b><br />
+			<b>Random seed to use if deterministic behavior is desired.  Setting to null will cause multiple invocations to produce different results.</b><br />
 			
 		</p>
 		<p>
@@ -886,7 +838,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.0-5-g441d28a-SNAPSHOT built at 12-39-2017 03:39:37.
+        <p class="version">Picard version 2.14.0-4-g4b09f8e-SNAPSHOT built at 13-58-2017 10:58:19.
         </p>
 
 	</div>
