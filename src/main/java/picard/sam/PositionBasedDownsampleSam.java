@@ -62,7 +62,7 @@ import java.util.Map;
  *
  * By default the program expects the read names to have 5 or 7 fields separated by colons (:) and it takes the last two
  * to indicate the x and y coordinates of the reads within the "tile" from whence it was sequenced. See
- * {@link ReadNameParser#DEFAULT_READ_NAME_REGEX} for more detail. The program traverses the {@link #INPUT} twice! First
+ * {@link ReadNameParser#DEFAULT_READ_NAME_REGEX} for more detail. The program traverses the {@link #INPUT} twice. First
  * to find out the size of each of the tiles, and next to perform the downsampling.
  *
  * Downsampling invalidates the duplicate flag (as reads marked as duplicates prior to downsampling might not be duplicates
@@ -102,21 +102,57 @@ import java.util.Map;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        summary = "Class to downsample a BAM file while respecting that we should either get rid of both ends of a pair or neither \n" +
-                "end of the pair. In addition, this program uses the read-name and extracts the position within the tile whence \n" +
-                "the read came from. The downsampling is based on this position. Results with the exact same input will produce the \n" +
-                "same results.\n" +
-                "\n" +
-                "Note 1: This is technology and read-name dependent. If your read-names do not have coordinate information, or if your\n" +
-                "BAM contains reads from multiple technologies (flowcell versions, sequencing machines) this will not work properly. \n" +
-                "This has been designed with Illumina MiSeq/HiSeq in mind.\n" +
-                "Note 2: The downsampling is not random. It is deterministically dependent on the position of the read within its tile.\n" +
-                "Note 3: Downsampling twice with this program is not supported.\n" +
-                "Note 4: You should call MarkDuplicates after downsampling.\n" +
-                "\n" +
-                "Finally, the code has been designed to simulate sequencing less as accurately as possible, not for getting an exact downsample \n" +
-                "fraction. In particular, since the reads may be distributed non-evenly within the lanes/tiles, the resulting downsampling \n" +
-                "percentage will not be accurately determined by the input argument FRACTION.",
+      summary = "<h4>Summary</h4>\n" +
+              "Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with DownsampleSam, all the " +
+              "reads with the same queryname are either kept or dropped as a unit." +
+              "\n\n " +
+              "Details\n" +
+              "The downsampling is _not random (and there is no random seed). It is deterministically determined by the position " +
+              "of each read within its \"tile\". Specifically, it draws an ellipse that covers a FRACTION of the total tile's " +
+              "area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads " +
+              "with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the " +
+              "same for all of them. The main concern of this downsampling method is that due to \"optical duplicates\" downsampling " +
+              "randomly can create a result that has a different optical duplciate rate, and therefore a different estimated library " +
+              "size (when running mark-duplicates) THe downsampling method done keeps (physically) close reads together, so that (except " +
+              "for the reads near the boundary of the circle) optical duplicates are kept or dropped as a group. " +
+              "By default the program expects the read names to have 5 or 7 fields separated by colons (:) and it takes the last two " +
+              "to indicate the x and y coordinates of the reads within the \"tile\" from whence it was sequenced. See " +
+              "DEFAULT_READ_NAME_REGEX for more detail. The program traverses the INPUT twice. First " +
+              "to find out the size of each of the tiles, and next to perform the downsampling. " +
+              "Downsampling invalidates the duplicate flag (as reads marked as duplicates prior to downsampling might not be duplicates " +
+              "afterwards.) Thus, the default setting also removes the duplicate information. " +
+              "\n\n" +
+              "Example\n\n" +
+
+              "java -jar picard.jar PositionBasedDownsampleSam \\\n" +
+              "      I=input.bam \\\n" +
+              "      O=downsampled.bam \\\n" +
+              "      FRACTION=0.1\n" +
+              "\n" +
+
+              "Caveats\n\n" +
+              "Note 1: " +
+              "This method is <b>technology and read-name dependent</b>. If the read-names do not have coordinate information " +
+              "embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines) " +
+              "this will not work properly. It has been designed to work with Illumina MiSeq/HiSeq technology and reads-names. Consider " +
+              "modifying {@link #READ_NAME_REGEX} in other cases. " +
+              "\n\n" +
+              "Note 2: " +
+              "The code has been designed to simulate, as accurately as possible, sequencing less, <b>not</b> for getting an exact " +
+              "downsampled fraction (Use {@link DownsampleSam} for that.) In particular, since the reads may be distributed non-evenly " +
+              "within the lanes/tiles, the resulting downsampling percentage will not be accurately determined by the input argument " +
+              "FRACTION. " +
+              "\n\n"+
+              "Note 3:" +
+              "Consider running {@link MarkDuplicates} after downsampling in order to \"expose\" the duplicates whose representative has " +
+              "been downsampled away." +
+              "\n\n" +
+              "Note 4:" +
+              "Due to the way the downsampling it performed, it assumes a uniform distribution of reads in the flowcell. This is violated " +
+              "if one uses an input that was already downsampled with PositionBasedDownsampleSam. To guard against this, a " +
+              "PG record is placed in the header ouf the output and if the input is found to contain this record, the program will " +
+              "abort.",
+
         oneLineSummary = "Downsample a SAM or BAM file to retain a subset of the reads based on the reads location in each tile in the flowcell.",
         programGroup = SamOrBam.class)
 @DocumentedFeature

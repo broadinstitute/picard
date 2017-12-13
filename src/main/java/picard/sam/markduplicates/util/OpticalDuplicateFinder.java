@@ -50,7 +50,7 @@ public class OpticalDuplicateFinder extends ReadNameParser {
 
     /**
      * Sets the size of a set that is big enough to log progress about.
-     * Defaults to {@value OpticalDuplicateFinder#DEFAULT_BIG_DUPLICATE_SET_SIZE}
+     * Defaults to {@value picard.sam.markduplicates.util.OpticalDuplicateFinder#DEFAULT_BIG_DUPLICATE_SET_SIZE}
      *
      * @param bigDuplicateSetSize the size of a set that is big enough to log progress about
      */
@@ -60,7 +60,7 @@ public class OpticalDuplicateFinder extends ReadNameParser {
 
     /**
      * Sets the size of a set that is too big to process.
-     * Defaults to {@value OpticalDuplicateFinder#DEFAULT_MAX_DUPLICATE_SET_SIZE}
+     * Defaults to {@value picard.sam.markduplicates.util.OpticalDuplicateFinder#DEFAULT_MAX_DUPLICATE_SET_SIZE}
      *
      * @param maxDuplicateSetSize the size of a set that is too big enough to process
      */
@@ -72,7 +72,8 @@ public class OpticalDuplicateFinder extends ReadNameParser {
     }
 
     /**
-     * Uses the default duplicate distance {@value OpticalDuplicateFinder#DEFAULT_OPTICAL_DUPLICATE_DISTANCE} and the default read name regex
+     * Uses the default duplicate distance {@link OpticalDuplicateFinder#DEFAULT_OPTICAL_DUPLICATE_DISTANCE}
+     * ({@value picard.sam.markduplicates.util.OpticalDuplicateFinder#DEFAULT_OPTICAL_DUPLICATE_DISTANCE}) and the default read name regex
      * {@link ReadNameParser#DEFAULT_READ_NAME_REGEX}.
      */
     public OpticalDuplicateFinder() {

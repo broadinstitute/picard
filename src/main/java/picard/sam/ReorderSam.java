@@ -52,7 +52,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Reorders a SAM/BAM input file according to the order of contigs in a second reference sequence
+ * Reorders a SAM/BAM input file according to the order of contigs in a second reference file.
+ *
+ * <h4>Summary</h4>
+ * Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary,
+ * ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file,
+ * as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new
+ * reference are dropped. Runs substantially faster if the input is an indexed BAM file.
+ *
+ * <h4>Example</h4>
+ * <pre>
+ *     java -jar picard.jar ReorderSam \\
+ *          INPUT=sample.bam \\
+ *          OUTPUT=reordered.bam \\
+ *          REFERENCE=reference_with_different_order.fasta
+ *
+ * </pre>
+ *
  *
  * @author mdepristo
  */
@@ -60,19 +76,28 @@ import java.util.Map;
         summary = "Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary, " +
                 "ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file, " +
                 "as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new " +
-                "reference are dropped. Runs substantially faster if the input is an indexed BAM file.",
-        oneLineSummary = "Reorders reads in a SAM or BAM file to match ordering in reference",
+                "reference are dropped. Runs substantially faster if the input is an indexed BAM file." +
+                "\n" +
+                "Example<\n" +
+                "\n" +
+                " java -jar picard.jar ReorderSam \\\n" +
+                "      INPUT=sample.bam \\\n" +
+                "      OUTPUT=reordered.bam \\\n" +
+                "      REFERENCE=reference_with_different_order.fasta\n" +
+                "      \n" +
+                " ",
+        oneLineSummary = "Reorders reads in a SAM or BAM file to match ordering in a second reference file.",
         programGroup = SamOrBam.class)
 @DocumentedFeature
 public class ReorderSam extends CommandLineProgram {
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file (bam or sam) to extract reads from.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file (SAM or BAM) to extract reads from.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file (bam or sam) to write extracted reads to.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file (SAM or BAM) to write extracted reads to.")
     public File OUTPUT;
 
-    @Argument(shortName = "S", doc = "If true, then allows only a partial overlap of the BAM contigs with the new reference " +
+    @Argument(shortName = "S", doc = "If true, then allows only a partial overlap of the original contigs with the new reference " +
             "sequence contigs.  By default, this tool requires a corresponding contig in the new " +
             "reference for each read contig")
     public boolean ALLOW_INCOMPLETE_DICT_CONCORDANCE = false;
@@ -84,13 +109,8 @@ public class ReorderSam extends CommandLineProgram {
 
     private final Log log = Log.getInstance(ReorderSam.class);
 
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        new ReorderSam().instanceMainWithExit(argv);
-    }
-
     // return a custom argument collection because this tool uses the (required) argument name
-    // "REFERENCE" instead of "REFERENCE_SEQUENCE"
+    // "REFERENCE" instead of "REFERENCE_SEQUENCE" which is not a required argument.
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         return new ReorderSamReferenceArgumentCollection();
@@ -99,7 +119,7 @@ public class ReorderSam extends CommandLineProgram {
     public static class ReorderSamReferenceArgumentCollection implements ReferenceArgumentCollection {
         @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, common=false,
                 doc = "Reference sequence to reorder reads to match.  " +
-                        "A sequence dictionary corresponding to the reference fasta is required.  Create one with CreateSequenceDictionary.jar.")
+                        "A sequence dictionary corresponding to the reference fasta is required.  Create one with CreateSequenceDictionary.")
         public File REFERENCE;
 
         @Override
@@ -115,8 +135,8 @@ public class ReorderSam extends CommandLineProgram {
 
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
 
-        ReferenceSequenceFile reference = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
-        SAMSequenceDictionary refDict = reference.getSequenceDictionary();
+        final ReferenceSequenceFile reference = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
+        final SAMSequenceDictionary refDict = reference.getSequenceDictionary();
 
         if (refDict == null) {
             log.error("No reference sequence dictionary found. Aborting.  You can create a sequence dictionary for the reference fasta using CreateSequenceDictionary.jar.");
@@ -126,28 +146,28 @@ public class ReorderSam extends CommandLineProgram {
 
         printDictionary("SAM/BAM file", in.getFileHeader().getSequenceDictionary());
         printDictionary("Reference", refDict);
-        Map<Integer, Integer> newOrder = buildSequenceDictionaryMap(refDict, in.getFileHeader().getSequenceDictionary());
+        final Map<Integer, Integer> newOrder = buildSequenceDictionaryMap(refDict, in.getFileHeader().getSequenceDictionary());
 
         // has to be after we create the newOrder
-        SAMFileHeader outHeader = in.getFileHeader().clone();
+        final SAMFileHeader outHeader = in.getFileHeader().clone();
         outHeader.setSequenceDictionary(refDict);
 
         log.info("Writing reads...");
         if (in.hasIndex()) {
-            final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, true, OUTPUT);
+            try( final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, true, OUTPUT)) {
 
-            // write the reads in contig order
-            for (final SAMSequenceRecord contig : refDict.getSequences()) {
-                final SAMRecordIterator it = in.query(contig.getSequenceName(), 0, 0, false);
-                writeReads(out, it, newOrder, contig.getSequenceName());
+                // write the reads in contig order
+                for (final SAMSequenceRecord contig : refDict.getSequences()) {
+                    final SAMRecordIterator it = in.query(contig.getSequenceName(), 0, 0, false);
+                    writeReads(out, it, newOrder, contig.getSequenceName());
+                }
+                // don't forget the unmapped reads
+                writeReads(out, in.queryUnmapped(), newOrder, "unmapped");
             }
-            // don't forget the unmapped reads
-            writeReads(out, in.queryUnmapped(), newOrder, "unmapped");
-            out.close();
         } else {
-            SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, false, OUTPUT);
-            writeReads(out, in.iterator(), newOrder, "All reads");
-            out.close();
+            try (final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, false, OUTPUT)) {
+                writeReads(out, in.iterator(), newOrder, "All reads");
+            }
         }
 
         // cleanup
