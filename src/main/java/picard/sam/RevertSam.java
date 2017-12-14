@@ -62,10 +62,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Reverts a SAM file by optionally restoring original quality scores and by removing
@@ -164,6 +161,11 @@ public class RevertSam extends CommandLineProgram {
             "the program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.")
     public double MAX_DISCARD_FRACTION = 0.01;
 
+    @Argument(doc = "If SANITIZE=true keep the first record when we find more than one record with the same name for R1/R2/unpaired reads respectively. " +
+            "For paired end reads, keeps only the first R1 and R2 found respectively, and discards all unpaired reads. " +
+            "Duplicates do not refer to the duplicate flag in the FLAG field, but instead reads with the same name.")
+    public boolean KEEP_FIRST_DUPLICATE = false;
+
     @Argument(doc = "The sample alias to use in the reverted output file.  This will override the existing " +
             "sample alias in the file and is used only if all the read groups in the input file have the " +
             "same sample alias ", shortName = StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME, optional = true)
@@ -189,6 +191,8 @@ public class RevertSam extends CommandLineProgram {
         final List<String> errors = new ArrayList<>();
         ValidationUtil.validateSanitizeSortOrder(SANITIZE, SORT_ORDER, errors);
         ValidationUtil.validateOutputParams(OUTPUT_BY_READGROUP, OUTPUT, OUTPUT_MAP, errors);
+
+        if (!SANITIZE && KEEP_FIRST_DUPLICATE) errors.add("KEEP_FIRST_DUPLICATE cannot be used without SANITIZE");
 
         if (!errors.isEmpty()) {
             return errors.toArray(new String[errors.size()]);
@@ -362,36 +366,58 @@ public class RevertSam extends CommandLineProgram {
         for (final PeekableIterator<SAMRecord> iterator : iterators) {
             readNameLoop:
             while (iterator.hasNext()) {
-                final List<SAMRecord> recs = fetchByReadName(iterator);
+                List<SAMRecord> recs = fetchByReadName(iterator);
                 total += recs.size();
 
                 // Check that all the reads have bases and qualities of the same length
                 for (final SAMRecord rec : recs) {
                     if (rec.getReadBases().length != rec.getBaseQualities().length) {
-                        log.debug("Discarding " + recs.size() + " reads with name " + rec.getReadName() + " for mismatching bases and quals length.");
+                        log.debug("Discarding ", recs.size(), " reads with name ", rec.getReadName(), " for mismatching bases and quals length.");
                         discarded += recs.size();
                         continue readNameLoop;
                     }
                 }
 
-                // Check that if the first read is marked as unpaired that there is in fact only one read
-                if (!recs.get(0).getReadPairedFlag() && recs.size() > 1) {
-                    log.debug("Discarding " + recs.size() + " reads with name " + recs.get(0).getReadName() + " because they claim to be unpaired.");
-                    discarded += recs.size();
-                    continue readNameLoop;
+                // Get the number of R1s, R2s, and unpaired reads respectively.
+                int firsts = 0, seconds = 0, unpaired = 0;
+                SAMRecord firstRecord = null, secondRecord = null, unpairedRecord = null;
+                for (final SAMRecord rec : recs) {
+                    if (!rec.getReadPairedFlag()) {
+                        if (unpairedRecord == null) unpairedRecord = rec;
+                        ++unpaired;
+                    }
+                    if (rec.getFirstOfPairFlag()) {
+                        if (firstRecord == null) firstRecord = rec;
+                        ++firsts;
+                    }
+                    if (rec.getSecondOfPairFlag()) {
+                        if (secondRecord == null) secondRecord = rec;
+                        ++seconds;
+                    }
                 }
 
-                // Check that if we have paired reads there is exactly one first of pair and one second of pair
-                if (recs.get(0).getReadPairedFlag()) {
-                    int firsts = 0, seconds = 0, unpaired = 0;
-                    for (final SAMRecord rec : recs) {
-                        if (!rec.getReadPairedFlag()) ++unpaired;
-                        if (rec.getFirstOfPairFlag()) ++firsts;
-                        if (rec.getSecondOfPairFlag()) ++seconds;
-                    }
+                // If we have paired reads, then check that there is exactly one first of pair and one second of pair.
+                // Otherwise, check that we have only one unpaired read.
+                if (firsts > 0 || seconds > 0) { // if we have any paired reads
+                    if (firsts != 1 || seconds != 1) { // if we do not have exactly one R1 and one R2
+                        if (KEEP_FIRST_DUPLICATE && firsts >= 1 && seconds >= 1) { // if we have at least one R1 and one R2, we can discard all but the first encountered
+                            discarded += recs.size() - 2;
+                            recs = Arrays.asList(firstRecord, secondRecord);
+                        }  else {
+                            log.debug("Discarding ", recs.size(), " reads with name ", recs.get(0).getReadName(), " because  we found ", firsts, " R1s ", seconds, " R2s and ", unpaired, " unpaired reads.");
+                            discarded += recs.size();
+                            continue readNameLoop;
+                        }
 
-                    if (unpaired > 0 || firsts != 1 || seconds != 1) {
-                        log.debug("Discarding " + recs.size() + " reads with name " + recs.get(0).getReadName() + " because pairing information in corrupt.");
+                    }
+                }
+                else if (unpaired > 1) { // only unpaired reads, and we have too many
+                    if (KEEP_FIRST_DUPLICATE) {
+                        discarded += recs.size() - 1;
+                        recs = Collections.singletonList(unpairedRecord);
+                    }
+                    else {
+                        log.debug("Discarding ", recs.size(), " reads with name ", recs.get(0).getReadName(), " because we found ", unpaired, " unpaired reads.");
                         discarded += recs.size();
                         continue readNameLoop;
                     }
