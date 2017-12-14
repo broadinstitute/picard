@@ -35,9 +35,6 @@ import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.filter.FilteringSamIterator;
-import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.FastqQualityFormat;
 import htsjdk.samtools.util.IOUtil;
@@ -317,7 +314,7 @@ public class RevertSam extends CommandLineProgram {
         } else {
             final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat;
             try {
-                readGroupToFormat = createReadGroupFormatMap(inHeader, REFERENCE_SEQUENCE, VALIDATION_STRINGENCY, INPUT, RESTORE_ORIGINAL_QUALITIES);
+                readGroupToFormat = createReadGroupFormatMap(sorter, RESTORE_ORIGINAL_QUALITIES);
             } catch (final PicardException e) {
                 log.error(e.getMessage());
                 return -1;
@@ -580,30 +577,27 @@ public class RevertSam extends CommandLineProgram {
         return outHeader;
     }
 
-    private Map<SAMReadGroupRecord, FastqQualityFormat> createReadGroupFormatMap(
-            final SAMFileHeader inHeader,
-            final File referenceSequence,
-            final ValidationStringency validationStringency,
-            final File input,
-            final boolean restoreOriginalQualities) {
+    private Map<SAMReadGroupRecord,FastqQualityFormat> createReadGroupFormatMap(RevertSamSorter sorter, boolean restoreOriginalQualities) {
 
         final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<>();
 
-        // Figure out the quality score encoding scheme for each read group.
-        for (final SAMReadGroupRecord rg : inHeader.getReadGroups()) {
-            final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceSequence).validationStringency(validationStringency).open(input);
-            final SamRecordFilter filter = new SamRecordFilter() {
-                public boolean filterOut(final SAMRecord rec) {
-                    return !rec.getReadGroup().getId().equals(rg.getId());
-                }
+        List<PeekableIterator<SAMRecord>> iterators = sorter.iterators();
+        for (PeekableIterator<SAMRecord> iterator : iterators) {
+            SAMReadGroupRecord readGroup = iterator.peek().getReadGroup();
 
-                public boolean filterOut(final SAMRecord first, final SAMRecord second) {
-                    throw new UnsupportedOperationException();
-                }
-            };
-            readGroupToFormat.put(rg, QualityEncodingDetector.detect(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, new FilteringSamIterator(reader.iterator(), filter), restoreOriginalQualities));
-            CloserUtil.close(reader);
+            if (readGroup == null) {
+                continue;
+            }
+
+            readGroupToFormat.put(
+                    readGroup,
+                    QualityEncodingDetector.detect(
+                            QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE,
+                            iterator,
+                            restoreOriginalQualities)
+            );
         }
+
         for (final SAMReadGroupRecord r : readGroupToFormat.keySet()) {
             log.info("Detected quality format for " + r.getReadGroupId() + ": " + readGroupToFormat.get(r));
         }
@@ -687,12 +681,23 @@ public class RevertSam extends CommandLineProgram {
                 for (final Map.Entry<String, SAMFileHeader> entry : headerMap.entrySet()) {
                     final String readGroupId = entry.getKey();
                     final SAMFileHeader outHeader = entry.getValue();
-                    final SortingCollection<SAMRecord> sorter = SortingCollection.newInstance(SAMRecord.class, new BAMRecordCodec(outHeader), new SAMRecordQueryNameComparator(), maxRecordsInRam);
+                    final SortingCollection<SAMRecord> sorter =
+                            SortingCollection.newInstance(
+                                    SAMRecord.class,
+                                    new BAMRecordCodec(outHeader),
+                                    new SAMRecordQueryNameComparator(),
+                                    maxRecordsInRam);
+                    sorter.setDestructiveIteration(false);
                     sorterMap.put(readGroupId, sorter);
                 }
                 singleSorter = null;
             } else {
-                singleSorter = SortingCollection.newInstance(SAMRecord.class, new BAMRecordCodec(singleOutHeader), new SAMRecordQueryNameComparator(), maxRecordsInRam);
+                singleSorter = SortingCollection.newInstance(
+                                    SAMRecord.class,
+                                    new BAMRecordCodec(singleOutHeader),
+                                    new SAMRecordQueryNameComparator(),
+                                    maxRecordsInRam);
+                singleSorter.setDestructiveIteration(false);
             }
         }
 
@@ -727,7 +732,7 @@ public class RevertSam extends CommandLineProgram {
     static class ValidationUtil {
 
         static void validateSanitizeSortOrder(final boolean sanitize, final SAMFileHeader.SortOrder sortOrder, final List<String> errors) {
-            if (sanitize && sortOrder != SAMFileHeader.SortOrder.queryname) {
+          if (sanitize && sortOrder != SAMFileHeader.SortOrder.queryname) {
                 errors.add("SORT_ORDER must be queryname when sanitization is enabled with SANITIZE=true.");
             }
         }
