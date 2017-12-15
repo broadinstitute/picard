@@ -177,6 +177,7 @@ public class CollectWgsMetricsWithNonZeroCoverageTest extends CommandLineProgram
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
+        Assert.assertTrue(chartOutFile.exists());
 
         final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
@@ -194,5 +195,52 @@ public class CollectWgsMetricsWithNonZeroCoverageTest extends CommandLineProgram
         Assert.assertEquals(nonZeroMetrics.MEAN_COVERAGE, 3.0);
     }
 
+    @Test
+    public void testNoCoverage() throws IOException {
+        final File reference = new File("testdata/picard/quality/chrM.reference.fasta");
+        final File testSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
+        testSamFile.deleteOnExit();
 
+        final SAMRecordSetBuilder setBuilder = CollectWgsMetricsTestUtils.createTestSAMBuilder(reference, READ_GROUP_ID, SAMPLE, PLATFORM, LIBRARY);
+        setBuilder.setReadLength(10);
+        for (int i = 0; i < 3; i++){
+            setBuilder.addPair("query:" + i, 0, 1, 30, true, true, "10M", "10M", false, true, 60);
+        }
+
+        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile);
+        setBuilder.forEach(writer::addAlignment);
+        writer.close();
+
+        final File outfile = File.createTempFile("testPoorQualityBases-metrics", ".txt");
+        outfile.deleteOnExit();
+
+        final File chartOutFile = File.createTempFile("testPoorQualityBases",".pdf");
+        chartOutFile.deleteOnExit();
+
+        final String[] args = new String[] {
+                "INPUT="  + testSamFile.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+                "INCLUDE_BQ_HISTOGRAM=true",
+                "COVERAGE_CAP=3",
+                "CHART_OUTPUT=" + chartOutFile.getAbsolutePath()
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        Assert.assertTrue(chartOutFile.exists());
+
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> output = new MetricsFile<>();
+        output.read(new FileReader(outfile));
+
+        final CollectWgsMetrics.WgsMetrics metrics = output.getMetrics().get(0);
+        final CollectWgsMetrics.WgsMetrics nonZeroMetrics = output.getMetrics().get(1);
+
+        // Some metrics should not change between with and without zero
+        Assert.assertEquals(nonZeroMetrics.PCT_EXC_BASEQ, metrics.PCT_EXC_BASEQ);
+        Assert.assertEquals(nonZeroMetrics.PCT_EXC_CAPPED, metrics.PCT_EXC_CAPPED);
+
+        // Other metrics change when we ignore the zero depth bin
+        Assert.assertEquals(nonZeroMetrics.GENOME_TERRITORY, 0);
+        Assert.assertEquals(nonZeroMetrics.MEAN_COVERAGE, Double.NaN);
+    }
 }
