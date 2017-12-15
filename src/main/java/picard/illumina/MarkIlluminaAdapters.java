@@ -53,6 +53,7 @@ import picard.util.ClippingUtility;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static picard.util.IlluminaUtil.IlluminaAdapterPair;
 
@@ -136,6 +137,9 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
             "were tied with the adapters being kept).")
     public int NUM_ADAPTERS_TO_KEEP = AdapterMarker.DEFAULT_NUM_ADAPTERS_TO_KEEP;
 
+    @Option(doc = "Add this number of Ns to each adapter (end of 5' and start of 3' adapters) to account for inline molecular barcodes")
+    public int MOLECULAR_BARCODE_LENGTH = 0;
+
     private static final Log log = Log.getInstance(MarkIlluminaAdapters.class);
 
     // Stock main method
@@ -171,9 +175,21 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
         final AdapterPair[] adapters;
         {
             final List<AdapterPair> tmp = new ArrayList<AdapterPair>();
-            tmp.addAll(ADAPTERS);
-            if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
-                tmp.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
+            if (MOLECULAR_BARCODE_LENGTH > 0) {
+                final String molecularBarcodeMask = StringUtil.repeatCharNTimes('N', MOLECULAR_BARCODE_LENGTH);
+                ADAPTERS.forEach(adapter -> {
+                    tmp.add(new CustomAdapterPair(adapter.get5PrimeAdapter() + molecularBarcodeMask, molecularBarcodeMask + adapter.get3PrimeAdapter()));
+                });
+
+                if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
+                    tmp.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER + molecularBarcodeMask, molecularBarcodeMask + THREE_PRIME_ADAPTER));
+                }
+            }
+            else {
+                tmp.addAll(ADAPTERS);
+                if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
+                    tmp.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
+                }
             }
             adapters = tmp.toArray(new AdapterPair[tmp.size()]);
         }
