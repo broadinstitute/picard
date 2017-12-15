@@ -16,20 +16,39 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 /**
- * A program that is designed to act as a large memory buffer between processes that are
- * connected with unix pipes where one or more processes either produce or consume their
+ * Acts as a large memory buffer between processes that are
+ * connected with unix pipes for the case that one or more processes produces or consumes their
  * input or output in bursts.  By inserting a large memory buffer between such processes
- * each process can run at full speed and the bursts can be smoothed out.
+ * each process can run at full speed and the bursts can be smoothed out by the memory buffer.
  *
- * For example:
- *   java -jar SamToFastq.jar F=my.fastq INTERLEAVE=true | java -jar FifoBuffer | bwa mem -t 8 ...
+ * <h4>Example</h4>
+ * <pre>
+ *   java -jar SamToFastq.jar \
+ *      F=my.fastq \
+ *      INTERLEAVE=true |
+ *   java -jar FifoBuffer |
+ *   bwa mem -t 8 \dev\stdin output.bam
+ *  </pre>
  *
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        summary = "Provides a large, configurable, FIFO buffer that can be used to buffer input and output " +
-                "streams between programs with a buffer size that is larger than that offered by native unix FIFOs (usually 64k).",
-        oneLineSummary = "FIFO buffer used to buffer input and output streams with a customizable buffer size ",
+        summary = "Provides a large, FIFO buffer that can be used to buffer input and output " +
+                "streams between programs.",
+        oneLineSummary =
+                "Acts as a large memory buffer between processes that are " +
+                "connected with unix pipes for the case that one or more processes produces or consumes their " +
+                "input or output in bursts.  By inserting a large memory buffer between such processes " +
+                "each process can run at full speed and the bursts can be smoothed out by the memory buffer. " +
+                "\n" +
+                "<h4>Example</h4>" +
+                "<pre>" +
+                "  java -jar SamToFastq.jar \\" +
+                "     F=my.fastq \\" +
+                "     INTERLEAVE=true |" +
+                "  java -jar FifoBuffer |" +
+                "  bwa mem -t 8 \\dev\\stdin output.bam" +
+                " </pre>",
         programGroup = None.class
 )
 @DocumentedFeature

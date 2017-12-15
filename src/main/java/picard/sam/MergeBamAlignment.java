@@ -40,7 +40,7 @@ import picard.sam.util.ReadOutputCommandLineProgram;
 import java.io.File;
 import java.util.*;
 
-/**
+/** MARK
  * A command-line tool to merge BAM/SAM alignment info from a third-party aligner with the data in an
  * unmapped BAM file, producing a third BAM file that has alignment data and all the additional data
  * from the unmapped BAM

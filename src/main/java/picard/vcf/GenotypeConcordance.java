@@ -52,7 +52,7 @@ import static htsjdk.variant.variantcontext.VariantContext.Type.*;
 import static htsjdk.variant.vcf.VCFConstants.MISSING_VALUE_v4;
 import static picard.vcf.GenotypeConcordanceStateCodes.*;
 
-/**
+/** MARK
  * Calculates the concordance between genotype data for two samples in two different VCFs - one being considered the truth (or reference)
  * the other being the call.  The concordance is broken into separate results sections for SNPs and indels.  Summary and detailed statistics
  * are reported

@@ -64,7 +64,7 @@ import java.util.TreeSet;
 
 import static htsjdk.variant.variantcontext.writer.Options.INDEX_ON_THE_FLY;
 
-/**
+/** MARK
  * Finds mendelian violations of all types within a VCF.  Takes in VCF or BCF and a pedigree file and looks
  * for high confidence calls where the genotype of the offspring is incompatible with the genotypes of the
  * parents.  Key features:

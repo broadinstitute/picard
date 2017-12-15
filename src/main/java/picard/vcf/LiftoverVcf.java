@@ -26,7 +26,7 @@ import java.text.NumberFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
+/** MARK
  * Tool for lifting over a VCF to another genome build and producing a properly header'd,
  * sorted and indexed VCF in one go.
  *

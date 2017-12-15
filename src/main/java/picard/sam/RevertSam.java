@@ -67,7 +67,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
+/** Mark
  * Reverts a SAM file by optionally restoring original quality scores and by removing
  * all alignment information.
  */
