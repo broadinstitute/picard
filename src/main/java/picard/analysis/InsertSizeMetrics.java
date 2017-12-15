@@ -40,6 +40,9 @@ public class InsertSizeMetrics extends MultilevelMetrics {
     /** The MEDIAN insert size of all paired end reads where both ends mapped to the same chromosome. */
     public double MEDIAN_INSERT_SIZE;
 
+    /** The MODE insert size of all paired end reads where both ends mapped to the same chromosome. */
+    public double MODE_INSERT_SIZE;
+
     /**
      * The median absolute deviation of the distribution.  If the distribution is essentially normal then
      * the standard deviation can be estimated as ~1.4826 * MAD.
@@ -89,6 +92,8 @@ public class InsertSizeMetrics extends MultilevelMetrics {
     public int WIDTH_OF_80_PERCENT;
     /** The "width" of the bins, centered around the median, that encompass 90% of all read pairs. */
     public int WIDTH_OF_90_PERCENT;
+    /** The "width" of the bins, centered around the median, that encompass 95% of all read pairs. */
+    public int WIDTH_OF_95_PERCENT;
     /** The "width" of the bins, centered around the median, that encompass 100% of all read pairs. */
     public int WIDTH_OF_99_PERCENT;
 }
