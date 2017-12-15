@@ -43,9 +43,9 @@ import java.util.*;
  * <h4>Usage example:</h4>
  * <h3>Create an interval list of intervals that do not contain any N blockS for use with haplotype caller on short reads</h3>
  * <pre>
- * java -jar picard.jar ScatterIntervalsByNs \\<br />
- *       R=reference_sequence.fasta \\<br />
- *       OT=BOTH \\<br />
+ * java -jar picard.jar ScatterIntervalsByNs \\
+ *       R=reference_sequence.fasta \\
+ *       OT=BOTH \\
  *       O=output.interval_list
  * </pre>
  *
@@ -81,9 +81,9 @@ public class ScatterIntervalsByNs extends CommandLineProgram {
             "<h4>Usage example:</h4>" +
             "<h3>Create an interval list of intervals that do not contain any N blocks for use with haplotype caller on short reads</h3>" +
             "<pre>" +
-            "java -jar picard.jar ScatterIntervalsByNs \\\\<br />\n" +
-            "      REFERENCE=reference_sequence.fasta \\\\<br />\n" +
-            "      OUTPUT_TYPE=ACGT \\\\<br />\n" +
+            "java -jar picard.jar ScatterIntervalsByNs \\\n" +
+            "      REFERENCE=reference_sequence.fasta \\\n" +
+            "      OUTPUT_TYPE=ACGT \\\n" +
             "      OUTPUT=output.interval_list\n" +
             "</pre>\n" +
             "\n";

@@ -60,9 +60,9 @@ import java.util.stream.Collectors;
  *
  * <h4>Example</h4>
  * <pre>
- *     java -jar picard.jar ClusterCrosscheckMetrics \\ <hr />
- *              INPUT=sample.crosscheck_metrics \\ <hr />
- *              LOD_THRESHOLD=3 \\ <hr />
+ *     java -jar picard.jar ClusterCrosscheckMetrics \\
+ *              INPUT=sample.crosscheck_metrics \\
+ *              LOD_THRESHOLD=3 \\
  *              OUTPUT=sample.clustered.crosscheck_metrics
  * </pre>
  *
@@ -78,7 +78,7 @@ import java.util.stream.Collectors;
         summary = "Clusters the results from a CrosscheckFingerprints run according to the LOD score. The resulting metric file " +
                 "can be used to diagnose results from running CrosscheckFingerprints. It clusters the connectivity graph between the " +
                 "different groups. Two groups are connected if they have a LOD score greater than the LOD_THRESHOLD. ",
-        oneLineSummary = "Clusters the results of a CrosscheckFingerprints run by LOD score.",
+        oneLineSummary = "Clusters the results of a CrosscheckFingerprints run by LOD score",
         programGroup = Fingerprinting.class
 )
 @DocumentedFeature

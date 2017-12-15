@@ -19,68 +19,89 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 /**
- * A tool for performing various {@link IntervalList} manipulations.
+ * Performs various {@link IntervalList} manipulations.
  *
  * <h4>Summary</h4>
  * This tool offers multiple interval list file manipulation capabilities, including: sorting,
  * merging, subtracting, padding, and other set-theoretic operations. The default action
  * is to merge and sort the intervals provided in the {@link #INPUT}s. Other options, e.g. interval subtraction, are
- * controlled by the arguments." +
- * <br />
+ * controlled by the arguments.
  * <br />
  * Both {@link IntervalList} and VCF files are accepted as input. {@link IntervalList} should be denoted with the extension
- * {@value IOUtil#INTERVAL_LIST_FILE_EXTENSION}, while a VCF must have one of {@value IOUtil#VCF_FILE_EXTENSION}, {@value IOUtil#COMPRESSED_VCF_FILE_EXTENSION},
- * {@value IOUtil#BCF_FILE_EXTENSION}. When VCF file is used as input, each variant is translated into an using its reference allele or the END
+ * {@value htsjdk.samtools.util.IOUtil#INTERVAL_LIST_FILE_EXTENSION}, while a VCF must have one of {@value htsjdk.samtools.util.IOUtil#VCF_FILE_EXTENSION}, {@value htsjdk.samtools.util.IOUtil#COMPRESSED_VCF_FILE_EXTENSION},
+ * {@value htsjdk.samtools.util.IOUtil#BCF_FILE_EXTENSION}. When VCF file is used as input, each variant is translated into an using its reference allele or the END
  * INFO annotation (if present) to determine the extent of the interval.
  *
  * {@link IntervalListTools} can also "scatter" the resulting interval-list into many interval-files. This can be useful
  * for creating multiple interval lists for scattering an analysis over.
  *
+ * <h4>Details</h4>
+ *  The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and
+ *  other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,
+ *  the file then contains records, one per line in text format with the following
+ * values tab-separated:
+ * <pre>
+ *      - Sequence name (SN) <br />
+ *      - Start position (1-based)** <br />
+ *      - End position (1-based, end inclusive) <br />
+ *      - Strand (either + or -) <br />
+ *      - Interval name (ideally unique names for intervals)
+ * </pre>
+ * The coordinate system  is such that the first base or position in a sequence is position 1, and both the start
+ * and the end positions are included in the interval.
  *
- * <h4>Usage examples</h4>" +
- * <h3>Combine the intervals from two interval lists</h3>
+ * For Example:
  * <pre>
- * java -jar picard.jar IntervalListTools \\<br />
- *       ACTION=CONCAT \\ <br />
- *       I=input.interval_list \\<br />
- *       I=input_2.interval_list \\<br />
- *       O=new.interval_list
+ * @HD	VN:1.0
+ * @SQ	SN:chr1	LN:501
+ * @SQ	SN:chr2	LN:401
+ * chr1	1	100	+	starts at the first base of the contig and covers 100 bases
+ * chr2	100	100	+	interval with exactly one base
  * </pre>
- * <hr />
- * <h3>Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting
- * intervals</h3>
- * <pre>
- * java -jar picard.jar IntervalListTools \\<br />
- *       ACTION=CONCAT \\ <br />
- *       SORT=true \\ <br />
- *       UNIQUE=true \\ <br />
- *       I=input.interval_list \\<br />
- *       I=input_2.interval_list \\<br />
- *       O=new.interval_list
- * </pre>
- * <hr />
- * <h3>Subtract the intervals in SECOND_INPUT from those in INPUT</h3>
- * <pre>
- * java -jar picard.jar IntervalListTools \\<br />
- *       ACTION=SUBTRACT \\ <br />
- *       I=input.interval_list \\<br />
- *       SI=input_2.interval_list \\<br />
- *       O=new.interval_list
- * </pre>
- * <hr />
- * <h3>Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:</h3>
- * <pre>
- * java -jar picard.jar IntervalListTools \\<br />
- *       ACTION=INTERSECT \\ <br />
- *       I=input1.interval_list \\<br />
- *       I=input2.interval_list \\<br />
- *       SI=input3.interval_list \\<br />
- *       O=new.interval_list
- * </pre>
- * <hr />
  *
- * Note: The coordinate system of interval_list files is such that the first base or position in a sequence is position \"1\"."
- * (As per the <a href="https://samtools.github.io/hts-specs/SAMv1.pdf">SAM spec</a>.)
+ * <hr/>
+ *
+ * <h4>Usage examples</h4>
+ * <h3>1.Combine the intervals from two interval lists:</h3>
+ * <pre>
+ * java -jar picard.jar IntervalListTools \\
+ *       ACTION=CONCAT \\
+ *       I=input.interval_list \\
+ *       I=input_2.interval_list \\
+ *       O=new.interval_list
+ * </pre>
+ *
+ * <h3>2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting
+ * intervals:</h3>
+ * <pre>
+ * java -jar picard.jar IntervalListTools \\
+ *       ACTION=CONCAT \\
+ *       SORT=true \\
+ *       UNIQUE=true \\
+ *       I=input.interval_list \\
+ *       I=input_2.interval_list \\
+ *       O=new.interval_list
+ * </pre>
+ *
+ * <h3>3. Subtract the intervals in SECOND_INPUT from those in INPUT:</h3>
+ * <pre>
+ * java -jar picard.jar IntervalListTools \\
+ *       ACTION=SUBTRACT \\
+ *       I=input.interval_list \\
+ *       SI=input_2.interval_list \\
+ *       O=new.interval_list
+ * </pre>
+ *
+ * <h3>4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:</h3>
+ * <pre>
+ * java -jar picard.jar IntervalListTools \\
+ *       ACTION=INTERSECT \\
+ *       I=input1.interval_list \\
+ *       I=input2.interval_list \\
+ *       SI=input3.interval_list \\
+ *       O=new.interval_list
+ * </pre>
+ *
  *
  * @author Tim Fennell
  */
@@ -91,33 +112,90 @@ import java.util.*;
 )
 @DocumentedFeature
 public class IntervalListTools extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "A tool for performing various IntervalList manipulations";
-    static final String USAGE_DETAILS = "This tool offers multiple interval list file manipulation capabilities include sorting, " +
-            "merging, subtracting, padding, customizing, and other set-theoretic operations. If given one or more inputs, the default " +
-            "operation is to merge and sort them.  Other options e.g. interval subtraction are controlled by the arguments. The tool " +
-            "lists intervals with respect to a reference sequence." +
-            "<br /><br />" +
-            "Both interval_list and VCF files are accepted as input. The interval_list file format is relatively simple" +
-            " and reflects the SAM alignment format to a degree.  A SAM style header must be present in the file that " +
-            "lists the sequence records against which the intervals are described.  After the header, the file then" +
-            " contains records, one per line in text format with the following" +
-            " values tab-separated: " +
-            "<pre>" +
-            "     -Sequence name (SN) <br />" +
-            "     -Start position (1-based)** <br />" +
-            "     -End position (1-based, end inclusive) <br />" +
-            "     -Strand (either + or -) <br />" +
-            "     -Interval name (ideally unique names for intervals)" +
-            "</pre>" +
-            "The coordinate system of interval_list files is such that the first base or position in a sequence is position \"1\"." +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar IntervalListTools \\<br />" +
-            "      I=input.interval_list \\<br />" +
-            "      SI=input_2.interval_list \\<br />" +
-            "      O=new.interval_list" +
-            "</pre>" +
-            "<hr />";
+    static final String USAGE_SUMMARY ="A tool for performing various IntervalList manipulations\n";
+    static final String USAGE_DETAILS =
+                    " <h4>Summary</h4>" +
+                    "This tool offers multiple interval list file manipulation capabilities, including: sorting, " +
+                    "merging, subtracting, padding, and other set-theoretic operations. The default action " +
+                    "is to merge and sort the intervals provided in the INPUTs. Other options, e.g. interval subtraction, are " +
+                    "controlled by the arguments." +
+                    "<br />" +
+                    "Both IntervalList and VCF files are accepted as input. IntervalList should be denoted with the extension " +
+                    ".interval_list, while a VCF must have one of .vcf, .vcf.gz, .bcf " +
+                    "When VCF file is used as input, each variant is translated into an using its reference allele or the END " +
+                    "INFO annotation (if present) to determine the extent of the interval. " +
+                    "\n" +
+                    "IntervalListTools can also \"scatter\" the resulting interval-list into many interval-files. This can be useful " +
+                    "for creating multiple interval lists for scattering an analysis over.\n" +
+                    "\n" +
+                    " <h4>Details</h4> " +
+                    "The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and " +
+                    "other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header, " +
+                    "the file then contains records, one per line in text format with the following" +
+                    "values tab-separated: \n" +
+                    "\n"+
+                    " - Sequence name (SN) \n" +
+                    " - Start position (1-based)\n" +
+                    " - End position (1-based, inclusive)\n" +
+                    " - Strand (either + or -)\n" +
+                    " - Interval name (ideally unique names for intervals)\n" +
+                    "\n"+
+                    "The coordinate system is such that the first base in a sequence has position 1, and both the start " +
+                    "and the end positions are included in the interval.\n" +
+                    "\n" +
+                    "For Example:" +
+                    "<pre>" +
+                    "@HD\tVN:1.0\n" +
+                    "@SQ\tSN:chr1\tLN:501\n" +
+                    "@SQ\tSN:chr2\tLN:401\n" +
+                    "chr1\t1\t100\t+\tstarts at the first base of the contig and covers 100 bases\n" +
+                    "chr2\t100\t100\t+\tinterval with exactly one base\n" +
+                    "</pre>" +
+                    "\n" +
+                    "\n" +
+                    "<h4>Usage Examples</h4>" +
+                    "<h3>1. Combine the intervals from two interval lists:</h3>" +
+                    "<pre>" +
+                    "java -jar picard.jar IntervalListTools \\\n" +
+                    "      ACTION=CONCAT \\\n" +
+                    "      I=input.interval_list \\\n" +
+                    "      I=input_2.interval_list \\\n" +
+                    "      O=new.interval_list" +
+                    "</pre>" +
+                    "" +
+                    " <h3>2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting " +
+                    "intervals:</h3>" +
+                    " <pre>" +
+                    " java -jar picard.jar IntervalListTools \\\n" +
+                    "       ACTION=CONCAT \\\n" +
+                    "       SORT=true \\\n" +
+                    "       UNIQUE=true \\\n" +
+                    "       I=input.interval_list \\\n" +
+                    "       I=input_2.interval_list \\\n" +
+                    "       O=new.interval_list" +
+                    " </pre>" +
+                    "" +
+                    " <h3>3. Subtract the intervals in SECOND_INPUT from those in INPUT</h3>" +
+                    " <pre>" +
+                    " java -jar picard.jar IntervalListTools \\\n" +
+                    "       ACTION=SUBTRACT \\\n" +
+                    "       I=input.interval_list \\\n" +
+                    "       SI=input_2.interval_list \\\n" +
+                    "       O=new.interval_list" +
+                    " </pre>" +
+                    "" +
+                    " <h3>4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:</h3>" +
+                    " <pre>" +
+                    " java -jar picard.jar IntervalListTools \\\n" +
+                    "       ACTION=INTERSECT \\\n" +
+                    "       I=input1.interval_list \\\n" +
+                    "       I=input2.interval_list \\\n" +
+                    "       SI=input3.interval_list \\\n" +
+                    "       O=new.interval_list" +
+                    " </pre>" +
+                    "" +
+                    "";
+
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more interval lists. If multiple interval lists are provided the output is the" +
                     "result of merging the inputs. Supported formats are interval_list and VCF.", minElements = 1)

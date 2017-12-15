@@ -66,16 +66,16 @@ import java.util.List;
  * fill the fields of the classes {@link FingerprintingSummaryMetrics} and {@link FingerprintingDetailMetrics}.
  * The output files may be specified individually using the SUMMARY_OUTPUT and DETAIL_OUTPUT options.
  * Alternatively the OUTPUT option may be used instead to give the base of the two output
- * files, with the summary metrics having a file extension ".{@value CheckFingerprint#FINGERPRINT_SUMMARY_FILE_SUFFIX}",
- * and the detail metrics having a file extension ".{@value CheckFingerprint#FINGERPRINT_DETAIL_FILE_SUFFIX}".
+ * files, with the summary metrics having a file extension ".{@value #FINGERPRINT_SUMMARY_FILE_SUFFIX}",
+ * and the detail metrics having a file extension ".{@value #FINGERPRINT_DETAIL_FILE_SUFFIX}".
  * <p>
  * <h4>Example</h4>
  * <h3>Comparing a bam against known genotypes:</h3>
  * <pre>
- *     java -jar picard.jar CheckFingerprint \\ <br />
- *          INPUT=sample.bam \\ <br />
- *          GENOTYPES=sample_genotypes.vcf <br />
- *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\ <br />
+ *     java -jar picard.jar CheckFingerprint \\
+ *          INPUT=sample.bam \\
+ *          GENOTYPES=sample_genotypes.vcf
+ *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\
  *          OUTPUT=sample_fingerprinting
  * </pre>
  * <p>
@@ -109,10 +109,10 @@ public class CheckFingerprint extends CommandLineProgram {
 
     static final String USAGE_DETAILS = "Computes a fingerprint from the supplied input file (SAM/BAM or VCF) file and " +
             "compares it to the expected fingerprint genotypes provided. The key output is a LOD score " +
-            "which represents the relative likelihood of the sequence data originating from the same " +
+            "that represents the relative likelihood of the sequence data originating from the same " +
             "sample as the genotypes vs. from a random sample.  Two outputs are produced: (1) a summary " +
             "metrics file that gives metrics of fingerprint match when comparing the input to a set of " +
-            "genotypes for the expected sample.  at the single sample level (if the input was a VCF) or at the read " +
+            "genotypes for the expected sample at the single sample level (if the input was a VCF) or at the read " +
             "level (lane or index within a lane) (if the input was a SAM/BAM) and (2) a detail metrics file that " +
             "contains an individual SNP/Haplotype comparison within a fingerprint comparison.  The two " +
             "files may be specified individually using the SUMMARY_OUTPUT and DETAIL_OUTPUT options.  " +

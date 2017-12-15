@@ -35,11 +35,10 @@ public class IntervalListScatterer {
         BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
         /**
          * A scatter approach that differs from {@link Mode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.
-         * <ol>
-         * <li>This approach tries to balance the number of bases in each interval list by estimating the remaining interval lists sizes.  This is
+         *
+         * This approach tries to balance the number of bases in each interval list by estimating the remaining interval lists sizes.  This is
          * computed from the total number of unique bases and the bases we have consumed.  This means that the interval list with the most
-         * number of unique bases is at most the ideal split length larger than the smallest interval list (unique number of bases).</li>
-         * </ol>         
+         * number of unique bases is at most the ideal split length larger than the smallest interval list (unique number of bases).
          */
         BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW
     }
