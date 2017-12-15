@@ -169,7 +169,7 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                             if (percentCovered >= 0.7 && metrics.WIDTH_OF_70_PERCENT == 0) metrics.WIDTH_OF_70_PERCENT = distance;
                             if (percentCovered >= 0.8 && metrics.WIDTH_OF_80_PERCENT == 0) metrics.WIDTH_OF_80_PERCENT = distance;
                             if (percentCovered >= 0.9 && metrics.WIDTH_OF_90_PERCENT == 0) metrics.WIDTH_OF_90_PERCENT = distance;
-                            if (percentCovered >= 0.9 && metrics.WIDTH_OF_95_PERCENT == 0) metrics.WIDTH_OF_95_PERCENT = distance;
+                            if (percentCovered >= 0.95 && metrics.WIDTH_OF_95_PERCENT == 0) metrics.WIDTH_OF_95_PERCENT = distance;
                             if (percentCovered >= 0.99 && metrics.WIDTH_OF_99_PERCENT == 0) metrics.WIDTH_OF_99_PERCENT = distance;
 
                             --low;
