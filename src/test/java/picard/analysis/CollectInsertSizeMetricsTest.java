@@ -23,6 +23,7 @@
  */
 package picard.analysis;
 
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -32,6 +33,7 @@ import picard.util.RExecutor;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Tests multi-level CollectInsertSizeMetrics
@@ -257,5 +259,83 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
                 "Flags of Chad and Romania");
 
         Assert.assertEquals(rResult, 0);
+    }
+
+    @Test
+    public void testWdithOfMetrics() throws IOException {
+        final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam", TEST_DATA_DIR);
+        testSamFile.deleteOnExit();
+
+        final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true, 100);
+        setBuilder.setReadLength(10);
+
+        final int insertBy = 3; // the # of bases to increase the insert by in the records below.
+        int queryIndex = 0;
+
+        // Create records such that we have 10 records in the 10th through the 90th percentiles, and 5 for the 95th and 99th percentiles.
+        // WIDTH_OF_10_PERCENT through WIDTH_OF_90_PERCENT (90 pairs total))
+        for (int j = 0; j < 9; j++) {
+            for (int i = 0; i < 5; i++, queryIndex++) {
+                setBuilder.addPair("query:" + queryIndex, 0, 1, 50 + j*insertBy, false, false, "10M", "10M", false, true, 60);
+            }
+            for (int i = 0; i < 5; i++, queryIndex++) {
+                setBuilder.addPair("query:" + queryIndex, 0, 1, 50 - j*insertBy, false, false, "10M", "10M", false, true, 60);
+            }
+        }
+        // WIDTH_OF_95_PERCENT through WIDTH_OF_99_PERCENT (10 pairs total)
+        for (int j = 9; j < 11; j++) {
+            for (int i = 0; i < 3; i++, queryIndex++) {
+                setBuilder.addPair("query:" + queryIndex, 0, 1, 50 + j*insertBy, false, false, "10M", "10M", false, true, 60);
+            }
+            for (int i = 0; i < 2; i++, queryIndex++) {
+                setBuilder.addPair("query:" + queryIndex, 0, 1, 50 - j*insertBy, false, false, "10M", "10M", false, true, 60);
+            }
+        }
+
+        // Add one to make the an odd # of pairs for the median
+        setBuilder.addPair("query:" + queryIndex, 0, 1, 50, false, false, "10M", "10M", false, true, 60);
+
+        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile);
+        setBuilder.forEach(writer::addAlignment);
+        writer.close();
+
+
+        final File outfile = File.createTempFile("test", ".insert_size_metrics");
+        final File pdf     = File.createTempFile("test", ".pdf");
+        outfile.deleteOnExit();
+        pdf.deleteOnExit();
+        final String[] args = new String[] {
+                "INPUT="  + testSamFile.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "Histogram_FILE=" + pdf.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<InsertSizeMetrics, Comparable<?>> output = new MetricsFile<InsertSizeMetrics, Comparable<?>>();
+        output.read(new FileReader(outfile));
+        
+        final List<InsertSizeMetrics> metrics = output.getMetrics();
+        
+        Assert.assertEquals(metrics.size(), 1);
+        
+        final InsertSizeMetrics metric = metrics.get(0);
+
+        Assert.assertEquals(metric.PAIR_ORIENTATION.name(), "FR");
+        Assert.assertEquals((int) metric.MEDIAN_INSERT_SIZE, 59);
+        Assert.assertEquals((int) metric.MODE_INSERT_SIZE, 59);
+        Assert.assertEquals(metric.MIN_INSERT_SIZE, 29);
+        Assert.assertEquals(metric.MAX_INSERT_SIZE, 89);
+        Assert.assertEquals(metric.READ_PAIRS, 101);
+        Assert.assertEquals(metric.WIDTH_OF_10_PERCENT, 1);
+        Assert.assertEquals(metric.WIDTH_OF_20_PERCENT, 1 + insertBy*2);
+        Assert.assertEquals(metric.WIDTH_OF_30_PERCENT, 1 + insertBy*4);
+        Assert.assertEquals(metric.WIDTH_OF_40_PERCENT, 1 + insertBy*6);
+        Assert.assertEquals(metric.WIDTH_OF_50_PERCENT, 1 + insertBy*8);
+        Assert.assertEquals(metric.WIDTH_OF_60_PERCENT, 1 + insertBy*10);
+        Assert.assertEquals(metric.WIDTH_OF_70_PERCENT, 1 + insertBy*12);
+        Assert.assertEquals(metric.WIDTH_OF_80_PERCENT, 1 + insertBy*14);
+        Assert.assertEquals(metric.WIDTH_OF_90_PERCENT, 1 + insertBy*16);
+        Assert.assertEquals(metric.WIDTH_OF_95_PERCENT, 1 + insertBy*18);
+        Assert.assertEquals(metric.WIDTH_OF_99_PERCENT, 1 + insertBy*20);
     }
 }
