@@ -22,7 +22,7 @@ public class TestStringUtilSplit {
         final StopWatch watch = new StopWatch();
         final long stringUtilTime;
         watch.start();
-        for (int i=0; i<ITERATIONS; ++i) {
+        for (int i = 0; i < ITERATIONS; ++i) {
             if (StringUtil.split(TEXT, fields, '\t') > 100) {
                 System.out.println("Mama Mia that's a lot of tokens!!");
             }
@@ -35,7 +35,7 @@ public class TestStringUtilSplit {
         final long tokenizerTime;
 
         watch.start();
-        for (int i=0; i<ITERATIONS; ++i) {
+        for (int i = 0; i < ITERATIONS; ++i) {
             if (split(TEXT, fields, "\t") > 100) {
                 System.out.println("Mama Mia that's a lot of tokens!!");
             }
@@ -43,12 +43,12 @@ public class TestStringUtilSplit {
         watch.stop();
         System.out.println("StringTokenizer took " + watch.getElapsedTime());
         tokenizerTime = watch.getElapsedTime();
-        return (tokenizerTime + 0D) / stringUtilTime;
+        return ((double) tokenizerTime) / stringUtilTime;
     }
 
     public int split(final String s, final String[] tokens, final String token) {
-        final StringTokenizer tokenizer = new StringTokenizer(s, token, false);
-        int i=0;
+        final StringTokenizer tokenizer = new StringTokenizer(s, token);
+        int i = 0;
         while (tokenizer.hasMoreTokens()) {
             tokens[i++] = tokenizer.nextToken();
         }

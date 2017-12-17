@@ -83,8 +83,8 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     @Test(dataProvider = "actionAndTotalBasesData")
     public void testActions(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
         final IntervalList il = tester(action);
-        Assert.assertEquals(il.getBaseCount(), bases, "unexpcted number of bases found.");
-        Assert.assertEquals(il.getIntervals().size(), intervals, "unexpcted number of intervals found.");
+        Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
+        Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
     }
 
     @DataProvider
@@ -104,8 +104,8 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     @Test(dataProvider = "actionAndTotalBasesWithInvertData")
     public void testActionsWithInvert(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
         final IntervalList il = tester(action, true);
-        Assert.assertEquals(il.getBaseCount(), bases, "unexpcted number of bases found.");
-        Assert.assertEquals(il.getIntervals().size(), intervals, "unexpcted number of intervals found.");
+        Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
+        Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
     }
 
     private IntervalList tester(IntervalListTools.Action action) throws IOException {
