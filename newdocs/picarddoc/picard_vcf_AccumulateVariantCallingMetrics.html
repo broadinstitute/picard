@@ -33,6 +33,22 @@
         		<hr>
         		<hr>
         		<hr>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#AlphaTools">Alpha Tools</a>
+							<div id="AlphaTools"
+								<?php echo ($group == 'Alpha Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
+											</li>
+								</ul>
+							</div>
+						</li>
 						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
 							<div id="Fasta"
 								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
@@ -64,6 +80,9 @@
 											</li>
 											<li>
 												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
 											</li>
 								</ul>
 							</div>
@@ -287,6 +306,9 @@
 												<a href="picard_sam_SamToFastq.html">SamToFastq</a>
 											</li>
 											<li>
+												<a href="picard_sam_SetNmAndUqTags.html">SetNmAndUqTags</a>
+											</li>
+											<li>
 												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
 											</li>
 											<li>
@@ -296,10 +318,23 @@
 												<a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a>
 											</li>
 											<li>
+												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
+											</li>
+											<li>
 												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
 											</li>
 											<li>
 												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#UnitTesting">Unit Testing</a>
+							<div id="UnitTesting"
+								<?php echo ($group == 'Unit Testing')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
 											</li>
 								</ul>
 							</div>
@@ -716,7 +751,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.0-4-g4b09f8e-SNAPSHOT built at 13-02-2017 11:02:12.
+        <p class="version">Picard version 2.17.0-SNAPSHOT built at 19-49-2017 11:49:03.
         </p>
 
 	</div>

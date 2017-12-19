@@ -1,5 +1,5 @@
 {
-  "summary": "Writes an interval list based on splitting a reference by Ns.",
+  "summary": "Writes an interval list based on splitting a reference by Ns.  ",
   "arguments": [
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and GELI).",
@@ -270,7 +270,7 @@
       ]
     }
   ],
-  "description": "A Program for breaking up a reference into intervals of alternating regions of N and ACGT bases.\n\n\n \u003cp\u003e\n Used for creating a broken-up interval list that can be used for scattering a variant-calling pipeline in a way that will not cause problems at the edges of the intervals.\n By using large enough N blocks (so that the tools will not be able to anchor on both sides) we can be assured that the results of scattering and gathering the variants with\n the resulting interval list will be the same as calling with one large region.\n\n \u003ch3\u003eInput\u003c/h3\u003e\n \u003cp\u003e A reference file to use for creating the intervals \u003c/p\u003e\n \u003cp\u003e Which type of intervals to emit in the output (Ns only, ACGT only or both)\n \u003cp\u003e An integer indicating the largest number of Ns in a contiguous block that will be \"tolerated\" and not converted into an N block.\u003c/p\u003e\n\n \u003ch3\u003eOutput\u003c/h3\u003e\n \u003cp\u003e\n An interval list (with a sam header) where the names of the intervals are labeled (either N-block or ACGT-block) to indicate what type of block they define.\n \u003c/p\u003e\n\n\n \u003ch4\u003eUsage example:\u003c/h4\u003e\n \u003ch3\u003eCreate an interval list of intervals that do not contain any N blockS for use with haplotype caller on short reads\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar ScatterIntervalsByNs \\\\\u003cbr /\u003e\n       R\u003dreference_sequence.fasta \\\\\u003cbr /\u003e\n       OT\u003dBOTH \\\\\u003cbr /\u003e\n       O\u003doutput.interval_list\n \u003c/pre\u003e\n\n author Yossi Farjoun",
+  "description": "A CLP for breaking up a reference into intervals of Ns and ACGTs bases.\n Used for creating a broken-up interval list for calling WGS.",
   "name": "ScatterIntervalsByNs",
   "group": "Interval Tools"
 }
