@@ -25,14 +25,12 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
@@ -50,9 +48,9 @@ import java.util.Map;
  */
 @CommandLineProgramProperties(
         summary = "Computes the fingerprint genotype likelihoods from the supplied SAM/BAM file and a contamination estimate." +
-                "NOTA BENE: the fingerprint is provided for the contamination (by default) or the main sample. " +
+                "NOTA BENE: the fingerprint is provided for the contamination (by default) for the main sample. " +
                 "It is given as a list of PLs at the fingerprinting sites.",
-        oneLineSummary = "Computes a fingerprint (of the contaminating or contaminated sample) from the supplied SAM/BAM file.",
+        oneLineSummary = "Computes a fingerprint from the supplied SAM/BAM file, given a contamination estimate.",
         programGroup = Fingerprinting.class)
 
 public class IdentifyContaminant extends CommandLineProgram {
@@ -60,29 +58,34 @@ public class IdentifyContaminant extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Name of output fingerprint file (VCF)")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Name of output fingerprint file (VCF).")
     public File OUTPUT;
 
     @Argument(shortName = "H", doc = "A file of haplotype information.")
     public File HAPLOTYPE_MAP;
 
-    @Argument(shortName = "C", doc = "A value of estimated contamination (must be between 0 and 1) in the file. ", optional = false)
+    @Argument(shortName = "C", doc = "A value of estimated contamination (must be between 0 and 1) in the file. ")
     public double CONTAMINATION;
 
-    @Argument(doc = "The sample alias to associate with the resulting fingerprint. Default value is <SAMPLE>-contamination, where <SAMPLE> is extracted from the header.", optional = true)
-    public String SAMPLE_ALIAS;
+    @Argument(doc = "The sample alias to associate with the resulting fingerprint. When null, uses \"<SAMPLE>-contamination\", where <SAMPLE> is extracted from the header.", optional = true)
+    public String SAMPLE_ALIAS = null;
 
-    @Argument(doc = "The maximum number of reads to use as evidence for any given locus", optional = true)
+    @Argument(doc = "The maximum number of reads to use as evidence for any given locus. This is provided as a way to limit the " +
+            "effect that any given locus may have.")
     public int LOCUS_MAX_READS = 200;
 
-    @Argument(doc = "Extract the contaminated fingerprint instead of the contaminant. If true changes the default value of SAMPLE_ALIAS to be the actual sample-id found in the header.", optional = true)
+    @Argument(doc = "Extract a fingerprint for the contaminated sample (instead of the contaminant). Setting to true changes the effect of SAMPLE_ALIAS when null. It names the sample in the VCF <SAMPLE>, using the SM value from the SAM header.")
     public boolean EXTRACT_CONTAMINATED = false;
 
     private final Log log = Log.getInstance(IdentifyContaminant.class);
 
-    // Stock main method
-    public static void main(final String[] args) {
-        new IdentifyContaminant().instanceMainWithExit(args);
+    @Override
+    protected String[] customCommandLineValidation() {
+        if (CONTAMINATION < 0.0 || CONTAMINATION > 1.0) {
+            return new String[]{"Value for CONTAMINATION must be in the range 0-1. Found " + CONTAMINATION};
+
+        }
+        return super.customCommandLineValidation();
     }
 
     @Override
@@ -92,16 +95,8 @@ public class IdentifyContaminant extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 
-        if (CONTAMINATION < 0.0 || CONTAMINATION > 1.0) {
-            final PicardException e = new PicardException("Value for contamination must be in the range 0-1, value received=" + CONTAMINATION);
-
-            log.error(e);
-            throw e;
-        }
-
         final SAMFileHeader header = getHeader();
 
-        checkSingleSample(header);
 
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
 
@@ -115,17 +110,19 @@ public class IdentifyContaminant extends CommandLineProgram {
         }
 
         final Fingerprint results = fingerprintMap.values().iterator().next();
-
+        if (SAMPLE_ALIAS == null) {
+            SAMPLE_ALIAS = getSampleAlias(header);
+        }
         try {
             FingerprintUtils.writeFingerPrint(results, OUTPUT, REFERENCE_SEQUENCE, SAMPLE_ALIAS, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION);
-        } catch(Exception e){
+        } catch (Exception e) {
             log.error(e);
         }
 
         return 0;
     }
 
-    // Return a custom (required)  argument collection
+    // Return a custom (required) Reference Argument Collection
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         return new ReferenceArgumentCollection() {
@@ -149,6 +146,7 @@ public class IdentifyContaminant extends CommandLineProgram {
             throw new IllegalArgumentException("Input file doesn't have a readgroup with an @SM tag: Not supported.");
         }
         final String bamSample = header.getReadGroups().get(0).getSample();
+
         for (int i = 1; i < header.getReadGroups().size(); i++) {
             if (!bamSample.equals(header.getReadGroups().get(i).getSample())) {
                 log.error("File has more than one sample in it (or a null sample): '%s' and '%s'. Not supported.", bamSample, header.getReadGroups().get(i).getSample());
@@ -176,18 +174,5 @@ public class IdentifyContaminant extends CommandLineProgram {
             log.error(e);
         }
         return header;
-    }
-
-    private void checkSingleSample(final SAMFileHeader header) {
-        String sampleInFile = null;
-        for (final SAMReadGroupRecord rec : header.getReadGroups()) {
-            if (sampleInFile == null) {
-                sampleInFile = rec.getSample();
-            } else if (!sampleInFile.equals(rec.getSample())) {
-                final PicardException e = new PicardException("SAM File must not contain data from multiple samples. Found: " + sampleInFile + " and " + rec.getSample());
-                log.error(e);
-                throw e;
-            }
-        }
     }
 }
