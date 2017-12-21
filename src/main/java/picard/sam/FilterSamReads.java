@@ -300,12 +300,18 @@ public class FilterSamReads extends CommandLineProgram {
         if ((FILTER.equals(Filter.includeReadList) ||
                 FILTER.equals(Filter.excludeReadList)) &&
                 READ_LIST_FILE == null) {
-            return new String[]{"A READ_LIST_FILE must be specified when using the " + FILTER.name() + " option"};
+            return new String[]{"A READ_LIST_FILE must be specified when using the " + FILTER.name() + " filter"};
 
         }
 
         if (FILTER.equals(Filter.includePairedIntervals) && INTERVAL_LIST == null) {
-            return new String[]{"A INTERVAL_LIST must be specified when using the " + FILTER.name() + " option"};
+            return new String[]{"A INTERVAL_LIST must be specified when using the " + FILTER.name() + " filter"};
+        }
+
+        if ((FILTER.equals(Filter.includeTagValues) || FILTER.equals(Filter.excludeTagValues)) &&
+                (TAG == null || TAG_VALUE.isEmpty())) {
+            return new String[]{"TAG and TAG_VALUE must be specified when using either the " + Filter.excludeTagValues.name() + " or " +
+                    Filter.includeTagValues.name() + " filter"};
         }
 
         return super.customCommandLineValidation();
