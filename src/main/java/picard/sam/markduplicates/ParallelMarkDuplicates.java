@@ -294,32 +294,33 @@ public class ParallelMarkDuplicates extends MarkDuplicates {
         MarkDuplicatesInstance md1 = mds.get(mdIndex);
         MarkDuplicatesInstance md2 = mds.get(mdIndex + 1);
 
-        CloseableIterator<Map.Entry<String, ReadEndsForMarkDuplicates>> map1Iterator =
-                md1.pairedWithNoMate.iterator();
-        while (map1Iterator.hasNext()) {
-            Map.Entry<String, ReadEndsForMarkDuplicates> entry1 = map1Iterator.next();
-            ReadEndsForMarkDuplicates end1 = entry1.getValue();
-            String key1 = entry1.getKey();
+        try (CloseableIterator<Map.Entry<String, ReadEndsForMarkDuplicates>> map1Iterator =
+                     md1.pairedWithNoMate.iterator()) {
 
-            if (end1.read1ReferenceIndex != sequenceId) {
-                // skip all mates which are not from the current sequence
-                // note: iteration is in arbitrary order
-                continue;
+            while (map1Iterator.hasNext()) {
+                Map.Entry<String, ReadEndsForMarkDuplicates> entry1 = map1Iterator.next();
+                ReadEndsForMarkDuplicates end1 = entry1.getValue();
+                String key1 = entry1.getKey();
+
+                if (end1.read1ReferenceIndex != sequenceId) {
+                    // skip all mates which are not from the current sequence
+                    // note: iteration is in arbitrary order
+                    continue;
+                }
+
+                if (!md2.containsSequenceInProcess(end1.read2ReferenceIndex)) {
+                    md2 = pickMDForReferenceIndex(end1.read2ReferenceIndex);
+                }
+                ReadEndsForMarkDuplicates end2 =
+                        md2.pairedWithNoMate.remove(end1.read1ReferenceIndex, key1);
+
+                if (end2 == null) {
+                    throw new IllegalStateException("Missing of a mate");
+                }
+
+                mergePairToBothMDInstances(md1, md2, end1, end2);
             }
-
-            if (!md2.containsSequenceInProcess(end1.read2ReferenceIndex)) {
-                md2 = pickMDForReferenceIndex(end1.read2ReferenceIndex);
-            }
-            ReadEndsForMarkDuplicates end2 =
-                    md2.pairedWithNoMate.remove(end1.read1ReferenceIndex, key1);
-
-            if (end2 == null) {
-                throw new IllegalStateException("Missing of a mate");
-            }
-
-            mergePairToBothMDInstances(md1, md2, end1, end2);
         }
-        map1Iterator.close();
     }
 
     private MarkDuplicatesInstance pickMDForReferenceIndex(int seqIndex) {
