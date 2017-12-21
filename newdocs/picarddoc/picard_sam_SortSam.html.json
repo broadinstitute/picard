@@ -1,5 +1,5 @@
 {
-  "summary": "Sorts a SAM or BAM file.  ",
+  "summary": "Sorts a SAM or BAM file ",
   "arguments": [
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and GELI).",
@@ -137,7 +137,7 @@
       "options": []
     },
     {
-      "summary": "Sort order of output file",
+      "summary": "Sort order of output file. ",
       "name": "--SORT_ORDER",
       "synonyms": "-SO",
       "type": "SortOrder",
@@ -152,10 +152,6 @@
       "options": [
         {
           "summary": "",
-          "name": "unsorted"
-        },
-        {
-          "summary": "",
           "name": "queryname"
         },
         {
@@ -165,10 +161,6 @@
         {
           "summary": "",
           "name": "duplicate"
-        },
-        {
-          "summary": "",
-          "name": "unknown"
         }
       ]
     },

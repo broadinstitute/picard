@@ -264,21 +264,6 @@
       "options": []
     },
     {
-      "summary": "If true, this tool will not attempt to validate mate information. In general cases, this option should not be used.  However, in cases where samples have very high duplication or chimerism rates (\u003e 10%), the mate validation process often requires extremely large amounts of memory to run, so this flag allows you to forego that check.",
-      "name": "--SKIP_MATE_VALIDATION",
-      "synonyms": "-SMV",
-      "type": "boolean",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "false",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "optional",
-      "options": []
-    },
-    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "-",

@@ -33,22 +33,6 @@
         		<hr>
         		<hr>
         		<hr>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#AlphaTools">Alpha Tools</a>
-							<div id="AlphaTools"
-								<?php echo ($group == 'Alpha Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
-											</li>
-											<li>
-												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
-											</li>
-											<li>
-												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
-											</li>
-								</ul>
-							</div>
-						</li>
 						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
 							<div id="Fasta"
 								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
@@ -80,9 +64,6 @@
 											</li>
 											<li>
 												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
 											</li>
 								</ul>
 							</div>
@@ -306,9 +287,6 @@
 												<a href="picard_sam_SamToFastq.html">SamToFastq</a>
 											</li>
 											<li>
-												<a href="picard_sam_SetNmAndUqTags.html">SetNmAndUqTags</a>
-											</li>
-											<li>
 												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
 											</li>
 											<li>
@@ -318,23 +296,10 @@
 												<a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a>
 											</li>
 											<li>
-												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
-											</li>
-											<li>
 												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
 											</li>
 											<li>
 												<a href="picard_sam_ViewSam.html">ViewSam</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#UnitTesting">Unit Testing</a>
-							<div id="UnitTesting"
-								<?php echo ($group == 'Unit Testing')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
 											</li>
 								</ul>
 							</div>
@@ -497,14 +462,6 @@
 					<!--<td>File</td> -->
 					<td>null</td>
 					<td>Output file or standard out if missing</td>
-				</tr>
-				<tr>
-					<td><a href="#--SKIP_MATE_VALIDATION">--SKIP_MATE_VALIDATION</a><br />
-								&nbsp;<em>-SMV</em>
-					</td>
-					<!--<td>boolean</td> -->
-					<td>false</td>
-					<td>If true, this tool will not attempt to validate mate information. In general cases, this option should not be used.  However, in cases where samples have very high duplication or chimerism rates (> 10%), the mate validation process often requires extremely large amounts of memory to run, so this flag allows you to forego that check.</td>
 				</tr>
 				<tr>
 					<td><a href="#--VALIDATE_INDEX">--VALIDATE_INDEX</a><br />
@@ -840,18 +797,6 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--SKIP_MATE_VALIDATION">--SKIP_MATE_VALIDATION </a>
-			 / <small>-SMV</small>
-		</h3>
-		<p class="args">
-			<b>If true, this tool will not attempt to validate mate information. In general cases, this option should not be used.  However, in cases where samples have very high duplication or chimerism rates (> 10%), the mate validation process often requires extremely large amounts of memory to run, so this flag allows you to forego that check.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">boolean</span>
-			&nbsp;<span class="label">false</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
 			 / <small>-</small>
 		</h3>
@@ -957,7 +902,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.0-SNAPSHOT built at 19-49-2017 11:49:03.
+        <p class="version">Picard version 2.14.0-5-ga0201bf-SNAPSHOT built at 21-43-2017 09:43:15.
         </p>
 
 	</div>
