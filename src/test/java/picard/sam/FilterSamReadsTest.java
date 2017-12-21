@@ -75,7 +75,9 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
     public Object[][] dataTestTagFilter() {
         return new Object[][]{
                 {"testdata/picard/sam/aligned.sam", "RG", "0", true, 8},
-                {"testdata/picard/sam/aligned.sam", "RG", "0", false, 0}
+                {"testdata/picard/sam/aligned.sam", "RG", "0", false, 0},
+                {"testdata/picard/sam/aligned.sam", "CB", "ACG", false, 3},
+                {"testdata/picard/sam/aligned.sam", "CB", "ACG", true, 5}
         };
     }
     
