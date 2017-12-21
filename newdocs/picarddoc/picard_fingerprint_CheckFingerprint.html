@@ -378,16 +378,21 @@
  Computes a fingerprint from the supplied input file (SAM/BAM or VCF) file and
  compares it to the expected fingerprint genotypes provided. The key output is a LOD score
  which represents the relative likelihood of the sequence data originating from the same
- sample as the genotypes vs. from a random sample.  Two outputs are produced: (1) a summary
- metrics file that gives metrics of fingerprint match when comparing the input to a set of
- genotypes for the expected sample.  at the single sample level (if the input was a VCF) or at the read
- level (lane or index within a lane) (if the input was a SAM/BAM) and (2) a detail metrics file that
- contains an individual SNP/Haplotype comparison within a fingerprint comparison.  The metrics files
- fill the fields of the classes FingerprintingSummaryMetrics and FingerprintingDetailMetrics.
+ sample as the genotypes vs. from a random sample.
+ <br/>
+ Two outputs are produced:
+ <ol>
+ <li>A summary metrics file that gives metrics of the fingerprint matchs when comparing the input to a set of
+ genotypes for the expected sample.  At the single sample level (if the input was a VCF) or at the read
+ level (lane or index within a lane) (if the input was a SAM/BAM) </li>
+ <li>A detail metrics file that contains an individual SNP/Haplotype comparison within a fingerprint comparison.
+ </li>
+ </ol>
+ The metrics files fill the fields of the classes FingerprintingSummaryMetrics and FingerprintingDetailMetrics
  The output files may be specified individually using the SUMMARY_OUTPUT and DETAIL_OUTPUT options.
  Alternatively the OUTPUT option may be used instead to give the base of the two output
- files, with the summary metrics having a file extension ".#FINGERPRINT_SUMMARY_FILE_SUFFIX",
- and the detail metrics having a file extension ".#FINGERPRINT_DETAIL_FILE_SUFFIX".
+ files, with the summary metrics having a file extension #FINGERPRINT_SUMMARY_FILE_SUFFIX,
+ and the detail metrics having a file extension #FINGERPRINT_DETAIL_FILE_SUFFIX.
  <br/>
  <h3>Example</h3>
  <h4>Comparing a bam against known genotypes:</h4>
@@ -930,7 +935,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.0-5-ga0201bf-SNAPSHOT built at 21-43-2017 09:43:15.
+        <p class="version">Picard version 2.14.0-5-ga0201bf-SNAPSHOT built at 21-13-2017 04:13:32.
         </p>
 
 	</div>
