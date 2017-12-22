@@ -42,7 +42,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -57,7 +57,7 @@ import java.io.FileOutputStream;
 @CommandLineProgramProperties(
         summary = "Takes a VCF and a second file that contains a sequence dictionary and updates the VCF with the new sequence dictionary.",
         oneLineSummary = "Takes a VCF and a second file that contains a sequence dictionary and updates the VCF with the new sequence dictionary.",
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class UpdateVcfSequenceDictionary extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF")

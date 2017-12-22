@@ -53,7 +53,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.util.TabbedTextFileWithHeaderParser;
 
 import java.io.File;
@@ -71,7 +71,7 @@ import java.util.*;
 @CommandLineProgramProperties(
         summary = RevertSam.USAGE_SUMMARY + RevertSam.USAGE_DETAILS,
         oneLineSummary = RevertSam.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class RevertSam extends CommandLineProgram {
     static final String USAGE_SUMMARY ="Reverts SAM or BAM files to a previous state.  ";

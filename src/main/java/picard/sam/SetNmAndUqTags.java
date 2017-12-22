@@ -26,7 +26,7 @@ package picard.sam;
 
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 /**
  *
@@ -39,7 +39,7 @@ import picard.cmdline.programgroups.SamOrBam;
 @CommandLineProgramProperties(
         summary = SetNmAndUqTags.USAGE_SUMMARY + SetNmMdAndUqTags.USAGE_DETAILS,
         oneLineSummary = SetNmAndUqTags.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 public class SetNmAndUqTags extends SetNmMdAndUqTags {
 
     static final String USAGE_SUMMARY = "DEPRECATED: Use SetNmMdAndUqTags instead.";

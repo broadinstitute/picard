@@ -46,7 +46,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -76,7 +76,7 @@ import java.util.Map;
 @CommandLineProgramProperties(
         summary = MergeSamFiles.USAGE_SUMMARY + MergeSamFiles.USAGE_DETAILS,
         oneLineSummary = MergeSamFiles.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class MergeSamFiles extends CommandLineProgram {
     private static final Log log = Log.getInstance(MergeSamFiles.class);

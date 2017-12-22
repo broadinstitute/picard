@@ -48,7 +48,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantEvaluationProgramGroup;
 import picard.pedigree.PedFile;
 import picard.vcf.processor.VariantProcessor;
 
@@ -98,7 +98,7 @@ import static htsjdk.variant.variantcontext.writer.Options.INDEX_ON_THE_FLY;
                 "\n"
         ,
         oneLineSummary = "Finds mendelian violations of all types within a VCF",
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantEvaluationProgramGroup.class)
 @DocumentedFeature
 public class FindMendelianViolations extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF or BCF with genotypes.")

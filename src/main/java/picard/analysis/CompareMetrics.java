@@ -32,7 +32,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.PositionalArguments;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.io.FileReader;
@@ -44,7 +44,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = CompareMetrics.USAGE_SUMMARY + CompareMetrics.USAGE_DETAIL,
         oneLineSummary = CompareMetrics.USAGE_SUMMARY,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CompareMetrics extends CommandLineProgram {

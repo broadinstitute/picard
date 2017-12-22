@@ -8,7 +8,7 @@ import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.analysis.CollectOxoGMetrics.*;
 import picard.analysis.artifacts.SequencingArtifactMetrics.*;
 
@@ -23,7 +23,7 @@ import java.util.Set;
 @CommandLineProgramProperties(
         summary = ConvertSequencingArtifactToOxoG.USAGE_SUMMARY + ConvertSequencingArtifactToOxoG.USAGE_DETAILS,
         oneLineSummary = ConvertSequencingArtifactToOxoG.USAGE_SUMMARY,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class ConvertSequencingArtifactToOxoG extends CommandLineProgram {

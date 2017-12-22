@@ -7,7 +7,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
-import picard.cmdline.programgroups.None;
+import picard.cmdline.programgroups.OtherProgramGroup;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +30,7 @@ import java.text.NumberFormat;
         summary = "Provides a large, configurable, FIFO buffer that can be used to buffer input and output " +
                 "streams between programs with a buffer size that is larger than that offered by native unix FIFOs (usually 64k).",
         oneLineSummary = "FIFO buffer used to buffer input and output streams with a customizable buffer size ",
-        programGroup = None.class
+        programGroup = OtherProgramGroup.class
 )
 @DocumentedFeature
 public class FifoBuffer extends CommandLineProgram {

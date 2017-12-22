@@ -33,7 +33,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Intervals;
+import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 @CommandLineProgramProperties(
         summary = "Converts an Picard IntervalList file to a BED file.",
         oneLineSummary = "Converts an Picard IntervalList file to a BED file.",
-        programGroup = Intervals.class
+        programGroup = IntervalsManipulationProgramGroup.class
 )
 @DocumentedFeature
 public class IntervalListToBed extends CommandLineProgram {

@@ -28,7 +28,7 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.sam.DuplicationMetrics;
 import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.util.Log;
@@ -54,7 +54,7 @@ import java.util.*;
 @CommandLineProgramProperties(
         summary = MarkDuplicates.USAGE_SUMMARY + MarkDuplicates.USAGE_DETAILS,
         oneLineSummary = MarkDuplicates.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     static final String USAGE_SUMMARY = "Identifies duplicate reads.  ";

@@ -45,7 +45,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -68,7 +68,7 @@ import java.util.List;
                 "and, within contigs, by start position. The input files must have the same sample and " +
                 "contig lists. An index file is created and a sequence dictionary is required by default.",
         oneLineSummary = "Merges multiple VCF or BCF files into one VCF file or BCF",
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class MergeVcfs extends CommandLineProgram {
 

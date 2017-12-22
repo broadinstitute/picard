@@ -42,9 +42,8 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.programgroups.Illumina;
+import picard.cmdline.programgroups.BaseCallingProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Illumina;
 import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
@@ -99,7 +98,7 @@ import java.util.Set;
 @CommandLineProgramProperties(
         summary = IlluminaBasecallsToSam.USAGE_SUMMARY + IlluminaBasecallsToSam.USAGE_DETAILS,
         oneLineSummary = IlluminaBasecallsToSam.USAGE_SUMMARY,
-        programGroup = Illumina.class
+        programGroup = BaseCallingProgramGroup.class
 )
 @DocumentedFeature
 public class IlluminaBasecallsToSam extends CommandLineProgram {

@@ -32,7 +32,7 @@ import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.cmdline.programgroups.Alpha;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 
@@ -76,7 +76,7 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary = UmiAwareMarkDuplicatesWithMateCigar.USAGE_SUMMARY + UmiAwareMarkDuplicatesWithMateCigar.USAGE_DETAILS,
         oneLineSummary = UmiAwareMarkDuplicatesWithMateCigar.USAGE_SUMMARY,
-        programGroup = Alpha.class
+        programGroup = ReadDataManipulationProgramGroup.class
 )
 public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWithMateCigar {
     static final String USAGE_SUMMARY = "Identifies duplicate reads using information from read positions and UMIs. ";
