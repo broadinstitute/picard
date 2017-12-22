@@ -194,6 +194,8 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         // Write out the metrics
         finalizeAndWriteMetrics(iterator.getLibraryIdGenerator());
 
+        closeResources();
+
         return 0;
     }
 

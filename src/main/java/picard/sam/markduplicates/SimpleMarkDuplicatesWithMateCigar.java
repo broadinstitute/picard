@@ -229,6 +229,8 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         // Write out the metrics
         finalizeAndWriteMetrics(libraryIdGenerator);
 
+        closeResources();
+
         return 0;
     }
 

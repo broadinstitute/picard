@@ -36,6 +36,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.RuntimeIOException;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import picard.PicardException;
@@ -44,6 +45,7 @@ import picard.sam.DuplicationMetrics;
 import picard.sam.util.PGTagArgumentCollection;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -120,6 +122,8 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     /** The program groups that have been seen during the course of examining the input records. */
     protected final Set<String> pgIdsSeen = new HashSet<>();
 
+    /** Keep two sets of readers to be able to free resources in the end. */
+    protected final Map<Boolean, List<SamReader>> readersByEagerlyDecode = new HashMap<>();
 
     /**
      * We have to re-chain the program groups based on this algorithm.  This returns the map from existing program group ID
@@ -207,18 +211,17 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
      * and checking of the inputs.
      */
     protected SamHeaderAndIterator openInputs(boolean eagerlyDecode) {
-        final List<SAMFileHeader> headers = new ArrayList<>(INPUT.size());
-        final List<SamReader> readers = new ArrayList<>(INPUT.size());
+        fetchReaders(eagerlyDecode);
 
-        for (final String input : INPUT) {
-            SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
-            SamReader reader = eagerlyDecode ? readerFactory.enable(SamReaderFactory.Option.EAGERLY_DECODE).open(SamInputResource.of(input)) :
-                    readerFactory.open(SamInputResource.of(input));
+        List<SamReader> readers = readersByEagerlyDecode.get(eagerlyDecode);
+
+        ArrayList<SAMFileHeader> headers = new ArrayList<>(INPUT.size());
+        for (SamReader reader : readers) {
             final SAMFileHeader header = reader.getFileHeader();
-
             headers.add(header);
-            readers.add(reader);
+
         }
+
         if (ASSUME_SORT_ORDER != null || ASSUME_SORTED) {
             if (ASSUME_SORT_ORDER == null) {
                 ASSUME_SORT_ORDER = SAMFileHeader.SortOrder.coordinate;
@@ -236,6 +239,34 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, ASSUME_SORT_ORDER != null);
             return new SamHeaderAndIterator(headerMerger.getMergedHeader(), iterator);
         }
+    }
+
+    private void fetchReaders(boolean eagerlyDecode) {
+        if (readersByEagerlyDecode.containsKey(eagerlyDecode)) {
+            return;
+        }
+
+        List<SamReader> readers = readersByEagerlyDecode.computeIfAbsent(eagerlyDecode, ignored -> new ArrayList<>());
+        for (final String input : INPUT) {
+            SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+            SamReader reader = eagerlyDecode ? readerFactory.enable(SamReaderFactory.Option.EAGERLY_DECODE).open(SamInputResource.of(input)) :
+                    readerFactory.open(SamInputResource.of(input));
+
+            readers.add(reader);
+        }
+    }
+
+    protected void closeResources() {
+        readersByEagerlyDecode.values()
+                .stream()
+                .flatMap(List::stream)
+                .forEach(reader -> {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        throw new RuntimeIOException(e);
+                    }
+                });
     }
 
     /**

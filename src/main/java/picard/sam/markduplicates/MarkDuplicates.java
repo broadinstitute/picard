@@ -249,6 +249,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         // Write out the metrics
         finalizeAndWriteMetrics(libraryIdGenerator);
 
+        closeResources();
+
         return 0;
     }
 
