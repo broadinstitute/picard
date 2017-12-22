@@ -110,10 +110,10 @@ public class LiftoverVcf extends CommandLineProgram {
 
     @Argument(doc = "INFO field annotations that behave like an Allele Frequency and should be transformed with x->1-x " +
             "when swapping reference with variant alleles.", optional = true)
-    public Collection<String> TAGS_TO_REVERSE = LiftoverUtils.DEFAULT_TAGS_TO_REVERSE;
+    public Collection<String> TAGS_TO_REVERSE = new ArrayList<>(LiftoverUtils.DEFAULT_TAGS_TO_REVERSE);
 
     @Argument(doc = "INFO field annotations that should be deleted when swapping reference with variant alleles.", optional = true)
-    public Collection<String> TAGS_TO_DROP = LiftoverUtils.DEFAULT_TAGS_TO_DROP;
+    public Collection<String> TAGS_TO_DROP = new ArrayList<>(LiftoverUtils.DEFAULT_TAGS_TO_DROP);
 
     // When a contig used in the chain is not in the reference, exit with this value instead of 0.
     public static int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE = 1;
@@ -310,9 +310,8 @@ public class LiftoverVcf extends CommandLineProgram {
                 refSeq = refSeqs.get(target.getContig());
 
                 final VariantContext liftedVC = LiftoverUtils.liftVariant(ctx, target, refSeq, WRITE_ORIGINAL_POSITION);
-                if (liftedVC == null) {
-                    throw new IllegalArgumentException("Unexpectedly found null VC. This should have not happened.");
-                } else {
+                // the liftedVC can be null if the liftover fails for various reasons
+                if (liftedVC != null) {
                     tryToAddVariant(liftedVC, refSeq, ctx);
                 }
             }
