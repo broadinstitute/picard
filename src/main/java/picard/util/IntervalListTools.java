@@ -21,7 +21,7 @@ import java.util.*;
 /**
  * Performs various {@link IntervalList} manipulations.
  *
- * <h4>Summary</h4>
+ * <h3>Summary</h3>
  * This tool offers multiple interval list file manipulation capabilities, including: sorting,
  * merging, subtracting, padding, and other set-theoretic operations. The default action
  * is to merge and sort the intervals provided in the {@link #INPUT}s. Other options, e.g. interval subtraction, are
@@ -35,20 +35,22 @@ import java.util.*;
  * {@link IntervalListTools} can also "scatter" the resulting interval-list into many interval-files. This can be useful
  * for creating multiple interval lists for scattering an analysis over.
  *
- * <h4>Details</h4>
+ * <h3>Details</h3>
  *  The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and
  *  other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,
  *  the file then contains records, one per line in text format with the following
  * values tab-separated:
  * <pre>
- *      - Sequence name (SN) <br />
- *      - Start position (1-based)** <br />
- *      - End position (1-based, end inclusive) <br />
- *      - Strand (either + or -) <br />
- *      - Interval name (ideally unique names for intervals)
+ * <ul>
+ * <li>Sequence name (SN)</li>
+ * <li>Start position (1-based)</li>
+ * <li>End position (1-based, end inclusive)</li>
+ * <li>Strand (either + or -)</li>
+ * <li>Interval name (ideally unique names for intervals)</li>
+ * </ul>
  * </pre>
- * The coordinate system  is such that the first base or position in a sequence is position 1, and both the start
- * and the end positions are included in the interval.
+ * The coordinate system is such that the first base in a sequence is at position 1, and both the start
+ * and the end positions are included in an interval.
  *
  * For Example:
  * <pre>
@@ -59,10 +61,8 @@ import java.util.*;
  * chr2	100	100	+	interval with exactly one base
  * </pre>
  *
- * <hr/>
- *
- * <h4>Usage examples</h4>
- * <h3>1.Combine the intervals from two interval lists:</h3>
+ * <h3>Usage examples</h3>
+ * <h4>1. Combine the intervals from two interval lists:</h4>
  * <pre>
  * java -jar picard.jar IntervalListTools \\
  *       ACTION=CONCAT \\
@@ -71,8 +71,8 @@ import java.util.*;
  *       O=new.interval_list
  * </pre>
  *
- * <h3>2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting
- * intervals:</h3>
+ * <h4>2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting
+ * intervals:</h4>
  * <pre>
  * java -jar picard.jar IntervalListTools \\
  *       ACTION=CONCAT \\
@@ -83,7 +83,7 @@ import java.util.*;
  *       O=new.interval_list
  * </pre>
  *
- * <h3>3. Subtract the intervals in SECOND_INPUT from those in INPUT:</h3>
+ * <h4>3. Subtract the intervals in SECOND_INPUT from those in INPUT:</h4>
  * <pre>
  * java -jar picard.jar IntervalListTools \\
  *       ACTION=SUBTRACT \\
@@ -92,7 +92,7 @@ import java.util.*;
  *       O=new.interval_list
  * </pre>
  *
- * <h3>4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:</h3>
+ * <h4>4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:</h4>
  * <pre>
  * java -jar picard.jar IntervalListTools \\
  *       ACTION=INTERSECT \\
@@ -114,7 +114,7 @@ import java.util.*;
 public class IntervalListTools extends CommandLineProgram {
     static final String USAGE_SUMMARY ="A tool for performing various IntervalList manipulations\n";
     static final String USAGE_DETAILS =
-                    " <h4>Summary</h4>" +
+                    " <h3>Summary</h3>" +
                     "This tool offers multiple interval list file manipulation capabilities, including: sorting, " +
                     "merging, subtracting, padding, and other set-theoretic operations. The default action " +
                     "is to merge and sort the intervals provided in the INPUTs. Other options, e.g. interval subtraction, are " +
@@ -128,7 +128,7 @@ public class IntervalListTools extends CommandLineProgram {
                     "IntervalListTools can also \"scatter\" the resulting interval-list into many interval-files. This can be useful " +
                     "for creating multiple interval lists for scattering an analysis over.\n" +
                     "\n" +
-                    " <h4>Details</h4> " +
+                    " <h3>Details</h3> " +
                     "The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and " +
                     "other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header, " +
                     "the file then contains records, one per line in text format with the following" +
@@ -141,9 +141,9 @@ public class IntervalListTools extends CommandLineProgram {
                     " - Interval name (ideally unique names for intervals)\n" +
                     "\n"+
                     "The coordinate system is such that the first base in a sequence has position 1, and both the start " +
-                    "and the end positions are included in the interval.\n" +
+                    "and the end positions are included in an interval.\n" +
                     "\n" +
-                    "For Example:" +
+                    "Example interval list file" +
                     "<pre>" +
                     "@HD\tVN:1.0\n" +
                     "@SQ\tSN:chr1\tLN:501\n" +
@@ -153,8 +153,8 @@ public class IntervalListTools extends CommandLineProgram {
                     "</pre>" +
                     "\n" +
                     "\n" +
-                    "<h4>Usage Examples</h4>" +
-                    "<h3>1. Combine the intervals from two interval lists:</h3>" +
+                    "<h3>Usage Examples</h3>" +
+                    "<h4>1. Combine the intervals from two interval lists:</h4>" +
                     "<pre>" +
                     "java -jar picard.jar IntervalListTools \\\n" +
                     "      ACTION=CONCAT \\\n" +
@@ -163,8 +163,8 @@ public class IntervalListTools extends CommandLineProgram {
                     "      O=new.interval_list" +
                     "</pre>" +
                     "" +
-                    " <h3>2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting " +
-                    "intervals:</h3>" +
+                    " <h4>2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting " +
+                    "intervals:</h4>" +
                     " <pre>" +
                     " java -jar picard.jar IntervalListTools \\\n" +
                     "       ACTION=CONCAT \\\n" +
@@ -175,7 +175,7 @@ public class IntervalListTools extends CommandLineProgram {
                     "       O=new.interval_list" +
                     " </pre>" +
                     "" +
-                    " <h3>3. Subtract the intervals in SECOND_INPUT from those in INPUT</h3>" +
+                    " <h4>3. Subtract the intervals in SECOND_INPUT from those in INPUT</h4>" +
                     " <pre>" +
                     " java -jar picard.jar IntervalListTools \\\n" +
                     "       ACTION=SUBTRACT \\\n" +
@@ -184,7 +184,7 @@ public class IntervalListTools extends CommandLineProgram {
                     "       O=new.interval_list" +
                     " </pre>" +
                     "" +
-                    " <h3>4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:</h3>" +
+                    " <h4>4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:</h4>" +
                     " <pre>" +
                     " java -jar picard.jar IntervalListTools \\\n" +
                     "       ACTION=INTERSECT \\\n" +
@@ -202,7 +202,7 @@ public class IntervalListTools extends CommandLineProgram {
     public List<File> INPUT;
 
     @Argument(doc = "The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which " +
-            "to write the scattered interval sub-directories (if SCATTER_COUNT > 1)", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
+            "to write the scattered interval sub-directories (if SCATTER_COUNT > 1).", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
     @Argument(doc = "The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed " +
@@ -210,7 +210,7 @@ public class IntervalListTools extends CommandLineProgram {
             "interval lists (both INPUT and SECOND_INPUT, if proivided) <b> before </b> the ACTION is performed.", optional = true)
     public int PADDING = 0;
 
-    @Argument(doc = "If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true")
+    @Argument(doc = "If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true.")
     public boolean UNIQUE = false;
 
     @Argument(doc = "If true, sort the resulting interval list by coordinate.")
@@ -229,18 +229,18 @@ public class IntervalListTools extends CommandLineProgram {
             "Note - if > 1, the resultant scattered intervals will be sorted and uniqued.  The sort will be inverted if the INVERT flag is set.")
     public int SCATTER_COUNT = 1;
 
-    @Argument(doc = "Whether to include filtered variants in the vcf when generating an interval list from vcf", optional = true)
+    @Argument(doc = "Whether to include filtered variants in the vcf when generating an interval list from vcf.", optional = true)
     public boolean INCLUDE_FILTERED = false;
 
     @Argument(shortName = "BRK", doc = "If set to a positive value will create a new interval list with the original intervals" +
             " broken up at integer multiples of this value. Set to 0 to NOT break up intervals.", optional = true)
     public int BREAK_BANDS_AT_MULTIPLES_OF = 0;
 
-    @Argument(shortName = "M", doc = "Selects between various ways in which scattering of the interval-list can happen")
+    @Argument(shortName = "M", doc = "Selects between various ways in which scattering of the interval-list can happen.")
     public IntervalListScatterer.Mode SUBDIVISION_MODE = IntervalListScatterer.Mode.INTERVAL_SUBDIVISION;
 
     @Argument(doc = "Produce the inverse list of intervals, that is, the regions in the genome that are <br>not</br> covered " +
-            "by any of the input intervals. Will merge abutting intervals first. Output will be sorted", optional = true)
+            "by any of the input intervals. Will merge abutting intervals first. Output will be sorted.", optional = true)
     public boolean INVERT = false;
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
@@ -280,7 +280,7 @@ public class IntervalListTools extends CommandLineProgram {
             }
         },
         OVERLAPS("Outputs the entire intervals from INPUT that have bases which overlap any interval from SECOND_INPUT. " +
-                "Note that this is different from INTERSECT in that each original interval is either emitted in its entirety, or not at all.") {
+                "Note that this is different than INTERSECT in that each original interval is either emitted in its entirety, or not at all.") {
             @Override
             IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
                 return IntervalList.overlaps(list1, list2);

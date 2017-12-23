@@ -21,27 +21,32 @@ import java.util.*;
 
 
 /**
- * A Program for breaking up a reference into intervals of alternating regions of N and ACGT bases.
+ * A Tool for breaking up a reference into intervals of alternating regions of N and ACGT bases.
  *
- *
- * <p>
- * Used for creating a broken-up interval list that can be used for scattering a variant-calling pipeline in a way that will not cause problems at the edges of the intervals.
- * By using large enough N blocks (so that the tools will not be able to anchor on both sides) we can be assured that the results of scattering and gathering the variants with
- * the resulting interval list will be the same as calling with one large region.
- *
+ * <br/>
+ * <br/>
+ * <h3>Summary</h3>
+ * Used for creating a broken-up interval list that can be used for scattering a variant-calling pipeline in a way that
+ * will not cause problems at the edges of the intervals. By using large enough N blocks (so that the tools will not be
+ * able to anchor on both sides) we can be assured that the results of scattering and gathering the variants with the
+ * resulting interval list will be the same as calling with one large region.
+ * <br/>
  * <h3>Input</h3>
- * <p> A reference file to use for creating the intervals </p>
- * <p> Which type of intervals to emit in the output (Ns only, ACGT only or both)
- * <p> An integer indicating the largest number of Ns in a contiguous block that will be "tolerated" and not converted into an N block.</p>
- *
+ * <il>
+ *     <li>A reference file to use for creating the intervals</li>
+ *     <li>Which type of intervals to emit in the output (Ns only, ACGT only or both).</li>
+ *     <li>An integer indicating the largest number of Ns in a contiguous block that will be "tolerated" and not
+ *     converted into an N block.</li>
+ * </il>
+ * <br/>
  * <h3>Output</h3>
- * <p>
- * An interval list (with a sam header) where the names of the intervals are labeled (either N-block or ACGT-block) to indicate what type of block they define.
- * </p>
+ * <br/>
+ * An interval list (with a sam header) where the names of the intervals are labeled (either N-block or ACGT-block) to
+ * indicate what type of block they define.
  *
  *
- * <h4>Usage example:</h4>
- * <h3>Create an interval list of intervals that do not contain any N blockS for use with haplotype caller on short reads</h3>
+ * <h3>Usage example</h3>
+ * <h4>Create an interval list of intervals that do not contain any N blockS for use with haplotype caller on short reads</h4>
  * <pre>
  * java -jar picard.jar ScatterIntervalsByNs \\
  *       R=reference_sequence.fasta \\
@@ -49,7 +54,7 @@ import java.util.*;
  *       O=output.interval_list
  * </pre>
  *
- * author Yossi Farjoun
+ * @author Yossi Farjoun
  **/
 
 
@@ -60,26 +65,25 @@ import java.util.*;
 )
 @DocumentedFeature
 public class ScatterIntervalsByNs extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Writes an interval list based on splitting a reference by Ns.";
+    static final String USAGE_SUMMARY = "Writes an interval list created by splitting a reference at Ns.";
     static final String USAGE_DETAILS = "A Program for breaking up a reference into intervals of alternating regions of N and ACGT bases." +
-            "<p>" +
-            "<p>" +
-            "<p>" +
+            "<br/>" +
+            "<br/>" +
+            "<br/>" +
             "Used for creating a broken-up interval list that can be used for scattering a variant-calling pipeline in a way that will not cause problems at the edges of the intervals. " +
             "By using large enough N blocks (so that the tools will not be able to anchor on both sides) we can be assured that the results of scattering and gathering the variants with " +
             "the resulting interval list will be the same as calling with one large region.\n" +
-            "<p>" +
+            "<br/>" +
             "<h3>Input</h3>" +
-            "<p> - A reference file to use for creating the intervals (needs to have index and dictionary next to it.)</p>" +
-            "<p> - Which type of intervals to emit in the output (Ns only, ACGT only or both)" +
-            "<p> - An integer indicating the largest number of Ns in a contiguous block that will be \"tolerated\" and not converted into an N block.</p>" +
-            "<p>" +
+            "- A reference file to use for creating the intervals (needs to have index and dictionary next to it.)\n" +
+            "- Which type of intervals to emit in the output (Ns only, ACGT only or both.)\n" +
+            "- An integer indicating the largest number of Ns in a contiguous block that will be \"tolerated\" and not converted into an N block.\n" +
+            "\n" +
             "<h3>Output</h3>" +
-            "<p> - An interval list (with a sam header) where the names of the intervals are labeled (either N-block or ACGT-block) to indicate what type of block they define. </p>" +
-            "<p>" +
-            "<p>" +
-            "<h4>Usage example:</h4>" +
-            "<h3>Create an interval list of intervals that do not contain any N blocks for use with haplotype caller on short reads</h3>" +
+            "- An interval list (with a sam header) where the names of the intervals are labeled (either N-block or ACGT-block) to indicate what type of block they define.\n" +
+            "\n" +
+            "<h3>Usage example</h3>" +
+            "<h4>Create an interval list of intervals that do not contain any N blocks for use with haplotype caller on short reads</h4>" +
             "<pre>" +
             "java -jar picard.jar ScatterIntervalsByNs \\\n" +
             "      REFERENCE=reference_sequence.fasta \\\n" +

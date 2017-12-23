@@ -44,21 +44,21 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * <h4>Summary</h4>
+ * <h3>Summary</h3>
  * Clusters the results from a {@link CrosscheckFingerprints} run according to the LOD score. The resulting metric file
  * can be used to assist diagnosing results from {@link CrosscheckFingerprints}. It clusters the connectivity graph between the
  * different groups. Two groups are connected if they have a LOD score greater than the {@link #LOD_THRESHOLD}.
+ * <br/>
  *
- *
- * <h4>Details</h4>
+ * <h3>Details</h3>
  * The results of running {@link CrosscheckFingerprints} can be difficult to analyze, especially when many groups are
  * related (meaning LOD greater than {@link #LOD_THRESHOLD}) in non-transitive manner (A is related to B, B is related to C,
  * but A doesn't seem to be related to C.) {@link ClusterCrosscheckMetrics} clusters the metrics from {@link CrosscheckFingerprints}
  * so that all the groups in a cluster are related to each other either directly, or indirectly (thus A, B and C would
  * end up in one cluster.) Two samples can only be in two different clusters if all the samples from these two clusters
  * do not get high LOD scores when compared to each other.
- *
- * <h4>Example</h4>
+ * <br/>
+ * <h3>Example</h3>
  * <pre>
  *     java -jar picard.jar ClusterCrosscheckMetrics \\
  *              INPUT=sample.crosscheck_metrics \\
@@ -69,15 +69,39 @@ import java.util.stream.Collectors;
  * The resulting file, consists of the {@link ClusteredCrosscheckMetric} class and contains the original crosscheck metric
  * values, for groups that end-up in the same clusters (regardless of LOD score of each comparison). In addition it notes
  * the {@link ClusteredCrosscheckMetric#CLUSTER} identifier and the size of the cluster (in {@link ClusteredCrosscheckMetric#CLUSTER_SIZE}.)
- * Groups that do not have high LOD scores with any other group (including
- * itself!) will not be included in the metric file. Note that cross-group comparisons are not included in the metric file.
+ * Groups that do not have high LOD scores with any other group (including itself!) will not be included in the metric file.
+ * Note that cross-group comparisons are not included in the metric file.
  *
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        summary = "Clusters the results from a CrosscheckFingerprints run according to the LOD score. The resulting metric file " +
-                "can be used to diagnose results from running CrosscheckFingerprints. It clusters the connectivity graph between the " +
-                "different groups. Two groups are connected if they have a LOD score greater than the LOD_THRESHOLD. ",
+        summary =
+                "<h3>Summary</h3>\n" +
+                "Clusters the results from a {@link CrosscheckFingerprints} run according to the LOD score. The resulting metric file " +
+                "can be used to assist diagnosing results from {@link CrosscheckFingerprints}. It clusters the connectivity graph between the " +
+                "different groups. Two groups are connected if they have a LOD score greater than the {@link #LOD_THRESHOLD}.\n " +
+                "\n" +
+                "<h3>Details</h3>" +
+                "The results of running {@link CrosscheckFingerprints} can be difficult to analyze, especially when many groups are " +
+                "related (meaning LOD greater than {@link #LOD_THRESHOLD}) in non-transitive manner (A is related to B, B is related to C, " +
+                "but A doesn't seem to be related to C.) {@link ClusterCrosscheckMetrics} clusters the metrics from {@link CrosscheckFingerprints} " +
+                "so that all the groups in a cluster are related to each other either directly, or indirectly (thus A, B and C would " +
+                "end up in one cluster.) Two samples can only be in two different clusters if all the samples from these two clusters " +
+                "do not get high LOD scores when compared to each other.\n" +
+                "\n" +
+                "<h3>Example</h3>\n" +
+                "<pre>\n" +
+                "    java -jar picard.jar ClusterCrosscheckMetrics \\\\\n" +
+                "             INPUT=sample.crosscheck_metrics \\\\\n" +
+                "             LOD_THRESHOLD=3 \\\\\n" +
+                "             OUTPUT=sample.clustered.crosscheck_metrics\n" +
+                "</pre>\n" +
+                "\n" +
+                "The resulting file, consists of the {@link ClusteredCrosscheckMetric} class and contains the original crosscheck metric " +
+                "values, for groups that end-up in the same clusters (regardless of LOD score of each comparison). In addition it notes " +
+                "the {@link ClusteredCrosscheckMetric#CLUSTER} identifier and the size of the cluster (in {@link ClusteredCrosscheckMetric#CLUSTER_SIZE}.) " +
+                "Groups that do not have high LOD scores with any other group (including " +
+                "itself!) will not be included in the metric file. Note that cross-group comparisons are not included in the metric file. ",
         oneLineSummary = "Clusters the results of a CrosscheckFingerprints run by LOD score",
         programGroup = Fingerprinting.class
 )

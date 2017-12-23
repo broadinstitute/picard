@@ -54,41 +54,46 @@ import java.util.List;
  * Check the sample identity of the sequence/genotype data in the provided file (SAM/BAM or VCF)
  * against a set of known genotypes in the supplied genotype file (in VCF format).
  *
- * <h4> Summary </h4>
+ * <h3> Summary </h3>
  * Computes a fingerprint from the supplied input file (SAM/BAM or VCF) file and
  * compares it to the expected fingerprint genotypes provided. The key output is a LOD score
  * which represents the relative likelihood of the sequence data originating from the same
- * sample as the genotypes vs. from a random sample.  Two outputs are produced: (1) a summary
- * metrics file that gives metrics of fingerprint match when comparing the input to a set of
- * genotypes for the expected sample.  at the single sample level (if the input was a VCF) or at the read
- * level (lane or index within a lane) (if the input was a SAM/BAM) and (2) a detail metrics file that
- * contains an individual SNP/Haplotype comparison within a fingerprint comparison.  The metrics files
- * fill the fields of the classes {@link FingerprintingSummaryMetrics} and {@link FingerprintingDetailMetrics}.
+ * sample as the genotypes vs. from a random sample.
+ * <br/>
+ * Two outputs are produced:
+ * <ol>
+ * <li>A summary metrics file that gives metrics of the fingerprint matches when comparing the input to a set of
+ * genotypes for the expected sample.  At the single sample level (if the input was a VCF) or at the read
+ * level (lane or index within a lane) (if the input was a SAM/BAM) </li>
+ * <li>A detail metrics file that contains an individual SNP/Haplotype comparison within a fingerprint comparison.
+ * </li>
+ * </ol>
+ * The metrics files fill the fields of the classes {@link FingerprintingSummaryMetrics} and {@link FingerprintingDetailMetrics}
  * The output files may be specified individually using the SUMMARY_OUTPUT and DETAIL_OUTPUT options.
  * Alternatively the OUTPUT option may be used instead to give the base of the two output
- * files, with the summary metrics having a file extension ".{@value #FINGERPRINT_SUMMARY_FILE_SUFFIX}",
- * and the detail metrics having a file extension ".{@value #FINGERPRINT_DETAIL_FILE_SUFFIX}".
- * <p>
- * <h4>Example</h4>
- * <h3>Comparing a bam against known genotypes:</h3>
+ * files, with the summary metrics having a file extension {@value #FINGERPRINT_SUMMARY_FILE_SUFFIX},
+ * and the detail metrics having a file extension {@value #FINGERPRINT_DETAIL_FILE_SUFFIX}.
+ * <br/>
+ * <h3>Example</h3>
+ * <h4>Comparing a bam against known genotypes:</h4>
  * <pre>
  *     java -jar picard.jar CheckFingerprint \\
  *          INPUT=sample.bam \\
- *          GENOTYPES=sample_genotypes.vcf
+ *          GENOTYPES=sample_genotypes.vcf \\
  *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\
  *          OUTPUT=sample_fingerprinting
  * </pre>
- * <p>
+ * <br/>
  * <h4>Detailed Explanation</h4>
  *
- * This tool calculates a single number that reports the LOD score for identity check between the INPUT
- * and the GENOTYPES. A positive value indicates that the data seems to have come from the same individual
+ * This tool calculates a single number that reports the LOD score for identity check between the {@link #INPUT}
+ * and the {@link #GENOTYPES}. A positive value indicates that the data seems to have come from the same individual
  * or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates
  * that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates
  * that the data do not match. A score that is near zero is inconclusive and can result from low coverage
  * or non-informative genotypes.
  *
- * The identity check makes use of haplotype blocks defined in the HAPLOTYPE_MAP file to enable it to have higher
+ * The identity check makes use of haplotype blocks defined in the {@link #HAPLOTYPE_MAP} file to enable it to have higher
  * statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This
  * enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).
  *
