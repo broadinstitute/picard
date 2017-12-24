@@ -141,19 +141,19 @@ import java.util.stream.Collectors;
                         "\n" +
                         "<h3>Summary</h3>\n" +
                         "Checks if all the genetic data within a set of files appear to come from the same individual. " +
-                        "It quickly determines whether a \"group's\" genotype matches that of an input SAM/BAM/VCF by selective sampling, " +
+                        "It quickly determines whether a group's genotype matches that of an input SAM/BAM/VCF by selective sampling, " +
                         "and has been designed to work well for low-depth SAM/BAMs (as well as high depth ones and VCFs.) " +
                         "The tool collects fingerprints (essentially genotype information from different parts of the genome)" +
                         " at the finest level available in the data (readgroup for SAM files " +
                         "and sample for VCF files) and then optionally aggregates it by library, sample or file, to increase power and provide " +
-                        "results at the desired resolution. Output is in a \"Moltenized\" format, one row per comparison. The results will " +
-                        "be emitted into a metric file for the class {@link CrosscheckMetric}. " +
+                        "results at the desired resolution. Output is in a \"Moltenized\" format, one row per comparison. The results are " +
+                        "emitted into a CrosscheckMetric metric file. " +
                         "In this format the output will include the LOD score and also tumor-aware LOD score which can " +
-                        "help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could " +
+                        "help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could cause it to " +
                         "otherwise fail to notice that samples are from the same individual.) " +
                         "A matrix output is also available to facilitate visual inspection of crosscheck results.\n " +
                         "\n" +
-                        "Since there can be many rows of output in the metric file, we recommend the use of {@link ClusterCrosscheckMetrics} " +
+                        "Since there can be many rows of output in the metric file, we recommend the use of ClusterCrosscheckMetrics " +
                         "as a follow-up step to running CrosscheckFingerprints.\n " +
                         "\n" +
                         "There are cases where one would like to identify a few groups out of a collection of many possible groups (say " +
@@ -167,27 +167,25 @@ import java.util.stream.Collectors;
                         " - MATRIX_OUTPUT is disabled. " +
                         "\n" +
                         "<hr/>" +
-                        "\n" +
                         "<h3>Examples</h3>" +
                         "<h4>Check that all the readgroups from a sample match each other:</h4>" +
                         "<pre>" +
                         "    java -jar picard.jar CrosscheckFingerprints \\\n" +
-                        "          INPUT=sample.with.many.readgroups.bam \\\n " +
-                        "          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n " +
-                        "          LOD_THRESHOLD=-5 \\\n " +
+                        "          INPUT=sample.with.many.readgroups.bam \\\n" +
+                        "          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n" +
+                        "          LOD_THRESHOLD=-5 \\\n" +
                         "          OUTPUT=sample.crosscheck_metrics" +
                         " </pre>" +
-                        "\n" +
                         "\n" +
                         " <h4>Check that all the readgroups match as expected when providing reads from two samples from the same individual:</h4>" +
                         " <pre>" +
                         "     java -jar picard.jar CrosscheckFingerprints \\\n" +
-                        "          INPUT=sample.one.with.many.readgroups.bam \\\n" +
-                        "          INPUT=sample.two.with.many.readgroups.bam \\\n" +
-                        "          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n" +
-                        "          LOD_THRESHOLD=-5 \\\n" +
-                        "          EXPECT_ALL_GROUPS_TO_MATCH=true \\\n" +
-                        "          OUTPUT=sample.crosscheck_metrics" +
+                        "           INPUT=sample.one.with.many.readgroups.bam \\\n" +
+                        "           INPUT=sample.two.with.many.readgroups.bam \\\n" +
+                        "           HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n" +
+                        "           LOD_THRESHOLD=-5 \\\n" +
+                        "           EXPECT_ALL_GROUPS_TO_MATCH=true \\\n" +
+                        "           OUTPUT=sample.crosscheck_metrics" +
                         " </pre>" +
                         "\n" +
                         "\n" +
@@ -200,7 +198,7 @@ import java.util.stream.Collectors;
                         "that the data do not match. A score that is near zero is inconclusive and can result from low coverage " +
                         "or non-informative genotypes. Each group is assigned a sample identifier (for SAM this is taken from the SM tag in " +
                         "the appropriate readgroup header line, for VCF this is taken from the column label in the file-header. " +
-                        "After combining all the data from the same \"group\" together, an all-against-all comparison is performed. Results are " +
+                        "After combining all the data from the same group together, an all-against-all comparison is performed. Results are " +
                         "categorized as one of EXPECTED_MATCH, EXPECTED_MISMATCH, UNEXPECTED_MATCH, UNEXPECTED_MISMATCH, or AMBIGUOUS depending " +
                         "on the LOD score and on whether the sample identifiers of the groups agree: LOD scores that are less than LOD_THRESHOLD " +
                         "are considered mismatches, and those greater than -LOD_THRESHOLD are matches (between is ambiguous). " +
@@ -220,11 +218,11 @@ import java.util.stream.Collectors;
 public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "One or more input files (or lists of files) to compare fingerprints for.", minElements = 1)
+            doc = "One or more input files (or lists of files) with which to compare fingerprints.", minElements = 1)
     public List<File> INPUT;
 
     @Argument(shortName = "SI", optional = true, mutex={"MATRIX_OUTPUT"},
-            doc = "Input files (or lists of files) to compare fingerprints for. If this option is provided " +
+            doc = "A second set of input files (or lists of files) with which to compare fingerprints. If this option is provided " +
                     "the tool compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID." +
                     " In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY."+
                     " When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. " +
@@ -238,7 +236,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Argument(shortName = "MO", optional = true,
             doc = "Optional output file to write matrix of LOD scores to. This is less informative than the metrics output " +
-                    "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity). " +
+                    "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of Heterozygosity). " +
                     "It is however sometimes easier to use visually.", mutex = {"SECOND_INPUT"})
     public File MATRIX_OUTPUT = null;
 
