@@ -27,8 +27,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /** MARK
- * Tool for lifting over a VCF to another genome build and producing a properly header'd,
+ * Tool for lifting over a VCF to another genome build and producing a properly headered,
  * sorted and indexed VCF in one go.
+ *
+ * Caveat: Sorts the output and thus relies on {@link #MAX_RECORDS_IN_RAM} to specify how many (vcf)records
+ * to hold in memory before spilling to disk. The default value is reasonable for BAM files, but not for VCFs.
+ * Consider lowering to 10,000 or even less if you have many genotypes.
  *
  * @author Tim Fennell
  */

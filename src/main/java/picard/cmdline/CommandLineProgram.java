@@ -105,7 +105,7 @@ public abstract class CommandLineProgram {
     @Argument(doc = "Compression level for all compressed files created (e.g. BAM and GELI).", common=true)
     public int COMPRESSION_LEVEL = Defaults.COMPRESSION_LEVEL;
 
-    @Argument(doc = "When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.", optional=true, common=true)
+    @Argument(doc = "When writing SAM/VCF files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.", optional=true, common=true)
     public Integer MAX_RECORDS_IN_RAM = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
 
     @Argument(doc = "Whether to create a BAM index when writing a coordinate-sorted BAM file.", common=true)

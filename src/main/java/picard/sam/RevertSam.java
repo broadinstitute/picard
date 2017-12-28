@@ -67,9 +67,44 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Mark
+/**
  * Reverts a SAM file by optionally restoring original quality scores and by removing
  * all alignment information.
+ *
+ *
+ * This tool removes or restores certain properties of the SAM records, including alignment information.
+ * It can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of
+ * restoring the original quality scores of a BAM file that has already undergone base quality score recalibration
+ * (BQSR) if the original qualities were retained during the calibration (in the tag OQ).
+ *
+ * <h3>Usage Examples</h3>
+ * <h4>Output to a single file</h4>
+ * <pre>
+ * java -jar picard.jar RevertSam \\
+ *      I=input.bam \\
+ *      O=reverted.bam
+ * </pre>
+ *
+ * <h4>Output by read group into multiple files with sample map</h4>
+ * <pre>
+ * java -jar picard.jar RevertSam \\
+ *      I=input.bam \\
+ *      OUTPUT_BY_READGROUP=true \\
+ *      OUTPUT_MAP=reverted_bam_paths.tsv
+ * </pre>
+ *
+ * <h4>Output by read group with no output map</h4>
+ * <pre>" +
+ * java -jar picard.jar RevertSam \\
+ *      I=input.bam \\
+ *      OUTPUT_BY_READGROUP=true \\
+ *      O=/write/reverted/read/group/bams/in/this/dir
+ * </pre>
+ * This will output a BAM (Can be overriden with OUTPUT_BY_READGROUP_FILE_FORMAT option.)
+ * <br/>
+ * Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to
+ * LENIENT or SILENT if the failures are expected to be obviated by the reversion process
+ * (e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).
  */
 @CommandLineProgramProperties(
         summary = RevertSam.USAGE_SUMMARY + RevertSam.USAGE_DETAILS,
@@ -150,7 +185,7 @@ public class RevertSam extends CommandLineProgram {
         add(SAMTag.MD.name());
         add(SAMTag.MQ.name());
         add(SAMTag.SA.name()); // Supplementary alignment metadata
-        add(SAMTag.MC.name());      // Mate Cigar
+        add(SAMTag.MC.name()); // Mate Cigar
         add(SAMTag.AS.name());
     }};
 
@@ -166,12 +201,12 @@ public class RevertSam extends CommandLineProgram {
 
     @Argument(doc = "The sample alias to use in the reverted output file.  This will override the existing " +
             "sample alias in the file and is used only if all the read groups in the input file have the " +
-            "same sample alias ", shortName = StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME, optional = true)
+            "same sample alias.", shortName = StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME, optional = true)
     public String SAMPLE_ALIAS;
 
     @Argument(doc = "The library name to use in the reverted output file.  This will override the existing " +
             "sample alias in the file and is used only if all the read groups in the input file have the " +
-            "same library name ", shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional = true)
+            "same library name.", shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional = true)
     public String LIBRARY_NAME;
 
     private final static Log log = Log.getInstance(RevertSam.class);
@@ -260,6 +295,7 @@ public class RevertSam extends CommandLineProgram {
             if (sanitizing) sorter.add(rec);
             else out.addAlignment(rec);
         }
+        CloserUtil.close(in);
 
         ////////////////////////////////////////////////////////////////////////////
         // Now if we're sanitizing, clean up the records and write them to the output
@@ -289,7 +325,6 @@ public class RevertSam extends CommandLineProgram {
             }
         }
 
-        CloserUtil.close(in);
         return 0;
     }
 
