@@ -310,8 +310,10 @@ public class LiftoverVcf extends CommandLineProgram {
                 refSeq = refSeqs.get(target.getContig());
 
                 final VariantContext liftedVC = LiftoverUtils.liftVariant(ctx, target, refSeq, WRITE_ORIGINAL_POSITION);
-                // the liftedVC can be null if the liftover fails for various reasons
-                if (liftedVC != null) {
+                // the liftedVC can be null if the liftover fails because of a problem with reverse complementing
+                if (liftedVC == null) {
+                    rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_INDEL);
+                } else {
                     tryToAddVariant(liftedVC, refSeq, ctx);
                 }
             }

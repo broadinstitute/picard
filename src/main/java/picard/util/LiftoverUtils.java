@@ -137,8 +137,7 @@ public class LiftoverUtils {
 
         if (source.isIndel()) {
             // check that the reverse complemented bases match the new reference
-            final String refString = StringUtil.bytesToString(refSeq.getBases(), start - 1, stop - start + 1);
-            if (!referenceAlleleMatchesReference(vcb.getAlleles(), refString)) {
+            if (!referenceAlleleMatchesReferenceForIndel(vcb.getAlleles(), refSeq, start, stop)) {
                 return null;
             }
             leftAlignVariant(vcb, start, stop, vcb.getAlleles(), refSeq);
@@ -304,22 +303,34 @@ public class LiftoverUtils {
      *
      * @param alleles list of alleles from which to find the reference allele
      * @param referenceSequence the ref sequence
+     * @param start the start position of the actual indel
+     * @param end   the end position of the actual indel
      * @return true if they match, false otherwise
      */
-    protected static boolean referenceAlleleMatchesReference(final List<Allele> alleles, final String referenceSequence) {
-        final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElse(null);
-        return (refAllele != null && referenceSequence.equalsIgnoreCase(refAllele.getBaseString()));
+    protected static boolean referenceAlleleMatchesReferenceForIndel(final List<Allele> alleles,
+                                                                     final ReferenceSequence referenceSequence,
+                                                                     final int start,
+                                                                     final int end) {
+        final String refString = StringUtil.bytesToString(referenceSequence.getBases(), start - 1, end - start + 1);
+        final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElseThrow(() -> new IllegalStateException("Error: no reference allele was present"));
+        return (refString.equalsIgnoreCase(refAllele.getBaseString()));
     }
 
     /**
      *    Normalizes and left aligns a {@link VariantContextBuilder}.
-     *    Note: this will modify the start/stop and alleles of this builder
+     *    Note: this will modify the start/stop and alleles of this builder.
+     *    Also note: if the reference allele does not match the reference sequence, this method does nothing
      *
      *    Based on Adrian Tan, Gonçalo R. Abecasis and Hyun Min Kang. (2015)
      *    Unified Representation of Genetic Variants. Bioinformatics.
      *
      */
     protected static void leftAlignVariant(final VariantContextBuilder builder, final int start, final int end, final List<Allele> alleles, final ReferenceSequence referenceSequence) {
+
+        //make sure that referenceAllele matches reference
+        if (!referenceAlleleMatchesReferenceForIndel(alleles, referenceSequence, start, end)) {
+            return;
+        }
 
         boolean changesInAlleles = true;
 
@@ -328,15 +339,6 @@ public class LiftoverUtils {
 
         int theStart = start;
         int theEnd = end;
-
-        //make sure that referenceAllele matches reference
-        final String refString = StringUtil.bytesToString(referenceSequence.getBases(), start - 1, end - start + 1);
-        if (!referenceAlleleMatchesReference(alleles, refString)) {
-            final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElse(null);
-            throw new IllegalArgumentException(
-                    String.format("Reference allele doesn't match reference: Allele= %s, at %s:%d-%d, ref=%s",
-                            refAllele == null ? "null" : refAllele.toString(), referenceSequence.getName(), start, end, refString));
-        }
 
         // 1. while changes in alleles do
         while (changesInAlleles) {
