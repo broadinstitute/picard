@@ -66,9 +66,7 @@ import java.util.Map;
  *          INPUT=sample.bam \\
  *          OUTPUT=reordered.bam \\
  *          REFERENCE=reference_with_different_order.fasta
- *
  * </pre>
- *
  *
  * @author mdepristo
  */
@@ -78,15 +76,12 @@ import java.util.Map;
                 "as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new " +
                 "reference are dropped. Runs substantially faster if the input is an indexed BAM file." +
                 "\n" +
-                "Example<\n" +
+                "Example\n" +
                 "\n" +
-                "<pre>" +
                 " java -jar picard.jar ReorderSam \\\n" +
                 "      INPUT=sample.bam \\\n" +
                 "      OUTPUT=reordered.bam \\\n" +
-                "      REFERENCE=reference_with_different_order.fasta\n" +
-                "      </pre>\n" +
-                " ",
+                "      REFERENCE=reference_with_different_order.fasta\n",
         oneLineSummary = "Reorders reads in a SAM or BAM file to match ordering in a second reference file.",
         programGroup = SamOrBam.class)
 @DocumentedFeature

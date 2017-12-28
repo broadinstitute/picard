@@ -45,12 +45,12 @@ import java.util.Map;
 
 
 /**
- * <h4>Summary</h4>
+ * <h3>Summary</h3>
  * Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with {@link DownsampleSam}, all the
  * reads with the same queryname are either kept or dropped as a unit.
- * <p/>
+ * <br/>
  *
- * <h4>Details</h4>
+ * <h3>Details</h3>
  * The downsampling is <b>not</b> random (and there is no random seed). It is deterministically determined by the position
  * of each read within its "tile". Specifically, it draws an ellipse that covers a {@link #FRACTION} of the total tile's
  * area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads
@@ -68,31 +68,30 @@ import java.util.Map;
  * Downsampling invalidates the duplicate flag (as reads marked as duplicates prior to downsampling might not be duplicates
  * afterwards.) Thus, the default setting also removes the duplicate information.
  *
- *<h4>Example</h4>
+ *<h3>Example</h3>
  * <pre>
  * java -jar picard.jar PositionBasedDownsampleSam \\
  *       I=input.bam \\
  *       O=downsampled.bam \\
  *       FRACTION=0.1
- * <hr/>
  * </pre>
- *<h4>Caveats</h4>
- *
+ *<h3>Caveats</h3>
  * Note 1:
  * This method is <b>technology and read-name dependent</b>. If the read-names do not have coordinate information
  * embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines)
- * this will not work properly. It has been designed to work with Illumina MiSeq/HiSeq technology and reads-names. Consider
+ * this will not work properly. It has been designed to work with Illumina technology and reads-names. Consider
  * modifying {@link #READ_NAME_REGEX} in other cases.
- * <p/>
+ * <br/>
  * Note 2:
  * The code has been designed to simulate, as accurately as possible, sequencing less, <b>not</b> for getting an exact
  * downsampled fraction (Use {@link DownsampleSam} for that.) In particular, since the reads may be distributed non-evenly
  * within the lanes/tiles, the resulting downsampling percentage will not be accurately determined by the input argument
  * {@link #FRACTION}.
- * <p/>
+ * <br/>
  * Note 3:
  * Consider running {@link MarkDuplicates} after downsampling in order to "expose" the duplicates whose representative has
  * been downsampled away.
+ * <br/>
  * Note 4:
  * Due to the way the downsampling it performed, it assumes a uniform distribution of reads in the flowcell. This is violated
  * if one uses an input that was already downsampled with {@link PositionBasedDownsampleSam}. To guard against this, a
@@ -102,12 +101,12 @@ import java.util.Map;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-      summary = "<h4>Summary</h4>\n" +
+      summary = "<h3>Summary</h3>\n" +
               "Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with DownsampleSam, all the " +
               "reads with the same queryname are either kept or dropped as a unit." +
               "\n\n " +
-              "Details\n" +
-              "The downsampling is _not random (and there is no random seed). It is deterministically determined by the position " +
+              "<h3>Details</h3>\n" +
+              "The downsampling is _not_ random (and there is no random seed). It is deterministically determined by the position " +
               "of each read within its \"tile\". Specifically, it draws an ellipse that covers a FRACTION of the total tile's " +
               "area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads " +
               "with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the " +
@@ -123,7 +122,6 @@ import java.util.Map;
               "afterwards.) Thus, the default setting also removes the duplicate information. " +
               "\n\n" +
               "Example\n\n" +
-
               "java -jar picard.jar PositionBasedDownsampleSam \\\n" +
               "      I=input.bam \\\n" +
               "      O=downsampled.bam \\\n" +
@@ -134,7 +132,7 @@ import java.util.Map;
               "Note 1: " +
               "This method is <b>technology and read-name dependent</b>. If the read-names do not have coordinate information " +
               "embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines) " +
-              "this will not work properly. It has been designed to work with Illumina MiSeq/HiSeq technology and reads-names. Consider " +
+              "this will not work properly. It has been designed to work with Illumina technology and reads-names. Consider " +
               "modifying {@link #READ_NAME_REGEX} in other cases. " +
               "\n\n" +
               "Note 2: " +

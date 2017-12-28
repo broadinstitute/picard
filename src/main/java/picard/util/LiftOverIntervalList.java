@@ -44,22 +44,22 @@ import java.util.List;
  *
  * This tool adjusts the coordinates in an interval list on one reference to its homologous interval list on another
  * reference, based on a chain file that describes the correspondence between the two references. It is based on the
- * UCSC liftOver tool (see: http://genome.ucsc.edu/cgi-bin/hgLiftOver) and uses a UCSC chain file to guide its operation.
+ * UCSC LiftOver tool (see: http://genome.ucsc.edu/cgi-bin/hgLiftOver) and uses a UCSC chain file to guide its operation.
  * It accepts both Picard interval_list files or VCF files as interval inputs.
  * <br />
- * <h4>Usage example:</h4>
+ * <h3>Usage example:</h3>
  * <pre>
- * java -jar picard.jar LiftOverIntervalList \\<br />
- *       I=input.interval_list \\<br />
- *       O=output.interval_list \\<br />
- *       SD=reference_sequence.dict \\<br />
+ * java -jar picard.jar LiftOverIntervalList \\
+ *       I=input.interval_list \\
+ *       O=output.interval_list \\
+ *       SD=reference_sequence.dict \\
  *       CHAIN=build.chain
  * </pre>
- * <hr />
- * <h4>Return codes</h4>
+ *
+ * <h3>Return codes</h3>
  * If all the intervals lifted over successfully, program will return 0. It will return 1 otherwise.
  *
- * <h4>Caveats</h4>
+ * <h3>Caveats</h3>
  * Intervals are "lifted" in their entirety, but they might intersect (a "hit") with multiple chain-blocks which would attempt to
  * place it in different places. In this case, The interval is lifted over using the first hit that passes the threshold
  * of {@link #MIN_LIFTOVER_PCT}. For large enough {@link #MIN_LIFTOVER_PCT} this is non-ambiguous, but if one uses small values of {@link #MIN_LIFTOVER_PCT}
@@ -76,22 +76,31 @@ import java.util.List;
 )
 @DocumentedFeature
 public class LiftOverIntervalList extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Lifts over an interval list from one reference build to another.  ";
+    static final String USAGE_SUMMARY = "Lifts over an interval list from one reference build to another. ";
     static final String USAGE_DETAILS = "This tool adjusts the coordinates in an interval list on one reference to its homologous " +
             "interval list on another " +
             "reference, based on a chain file that describes the correspondence between the two references. It is based on the " +
-            "UCSC liftOver tool (see: http://genome.ucsc.edu/cgi-bin/hgLiftOver) and uses a UCSC chain file to guide its operation. " +
-            "It accepts both Picard interval_list files or VCF files as interval inputs." +
-            "<br />" +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar LiftOverIntervalList \\<br />" +
-            "      I=input.interval_list \\<br />" +
-            "      O=output.interval_list \\<br />" +
-            "      SD=reference_sequence.dict \\<br />" +
+            "UCSC LiftOver tool (see: http://genome.ucsc.edu/cgi-bin/hgLiftOver) and uses a UCSC chain file to guide its operation. " +
+            "It accepts both Picard interval_list files or VCF files as interval inputs.\n" +
+            "\n" +
+            "<h3>Usage example:</h3>" +
+            "java -jar picard.jar LiftOverIntervalList \\\n" +
+            "      I=input.interval_list \\\n" +
+            "      O=output.interval_list \\\n" +
+            "      SD=reference_sequence.dict \\\n" +
             "      CHAIN=build.chain" +
             "</pre>" +
-            "<hr />";
+            "\n" +
+            "<h3>Return codes</h3>\n" +
+            "If all the intervals lifted over successfully, program will return 0. It will return 1 otherwise.\n" +
+            "\n" +
+            "<h3>Caveats</h3>\n" +
+            "Intervals are \"lifted\" in their entirety, but they might intersect (a \"hit\") with multiple chain-blocks which would attempt to " +
+            "place it in different places. In this case, The interval is lifted over using the first hit that passes the threshold " +
+            "of {@link #MIN_LIFTOVER_PCT}. For large enough {@link #MIN_LIFTOVER_PCT} this is non-ambiguous, but if one uses small values of {@link #MIN_LIFTOVER_PCT} " +
+            "(perhaps in order to increase the rate of successful hits...) the liftover could end up going to the smaller of two " +
+            "good hits. On the other hand, if none of the hits pass the threshold a warning will be emitted and the interval will " +
+            "not be lifted.";
     private static final Log LOG = Log.getInstance(LiftOverIntervalList.class);
 
     @Argument(doc = "The input Interval list that is to be lifted over.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)

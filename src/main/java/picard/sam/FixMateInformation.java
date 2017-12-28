@@ -59,6 +59,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
+ * <h3>Summary</h3>
  * This tool ensures that all mate-pair information is in sync between each read
  * and its mate pair.  If no {@link #OUTPUT} file is supplied then the output is written to a temporary file
  * and then copied over the {@link #INPUT} file (with the original placed in a .old file.)
@@ -66,17 +67,17 @@ import java.util.List;
  * However, <b>supplementary</b> reads are corrected so that they point to the primary,
  * non-supplemental mate record.
  *
- * <h4>Usage example:</h4>
+ * <h3>Usage example:</h3>
  * <pre>
  * java -jar picard.jar FixMateInformation \\
  *       I=input.bam \\
  *       O=fixed_mate.bam \\
  *       ADD_MATE_CIGAR=true
  * </pre>
- * <h4>Caveats</h4
+ * <h3>Caveats</h3>
  * The program should run with fairly limited memory unless there are many mate pairs that are missing or far apart
  * from each other in the file, as it keeps track of the unmatched mates
- * <hr />"
+ *
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
@@ -90,19 +91,18 @@ public class FixMateInformation extends CommandLineProgram {
             "and its mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +
             "and then copied over the INPUT file (with the original placed in a .old file.)  Reads marked with the secondary alignment flag are written " +
             "to the output file unchanged. However <b>supplementary</b> reads are corrected so that they point to the primary, " +
-            "non-supplemental mate record." +
-            "" +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar FixMateInformation \\" +
-            "      I=input.bam \\ " +
-            "      O=fixed_mate.bam \\" +
-            "      ADD_MATE_CIGAR=true" +
-            "</pre> " +
-            "<h4>Caveats</h4>"+
+            "non-supplemental mate record.\n" +
+            "\n" +
+            "<h3>Usage example</h3>\n" +
+            "\n" +
+            "java -jar picard.jar FixMateInformation \\\n" +
+            "      I=input.bam \\\n " +
+            "      O=fixed_mate.bam \\\n" +
+            "      ADD_MATE_CIGAR=true\n" +
+            "\n" +
+            "<h3>Caveats</h3>\n"+
             "The program should run with fairly limited memory unless there are many mate pairs that are missing or far apart " +
-            "from each other in the file, as it keeps track of the unmatched mates."+
-            "<hr />" ;
+            "from each other in the file, as it keeps track of the unmatched mates.";
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input file to check and fix.")
     public List<File> INPUT;
 
