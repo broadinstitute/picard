@@ -16,18 +16,19 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 /**
+ * <h3>Summary</h3>
  * Acts as a large memory buffer between processes that are
  * connected with unix pipes for the case that one or more processes produces or consumes their
  * input or output in bursts.  By inserting a large memory buffer between such processes
  * each process can run at full speed and the bursts can be smoothed out by the memory buffer.
  *
- * <h4>Example</h4>
+ * <h3>Example</h3>
  * <pre>
  *   java -jar SamToFastq.jar \
  *      F=my.fastq \
  *      INTERLEAVE=true |
  *   java -jar FifoBuffer |
- *   bwa mem -t 8 \dev\stdin output.bam
+ *   bwa mem -t 8 -Y reference.fasta \dev\stdin output.bam
  *  </pre>
  *
  * @author Tim Fennell
@@ -39,16 +40,14 @@ import java.text.NumberFormat;
                 "Acts as a large memory buffer between processes that are " +
                 "connected with unix pipes for the case that one or more processes produces or consumes their " +
                 "input or output in bursts.  By inserting a large memory buffer between such processes " +
-                "each process can run at full speed and the bursts can be smoothed out by the memory buffer. " +
+                "each process can run at full speed and the bursts can be smoothed out by the memory buffer.\n " +
                 "\n" +
-                "<h4>Example</h4>" +
-                "<pre>" +
-                "  java -jar SamToFastq.jar \\" +
-                "     F=my.fastq \\" +
-                "     INTERLEAVE=true |" +
-                "  java -jar FifoBuffer |" +
-                "  bwa mem -t 8 \\dev\\stdin output.bam" +
-                " </pre>",
+                "<h3>Example</h3>\n" +
+                "  java -jar SamToFastq.jar \\\n" +
+                "     F=my.fastq \\\n" +
+                "     INTERLEAVE=true |\n" +
+                "  java -jar FifoBuffer |\n" +
+                "  bwa mem -t 8 \\dev\\stdin output.bam\n",
         programGroup = None.class
 )
 @DocumentedFeature
