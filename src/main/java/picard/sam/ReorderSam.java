@@ -54,13 +54,13 @@ import java.util.Map;
 /**
  * Reorders a SAM/BAM input file according to the order of contigs in a second reference file.
  *
- * <h4>Summary</h4>
+ * <h3>Summary</h3>
  * Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary,
  * ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file,
  * as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new
  * reference are dropped. Runs substantially faster if the input is an indexed BAM file.
  *
- * <h4>Example</h4>
+ * <h3>Example</h3>
  * <pre>
  *     java -jar picard.jar ReorderSam \\
  *          INPUT=sample.bam \\
@@ -80,11 +80,12 @@ import java.util.Map;
                 "\n" +
                 "Example<\n" +
                 "\n" +
+                "<pre>" +
                 " java -jar picard.jar ReorderSam \\\n" +
                 "      INPUT=sample.bam \\\n" +
                 "      OUTPUT=reordered.bam \\\n" +
                 "      REFERENCE=reference_with_different_order.fasta\n" +
-                "      \n" +
+                "      </pre>\n" +
                 " ",
         oneLineSummary = "Reorders reads in a SAM or BAM file to match ordering in a second reference file.",
         programGroup = SamOrBam.class)

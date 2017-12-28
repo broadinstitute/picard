@@ -30,33 +30,33 @@ import java.util.regex.Pattern;
 /**
  * Assigns all the reads in a file to a single new readgroup.
  *
- * <h4>Summary</h4>
- * <br /><br />
+ * <h3>Summary</h3>
+ * <br />
  * Many tools (Picard and GATK for example) require or assume the presence of at least one RG tag, defining a "readgroup"
  * to which each read can be assigned (as specified in the RG tag in the SAM record).
  * This tool enables the user to assign all the reads in the {@link #INPUT} to a single new readgroup.
  * For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>
- * GATK Dictionary entry.</a> <br /><br />
- * This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation).
+ * GATK Dictionary entry.</a>
+ * <br />
+ * This tool accepts as INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation).
  * <h4>Usage example:</h4>
  * <pre>
- * java -jar picard.jar AddOrReplaceReadGroups \\<br />
- *       I=input.bam \\<br />
- *       O=output.bam \\<br />
- *       RGID=4 \\<br />
- *       RGLB=lib1 \\<br />
- *       RGPL=illumina \\<br />
- *       RGPU=unit1 \\<br />
+ * java -jar picard.jar AddOrReplaceReadGroups \\
+ *       I=input.bam \\
+ *       O=output.bam \\
+ *       RGID=4 \\
+ *       RGLB=lib1 \\
+ *       RGPL=illumina \\
+ *       RGPU=unit1 \\
  *       RGSM=20
  * </pre>
  * <br/>
- * <h4>Caveats</h4>
+ * <h3>Caveats</h3>
  * The value of the tags must adhere (according to the <a href=\"https://samtools.github.io/hts-specs/SAMv1.pdf\"> SAM-spec</a>)
  * with the regex '^[ -~]+$' In particular &lt;Space&gt; is the only non-printing character allowed.
  * <br/>
  * The program only enables the wholesale assignment of all the reads in the {@link #INPUT} to a single readgroup. If your file
  * already has reads assigned to multiple readgroups, the original RG value will be lost.
- * <hr />
  *
  * @author mdepristo
  */
@@ -68,30 +68,29 @@ import java.util.regex.Pattern;
 public class AddOrReplaceReadGroups extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Add (if missing) or replaces the read groups in a BAM file with a new one.";
     static final String USAGE_DETAILS = "This tool enables the user to assign all the reads in the INPUT file to a single new readgroup." +
-            "<br /><br />" +
+            "<br />" +
             "For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>" +
-            "GATK Dictionary entry.</a> <br /><br /> " +
+            "GATK Dictionary entry.</a> " +
+            "<br />" +
             "This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation)." +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar AddOrReplaceReadGroups \\<br />" +
-            "      I=input.bam \\<br />" +
-            "      O=output.bam \\<br />" +
-            "      RGID=4 \\<br />" +
-            "      RGLB=lib1 \\<br />" +
-            "      RGPL=illumina \\<br />" +
-            "      RGPU=unit1 \\<br />" +
+            "<h3>Usage example:</h3>" +
+            "\n"+
+            "java -jar picard.jar AddOrReplaceReadGroups \\\n" +
+            "      I=input.bam \\\n" +
+            "      O=output.bam \\\n" +
+            "      RGID=4 \\\n" +
+            "      RGLB=lib1 \\\n" +
+            "      RGPL=illumina \\\n" +
+            "      RGPU=unit1 \\\n" +
             "      RGSM=20 " +
             "</pre>" +
             "<br/>" +
-            "<h4>Caveats</h4>" +
+            "<h3>Caveats</h3>" +
             "The value of the tags must adhere (according to the <a href=\"https://samtools.github.io/hts-specs/SAMv1.pdf\"> SAM-spec</a>) " +
             "with the RegEx '^[ -~]+$' In particular <Space> is the only non-printing character allowed." +
             "<br/> " +
             "The program only enables the wholesale assignment of all the reads in the INPUT to a single readgroup. If your file" +
-            "already has reads assigned to multiple readgroups, the original RG value will be lost." +
-            "<hr />" ;
-
+            "already has reads assigned to multiple readgroups, the original RG value will be lost.";
     @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (BAM or SAM or a GA4GH url).")
     public String INPUT = null;
 
