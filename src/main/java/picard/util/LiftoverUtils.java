@@ -319,7 +319,7 @@ public class LiftoverUtils {
     /**
      *    Normalizes and left aligns a {@link VariantContextBuilder}.
      *    Note: this will modify the start/stop and alleles of this builder.
-     *    Also note: if the reference allele does not match the reference sequence, this method does nothing
+     *    Also note: if the reference allele does not match the reference sequence, this method will throw an exception
      *
      *    Based on Adrian Tan, Gonçalo R. Abecasis and Hyun Min Kang. (2015)
      *    Unified Representation of Genetic Variants. Bioinformatics.
@@ -327,9 +327,9 @@ public class LiftoverUtils {
      */
     protected static void leftAlignVariant(final VariantContextBuilder builder, final int start, final int end, final List<Allele> alleles, final ReferenceSequence referenceSequence) {
 
-        //make sure that referenceAllele matches reference
+        // make sure that referenceAllele matches reference
         if (!referenceAlleleMatchesReferenceForIndel(alleles, referenceSequence, start, end)) {
-            return;
+            throw new IllegalArgumentException(String.format("Reference allele doesn't match reference at %s:%d-%d", referenceSequence.getName(), start, end));
         }
 
         boolean changesInAlleles = true;
