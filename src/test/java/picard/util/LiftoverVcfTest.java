@@ -125,6 +125,46 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         }
     }
 
+    @Test
+    public void testChangingTagArguments() {
+        final String filename = "testLiftoverFailingVariants.vcf";
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
+        final File input = new File(TEST_DATA_PATH, filename);
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "TAGS_TO_REVERSE=null",
+                "TAGS_TO_DROP=null",
+                "CREATE_INDEX=false"
+        };
+
+        // we don't actually care what the results are here -- we just want to make sure that it doesn't fail
+    }
+
+    @Test
+    public void testReverseComplementFailureDoesNotErrorOut() {
+        final VariantContextBuilder builder = new VariantContextBuilder().source("test").loc("chr1", 1, 4);
+        final Allele originalRef = Allele.create("CCCC", true);
+        final Allele originalAlt = Allele.create("C", false);
+        builder.alleles(Arrays.asList(originalRef, originalAlt));
+
+        final Interval interval = new Interval("chr1", 1, 4, true, "test ");
+
+        final String reference = "ATGATGATGA";
+        final ReferenceSequence refSeq = new ReferenceSequence("chr1", 10, reference.getBytes());
+
+        // we don't actually care what the results are here -- we just want to make sure that it doesn't fail
+        final VariantContextBuilder result = LiftoverUtils.reverseComplementVariantContext(builder.make(), interval, refSeq);
+    }
+
     @DataProvider(name = "dataTestMissingContigInReference")
     public Object[][] dataTestHaplotypeProbabilitiesFromSequenceAddToProbs() {
         return new Object[][]{
