@@ -42,6 +42,15 @@ import java.util.stream.Collectors;
  * adjust the SNP, and correct AF-like INFO fields and the relevant genotypes.
  * <br />
  *
+ * <h3>Example</h3>
+ * <pre>
+ * java -jar picard.jar LiftoverVcf \\
+ *     I=input.vcf \\
+ *     O=lifted_over.vcf \\
+ *     CHAIN=b37tohg38.chain \\
+ *     REJECT=rejected_variants.vcf \\
+ *     R=reference_sequence.fasta
+ * </pre>
  * <h3>Caveats</h3>
  * <h4>Rejected Records</h4>
  * Records may be rejected because they cannot be lifted over or because of sequence incompatibilities between the
@@ -77,6 +86,14 @@ public class LiftoverVcf extends CommandLineProgram {
             "and, in the case that the reference and alternate alleles og a SNP have been swapped in the new genome build, it will " +
             "adjust the SNP, and correct AF-like INFO fields and the relevant genotypes." +
             "\n" +
+            "\n" +
+            "<h3>Example</h3>\n" +
+            "java -jar picard.jar LiftoverVcf \\\n" +
+            "    I=input.vcf \\\n" +
+            "    O=lifted_over.vcf \\\n" +
+            "    CHAIN=b37tohg38.chain \\\n" +
+            "    REJECT=rejected_variants.vcf \\\n" +
+            "    R=reference_sequence.fasta\n" +
             "\n" +
             "<h3>Caveats</h3>\n" +
             "<h4>Rejected Records</h4>\n" +
