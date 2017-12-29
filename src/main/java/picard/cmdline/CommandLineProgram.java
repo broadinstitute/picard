@@ -89,7 +89,7 @@ public abstract class CommandLineProgram {
 
     @Argument(doc="One or more directories with space available to be used by this program for temporary storage of working files",
             common=true, optional=true)
-    public List<File> TMP_DIR = new ArrayList<File>();
+    public List<File> TMP_DIR = new ArrayList<>();
 
     @Argument(doc = "Control verbosity of logging.", common=true)
     public Log.LogLevel VERBOSITY = Log.LogLevel.INFO;
@@ -102,10 +102,11 @@ public abstract class CommandLineProgram {
             "do not otherwise need to be decoded.", common=true)
     public ValidationStringency VALIDATION_STRINGENCY = ValidationStringency.DEFAULT_STRINGENCY;
 
-    @Argument(doc = "Compression level for all compressed files created (e.g. BAM and GELI).", common=true)
+    @Argument(doc = "Compression level for all compressed files created (e.g. BAM and VCF).", common=true)
     public int COMPRESSION_LEVEL = Defaults.COMPRESSION_LEVEL;
 
-    @Argument(doc = "When writing SAM/VCF files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.", optional=true, common=true)
+    @Argument(doc = "When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. " +
+            "Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.", optional=true, common=true)
     public Integer MAX_RECORDS_IN_RAM = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
 
     @Argument(doc = "Whether to create a BAM index when writing a coordinate-sorted BAM file.", common=true)
@@ -158,7 +159,7 @@ public abstract class CommandLineProgram {
     */
     private CommandLineParser commandLineParser;
 
-    private final List<Header> defaultHeaders = new ArrayList<Header>();
+    private final List<Header> defaultHeaders = new ArrayList<>();
 
     /**
     * The reconstructed commandline used to run this program. Used for logging
@@ -198,7 +199,7 @@ public abstract class CommandLineProgram {
         }
 
         // Provide one temp directory if the caller didn't
-        if (this.TMP_DIR == null) this.TMP_DIR = new ArrayList<File>();
+        if (this.TMP_DIR == null) this.TMP_DIR = new ArrayList<>();
         if (this.TMP_DIR.isEmpty()) TMP_DIR.add(IOUtil.getDefaultTmpDir());
 
         // Build the default headers
@@ -333,7 +334,7 @@ public abstract class CommandLineProgram {
 
     /** Gets a MetricsFile with default headers already written into it. */
     protected <A extends MetricBase,B extends Comparable<?>> MetricsFile<A,B> getMetricsFile() {
-        final MetricsFile<A,B> file = new MetricsFile<A,B>();
+        final MetricsFile<A,B> file = new MetricsFile<>();
         for (final Header h : this.defaultHeaders) {
             file.addHeader(h);
         }

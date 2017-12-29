@@ -26,13 +26,33 @@ import java.text.NumberFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/** MARK
- * Tool for lifting over a VCF to another genome build and producing a properly headered,
+/**
+ * <h3>Summary</h3>
+ * Tool for "lifting over" a VCF from one genome build to another, producing a properly headered,
  * sorted and indexed VCF in one go.
  *
- * Caveat: Sorts the output and thus relies on {@link #MAX_RECORDS_IN_RAM} to specify how many (vcf)records
- * to hold in memory before spilling to disk. The default value is reasonable for BAM files, but not for VCFs.
- * Consider lowering to 10,000 or even less if you have many genotypes.
+ * <h3>Details</h3>
+ * This tool adjusts the coordinates of variants within a VCF file to match a new reference. The
+ * output file will be sorted and indexed using the target reference build. To be clear, {@link #REFERENCE_SEQUENCE} should be the
+ * <em>target</em> reference build (that is, the "new" one). The tool is based on the <a href="http://genome.ucsc.edu/cgi-bin/hgLiftOver">UCSC LiftOver tool</a>
+ * and uses a UCSC chain file to guide its operation. <br />
+ *
+ * For each variant, the tool will look for the target coordinate, reverse-complement and left-align the variant if needed,
+ * and, in the case that the reference and alternate alleles og a SNP have been swapped in the new genome build, it will
+ * adjust the SNP, and correct AF-like INFO fields and the relevant genotypes.
+ * <br />
+ *
+ * <h3>Caveats</h3>
+ * <h4>Rejected Records</h4>
+ * Records may be rejected because they cannot be lifted over or because of sequence incompatibilities between the
+ * source and target reference genomes.  Rejected records will be emitted to the {@link #REJECT} file using the source
+ * genome build coordinates. The reason for the rejection will be stated in the FILTER field, and more detail may be placed
+ * in the INFO field.
+ * <h4>Memory Use</h4>
+ * LiftOverVcf sorts the output using a {@link htsjdk.samtools.util.SortingCollection} which relies on {@link #MAX_RECORDS_IN_RAM}
+ * to specify how many (vcf) records to hold in memory before "spilling" to disk. The default value is reasonable when sorting SAM files,
+ * but not for VCFs as there is no good default due to the dependence on the number of samples and amount of information in the INFO and FORMAT
+ * fields. Consider lowering to 100,000 or even less if you have many genotypes.
  *
  * @author Tim Fennell
  */
@@ -43,28 +63,37 @@ import java.util.stream.Collectors;
 @DocumentedFeature
 public class LiftoverVcf extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Lifts over a VCF file from one reference build to another.  ";
-    static final String USAGE_DETAILS = "This tool adjusts the coordinates of variants within a VCF file to match a new reference. The " +
+    static final String USAGE_DETAILS = "<h3>Summary</h3>\n" +
+            "Tool for \"lifting over\" a VCF from one genome build to another, producing a properly headered, " +
+            "sorted and indexed VCF in one go.\n" +
+            "\n" +
+            "<h3>Details</h3>\n" +
+            "This tool adjusts the coordinates of variants within a VCF file to match a new reference. The " +
             "output file will be sorted and indexed using the target reference build. To be clear, REFERENCE_SEQUENCE should be the " +
-            "<em>target</em> reference build. The tool is based on the UCSC liftOver tool (see: http://genome.ucsc.edu/cgi-bin/hgLiftOver) " +
-            "and uses a UCSC chain file to guide its operation. <br /><br />" +
-            "Note that records may be rejected because they cannot be lifted over or because of sequence incompatibilities between the " +
-            "source and target reference genomes.  Rejected records will be emitted with filters to the REJECT file, using the source " +
-            "genome coordinates.<br />" +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar LiftoverVcf \\<br />" +
-            "     I=input.vcf \\<br />" +
-            "     O=lifted_over.vcf \\<br />" +
-            "     CHAIN=b37tohg19.chain \\<br />" +
-            "     REJECT=rejected_variants.vcf \\<br />" +
-            "     R=reference_sequence.fasta" +
-            "</pre>" +
-            "For additional information, please see: http://genome.ucsc.edu/cgi-bin/hgLiftOver" +
-            "<hr />";
+            "<em>target</em> reference build (that is, the \"new\" one). The tool is based on the UCSC LiftOver tool (see http://genome.ucsc.edu/cgi-bin/hgLiftOver) " +
+            "and uses a UCSC chain file to guide its operation.\n" +
+            "\n" +
+            "For each variant, the tool will look for the target coordinate, reverse-complement and left-align the variant if needed, " +
+            "and, in the case that the reference and alternate alleles og a SNP have been swapped in the new genome build, it will " +
+            "adjust the SNP, and correct AF-like INFO fields and the relevant genotypes." +
+            "\n" +
+            "\n" +
+            "<h3>Caveats</h3>\n" +
+            "<h4>Rejected Records</h4>\n" +
+            "Records may be rejected because they cannot be lifted over or because of sequence incompatibilities between the " +
+            "source and target reference genomes.  Rejected records will be emitted to the REJECT file using the source " +
+            "genome build coordinates. The reason for the rejection will be stated in the FILTER field, and more detail may be placed " +
+            "in the INFO field.\n" +
+            "<h4>Memory Use</h4>\n" +
+            "LiftOverVcf sorts the output using a \"SortingCollection\" which relies on MAX_RECORDS_IN_RAM " +
+            "to specify how many (vcf) records to hold in memory before \"spilling\" to disk. The default value is reasonable when sorting SAM files, " +
+            "but not for VCFs as there is no good default due to the dependence on the number of samples and amount of information in the INFO and FORMAT " +
+            "fields. Consider lowering to 100,000 or even less if you have many genotypes.\n";
+
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input VCF/BCF file to be lifted over.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output location to write the lifted over VCF/BCF to.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output location for the lifted over VCF/BCF.")
     public File OUTPUT;
 
     @Argument(shortName = "C", doc = "The liftover chain file. See https://genome.ucsc.edu/goldenPath/help/chain.html for a description" +
@@ -119,7 +148,7 @@ public class LiftoverVcf extends CommandLineProgram {
             new VCFFilterHeaderLine(FILTER_CANNOT_LIFTOVER_INDEL, "Indel falls into a reverse complemented region in the target genome."),
             new VCFFilterHeaderLine(FILTER_NO_TARGET, "Variant could not be lifted between genome builds."),
             new VCFFilterHeaderLine(FILTER_MISMATCHING_REF_ALLELE, "Reference allele does not match reference genome sequence after liftover."),
-            new VCFFilterHeaderLine(FILTER_INDEL_STRADDLES_TWO_INTERVALS, "Indel is straddling multiple intervalss in the chain, and so the results are not well defined.")
+            new VCFFilterHeaderLine(FILTER_INDEL_STRADDLES_TWO_INTERVALS, "Reference allele in Indel is straddling multiple intervals in the chain, and so the results are not well defined.")
     );
 
     /**
@@ -155,8 +184,8 @@ public class LiftoverVcf extends CommandLineProgram {
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         return new ReferenceArgumentCollection() {
             @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, common=false,
-                    doc = "The reference sequence (fasta) for the TARGET genome build.  The fasta file must have an " +
-                            "accompanying sequence dictionary (.dict file).")
+                    doc = "The reference sequence (fasta) for the TARGET genome build (i.e., the new one.  The fasta file must have an " +
+                                "accompanying sequence dictionary (.dict file).")
             public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
             @Override
@@ -164,11 +193,6 @@ public class LiftoverVcf extends CommandLineProgram {
                 return REFERENCE_SEQUENCE;
             }
         };
-    }
-
-    // Stock main method
-    public static void main(final String[] args) {
-        new LiftoverVcf().instanceMainWithExit(args);
     }
 
     @Override
