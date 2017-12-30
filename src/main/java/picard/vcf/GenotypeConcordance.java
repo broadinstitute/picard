@@ -102,10 +102,10 @@ import static picard.vcf.GenotypeConcordanceStateCodes.*;
  * <li>TN - True-negatives are correctly called as reference</li>
  * <li>Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) appears in the truth-set</li>
  * </ul>
- * <h4>VCF Output:</h4>
+ * <h3>VCF Output:</h3>
  * <ul>
- * <li>The concordance state will be stored in the \"CONC_ST\" tag in the INFO field.</li>
- * <li>The truth sample name will be \"truth\" and call sample name will be \"call\".</li>
+ * <li>The concordance state will be stored in the CONC_ST tag in the INFO field</li>
+ * <li>The truth sample name will be \"truth\" and call sample name will be \"call\"</li>
  * </ul>
  *
  *
@@ -172,7 +172,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             "TN - True-negatives are correctly called as reference\n" +
             "Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) appears in the truth-set\n" +
             "\n" +
-            "<h4>VCF Output:</h4>\n" +
+            "<h3>VCF Output:</h3>\n" +
             "- The concordance state will be stored in the CONC_ST tag in the INFO field\n" +
             "- The truth sample name will be \"truth\" and call sample name will be \"call\"";
     @Argument(shortName = "TV", doc="The VCF containing the truth sample")
