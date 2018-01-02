@@ -33,6 +33,22 @@
         		<hr>
         		<hr>
         		<hr>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#AlphaTools">Alpha Tools</a>
+							<div id="AlphaTools"
+								<?php echo ($group == 'Alpha Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
+											</li>
+								</ul>
+							</div>
+						</li>
 						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
 							<div id="Fasta"
 								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
@@ -64,6 +80,9 @@
 											</li>
 											<li>
 												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
 											</li>
 								</ul>
 							</div>
@@ -287,6 +306,9 @@
 												<a href="picard_sam_SamToFastq.html">SamToFastq</a>
 											</li>
 											<li>
+												<a href="picard_sam_SetNmAndUqTags.html">SetNmAndUqTags</a>
+											</li>
+											<li>
 												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
 											</li>
 											<li>
@@ -296,10 +318,23 @@
 												<a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a>
 											</li>
 											<li>
+												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
+											</li>
+											<li>
 												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
 											</li>
 											<li>
 												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#UnitTesting">Unit Testing</a>
+							<div id="UnitTesting"
+								<?php echo ($group == 'Unit Testing')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
 											</li>
 								</ul>
 							</div>
@@ -364,42 +399,15 @@
 
 		<h1>ScatterIntervalsByNs</h1>
 
-		<p class="lead">Writes an interval list based on splitting a reference by Ns.</p>
+		<p class="lead">Writes an interval list based on splitting a reference by Ns.  </p>
 
 			<h3>Category
 				<small> Interval Tools</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		A Program for breaking up a reference into intervals of alternating regions of N and ACGT bases.
-
-
- <p>
- Used for creating a broken-up interval list that can be used for scattering a variant-calling pipeline in a way that will not cause problems at the edges of the intervals.
- By using large enough N blocks (so that the tools will not be able to anchor on both sides) we can be assured that the results of scattering and gathering the variants with
- the resulting interval list will be the same as calling with one large region.
-
- <h3>Input</h3>
- <p> A reference file to use for creating the intervals </p>
- <p> Which type of intervals to emit in the output (Ns only, ACGT only or both)
- <p> An integer indicating the largest number of Ns in a contiguous block that will be "tolerated" and not converted into an N block.</p>
-
- <h3>Output</h3>
- <p>
- An interval list (with a sam header) where the names of the intervals are labeled (either N-block or ACGT-block) to indicate what type of block they define.
- </p>
-
-
- <h4>Usage example:</h4>
- <h3>Create an interval list of intervals that do not contain any N blockS for use with haplotype caller on short reads</h3>
- <pre>
- java -jar picard.jar ScatterIntervalsByNs \\
-       R=reference_sequence.fasta \\
-       OT=BOTH \\
-       O=output.interval_list
- </pre>
-
- author Yossi Farjoun
+		A CLP for breaking up a reference into intervals of Ns and ACGTs bases.
+ Used for creating a broken-up interval list for calling WGS.
 
 
 				<h3>ScatterIntervalsByNs specific arguments</h3>
@@ -780,7 +788,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.0-5-ga0201bf-SNAPSHOT built at 21-13-2017 04:13:32.
+        <p class="version">Picard version 2.17.1-SNAPSHOT built at 02-17-2018 12:17:35.
         </p>
 
 	</div>

@@ -33,6 +33,22 @@
         		<hr>
         		<hr>
         		<hr>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#AlphaTools">Alpha Tools</a>
+							<div id="AlphaTools"
+								<?php echo ($group == 'Alpha Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
+											</li>
+								</ul>
+							</div>
+						</li>
 						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
 							<div id="Fasta"
 								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
@@ -64,6 +80,9 @@
 											</li>
 											<li>
 												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
 											</li>
 								</ul>
 							</div>
@@ -287,6 +306,9 @@
 												<a href="picard_sam_SamToFastq.html">SamToFastq</a>
 											</li>
 											<li>
+												<a href="picard_sam_SetNmAndUqTags.html">SetNmAndUqTags</a>
+											</li>
+											<li>
 												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
 											</li>
 											<li>
@@ -296,10 +318,23 @@
 												<a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a>
 											</li>
 											<li>
+												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
+											</li>
+											<li>
 												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
 											</li>
 											<li>
 												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#UnitTesting">Unit Testing</a>
+							<div id="UnitTesting"
+								<?php echo ($group == 'Unit Testing')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
 											</li>
 								</ul>
 							</div>
@@ -364,47 +399,14 @@
 
 		<h1>IntervalListTools</h1>
 
-		<p class="lead">A tool for performing various IntervalList manipulations
-</p>
+		<p class="lead">Manipulates interval lists.  </p>
 
 			<h3>Category
 				<small> Interval Tools</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		Performs various IntervalList manipulations.
-
- <h4>Summary</h4>
- This tool offers multiple interval list file manipulation capabilities, including: sorting,
- merging, subtracting, padding, and other set-theoretic operations. The default action
- is to merge and sort the intervals provided in the #INPUTs. Other options, e.g. interval subtraction, are
- controlled by the arguments.
- <br />
- Both IntervalList and VCF files are accepted as input. IntervalList should be denoted with the extension
- htsjdk.samtools.util.IOUtil#INTERVAL_LIST_FILE_EXTENSION, while a VCF must have one of htsjdk.samtools.util.IOUtil#VCF_FILE_EXTENSION, htsjdk.samtools.util.IOUtil#COMPRESSED_VCF_FILE_EXTENSION,
- htsjdk.samtools.util.IOUtil#BCF_FILE_EXTENSION. When VCF file is used as input, each variant is translated into an using its reference allele or the END
- INFO annotation (if present) to determine the extent of the interval.
-
- IntervalListTools can also "scatter" the resulting interval-list into many interval-files. This can be useful
- for creating multiple interval lists for scattering an analysis over.
-
- <h4>Details</h4>
-  The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and
-  other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,
-  the file then contains records, one per line in text format with the following
- values tab-separated:
- <pre>
-      - Sequence name (SN) <br />
-      - Start position (1-based)** <br />
-      - End position (1-based, end inclusive) <br />
-      - Strand (either + or -) <br />
-      - Interval name (ideally unique names for intervals)
- </pre>
- The coordinate system  is such that the first base or position in a sequence is position 1, and both the start
- and the end positions are included in the interval.
-
- For Example:
- <pre>
+		Little class to aid working with interval lists.
 
 
 				<h3>IntervalListTools specific arguments</h3>
@@ -446,7 +448,7 @@
 					</td>
 					<!--<td>int</td> -->
 					<td>0</td>
-					<td>If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value. Set to 0 to NOT break up intervals.</td>
+					<td>If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value.  Set to 0 to NOT break up intervals</td>
 				</tr>
 				<tr>
 					<td><a href="#--COMMENT">--COMMENT</a><br />
@@ -454,7 +456,7 @@
 					</td>
 					<!--<td>List[String]</td> -->
 					<td>[]</td>
-					<td>One or more lines of comment to add to the header of the output file (as @CO lines in the SAM header.</td>
+					<td>One or more lines of comment to add to the header of the output file.</td>
 				</tr>
 				<tr>
 					<td><a href="#--INCLUDE_FILTERED">--INCLUDE_FILTERED</a><br />
@@ -470,7 +472,7 @@
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
-					<td>Produce the inverse list of intervals, that is, the regions in the genome that are <br>not</br> covered by any of the input intervals. Will merge abutting intervals first. Output will be sorted</td>
+					<td>Produce the inverse list</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -478,7 +480,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1)</td>
+					<td>The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1)</td>
 				</tr>
 				<tr>
 					<td><a href="#--PADDING">--PADDING</a><br />
@@ -486,7 +488,7 @@
 					</td>
 					<!--<td>int</td> -->
 					<td>0</td>
-					<td>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists (both INPUT and SECOND_INPUT, if proivided) <b> before </b> the ACTION is performed.</td>
+					<td>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists <b> before </b> the ACTION is performed.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SCATTER_COUNT">--SCATTER_COUNT</a><br />
@@ -518,7 +520,7 @@
 					</td>
 					<!--<td>Mode</td> -->
 					<td>INTERVAL_SUBDIVISION</td>
-					<td>Selects between various ways in which scattering of the interval-list can happen</td>
+					<td>Do not subdivide </td>
 				</tr>
 				<tr>
 					<td><a href="#--UNIQUE">--UNIQUE</a><br />
@@ -666,7 +668,7 @@
 			 / <small>-BRK</small>
 		</h3>
 		<p class="args">
-			<b>If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value. Set to 0 to NOT break up intervals.</b><br />
+			<b>If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value.  Set to 0 to NOT break up intervals</b><br />
 			
 		</p>
 		<p>
@@ -680,7 +682,7 @@
 			 / <small>-</small>
 		</h3>
 		<p class="args">
-			<b>One or more lines of comment to add to the header of the output file (as @CO lines in the SAM header.</b><br />
+			<b>One or more lines of comment to add to the header of the output file.</b><br />
 			
 		</p>
 		<p>
@@ -767,7 +769,7 @@
 			 / <small>-</small>
 		</h3>
 		<p class="args">
-			<b>Produce the inverse list of intervals, that is, the regions in the genome that are <br>not</br> covered by any of the input intervals. Will merge abutting intervals first. Output will be sorted</b><br />
+			<b>Produce the inverse list</b><br />
 			
 		</p>
 		<p>
@@ -793,7 +795,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1)</b><br />
+			<b>The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1)</b><br />
 			
 		</p>
 		<p>
@@ -805,7 +807,7 @@
 			 / <small>-</small>
 		</h3>
 		<p class="args">
-			<b>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists (both INPUT and SECOND_INPUT, if proivided) <b> before </b> the ACTION is performed.</b><br />
+			<b>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists <b> before </b> the ACTION is performed.</b><br />
 			
 		</p>
 		<p>
@@ -881,33 +883,34 @@
 			 / <small>-M</small>
 		</h3>
 		<p class="args">
-			<b>Selects between various ways in which scattering of the interval-list can happen</b><br />
+			<b>Do not subdivide </b><br />
 			
 		</p>
 			<p>
 				The --SUBDIVISION_MODE argument is an enumerated type (Mode), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">INTERVAL_SUBDIVISION</dt>
-					<dd class="enum">A simple scatter approach in which all output intervals have size equal to the total base count of the source list divided by the
- scatter count (except, possibly, in the last interval list).</dd>
+					<dd class="enum">A simple scatter approach in which all output intervals have size equal to the total base count of the source list divide by the
+ scatter count (except for possible variance in the final interval list).</dd>
 					<dt class="enum">BALANCING_WITHOUT_INTERVAL_SUBDIVISION</dt>
-					<dd class="enum">A scatter approach that differs from {@link Mode#INTERVAL_SUBDIVISION} in a few ways:
+					<dd class="enum">A scatter approach that differs from {@link Mode#INTERVAL_SUBDIVISION} in a few ways.
  <ol>
- <li>No interval will be subdivided, and consequently, the requested {@link IntervalListTools#SCATTER_COUNT} is
- an upper bound of scatter count, not a guarante of the number of {@link IntervalList}s that will be produced
- (e.g., if scatterCount = 10 but there is only one interval in the input, only 1 interval list will be emitted).</li>
+ <li>No interval will be subdivided, and consequently, the requested scatter count is an upper bound of scatter count, not a
+ guarantee as to how many {@link IntervalList}s will be produced (e.g., if scatterCount = 10 but there is only one input interval,
+ only 1 interval list will be emitted).</li>
  <li>When an interval would otherwise be split, it is instead deferred to the next scatter list.</li>
  <li>The "target width" of each scatter list may be wider than what is computed for {@link Mode#INTERVAL_SUBDIVISION}.
  Specifically, if the widest interval in the source interval list is larger than what would otherwise be the target width, that
- interval's width is used.<br/><br/>This approach produces more consistently-sized interval lists, which is one of
- the objectives of scattering.</li>
+ interval's width is used.<br/><br/>The reasoning for this is that this approach produces more consistently-sized interval lists,
+ which is one of the objectives of scattering.</li>
  </ol></dd>
 					<dt class="enum">BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW</dt>
 					<dd class="enum">A scatter approach that differs from {@link Mode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.
-
- This approach tries to balance the number of bases in each interval list by estimating the remaining interval lists sizes.  This is
+ <ol>
+ <li>We try to balance the number of unique bases in each interval list by estimating the remaining interval lists sizes.  This is 
  computed from the total number of unique bases and the bases we have consumed.  This means that the interval list with the most
- number of unique bases is at most the ideal split length larger than the smallest interval list (unique number of bases).</dd>
+ number of unique bases is at most the ideal split length larger than the smallest interval list (unique # of bases).</li>
+ </ol></dd>
 			</dl>
 			</p>
 		<p>
@@ -1020,7 +1023,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.14.0-5-ga0201bf-SNAPSHOT built at 21-13-2017 04:13:32.
+        <p class="version">Picard version 2.17.1-SNAPSHOT built at 02-17-2018 12:17:35.
         </p>
 
 	</div>

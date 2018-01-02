@@ -1,5 +1,5 @@
 {
-  "summary": "Computes a fingerprint from the supplied input (SAM/BAM or VCF) file and compares it to the provided genotypes.",
+  "summary": "Computes a fingerprint from the supplied input (SAM/BAM or VCF) file and compares it to the provided genotypes",
   "arguments": [
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and GELI).",
@@ -107,7 +107,7 @@
       "options": []
     },
     {
-      "summary": "File of genotypes (VCF) to be used in comparison. May contain any number of genotypes; CheckFingerprint will use only those that are usable for fingerprinting.",
+      "summary": "File of genotypes (VCF or GELI) to be used in comparison. May contain any number of genotypes; CheckFingerprint will use only those that are usable for fingerprinting.",
       "name": "--GENOTYPES",
       "synonyms": "-G",
       "type": "File",
@@ -362,7 +362,7 @@
       ]
     }
   ],
-  "description": "Check the sample identity of the sequence/genotype data in the provided file (SAM/BAM or VCF)\n against a set of known genotypes in the supplied genotype file (in VCF format).\n\n \u003ch3\u003e Summary \u003c/h3\u003e\n Computes a fingerprint from the supplied input file (SAM/BAM or VCF) file and\n compares it to the expected fingerprint genotypes provided. The key output is a LOD score\n which represents the relative likelihood of the sequence data originating from the same\n sample as the genotypes vs. from a random sample.\n \u003cbr/\u003e\n Two outputs are produced:\n \u003col\u003e\n \u003cli\u003eA summary metrics file that gives metrics of the fingerprint matchs when comparing the input to a set of\n genotypes for the expected sample.  At the single sample level (if the input was a VCF) or at the read\n level (lane or index within a lane) (if the input was a SAM/BAM) \u003c/li\u003e\n \u003cli\u003eA detail metrics file that contains an individual SNP/Haplotype comparison within a fingerprint comparison.\n \u003c/li\u003e\n \u003c/ol\u003e\n The metrics files fill the fields of the classes FingerprintingSummaryMetrics and FingerprintingDetailMetrics\n The output files may be specified individually using the SUMMARY_OUTPUT and DETAIL_OUTPUT options.\n Alternatively the OUTPUT option may be used instead to give the base of the two output\n files, with the summary metrics having a file extension #FINGERPRINT_SUMMARY_FILE_SUFFIX,\n and the detail metrics having a file extension #FINGERPRINT_DETAIL_FILE_SUFFIX.\n \u003cbr/\u003e\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003ch4\u003eComparing a bam against known genotypes:\u003c/h4\u003e\n \u003cpre\u003e\n     java -jar picard.jar CheckFingerprint \\\\\n          INPUT\u003dsample.bam \\\\\n          GENOTYPES\u003dsample_genotypes.vcf \\\\\n          HAPLOTYPE_DATABASE\u003dfingerprinting_haplotype_database.txt \\\\\n          OUTPUT\u003dsample_fingerprinting\n \u003c/pre\u003e\n \u003cbr/\u003e\n \u003ch4\u003eDetailed Explanation\u003c/h4\u003e\n\n This tool calculates a single number that reports the LOD score for identity check between the #INPUT\n and the #GENOTYPES. A positive value indicates that the data seems to have come from the same individual\n or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates\n that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates\n that the data do not match. A score that is near zero is inconclusive and can result from low coverage\n or non-informative genotypes.\n\n The identity check makes use of haplotype blocks defined in the #HAPLOTYPE_MAP file to enable it to have higher\n statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This\n enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).\n\n When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that\n it finds.",
+  "description": "Attempts to check the sample identity of the sequence/genotype data in the provided file (SAM/BAM or VCF)\n against a set of known genotypes in the supplied genotype file (in either GELI or VCF format).",
   "name": "CheckFingerprint",
   "group": "Fingerprinting Tools"
 }
