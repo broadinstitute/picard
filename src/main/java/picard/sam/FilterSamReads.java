@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * From a SAM or BAM file, produce a new SAM or BAM by filtering aligned reads or a list of read
@@ -89,7 +90,9 @@ public class FilterSamReads extends CommandLineProgram {
         includeReadList("OUTPUT SAM/BAM will contain reads that are supplied in the READ_LIST_FILE file"),
         excludeReadList("OUTPUT bam will contain reads that are *not* supplied in the READ_LIST_FILE file"),
     	includeJavascript("OUTPUT bam will contain reads that hava been accepted by the JAVASCRIPT_FILE script."),
-        includePairedIntervals("OUTPUT SAM/BAM will contain any reads (and their mate) that overlap with an interval. INPUT SAM/BAM and INTERVAL_LIST must be in coordinate SortOrder. Only aligned reads will be output.");
+        includePairedIntervals("OUTPUT SAM/BAM will contain any reads (and their mate) that overlap with an interval. INPUT SAM/BAM and INTERVAL_LIST must be in coordinate SortOrder. Only aligned reads will be output."),
+        includeTagValues("OUTPUT SAM/BAM will contain reads that have a value of tag TAG that is contained in the values for TAG_VALUES"),
+        excludeTagValues("OUTPUT SAM/BAM will contain reads that do not have a value of tag TAG that is contained in the values for TAG_VALUES");
         private final String description;
 
         Filter(final String description) {
@@ -103,11 +106,10 @@ public class FilterSamReads extends CommandLineProgram {
     }
 
     @Argument(doc = "The SAM or BAM file that will be filtered.",
-            optional = false,
             shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Argument(doc = "Filter.", optional = false)
+    @Argument(doc = "Filter.")
     public Filter FILTER = null;
 
     @Argument(doc = "Read List File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.",
@@ -122,17 +124,28 @@ public class FilterSamReads extends CommandLineProgram {
 
     @Argument(
             doc = "SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.",
-            optional = true, shortName = "SO")
+            optional = true,
+            shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
     @Argument(
             doc = "Create .reads files (for debugging purposes)",
             optional = true)
-    public boolean WRITE_READS_FILES = true;
+    public boolean WRITE_READS_FILES = false;
 
     @Argument(doc = "SAM or BAM file to write read excluded results to",
-            optional = false, shortName = "O")
+            shortName = "O")
     public File OUTPUT;
+
+    @Argument(doc = "The tag to select from input SAM/BAM",
+            optional = true,
+            shortName = "T")
+    public String TAG;
+
+    @Argument(doc = "List of tag values to extract from Input SAM/BAM",
+            shortName = "TV",
+            optional = true)
+    public List<String> TAG_VALUE;
     
 	@Argument(shortName = "JS",
 			doc = "Filters a SAM or BAM file with a javascript expression using the java javascript-engine. "
@@ -248,6 +261,16 @@ public class FilterSamReads extends CommandLineProgram {
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),
                             new IntervalKeepPairFilter(intervalList), false);
                     break;
+                case includeTagValues:
+                    List<Object> includeTagList = TAG_VALUE.stream().map(T -> (Object) T).collect(Collectors.toList());
+                    filteringIterator = new FilteringSamIterator(samReader.iterator(),
+                            new TagFilter(TAG, includeTagList, true));
+                    break;
+                case excludeTagValues:
+                    List<Object> excludeTagList = TAG_VALUE.stream().map(T -> (Object) T).collect(Collectors.toList());
+                    filteringIterator = new FilteringSamIterator(samReader.iterator(),
+                            new TagFilter(TAG, excludeTagList, false));
+                    break;
                 default:
                     throw new UnsupportedOperationException(FILTER.name() + " has not been implemented!");
             }
@@ -277,12 +300,18 @@ public class FilterSamReads extends CommandLineProgram {
         if ((FILTER.equals(Filter.includeReadList) ||
                 FILTER.equals(Filter.excludeReadList)) &&
                 READ_LIST_FILE == null) {
-            return new String[]{"A READ_LIST_FILE must be specified when using the " + FILTER.name() + " option"};
+            return new String[]{"A READ_LIST_FILE must be specified when using the " + FILTER.name() + " filter"};
 
         }
 
         if (FILTER.equals(Filter.includePairedIntervals) && INTERVAL_LIST == null) {
-            return new String[]{"A INTERVAL_LIST must be specified when using the " + FILTER.name() + " option"};
+            return new String[]{"A INTERVAL_LIST must be specified when using the " + FILTER.name() + " filter"};
+        }
+
+        if ((FILTER.equals(Filter.includeTagValues) || FILTER.equals(Filter.excludeTagValues)) &&
+                (TAG == null || TAG_VALUE.isEmpty())) {
+            return new String[]{"TAG and TAG_VALUE must be specified when using either the " + Filter.excludeTagValues.name() + " or " +
+                    Filter.includeTagValues.name() + " filter"};
         }
 
         return super.customCommandLineValidation();

@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.stream.StreamSupport;
 
 public class FilterSamReadsTest extends CommandLineProgramTest {
@@ -67,6 +68,16 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         return new Object[][]{
                 {"testdata/picard/sam/FilterSamReads/filter1.interval_list", 4},
                 {"testdata/picard/sam/FilterSamReads/filter2.interval_list", 0}
+        };
+    }
+
+    @DataProvider(name = "dataTestTagFilter")
+    public Object[][] dataTestTagFilter() {
+        return new Object[][]{
+                {"testdata/picard/sam/aligned.sam", "RG", "0", true, 8},
+                {"testdata/picard/sam/aligned.sam", "RG", "0", false, 0},
+                {"testdata/picard/sam/aligned.sam", "CB", "ACG", false, 3},
+                {"testdata/picard/sam/aligned.sam", "CB", "ACG", true, 5}
         };
     }
     
@@ -132,6 +143,29 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         }
 
         return program;
+    }
+
+    /**
+     * filters a SAM using Tag Values
+     */
+    @Test(dataProvider = "dataTestTagFilter")
+    public void testTagFilter(final String samFilename, final String tag, final String tagValue, final boolean includeReads, final int expectNumber) throws Exception {
+        // input as SAM file
+        final File inputSam = new File(samFilename);
+
+        final FilterSamReads filterTest = new FilterSamReads();
+        filterTest.INPUT = inputSam;
+        filterTest.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
+        filterTest.OUTPUT.deleteOnExit();
+        filterTest.FILTER = includeReads ? FilterSamReads.Filter.includeTagValues : FilterSamReads.Filter.excludeTagValues;
+        filterTest.TAG = tag;
+        filterTest.TAG_VALUE = Arrays.asList(tagValue);
+
+        Assert.assertEquals(filterTest.doWork(),0);
+
+        long count = getReadCount(filterTest);
+
+        Assert.assertEquals(count, expectNumber);
     }
 
     private long getReadCount(FilterSamReads filterTest) throws Exception {
