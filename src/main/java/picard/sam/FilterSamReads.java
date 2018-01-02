@@ -84,12 +84,12 @@ public class FilterSamReads extends CommandLineProgram {
     private static final Log log = Log.getInstance(FilterSamReads.class);
     
     protected /* <- used in test */ enum Filter {
-        includeAligned("OUTPUT SAM/BAM will contain aligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note that *both* first and second of paired reads must be aligned to be included in the OUTPUT SAM or BAM)"),
-        excludeAligned("OUTPUT SAM/BAM will contain un-mapped reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note that *both* first and second of pair must be aligned to be excluded from the OUTPUT SAM or BAM)"),
+        includeAligned("OUTPUT SAM/BAM will contain aligned reads only. INPUT SAM/BAM must be in queryname OutputSortOrder. (Note that *both* first and second of paired reads must be aligned to be included in the OUTPUT SAM or BAM)"),
+        excludeAligned("OUTPUT SAM/BAM will contain un-mapped reads only. INPUT SAM/BAM must be in queryname OutputSortOrder. (Note that *both* first and second of pair must be aligned to be excluded from the OUTPUT SAM or BAM)"),
         includeReadList("OUTPUT SAM/BAM will contain reads that are supplied in the READ_LIST_FILE file"),
         excludeReadList("OUTPUT bam will contain reads that are *not* supplied in the READ_LIST_FILE file"),
     	includeJavascript("OUTPUT bam will contain reads that hava been accepted by the JAVASCRIPT_FILE script."),
-        includePairedIntervals("OUTPUT SAM/BAM will contain any reads (and their mate) that overlap with an interval. INPUT SAM/BAM and INTERVAL_LIST must be in coordinate SortOrder. Only aligned reads will be output.");
+        includePairedIntervals("OUTPUT SAM/BAM will contain any reads (and their mate) that overlap with an interval. INPUT SAM/BAM and INTERVAL_LIST must be in coordinate OutputSortOrder. Only aligned reads will be output.");
         private final String description;
 
         Filter(final String description) {
@@ -121,7 +121,7 @@ public class FilterSamReads extends CommandLineProgram {
     public File INTERVAL_LIST;
 
     @Argument(
-            doc = "SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.",
+            doc = "OutputSortOrder of the OUTPUT SAM or BAM file, otherwise use the OutputSortOrder of the INPUT file.",
             optional = true, shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
 

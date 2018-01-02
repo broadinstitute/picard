@@ -132,7 +132,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         // Create the output header
         final SAMFileHeader outputHeader = header.clone();
         if (outputHeader.getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-            throw new PicardException("This program requires inputs in coordinate SortOrder");
+            throw new PicardException("This program requires inputs in coordinate OutputSortOrder");
         }
 
         COMMENT.forEach(outputHeader::addComment);
