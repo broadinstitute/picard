@@ -86,10 +86,7 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
                 new String[]{"BAIT_SET",  "BAIT_TERRITORY",  "ON_BAIT_BASES",  "NEAR_BAIT_BASES",  "OFF_BAIT_BASES",  "PCT_OFF_BAIT",  "ON_BAIT_VS_SELECTED",  "MEAN_BAIT_COVERAGE"}
         );
 
-        hsMetrics.BAIT_DESIGN_EFFICIENCY = (double) hsMetrics.TARGET_TERRITORY / (double) hsMetrics.BAIT_TERRITORY;
-        hsMetrics.PCT_USABLE_BASES_ON_BAIT   = hsMetrics.ON_BAIT_BASES   / (double) targetMetrics.PF_BASES;
-        hsMetrics.PCT_USABLE_BASES_ON_TARGET = hsMetrics.ON_TARGET_BASES / (double) targetMetrics.PF_BASES;
-        hsMetrics.HS_LIBRARY_SIZE = DuplicationMetrics.estimateLibrarySize(targetMetrics.PF_SELECTED_PAIRS, targetMetrics.PF_SELECTED_UNIQUE_PAIRS);
+        updateMetrics(hsMetrics, targetMetrics.PF_BASES, targetMetrics.PF_SELECTED_PAIRS, targetMetrics.PF_SELECTED_UNIQUE_PAIRS);
 
         //need HSLIBRARY_SIZE
         hsMetrics.HS_PENALTY_10X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 10);
@@ -102,6 +99,21 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
     }
 
     /**
+     * Updates several of the metrics in the provided Metrics object so that they better reflect the particular target strategy
+     *
+     * @param hsMetrics the metrics object to fix
+     * @param bases the total number of bases
+     * @param selectedPairs the total number of selected pairs
+     * @param selectedUniquePairs the number of selected pairs that are unique
+     */
+    protected void updateMetrics(final HsMetrics hsMetrics, final long bases, final long selectedPairs, final long selectedUniquePairs) {
+        hsMetrics.BAIT_DESIGN_EFFICIENCY = (double) hsMetrics.TARGET_TERRITORY / (double) hsMetrics.BAIT_TERRITORY;
+        hsMetrics.PCT_USABLE_BASES_ON_BAIT   = hsMetrics.ON_BAIT_BASES   / (double) bases;
+        hsMetrics.PCT_USABLE_BASES_ON_TARGET = hsMetrics.ON_TARGET_BASES / (double) bases;
+        hsMetrics.HS_LIBRARY_SIZE = DuplicationMetrics.estimateLibrarySize(selectedPairs, selectedUniquePairs);
+    }
+
+    /**
      * Attempts to calculate the HS penalty incurred by the library in order to get 80%
      * of target bases (in non-zero-covered targets) to a specific target coverage (e.g. 20X).
      *
@@ -109,7 +121,7 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
      * @return the hs penalty - a multiplier that tells if you want, e.g. 20X coverage, then you will
      *         need to produce this many PF aligned bases per target bases in your design!
      */
-    private double calculateHsPenalty(final Long librarySize, final TargetMetrics targetMetrics, final int coverageGoal) {
+    protected double calculateHsPenalty(final Long librarySize, final TargetMetrics targetMetrics, final int coverageGoal) {
         if (librarySize == null) return 0;
 
         final double meanCoverage  = targetMetrics.ON_TARGET_FROM_PAIR_BASES / (double) targetMetrics.TARGET_TERRITORY;
