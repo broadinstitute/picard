@@ -53,7 +53,7 @@ import java.io.File;
 public class SortSam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Sorts a SAM or BAM file.  ";
     static final String USAGE_DETAILS = "This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property " +
-            "of the SAM record. The OutputSortOrder of a SAM/BAM file is found in the SAM file header tag @HD in the field labeled SO.  " +
+            "of the SAM record. The SortOrder of a SAM/BAM file is found in the SAM file header tag @HD in the field labeled SO.  " +
             "" +
             "<p>For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the " +
             "reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping " +

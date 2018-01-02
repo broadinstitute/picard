@@ -178,7 +178,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
      * may be called multiple times over the course of an iteration,
      * changing the expected sort, if desired -- from the time it is called,
      * it validates whatever sort is set, or stops validating if it
-     * is set to null or SAMFileHeader.OutputSortOrder.unsorted.  If this method
+     * is set to null or SAMFileHeader.SortOrder.unsorted.  If this method
      * is not called, then no validation of the iterated records is done.
      *
      * @param sortOrder The order in which records are expected to be returned
