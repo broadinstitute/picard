@@ -117,18 +117,37 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
      * Attempts to calculate the HS penalty incurred by the library in order to get 80%
      * of target bases (in non-zero-covered targets) to a specific target coverage (e.g. 20X).
      *
+     * @param librarySize  the estimated library size
+     * @param targetMetrics the target metrics class
      * @param coverageGoal the desired coverage target (e.g. 20X)
      * @return the hs penalty - a multiplier that tells if you want, e.g. 20X coverage, then you will
      *         need to produce this many PF aligned bases per target bases in your design!
      */
-    protected double calculateHsPenalty(final Long librarySize, final TargetMetrics targetMetrics, final int coverageGoal) {
-        if (librarySize == null) return 0;
-
+    private double calculateHsPenalty(final Long librarySize, final TargetMetrics targetMetrics, final int coverageGoal) {
         final double meanCoverage  = targetMetrics.ON_TARGET_FROM_PAIR_BASES / (double) targetMetrics.TARGET_TERRITORY;
         final double fold80        = targetMetrics.FOLD_80_BASE_PENALTY;
         final long pairs           = targetMetrics.PF_SELECTED_PAIRS;
         final long uniquePairs     = targetMetrics.PF_SELECTED_UNIQUE_PAIRS;
         final double onTargetPct   = (double) targetMetrics.ON_TARGET_BASES / (double) targetMetrics.PF_UQ_BASES_ALIGNED;
+        return calculateHsPenalty(librarySize, meanCoverage, fold80, pairs, uniquePairs, onTargetPct, coverageGoal);
+    }
+
+    /**
+     * Attempts to calculate the HS penalty incurred by the library in order to get 80%
+     * of target bases (in non-zero-covered targets) to a specific target coverage (e.g. 20X).
+     *
+     * @param librarySize  the estimated library size
+     * @param meanCoverage  the mean coverage
+     * @param pairs  the total number of read pairs
+     * @param uniquePairs  the number of unique read pairs
+     * @param onTargetPct  the percentage of on-target bases
+     * @param coverageGoal the desired coverage target (e.g. 20X)
+     * @return the hs penalty - a multiplier that tells if you want, e.g. 20X coverage, then you will
+     *         need to produce this many PF aligned bases per target bases in your design!
+     */
+    protected double calculateHsPenalty(final Long librarySize, final double meanCoverage, final double fold80, final long pairs, final long uniquePairs, final double onTargetPct, final int coverageGoal) {
+
+        if (librarySize == null) return 0;
 
         final double uniquePairGoalMultiplier = (coverageGoal / meanCoverage) * fold80;
         double pairMultiplier = uniquePairGoalMultiplier;
@@ -163,5 +182,4 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
             return (1 / uniqueFraction) * fold80 * (1 / onTargetPct);
         }
     }
-
 }
