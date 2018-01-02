@@ -29,6 +29,9 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.programgroups.SamOrBam;
 
 /**
+ *
+ * This tool is deprecated and SetNmMdAndUqTags should be used instead.
+ *
  * @author Yossi Farjoun
  */
 @Deprecated
@@ -38,17 +41,18 @@ import picard.cmdline.programgroups.SamOrBam;
         oneLineSummary = SetNmAndUqTags.USAGE_SUMMARY,
         programGroup = SamOrBam.class)
 public class SetNmAndUqTags extends SetNmMdAndUqTags {
+
     static final String USAGE_SUMMARY = "DEPRECATED: Use SetNmMdAndUqTags instead.";
     static final String USAGE_DETAILS = "DEPRECATED: Use SetNmMdAndUqTags instead.  This tool takes in a SAM or BAM file (sorted by coordinate) and calculates the NM, MD, and UQ tags by comparing with the reference."+
             "<br />" +
             "This may be needed when MergeBamAlignment was run with SORT_ORDER different from 'coordinate' and thus could not fix\n"+
             "these tags then.<br />"+
+            "<p>"+
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar SetNmAndUqTags \\<br />" +
             "      I=sorted.bam \\<br />" +
             "      O=fixed.bam \\<br />"+
-            "</pre>" +
-            "<hr />";
+            "</pre>";
 }
 
