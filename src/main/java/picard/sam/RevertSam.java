@@ -48,12 +48,10 @@ import htsjdk.samtools.util.QualityEncodingDetector;
 import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.SortingCollection;
 import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.OutputSortOrder;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 import picard.util.TabbedTextFileWithHeaderParser;
@@ -162,7 +160,7 @@ public class RevertSam extends CommandLineProgram {
     public FileType OUTPUT_BY_READGROUP_FILE_FORMAT = FileType.dynamic;
 
     @Argument(shortName = "SO", doc = "The sort order to create the reverted output file with.")
-    public OutputSortOrder SORT_ORDER = OutputSortOrder.queryname;
+    public SortOrder SORT_ORDER = SortOrder.queryname;
 
     @Argument(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME, doc = "True to restore original qualities from the OQ field to the QUAL field if available.")
     public boolean RESTORE_ORIGINAL_QUALITIES = true;
@@ -214,7 +212,7 @@ public class RevertSam extends CommandLineProgram {
     @Override
     protected String[] customCommandLineValidation() {
         final List<String> errors = new ArrayList<>();
-        ValidationUtil.validateSanitizeSortOrder(SANITIZE, SORT_ORDER.getSortOrder(), errors);
+        ValidationUtil.validateSanitizeSortOrder(SANITIZE, SORT_ORDER, errors);
         ValidationUtil.validateOutputParams(OUTPUT_BY_READGROUP, OUTPUT, OUTPUT_MAP, errors);
 
         if (!errors.isEmpty()) {
@@ -235,10 +233,10 @@ public class RevertSam extends CommandLineProgram {
         ////////////////////////////////////////////////////////////////////////////
         // Build the output writer with an appropriate header based on the options
         ////////////////////////////////////////////////////////////////////////////
-        final boolean presorted = isPresorted(inHeader, SORT_ORDER.getSortOrder(), sanitizing);
+        final boolean presorted = isPresorted(inHeader, SORT_ORDER, sanitizing);
         if (SAMPLE_ALIAS != null) overwriteSample(inHeader.getReadGroups(), SAMPLE_ALIAS);
         if (LIBRARY_NAME != null) overwriteLibrary(inHeader.getReadGroups(), LIBRARY_NAME);
-        final SAMFileHeader singleOutHeader = createOutHeader(inHeader, SORT_ORDER.getSortOrder(), REMOVE_ALIGNMENT_INFORMATION);
+        final SAMFileHeader singleOutHeader = createOutHeader(inHeader, SORT_ORDER, REMOVE_ALIGNMENT_INFORMATION);
         inHeader.getReadGroups().forEach(readGroup -> singleOutHeader.addReadGroup(readGroup));
 
         final Map<String, File> outputMap;
@@ -257,7 +255,7 @@ public class RevertSam extends CommandLineProgram {
 
             outputMap = createOutputMap(OUTPUT_MAP, OUTPUT, defaultExtension, inHeader.getReadGroups());
             ValidationUtil.assertAllReadGroupsMapped(outputMap, inHeader.getReadGroups());
-            headerMap = createHeaderMap(inHeader, SORT_ORDER.getSortOrder(), REMOVE_ALIGNMENT_INFORMATION);
+            headerMap = createHeaderMap(inHeader, SORT_ORDER, REMOVE_ALIGNMENT_INFORMATION);
         } else {
             outputMap = null;
             headerMap = null;
