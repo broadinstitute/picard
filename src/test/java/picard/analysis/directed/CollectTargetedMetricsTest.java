@@ -66,7 +66,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
         //Check that dictionary file is readable and then set header dictionary
         try {
-            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(dict));
+            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(dict.toPath()));
             header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
         } catch (final SAMException e) {
             e.printStackTrace();

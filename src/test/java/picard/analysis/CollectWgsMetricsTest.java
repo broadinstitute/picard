@@ -148,7 +148,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         //Check that dictionary file is readable and then set header dictionary
         try {
-            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(referenceDict));
+            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(referenceDict.toPath()));
             header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
         } catch (final SAMException e) {
             e.printStackTrace();

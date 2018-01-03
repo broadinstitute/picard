@@ -117,7 +117,7 @@ public class BedToIntervalList extends CommandLineProgram {
         try {
             // create a new header that we will assign the dictionary provided by the SAMSequenceDictionaryExtractor to.
             final SAMFileHeader header = new SAMFileHeader();
-            final SAMSequenceDictionary samSequenceDictionary = SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY);
+            final SAMSequenceDictionary samSequenceDictionary = SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY.toPath());
             header.setSequenceDictionary(samSequenceDictionary);
             // set the sort order to be sorted by coordinate, which is actually done below
             // by getting the .uniqued() intervals list before we write out the file

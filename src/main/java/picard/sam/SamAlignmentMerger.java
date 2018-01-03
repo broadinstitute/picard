@@ -189,7 +189,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
     @Override
     protected SAMSequenceDictionary getDictionaryForMergedBam() {
-        SAMSequenceDictionary referenceDict = SAMSequenceDictionaryExtractor.extractDictionary(referenceFasta);
+        SAMSequenceDictionary referenceDict = SAMSequenceDictionaryExtractor.extractDictionary(referenceFasta.toPath());
         if (referenceDict == null) {
             throw new PicardException("No sequence dictionary found for " + referenceFasta.getAbsolutePath() +
                     ".  Use Picard's CreateSequenceDictionary to create a sequence dictionary.");

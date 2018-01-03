@@ -97,8 +97,8 @@ public class UpdateVcfSequenceDictionaryTest {
         IOUtil.assertFilesEqual(samSequenceDictionaryVcf, outputFile);
 
         // A little extra checking.
-        Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(input).size(), 84);
-        Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(samSequenceDictionaryVcf).size(), 82);
-        Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(outputFile).size(), 82);
+        Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(input.toPath()).size(), 84);
+        Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(samSequenceDictionaryVcf.toPath()).size(), 82);
+        Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(outputFile.toPath()).size(), 82);
     }
 }

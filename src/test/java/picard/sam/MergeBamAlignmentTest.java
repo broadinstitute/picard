@@ -953,7 +953,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         alignedSam.deleteOnExit();
 
         // Populate the header with SAMSequenceRecords
-        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2));
+        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2.toPath()));
 
         // Create 2 alignments for each end of pair
         final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
@@ -1107,7 +1107,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
             final String sequence = "chr1";
             // Populate the header with SAMSequenceRecords
-            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2));
+            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2.toPath()));
 
             final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
             for (final MultipleAlignmentSpec spec : specs) {
@@ -1232,7 +1232,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
         final String sequence = "chr1";
         // Populate the header with SAMSequenceRecords
-        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2));
+        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2.toPath()));
 
         final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
 

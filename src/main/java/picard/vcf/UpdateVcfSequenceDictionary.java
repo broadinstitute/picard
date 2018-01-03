@@ -82,7 +82,7 @@ public class UpdateVcfSequenceDictionary extends CommandLineProgram {
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final SAMSequenceDictionary samSequenceDictionary = SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY);
+        final SAMSequenceDictionary samSequenceDictionary = SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY.toPath());
 
         final VCFFileReader fileReader = new VCFFileReader(INPUT, false);
         final VCFHeader fileHeader = fileReader.getFileHeader();
