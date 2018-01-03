@@ -59,11 +59,11 @@ import java.io.File;
  * <h3> Inputs</h3>
  * <ul>
  *     <li> Input BAM or SAM file to sort </li>
- *     <li> Name of the sorted BAM or SAM output file </li>
+ *     <li> Sorted BAM or SAM output file </li>
  *     <li> Sort order of output file </li>
  * </ul>
  *
- * <h3>Example</h3>
+ * <h3>Usage example:</h3>
  * <pre>
  *     java -jar picard.jar SortSam \
  *     INPUT=input.bam \
@@ -75,7 +75,7 @@ import java.io.File;
  * @author alecw@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        summary = SortSam.USAGE_SUMMARY + SortSam.USAGE_DETAILS,
+        summary = SortSam.USAGE_DETAILS,
         oneLineSummary = SortSam.USAGE_SUMMARY,
         programGroup = SamOrBam.class)
 @DocumentedFeature
@@ -83,27 +83,26 @@ public class SortSam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Sorts a SAM or BAM file.";
     static final String USAGE_DETAILS = "This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property " +
             "of the SAM record. The SortOrder of a SAM/BAM file is found in the SAM file header tag @HD in the field labeled SO.  " +
-            "\nFor a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the " +
+            "<p> For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the " +
             "reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping " +
-            "position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.\n" +
-            "" +
-            "For queryname-sorted alignments, all alignments are grouped using the queryname field but the alignments are not necessarily sorted within these groups.  " +
-            "Reads having the same queryname are derived from the same template.  " +
-
-            "<h3>Usage example:</h3>" +
-            "\n<pre>" +
+            "position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.</p>" +
+            "<p>For queryname-sorted alignments, all alignments are grouped using the queryname field but the alignments are not necessarily sorted within these groups.  " +
+            "Reads having the same queryname are derived from the same template.</p>" +
+            "<hr /><hr />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
             "java -jar picard.jar SortSam \\<br />" +
             "      I=input.bam \\<br />" +
             "      O=sorted.bam \\<br />" +
             "      SORT_ORDER=coordinate" +
             "</pre>";
-    @Argument(doc = "The BAM or SAM file to sort.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "Input BAM or SAM file to sort.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Argument(doc = "The sorted BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc = "Sorted BAM or SAM output file.", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc = "Sort order of output file")
+    @Argument(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc = "Sort order of output file.")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
     private final Log log = Log.getInstance(SortSam.class);
