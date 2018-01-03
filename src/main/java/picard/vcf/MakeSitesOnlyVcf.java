@@ -62,8 +62,8 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
             "any support variant format including .vcf, .vcf.gz or .bcf. <br /><br />" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
-            "java -jar picard.jar MakeSitesOnlyVcf \\ <br \>" +
-            "      INPUT=input_variants.vcf \\ <br >" +
+            "java -jar picard.jar MakeSitesOnlyVcf \\ <br />" +
+            "      INPUT=input_variants.vcf \\ <br />" +
             "      OUTPUT=output_variants.vcf" +
             "</pre>";
 
