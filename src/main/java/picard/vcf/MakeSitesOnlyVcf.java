@@ -27,15 +27,36 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
+ * Creates a VCF that contains all the site-level information for all records in the input VCF but no genotype information.
+ *
+ * <h3> Summary </h3>
+ * This tool reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining all site level information,
+ * including annotations based on genotypes (e.g. AN, AF). Output can be any support variant format including .vcf,
+ * .vcf.gz or .bcf.
+ *
+ * <h3> Inputs</h3>
+ * <ul>
+ *     <li> Input VCF or BCF file containing genotype and site-level information </li>
+ *     <li> Name of output VCF or BCF file to output site-level information </li>
+ *     <li> Names of one or more samples to include in the output VCF [Optional] </li>
+ * </ul>
+ *
+ * <h3>Example</h3>
+ * <pre>
+ *     java -jar picard.jar MakeSitesOnlyVcf \
+ *      INPUT=input_variants.vcf \
+ *      OUTPUT=output_variants.vcf
+ * </pre>
+ *
  * Writes out a VCF that contains all the site-level information for all records in the input VCF and no per-sample information.
  *
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
         summary = "Reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining " +
-                "all site level information, including annotations based on genotypes (e.g. AN, AF). Output an be " +
+                "all site level information, including annotations based on genotypes (e.g. AN, AF). Output can be " +
                 "any support variant format including .vcf, .vcf.gz or .bcf.",
-        oneLineSummary = "Creates a VCF bereft of genotype information from an input VCF or BCF",
+        oneLineSummary = "Creates a VCF that contains all the site-level information for all records in the input VCF but no genotype information.",
         programGroup = VcfOrBcf.class)
 @DocumentedFeature
 public class MakeSitesOnlyVcf extends CommandLineProgram {

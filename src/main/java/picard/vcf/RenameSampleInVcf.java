@@ -42,6 +42,36 @@ import picard.cmdline.programgroups.VcfOrBcf;
 import java.io.File;
 import java.util.EnumSet;
 
+/**
+ * Renames a sample within a VCF or BCF.
+ *
+ * <h3> Summary </h3>
+ * This tool enables the user to rename a sample in either a VCF or BCF file. It is intended to change the name of a
+ * sample in a VCF prior to merging with VCF files in which one or more samples have similar names. Note that the
+ * input VCF file must be single-sample VCF and that the NEW_SAMPLE_NAME argument is required.
+ *
+ *
+ * <h3> Inputs</h3>
+ * <ul>
+ *     <li> Input single-sample VCF or BCF file </li>
+ *     <li> Name of output single-sample VCF or BCF file that contains the new sample name </li>
+ *     <li> New name to give sample in output VCF </li>
+ *     <li> Name of current sample in input VCF used to assert the extant sample name [Optional] </li>
+ * </ul>
+ *
+ * <h3>Example</h3>
+ * <pre>
+ *     java -jar picard.jar RenameSampleInVcf \
+ *     INPUT=input_variants.vcf \
+ *     OUTPUT=output_variants.vcf \
+ *     NEW_SAMPLE_NAME=sample
+ * </pre>
+ *
+ * <h3> Notes </h3>
+ * The input VCF (or BCF) <i>must</i> be single-sample.
+ *
+ */
+
 @CommandLineProgramProperties(
         summary = RenameSampleInVcf.USAGE_SUMMARY + RenameSampleInVcf.USAGE_DETAILS,
         oneLineSummary = RenameSampleInVcf.USAGE_SUMMARY,
