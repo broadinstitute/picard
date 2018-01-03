@@ -361,7 +361,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         int start = CHAIN_SIZE - 3;
         int stop = start + 2;
         builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefTTT, T));
-        result_builder.start(1).stop(3).alleles(CollectionUtil.makeList(RefCAA, C));
+        result_builder.start(1).stop(3).alleles(CollectionUtil.makeList(RefCAA, C)).attribute(LiftoverUtils.REV_COMPED_ALLELES, true);
 
         genotypeBuilder.alleles(builder.getAlleles());
         resultGenotypeBuilder.alleles(result_builder.getAlleles());
@@ -574,7 +574,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1");
         final GenotypeBuilder genotypeBuilder = new GenotypeBuilder("test1");
         final GenotypeBuilder resultGenotypeBuilder = new GenotypeBuilder("test1");
-        final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1").attribute("SwappedAlleles", true);
+        final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1").attribute(LiftoverUtils.SWAPPED_ALLELES, true);
 
         // simple snp
         int start = 12;
@@ -1041,7 +1041,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1");
         final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1");
-        result_builder.attribute("OriginalContig", "chr1");
+        result_builder.attribute(LiftoverVcf.ORIGINAL_CONTIG, "chr1");
         final GenotypeBuilder genotypeBuilder = new GenotypeBuilder("test1");
         final GenotypeBuilder resultGenotypeBuilder = new GenotypeBuilder("test1");
         final List<Object[]> tests = new ArrayList<>();
@@ -1063,14 +1063,14 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         resultGenotypeBuilder.alleles(CollectionUtil.makeList(Allele.create("."), Allele.create(".")));
         builder.genotypes(genotypeBuilder.make());
         result_builder.genotypes(resultGenotypeBuilder.make());
-        result_builder.attribute("OriginalStart", start);
+        result_builder.attribute(LiftoverVcf.ORIGINAL_START, start);
 
         tests.add(new Object[]{liftOver, builder.make(), result_builder.make(), false});
 
         builder.source("test2");
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(CRef, T, DEL));
         result_builder.start(start).stop(start).alleles(CollectionUtil.makeList(CRef, T, DEL));
-        result_builder.attribute("OriginalStart", start);
+        result_builder.attribute(LiftoverVcf.ORIGINAL_START, start);
         genotypeBuilder.alleles(CollectionUtil.makeList(T, DEL));
         resultGenotypeBuilder.alleles(CollectionUtil.makeList(T, DEL));
         builder.genotypes(genotypeBuilder.make());
@@ -1085,7 +1085,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         int liftedStart = 1 + offset;
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(CRef, T, DEL));
         result_builder.start(liftedStart).stop(liftedStart).alleles(CollectionUtil.makeList(GRef, A, DEL));
-        result_builder.attribute("OriginalStart", start);
+        result_builder.attribute(LiftoverVcf.ORIGINAL_START, start);
+        result_builder.attribute(LiftoverUtils.REV_COMPED_ALLELES, true);
 
         genotypeBuilder.alleles(CollectionUtil.makeList(T, DEL));
         resultGenotypeBuilder.alleles(CollectionUtil.makeList(A, DEL));
@@ -1100,7 +1101,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         liftedStart = 1 + offset;
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(CRef, T));
         result_builder.start(liftedStart).stop(liftedStart).alleles(CollectionUtil.makeList(GRef, A));
-        result_builder.attribute("OriginalStart", start);
+        result_builder.attribute(LiftoverVcf.ORIGINAL_START, start);
 
         genotypeBuilder.alleles(CollectionUtil.makeList(T, Allele.NO_CALL));
         resultGenotypeBuilder.alleles(CollectionUtil.makeList(A, Allele.NO_CALL));

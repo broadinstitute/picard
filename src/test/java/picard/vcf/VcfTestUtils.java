@@ -105,9 +105,9 @@ public class VcfTestUtils {
         Assert.assertTrue(actual.hasSameAllelesAs(expected), "Alleles differ between " + actual + " and " + expected + ": ");
         assertEquals(actual.getGenotypes(), expected.getGenotypes());
 
-        Assert.assertEquals(expected.getID(), actual.getID());
-        Assert.assertEquals(expected.getFilters(), actual.getFilters());
-        Assert.assertEquals(expected.getAttributes(), actual.getAttributes(), "");
+        Assert.assertEquals(actual.getID(), expected.getID());
+        Assert.assertEquals(actual.getFilters(), expected.getFilters());
+        Assert.assertEquals(actual.getAttributes(), expected.getAttributes(), "");
     }
 
     public static void assertEquals(final GenotypesContext actual, final GenotypesContext expected) {
