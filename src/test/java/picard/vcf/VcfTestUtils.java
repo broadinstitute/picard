@@ -12,6 +12,7 @@ import org.testng.Assert;
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Iterator;
 
 public class VcfTestUtils {
 
@@ -71,6 +72,22 @@ public class VcfTestUtils {
         return output;
     }
 
+    public static void assertEquals(final Iterable<VariantContext> actual, final Iterable<VariantContext> expected ){
+
+        final Iterator<VariantContext> actualI = actual.iterator();
+        final Iterator<VariantContext> expectedI = expected.iterator();
+
+        Assert.assertNotNull(actualI);
+        Assert.assertNotNull(expectedI);
+
+        while(actualI.hasNext() && expectedI.hasNext()){
+            assertEquals(actualI.next(), expectedI.next());
+        }
+
+        Assert.assertFalse(actualI.hasNext(), "Found an unexpected variant: " + actualI.next());
+        Assert.assertFalse(expectedI.hasNext(), "Didn't find an expected variant: " + expectedI.next());
+    }
+
     public static void assertEquals(final VariantContext actual, final VariantContext expected) {
 
         if (expected == null) {
@@ -85,6 +102,10 @@ public class VcfTestUtils {
 
         Assert.assertTrue(actual.hasSameAllelesAs(expected), "Alleles differ between " + actual + " and " + expected + ": ");
         assertEquals(actual.getGenotypes(), expected.getGenotypes());
+
+        Assert.assertEquals(expected.getID(), actual.getID());
+        Assert.assertEquals(expected.getFilters(), actual.getFilters());
+        Assert.assertEquals(expected.getAttributes(), actual.getAttributes(),"");
     }
 
     public static void assertEquals(final GenotypesContext actual, final GenotypesContext expected) {
@@ -98,6 +119,18 @@ public class VcfTestUtils {
             Assert.assertEquals(actual.get(name).getAlleles(), expected.get(name).getAlleles(), "Alleles differ for sample " + name);
             Assert.assertEquals(actual.get(name).getAD(), expected.get(name).getAD());
             Assert.assertEquals(actual.get(name).getPL(), expected.get(name).getPL());
+        }
+    }
+
+    public static void assertVcfFilesAreEqual(final File actual, final File expected) throws IOException {
+
+        final File indexedActual = createTemporaryIndexedVcfFromInput(actual,"assert");
+        final File indexedExpected = createTemporaryIndexedVcfFromInput(expected,"assert");
+
+        try (
+                final VCFFileReader vcfReaderActual = new VCFFileReader(indexedActual);
+                final VCFFileReader vcfReaderExpected = new VCFFileReader(indexedExpected)){
+            VcfTestUtils.assertEquals(vcfReaderActual, vcfReaderExpected);
         }
     }
 }

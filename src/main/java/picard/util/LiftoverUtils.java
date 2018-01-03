@@ -83,7 +83,7 @@ public class LiftoverUtils {
         builder.log10PError(source.getLog10PError());
         builder.attributes(source.getAttributes());
         // make sure that the variant isn't mistakenly set as "SwappedAlleles"
-        builder.attribute(SWAPPED_ALLELES, false);
+        builder.rmAttribute(SWAPPED_ALLELES);
         builder.id(source.getID());
 
         if (writeOriginalPosition) {
