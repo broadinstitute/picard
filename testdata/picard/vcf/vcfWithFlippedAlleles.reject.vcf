@@ -1,5 +1,5 @@
 ##fileformat=VCFv4.2
-##contig=<ID=chr1,length=1000,assembly=dummy>
+##contig=<ID=chr1,length=1085>
 ##FILTER=<ID=IndelStraddlesMultipleIntevals,Description="Indel is straddling multiple intervalss in the chain, and so the results are not well defined.">
 ##FILTER=<ID=MismatchedRefAllele,Description="Reference allele does not match reference genome sequence after liftover.">
 ##FILTER=<ID=NoTarget,Description="Variant could not be lifted between genome builds.">

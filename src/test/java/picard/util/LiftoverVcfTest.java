@@ -42,6 +42,13 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
     private final int CHAIN_SIZE = 540; // the length of the single chain in CHAIN_FILE
 
+
+    // comment can help find positions in string. not inline due to IDE shenanigans
+    //                                       123456789 123456789 123456789 123
+    private static final String refString = "CAAAAAAAAAACGTACGTACTCTCTCTCTACGT";
+    private static final ReferenceSequence REFERENCE = new ReferenceSequence("chr1", 0, refString.getBytes());
+
+
     public String getCommandLineProgramName() {
         return LiftoverVcf.class.getSimpleName();
     }
@@ -311,9 +318,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         VcfTestUtils.assertVcfFilesAreEqual(rejectOutputFile, expectedRejectVcf);
 
     }
-
-    //                                                                                                123456789 123456789 123456789 123
-    private static final ReferenceSequence REFERENCE = new ReferenceSequence("chr1", 0, "CAAAAAAAAAACGTACGTACTCTCTCTCTACGT".getBytes());
 
     @DataProvider(name = "indelFlipData")
     public Iterator<Object[]> indelFlipData() {

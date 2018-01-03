@@ -1,5 +1,5 @@
 ##fileformat=VCFv4.2
-##contig=<ID=chr1,length=1000,assembly=dummy>
+##contig=<ID=chr1,length=1085>
 ##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods summed across all unfiltered datasets for genotypes as defined in the VCF specification">

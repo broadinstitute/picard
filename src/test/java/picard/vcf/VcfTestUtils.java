@@ -18,6 +18,7 @@ public class VcfTestUtils {
 
     /**
      * This method creates a temporary VCF file and it's appropriately named index file, and will delete them on exit.
+     *
      * @param prefix - The prefix string to be used in generating the file's name; must be at least three characters long
      * @param suffix - The suffix string to be used in generating the file's name; may be null, in which case the suffix ".tmp" will be used
      * @return A File object referencing the newly created temporary VCF file
@@ -29,8 +30,7 @@ public class VcfTestUtils {
         String indexFileExtension = null;
         if (suffix.endsWith("vcf.gz")) {
             indexFileExtension = ".tbi";
-        }
-        else if (suffix.endsWith("vcf")) {
+        } else if (suffix.endsWith("vcf")) {
             indexFileExtension = ".idx";
         }
         if (indexFileExtension != null) {
@@ -44,15 +44,17 @@ public class VcfTestUtils {
      * This method makes a copy of the input VCF and creates an index file for it in the same location.
      * This is done so that we don't need to store the index file in the same repo
      * The copy of the input is done so that it and its index are in the same directory which is typically required.
+     *
      * @param vcfFile the vcf file to index
      * @return File a vcf file (index file is created in same path).
      */
     public static File createTemporaryIndexedVcfFromInput(final File vcfFile, final String tempFilePrefix) throws IOException {
         final String extension;
 
-        if (vcfFile.getAbsolutePath().endsWith(".vcf") ) extension = ".vcf";
-        else if (vcfFile.getAbsolutePath().endsWith(".vcf.gz") ) extension = ".vcf.gz";
-        else throw new IllegalArgumentException("couldn't find a .vcf or .vcf.gz ending for input file " + vcfFile.getAbsolutePath());
+        if (vcfFile.getAbsolutePath().endsWith(".vcf")) extension = ".vcf";
+        else if (vcfFile.getAbsolutePath().endsWith(".vcf.gz")) extension = ".vcf.gz";
+        else
+            throw new IllegalArgumentException("couldn't find a .vcf or .vcf.gz ending for input file " + vcfFile.getAbsolutePath());
 
         File output = createTemporaryIndexedVcfFile(tempFilePrefix, extension);
 
@@ -72,7 +74,7 @@ public class VcfTestUtils {
         return output;
     }
 
-    public static void assertEquals(final Iterable<VariantContext> actual, final Iterable<VariantContext> expected ){
+    public static void assertEquals(final Iterable<VariantContext> actual, final Iterable<VariantContext> expected) {
 
         final Iterator<VariantContext> actualI = actual.iterator();
         final Iterator<VariantContext> expectedI = expected.iterator();
@@ -80,7 +82,7 @@ public class VcfTestUtils {
         Assert.assertNotNull(actualI);
         Assert.assertNotNull(expectedI);
 
-        while(actualI.hasNext() && expectedI.hasNext()){
+        while (actualI.hasNext() && expectedI.hasNext()) {
             assertEquals(actualI.next(), expectedI.next());
         }
 
@@ -105,7 +107,7 @@ public class VcfTestUtils {
 
         Assert.assertEquals(expected.getID(), actual.getID());
         Assert.assertEquals(expected.getFilters(), actual.getFilters());
-        Assert.assertEquals(expected.getAttributes(), actual.getAttributes(),"");
+        Assert.assertEquals(expected.getAttributes(), actual.getAttributes(), "");
     }
 
     public static void assertEquals(final GenotypesContext actual, final GenotypesContext expected) {
@@ -124,12 +126,12 @@ public class VcfTestUtils {
 
     public static void assertVcfFilesAreEqual(final File actual, final File expected) throws IOException {
 
-        final File indexedActual = createTemporaryIndexedVcfFromInput(actual,"assert");
-        final File indexedExpected = createTemporaryIndexedVcfFromInput(expected,"assert");
+        final File indexedActual = createTemporaryIndexedVcfFromInput(actual, "assert");
+        final File indexedExpected = createTemporaryIndexedVcfFromInput(expected, "assert");
 
         try (
                 final VCFFileReader vcfReaderActual = new VCFFileReader(indexedActual);
-                final VCFFileReader vcfReaderExpected = new VCFFileReader(indexedExpected)){
+                final VCFFileReader vcfReaderExpected = new VCFFileReader(indexedExpected)) {
             VcfTestUtils.assertEquals(vcfReaderActual, vcfReaderExpected);
         }
     }
