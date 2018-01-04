@@ -41,8 +41,8 @@ import java.io.File;
  * <h3>Input</h3>
  * <p>A single BAM file to convert</p>.
  * <h3>Output</h3>
- * <p>One or two FASTQ files depending on whether the BAM file contains a single or
- * a paired sequencing data. You must indicate the output directory that will contain these files (<code>ANALYSIS_DIR</code>)
+ * <p>One or two FASTQ files depending on whether the BAM file contains single- or
+ * paired-end sequencing data. You must indicate the output directory that will contain these files (<code>ANALYSIS_DIR</code>)
  * and the output file name prefix (<code>OUTPUT_FILE_PREFIX</code>).</p> 
  * <h3>Usage example:</h3>
  * <pre>
@@ -68,8 +68,8 @@ public class BamToBfq extends CommandLineProgram {
     		 "<h3>Input</h3>" + 
     		 "<p>A single BAM file to convert</p>" +
     		 "<h3>Output</h3>" +
-    		 "<p>One or two FASTQ files depending on whether the BAM file contains a single or " +
-    		 "a paired sequencing data. You must indicate the output directory that will contain these files (<code>ANALYSIS_DIR</code>) " + 
+    		 "<p>One or two FASTQ files depending on whether the BAM file contains single- or " +
+    		 "paired-end sequencing data. You must indicate the output directory that will contain these files (<code>ANALYSIS_DIR</code>) " +
     		 "and the output file name prefix (<code>OUTPUT_FILE_PREFIX</code>).</p>" +  
     		 "<h3>Usage example:</h3>" +
     		 "<pre>" +
