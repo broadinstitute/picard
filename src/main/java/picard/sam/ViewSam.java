@@ -54,11 +54,11 @@ import java.util.List;
  * Prints a SAM or BAM file to the screen.
  *
  * <p>Very simple command that just reads a SAM or BAM file and writes out the header
- * and each records to standard out. When an (optional) intervals file is specified,
+ * and each record to standard out. When an (optional) intervals file is specified,
  * only records overlapping those intervals will be output. </p>
  *
  * <p>All reads, just the aligned reads, or just the unaligned reads can be printed out by
- * setting AlignmentStatus accordingly. The SAM or BAM header can be printed out only
+ * setting AlignmentStatus accordingly. The SAM or BAM header can be printed out separately
  * using HEADER_ONLY. Only the alignment records can be printed using RECORDS_ONLY.
  * However, HEADER_ONLY and RECORDS_ONLY cannot both be specified at one time.</p>
  *
@@ -89,10 +89,10 @@ public class ViewSam extends CommandLineProgram {
 
     static final String USAGE_SUMMARY = "Prints a SAM or BAM file to the screen";
     static final String USAGE_DETAILS = "Very simple command that just reads a SAM or BAM file and" +
-            "writes out the header and each records to standard out. When an (optional) intervals" +
+            "writes out the header and each record to standard out. When an (optional) intervals" +
             "file is specified, only records overlapping those intervals will be output.\n"+
             "All reads, just the aligned reads, or just the unaligned reads can be printed out by"+
-            "setting AlignmentStatus accordingly. The SAM or BAM header can be printed out only"+
+            "setting AlignmentStatus accordingly. The SAM or BAM header can be printed out separately"+
             "using HEADER_ONLY. Only the alignment records can be printed using RECORDS_ONLY."+
             "However, HEADER_ONLY and RECORDS_ONLY cannot both be specified at one time."+
             "<p>"+
