@@ -44,7 +44,7 @@ import java.util.Arrays;
 public class RExecutor {
     private static final Log LOG = Log.getInstance(RExecutor.class);
     private static final String R_EXE = "Rscript";
-    
+
     /**
      * Executes the given R script that is stored in a file on the classpath. The script file
      * is read from the classpath and written to a temp file then executed by a call to Rscript.

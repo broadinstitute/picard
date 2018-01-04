@@ -40,14 +40,21 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
-import picard.annotation.GeneAnnotationReader;
+import picard.annotation.Converter;
+import picard.annotation.Reader;
+import picard.annotation.RefFlatRecord;
+import picard.annotation.GtfRecord;
+import picard.annotation.GenePredRecord;
+import picard.annotation.GeneOverlapDetectorLoader;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @CommandLineProgramProperties(
         summary = CollectRnaSeqMetrics.USAGE_SUMMARY + CollectRnaSeqMetrics.USAGE_DETAILS,
@@ -86,6 +93,19 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 "MIR548A3	NR_030330	chr8	-	104484368	104484465	104484465	104484465	1	104484368,	104484465," +
 "</pre>" +
 
+"<p>GTF is also tab-delimeted file, based on GFF. GTF used to hold information about gene structure." +
+"For an example GTF file see " +
+"<a href='http://genome.ucsc.edu/cgi-bin/hgTables'>" +
+"The first five of GTF file appear as follows.</p>" +
+
+"<pre>" +
+"chr22\thg19_knownGene\texon\t44594501\t44594602\t0.000000\t+\t.\tgene_id \"uc021wrc.1\"; transcript_id \"uc021wrc.1\"; \n" +
+"chr22\thg19_knownGene\tstop_codon\t44645565\t44645565\t0.000000\t-\t.\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; \n" +
+"chr22\thg19_knownGene\tstop_codon\t44681308\t44681309\t0.000000\t-\t.\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; \n" +
+"chr22\thg19_knownGene\texon\t44639557\t44645565\t0.000000\t-\t.\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; \n" +
+"chr22\thg19_knownGene\tCDS\t44681310\t44681625\t0.000000\t-\t1\tgene_id \"uc003bet.2\"; transcript_id \"uc003bet.2\"; " +
+"</pre>" +
+
 "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>"+
 "<h4>Usage example:</h4>"+
 "<pre>" +
@@ -104,7 +124,10 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
 
-    @Argument(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
+    @Argument(doc="Gene annotation in GTF form. Format describe here: http://mblab.wustl.edu/GTF2.html", mutex = {"REF_FLAT"})
+    public File GTF;
+
+    @Argument(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat", mutex = {"GTF"})
     public File REF_FLAT;
 
     @Argument(doc="Location of rRNA sequences in genome, in interval_list format.  " +
@@ -158,7 +181,8 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
         if (CHART_OUTPUT != null) IOUtil.assertFileIsWritable(CHART_OUTPUT);
 
-        final OverlapDetector<Gene> geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary());
+        OverlapDetector<Gene> geneOverlapDetector = constructGeneOverlapDetector(header);
+
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
 
         final Long ribosomalBasesInitialValue = RIBOSOMAL_INTERVALS != null ? 0L : null;
@@ -176,6 +200,27 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
             this.plotSubtitle = readGroups.get(0).getLibrary();
             if (null == this.plotSubtitle) this.plotSubtitle = "";
         }
+    }
+
+    private OverlapDetector<Gene> constructGeneOverlapDetector(SAMFileHeader header) {
+        OverlapDetector<Gene> overlapDetector = null;
+        if (GTF != null) {
+            try (final Stream<GenePredRecord> records = Converter.gtfToGenePred(Reader.of(GTF.toPath(), GtfRecord::fromRow).records())) {
+                overlapDetector = GeneOverlapDetectorLoader.load(records, header.getSequenceDictionary());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else if (REF_FLAT != null) {
+            try (final Stream<GenePredRecord> records = Converter.refFlatToGenePred(Reader.of(REF_FLAT.toPath(), RefFlatRecord::fromRow).records())) {
+                overlapDetector = GeneOverlapDetectorLoader.load(records, header.getSequenceDictionary());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            throw new PicardException("Both GTF and REF_FLAT arguments not set.");
+        }
+
+        return overlapDetector;
     }
 
     @Override
@@ -208,5 +253,4 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
             }
         }
     }
-
 }
