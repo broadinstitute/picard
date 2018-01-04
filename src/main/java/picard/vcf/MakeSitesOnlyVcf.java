@@ -31,7 +31,7 @@ import java.util.TreeSet;
  *
  * <h3> Summary </h3>
  * This tool reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining all site level information,
- * including annotations based on genotypes (e.g. AN, AF). Output can be any support variant format including .vcf,
+ * including annotations based on genotypes (e.g. AN, AF). Output can be any supported variant format including .vcf,
  * .vcf.gz or .bcf.
  *
  * <h3> Inputs</h3>
@@ -59,7 +59,7 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Creates a VCF that contains all the site-level information for all records in the input VCF but no genotype information.";
     static final String USAGE_DETAILS = "This tool reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining" +
             "all site level information, including annotations based on genotypes (e.g. AN, AF). Output can be" +
-            "any support variant format including .vcf, .vcf.gz or .bcf. <br /><br />" +
+            "any supported variant format including .vcf, .vcf.gz or .bcf. <br /><br />" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar MakeSitesOnlyVcf \\ <br />" +
