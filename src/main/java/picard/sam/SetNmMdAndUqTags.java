@@ -42,16 +42,17 @@ import java.util.stream.StreamSupport;
 /**
  * Fixes the NM, MD, and UQ tags in a SAM or BAM file.
  *
- * <p>This tool takes in a SAM or BAM file (sorted by coordinate) and calculates the NM, MD, and UQ
+ * <p>This tool takes in a coordinate0sorted SAM or BAM file and calculates the NM, MD, and UQ
  * tags by comparing with the reference. </p>
  *
- * <p>This may be needed when MergeBamAlignment was run with SORT_ORDER different from 'coordinate'
+ * <p>This may be needed when MergeBamAlignment was run with SORT_ORDER other than 'coordinate'
  * and thus could not fix these tags then. The input must be coordinate sorted in order to run.
  * If specified, the MD and NM tags can be ignored and only the UQ tag be set.</p>
  *
- * <h3>Input</h3>
+ * <h3>Inputs</h3>
  * <p>
- * The BAM or SAM file to fix
+ *     <li> The BAM or SAM file to fix </li>
+ *     <li> A reference sequence </li>
  * </p>
  *
  * <h3>Output</h3>
@@ -64,6 +65,7 @@ import java.util.stream.StreamSupport;
  * <h3>Fix the tags in a BAM file:</h3>
  * <pre>
  *     java -jar picard.jar SetNmMdAndUqTags \
+ *          R=reference_sequence.fasta \
  *          I=sorted.bam \
  *          O=fixed.bam
  * </pre>
@@ -90,6 +92,7 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar SetNmMdAndUqTags <br />" +
+            "      R=reference_sequence.fasta <br />" +
             "      I=sorted.bam <br />" +
             "      O=fixed.bam <br />"+
             "</pre>";
