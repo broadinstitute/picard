@@ -32,7 +32,7 @@ import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Fingerprinting;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.GraphUtils;
 
 import java.io.File;
@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
         summary = "Clusters the results from a CrosscheckFingerprints into groups that are connected according " +
                 "to a large enough LOD score.",
         oneLineSummary = "Clusters the results of a CrosscheckFingerprints run by LOD score.",
-        programGroup = Fingerprinting.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class ClusterCrosscheckMetrics extends CommandLineProgram {

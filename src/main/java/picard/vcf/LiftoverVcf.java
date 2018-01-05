@@ -42,7 +42,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 import picard.util.LiftoverUtils;
 
 import java.io.File;
@@ -59,7 +59,7 @@ import java.util.*;
 @CommandLineProgramProperties(
         summary = LiftoverVcf.USAGE_SUMMARY + LiftoverVcf.USAGE_DETAILS,
         oneLineSummary = LiftoverVcf.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class LiftoverVcf extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Lifts over a VCF file from one reference build to another.  ";

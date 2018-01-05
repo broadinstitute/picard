@@ -41,7 +41,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.sam.DuplicationMetrics;
 
 import java.io.File;
@@ -58,7 +58,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = CollectJumpingLibraryMetrics.USAGE_SUMMARY + CollectJumpingLibraryMetrics.USAGE_DETAILS,
         oneLineSummary = CollectJumpingLibraryMetrics.USAGE_SUMMARY,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CollectJumpingLibraryMetrics extends CommandLineProgram {

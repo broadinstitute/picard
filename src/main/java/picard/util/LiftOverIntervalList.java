@@ -35,7 +35,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Intervals;
+import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 
 import java.io.File;
 import java.util.List;
@@ -46,7 +46,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = LiftOverIntervalList.USAGE_SUMMARY + LiftOverIntervalList.USAGE_DETAILS,
         oneLineSummary = LiftOverIntervalList.USAGE_SUMMARY,
-        programGroup = Intervals.class
+        programGroup = IntervalsManipulationProgramGroup.class
 )
 @DocumentedFeature
 public class LiftOverIntervalList extends CommandLineProgram {

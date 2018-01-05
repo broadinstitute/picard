@@ -63,7 +63,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Alpha;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.filter.CountingPairedFilter;
 
 import java.io.File;
@@ -109,7 +109,7 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
                 "That is, it estimates the fraction of the reads which would be marked as duplicates but " +
                 "are actually biological replicates, independent observations of the data. ",
         oneLineSummary = "(Experimental) Estimates the rate of independent replication of reads within a bam.",
-        programGroup = Alpha.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 public class CollectIndependentReplicateMetrics extends CommandLineProgram {
     private static final int DOUBLETON_SIZE = 2, TRIPLETON_SIZE = 3;

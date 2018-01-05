@@ -21,7 +21,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = SortVcf.USAGE_SUMMARY + SortVcf.USAGE_DETAILS,
         oneLineSummary = SortVcf.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class SortVcf extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Sorts one or more VCF files.  ";

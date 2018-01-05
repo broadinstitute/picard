@@ -46,7 +46,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.util.HashMap;
@@ -75,7 +75,7 @@ import java.util.Set;
 @CommandLineProgramProperties(
         summary = SamToFastq.USAGE_SUMMARY + SamToFastq.USAGE_DETAILS,
         oneLineSummary = SamToFastq.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class SamToFastq extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Converts a SAM or BAM file to FASTQ.";

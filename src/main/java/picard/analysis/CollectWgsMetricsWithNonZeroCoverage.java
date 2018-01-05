@@ -37,7 +37,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Alpha;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.filter.CountingFilter;
 import picard.filter.CountingPairedFilter;
 import picard.util.RExecutor;
@@ -50,7 +50,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = CollectWgsMetricsWithNonZeroCoverage.USAGE_SUMMARY + CollectWgsMetricsWithNonZeroCoverage.USAGE_DETAILS,
         oneLineSummary = CollectWgsMetricsWithNonZeroCoverage.USAGE_SUMMARY,
-        programGroup = Alpha.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 

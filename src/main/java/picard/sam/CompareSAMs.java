@@ -37,7 +37,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.PositionalArguments;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.util.HashMap;
@@ -53,7 +53,7 @@ import java.util.Map;
 @CommandLineProgramProperties(
         summary = CompareSAMs.USAGE_SUMMARY + CompareSAMs.USAGE_DETAILS,
         oneLineSummary = CompareSAMs.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = DiagnosticsAndQCProgramGroup.class)
 @DocumentedFeature
 public class CompareSAMs extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Compare two input \".sam\" or \".bam\" files.  ";

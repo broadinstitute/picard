@@ -28,7 +28,7 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IntervalList;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 /**
  * Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing
@@ -70,7 +70,7 @@ import picard.cmdline.programgroups.Metrics;
 @CommandLineProgramProperties(
         summary = CollectRawWgsMetrics.USAGE_SUMMARY + CollectRawWgsMetrics.USAGE_DETAILS,
         oneLineSummary = CollectRawWgsMetrics.USAGE_SUMMARY,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CollectRawWgsMetrics extends CollectWgsMetrics{
