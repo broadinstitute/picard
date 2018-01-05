@@ -43,6 +43,7 @@ public class LiftoverUtils {
      * Attribute used to store the fact that the alt and ref alleles of the variant have been swapped, while all the INFO annotations have not.
      */
     public static final String SWAPPED_ALLELES = "SwappedAlleles";
+    public static final String REV_COMPED_ALLELES = "ReverseComplementedAlleles";
 
     /**
      * Default list of attributes that need to be reversed or dropped from the INFO field when alleles have been swapped.
@@ -83,7 +84,14 @@ public class LiftoverUtils {
         builder.log10PError(source.getLog10PError());
         builder.attributes(source.getAttributes());
         // make sure that the variant isn't mistakenly set as "SwappedAlleles"
-        builder.attribute(SWAPPED_ALLELES, false);
+        builder.rmAttribute(SWAPPED_ALLELES);
+        if (target.isNegativeStrand()) {
+            builder.attribute(REV_COMPED_ALLELES, true);
+        } else {
+            // make sure that the variant isn't mistakenly set as "ReverseComplementedAlleles" (from a previous liftover, say)
+            builder.rmAttribute(REV_COMPED_ALLELES);
+        }
+
         builder.id(source.getID());
 
         if (writeOriginalPosition) {
@@ -113,7 +121,7 @@ public class LiftoverUtils {
             throw new IllegalArgumentException("This should only be called for negative strand liftovers");
         }
 
-        //not currently supported
+        // not currently supported
         if (source.isIndel() && !source.isBiallelic()) {
             return null;
         }

@@ -235,6 +235,9 @@ public class LiftoverVcf extends CommandLineProgram {
                 "It is possible that not all INFO annotations reflect this swap, and in the genotypes, " +
                 "only the GT, PL, and AD fields have been modified. You should check the TAGS_TO_REVERSE parameter that was used " +
                         "during the LiftOver to be sure."));
+        outHeader.addMetaDataLine(new VCFInfoHeaderLine(LiftoverUtils.REV_COMPED_ALLELES, 0, VCFHeaderLineType.Flag,
+                "The REF and the ALT alleles have been reverse complemented in liftover since the mapping from the " +
+                        "previous reference to the current one was on the negative strand."));
 
         final VariantContextWriter out = new VariantContextWriterBuilder()
                 .setOption(Options.INDEX_ON_THE_FLY)
