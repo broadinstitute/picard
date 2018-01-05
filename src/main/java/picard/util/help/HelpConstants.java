@@ -2,7 +2,6 @@ package picard.util.help;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public final class HelpConstants {
 
@@ -11,20 +10,35 @@ public final class HelpConstants {
     /**
      * Definition of the group names / descriptions for documentation/help purposes.
      */
-    public final static String DOC_CAT_FASTA = "Fasta File Tools";
-    public final static String DOC_CAT_FASTA_SUMMARY = "Tools for analysis and manipulation of files in fasta format";
+    public final static String DOC_CAT_BASE_CALLING = "Base Calling";
+    public final static String DOC_CAT_BASE_CALLING_SUMMARY = "Tools that process sequencing machine data, e.g. Illumina base calls, and detect sequencing level attributes, e.g. adapters";
 
-    public final static String DOC_CAT_INTERVALS = "Interval Tools";
-    public final static String DOC_CAT_INTERVALS_SUMMARY = "Tools for processing intervals and associated overlapping records";
+    public final static String DOC_CAT_DIAGNOSTICS_AND_QC = "Diagnostics and Quality Control";
+    public final static String DOC_CAT_DIAGNOSTICS_AND_QC_SUMMARY = "Tools that collect sequencing quality related and comparative metrics";
 
-    public final static String DOC_CAT_READS = "SAM/BAM/CRAM Tools";
-    public final static String DOC_CAT_READS_SUMMARY = "Tools for manipulating read-level data (SAM/BAM/CRAM)";
+    public final static String DOC_CAT_INTERVALS_MANIPULATION = "Intervals Manipulation";
+    public final static String DOC_CAT_INTERVALS_MANIPULATION_SUMMARY = "Tools that process genomic intervals in various formats";
 
-    public final static String DOC_CAT_VARIANT = "VCF Tools";
-    public final static String DOC_CAT_VARIANT_SUMMARY = "Tools for manipulating variants and associated metadata";
+    public final static String DOC_CAT_OTHER = "Other";
+    public final static String DOC_CAT_OTHER_SUMMARY = "Miscellaneous tools, e.g. those that aid in data streaming";
+
+    public final static String DOC_CAT_READ_DATA_MANIPULATION = "Read Data Manipulation";
+    public final static String DOC_CAT_READ_DATA_MANIPULATION_SUMMARY = "Tools that manipulate read data in SAM, BAM or CRAM format";
+
+    public final static String DOC_CAT_REFERENCE = "Reference";
+    public final static String DOC_CAT_REFERENCE_SUMMARY = "Tools that analyze and manipulate FASTA format references";
 
     public final static String DOC_CAT_TEST = "Test Tools";
     public final static String DOC_CAT_TEST_SUMMARY = "Tools for internal test purposes";
+
+    public final static String DOC_CAT_VARIANT_FILTERING = "Variant Filtering";
+    public final static String DOC_CAT_VARIANT_FILTERING_SUMMARY = "Tools that filter variants by annotating the FILTER column";
+
+    public final static String DOC_CAT_VARIANT_EVALUATION = "Variant Evaluation and Refinement";
+    public final static String DOC_CAT_VARIANT_EVALUATION_SUMMARY = "Tools that evaluate and refine variant calls, e.g. with annotations not offered by the engine";
+
+    public final static String DOC_CAT_VARIANT_MANIPULATION = "Variant Manipulation";
+    public final static String DOC_CAT_VARIANT_MANIPULATION_SUMMARY = "Tools that manipulate variant call format (VCF) data";
 
     /**
      * List of "supercategory" values used for doc purposes. Every doc group name can/should be put into
@@ -43,13 +57,21 @@ public final class HelpConstants {
             groupToSuperCategory = new HashMap<>();
 
             // supercat Tools
-            groupToSuperCategory.put(DOC_CAT_FASTA, DOC_SUPERCAT_TOOLS);
-            groupToSuperCategory.put(DOC_CAT_READS, DOC_SUPERCAT_TOOLS);
-            groupToSuperCategory.put(DOC_CAT_VARIANT, DOC_SUPERCAT_TOOLS);
+            groupToSuperCategory.put(DOC_CAT_BASE_CALLING, DOC_SUPERCAT_TOOLS);
+            groupToSuperCategory.put(DOC_CAT_DIAGNOSTICS_AND_QC, DOC_SUPERCAT_TOOLS);
+            groupToSuperCategory.put(DOC_CAT_INTERVALS_MANIPULATION, DOC_SUPERCAT_TOOLS);
+            groupToSuperCategory.put(DOC_CAT_OTHER, DOC_SUPERCAT_TOOLS);
+            groupToSuperCategory.put(DOC_CAT_READ_DATA_MANIPULATION, DOC_SUPERCAT_TOOLS);
+            groupToSuperCategory.put(DOC_CAT_REFERENCE, DOC_SUPERCAT_TOOLS);
+            groupToSuperCategory.put(DOC_CAT_READ_DATA_MANIPULATION, DOC_SUPERCAT_TOOLS);
+            groupToSuperCategory.put(DOC_CAT_VARIANT_FILTERING, DOC_SUPERCAT_TOOLS);
+            groupToSuperCategory.put(DOC_CAT_VARIANT_EVALUATION, DOC_SUPERCAT_TOOLS);
+            groupToSuperCategory.put(DOC_CAT_VARIANT_MANIPULATION, DOC_SUPERCAT_TOOLS);
 
             // supercat Exclude
             groupToSuperCategory.put(DOC_CAT_TEST, DOC_SUPERCAT_EXCLUDE);
         }
+
         return groupToSuperCategory;
     }
 

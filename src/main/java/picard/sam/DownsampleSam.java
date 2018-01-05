@@ -38,7 +38,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -55,7 +55,7 @@ import java.util.Random;
 @CommandLineProgramProperties(
         summary = DownsampleSam.USAGE_SUMMARY + DownsampleSam.USAGE_DETAILS,
         oneLineSummary = DownsampleSam.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class DownsampleSam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Downsample a SAM or BAM file.  ";

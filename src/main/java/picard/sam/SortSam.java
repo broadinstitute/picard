@@ -38,7 +38,7 @@ import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 
@@ -77,7 +77,7 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary = SortSam.USAGE_DETAILS,
         oneLineSummary = SortSam.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class SortSam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Sorts a SAM or BAM file.";

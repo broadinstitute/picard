@@ -50,7 +50,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -110,7 +110,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = "<p>" + FastqToSam.USAGE_SUMMARY + ".</p>" + FastqToSam.USAGE_DETAILS,
         oneLineSummary = FastqToSam.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class FastqToSam extends CommandLineProgram {
     static final String USAGE_SUMMARY = 

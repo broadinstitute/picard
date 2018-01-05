@@ -40,7 +40,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -81,7 +81,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = ValidateSamFile.USAGE_SUMMARY + ValidateSamFile.USAGE_DETAILS,
         oneLineSummary = ValidateSamFile.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = DiagnosticsAndQCProgramGroup.class)
 @DocumentedFeature
 public class ValidateSamFile extends CommandLineProgram {
     private static final Log log = Log.getInstance(ValidateSamFile.class);

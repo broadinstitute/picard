@@ -41,7 +41,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 
@@ -51,7 +51,7 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary =  ReplaceSamHeader.USAGE_SUMMARY + ReplaceSamHeader.USAGE_DETAILS,
         oneLineSummary = ReplaceSamHeader.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class ReplaceSamHeader extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Replaces the SAMFileHeader in a SAM or BAM file.  ";

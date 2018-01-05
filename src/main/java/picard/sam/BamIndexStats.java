@@ -33,7 +33,7 @@ import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 
@@ -48,7 +48,7 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary = BamIndexStats.USAGE_SUMMARY + BamIndexStats.USAGE_DETAILS,
         oneLineSummary = BamIndexStats.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = DiagnosticsAndQCProgramGroup.class)
 @DocumentedFeature
 public class BamIndexStats extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Generate index statistics from a BAM file";

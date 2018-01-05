@@ -8,7 +8,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -17,7 +17,7 @@ import java.io.IOException;
 @CommandLineProgramProperties(
         summary = CalculateReadGroupChecksum.USAGE_SUMMARY + CalculateReadGroupChecksum.USAGE_DETAILS,
         oneLineSummary = CalculateReadGroupChecksum.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = DiagnosticsAndQCProgramGroup.class)
 @DocumentedFeature
 public class CalculateReadGroupChecksum extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Creates a hash code based on the read groups (RG).  ";

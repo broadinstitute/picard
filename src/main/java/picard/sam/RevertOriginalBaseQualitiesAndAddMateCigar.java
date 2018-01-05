@@ -20,7 +20,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.util.Iterator;
@@ -35,7 +35,7 @@ import java.util.Iterator;
 @CommandLineProgramProperties(
         summary = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.",
         oneLineSummary = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs",
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgram {
 

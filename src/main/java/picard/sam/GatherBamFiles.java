@@ -15,7 +15,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.util.List;
@@ -57,7 +57,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = "<p>" + GatherBamFiles.USAGE_SUMMARY + ".</p>" + GatherBamFiles.USAGE_DETAILS,
         oneLineSummary = GatherBamFiles.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class GatherBamFiles extends CommandLineProgram {
     static final String USAGE_SUMMARY = 

@@ -29,7 +29,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 
@@ -43,7 +43,7 @@ import java.io.File;
  * <h3>Output</h3>
  * <p>One or two FASTQ files depending on whether the BAM file contains single- or
  * paired-end sequencing data. You must indicate the output directory that will contain these files (<code>ANALYSIS_DIR</code>)
- * and the output file name prefix (<code>OUTPUT_FILE_PREFIX</code>).</p> 
+ * and the output file name prefix (<code>OUTPUT_FILE_PREFIX</code>).</p>
  * <h3>Usage example:</h3>
  * <pre>
  *     java -jar picard.jar BamToBfq \
@@ -52,25 +52,25 @@ import java.io.File;
  *             OUTPUT_FILE_PREFIX=output_name \
  *             PAIRED_RUN=false
  * </pre>
- * 
+ *
  * @author ktibbett@broadinstitute.org
  */
 @CommandLineProgramProperties(
         summary = "<p>" + BamToBfq.USAGE_SUMMARY + ".</p>" + BamToBfq.USAGE_DETAILS,
         oneLineSummary = BamToBfq.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class BamToBfq extends CommandLineProgram {
-    static final String USAGE_SUMMARY = 
+    static final String USAGE_SUMMARY =
     		"Converts a BAM file into a BFQ (binary fastq formatted) file";
-    static final String USAGE_DETAILS = 
+    static final String USAGE_DETAILS =
     		 "<p>The BFQ format is the input format to some tools like Maq aligner.</p>" +
-    		 "<h3>Input</h3>" + 
+    		 "<h3>Input</h3>" +
     		 "<p>A single BAM file to convert</p>" +
     		 "<h3>Output</h3>" +
     		 "<p>One or two FASTQ files depending on whether the BAM file contains single- or " +
     		 "paired-end sequencing data. You must indicate the output directory that will contain these files (<code>ANALYSIS_DIR</code>) " +
-    		 "and the output file name prefix (<code>OUTPUT_FILE_PREFIX</code>).</p>" +  
+    		 "and the output file name prefix (<code>OUTPUT_FILE_PREFIX</code>).</p>" +
     		 "<h3>Usage example:</h3>" +
     		 "<pre>" +
     		 "java -jar picard.jar BamToBfq \\\n" +

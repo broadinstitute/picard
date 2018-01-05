@@ -45,7 +45,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -63,7 +63,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary =  FilterSamReads.USAGE_SUMMARY + FilterSamReads.USAGE_DETAILS,
         oneLineSummary = FilterSamReads.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class FilterSamReads extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Subset read data from a SAM or BAM file";

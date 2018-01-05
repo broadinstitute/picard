@@ -20,7 +20,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
 import java.util.Set;
@@ -53,7 +53,7 @@ import java.util.TreeSet;
 @CommandLineProgramProperties(
         summary = MakeSitesOnlyVcf.USAGE_DETAILS,
         oneLineSummary = MakeSitesOnlyVcf.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class MakeSitesOnlyVcf extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Creates a VCF that contains all the site-level information for all records in the input VCF but no genotype information.";

@@ -9,7 +9,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
 
@@ -43,11 +43,10 @@ import java.io.File;
  *
  * @author ggrant@broadinstitute.org
  */
-
 @CommandLineProgramProperties(
         summary = VcfToIntervalList.USAGE_DETAILS,
         oneLineSummary = VcfToIntervalList.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class VcfToIntervalList extends CommandLineProgram {
 
