@@ -112,7 +112,7 @@ import java.util.*;
 )
 @DocumentedFeature
 public class IntervalListTools extends CommandLineProgram {
-    static final String USAGE_SUMMARY ="A tool for performing various IntervalList manipulations\n";
+    static final String USAGE_SUMMARY ="A tool for performing various IntervalList manipulations";
     static final String USAGE_DETAILS =
                     " <h3>Summary</h3>" +
                     "This tool offers multiple interval list file manipulation capabilities, including: sorting, " +
