@@ -48,6 +48,7 @@ import htsjdk.samtools.util.QualityEncodingDetector;
 import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.SortingCollection;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
@@ -67,6 +68,41 @@ import java.util.*;
 /**
  * Reverts a SAM file by optionally restoring original quality scores and by removing
  * all alignment information.
+ * <p>
+ * <p>
+ * This tool removes or restores certain properties of the SAM records, including alignment information.
+ * It can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of
+ * restoring the original quality scores of a BAM file that has already undergone base quality score recalibration
+ * (BQSR) if the original qualities were retained during the calibration (in the OQ tag).
+ * <p>
+ * <h3>Usage Examples</h3>
+ * <h4>Output to a single file</h4>
+ * <pre>
+ * java -jar picard.jar RevertSam \\
+ *      I=input.bam \\
+ *      O=reverted.bam
+ * </pre>
+ * <p>
+ * <h4>Output by read group into multiple files with sample map</h4>
+ * <pre>
+ * java -jar picard.jar RevertSam \\
+ *      I=input.bam \\
+ *      OUTPUT_BY_READGROUP=true \\
+ *      OUTPUT_MAP=reverted_bam_paths.tsv
+ * </pre>
+ * <p>
+ * <h4>Output by read group with no output map</h4>
+ * <pre>
+ * java -jar picard.jar RevertSam \\
+ *      I=input.bam \\
+ *      OUTPUT_BY_READGROUP=true \\
+ *      O=/write/reverted/read/group/bams/in/this/dir
+ * </pre>
+ * This will output a BAM (Can be overridden with OUTPUT_BY_READGROUP_FILE_FORMAT option.)
+ * <br/>
+ * Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to
+ * LENIENT or SILENT if the failures are expected to be obviated by the reversion process
+ * (e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).
  */
 @CommandLineProgramProperties(
         summary = RevertSam.USAGE_SUMMARY + RevertSam.USAGE_DETAILS,
@@ -74,57 +110,68 @@ import java.util.*;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class RevertSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY ="Reverts SAM or BAM files to a previous state.  ";
-    static final String USAGE_DETAILS ="This tool removes or restores certain properties of the SAM records, including alignment " +
+    static final String USAGE_SUMMARY = "Reverts SAM or BAM files to a previous state.  ";
+    static final String USAGE_DETAILS = "This tool removes or restores certain properties of the SAM records, including alignment " +
             "information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of " +
             "restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if the" +
-            "original qualities were retained." +
-            "<h4>Example with single output:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar RevertSam \\<br />" +
-            "     I=input.bam \\<br />" +
-            "     O=reverted.bam" +
-            "</pre>" +
-            "Output format is BAM by default, or SAM or CRAM if the input path ends with '.sam' or '.cram', respectively." +
-            "<h4>Example outputting by read group with output map:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar RevertSam \\<br />" +
-            "     I=input.bam \\<br />" +
-            "     OUTPUT_BY_READGROUP=true \\<br />" +
-            "     OUTPUT_MAP=reverted_bam_paths.tsv" +
-            "</pre>" +
-            "Will output a BAM/SAM file per read group. By default, all outputs will be in BAM format. " +
-            "However, a SAM file will be produced instead for any read group mapped in OUTPUT_MAP to a path ending with '.sam'. " +
-            "A CRAM file will be produced for any read group mapped to a path ending with '.cram'. " +
-            "<h4>Example outputting by read group without output map:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar RevertSam \\<br />" +
-            "     I=input.bam \\<br />" +
-            "     OUTPUT_BY_READGROUP=true \\<br />" +
-            "     O=/write/reverted/read/group/bams/in/this/dir" +
-            "</pre>" +
-            "Will output a BAM/SAM file per read group. By default, all outputs will be in BAM format. " +
-            "However, outputs will be in SAM format if the input path ends with '.sam', or CRAM format if it ends with '.cram'." +
-            " This behaviour can be overriden with OUTPUT_BY_READGROUP_FILE_FORMAT option."+
-            "<p>Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to " +
+            "original qualities were retained.\n" +
+            "<h3>Examples</h3>\n" +
+            "<h4>Example with single output:</h4>\n" +
+            "java -jar picard.jar RevertSam \\\n" +
+            "     I=input.bam \\\n" +
+            "     O=reverted.bam\n" +
+            "\n" +
+            "<h4>Example outputting by read group with output map:</h4>\n" +
+            "java -jar picard.jar RevertSam \\\n" +
+            "     I=input.bam \\\n" +
+            "     OUTPUT_BY_READGROUP=true \\\n" +
+            "     OUTPUT_MAP=reverted_bam_paths.tsv\n" +
+            "\n" +
+            "Will output a BAM/SAM file per read group.\n" +
+            "<h4>Example outputting by read group without output map:</h4>\n" +
+            "java -jar picard.jar RevertSam \\\n" +
+            "     I=input.bam \\\n" +
+            "     OUTPUT_BY_READGROUP=true \\\n" +
+            "     O=/write/reverted/read/group/bams/in/this/dir\n" +
+            "\n" +
+            "Will output a BAM file per read group." +
+            " Output format can be overridden with the OUTPUT_BY_READGROUP_FILE_FORMAT option.\n" +
+            "Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to " +
             "LENIENT or SILENT if the failures are expected to be obviated by the reversion process " +
-            "(e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).</p>" +
-            "<hr />";
+            "(e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).\n" +
+            "";
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")
     public File INPUT;
 
     @Argument(mutex = {"OUTPUT_MAP"}, shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.")
     public File OUTPUT;
-    
+
     @Argument(mutex = {"OUTPUT"}, shortName = "OM", doc = "Tab separated file with two columns, READ_GROUP_ID and OUTPUT, providing file mapping only used if OUTPUT_BY_READGROUP is true.")
     public File OUTPUT_MAP;
 
     @Argument(shortName = "OBR", doc = "When true, outputs each read group in a separate file.")
     public boolean OUTPUT_BY_READGROUP = false;
 
-    public static enum FileType {sam, bam, cram,dynamic}
-    @Argument(shortName = "OBRFF", doc = "When using OUTPUT_BY_READGROUP, the output file format can be set to a certain format." )
-    public FileType  OUTPUT_BY_READGROUP_FILE_FORMAT=FileType.dynamic;
+    public static enum FileType implements CommandLineParser.ClpEnum {
+        sam("Generate SAM files."),
+        bam("Generate BAM files."),
+        cram("Generate CRAM files."),
+        dynamic("Generate files based on the extention of INPUT.");
+
+        final String description;
+
+        FileType(String descrition) {
+            this.description = descrition;
+        }
+
+        @Override
+        public String getHelpDoc() {
+            return description;
+        }
+    }
+
+    @Argument(shortName = "OBRFF", doc = "When using OUTPUT_BY_READGROUP, the output file format can be set to a certain format.")
+    public FileType OUTPUT_BY_READGROUP_FILE_FORMAT = FileType.dynamic;
 
     @Argument(shortName = "SO", doc = "The sort order to create the reverted output file with.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
@@ -147,7 +194,7 @@ public class RevertSam extends CommandLineProgram {
         add(SAMTag.MD.name());
         add(SAMTag.MQ.name());
         add(SAMTag.SA.name()); // Supplementary alignment metadata
-        add(SAMTag.MC.name());      // Mate Cigar
+        add(SAMTag.MC.name()); // Mate Cigar
         add(SAMTag.AS.name());
     }};
 
@@ -168,20 +215,15 @@ public class RevertSam extends CommandLineProgram {
 
     @Argument(doc = "The sample alias to use in the reverted output file.  This will override the existing " +
             "sample alias in the file and is used only if all the read groups in the input file have the " +
-            "same sample alias ", shortName = StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME, optional = true)
+            "same sample alias.", shortName = StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME, optional = true)
     public String SAMPLE_ALIAS;
 
     @Argument(doc = "The library name to use in the reverted output file.  This will override the existing " +
             "sample alias in the file and is used only if all the read groups in the input file have the " +
-            "same library name ", shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional = true)
+            "same library name.", shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional = true)
     public String LIBRARY_NAME;
 
     private final static Log log = Log.getInstance(RevertSam.class);
-
-    /** Default main method impl. */
-    public static void main(final String[] args) {
-        new RevertSam().instanceMainWithExit(args);
-    }
 
     /**
      * Enforce that output ordering is queryname when sanitization is turned on since it requires a queryname sort.
@@ -226,7 +268,7 @@ public class RevertSam extends CommandLineProgram {
             }
 
             final String defaultExtension;
-            if (OUTPUT_BY_READGROUP_FILE_FORMAT==FileType.dynamic) {
+            if (OUTPUT_BY_READGROUP_FILE_FORMAT == FileType.dynamic) {
                 defaultExtension = getDefaultExtension(INPUT.toString());
             } else {
                 defaultExtension = "." + OUTPUT_BY_READGROUP_FILE_FORMAT.toString();
@@ -242,12 +284,13 @@ public class RevertSam extends CommandLineProgram {
 
         final SAMFileWriterFactory factory = new SAMFileWriterFactory();
         final RevertSamWriter out = new RevertSamWriter(OUTPUT_BY_READGROUP, headerMap, outputMap, singleOutHeader, OUTPUT, presorted, factory, REFERENCE_SEQUENCE);
-        
+
         ////////////////////////////////////////////////////////////////////////////
         // Build a sorting collection to use if we are sanitizing
         ////////////////////////////////////////////////////////////////////////////
         final RevertSamSorter sorter;
-        if (sanitizing) sorter = new RevertSamSorter(OUTPUT_BY_READGROUP, headerMap, singleOutHeader, MAX_RECORDS_IN_RAM);
+        if (sanitizing)
+            sorter = new RevertSamSorter(OUTPUT_BY_READGROUP, headerMap, singleOutHeader, MAX_RECORDS_IN_RAM);
         else sorter = null;
 
         final ProgressLogger progress = new ProgressLogger(log, 1000000, "Reverted");
@@ -264,6 +307,7 @@ public class RevertSam extends CommandLineProgram {
             if (sanitizing) sorter.add(rec);
             else out.addAlignment(rec);
         }
+        CloserUtil.close(in);
 
         ////////////////////////////////////////////////////////////////////////////
         // Now if we're sanitizing, clean up the records and write them to the output
@@ -293,7 +337,6 @@ public class RevertSam extends CommandLineProgram {
             }
         }
 
-        CloserUtil.close(in);
         return 0;
     }
 
@@ -441,7 +484,7 @@ public class RevertSam extends CommandLineProgram {
         }
         return new long[]{discarded, total};
     }
-    
+
     /**
      * Generates a list by consuming from the iterator in order starting with the first available
      * read and continuing while subsequent reads share the same read name. If there are no reads
@@ -513,7 +556,7 @@ public class RevertSam extends CommandLineProgram {
             final SAMFileHeader inHeader,
             final SortOrder sortOrder,
             final boolean removeAlignmentInformation) {
-        
+
         final Map<String, SAMFileHeader> headerMap = new HashMap<>();
         for (final SAMReadGroupRecord readGroup : inHeader.getReadGroups()) {
             final SAMFileHeader header = createOutHeader(inHeader, sortOrder, removeAlignmentInformation);
