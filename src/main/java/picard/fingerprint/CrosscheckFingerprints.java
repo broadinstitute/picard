@@ -46,40 +46,188 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Program to check that all fingerprints within the set of input files appear to come from the same
- * individual. Can be used to cross-check readgroups, libraries, samples, or files.
+ * Checks that all data in the set of input files appear to come from the same
+ * individual. Can be used to compare according to readgroups, libraries, samples, or files.
  * Operates on bams/sams and vcfs (including gvcfs).
+ *
+ * <h3>Summary</h3>
+ * Checks if all the genetic data within a set of files appear to come from the same individual.
+ * It quickly determines whether a "group's" genotype matches that of an input SAM/BAM/VCF by selective sampling,
+ * and has been designed to work well even for low-depth SAM/BAMs.
+ * <br/>
+ * The tool collects "fingerprints" (essentially genotype information from different parts of the genome)
+ * at the finest level available in the data (readgroup for SAM files
+ * and sample for VCF files) and then optionally aggregates it by library, sample or file, to increase power and provide
+ * results at the desired resolution. Output is in a "Moltenized" format, one row per comparison. The results will
+ * be emitted into a metric file for the class {@link CrosscheckMetric}.
+ * In this format the output will include the LOD score and also tumor-aware LOD score which can
+ * help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could
+ * otherwise fail to notice that samples are from the same individual.)
+ * A matrix output is also available to facilitate visual inspection of crosscheck results.
+ * <br/>
+ * Since there can be many rows of output in the metric file, we recommend the use of {@link ClusterCrosscheckMetrics}
+ * as a follow-up step to running CrosscheckFingerprints.
+ * <br/>
+ * There are cases where one would like to identify a few groups out of a collection of many possible groups (say
+ * to link a bam to it's correct sample in a multi-sample vcf. In this case one would not case for the cross-checking
+ * of the various samples in the VCF against each other, but only in checking the identity of the bam against the various
+ * samples in the vcf. The {@link #SECOND_INPUT} is provided for this use-case. With {@link #SECOND_INPUT} provided, CrosscheckFingerprints
+ * does the following:
+ * <il>
+ * <li>aggregation of data happens independently for the input files in {@link #INPUT} and {@link #SECOND_INPUT}.</li>
+ * <li>aggregation of data happens at the SAMPLE level.</li>
+ * <li>each samples from {@link #INPUT} will only be compared to that same sample in {@link #INPUT}.</li>
+ * <li>{@link #MATRIX_OUTPUT} is disabled.</li>
+ * </il>
+ * <br/>
+ * <h3>Examples</h3>
+ * <h4>Check that all the readgroups from a sample match each other:</h4>
+ * <pre>
+ *     java -jar picard.jar CrosscheckFingerprints \
+ *          INPUT=sample.with.many.readgroups.bam \
+ *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+ *          LOD_THRESHOLD=-5 \
+ *          OUTPUT=sample.crosscheck_metrics
+ * </pre>
+ *
+ *
+ * <h4>Check that all the readgroups match as expected when providing reads from two samples from the same individual:</h4>
+ * <pre>
+ *     java -jar picard.jar CrosscheckFingerprints \
+ *          INPUT=sample.one.with.many.readgroups.bam \
+ *          INPUT=sample.two.with.many.readgroups.bam \
+ *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+ *          LOD_THRESHOLD=-5 \
+ *          EXPECT_ALL_GROUPS_TO_MATCH=true \
+ *          OUTPUT=sample.crosscheck_metrics
+ * </pre>
+ *
+ *
+ * <h3> Detailed Explanation</h3>
+ *
+ * This tool calculates the LOD score for identity check between "groups" of data in the INPUT files as defined by
+ * the CROSSCHECK_BY argument. A positive value indicates that the data seems to have come from the same individual
+ * or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates
+ * that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates
+ * that the data do not match. A score that is near zero is inconclusive and can result from low coverage
+ * or non-informative genotypes. Each group is assigned a sample identifier (for SAM this is taken from the SM tag in
+ * the appropriate readgroup header line, for VCF this is taken from the column label in the file-header.
+ * After combining all the data from the same "group" together, an all-against-all comparison is performed. Results are
+ * categorized a {@link FingerprintResult} enum: EXPECTED_MATCH, EXPECTED_MISMATCH, UNEXPECTED_MATCH, UNEXPECTED_MISMATCH,
+ * or AMBIGUOUS depending on the LOD score and on whether the sample identifiers of the groups agree: LOD scores that are
+ * less than LOD_THRESHOLD are considered mismatches, and those greater than -LOD_THRESHOLD are matches (between is ambiguous).
+ * If the sample identifiers are equal, the groups are expected to match. They are expected to mismatch otherwise.
+ * <br/>
+ *
+ * The identity check makes use of haplotype blocks defined in the HAPLOTYPE_MAP file to enable it to have higher
+ * statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This
+ * enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).
+ * <br/>
+ * When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that
+ * it finds.
+ *
+ *
  *
  * @author Tim Fennell
  * @author Yossi Farjoun
  */
+
+
 @CommandLineProgramProperties(
-        summary = "Checks if all fingerprints within a set of files appear to come from the same individual. " +
-                "The fingerprints are calculated initially at the readgroup level (if present) but can be " +
-                "\"rolled-up\" by library, sample or file, to increase power and provide results at the " +
-                "desired resolution. Regular output is in a \"Moltenized\" format, one row per comparison. " +
-                "In this format the output will include the LOD score and also tumor-aware LOD score which can " +
-                "help assess identity even in the presence of a severe LOH sample with high purity. " +
-                "A matrix output is also available to facilitate visual inspection of crosscheck results." +
-                "\n" +
-                "A separate CLP, ClusterCrosscheckMetrics, can cluster the results as a connected graph " +
-                "according to LOD greater than a threshold. ",
-        oneLineSummary = "Checks if all fingerprints appear to come from the same individual.",
+        summary =
+                "Checks that all data in the set of input files appear to come from the same " +
+                        "individual. Can be used to cross-check readgroups, libraries, samples, or files. " +
+                        "Operates on bams/sams and vcfs (including gvcfs). " +
+                        "\n" +
+                        "<h3>Summary</h3>\n" +
+                        "Checks if all the genetic data within a set of files appear to come from the same individual. " +
+                        "It quickly determines whether a group's genotype matches that of an input SAM/BAM/VCF by selective sampling, " +
+                        "and has been designed to work well for low-depth SAM/BAMs (as well as high depth ones and VCFs.) " +
+                        "The tool collects fingerprints (essentially, genotype information from different parts of the genome)" +
+                        " at the finest level available in the data (readgroup for SAM files " +
+                        "and sample for VCF files) and then optionally aggregates it by library, sample or file, to increase power and provide " +
+                        "results at the desired resolution. Output is in a \"Moltenized\" format, one row per comparison. The results are " +
+                        "emitted into a CrosscheckMetric metric file. " +
+                        "In this format the output will include the LOD score and also tumor-aware LOD score which can " +
+                        "help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could cause it to " +
+                        "otherwise fail to notice that samples are from the same individual.) " +
+                        "A matrix output is also available to facilitate visual inspection of crosscheck results.\n " +
+                        "\n" +
+                        "Since there can be many rows of output in the metric file, we recommend the use of ClusterCrosscheckMetrics " +
+                        "as a follow-up step to running CrosscheckFingerprints.\n " +
+                        "\n" +
+                        "There are cases where one would like to identify a few groups out of a collection of many possible groups (say " +
+                        "to link a bam to it's correct sample in a multi-sample vcf. In this case one would not case for the cross-checking " +
+                        "of the various samples in the VCF against each other, but only in checking the identity of the bam against the various " +
+                        "samples in the vcf. The SECOND_INPUT is provided for this use-case. With SECOND_INPUT provided, CrosscheckFingerprints " +
+                        "does the following:\n" +
+                        " - aggregation of data happens independently for the input files in INPUT and SECOND_INPUT. \n" +
+                        " - aggregation of data happens at the SAMPLE level \n" +
+                        " - each samples from INPUT will only be compared to that same sample in SECOND_INPUT. \n" +
+                        " - MATRIX_OUTPUT is disabled. " +
+                        "\n" +
+                        "<hr/>" +
+                        "<h3>Examples</h3>" +
+                        "<h4>Check that all the readgroups from a sample match each other:</h4>" +
+                        "<pre>" +
+                        "    java -jar picard.jar CrosscheckFingerprints \\\n" +
+                        "          INPUT=sample.with.many.readgroups.bam \\\n" +
+                        "          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n" +
+                        "          LOD_THRESHOLD=-5 \\\n" +
+                        "          OUTPUT=sample.crosscheck_metrics" +
+                        " </pre>" +
+                        "\n" +
+                        " <h4>Check that all the readgroups match as expected when providing reads from two samples from the same individual:</h4>" +
+                        " <pre>" +
+                        "     java -jar picard.jar CrosscheckFingerprints \\\n" +
+                        "           INPUT=sample.one.with.many.readgroups.bam \\\n" +
+                        "           INPUT=sample.two.with.many.readgroups.bam \\\n" +
+                        "           HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n" +
+                        "           LOD_THRESHOLD=-5 \\\n" +
+                        "           EXPECT_ALL_GROUPS_TO_MATCH=true \\\n" +
+                        "           OUTPUT=sample.crosscheck_metrics" +
+                        " </pre>" +
+                        "\n" +
+                        "\n" +
+                        "<h4>Detailed Explanation</h4>" +
+                        "\n" +
+                        "This tool calculates the LOD score for identity check between \"groups\" of data in the INPUT files as defined by " +
+                        "the CROSSCHECK_BY argument. A positive value indicates that the data seems to have come from the same individual " +
+                        "or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates " +
+                        "that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates " +
+                        "that the data do not match. A score that is near zero is inconclusive and can result from low coverage " +
+                        "or non-informative genotypes. Each group is assigned a sample identifier (for SAM this is taken from the SM tag in " +
+                        "the appropriate readgroup header line, for VCF this is taken from the column label in the file-header. " +
+                        "After combining all the data from the same group together, an all-against-all comparison is performed. Results are " +
+                        "categorized as one of EXPECTED_MATCH, EXPECTED_MISMATCH, UNEXPECTED_MATCH, UNEXPECTED_MISMATCH, or AMBIGUOUS depending " +
+                        "on the LOD score and on whether the sample identifiers of the groups agree: LOD scores that are less than LOD_THRESHOLD " +
+                        "are considered mismatches, and those greater than -LOD_THRESHOLD are matches (between is ambiguous). " +
+                        "If the sample identifiers are equal, the groups are expected to match. They are expected to mismatch otherwise. " +
+                        "\n" +
+                        "\n" +
+                        "The identity check makes use of haplotype blocks defined in the HAPLOTYPE_MAP file to enable it to have higher " +
+                        "statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This " +
+                        "enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).\n " +
+                        "\n" +
+                        "When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that " +
+                        "it finds. ",
+        oneLineSummary = "Checks that all data in the input files appear to have come from the same individual",
         programGroup = DiagnosticsAndQCProgramGroup.class
+
 )
 @DocumentedFeature
 public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "One or more input files (or lists of files) to compare fingerprints for.")
+            doc = "One or more input files (or lists of files) with which to compare fingerprints.", minElements = 1)
     public List<File> INPUT;
 
     @Argument(shortName = "SI", optional = true, mutex={"MATRIX_OUTPUT"},
-            doc = "One or more input files (or lists of files) to compare fingerprints for. If this option is given " +
-                    "the program compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID." +
+            doc = "A second set of input files (or lists of files) with which to compare fingerprints. If this option is provided " +
+                    "the tool compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID." +
                     " In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY."+
                     " When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. " +
-                    "If this is violated, the program will proceed to check the matching samples, but report the missing samples" +
+                    "If this is violated, the tool will proceed to check the matching samples, but report the missing samples" +
                     " and return a non-zero error-code." )
     public List<File> SECOND_INPUT;
 
@@ -89,7 +237,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Argument(shortName = "MO", optional = true,
             doc = "Optional output file to write matrix of LOD scores to. This is less informative than the metrics output " +
-                    "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity). " +
+                    "and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of Heterozygosity). " +
                     "It is however sometimes easier to use visually.", mutex = {"SECOND_INPUT"})
     public File MATRIX_OUTPUT = null;
 
@@ -99,14 +247,14 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Argument(shortName = "LOD",
             doc = "If any two groups (with the same sample name) match with a LOD score lower than the threshold " +
-                    "the program will exit with a non-zero code to indicate error." +
+                    "the tool will exit with a non-zero code to indicate error." +
                     " Program will also exit with an error if it finds two groups with different sample name that " +
                     "match with a LOD score greater than -LOD_THRESHOLD." +
                     "\n\n" +
-                    "LOD score 0 means equal likelihood" +
-                    "that the groups match vs. come from different individuals, negative LOD scores mean N logs more likely " +
-                    "that the groups are from different individuals, and positive numbers mean N logs more likely that " +
-                    "the groups are from the sample individual. ")
+                    "LOD score 0 means equal likelihood " +
+                    "that the groups match vs. come from different individuals, negative LOD score -N, mean 10^N time more likely " +
+                    "that the groups are from different individuals, and +N means 10^N times more likely that " +
+                    "the groups are from the same individual. ")
     public double LOD_THRESHOLD = 0;
 
     @Argument(doc = "Specificies which data-type should be used as the basic comparison unit. Fingerprints from readgroups can " +
@@ -114,7 +262,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             " Fingerprints from VCF can be be compared by SAMPLE or FILE.")
     public CrosscheckMetric.DataType CROSSCHECK_BY = CrosscheckMetric.DataType.READGROUP;
 
-    @Argument(doc = "The number of threads to use to process files and generate Fingerprints.")
+    @Argument(doc = "The number of threads to use to process files and generate fingerprints.")
     public int NUM_THREADS = 1;
 
     @Argument(doc = "Allow the use of duplicate reads in performing the comparison. Can be useful when duplicate " +
@@ -122,7 +270,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     public boolean ALLOW_DUPLICATE_READS = false;
 
     @Argument(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from " +
-            "the expected sample.")
+            "the expected sample. Must be greater than zero. " )
     public double GENOTYPING_ERROR_RATE = 0.01;
 
     @Argument(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.")
@@ -144,6 +292,14 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     private double[][] crosscheckMatrix = null;
     private final List<String> matrixKeys = new ArrayList<>();
+
+    @Override
+    protected String[] customCommandLineValidation() {
+        if (GENOTYPING_ERROR_RATE <= 0 ) {
+            return new String[]{"GENOTYPING_ERROR_RATE must be greater than zero. Found " + GENOTYPING_ERROR_RATE};
+        }
+        return super.customCommandLineValidation();
+    }
 
     @Override
     protected int doWork() {

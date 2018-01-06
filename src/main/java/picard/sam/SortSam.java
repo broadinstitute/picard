@@ -33,6 +33,7 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -80,7 +81,7 @@ import java.io.File;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class SortSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Sorts a SAM or BAM file.";
+    static final String USAGE_SUMMARY = "Sorts a SAM or BAM file";
     static final String USAGE_DETAILS = "This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property " +
             "of the SAM record. The SortOrder of a SAM/BAM file is found in the SAM file header tag @HD in the field labeled SO.  " +
             "<p> For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the " +
@@ -102,21 +103,54 @@ public class SortSam extends CommandLineProgram {
     @Argument(doc = "Sorted BAM or SAM output file.", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc = "Sort order of output file.")
-    public SAMFileHeader.SortOrder SORT_ORDER;
+    // note that SortOrder here is a local enum, not the SamFileHeader version.
+    @Argument(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc = "Sort order of output file. ")
+    public SortOrder SORT_ORDER;
+
 
     private final Log log = Log.getInstance(SortSam.class);
 
-    public static void main(final String[] argv) {
-        new SortSam().instanceMainWithExit(argv);
+    /** a SortOrder class intended to expose the various options available as inputs to SortSam
+     *
+     * In particular this enables to add a description and also to not expose "unsorted" and "unknown"
+     * as they are not appropriate values to sort a file into.
+     *
+     */
+    private enum SortOrder implements CommandLineParser.ClpEnum {
+        queryname("Sorts according to the readname. This will place read-pairs and other derived reads (secondary and " +
+                "supplementary) adjacent to each other. Note that the readnames are compared lexicographically, even though " +
+                "they may include numbers. In paired reads, Read1 sorts before Read2."),
+        coordinate("Sorts primarily according to the SEQ and POS fields of the record. The sequence will sorted according to " +
+                "the order in the sequence dictionary, taken from from the header of the file. Within each reference sequence, the " +
+                "reads are sorted by the position. Unmapped reads whose mates are mapped will be placed near their mates. " +
+                "Unmapped read-pairs are placed after all the mapped reads and their mates."),
+        duplicate("Sorts the reads so that duplicates reads are adjacent. Required that the mate-cigar (MC) tag is present. " +
+                "The resulting will be sorted by library, unclipped 5-prime position, orientation, and mate's unclipped " +
+                "5-prime position.")
+        ;
+
+        private String description;
+        SortOrder(String description) {
+            this.description=description;
+        }
+
+        public SAMFileHeader.SortOrder getSortOrder(){
+            return SAMFileHeader.SortOrder.valueOf(this.name());
+        }
+
+        @Override
+        public String getHelpDoc() {
+            return description;
+        }
     }
+
 
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
         final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         ;
-        reader.getFileHeader().setSortOrder(SORT_ORDER);
+        reader.getFileHeader().setSortOrder(SORT_ORDER.getSortOrder());
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), false, OUTPUT);
         writer.setProgressLogger(
                 new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
