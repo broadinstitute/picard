@@ -66,7 +66,7 @@ import java.util.Map;
  * to find out the size of each of the tiles, and next to perform the downsampling.
  *
  * Downsampling invalidates the duplicate flag because duplicate reads before downsampling may not all remain duplicated
- * after downsampling. Thus, the default setting also removes the duplicate information. " +
+ * after downsampling. Thus, the default setting also removes the duplicate information.
  *
  * <h3>Example</h3>
  * <pre>

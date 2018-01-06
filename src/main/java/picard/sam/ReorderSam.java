@@ -62,9 +62,9 @@ import java.util.Map;
  *
  * <h3>Example</h3>
  * <pre>
- *     java -jar picard.jar ReorderSam \\
- *          INPUT=sample.bam \\
- *          OUTPUT=reordered.bam \\
+ *     java -jar picard.jar ReorderSam \
+ *          INPUT=sample.bam \
+ *          OUTPUT=reordered.bam \
  *          REFERENCE=reference_with_different_order.fasta
  * </pre>
  *

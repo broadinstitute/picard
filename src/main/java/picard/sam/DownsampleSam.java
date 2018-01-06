@@ -55,29 +55,29 @@ import java.util.Random;
  *
  * A number of different downsampling strategies are supported using the {@link #STRATEGY} option:
  * <dl>
- * <dd>ConstantMemory</dd>
- * <dt>
+ * <dt>ConstantMemory</dt>
+ * <dd>
  *     Downsamples a stream or file of SAMRecords using a hash-projection strategy such that it can run in constant memory.
  *     The downsampling is stochastic, and therefore the actual retained proportion will vary around the requested proportion. Due
  *     to working in fixed memory this strategy is good for large inputs, and due to the stochastic nature the accuracy of this strategy
  *     is highest with a high number of output records, and diminishes at low output volumes.
- * </dt>
- * <dd>HighAccuracy</dd>
- * <dt>
+ * </dd>
+ * <dt>HighAccuracy</dt>
+ * <dd>
  *     Attempts (but does not guarantee) to provide accuracy up to a specified limit. Accuracy is defined as emitting
  *     a proportion of reads as close to the requested proportion as possible. In order to do so this strategy requires
  *     memory that is proportional to the number of template names in the incoming stream of reads, and will thus require
  *     large amounts of memory when running on large input files.
- *     </dt>
- * <dd>Chained</dd>
- * <dt>
+ * </dd>
+ * <dt>Chained</dt>
+ * <dd>
  *     Attempts to provide a compromise strategy that offers some of the advantages of both the ConstantMemory and HighAccuracy strategies.
  *     Uses a ConstantMemory strategy to downsample the incoming stream to approximately the desired proportion, and then a HighAccuracy
  *     strategy to finish. Works in a single pass, and will provide accuracy close to (but often not as good as) HighAccuracy while requiring
  *     memory proportional to the set of reads emitted from the ConstantMemory strategy to the HighAccuracy strategy. Works well when downsampling
  *     large inputs to small proportions (e.g. downsampling hundreds of millions of reads and retaining only 2%. Should be accurate 99.9% of the time
  *     when the input contains more than 50,000 templates (read names). For smaller inputs, HighAccuracy is recommended instead.
- * </dt>
+ * </dd>
  * </dl>
  *
  * The number of records written can be output to a {@link QualityYieldMetrics} metrics file via the {@link #METRICS_FILE}.

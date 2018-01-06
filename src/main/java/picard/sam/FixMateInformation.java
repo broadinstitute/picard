@@ -69,9 +69,9 @@ import java.util.List;
  *
  * <h3>Usage example:</h3>
  * <pre>
- * java -jar picard.jar FixMateInformation \\
- *       I=input.bam \\
- *       O=fixed_mate.bam \\
+ * java -jar picard.jar FixMateInformation \
+ *       I=input.bam \
+ *       O=fixed_mate.bam \
  *       ADD_MATE_CIGAR=true
  * </pre>
  * <h3>Caveats</h3>
