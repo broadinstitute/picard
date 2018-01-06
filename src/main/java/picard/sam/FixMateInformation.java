@@ -103,11 +103,12 @@ public class FixMateInformation extends CommandLineProgram {
             "<h3>Caveats</h3>\n"+
             "The program should run with fairly limited memory unless there are many mate pairs that are missing or far apart " +
             "from each other in the file, as it keeps track of the unmatched mates.";
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input file to check and fix.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input files to check and fix. Multiple files will be " +
+            "merged and sorted.")
     public List<File> INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
-            doc = "The output file to write to. If no output file is supplied, the input file is overwritten.")
+            doc = "The output file to write to. If no output file is supplied, the input file is overwritten (only available with single input file).")
     public File OUTPUT;
 
     @Argument(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, optional = true,

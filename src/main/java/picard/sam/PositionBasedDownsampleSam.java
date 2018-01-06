@@ -52,51 +52,55 @@ import java.util.Map;
  *
  * <h3>Details</h3>
  * The downsampling is <b>not</b> random (and there is no random seed). It is deterministically determined by the position
- * of each read within its "tile". Specifically, it draws an ellipse that covers a {@link #FRACTION} of the total tile's
+ * of each read within its tile. Specifically, it draws an ellipse that covers a {@link #FRACTION} of the total tile's
  * area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads
  * with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the
  * same for all of them. The main concern of this downsampling method is that due to "optical duplicates" downsampling
- * randomly can create a result that has a different optical duplciate rate, and therefore a different estimated library
- * size (when running mark-duplicates) THe downsampling method done keeps (physically) close reads together, so that (except
- * for the reads near the boundary of the circle) optical duplicates are kept or dropped as a group.
+ * randomly can create a result that has a different optical duplicate rate, and therefore a different estimated library
+ * size (when running MarkDuplicates). This method keeps (physically) close read together, so that (except
+ * for reads near the boundary of the circle) optical duplicates are kept or dropped as a group.
  *
- * By default the program expects the read names to have 5 or 7 fields separated by colons (:) and it takes the last two
- * to indicate the x and y coordinates of the reads within the "tile" from whence it was sequenced. See
- * {@link ReadNameParser#DEFAULT_READ_NAME_REGEX} for more detail. The program traverses the {@link #INPUT} twice. First
+ * By default the program expects the read names to have 5 or 7 fields separated by colons (:), and it takes the last two
+ * to indicate the x and y coordinates of the reads within the tile whence it was sequenced. See
+ * {@link ReadNameParser#DEFAULT_READ_NAME_REGEX} for more detail. The program traverses the {@link #INPUT} twice: first
  * to find out the size of each of the tiles, and next to perform the downsampling.
  *
- * Downsampling invalidates the duplicate flag (as reads marked as duplicates prior to downsampling might not be duplicates
- * afterwards.) Thus, the default setting also removes the duplicate information.
+ * Downsampling invalidates the duplicate flag because duplicate reads before downsampling may not all remain duplicated
+ * after downsampling. Thus, the default setting also removes the duplicate information. " +
  *
- *<h3>Example</h3>
+ * <h3>Example</h3>
  * <pre>
- * java -jar picard.jar PositionBasedDownsampleSam \\
- *       I=input.bam \\
- *       O=downsampled.bam \\
+ * java -jar picard.jar PositionBasedDownsampleSam \
+ *       I=input.bam \
+ *       O=downsampled.bam \
  *       FRACTION=0.1
  * </pre>
- *<h3>Caveats</h3>
- * Note 1:
+ * <h3>Caveats</h3>
+ * <ol>
+ * <li>
  * This method is <b>technology and read-name dependent</b>. If the read-names do not have coordinate information
- * embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines)
+ * embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines).
  * this will not work properly. It has been designed to work with Illumina technology and reads-names. Consider
  * modifying {@link #READ_NAME_REGEX} in other cases.
- * <br/>
- * Note 2:
+ * </li>
+ * <li>
  * The code has been designed to simulate, as accurately as possible, sequencing less, <b>not</b> for getting an exact
  * downsampled fraction (Use {@link DownsampleSam} for that.) In particular, since the reads may be distributed non-evenly
  * within the lanes/tiles, the resulting downsampling percentage will not be accurately determined by the input argument
  * {@link #FRACTION}.
- * <br/>
- * Note 3:
+ * </li>
+ * <li>
  * Consider running {@link MarkDuplicates} after downsampling in order to "expose" the duplicates whose representative has
  * been downsampled away.
- * <br/>
- * Note 4:
- * Due to the way the downsampling it performed, it assumes a uniform distribution of reads in the flowcell. This is violated
- * if one uses an input that was already downsampled with {@link PositionBasedDownsampleSam}. To guard against this, a
- * PG record is placed in the header ouf the output and if the input is found to contain this record, the program will
- * abort.
+ * </li>
+ * <li>
+ * The downsampling assumes a uniform distribution of reads in the flowcell.
+ * Input already downsampled with PositionBasedDownsampleSam violates this assumption.
+ * To guard against such input,
+ * PositionBasedDownsampleSam always places a PG record in the header of its output,
+ * and aborts whenever it finds such a PG record in its input.
+ * </li>
+ * </ol>
  *
  * @author Yossi Farjoun
  */
@@ -107,19 +111,19 @@ import java.util.Map;
               "\n\n " +
               "<h3>Details</h3>\n" +
               "The downsampling is _not_ random (and there is no random seed). It is deterministically determined by the position " +
-              "of each read within its \"tile\". Specifically, it draws an ellipse that covers a FRACTION of the total tile's " +
+              "of each read within its tile. Specifically, it draws an ellipse that covers a FRACTION of the total tile's " +
               "area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads " +
               "with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the " +
               "same for all of them. The main concern of this downsampling method is that due to \"optical duplicates\" downsampling " +
-              "randomly can create a result that has a different optical duplciate rate, and therefore a different estimated library " +
-              "size (when running mark-duplicates) THe downsampling method done keeps (physically) close reads together, so that (except " +
-              "for the reads near the boundary of the circle) optical duplicates are kept or dropped as a group. " +
+              "randomly can create a result that has a different optical duplicate rate, and therefore a different estimated library " +
+              "size (when running MarkDuplicates). This method keeps (physically) close read together, so that (except " +
+              "for reads near the boundary of the circle) optical duplicates are kept or dropped as a group. " +
               "By default the program expects the read names to have 5 or 7 fields separated by colons (:) and it takes the last two " +
-              "to indicate the x and y coordinates of the reads within the \"tile\" from whence it was sequenced. See " +
-              "DEFAULT_READ_NAME_REGEX for more detail. The program traverses the INPUT twice. First " +
+              "to indicate the x and y coordinates of the reads within the tile whence it was sequenced. See " +
+              "DEFAULT_READ_NAME_REGEX for more detail. The program traverses the INPUT twice: first " +
               "to find out the size of each of the tiles, and next to perform the downsampling. " +
-              "Downsampling invalidates the duplicate flag (as reads marked as duplicates prior to downsampling might not be duplicates " +
-              "afterwards.) Thus, the default setting also removes the duplicate information. " +
+              "Downsampling invalidates the duplicate flag because duplicate reads before downsampling " +
+              "may not all remain duplicated after downsampling. Thus, the default setting also removes the duplicate information. " +
               "\n\n" +
               "Example\n\n" +
               "java -jar picard.jar PositionBasedDownsampleSam \\\n" +
@@ -146,11 +150,11 @@ import java.util.Map;
               "been downsampled away." +
               "\n\n" +
               "Note 4:" +
-              "Due to the way the downsampling it performed, it assumes a uniform distribution of reads in the flowcell. This is violated " +
-              "if one uses an input that was already downsampled with PositionBasedDownsampleSam. To guard against this, a " +
-              "PG record is placed in the header ouf the output and if the input is found to contain this record, the program will " +
-              "abort.",
-
+              "The downsampling assumes a uniform distribution of reads in the flowcell. " +
+              "Input already downsampled with PositionBasedDownsampleSam violates this assumption. " +
+              "To guard against such input, " +
+              "PositionBasedDownsampleSam always places a PG record in the header of its output, " +
+              "and aborts whenever it finds such a PG record in its input.",
         oneLineSummary = "Downsample a SAM or BAM file to retain a subset of the reads based on the reads location in each tile in the flowcell.",
         programGroup = SamOrBam.class)
 @DocumentedFeature
@@ -168,14 +172,14 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
     @Argument(doc = "Determines whether the duplicate tag should be reset since the downsampling requires re-marking duplicates.")
     public boolean REMOVE_DUPLICATE_INFORMATION = true;
 
-    @Argument(doc = "Regular expression that can be used to parse read names in the incoming SAM file. Read names are " +
+    @Argument(doc = "Use these regular expressions to parse read names in the input SAM file. Read names are " +
             "parsed to extract three variables: tile/region, x coordinate and y coordinate. The x and y coordinates are used " +
             "to determine the downsample decision. " +
             "Set this option to null to disable optical duplicate detection, e.g. for RNA-seq " +
             "The regular expression should contain three capture groups for the three variables, in order. " +
             "It must match the entire read name. " +
             "Note that if the default regex is specified, a regex match is not actually done, but instead the read name " +
-            " is split on colon character. " +
+            "is split on colons (:). " +
             "For 5 element names, the 3rd, 4th and 5th elements are assumed to be tile, x and y values. " +
             "For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values.")
     public String READ_NAME_REGEX = ReadNameParser.DEFAULT_READ_NAME_REGEX;
@@ -183,7 +187,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
     @Argument(doc = "Stop after processing N reads, mainly for debugging.", optional = true)
     public Long STOP_AFTER = null;
 
-    @Argument(doc = "Allow Downsampling again despite this being a bad idea with possibly unexpected results.", optional = true)
+    @Argument(doc = "Allow downsampling again despite this being a bad idea with possibly unexpected results.", optional = true)
     public boolean ALLOW_MULTIPLE_DOWNSAMPLING_DESPITE_WARNINGS = false;
 
     private final Log log = Log.getInstance(PositionBasedDownsampleSam.class);

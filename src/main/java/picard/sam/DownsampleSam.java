@@ -46,27 +46,37 @@ import java.text.NumberFormat;
 import java.util.Random;
 
 /**
- *
  * <h3>Summary</h3>
  * This tool applies a downsampling algorithm to a SAM or BAM file to retain only a (deterministically random) subset of
  * the reads. Reads from the same template (e.g. read-pairs, secondary and supplementary reads) are all either kept or
- * discarded as a unit, with the goal of retaining reads from {@link #PROBABILITY} * input <b>templates</b>. While this
- * will usually result in approximately {@link #PROBABILITY} * input reads being retained also, for very small probabilities
- * this may not be the case.
+ * discarded as a unit, with the goal of retaining reads from <code>PROBABILITY * (input templates)</code>. The results
+ * will contain approximately <code>PROBABILITY * (input reads)</code>, however for very small
+ * probabilities this may not be the case.
  *
  * A number of different downsampling strategies are supported using the {@link #STRATEGY} option:
  * <dl>
  * <dd>ConstantMemory</dd>
- * <dt>{@value htsjdk.samtools.DownsamplingIteratorFactory#CONSTANT_MEMORY_DESCRPTION}</dt>
+ * <dt>
+ *     Downsamples a stream or file of SAMRecords using a hash-projection strategy such that it can run in constant memory.
+ *     The downsampling is stochastic, and therefore the actual retained proportion will vary around the requested proportion. Due
+ *     to working in fixed memory this strategy is good for large inputs, and due to the stochastic nature the accuracy of this strategy
+ *     is highest with a high number of output records, and diminishes at low output volumes.
+ * </dt>
  * <dd>HighAccuracy</dd>
- * <dt>{@value htsjdk.samtools.DownsamplingIteratorFactory#HIGH_ACCURACY_DESCRIPTION}</dt>
+ * <dt>
+ *     Attempts (but does not guarantee) to provide accuracy up to a specified limit. Accuracy is defined as emitting
+ *     a proportion of reads as close to the requested proportion as possible. In order to do so this strategy requires
+ *     memory that is proportional to the number of template names in the incoming stream of reads, and will thus require
+ *     large amounts of memory when running on large input files.
+ *     </dt>
  * <dd>Chained</dd>
- * <dt>"Attempts to provide a compromise strategy that offers some of the advantages of both the ConstantMemory and HighAccuracy strategies.
- * Uses a ConstantMemory strategy to downsample the incoming stream to approximately the desired proportion, and then a HighAccuracy
- * strategy to finish. Works in a single pass, and will provide accuracy close to (but often not as good as) HighAccuracy while requiring
- * memory proportional to the set of reads emitted from the ConstantMemory strategy to the HighAccuracy strategy. Works well when downsampling
- * large inputs to small proportions (e.g. downsampling hundreds of millions of reads and retaining only 2%. Should be accurate 99.9% of the time
- * when the input contains more than 50,000 templates (read names). For smaller inputs, HighAccuracy is recommended instead."
+ * <dt>
+ *     Attempts to provide a compromise strategy that offers some of the advantages of both the ConstantMemory and HighAccuracy strategies.
+ *     Uses a ConstantMemory strategy to downsample the incoming stream to approximately the desired proportion, and then a HighAccuracy
+ *     strategy to finish. Works in a single pass, and will provide accuracy close to (but often not as good as) HighAccuracy while requiring
+ *     memory proportional to the set of reads emitted from the ConstantMemory strategy to the HighAccuracy strategy. Works well when downsampling
+ *     large inputs to small proportions (e.g. downsampling hundreds of millions of reads and retaining only 2%. Should be accurate 99.9% of the time
+ *     when the input contains more than 50,000 templates (read names). For smaller inputs, HighAccuracy is recommended instead.
  * </dt>
  * </dl>
  *
@@ -75,37 +85,34 @@ import java.util.Random;
  * <h3>Usage examples:</h3>
  * <h4>Downsample file, keeping about 10% of the reads</h4>
  * <pre>
- * java -jar picard.jar DownsampleSam \\
- *       I=input.bam \\
- *       O=downsampled.bam \\
+ * java -jar picard.jar DownsampleSam \
+ *       I=input.bam \
+ *       O=downsampled.bam \
  *       P=0.1
  * </pre>
  *
  * <h4>Downsample file, keeping 2% of the reads </h4>
  * <pre>
- * java -jar picard.jar DownsampleSam \\
- *       I=input.bam \\
- *       O=downsampled.bam \\
- *       STRATEGY=Chained \\
- *       P=0.02 \\
+ * java -jar picard.jar DownsampleSam \
+ *       I=input.bam \
+ *       O=downsampled.bam \
+ *       STRATEGY=Chained \
+ *       P=0.02 \
  *       ACCURACY=0.0001
  * </pre>
  *
  * <h4>Downsample file, keeping 0.001% of the reads (may require more memory)</h4>
  * <pre>
- * java -jar picard.jar DownsampleSam \\
- *       I=input.bam \\
- *       O=downsampled.bam \\
- *       STRATEGY=HighAccuracy \\
- *       P=0.00001 \\
+ * java -jar picard.jar DownsampleSam \
+ *       I=input.bam \
+ *       O=downsampled.bam \
+ *       STRATEGY=HighAccuracy \
+ *       P=0.00001 \
  *       ACCURACY=0.0000001
  * </pre>
  *
  * @author Tim Fennell
  */
-
-
-
 
 @CommandLineProgramProperties(
         summary = DownsampleSam.USAGE_SUMMARY + DownsampleSam.USAGE_DETAILS,
@@ -114,12 +121,12 @@ import java.util.Random;
 @DocumentedFeature
 public class DownsampleSam extends CommandLineProgram {
 
-    static final String USAGE_SUMMARY = "Downsample a SAM or BAM file. ";
+    static final String USAGE_SUMMARY = "Downsample a SAM or BAM file.";
     static final String USAGE_DETAILS = "This tool applies a downsampling algorithm to a SAM or BAM file to retain " +
             "only a (deterministically random) subset of the reads. Reads from the same template (e.g. read-pairs, secondary " +
             "and supplementary reads) are all either kept or discarded as a unit, with the goal of retaining reads" +
-            "from PROBABILITY * input <b>templates<b/>. While this will usually result in approximately " +
-            "PROBABILITY * input reads being retained also, for very small PROBABILITIES this may not " +
+            "from PROBABILITY * input templates. The results will contain approximately " +
+            "PROBABILITY * input reads, however for very small PROBABILITIES this may not " +
             "be the case.\n" +
             "A number of different downsampling strategies are supported using the STRATEGY option:\n\n" +
             "ConstantMemory:\n " + DownsamplingIteratorFactory.CONSTANT_MEMORY_DESCRPTION + "\n" +
@@ -171,7 +178,7 @@ public class DownsampleSam extends CommandLineProgram {
             "Higher accuracy will generally require more memory.")
     public double ACCURACY = 0.0001;
 
-    @Argument(shortName = "M", doc = "The file to write metrics to (of type QualityYieldMetrics)", optional=true)
+    @Argument(shortName = "M", doc = "The metrics file (of type QualityYieldMetrics) which will contain information about the downsampled file.", optional=true)
     public File METRICS_FILE;
 
     private final Log log = Log.getInstance(DownsampleSam.class);
@@ -200,8 +207,8 @@ public class DownsampleSam extends CommandLineProgram {
 
         if (RANDOM_SEED == null) {
             RANDOM_SEED = new Random().nextInt();
-            log.info("A Null RANDOM_SEED was provided, so drawing a random one. If results need to be " +
-                    "reproduced use this one: " + RANDOM_SEED);
+            log.warn(String.format(
+                    "Drawing a random seed because RANDOM_SEED was not set. Set RANDOM_SEED to %s to reproduce these results in the future.", RANDOM_SEED));
         }
 
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));

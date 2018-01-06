@@ -107,7 +107,7 @@ public abstract class GenotypeConcordanceScheme{
     /**
      * Get the contingency state array as a set
      * @param contingencyStateArray
-     * @return contingency state arry (as a Set)
+     * @return contingency state array (as a Set)
      */
     public Set<ContingencyState> getContingencyStateSet(final ContingencyState[] contingencyStateArray) {
         final Set<ContingencyState> contingencyStateSet = new HashSet<ContingencyState>();

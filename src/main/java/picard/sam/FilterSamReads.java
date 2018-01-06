@@ -29,18 +29,9 @@
 package picard.sam;
 
 import com.google.common.annotations.VisibleForTesting;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.filter.*;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -56,13 +47,54 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
- * From a SAM or BAM file, produce a new SAM or BAM by filtering aligned reads or a list of read
- * names provided in a file (one readname per line)
- * <p/>
- * $Id$
+ *
+ * <h3>Summary</h3>
+ * Subsets a SAM file by either selecting or excluding certain reads
+ *
+ * <h3>Details</h3>
+ * Subsets a SAM or BAM file by either excluding or selecting reads as specified by FILTER.
+ * Other parameters influence the behavior of the FILTER algorithm as described below.
+ *
+ * <h3>Usage examples</h3>
+ * <h4>Filter by queryname:</h4>
+ * <pre>
+ * java -jar picard.jar FilterSamReads \
+ *       I=input.bam \
+ *       O=output.bam \
+ *       READ_LIST_FILE=read_names.txt \
+ *       FILTER=includeReadList
+ * </pre>
+ * <h4>Filter by interval:</h4>
+ * <pre>
+ * java -jar picard.jar FilterSamReads \
+ *       I=input.bam \
+ *       O=output.bam \
+ *       INTERVAL_LIST=regions.interval_list \
+ *       FILTER=includePairedIntervals
+ * </pre>
+ * <h4>Filter reads having a (2-base or more) soft clip on the beginning of the read:</h4>
+ * <pre>
+ * cat <<EOF > script.js
+ * // reads having a soft clip larger than 2 bases in start of read
+ * function accept(rec) {
+ *     if (rec.getReadUnmappedFlag()) return false;
+ *     var cigar = rec.getCigar();
+ *     if (cigar == null) return false;
+ *     var ce = cigar.getCigarElement(0);
+ *     return ce.getOperator().name() == "S" && ce.length() > 2;
+ * }
+ *
+ * accept(record);
+ * EOF
+ *
+ * java -jar picard.jar FilterSamReads \
+ *       I=input.bam \
+ *       O=output.bam \
+ *       JAVASCRIPT_FILE=script.js \
+ *       FILTER=includeJavascript
+ * </pre>
  */
 @CommandLineProgramProperties(
         summary = FilterSamReads.USAGE_SUMMARY + FilterSamReads.USAGE_DETAILS,
@@ -71,21 +103,20 @@ import java.util.stream.Stream;
 @DocumentedFeature
 public class FilterSamReads extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Subsets reads from a SAM or BAM file by applying one of several filters.";
-    static final String USAGE_DETAILS = "Takes a SAM or BAM file and subsets it by either excluding or " +
+    static final String USAGE_DETAILS = "\nTakes a SAM or BAM file and subsets it by either excluding or " +
             "only including certain reads such as aligned or unaligned reads, or specific reads based on a list of reads names, " +
-            "an interval list, or using a JavaScript script.  " +
-            "" +
-            "<h4>Usage example:</h4>" +
-            "<h3>Filter by queryname</h3>" +
+            "an interval list, or using a JavaScript script.\n" +
+            "<br />" +
+            "<h3>Usage example:</h3>" +
+            "<h4>Filter by queryname</h4>" +
             "<pre>" +
             "java -jar picard.jar FilterSamReads \\<br /> " +
             "      I=input.bam \\ <br /> " +
             "      O=output.bam \\ <br /> " +
-            "      READ_LIST_FILE=read_names.txt \\ <br/>" +
+            "      READ_LIST_FILE=read_names.txt \\ <br />" +
             "      FILTER=includeReadList" +
             "</pre> " +
-            "<hr />" +
-            "<h3>Filter by interval</h3>" +
+            "<h4>Filter by interval</h4>" +
             "<pre>" +
             "java -jar picard.jar FilterSamReads \\ <br /> " +
             "      I=input.bam \\ <br /> " +
@@ -93,11 +124,10 @@ public class FilterSamReads extends CommandLineProgram {
             "      INTERVAL_LIST=regions.interval_list \\ <br/>" +
             "      FILTER=includePairedIntervals" +
             "</pre> " +
-            "<hr />" +
-            "<h3>Filter reads having a soft clip on the beginning of the read larger than 2 bases with a JavaScript script</h3>" +
+            "<h4>Filter reads having a soft clip on the beginning of the read larger than 2 bases with a JavaScript script</h4>" +
             "<pre>" +
-            "cat <<EOF > script.js <br />" +
-            "/** reads having a soft clip in 5' larger than 2 bases  */ <br/>" +
+            "cat <<EOF > script.js <br/>" +
+            "/** reads having a soft clip larger than 2 bases in beginning of read*/ <br/>" +
             "function accept(rec) {   <br/>" +
             "    if (rec.getReadUnmappedFlag()) return false; <br/>" +
             "    var cigar = rec.getCigar(); <br/>" +
@@ -114,16 +144,15 @@ public class FilterSamReads extends CommandLineProgram {
             "      O=output.bam \\ <br /> " +
             "      JAVASCRIPT_FILE=script.js \\ <br/>" +
             "      FILTER=includeJavascript" +
-            "</pre> " +
-            "<hr />";
+            "</pre> ";
     private static final Log log = Log.getInstance(FilterSamReads.class);
 
     @VisibleForTesting
     protected enum Filter implements CommandLineParser.ClpEnum {
-        includeAligned("Aligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note: first and second of paired reads must <b>both</b> be aligned to be included in OUTPUT.)"),
-        excludeAligned("Unaligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note: first and second of pair must <b>both</b> be aligned to be excluded from  OUTPUT.)"),
+        includeAligned("Aligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note: first and second of paired reads must both be aligned to be included in OUTPUT.)"),
+        excludeAligned("Unaligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note: first and second of pair must both be aligned to be excluded from  OUTPUT.)"),
         includeReadList("Reads whose queryname is in READ_LIST_FILE."),
-        excludeReadList("Reads whose queryname is <b>not</b> in READ_LIST_FILE. see the READ_LIST_FILE for more detail."),
+        excludeReadList("Reads whose queryname is not in READ_LIST_FILE. see the READ_LIST_FILE for more detail."),
         includeJavascript("Reads that have been accepted by the JAVASCRIPT_FILE script, that is, reads for which the value of the script is true. " +
                 "See the JAVASCRIPT_FILE argument for more detail. "),
         includePairedIntervals("Reads (and their mate) that overlap with an interval from INTERVAL_LIST. INPUT must be coordinate sorted.");
@@ -147,12 +176,12 @@ public class FilterSamReads extends CommandLineProgram {
     @Argument(doc = "Which filter to use.")
     public Filter FILTER = null;
 
-    @Argument(doc = "File containing reads that will be included or excluded from the OUTPUT SAM or BAM file.",
+    @Argument(doc = "File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file.",
             optional = true,
             shortName = "RLF")
     public File READ_LIST_FILE;
 
-    @Argument(doc = "Interval List File containing intervals that will be included from the OUTPUT if using FILTER=includePairedIntervals",
+    @Argument(doc = "Interval List File containing intervals that will be included in the OUTPUT if using FILTER=includePairedIntervals",
             optional = true,
             shortName = "IL")
     public File INTERVAL_LIST;
@@ -162,7 +191,7 @@ public class FilterSamReads extends CommandLineProgram {
             optional = true, shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
-    @Argument(doc = "SAM or BAM file to write read excluded results to", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc = "SAM or BAM file for resulting reads.", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
     @Argument(shortName = "JS",
@@ -176,7 +205,7 @@ public class FilterSamReads extends CommandLineProgram {
     public File JAVASCRIPT_FILE = null;
 
     @Argument(
-            doc = "Create .reads files (from the OUTPUT filename) containing names of reads from INPUT *and* OUTPUT (for debugging purposes.)",
+            doc = "Create <OUTPUT>.reads file containing names of reads from INPUT and OUTPUT (for debugging purposes.)",
             optional = true)
     public boolean WRITE_READS_FILES = true;
 
