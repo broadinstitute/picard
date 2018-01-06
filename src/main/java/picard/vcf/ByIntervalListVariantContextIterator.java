@@ -12,7 +12,7 @@ import java.util.Iterator;
 /**
  * Takes a VCFFileReader and an IntervalList and provides a single iterator over all variants in all the intervals.
  *
- * @TODO Currently this uses the VCFFileReader.query method - could be useful to make a version of this iterator that uses the .iterator method
+ * //TODO Currently this uses the VCFFileReader.query method - could be useful to make a version of this iterator that uses the .iterator method
  *
  * @author Tim Fennell
  * @author George Grant

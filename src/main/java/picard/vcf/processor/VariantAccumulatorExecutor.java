@@ -23,9 +23,7 @@
  */
 package picard.vcf.processor;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import picard.util.AtomicIterator;
 import picard.util.Iterators;
@@ -33,10 +31,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -126,12 +121,7 @@ public interface VariantAccumulatorExecutor<ACCUMULATOR extends VariantProcessor
             @Override
             public String getMessage() {
                 return "Children threads encountered exceptions:\n" + Joiner.on("\n\t").join(FluentIterable.from(childrenExceptions).transform
-                        (new Function<Throwable, String>() {
-                            @Override
-                            public String apply(final Throwable throwable) {
-                                return throwable.getMessage();
-                            }
-                        }));
+                        (throwable -> throwable.getMessage()));
             }
         }
 

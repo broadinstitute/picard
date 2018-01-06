@@ -1,12 +1,12 @@
 package picard.util;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 /**
  * Describes 
  * @author mccowan
  */
 public interface AtomicIterator<T> {
-    /** Produces the next element from the iterator, if there is one; otherwise, produces {@link com.google.common.base.Optional.Absent} */
+    /** Produces the next element from the iterator, if there is one; otherwise, produces {@link Optional#EMPTY} */
     Optional<T> next();
 }
