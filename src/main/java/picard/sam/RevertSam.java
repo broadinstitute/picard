@@ -48,6 +48,7 @@ import htsjdk.samtools.util.QualityEncodingDetector;
 import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.SortingCollection;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
@@ -154,7 +155,23 @@ public class RevertSam extends CommandLineProgram {
     @Argument(shortName = "OBR", doc = "When true, outputs each read group in a separate file.")
     public boolean OUTPUT_BY_READGROUP = false;
 
-    public static enum FileType {sam, bam, cram, dynamic}
+    public static enum FileType implements CommandLineParser.ClpEnum {
+        sam("Generate SAM files."),
+        bam("Generate BAM files."),
+        cram("Generate CRAM files."),
+        dynamic("Generate files based on the extention of INPUT.");
+
+        final String description;
+
+        FileType(String descrition) {
+            this.description = descrition;
+        }
+
+        @Override
+        public String getHelpDoc() {
+            return description;
+        }
+    }
 
     @Argument(shortName = "OBRFF", doc = "When using OUTPUT_BY_READGROUP, the output file format can be set to a certain format.")
     public FileType OUTPUT_BY_READGROUP_FILE_FORMAT = FileType.dynamic;

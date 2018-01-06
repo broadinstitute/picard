@@ -28,7 +28,6 @@ import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamPairUtil;
-import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -43,7 +42,7 @@ import java.util.*;
 
 /**
  * <h3>Summary</h3>
- * A command-line tool build for merging BAM/SAM alignment info from a third-party aligner with the data in an
+ * A command-line tool for merging BAM/SAM alignment info from a third-party aligner with the data in an
  * unmapped BAM file, producing a third BAM file that has alignment data (from the aligner) and all the remaining
  * data from the unmapped BAM.
  *
@@ -55,9 +54,9 @@ import java.util.*;
  * be lost in the conversion to fastq (meta-data like sample alias, library, barcodes, etc., and read-level tags.)
  *
  * This tool takes an unaligned bam with meta-data, and the aligned bam produced by calling {@link SamToFastq} and
- * then passing the result to a aligner/mapper. It produces a new SAM file that includes all aligned and unaligned reads
+ * then passing the result to an aligner/mapper. It produces a new SAM file that includes all aligned and unaligned reads
  * and also carries forward additional read attributes from the unmapped BAM (attributes that are otherwise lost in the
- * process of converting to fastq.) The resulting file will be valid for use by Picard and GATK tools.
+ * process of converting to fastq). The resulting file will be valid for use by Picard and GATK tools.
  *
  * The output may be coordinate-sorted, in which case the tags, NM, MD, and UQ will be calculated and populated, or
  * query-name sorted, in which case the tags will not be calculated or populated.
@@ -98,7 +97,7 @@ public class MergeBamAlignment extends ReadOutputCommandLineProgram {
     static final String USAGE_SUMMARY = "Merge alignment data from a SAM or BAM with data in an unmapped BAM file.  ";
     static final String USAGE_DETAILS = "" +
             "<h3>Summary</h3>\n" +
-            "A command-line tool build for merging BAM/SAM alignment info from a third-party aligner with the data in an " +
+            "A command-line tool for merging BAM/SAM alignment info from a third-party aligner with the data in an " +
             "unmapped BAM file, producing a third BAM file that has alignment data (from the aligner) and all the remaining " +
             "data from the unmapped BAM.\n" +
             "\n" +
@@ -110,9 +109,9 @@ public class MergeBamAlignment extends ReadOutputCommandLineProgram {
             "be lost in the conversion to fastq (meta-data like sample alias, library, barcodes, etc., and read-level tags.)\n" +
             "\n" +
             "This tool takes an unaligned bam with meta-data, and the aligned bam produced by calling {@link SamToFastq} and " +
-            "then passing the result to a aligner/mapper. It produces a new SAM file that includes all aligned and unaligned reads " +
+            "then passing the result to an aligner/mapper. It produces a new SAM file that includes all aligned and unaligned reads " +
             "and also carries forward additional read attributes from the unmapped BAM (attributes that are otherwise lost in the " +
-            "process of converting to fastq.) The resulting file will be valid for use by Picard and GATK tools.\n" +
+            "process of converting to fastq). The resulting file will be valid for use by Picard and GATK tools.\n" +
             "\n" +
             "The output may be coordinate-sorted, in which case the tags, NM, MD, and UQ will be calculated and populated, or " +
             "query-name sorted, in which case the tags will not be calculated or populated.\n" +

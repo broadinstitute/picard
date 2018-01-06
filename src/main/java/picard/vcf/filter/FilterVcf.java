@@ -44,7 +44,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/** MARK
+/**
  * Applies a set of hard filters to Variants and to Genotypes within a VCF.
  *
  * @author Tim Fennell

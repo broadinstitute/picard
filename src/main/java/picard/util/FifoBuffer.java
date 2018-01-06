@@ -34,9 +34,9 @@ import java.text.NumberFormat;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        summary = "Provides a large, FIFO buffer that can be used to buffer input and output " +
+        oneLineSummary = "Provides a large, FIFO buffer that can be used to buffer input and output " +
                 "streams between programs.",
-        oneLineSummary =
+        summary =
                 "Acts as a large memory buffer between processes that are " +
                 "connected with unix pipes for the case that one or more processes produces or consumes their " +
                 "input or output in bursts.  By inserting a large memory buffer between such processes " +

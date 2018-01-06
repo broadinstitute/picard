@@ -181,7 +181,7 @@ public class GenotypeConcordance extends CommandLineProgram {
     @Argument(shortName = "CV", doc="The VCF containing the call sample")
     public File CALL_VCF;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for the two metrics files that are to be written." +
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for the three metrics files that are to be written." +
             " Resulting files will be <OUTPUT>" + SUMMARY_METRICS_FILE_EXTENSION + ", <OUTPUT>" + DETAILED_METRICS_FILE_EXTENSION + ", and <OUTPUT>" + CONTINGENCY_METRICS_FILE_EXTENSION + ".")
     public File OUTPUT;
 

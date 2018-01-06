@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * and uses a UCSC chain file to guide its operation. <br />
  *
  * For each variant, the tool will look for the target coordinate, reverse-complement and left-align the variant if needed,
- * and, in the case that the reference and alternate alleles og a SNP have been swapped in the new genome build, it will
+ * and, in the case that the reference and alternate alleles of a SNP have been swapped in the new genome build, it will
  * adjust the SNP, and correct AF-like INFO fields and the relevant genotypes.
  * <br />
  *
@@ -83,7 +83,7 @@ public class LiftoverVcf extends CommandLineProgram {
             "and uses a UCSC chain file to guide its operation.\n" +
             "\n" +
             "For each variant, the tool will look for the target coordinate, reverse-complement and left-align the variant if needed, " +
-            "and, in the case that the reference and alternate alleles og a SNP have been swapped in the new genome build, it will " +
+            "and, in the case that the reference and alternate alleles of a SNP have been swapped in the new genome build, it will " +
             "adjust the SNP, and correct AF-like INFO fields and the relevant genotypes." +
             "\n" +
             "\n" +
