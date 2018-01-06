@@ -81,7 +81,6 @@ public class CrosscheckMetric extends MetricBase {
     // The resulting LOD score comparing LEFT as normal and RIGHT as tumor
     public Double LOD_SCORE_NORMAL_TUMOR;
 
-
     // The LEFT run barcode (PU field) expected to look like : D047KACXX110901.1.ACCAACTG
     public String LEFT_RUN_BARCODE;
     // The LEFT lane

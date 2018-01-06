@@ -27,18 +27,21 @@ package picard.fingerprint;
 import picard.util.ReflectionUtil;
 
 /**
- * A Metric class to hold the result of clustered crosschecking fingerprints.
- * The same metric will be used for crosschecking Readgroups, libraries, samples, or files.
+ * A metric class to hold the result of {@link ClusterCrosscheckMetrics} fingerprints.
  *
  * @author Yossi Farjoun
  */
 
 public class ClusteredCrosscheckMetric extends CrosscheckMetric {
-    // Number indicating the cluster to which the groups within this metric belong.
-    // Metric-lines involving groups that are not in the same cluster should either
-    // be excluded, or given an error-indicating CLUSTER value (perhaps MIN_VALUE?).
+    /**
+     The cluster identifier to which the two groups within this metric ({@link #LEFT_GROUP_VALUE} and {@link #RIGHT_GROUP_VALUE}) belong.
+      */
     public Integer CLUSTER;
 
+    /**
+     * The number of different groups that are assigned to this cluster. Should be the same value for all rows within the same
+     * {@link #CLUSTER}.
+     */
     public Integer CLUSTER_SIZE;
 
     public ClusteredCrosscheckMetric() {

@@ -6,7 +6,6 @@ import htsjdk.samtools.util.IntervalList;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -16,31 +15,30 @@ public class IntervalListScatterer {
 
     public enum Mode {
         /**
-         * A simple scatter approach in which all output intervals have size equal to the total base count of the source list divide by the
-         * scatter count (except for possible variance in the final interval list).
+         * A simple scatter approach in which all output intervals have size equal to the total base count of the source list divided by the
+         * scatter count (except, possibly, in the last interval list).
          */
         INTERVAL_SUBDIVISION,
         /**
-         * A scatter approach that differs from {@link Mode#INTERVAL_SUBDIVISION} in a few ways.
+         * A scatter approach that differs from {@link Mode#INTERVAL_SUBDIVISION} in a few ways:
          * <ol>
-         * <li>No interval will be subdivided, and consequently, the requested scatter count is an upper bound of scatter count, not a
-         * guarantee as to how many {@link IntervalList}s will be produced (e.g., if scatterCount = 10 but there is only one input interval,
-         * only 1 interval list will be emitted).</li>
+         * <li>No interval will be subdivided, and consequently, the requested {@link IntervalListTools#SCATTER_COUNT} is
+         * an upper bound of scatter count, not a guarante of the number of {@link IntervalList}s that will be produced
+         * (e.g., if scatterCount = 10 but there is only one interval in the input, only 1 interval list will be emitted).</li>
          * <li>When an interval would otherwise be split, it is instead deferred to the next scatter list.</li>
          * <li>The "target width" of each scatter list may be wider than what is computed for {@link Mode#INTERVAL_SUBDIVISION}.
          * Specifically, if the widest interval in the source interval list is larger than what would otherwise be the target width, that
-         * interval's width is used.<br/><br/>The reasoning for this is that this approach produces more consistently-sized interval lists,
-         * which is one of the objectives of scattering.</li>
+         * interval's width is used.<br/><br/>This approach produces more consistently-sized interval lists, which is one of
+         * the objectives of scattering.</li>
          * </ol>
          */
         BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
         /**
          * A scatter approach that differs from {@link Mode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.
-         * <ol>
-         * <li>We try to balance the number of unique bases in each interval list by estimating the remaining interval lists sizes.  This is 
+         *
+         * This approach tries to balance the number of bases in each interval list by estimating the remaining interval lists sizes.  This is
          * computed from the total number of unique bases and the bases we have consumed.  This means that the interval list with the most
-         * number of unique bases is at most the ideal split length larger than the smallest interval list (unique # of bases).</li>
-         * </ol>         
+         * number of unique bases is at most the ideal split length larger than the smallest interval list (unique number of bases).
          */
         BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW
     }
@@ -56,12 +54,7 @@ public class IntervalListScatterer {
                 return splitWidth;
             case BALANCING_WITHOUT_INTERVAL_SUBDIVISION:
             case BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW:
-                final int widestIntervalLength = Collections.max(uniquedList.getIntervals(), new Comparator<Interval>() {
-                    @Override
-                    public int compare(final Interval o1, final Interval o2) {
-                        return Integer.valueOf(o1.length()).compareTo(o2.length());
-                    }
-                }).length();
+                final int widestIntervalLength = Collections.max(uniquedList.getIntervals(), (o1, o2) -> Integer.valueOf(o1.length()).compareTo(o2.length())).length();
 
                 // There is no purpose to splitting more granularly than the widest interval, so do not.
                 return Math.max(widestIntervalLength, splitWidth);
@@ -92,10 +85,10 @@ public class IntervalListScatterer {
         final long idealSplitLength = deduceIdealSplitLength(uniquedList, scatterCount);
         System.err.println("idealSplitLength=" + idealSplitLength);
 
-        final List<IntervalList> accumulatedIntervalLists = new ArrayList<IntervalList>();
+        final List<IntervalList> accumulatedIntervalLists = new ArrayList<>();
 
         IntervalList runningIntervalList = new IntervalList(uniquedList.getHeader());
-        final ArrayDeque<Interval> intervalQueue = new ArrayDeque<Interval>(uniquedList.getIntervals());
+        final ArrayDeque<Interval> intervalQueue = new ArrayDeque<>(uniquedList.getIntervals());
         
         long numBasesLeft = uniquedList.getBaseCount();
 
