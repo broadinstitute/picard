@@ -26,12 +26,13 @@ package picard.sam;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
+import ngs.Read;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -48,7 +49,7 @@ import java.text.DecimalFormat;
 @CommandLineProgramProperties(
         summary = SplitSamByNumberOfReads.USAGE_SUMMARY + SplitSamByNumberOfReads.USAGE_DETAILS,
         oneLineSummary = SplitSamByNumberOfReads.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class SplitSamByNumberOfReads extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Splits a SAM or BAM file to multiple BAMs.";

@@ -42,7 +42,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 import picard.util.LiftoverUtils;
 
 import java.io.File;
@@ -59,7 +59,7 @@ import java.util.*;
 @CommandLineProgramProperties(
         summary = LiftoverVcf.USAGE_SUMMARY + LiftoverVcf.USAGE_DETAILS,
         oneLineSummary = LiftoverVcf.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class LiftoverVcf extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Lifts over a VCF file from one reference build to another.  ";
@@ -110,10 +110,10 @@ public class LiftoverVcf extends CommandLineProgram {
 
     @Argument(doc = "INFO field annotations that behave like an Allele Frequency and should be transformed with x->1-x " +
             "when swapping reference with variant alleles.", optional = true)
-    public Collection<String> TAGS_TO_REVERSE = LiftoverUtils.DEFAULT_TAGS_TO_REVERSE;
+    public Collection<String> TAGS_TO_REVERSE = new ArrayList<>(LiftoverUtils.DEFAULT_TAGS_TO_REVERSE);
 
     @Argument(doc = "INFO field annotations that should be deleted when swapping reference with variant alleles.", optional = true)
-    public Collection<String> TAGS_TO_DROP = LiftoverUtils.DEFAULT_TAGS_TO_DROP;
+    public Collection<String> TAGS_TO_DROP = new ArrayList<>(LiftoverUtils.DEFAULT_TAGS_TO_DROP);
 
     // When a contig used in the chain is not in the reference, exit with this value instead of 0.
     public static int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE = 1;
@@ -235,6 +235,9 @@ public class LiftoverVcf extends CommandLineProgram {
                 "It is possible that not all INFO annotations reflect this swap, and in the genotypes, " +
                 "only the GT, PL, and AD fields have been modified. You should check the TAGS_TO_REVERSE parameter that was used " +
                         "during the LiftOver to be sure."));
+        outHeader.addMetaDataLine(new VCFInfoHeaderLine(LiftoverUtils.REV_COMPED_ALLELES, 0, VCFHeaderLineType.Flag,
+                "The REF and the ALT alleles have been reverse complemented in liftover since the mapping from the " +
+                        "previous reference to the current one was on the negative strand."));
 
         final VariantContextWriter out = new VariantContextWriterBuilder()
                 .setOption(Options.INDEX_ON_THE_FLY)
@@ -310,8 +313,9 @@ public class LiftoverVcf extends CommandLineProgram {
                 refSeq = refSeqs.get(target.getContig());
 
                 final VariantContext liftedVC = LiftoverUtils.liftVariant(ctx, target, refSeq, WRITE_ORIGINAL_POSITION);
+                // the liftedVC can be null if the liftover fails because of a problem with reverse complementing
                 if (liftedVC == null) {
-                    throw new IllegalArgumentException("Unexpectedly found null VC. This should have not happened.");
+                    rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_INDEL);
                 } else {
                     tryToAddVariant(liftedVC, refSeq, ctx);
                 }

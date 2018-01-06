@@ -40,7 +40,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.net.URL;
@@ -53,7 +53,7 @@ import java.net.URL;
 @CommandLineProgramProperties(
         summary = BuildBamIndex.USAGE_SUMMARY + BuildBamIndex.USAGE_DETAILS,
         oneLineSummary = BuildBamIndex.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class BuildBamIndex extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Generates a BAM index \".bai\" file.  ";

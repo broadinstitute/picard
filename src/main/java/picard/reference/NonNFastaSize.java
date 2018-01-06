@@ -41,7 +41,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Fasta;
+import picard.cmdline.programgroups.ReferenceProgramGroup;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -53,7 +53,7 @@ import java.io.IOException;
 @CommandLineProgramProperties(
         summary = NonNFastaSize.USAGE_SUMMARY + NonNFastaSize.USAGE_DETAILS,
         oneLineSummary = NonNFastaSize.USAGE_SUMMARY,
-        programGroup = Fasta.class
+        programGroup = ReferenceProgramGroup.class
 )
 @DocumentedFeature
 public class NonNFastaSize extends CommandLineProgram {

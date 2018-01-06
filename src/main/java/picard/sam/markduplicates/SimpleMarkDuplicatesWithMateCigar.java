@@ -37,7 +37,7 @@ import org.broadinstitute.barclay.argparser.BetaFeature;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Testing;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.sam.DuplicationMetrics;
 import picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram;
 import picard.sam.markduplicates.util.LibraryIdGenerator;
@@ -69,7 +69,7 @@ import java.util.Set;
         summary = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
                 "All records are then written to the output file with the duplicate records flagged.",
         oneLineSummary = "(Experimental) Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.",
-        programGroup = Testing.class
+        programGroup = ReadDataManipulationProgramGroup.class
 )
 public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
     private final Log log = Log.getInstance(MarkDuplicatesWithMateCigar.class);

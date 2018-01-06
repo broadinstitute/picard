@@ -36,7 +36,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.sam.util.PGTagArgumentCollection;
 
 import java.io.File;
@@ -52,7 +52,7 @@ import java.util.*;
 @CommandLineProgramProperties(
         summary = MergeBamAlignment.USAGE_SUMMARY + MergeBamAlignment.USAGE_DETAILS,
         oneLineSummary = MergeBamAlignment.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
+        programGroup = ReadDataManipulationProgramGroup.class
 )
 @DocumentedFeature
 public class MergeBamAlignment extends CommandLineProgram {

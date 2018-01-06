@@ -29,14 +29,13 @@ import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Fingerprinting;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.fingerprint.CrosscheckMetric.FingerprintResult;
 
 import java.io.*;
@@ -66,7 +65,7 @@ import java.util.stream.Collectors;
                 "A separate CLP, ClusterCrosscheckMetrics, can cluster the results as a connected graph " +
                 "according to LOD greater than a threshold. ",
         oneLineSummary = "Checks if all fingerprints appear to come from the same individual.",
-        programGroup = Fingerprinting.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CrosscheckFingerprints extends CommandLineProgram {

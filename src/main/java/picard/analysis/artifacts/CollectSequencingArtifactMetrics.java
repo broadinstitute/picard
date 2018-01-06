@@ -17,7 +17,7 @@ import picard.analysis.artifacts.SequencingArtifactMetrics.BaitBiasSummaryMetric
 import picard.analysis.artifacts.SequencingArtifactMetrics.PreAdapterDetailMetrics;
 import picard.analysis.artifacts.SequencingArtifactMetrics.PreAdapterSummaryMetrics;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.DbSnpBitSetUtil;
 import picard.util.VariantType;
 
@@ -47,7 +47,7 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
 @CommandLineProgramProperties(
         summary = CollectSequencingArtifactMetrics.USAGE_SUMMARY + CollectSequencingArtifactMetrics.USAGE_DETAILS,
         oneLineSummary = CollectSequencingArtifactMetrics.USAGE_SUMMARY,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {

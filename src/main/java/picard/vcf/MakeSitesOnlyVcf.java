@@ -20,33 +20,60 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
 import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Writes out a VCF that contains all the site-level information for all records in the input VCF and no per-sample information.
+ * Creates a VCF that contains all the site-level information for all records in the input VCF but no genotype information.
+ *
+ * <h3> Summary </h3>
+ * This tool reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining all site level information,
+ * including annotations based on genotypes (e.g. AN, AF). Output can be any supported variant format including .vcf,
+ * .vcf.gz or .bcf.
+ *
+ * <h3> Inputs</h3>
+ * <ul>
+ *     <li> Input VCF or BCF file containing genotype and site-level information. </li>
+ *     <li> Output VCF or BCF file containing only site-level information. </li>
+ *     <li> [Optional] Names of one or more samples to include in the output VCF. </li>
+ * </ul>
+ *
+ * <h3>Usage example:</h3>
+ * <pre>
+ *     java -jar picard.jar MakeSitesOnlyVcf \
+ *      INPUT=input_variants.vcf \
+ *      OUTPUT=output_variants.vcf
+ * </pre>
  *
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        summary = "Reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining " +
-                "all site level information, including annotations based on genotypes (e.g. AN, AF). Output an be " +
-                "any support variant format including .vcf, .vcf.gz or .bcf.",
-        oneLineSummary = "Creates a VCF bereft of genotype information from an input VCF or BCF",
-        programGroup = VcfOrBcf.class)
+        summary = MakeSitesOnlyVcf.USAGE_DETAILS,
+        oneLineSummary = MakeSitesOnlyVcf.USAGE_SUMMARY,
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class MakeSitesOnlyVcf extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Creates a VCF that contains all the site-level information for all records in the input VCF but no genotype information.";
+    static final String USAGE_DETAILS = "This tool reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining" +
+            "all site level information, including annotations based on genotypes (e.g. AN, AF). Output can be" +
+            "any supported variant format including .vcf, .vcf.gz or .bcf. <br /><br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar MakeSitesOnlyVcf \\ <br />" +
+            "      INPUT=input_variants.vcf \\ <br />" +
+            "      OUTPUT=output_variants.vcf" +
+            "</pre>";
 
-    @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input VCF or BCF")
+    @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input VCF or BCF containing genotype and site-level information.")
     public File INPUT;
 
-    @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output VCF or BCF to emit without per-sample info.")
+    @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output VCF or BCF file containing only site-level information.")
     public File OUTPUT;
 
-    @Argument(shortName="S", doc="Optionally one or more samples to retain when building the 'sites-only' VCF.", optional=true)
+    @Argument(shortName="S", doc="Names of one or more samples to include in the output VCF.", optional=true)
     public Set<String> SAMPLE = new TreeSet<String>();
 
     // Stock main method

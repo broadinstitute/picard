@@ -39,7 +39,8 @@ import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.illumina.parser.ReadData;
 
 import java.io.File;
 
@@ -52,7 +53,7 @@ import java.io.File;
         summary = "Convert a BAM file to a SAM file, or SAM to BAM.\n" +
                 "Input and output formats are determined by file extension.",
         oneLineSummary = "Convert a BAM file to a SAM file, or a SAM to a BAM",
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class
         SamFormatConverter extends CommandLineProgram {

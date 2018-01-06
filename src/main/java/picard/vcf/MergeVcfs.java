@@ -45,7 +45,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -100,7 +100,7 @@ import java.util.List;
 @CommandLineProgramProperties(
 		oneLineSummary = MergeVcfs.SUMMARY_FIRST_SENTENCE,
         summary = MergeVcfs.SUMMARY,
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class MergeVcfs extends CommandLineProgram {
 

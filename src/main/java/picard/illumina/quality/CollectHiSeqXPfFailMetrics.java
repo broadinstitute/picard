@@ -32,7 +32,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProviderFactory;
@@ -61,7 +61,7 @@ import java.util.concurrent.TimeUnit;
 @CommandLineProgramProperties(
         summary = CollectHiSeqXPfFailMetrics.USAGE_SUMMARY + CollectHiSeqXPfFailMetrics.USAGE_DETAILS,
         oneLineSummary = CollectHiSeqXPfFailMetrics.USAGE_SUMMARY,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 
