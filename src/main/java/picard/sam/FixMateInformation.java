@@ -50,7 +50,7 @@ import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,7 +83,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = FixMateInformation.USAGE_SUMMARY + FixMateInformation.USAGE_DETAILS,
         oneLineSummary = FixMateInformation.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class FixMateInformation extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Verify mate-pair information between mates and fix if needed.";

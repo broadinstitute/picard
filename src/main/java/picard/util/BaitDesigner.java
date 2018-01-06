@@ -17,8 +17,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.None;
+import picard.cmdline.programgroups.ReferenceProgramGroup;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -42,7 +41,7 @@ import java.util.regex.Pattern;
 @CommandLineProgramProperties(
         summary = BaitDesigner.USAGE_SUMMARY + BaitDesigner.USAGE_DETAILS,
         oneLineSummary = BaitDesigner.USAGE_SUMMARY,
-                programGroup = None.class
+                programGroup = ReferenceProgramGroup.class
         )
 @DocumentedFeature
 public class BaitDesigner extends CommandLineProgram {

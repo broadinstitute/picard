@@ -12,9 +12,8 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.programgroups.Intervals;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Intervals;
+import picard.cmdline.programgroups.ReferenceProgramGroup;
 
 import java.io.File;
 import java.util.*;
@@ -30,7 +29,7 @@ import java.util.*;
 @CommandLineProgramProperties(
         summary = ScatterIntervalsByNs.USAGE_SUMMARY + ScatterIntervalsByNs.USAGE_DETAILS,
         oneLineSummary = ScatterIntervalsByNs.USAGE_SUMMARY,
-        programGroup = Intervals.class
+        programGroup = ReferenceProgramGroup.class
 )
 @DocumentedFeature
 public class ScatterIntervalsByNs extends CommandLineProgram {

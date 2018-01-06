@@ -1,0 +1,13 @@
+##fileformat=VCFv4.2
+##contig=<ID=chr1,length=1085>
+##FILTER=<ID=IndelStraddlesMultipleIntevals,Description="Indel is straddling multiple intervalss in the chain, and so the results are not well defined.">
+##FILTER=<ID=MismatchedRefAllele,Description="Reference allele does not match reference genome sequence after liftover.">
+##FILTER=<ID=NoTarget,Description="Variant could not be lifted between genome builds.">
+##FILTER=<ID=ReverseComplementedIndel,Description="Indel falls into a reverse complemented region in the target genome.">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods summed across all unfiltered datasets for genotypes as defined in the VCF specification">
+##INFO=<ID=AttemptedLocus,Number=1,Type=String,Description="The locus of the variant in the TARGET prior to failing due to mismatching alleles.">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample1
+chr1	61	.	GT	G	724.43	MismatchedRefAllele	AttemptedLocus=chr1:61-62	GT	0/1
+chr1	73	chr1_73_G_T	G	T	100	MismatchedRefAllele	AttemptedLocus=chr1:73-73	GT:AD:PL	0/0:10,11:50,0,60

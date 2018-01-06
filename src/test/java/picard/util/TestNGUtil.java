@@ -19,7 +19,8 @@ import static java.lang.Math.abs;
 public class TestNGUtil {
 
     static final double EPSILON = 1e-300; //a constant near the smallest possible positive value representable in double,
-    // not actually the smallest possible value on purpose, since that would be indistinguishable from 0 and then useless.
+
+     // not actually the smallest possible value on purpose, since that would be indistinguishable from 0 and then useless.
     // This is small enough to be meaningless, but representable.
 
 
@@ -122,5 +123,13 @@ public class TestNGUtil {
         }
 
         return data.iterator();
+    }
+
+    static public void assertGreaterThan(final double lhs, final double rhs) {
+        Assert.assertTrue(lhs > rhs, String.format("Expected inequality is not true: %g > %g", lhs, rhs));
+    }
+
+    static public void assertLessThan(final double lhs, final double rhs) {
+        Assert.assertTrue(lhs < rhs, String.format("Expected inequality is not true: %g < %g", lhs, rhs));
     }
 }

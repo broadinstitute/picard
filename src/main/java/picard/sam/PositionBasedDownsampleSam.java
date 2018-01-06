@@ -32,8 +32,8 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
-import picard.sam.markduplicates.MarkDuplicates;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.sam.markduplicates.util.OpticalDuplicateFinder;
 import picard.sam.util.PhysicalLocationInt;
 import picard.sam.util.ReadNameParser;
 
@@ -156,7 +156,7 @@ import java.util.Map;
               "PositionBasedDownsampleSam always places a PG record in the header of its output, " +
               "and aborts whenever it finds such a PG record in its input.",
         oneLineSummary = "Downsample a SAM or BAM file to retain a subset of the reads based on the reads location in each tile in the flowcell.",
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class PositionBasedDownsampleSam extends CommandLineProgram {
 

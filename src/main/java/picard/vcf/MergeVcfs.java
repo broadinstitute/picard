@@ -45,7 +45,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -54,31 +54,97 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
- * Combines multiple VCF files into a single file. Input files must be sorted by their contigs
- * and, within contigs, by start position. Throws IllegalArgumentException if the contig lists
- * are not present in the input files, are not identical or if the sample lists are not the
- * same; this class uses the GATK to merge headers, which may throw exceptions if the headers
- * cannot be merged. See VCFUtils.smartMergeHeaders for details.
- * <p/>
- * An index file is created for the output file by default. Using an output file name with a
- * ".gz" extension will create gzip-compressed output.
+ * Combines multiple variant files into a single variant file.
+ *
+ * <h3>Inputs</h3>
+ *  <ul>
+ *      <li>One or more input file in VCF format (can be gzipped, i.e. ending in ".vcf.gz", or binary compressed, i.e. ending in ".bcf").</li>
+ *      <li>Optionally a sequence dictionary file (typically name ending in .dict) if the input VCF does not contain a
+ *          complete contig list and if the output index is to be created (true by default).</li>
+ *  </ul>
+ *  <p>
+ *  The input variant data must adhere to the following rules:
+ *     <ul>
+ *         <li>If there are samples, those must be the same across all input files.</li>
+ *         <li>Input file headers must be contain compatible declarations for common annotations (INFO, FORMAT fields) and filters.</li>
+ *         <li>Input files variant records must be sorted by their contig and position following the sequence dictionary provided
+ *         or the header contig list.</li>
+ *     </ul>
+ * </p>
+ * <p>
+ *     You can either directly specify the list of files by specifying <code>INPUT</code> multiple times, or provide a list
+ *     in a file with name ending in ".list" to <code>INPUT</code>.
+ * </p>
+ *
+ * <h3>Outputs</h3>
+ * A VCF sorted (i) according to the dictionary and (ii) by coordiante. 
+ * <h3>Usage examples</h3>
+ * <h4>Example 1:</h4>
+ *     We combine several variant files in different formats, where at least one of them contains the contig list in its header.
+ * <pre>
+ *     java -jar picard.jar MergeVcfs \
+ *          I=input_variants.01.vcf \
+ *          I=input_variants.02.vcf.gz \
+ *          O=output_variants.vcf.gz
+ * </pre>
+ * <h4>Example 2:</h4>
+ *      Similar to example 1 but we use an input list file to specify the input files:
+ * <pre>
+ *     java -jar picard.jar MergeVcfs \
+ *          I=input_variant_files.list \
+ *          O=output_variants.vcf.gz
+ * </pre>
+ *
+ * @since 1.0.1
  */
 @CommandLineProgramProperties(
-        summary = "Merges multiple VCF or BCF files into one VCF file. Input files must be sorted by their contigs " +
-                "and, within contigs, by start position. The input files must have the same sample and " +
-                "contig lists. An index file is created and a sequence dictionary is required by default.",
-        oneLineSummary = "Merges multiple VCF or BCF files into one VCF file or BCF",
-        programGroup = VcfOrBcf.class)
+		oneLineSummary = MergeVcfs.SUMMARY_FIRST_SENTENCE,
+        summary = MergeVcfs.SUMMARY,
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class MergeVcfs extends CommandLineProgram {
 
-    @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files (File format is determined by file extension), or a file having a '.list' suffix containing the path to the files.", minElements=1)
+	static final String SUMMARY_FIRST_SENTENCE = "Combines multiple variant files into a single variant file";
+	static final String SUMMARY = "<p>" + SUMMARY_FIRST_SENTENCE + ".</p>" + 
+			"<h3>Inputs</h3>" + 
+			"<ul>" + 
+			"      <li>One or more input file in VCF format (can be gzipped, i.e. ending in \".vcf.gz\", or binary compressed, i.e. ending in \".bcf\").</li>" + 
+			"      <li>Optionally a sequence dictionary file (typically name ending in .dict) if the input VCF does not contain a" + 
+			"          complete contig list and if the output index is to be created (true by default).</li>" + 
+			"  </ul>" + 
+			"  <p>" + 
+			"  The input variant data must adhere to the following rules:</p>" + 
+			"     <ul>" + 
+			"         <li>If there are samples, those must be the same across all input files.</li>" + 
+			"         <li>Input file headers must be contain compatible declarations for common annotations (INFO, FORMAT fields) and filters.</li>" + 
+			"         <li>Input files variant records must be sorted by their contig and position following the sequence dictionary provided" + 
+			"         or the header contig list.</li>" + 
+			"     </ul>" + 
+			" <p>You can either directly specify the list of files by specifying <code>INPUT</code> multiple times, or provide a list" + 
+			"     in a file with name ending in \".list\" to <code>INPUT</code>.</p>" + 
+			" <h3>Outputs</h3>" + 
+			" <p>A VCF sorted (i) according to the dictionary and (ii) by coordiante.</p>" + 
+			" <h3>Usage examples</h3>" + 
+			" <h4>Example 1:</h4>" + 
+			" <p>We combine several variant files in different formats, where at least one of them contains the contig list in its header.</p>" + 
+			" <pre>java -jar picard.jar MergeVcfs \\\n" + 
+			"          I=input_variants.01.vcf \\\n" + 
+			"          I=input_variants.02.vcf.gz \\\n" + 
+			"          O=output_variants.vcf.gz</pre>" + 
+			" <h4>Example 2:</h4>" + 
+			" <p>Similar to example 1 but we use an input list file to specify the input files:</p>" + 
+			" <pre>java -jar picard.jar MergeVcfs \\\n" + 
+			"          I=input_variant_files.list \\\n" + 
+			"          O=output_variants.vcf.gz</pre><hr/>";  
+	  	
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+              doc="VCF or BCF input files (File format is determined by file extension), or a file having a '.list' suffix containing the path to the files, one per line.", minElements=1)
     public List<File> INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The merged VCF or BCF file. File format is determined by file extension.")
     public File OUTPUT;
 
-    @Argument(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionary in the input file", optional = true)
+    @Argument(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionary in the input files", optional = true)
     public File SEQUENCE_DICTIONARY;
 
     private final Log log = Log.getInstance(MergeVcfs.class);
@@ -98,7 +164,6 @@ public class MergeVcfs extends CommandLineProgram {
         INPUT = IOUtil.unrollFiles(INPUT, IOUtil.VCF_EXTENSIONS);
         final Collection<CloseableIterator<VariantContext>> iteratorCollection = new ArrayList<CloseableIterator<VariantContext>>(INPUT.size());
         final Collection<VCFHeader> headers = new HashSet<VCFHeader>(INPUT.size());
-
         VariantContextComparator variantContextComparator = null;
         SAMSequenceDictionary sequenceDictionary = null;
 
@@ -141,8 +206,11 @@ public class MergeVcfs extends CommandLineProgram {
         final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
                 .setOutputFile(OUTPUT)
                 .setReferenceDictionary(sequenceDictionary);
+
         if (CREATE_INDEX) {
             builder.setOption(Options.INDEX_ON_THE_FLY);
+        } else {
+            builder.unsetOption(Options.INDEX_ON_THE_FLY);
         }
         final VariantContextWriter writer = builder.build();
 

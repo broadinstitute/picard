@@ -38,6 +38,8 @@ public class UmiMetrics extends MetricBase {
     private final Histogram<String> observedUmis = new Histogram<>();
     private final Histogram<String> inferredUmis = new Histogram<>();
     private long observedUmiBases = 0;
+    private long observedUmiWithNs = 0;
+    private long totalObservedUmisWithoutNs = 0;
 
     /** Number of bases in each UMI */
     public double MEAN_UMI_LENGTH = 0.0;
@@ -75,12 +77,17 @@ public class UmiMetrics extends MetricBase {
     /** Estimation of Phred scaled quality scores for UMIs */
     public double UMI_BASE_QUALITIES = 0.0;
 
+    /** The percentage of reads that contain an UMI that contains at least one N */
+    public double PCT_UMI_WITH_N = 0.0;
+
     public UmiMetrics() {}
 
     public UmiMetrics(final double length, final int observedUniqueUmis, final int inferredUniqueUmis,
                       final int observedBaseErrors, final int duplicateSetsWithoutUmi,
                       final int duplicateSetsWithUmi, final double effectiveLengthOfInferredUmis,
-                      final double effectiveLengthOfObservedUmis, final double estimatedBaseQualityOfUmis) {
+                      final double effectiveLengthOfObservedUmis, final double estimatedBaseQualityOfUmis,
+                      final double percentUmiWithN) {
+
         MEAN_UMI_LENGTH = length;
         OBSERVED_UNIQUE_UMIS = observedUniqueUmis;
         INFERRED_UNIQUE_UMIS = inferredUniqueUmis;
@@ -90,15 +97,17 @@ public class UmiMetrics extends MetricBase {
         INFERRED_UMI_ENTROPY = effectiveLengthOfInferredUmis;
         OBSERVED_UMI_ENTROPY = effectiveLengthOfObservedUmis;
         UMI_BASE_QUALITIES = estimatedBaseQualityOfUmis;
+        PCT_UMI_WITH_N = percentUmiWithN;
     }
 
     public void calculateDerivedFields() {
         OBSERVED_UNIQUE_UMIS = observedUmis.size();
         INFERRED_UNIQUE_UMIS = inferredUmis.size();
 
+        // Percent of UMIs that contain at least one N of total number of UMIs observed (observed UMIs is a count of UMIs without N)
+        PCT_UMI_WITH_N = (double) observedUmiWithNs/ ((double) observedUmiWithNs + (double) totalObservedUmisWithoutNs);
         OBSERVED_UMI_ENTROPY = effectiveNumberOfBases(observedUmis);
         INFERRED_UMI_ENTROPY = effectiveNumberOfBases(inferredUmis);
-
         UMI_BASE_QUALITIES = QualityUtil.getPhredScoreFromErrorProbability((double) OBSERVED_BASE_ERRORS / (double) observedUmiBases);
     }
 
@@ -111,6 +120,12 @@ public class UmiMetrics extends MetricBase {
         observedUmis.increment(observedUmi);
         inferredUmis.increment(inferredUmi);
         observedUmiBases += observedUmi.length();
+        totalObservedUmisWithoutNs++;
+    }
+
+    /** Add an observation of a UMI containing at least one N to the metrics */
+    public void addUmiObservationN() {
+        observedUmiWithNs++;
     }
 
     private double effectiveNumberOfBases(Histogram<?> observations) {

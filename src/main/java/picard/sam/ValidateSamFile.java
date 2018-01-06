@@ -40,7 +40,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,18 +49,43 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Command line program wrapping SamFileValidator.
+ * <p>This tool reports on the validity of a SAM or BAM file relative to the SAM format
+ * specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper
+ * formatting, faulty alignments, incorrect flag values, etc. </p>
+ *
+ * <p>By default, the tool runs in VERBOSE mode and will exit after finding 100 errors and output them to the console (stdout).
+ * Therefore, it is often more practical to run this tool initially using the MODE=SUMMARY option.  This mode outputs a summary
+ * table listing the numbers of all 'errors' and 'warnings'.</p>
+ *
+ * <p>When fixing errors in your file, it is often useful to prioritize the severe validation errors and ignore the
+ * errors/warnings of lesser concern.  This can be done using the IGNORE and/or IGNORE_WARNINGS arguments.  For helpful
+ * suggestions on error prioritization, please follow this link to obtain additional documentation on <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>ValidateSamFile</a>.</p>
+ *
+ * <p>After identifying and fixing your 'warnings/errors', we recommend that you rerun this tool to validate your SAM/BAM
+ * file prior to proceeding with your downstream analysis.  This will verify that all problems in your file have been addressed.</p>
+ *
+ * This tool is a wrapper for {@link SamFileValidator}.
+ *
+ * <h4>Usage example:</h4>
+ * <pre>
+ * java -jar picard.jar ValidateSamFile \\<br />
+ *       I=input.bam \\<br />
+ *       MODE=SUMMARY
+ * </pre>
+ * <p>To obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional
+ *  <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>
+ * "<hr />
  *
  * @author Doug Voet
  */
 @CommandLineProgramProperties(
         summary = ValidateSamFile.USAGE_SUMMARY + ValidateSamFile.USAGE_DETAILS,
         oneLineSummary = ValidateSamFile.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = DiagnosticsAndQCProgramGroup.class)
 @DocumentedFeature
 public class ValidateSamFile extends CommandLineProgram {
     private static final Log log = Log.getInstance(ValidateSamFile.class);
-    static final String USAGE_SUMMARY = "Validates a SAM or BAM file.  ";
+    static final String USAGE_SUMMARY = "Validates a SAM or BAM file.";
     static final String USAGE_DETAILS = "<p>This tool reports on the validity of a SAM or BAM file relative to the SAM format " +
             "specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper " +
             "formatting, faulty alignments, incorrect flag values, etc. </p> " +
@@ -132,6 +157,13 @@ public class ValidateSamFile extends CommandLineProgram {
             "This number can be found by executing the 'ulimit -n' command on a Unix system.")
     public int MAX_OPEN_TEMP_FILES = 8000;
 
+    @Argument(shortName = "SMV",
+            doc = "If true, this tool will not attempt to validate mate information. " +
+            "In general cases, this option should not be used.  However, in cases where samples have very " +
+            "high duplication or chimerism rates (> 10%), the mate validation process often requires extremely " +
+            "large amounts of memory to run, so this flag allows you to forego that check.")
+    public boolean SKIP_MATE_VALIDATION = false;
+
     public static void main(final String[] args) {
         System.exit(new ValidateSamFile().instanceMain(args));
     }
@@ -201,17 +233,14 @@ public class ValidateSamFile extends CommandLineProgram {
 
             final SamFileValidator validator = new SamFileValidator(out, MAX_OPEN_TEMP_FILES);
             validator.setErrorsToIgnore(IGNORE);
+            validator.setSkipMateValidation(SKIP_MATE_VALIDATION);
+            validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
+            validator.setIgnoreWarnings(IGNORE_WARNINGS);
 
-            if (IGNORE_WARNINGS) {
-                validator.setIgnoreWarnings(IGNORE_WARNINGS);
-            }
             if (MODE == Mode.SUMMARY) {
                 validator.setVerbose(false, 0);
             } else {
                 validator.setVerbose(true, MAX_OUTPUT);
-            }
-            if (IS_BISULFITE_SEQUENCED) {
-                validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
             }
             if (VALIDATE_INDEX) {
                 validator.setIndexValidationStringency(VALIDATE_INDEX ? IndexValidationStringency.EXHAUSTIVE : IndexValidationStringency.NONE);

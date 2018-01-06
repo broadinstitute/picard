@@ -38,7 +38,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantEvaluationProgramGroup;
 import picard.vcf.GenotypeConcordanceStates.CallState;
 import picard.vcf.GenotypeConcordanceStates.ContingencyState;
 import picard.vcf.GenotypeConcordanceStates.TruthAndCallStates;
@@ -53,9 +53,61 @@ import static htsjdk.variant.vcf.VCFConstants.MISSING_VALUE_v4;
 import static picard.vcf.GenotypeConcordanceStateCodes.*;
 
 /**
- * Calculates the concordance between genotype data for two samples in two different VCFs - one being considered the truth (or reference)
- * the other being the call.  The concordance is broken into separate results sections for SNPs and indels.  Summary and detailed statistics
- * are reported
+ * <h3>Summary</h3>
+ * Calculates the concordance between genotype data of one sample in each of two VCFs - one being considered the truth (or reference)
+ * the other being the call.  The concordance is broken into separate results sections for SNPs and indels.  Satistics
+ * are reported in three different files.
+ *
+ * <h3>Details</h3>
+ * This tool evaluates the concordance between genotype calls for a sample in different callsets where one is being considered
+ * as the \"truth\" (aka standard, or reference) and the other as the \"call\" that is being evaluated for accuracy. The
+ * Comparison can be restricted to a confidence interval which is typically used in order to enable proper assessment of
+ * False Positives and the False-Positive Rate (FPR).
+ * <br />
+ * <h3>Usage example</h3>
+ * <h4>Compare two VCFs within a confidence region</h4>
+ * <pre>
+ * java -jar picard.jar GenotypeConcordance \\
+ *       CALL_VCF=input.vcf \\
+ *       CALL_SAMPLE=sample_name \\
+ *       O=gc_concordance.vcf \\
+ *       TRUTH_VCF=truth_set.vcf \\
+ *       TRUTH_SAMPLE=sample_in_truth \\
+ *       INTERVALS=confident.interval_list \\
+ *       MISSING_SITES_HOM_REF = true
+ * </pre>
+ *
+ * <h3>Output Metrics:</h3>
+ * Output metrics consists of GenotypeConcordanceContingencyMetrics, GenotypeConcordanceSummaryMetrics, and
+ * GenotypeConcordanceDetailMetrics.  For each set of metrics, the data is broken into separate sections for
+ * SNPs and INDELs.  Note that only SNP and INDEL variants are considered, MNP, Symbolic, and Mixed classes
+ *  of variants are not included.
+ * <ul>
+ * <li>{@link GenotypeConcordanceContingencyMetrics} enumerate the constituents of each contingent in a callset including true-positive
+ * (TP), true-negative (TN), false-positive (FP), and false-negative (FN) calls.</li>
+ * <li>{@link GenotypeConcordanceDetailMetrics} include the numbers of SNPs and INDELs for each contingent genotype as well as the
+ * number of validated genotypes.</li>
+ * <li>{@link GenotypeConcordanceSummaryMetrics} provide specific details for the variant caller performance on a callset including
+ * values for sensitivity, specificity, and positive predictive values.</li>
+ * </ul>
+ * <br />
+ * <br />
+ * Useful definitions applicable to alleles and genotypes:
+ * <ul>
+ * <li>Truthset - A callset (typically in VCF format) containing variant calls and genotypes that have been cross-validated
+ * with multiple technologies e.g. Genome In A Bottle Consortium (GIAB) (https://sites.stanford.edu/abms/giab)</li>
+ * <li>TP - True-positives are variant sites that match against the truth-set</li>
+ * <li>FP - False-positives are reference sites miscalled as variant</li>
+ * <li>FN - False-negatives are variant sites miscalled as reference</li>
+ * <li>TN - True-negatives are correctly called as reference</li>
+ * <li>Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) appears in the truth-set</li>
+ * </ul>
+ * <h3>VCF Output:</h3>
+ * <ul>
+ * <li>The concordance state will be stored in the CONC_ST tag in the INFO field</li>
+ * <li>The truth sample name will be \"truth\" and call sample name will be \"call\"</li>
+ * </ul>
+ *
  *
  * @author Tim Fennell
  * @author George Grant
@@ -63,67 +115,74 @@ import static picard.vcf.GenotypeConcordanceStateCodes.*;
 @CommandLineProgramProperties(
         summary = GenotypeConcordance.USAGE_SUMMARY + GenotypeConcordance.USAGE_DETAILS,
         oneLineSummary =  GenotypeConcordance.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantEvaluationProgramGroup.class)
 @DocumentedFeature
 public class GenotypeConcordance extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Evaluate genotype concordance between callsets.";
-    static final String USAGE_DETAILS = "This tool evaluates the concordance between genotype calls for samples in different " +
-            "callsets where one is being considered as the truth (aka standard, or reference) and the other as the call that is being " +
-            "evaluated for accuracy. <br />" +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar GenotypeConcordance \\<br />" +
-            "      CALL_VCF=input.vcf \\<br />" +
-            "      CALL_SAMPLE=sample_name \\<br />" +
-            "      O=gc_concordance.vcf \\<br />" +
-            "      TRUTH_VCF=truth_set.vcf \\<br />" +
-            "      TRUTH_SAMPLE=truth_sample#" +
-            "</pre>" +
-            "" +
-            "<h4>Output Metrics:</h4>" +
-            "<ul>" +
-            "<li>Output metrics include GenotypeConcordanceContingencyMetrics, GenotypeConcordanceSummaryMetrics, and " +
-            "GenotypeConcordanceDetailMetrics.  For each set of metrics, the data is broken into separate sections for " +
-            "SNPs and INDELs.  Note that only SNP and INDEL variants are considered, MNP, Symbolic, and Mixed classes" +
-            " of variants are not included. </li>" +
-            "<li>GenotypeConcordanceContingencyMetrics enumerate the constituents of each contingent in a callset " +
-            "including true-positive (TP), true-negative (TN), false-positive (FP), and false-negative (FN) calls. See " +
-            "http://broadinstitute.github.io/picard/picard-metric-definitions.html#GenotypeConcordanceContingencyMetrics" +
-            " for more details.</li>" +
-            "<li>GenotypeConcordanceDetailMetrics include the numbers of SNPs and INDELs for each contingent genotype as well " +
-            "as the number of validated genotypes. See " +
-            "http://broadinstitute.github.io/picard/picard-metric-definitions.html#GenotypeConcordanceDetailMetrics for more details.</li>" +
-            "<li>GenotypeConcordanceSummaryMetrics provide specific details for the variant caller performance on a callset including: " +
-            "values for sensitivity, specificity, and positive predictive values. See " +
-            "http://broadinstitute.github.io/picard/picard-metric-definitions.html#GenotypeConcordanceSummaryMetrics for more details.</li>" +
-            "</ul>" +
-            "<br /><br />" +
-            "Useful definitions applicable to alleles and genotypes:<br /> " +
-            "<ul>"+
-            "<li>Truthset - A callset (typically in VCF format) containing variant calls and genotypes that have been cross-validated " +
-            "with multiple technologies e.g. Genome In A Bottle Consortium (GIAB) (https://sites.stanford.edu/abms/giab)</li>" +
-            "<li>TP - True positives are variant calls that match a 'truthset'</li>" +
-            "<li>FP - False-positives are reference sites miscalled as variant</li>" +
-            "<li>FN - False-negatives are variant sites miscalled as reference</li>" +
-            "<li>TN - True negatives are correctly called reference sites</li>" +
-            "<li>Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) has been validated </li> "     +
-            "</ul>"+
-            "" +
-            "<h4>VCF Output:</h4>" +
-            "<ul>" +
-            "<li>The concordance state will be stored in the \"CONC_ST\" tag in the INFO field.</li>" +
-            "<li>The truth sample name will be \"truth\" and call sample name will be \"call\".</li>" +
-            "</ul>" +
-            "<hr />"
+    static final String USAGE_SUMMARY = "Calculates the concordance between genotype data of one samples in each of two VCFs - one " +
+            " being considered the truth (or reference) the other being the call.  The concordance is broken into separate " +
+            "results sections for SNPs and indels.  Statistics are reported in three different files.";
             ;
+    static final String USAGE_DETAILS =
+            "<h3>Summary</h3>" +
+            "Calculates the concordance between genotype data of one samples in each of two VCFs - one being considered the truth (or reference) " +
+            "the other being the call.  The concordance is broken into separate results sections for SNPs and indels.  Summary and detailed statistics " +
+            "are reported.\n" +
+            "\n" +
+            "<h3>Details</h3>\n" +
+            "This tool evaluates the concordance between genotype calls for a sample in different callsets where one is being considered " +
+            "as the \"truth\" (aka standard, or reference) and the other as the \"call\" that is being evaluated for accuracy. The " +
+            "Comparison can be restricted to a confidence interval which is typically used in order to enable proper assessment of " +
+            "False Positives and the False-Positive Rate (FPR).\n" +
+            "\n" +
+            "<h3>Usage example</h3>\n" +
+            "<h4>Compare two VCFs within a confidence region</h4>\n" +
+            "\n" +
+            "java -jar picard.jar GenotypeConcordance \\\n" +
+            "      CALL_VCF=input.vcf \\\n" +
+            "      CALL_SAMPLE=sample_name \\\n" +
+            "      O=gc_concordance.vcf \\\n" +
+            "      TRUTH_VCF=truth_set.vcf \\\n" +
+            "      TRUTH_SAMPLE=sample_in_truth \\\n" +
+            "      INTERVALS=confident.interval_list \\\n" +
+            "      MISSING_SITES_HOM_REF = true\n" +
+            "\n" +
+            "<h3>Output Metrics:</h3>\n" +
+            "Output metrics consists of GenotypeConcordanceContingencyMetrics, GenotypeConcordanceSummaryMetrics, and " +
+            "GenotypeConcordanceDetailMetrics.  For each set of metrics, the data is broken into separate sections for " +
+            "SNPs and INDELs.  Note that only SNP and INDEL variants are considered, MNP, Symbolic, and Mixed classes " +
+            " of variants are not included.\n" +
+            "\n" +
+            "- GenotypeConcordanceContingencyMetrics enumerate the constituents of each contingent in a callset including true-positive" +
+            "(TP), true-negative (TN), false-positive (FP), and false-negative (FN) calls. See" +
+            "http://broadinstitute.github.io/picard/picard-metric-definitions.html#GenotypeConcordanceContingencyMetrics for more details.\n" +
+            "- GenotypeConcordanceDetailMetrics include the numbers of SNPs and INDELs for each contingent genotype as well as the" +
+            "number of validated genotypes. See" +
+            "http://broadinstitute.github.io/picard/picard-metric-definitions.html#GenotypeConcordanceDetailMetrics for more details." +
+            "- GenotypeConcordanceSummaryMetrics provide specific details for the variant caller performance on a callset including:" +
+            "values for sensitivity, specificity, and positive predictive values. See" +
+            "http://broadinstitute.github.io/picard/picard-metric-definitions.html#GenotypeConcordanceSummaryMetrics for more details.\n" +
+            "\n" +
+            "Useful definitions applicable to alleles and genotypes:\n" +
+            "\n" +
+            "Truthset - A callset (typically in VCF format) containing variant calls and genotypes that have been cross-validated" +
+            "with multiple technologies e.g. Genome In A Bottle Consortium (GIAB) (https://sites.stanford.edu/abms/giab)\n" +
+            "TP - True-positives are variant sites that match against the truth-set\n" +
+            "FP - False-positives are reference sites miscalled as variant\n" +
+            "FN - False-negatives are variant sites miscalled as reference\n" +
+            "TN - True-negatives are correctly called as reference\n" +
+            "Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) appears in the truth-set\n" +
+            "\n" +
+            "<h3>VCF Output:</h3>\n" +
+            "- The concordance state will be stored in the CONC_ST tag in the INFO field\n" +
+            "- The truth sample name will be \"truth\" and call sample name will be \"call\"";
     @Argument(shortName = "TV", doc="The VCF containing the truth sample")
     public File TRUTH_VCF;
 
     @Argument(shortName = "CV", doc="The VCF containing the call sample")
     public File CALL_VCF;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for the two metrics files that are to be written." +
-            " Resulting files will be <OUTPUT>" + SUMMARY_METRICS_FILE_EXTENSION + " and <OUTPUT>" + DETAILED_METRICS_FILE_EXTENSION + ".")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for the three metrics files that are to be written." +
+            " Resulting files will be <OUTPUT>" + SUMMARY_METRICS_FILE_EXTENSION + ", <OUTPUT>" + DETAILED_METRICS_FILE_EXTENSION + ", and <OUTPUT>" + CONTINGENCY_METRICS_FILE_EXTENSION + ".")
     public File OUTPUT;
 
     @Argument(doc = "Output a VCF annotated with concordance information.")

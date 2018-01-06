@@ -37,7 +37,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Fasta;
+import picard.cmdline.programgroups.ReferenceProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.BufferedWriter;
@@ -53,7 +53,7 @@ import java.io.IOException;
 @CommandLineProgramProperties(
         summary = ExtractSequences.USAGE_SUMMARY + ExtractSequences.USAGE_DETAILS,
         oneLineSummary = ExtractSequences.USAGE_SUMMARY,
-        programGroup = Fasta.class
+        programGroup = ReferenceProgramGroup.class
 )
 @DocumentedFeature
 public class ExtractSequences extends CommandLineProgram {

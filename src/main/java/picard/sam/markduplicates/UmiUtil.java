@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 The Broad Institute
+ * Copyright (c) 2017 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,13 +21,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package picard.cmdline.programgroups;
 
-import org.broadinstitute.barclay.argparser.CommandLineProgramGroup;
+package picard.sam.markduplicates;
+import htsjdk.samtools.SAMRecord;
 
-public class Fingerprinting implements CommandLineProgramGroup {
-    @Override
-    public String getName() { return "Fingerprinting Tools"; }
-    @Override
-    public String getDescription() { return "Tools for manipulating fingerprints, or related data."; }
+/**
+ *
+ * A collection of functions for use in processing UMIs
+ *
+ * @author mduran
+ */
+
+public class UmiUtil {
+
+    /** Returns an instance of the UMI without dashes */
+    public static String getSanitizedUMI(final SAMRecord record, final String umiTag) {
+        String umi = record.getStringAttribute(umiTag);
+        if (umi == null) return null;
+        return umi.replace("-", "");
+    }
 }

@@ -9,7 +9,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.BlockCompressedInputStream;
 import htsjdk.samtools.util.BlockCompressedInputStream.FileTermination;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +20,7 @@ import java.io.IOException;
 @CommandLineProgramProperties(
         summary = CheckTerminatorBlock.USAGE,
         oneLineSummary = CheckTerminatorBlock.USAGE,
-        programGroup = SamOrBam.class)
+        programGroup = DiagnosticsAndQCProgramGroup.class)
 @DocumentedFeature
 public class CheckTerminatorBlock extends CommandLineProgram {
     static final String USAGE = "Asserts the provided gzip file's (e.g., BAM) last block is well-formed; RC 100 otherwise";

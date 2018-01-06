@@ -37,7 +37,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantFilteringProgramGroup;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,7 +53,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = "Applies one or more hard filters to a VCF file to filter out genotypes and variants.",
         oneLineSummary = "Hard filters a VCF.",
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantFilteringProgramGroup.class)
 @DocumentedFeature
 public class FilterVcf extends CommandLineProgram {
     @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The INPUT VCF or BCF file.")

@@ -141,6 +141,7 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                         metrics.MAX_INSERT_SIZE = (int) histogram.getMax();
                         metrics.MIN_INSERT_SIZE = (int) histogram.getMin();
                         metrics.MEDIAN_INSERT_SIZE = histogram.getMedian();
+                        metrics.MODE_INSERT_SIZE = histogram.getMode();
                         metrics.MEDIAN_ABSOLUTE_DEVIATION = histogram.getMedianAbsoluteDeviation();
 
                         final double median = histogram.getMedian();
@@ -168,6 +169,7 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                             if (percentCovered >= 0.7 && metrics.WIDTH_OF_70_PERCENT == 0) metrics.WIDTH_OF_70_PERCENT = distance;
                             if (percentCovered >= 0.8 && metrics.WIDTH_OF_80_PERCENT == 0) metrics.WIDTH_OF_80_PERCENT = distance;
                             if (percentCovered >= 0.9 && metrics.WIDTH_OF_90_PERCENT == 0) metrics.WIDTH_OF_90_PERCENT = distance;
+                            if (percentCovered >= 0.95 && metrics.WIDTH_OF_95_PERCENT == 0) metrics.WIDTH_OF_95_PERCENT = distance;
                             if (percentCovered >= 0.99 && metrics.WIDTH_OF_99_PERCENT == 0) metrics.WIDTH_OF_99_PERCENT = distance;
 
                             --low;
