@@ -81,29 +81,29 @@ import java.util.stream.Collectors;
  * </il>
  * <br/>
  * <h3>Examples</h3>
- * <h4>Check that all the readgroups from a sample match each other</h4>
+ * <h4>Check that all the readgroups from a sample match each other:</h4>
  * <pre>
- *     java -jar picard.jar CrosscheckFingerprints \\
- *          INPUT=sample.with.many.readgroups.bam \\
- *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\
- *          LOD_THRESHOLD=-5 \\
+ *     java -jar picard.jar CrosscheckFingerprints \
+ *          INPUT=sample.with.many.readgroups.bam \
+ *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+ *          LOD_THRESHOLD=-5 \
  *          OUTPUT=sample.crosscheck_metrics
  * </pre>
  *
  *
- * <h4>Check that all the readgroups match as expected when providing reads from two samples from the same individual</h4>
+ * <h4>Check that all the readgroups match as expected when providing reads from two samples from the same individual:</h4>
  * <pre>
- *     java -jar picard.jar CrosscheckFingerprints \\
- *          INPUT=sample.one.with.many.readgroups.bam \\
- *          INPUT=sample.two.with.many.readgroups.bam \\
- *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\
- *          LOD_THRESHOLD=-5 \\
- *          EXPECT_ALL_GROUPS_TO_MATCH=true \\
+ *     java -jar picard.jar CrosscheckFingerprints \
+ *          INPUT=sample.one.with.many.readgroups.bam \
+ *          INPUT=sample.two.with.many.readgroups.bam \
+ *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+ *          LOD_THRESHOLD=-5 \
+ *          EXPECT_ALL_GROUPS_TO_MATCH=true \
  *          OUTPUT=sample.crosscheck_metrics
  * </pre>
  *
  *
- * <h4> Detailed Explanation</h4>
+ * <h3> Detailed Explanation</h3>
  *
  * This tool calculates the LOD score for identity check between "groups" of data in the INPUT files as defined by
  * the CROSSCHECK_BY argument. A positive value indicates that the data seems to have come from the same individual
@@ -143,7 +143,7 @@ import java.util.stream.Collectors;
                         "Checks if all the genetic data within a set of files appear to come from the same individual. " +
                         "It quickly determines whether a group's genotype matches that of an input SAM/BAM/VCF by selective sampling, " +
                         "and has been designed to work well for low-depth SAM/BAMs (as well as high depth ones and VCFs.) " +
-                        "The tool collects fingerprints (essentially genotype information from different parts of the genome)" +
+                        "The tool collects fingerprints (essentially, genotype information from different parts of the genome)" +
                         " at the finest level available in the data (readgroup for SAM files " +
                         "and sample for VCF files) and then optionally aggregates it by library, sample or file, to increase power and provide " +
                         "results at the desired resolution. Output is in a \"Moltenized\" format, one row per comparison. The results are " +

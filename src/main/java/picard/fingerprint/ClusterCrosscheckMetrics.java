@@ -60,9 +60,9 @@ import java.util.stream.Collectors;
  * <br/>
  * <h3>Example</h3>
  * <pre>
- *     java -jar picard.jar ClusterCrosscheckMetrics \\
- *              INPUT=sample.crosscheck_metrics \\
- *              LOD_THRESHOLD=3 \\
+ *     java -jar picard.jar ClusterCrosscheckMetrics \
+ *              INPUT=sample.crosscheck_metrics \
+ *              LOD_THRESHOLD=3 \
  *              OUTPUT=sample.clustered.crosscheck_metrics
  * </pre>
  *
@@ -91,9 +91,9 @@ import java.util.stream.Collectors;
                 "\n" +
                 "<h3>Example</h3>\n" +
                 "<pre>\n" +
-                "    java -jar picard.jar ClusterCrosscheckMetrics \\\\\n" +
-                "             INPUT=sample.crosscheck_metrics \\\\\n" +
-                "             LOD_THRESHOLD=3 \\\\\n" +
+                "    java -jar picard.jar ClusterCrosscheckMetrics \\\n" +
+                "             INPUT=sample.crosscheck_metrics \\\n" +
+                "             LOD_THRESHOLD=3 \\\n" +
                 "             OUTPUT=sample.clustered.crosscheck_metrics\n" +
                 "</pre>\n" +
                 "\n" +

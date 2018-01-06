@@ -49,14 +49,14 @@ import java.util.*;
  * <li>Interval name (ideally unique names for intervals)</li>
  * </ul>
  * </pre>
- * The coordinate system is such that the first base in a sequence is at position 1, and both the start
+ * The coordinate system is 1-based, closed-ended, so that the first base in a sequence is at position 1, and both the start
  * and the end positions are included in an interval.
  *
  * For Example:
  * <pre>
- * @HD	VN:1.0
- * @SQ	SN:chr1	LN:501
- * @SQ	SN:chr2	LN:401
+ * \@HD	VN:1.0
+ * \@SQ	SN:chr1	LN:501
+ * \@SQ	SN:chr2	LN:401
  * chr1	1	100	+	starts at the first base of the contig and covers 100 bases
  * chr2	100	100	+	interval with exactly one base
  * </pre>
@@ -140,7 +140,7 @@ public class IntervalListTools extends CommandLineProgram {
                     " - Strand (either + or -)\n" +
                     " - Interval name (ideally unique names for intervals)\n" +
                     "\n"+
-                    "The coordinate system is such that the first base in a sequence has position 1, and both the start " +
+                    "The coordinate system is 1-based, closed-ended so that the first base in a sequence has position 1, and both the start " +
                     "and the end positions are included in an interval.\n" +
                     "\n" +
                     "Example interval list file" +
@@ -222,7 +222,7 @@ public class IntervalListTools extends CommandLineProgram {
     @Argument(shortName = "SI", doc = "Second set of intervals for SUBTRACT and DIFFERENCE operations.", optional = true)
     public List<File> SECOND_INPUT;
 
-    @Argument(doc = "One or more lines of comment to add to the header of the output file (as @CO lines in the SAM header.", optional = true)
+    @Argument(doc = "One or more lines of comment to add to the header of the output file (as @CO lines in the SAM header).", optional = true)
     public List<String> COMMENT = null;
 
     @Argument(doc = "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  " +

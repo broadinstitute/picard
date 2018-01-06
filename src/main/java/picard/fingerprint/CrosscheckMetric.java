@@ -34,9 +34,6 @@ import htsjdk.samtools.metrics.MetricBase;
  */
 public class CrosscheckMetric extends MetricBase {
 
-    public enum Test{
-        TEST
-    }
     // An enum representing whether the result of the fingerprinting was expected and whether it was a match.
     public enum FingerprintResult {
         EXPECTED_MATCH(true, true),
@@ -83,7 +80,6 @@ public class CrosscheckMetric extends MetricBase {
     public Double LOD_SCORE_TUMOR_NORMAL;
     // The resulting LOD score comparing LEFT as normal and RIGHT as tumor
     public Double LOD_SCORE_NORMAL_TUMOR;
-
 
     // The LEFT run barcode (PU field) expected to look like : D047KACXX110901.1.ACCAACTG
     public String LEFT_RUN_BARCODE;

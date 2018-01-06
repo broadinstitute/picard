@@ -41,16 +41,16 @@ import java.util.*;
  * <br/>
  * <h3>Output</h3>
  * <br/>
- * An interval list (with a sam header) where the names of the intervals are labeled (either N-block or ACGT-block) to
+ * An interval list (with a SAM header) where the names of the intervals are labeled (either N-block or ACGT-block) to
  * indicate what type of block they define.
  *
  *
  * <h3>Usage example</h3>
- * <h4>Create an interval list of intervals that do not contain any N blockS for use with haplotype caller on short reads</h4>
+ * <h4>Create an interval list of intervals that do not contain any N blocks for use with haplotype caller on short reads</h4>
  * <pre>
- * java -jar picard.jar ScatterIntervalsByNs \\
- *       R=reference_sequence.fasta \\
- *       OT=BOTH \\
+ * java -jar picard.jar ScatterIntervalsByNs \
+ *       R=reference_sequence.fasta \
+ *       OT=BOTH \
  *       O=output.interval_list
  * </pre>
  *
@@ -80,7 +80,7 @@ public class ScatterIntervalsByNs extends CommandLineProgram {
             "- An integer indicating the largest number of Ns in a contiguous block that will be \"tolerated\" and not converted into an N block.\n" +
             "\n" +
             "<h3>Output</h3>" +
-            "- An interval list (with a sam header) where the names of the intervals are labeled (either N-block or ACGT-block) to indicate what type of block they define.\n" +
+            "- An interval list (with a SAM header) where the names of the intervals are labeled (either N-block or ACGT-block) to indicate what type of block they define.\n" +
             "\n" +
             "<h3>Usage example</h3>" +
             "<h4>Create an interval list of intervals that do not contain any N blocks for use with haplotype caller on short reads</h4>" +
