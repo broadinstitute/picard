@@ -7,8 +7,6 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SAMTextHeaderCodec;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
@@ -18,6 +16,8 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.sam.util.SamTestUtil;
+import picard.util.TestNGUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import static org.testng.Assert.assertEquals;
 
 public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
     final static String sample = "TestSample";
@@ -117,7 +115,7 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
         final ValidateSamFile validateSamFile = new ValidateSamFile();
 
         validateSamFile.INPUT = tempSamFile;
-        assertEquals(validateSamFile.doWork(), 0);
+        Assert.assertEquals(validateSamFile.doWork(), 0);
     }
 
     @DataProvider(name = "ValidArgumentsTestProvider")
@@ -147,31 +145,20 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
         };
 
         // make sure results is successful
-        assertEquals(runPicardCommandLine(args), 0);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         // make sure that the resulting BAM is valid.
         final ValidateSamFile validateSamFile = new ValidateSamFile();
 
         validateSamFile.INPUT = downsampled;
-        assertEquals(validateSamFile.doWork(), 0);
+        Assert.assertEquals(validateSamFile.doWork(), 0);
 
         //make sure that the total number of record in the resulting file in in the ballpark:
-        assertGreaterThan(countSamTotalRecord(downsampled), fraction * .8 * countSamTotalRecord(samFile));
-        assertLessThan(countSamTotalRecord(downsampled), fraction * 1.2 * countSamTotalRecord(samFile));
+        TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile));
+        TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile));
     }
 
-    private long countSamTotalRecord(final File samFile) {
-        final SamReader reader = SamReaderFactory.make().open(samFile);
-        assert reader.hasIndex();
-        long total = 0;
-
-        for (int i = 0; i < reader.getFileHeader().getSequenceDictionary().size(); i++) {
-            total += reader.indexing().getIndex().getMetaData(i).getAlignedRecordCount();
-            total += reader.indexing().getIndex().getMetaData(i).getUnalignedRecordCount();
-        }
-        return total;
-    }
-
+    
     @DataProvider(name="allowTwiceData")
     public Object[][] allowTwiceData(){
         return new Object[][]{{true},{false}};
@@ -234,15 +221,6 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
         };
         //should blow up due to bad inputs
         assert runPicardCommandLine(args) != 0;
-    }
-
-    // these fit in a TestNG.Utils class, but there isn't one in picard-public...
-    static public void assertGreaterThan(final double lhs, final double rhs) {
-        Assert.assertTrue(lhs > rhs, String.format("Expected inequality is not true: %g > %g", lhs, rhs));
-    }
-
-    static public void assertLessThan(final double lhs, final double rhs) {
-        Assert.assertTrue(lhs < rhs, String.format("Expected inequality is not true: %g < %g", lhs, rhs));
     }
 
 }

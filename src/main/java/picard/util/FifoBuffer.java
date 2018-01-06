@@ -7,7 +7,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
-import picard.cmdline.programgroups.None;
+import picard.cmdline.programgroups.OtherProgramGroup;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +48,8 @@ import java.text.NumberFormat;
                 "     INTERLEAVE=true |\n" +
                 "  java -jar FifoBuffer |\n" +
                 "  bwa mem -t 8 \\dev\\stdin output.bam\n",
-        programGroup = None.class
+        programGroup = OtherProgramGroup.class
+
 )
 @DocumentedFeature
 public class FifoBuffer extends CommandLineProgram {

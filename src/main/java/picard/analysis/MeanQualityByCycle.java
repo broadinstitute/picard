@@ -37,7 +37,7 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -55,7 +55,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = MeanQualityByCycle.USAGE_SUMMARY + MeanQualityByCycle.USAGE_DETAILS,
         oneLineSummary = MeanQualityByCycle.USAGE_SUMMARY,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class MeanQualityByCycle extends SinglePassSamProgram {

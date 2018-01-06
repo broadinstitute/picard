@@ -34,7 +34,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.*;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram;
 
 
@@ -61,7 +61,7 @@ import java.util.*;
 @CommandLineProgramProperties(
         summary = MarkDuplicatesWithMateCigar.USAGE_SUMMARY + MarkDuplicatesWithMateCigar.USAGE_DETAILS,
         oneLineSummary =  MarkDuplicatesWithMateCigar.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLineProgram {
     static final String USAGE_SUMMARY = "Identifies duplicate reads, accounting for mate CIGAR.  ";
@@ -201,7 +201,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
      * Updates the program record if necessary.
      */
     private void updateProgramRecord(final SAMRecord record, final Map<String, String> chainedPgIds) {
-        if (PROGRAM_RECORD_ID != null && ADD_PG_TAG_TO_READS) {
+        if (PROGRAM_RECORD_ID != null && pgTagArgumentCollection.ADD_PG_TAG_TO_READS) {
             final String pgId = record.getStringAttribute(SAMTag.PG.name());
             if (null == pgId) {
                 if (!warnedNullProgramRecords) {

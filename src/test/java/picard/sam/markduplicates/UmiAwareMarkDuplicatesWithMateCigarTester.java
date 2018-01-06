@@ -191,6 +191,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
             Assert.assertEquals(observedMetrics.INFERRED_UMI_ENTROPY, expectedMetrics.INFERRED_UMI_ENTROPY, tolerance, "INFERRED_UMI_ENTROPY does not match expected");
             Assert.assertEquals(observedMetrics.OBSERVED_UMI_ENTROPY, expectedMetrics.OBSERVED_UMI_ENTROPY, tolerance, "OBSERVED_UMI_ENTROPY does not match expected");
             Assert.assertEquals(observedMetrics.UMI_BASE_QUALITIES, expectedMetrics.UMI_BASE_QUALITIES, tolerance, "UMI_BASE_QUALITIES does not match expected");
+            Assert.assertEquals(observedMetrics.PCT_UMI_WITH_N, expectedMetrics.PCT_UMI_WITH_N, tolerance,"PERCENT_UMI_WITH_N does not match expected" );
         }
 
         // Also do tests from AbstractMarkDuplicatesCommandLineProgramTester

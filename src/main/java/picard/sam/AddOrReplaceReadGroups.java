@@ -20,7 +20,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.util.Arrays;
@@ -33,7 +33,7 @@ import java.util.Arrays;
 @CommandLineProgramProperties(
         summary = AddOrReplaceReadGroups.USAGE_SUMMARY + AddOrReplaceReadGroups.USAGE_DETAILS,
         oneLineSummary = AddOrReplaceReadGroups.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class AddOrReplaceReadGroups extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Replace read groups in a BAM file.";

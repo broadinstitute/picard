@@ -45,7 +45,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Illumina;
+import picard.cmdline.programgroups.BaseCallingProgramGroup;
 import picard.util.AdapterMarker;
 import picard.util.AdapterPair;
 import picard.util.ClippingUtility;
@@ -66,7 +66,7 @@ import static picard.util.IlluminaUtil.IlluminaAdapterPair;
 
         summary = MarkIlluminaAdapters.USAGE_SUMMARY + MarkIlluminaAdapters.USAGE_DETAILS,
         oneLineSummary = MarkIlluminaAdapters.USAGE_SUMMARY,
-        programGroup = Illumina.class
+        programGroup = BaseCallingProgramGroup.class
 )
 @DocumentedFeature
 public class MarkIlluminaAdapters extends CommandLineProgram {

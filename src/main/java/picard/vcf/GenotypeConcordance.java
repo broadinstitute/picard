@@ -38,7 +38,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantEvaluationProgramGroup;
 import picard.vcf.GenotypeConcordanceStates.CallState;
 import picard.vcf.GenotypeConcordanceStates.ContingencyState;
 import picard.vcf.GenotypeConcordanceStates.TruthAndCallStates;
@@ -115,7 +115,7 @@ import static picard.vcf.GenotypeConcordanceStateCodes.*;
 @CommandLineProgramProperties(
         summary = GenotypeConcordance.USAGE_SUMMARY + GenotypeConcordance.USAGE_DETAILS,
         oneLineSummary =  GenotypeConcordance.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantEvaluationProgramGroup.class)
 @DocumentedFeature
 public class GenotypeConcordance extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Calculates the concordance between genotype data of one samples in each of two VCFs - one " +

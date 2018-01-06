@@ -40,7 +40,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -59,7 +59,7 @@ import java.util.Set;
 @CommandLineProgramProperties(
         summary = CollectRrbsMetrics.USAGE_SUMMARY + CollectRrbsMetrics.USAGE_DETAILS,
         oneLineSummary = CollectRrbsMetrics.USAGE_SUMMARY,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CollectRrbsMetrics extends CommandLineProgram {

@@ -37,7 +37,7 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -51,7 +51,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = QualityScoreDistribution.USAGE_SUMMARY + QualityScoreDistribution.USAGE_DETAILS,
         oneLineSummary = QualityScoreDistribution.USAGE_SUMMARY,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class QualityScoreDistribution extends SinglePassSamProgram {

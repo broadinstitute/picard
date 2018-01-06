@@ -23,6 +23,7 @@
  */
 package picard.illumina;
 
+import com.sun.xml.internal.rngom.parse.host.Base;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.fastq.BasicFastqWriter;
@@ -40,9 +41,8 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Illumina;
+import picard.cmdline.programgroups.BaseCallingProgramGroup;
 import picard.fastq.Casava18ReadNameEncoder;
 import picard.fastq.IlluminaReadNameEncoder;
 import picard.fastq.ReadNameEncoder;
@@ -72,7 +72,7 @@ import java.util.Set;
 @CommandLineProgramProperties(
         summary = IlluminaBasecallsToFastq.USAGE_SUMMARY + IlluminaBasecallsToFastq.USAGE_DETAILS,
         oneLineSummary = IlluminaBasecallsToFastq.USAGE_SUMMARY,
-        programGroup = Illumina.class
+        programGroup = BaseCallingProgramGroup.class
 )
 @DocumentedFeature
 public class IlluminaBasecallsToFastq extends CommandLineProgram {

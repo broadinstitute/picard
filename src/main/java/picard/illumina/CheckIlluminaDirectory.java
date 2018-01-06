@@ -9,9 +9,8 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Illumina;
+import picard.cmdline.programgroups.BaseCallingProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Illumina;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.IlluminaFileUtil;
@@ -46,7 +45,7 @@ import static picard.illumina.parser.NewIlluminaDataProvider.fileToTile;
 @CommandLineProgramProperties(
         summary = CheckIlluminaDirectory.USAGE_SUMMARY + CheckIlluminaDirectory.USAGE_DETAILS,
         oneLineSummary = CheckIlluminaDirectory.USAGE_SUMMARY,
-        programGroup = Illumina.class
+        programGroup = BaseCallingProgramGroup.class
 )
 @DocumentedFeature
 public class CheckIlluminaDirectory extends CommandLineProgram {
@@ -121,10 +120,10 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         final List<Integer> failingLanes = new ArrayList<>();
         int totalFailures = 0;
 
-        final int[] expectedCycles = new OutputMapping(readStructure).getOutputCycles();
+        final OutputMapping outputMapping = new OutputMapping(readStructure);
         log.info("Checking lanes(" + StringUtil.join(",", LANES) + " in basecalls directory (" + BASECALLS_DIR
                 .getAbsolutePath() + ")\n");
-        log.info("Expected cycles: " + StringUtil.intValuesToString(expectedCycles));
+        log.info("Expected cycles: " + StringUtil.intValuesToString(outputMapping.getOutputCycles()));
 
         for (final Integer lane : LANES) {
             if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, lane)) {
@@ -168,9 +167,8 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                     filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
                 }
 
-                final OutputMapping outputMapping = new OutputMapping(readStructure);
-
-                final CbclReader reader = new CbclReader(cbcls, filterFileMap, readStructure.readLengths, tiles.get(0), locs, outputMapping.getOutputCycles(), true);
+                final CbclReader reader = new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(),
+                        tiles.get(0), locs, outputMapping.getOutputCycles(), true);
                 reader.getAllTiles().forEach((key, value) -> {
                     //we are looking for cycles with compressed data count of 2 bytes (standard gzip header size)
                     String emptyCycleString = value.stream()
@@ -211,7 +209,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 log.info("Checking lane " + lane);
                 log.info("Expected tiles: " + StringUtil.join(", ", expectedTiles));
 
-                final int numFailures = verifyLane(fileUtil, expectedTiles, expectedCycles, DATA_TYPES, FAKE_FILES);
+                final int numFailures = verifyLane(fileUtil, expectedTiles, outputMapping.getOutputCycles(), DATA_TYPES, FAKE_FILES);
 
                 if (numFailures > 0) {
                     log.info("Lane " + lane + " FAILED " + " Total Errors: " + numFailures);
@@ -274,9 +272,9 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
      * @param dataTypes     The data types we expect to be available/well-formed
      * @return The number of errors found/logged for this directory/lane
      */
-    private static final int verifyLane(final IlluminaFileUtil fileUtil, final List<Integer> expectedTiles,
-                                        final int[] cycles,
-                                        final Set<IlluminaDataType> dataTypes, final boolean fakeFiles) {
+    private static int verifyLane(final IlluminaFileUtil fileUtil, final List<Integer> expectedTiles,
+                                  final int[] cycles,
+                                  final Set<IlluminaDataType> dataTypes, final boolean fakeFiles) {
         if (expectedTiles.isEmpty()) {
             throw new PicardException(
                     "0 input tiles were specified!  Check to make sure this lane is in the InterOp file!");

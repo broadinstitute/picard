@@ -10,7 +10,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary =  AddCommentsToBam.USAGE_SUMMARY + AddCommentsToBam.USAGE_DETAILS,
         oneLineSummary = AddCommentsToBam.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class AddCommentsToBam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Adds comments to the header of a BAM file.";

@@ -23,13 +23,7 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMTag;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
 import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.testng.Assert;
@@ -499,5 +493,38 @@ public class RevertSamTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
         verifyPositiveResults(output, new RevertSam(), true, true, false, false, null, 240, null, null);
+    }
+
+    @Test
+    public void testSanitizeAndDeduplicateRecords() throws Exception {
+        final File input  = File.createTempFile("test-input-santize-and-deduplicate-records", ".sam");
+        final File output = File.createTempFile("test-output-santize-and-deduplicate-records", ".sam");
+
+        // Create a SAM file that has duplicate records
+        final SamReader reader     = SamReaderFactory.makeDefault().open(Paths.get(basicSamToRevert));
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), false, input);
+        int numDuplicated = 0;
+        for (final SAMRecord rec : reader) {
+            writer.addAlignment(rec);
+            if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) {
+                writer.addAlignment(rec);
+                numDuplicated++;
+            }
+        }
+        reader.close();
+        writer.close();
+
+        // Make sure some records are duplicated
+        Assert.assertTrue(numDuplicated > 0);
+
+        final String [] args = new String[]{
+                "I=" + input.getAbsolutePath(),
+                "SANITIZE=true",
+                "KEEP_FIRST_DUPLICATE=true",
+                "MAX_DISCARD_FRACTION=1",
+                "O=" + output.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        verifyPositiveResults(output, new RevertSam(), true, true, false, false, null, 8, null, null);
     }
 }

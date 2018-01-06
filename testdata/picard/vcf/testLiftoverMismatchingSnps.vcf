@@ -1,0 +1,10 @@
+##fileformat=VCFv4.1
+##contig=<ID=chr1,length=1085>
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods summed across all unfiltered datasets for genotypes as defined in the VCF specification">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample1
+chr1	1	.	C	CCCCT	15676.17	PASS	.	GT	0/0
+chr1	61	.	GT	G	724.43	PASS	.	GT	0/1
+chr1	72	chr1_72_C_A	C	A	100	PASS	.	GT:AD:PL	1/1:10,11:50,0,60
+chr1	73	chr1_73_G_T	G	T	100	PASS	.	GT:AD:PL	0/0:10,11:50,0,60

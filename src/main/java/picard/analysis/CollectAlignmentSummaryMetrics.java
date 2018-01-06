@@ -38,7 +38,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.util.EnumSet;
@@ -77,7 +77,7 @@ import java.util.Set;
 @CommandLineProgramProperties(
         summary = CollectAlignmentSummaryMetrics.USAGE_SUMMARY + CollectAlignmentSummaryMetrics.USAGE_DETAILS,
         oneLineSummary = CollectAlignmentSummaryMetrics.USAGE_SUMMARY,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {

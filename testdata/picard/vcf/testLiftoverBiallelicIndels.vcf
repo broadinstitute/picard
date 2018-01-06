@@ -4,3 +4,5 @@
 chr1	1	.	C	CCCCT	15676.17	PASS	.	GT	0/0
 chr1	61	.	GT	G	724.43	PASS	.	GT	0/1
 chr1	72	.	T	A	100	PASS	.	GT	0/1
+chr1	72	.	T	A	100	PASS	.	GT	./.
+chr1	72	.	TT	A	100	PASS	.	GT	1/.

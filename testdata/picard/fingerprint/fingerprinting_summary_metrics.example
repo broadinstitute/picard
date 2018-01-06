@@ -1,0 +1,10 @@
+## htsjdk.samtools.metrics.StringHeader
+# CheckFingerprint INPUT=testdata/picard/fingerprint/NA12892.vcf OUTPUT=testdata/picard/fingerprint/testoutput/otp.fp GENOTYPES=testdata/picard/fingerprint/NA12892.g.vcf HAPLOTYPE_MAP=testdata/picard/fingerprint/Homo_sapiens_assembly19.haplotype_database.subset.txt    GENOTYPE_LOD_THRESHOLD=5.0 IGNORE_READ_GROUPS=false VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false GA4GH_CLIENT_SECRETS=client_secrets.json USE_JDK_DEFLATER=false USE_JDK_INFLATER=false
+## htsjdk.samtools.metrics.StringHeader
+# Started on: Thu Nov 16 14:50:20 MSK 2017
+
+## METRICS CLASS	picard.analysis.FingerprintingSummaryMetrics
+READ_GROUP	SAMPLE	LL_EXPECTED_SAMPLE	LL_RANDOM_SAMPLE	LOD_EXPECTED_SAMPLE	HAPLOTYPES_WITH_GENOTYPES	HAPLOTYPES_CONFIDENTLY_CHECKED	HAPLOTYPES_CONFIDENTLY_MATCHING	HET_AS_HOM	HOM_AS_HET	HOM_AS_OTHER_HOM
+	NA12892	-0.014852	-1.08308	1.068228	3	0	0	0	0	0
+
+

@@ -38,7 +38,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -51,18 +51,54 @@ import java.util.Map;
  * Command-line program to split a SAM or BAM file into separate files based on
  * library name.
  *
+ * <p> This tool takes a SAM or BAM file and separates all the reads
+ * into one SAM or BAM file per library name. Reads that do not have
+ * a read group specified or whose read group does not have a library name
+ * are written to a file called 'unknown.' The format (SAM or BAM) of the
+ * output files matches that of the input file.</p>
+ *
+ * <h3>Inputs</h3>
+ * <ul>
+ *     <li> The BAM or SAM file to be split </li>
+ *     <li> The directory where the library SAM or BAM files should be written </li>
+ * </ul>
+ *
+ * <h3>Output/h3>
+ * <ul>
+ *     <li> One SAM or BAM file per library name  </li>
+ * </ul>
+ *
+ * <p>
+ * <h4>Usage example: </h4>
+ * <pre>
+ *     java -jar picard.jar SplitSamByLibrary \
+ *          I=input_reads.bam \
+ *          O=/output/directory/
+ * </pre>
+ * </p>
+ *
  * @author ktibbett@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        summary = "Takes a SAM or BAM file and separates all the reads " +
-                "into one SAM or BAM file per library name.  Reads that do not have " +
-                "a read group specified or whose read group does not have a library name " +
-                "are written to a file called 'unknown.'  The format (SAM or BAM) of the  " +
-                "output files matches that of the input file.  ",
-        oneLineSummary = "Splits a SAM or BAM file into individual files by library",
-        programGroup = SamOrBam.class)
+        summary = SplitSamByLibrary.USAGE_DETAILS,
+        oneLineSummary = SplitSamByLibrary.USAGE_SUMMARY,
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class SplitSamByLibrary extends CommandLineProgram {
+
+    static final String USAGE_SUMMARY = "Splits a SAM or BAM file into individual files by library";
+    static final String USAGE_DETAILS = "Takes a SAM or BAM file and separates all the reads " +
+            "into one SAM or BAM file per library name.  Reads that do not have " +
+            "a read group specified or whose read group does not have a library name " +
+            "are written to a file called 'unknown.' The format (SAM or BAM) of the  " +
+            "output files matches that of the input file." +
+            "<br />"+
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar SplitSamByLibrary <br />" +
+            "      I=input_reads.bam <br />" +
+            "      O=/output/directory/ <br />"+
+            "</pre>";
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "The SAM or BAM file to be split. ")

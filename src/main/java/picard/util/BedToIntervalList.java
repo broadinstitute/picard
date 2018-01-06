@@ -22,7 +22,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Intervals;
+import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +33,7 @@ import java.io.IOException;
 @CommandLineProgramProperties(
         summary = BedToIntervalList.USAGE_SUMMARY + BedToIntervalList.USAGE_DETAILS,
         oneLineSummary = BedToIntervalList.USAGE_SUMMARY,
-        programGroup = Intervals.class
+        programGroup = IntervalsManipulationProgramGroup.class
 )
 @DocumentedFeature
 public class BedToIntervalList extends CommandLineProgram {

@@ -105,6 +105,8 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
      * Attempts to calculate the HS penalty incurred by the library in order to get 80%
      * of target bases (in non-zero-covered targets) to a specific target coverage (e.g. 20X).
      *
+     * @param librarySize  the estimated library size
+     * @param targetMetrics the target metrics class
      * @param coverageGoal the desired coverage target (e.g. 20X)
      * @return the hs penalty - a multiplier that tells if you want, e.g. 20X coverage, then you will
      *         need to produce this many PF aligned bases per target bases in your design!
@@ -151,5 +153,4 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
             return (1 / uniqueFraction) * fold80 * (1 / onTargetPct);
         }
     }
-
 }

@@ -50,38 +50,103 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Converts a fastq file to an unaligned BAM/SAM format.
- * See <a href="http://maq.sourceforge.net/fastq.shtml">MAQ FastQ specification</a> for details.
- * Three fastq versions are supported: FastqSanger, FastqSolexa and FastqIllumina.
- * Input files can be in GZip format (end in .gz).
+ * Converts a FASTQ file to an unaligned BAM or SAM file.
+ * <p>
+ *     Output read records will contain the original base calls and quality scores will be
+ *     translated depending on the base quality score encoding: FastqSanger, FastqSolexa and FastqIllumina.
+ * </p>
+ * <p>
+ *     There are also arguments to provide values for SAM header and read attributes that are not present in FASTQ
+ *     (e.g see <code>RG</code> or <code>SM</code> below).
+ * </p>
+ * <h3>Inputs</h3>
+ * <p>
+ *     One FASTQ file name for single-end or two for pair-end sequencing input data.
+ *     These files might be in gzip compressed format (when file name is ending with ".gz").
+ * </p>
+ * <p>
+ *     Alternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name (see <code>USE_SEQUENCIAL_FASTQ</code> for details below).
+ * </p>
+ * <p>
+ *     By default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly
+ *     using the <code>QUALITY_FORMAT</code> argument.
+ * </p>
+ * <h3>Output</h3>
+ * A single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.
+ * <h3>Usage examples</h3>
+ *
+ * <h4>Example 1:</h4>
+ * <p>
+ *     Single-end sequencing FASTQ file conversion. All reads are annotated
+ *     as belonging to the "rg0013" read group that in turn is part of the sample "sample001".
+ * </p>
+ * <pre>
+ * java -jar picard.jar FastqToSam \
+ *      F1=input_reads.fastq \
+ *      O=unaligned_reads.bam \
+ *      SM=sample001 \
+ *      RG=rg0013
+ * </pre>
+ * <h4>Example 2:</h4>
+ * <p>
+ *     Similar to example 1 above, but for paired-end sequencing.
+ * </p>
+ * <pre>
+ * java -jar picard.jar FastqToSam \
+ *      F1=forward_reads.fastq \
+ *      F2=reverse_reads.fastq \
+ *      O=unaligned_read_pairs.bam \
+ *      SM=sample001 \
+ *      RG=rg0013 
+ * </pre>
  */
 @CommandLineProgramProperties(
-        summary = FastqToSam.USAGE_SUMMARY + FastqToSam.USAGE_DETAILS,
+        summary = "<p>" + FastqToSam.USAGE_SUMMARY + ".</p>" + FastqToSam.USAGE_DETAILS,
         oneLineSummary = FastqToSam.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class FastqToSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Converts a FASTQ file to an unaligned BAM or SAM file.  ";
-    static final String USAGE_DETAILS = "This tool extracts read sequences and base qualities from the input FASTQ file and writes them" +
-            " out to a new file in unaligned BAM (uBAM) format. Read group information can be provided on the command line. <br /><br />  " +
-            "Three versions of FASTQ quality scales are supported: FastqSanger, FastqSolexa and FastqIllumina " +
-            "(see http://maq.sourceforge.net/fastq.shtml for details). Input FASTQ files can be in GZip format " +
-            "(with .gz extension)." +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar FastqToSam \\<br />" +
-            "      F1=file_1.fastq \\<br />" +
-            "      O=fastq_to_bam.bam \\<br />" +
-            "      SM=for_tool_testing " +
-            "</pre>" +
-            "<hr />";
+    static final String USAGE_SUMMARY = 
+    		"Converts a FASTQ file to an unaligned BAM or SAM file";
+    static final String USAGE_DETAILS = 
+    		"<p>Output read records will contain the original base calls and quality scores will be " +
+    		"translated depending on the base quality score encoding: FastqSanger, FastqSolexa and FastqIllumina.</p>" +
+        "<p>There are also arguments to provide values for SAM header and read attributes that are not present in FASTQ " +
+        "(e.g see RG or SM below).</p>" + 
+        "<h3>Inputs</h3>" +
+        "<p>One FASTQ file name for single-end or two for pair-end sequencing input data. " +
+        "These files might be in gzip compressed format (when file name is ending with \".gz\").</p>" +
+        "<p>Alternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name " + 
+        "(see USE_SEQUENCIAL_FASTQ for details below).</p>" +
+        "<p>By default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly " +
+        "using the QUALITY_FORMAT argument.</p>" +
+        "<h3>Output</h3>" +
+        "<p>A single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.</p>" +
+        "<h3>Usage examples</h3>" +
+        "<h4>Example 1:</h4>" + 
+        "<p>Single-end sequencing FASTQ file conversion. All reads are annotated " + 
+        "as belonging to the \"rg0013\" read group that in turn is part of the sample \"sample001\".</p>" + 
+        "<pre>java -jar picard.jar FastqToSam \\\n" +
+        "        F1=input_reads.fastq \\\n" +
+        "        O=unaligned_reads.bam \\\n" + 
+        "        SM=sample001 \\\n" + 
+        "        RG=rg0013</pre>" +
+        "<h4>Example 2:</h4>" + 
+        "<p>Similar to example 1 above, but for paired-end sequencing.</p>" + 
+        "<pre>java -jar picard.jar FastqToSam \\\n" +
+        "       F1=forward_reads.fastq \\\n" + 
+        "       F2=reverse_reads.fastq \\\n" +
+        "       O=unaligned_read_pairs.bam \\\n" + 
+        "       SM=sample001 \\\n" + 
+        "       RG=rg0013</pre><hr />";
+    
     private static final Log LOG = Log.getInstance(FastqToSam.class);
 
     @Argument(shortName="F1", doc="Input fastq file (optionally gzipped) for single end data, or first read in paired end data.")
