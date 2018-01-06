@@ -27,6 +27,7 @@ package picard.sam.markduplicates;
 import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.StringUtil;
+import org.apache.commons.lang3.StringUtils;
 import picard.PicardException;
 import picard.util.GraphUtils;
 
@@ -67,7 +68,7 @@ public class UmiGraph {
 
         // First ensure that all the reads have a UMI, if any reads are missing a UMI throw an exception unless allowMissingUmis is true
         for (SAMRecord rec : records) {
-            if (rec.getStringAttribute(umiTag) == null) {
+            if (UmiUtil.getSanitizedUMI(rec, umiTag) == null) {
                 if (allowMissingUmis) {
                     rec.setAttribute(umiTag, "");
                 } else {
@@ -77,7 +78,7 @@ public class UmiGraph {
         }
 
         // Count the number of times each UMI occurs
-        umiCounts = records.stream().collect(Collectors.groupingBy(p -> p.getStringAttribute(umiTag), counting()));
+        umiCounts = records.stream().collect(Collectors.groupingBy(p -> UmiUtil.getSanitizedUMI(p, umiTag), counting()));
 
         // At first we consider every UMI as if it were its own duplicate set
         numUmis = umiCounts.size();
@@ -119,7 +120,7 @@ public class UmiGraph {
         // Assign UMIs to duplicateSets
         final Map<String, Integer> duplicateSetsFromUmis = getDuplicateSetsFromUmis();
         for (SAMRecord rec : records) {
-            final String umi = rec.getStringAttribute(umiTag);
+            final String umi = UmiUtil.getSanitizedUMI(rec, umiTag);
             final Integer duplicateSetIndex = duplicateSetsFromUmis.get(umi);
 
             if (duplicateSets.containsKey(duplicateSetIndex)) {
@@ -143,14 +144,34 @@ public class UmiGraph {
             // and use this as an assigned UMI.
             long maxCount = 0;
             String assignedUmi = null;
-            for (SAMRecord rec : recordList) {
-                final String umi = rec.getStringAttribute(umiTag);
+            String fewestNUmi = null;
+            long nCount = 0;
 
-                if (umiCounts.get(umi) > maxCount) {
-                   maxCount = umiCounts.get(umi);
-                   assignedUmi = umi;
+            for (SAMRecord rec : recordList) {
+                final String umi = UmiUtil.getSanitizedUMI(rec, umiTag);
+
+                // If there is another choice, we don't want to choose the UMI with a N
+                // as the assignedUmi
+                if (umi.contains("N")) {
+
+                    int count = StringUtils.countMatches(umi, "N");
+                    // If an UMI containing a N hasn't been seen before, the current UMI is now the fewestNUmi
+                    if (nCount == 0) {
+                        nCount = count;
+                        fewestNUmi = umi;
+                    } else if (count < nCount) { // If N containing UMI already exists, reset it if we find a lower one
+                        nCount = count;
+                        fewestNUmi = umi;
+                    }
+                } else if (umiCounts.get(umi) > maxCount) {
+                    maxCount = umiCounts.get(umi);
+                    assignedUmi = umi;
                 }
             }
+
+            // If we didn't find a Umi w/o a N to represent
+            // then choose the one with the fewest Ns
+            if (assignedUmi == null) { assignedUmi = fewestNUmi; }
 
             // Set the records to contain the assigned UMI
             for (final SAMRecord rec : recordList) {

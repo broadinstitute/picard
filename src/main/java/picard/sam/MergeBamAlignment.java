@@ -28,50 +28,121 @@ import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamPairUtil;
-import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineParser;
+import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
-import picard.sam.util.ReadOutputCommandLineProgram;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.sam.util.PGTagArgumentCollection;
 
 import java.io.File;
 import java.util.*;
 
 /**
- * A command-line tool to merge BAM/SAM alignment info from a third-party aligner with the data in an
- * unmapped BAM file, producing a third BAM file that has alignment data and all the additional data
- * from the unmapped BAM
+ * <h3>Summary</h3>
+ * A command-line tool for merging BAM/SAM alignment info from a third-party aligner with the data in an
+ * unmapped BAM file, producing a third BAM file that has alignment data (from the aligner) and all the remaining
+ * data from the unmapped BAM.
+ *
+ * Quick note: this is <b>not</b> a tool for taking multiple sam files and creating a bigger file by merging them. For
+ * that use-case, see {@link MergeSamFiles}.
+ *
+ * <h3>Details</h3>
+ * Many alignment tools (still!) require fastq format input. The unmapped bam may contain useful information that will
+ * be lost in the conversion to fastq (meta-data like sample alias, library, barcodes, etc., and read-level tags.)
+ *
+ * This tool takes an unaligned bam with meta-data, and the aligned bam produced by calling {@link SamToFastq} and
+ * then passing the result to an aligner/mapper. It produces a new SAM file that includes all aligned and unaligned reads
+ * and also carries forward additional read attributes from the unmapped BAM (attributes that are otherwise lost in the
+ * process of converting to fastq). The resulting file will be valid for use by Picard and GATK tools.
+ *
+ * The output may be coordinate-sorted, in which case the tags, NM, MD, and UQ will be calculated and populated, or
+ * query-name sorted, in which case the tags will not be calculated or populated.
+ *
+ * <h3>Usage example:</h3>
+ * <pre>
+ * java -jar picard.jar MergeBamAlignment \\
+ *      ALIGNED=aligned.bam \\
+ *      UNMAPPED=unmapped.bam \\
+ *      O=merge_alignments.bam \\
+ *      R=reference_sequence.fasta
+ * </pre>
+ *
+ *
+ * <h3>Caveats</h3>
+ * This tool has been developing for a while and many arguments have been added to it over the years.
+ * You may be particularly interested in the following (partial) list:
+ * <ul>
+ *     <li>CLIP_ADAPTERS -- Whether to (soft-)clip the ends of the reads that are identified as belonging to adapters</li>
+ *     <li>IS_BISULFITE_SEQUENCE -- Whether the sequencing originated from bisulfite sequencing, in which case NM will be
+ *     calculated differently</li>
+ *     <li>ALIGNER_PROPER_PAIR_FLAGS -- Use if the aligner that was used cannot be trusted to set the "Proper pair" flag
+ *     and then the tool will set this flag based on orientation and distance between pairs.</li>
+ *     <li>ADD_MATE_CIGAR -- Whether to use this opportunity to add the MC tag to each read.</li>
+ *     <li>UNMAP_CONTAMINANT_READS (and MIN_UNCLIPPED_BASES) -- Whether to identify extremely short alignments (with
+ *     clipping on both sides) as cross-species contamination and unmap the reads.</li>
+ * </ul>
  *
  * @author ktibbett@broadinstitute.org
  */
 @CommandLineProgramProperties(
         summary = MergeBamAlignment.USAGE_SUMMARY + MergeBamAlignment.USAGE_DETAILS,
         oneLineSummary = MergeBamAlignment.USAGE_SUMMARY,
-        programGroup = SamOrBam.class
+        programGroup = ReadDataManipulationProgramGroup.class
 )
 @DocumentedFeature
-public class MergeBamAlignment extends ReadOutputCommandLineProgram {
+public class MergeBamAlignment extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Merge alignment data from a SAM or BAM with data in an unmapped BAM file.  ";
-    static final String USAGE_DETAILS = "This tool produces a new SAM or BAM file that includes all aligned and unaligned reads and also carries " +
-            "forward additional read attributes from the unmapped BAM (attributes that are otherwise lost in the process of alignment)." +
-            "  The purpose of this tool is to use information from the unmapped BAM to fix up aligner output.  The resulting file will be valid " +
-            "for use by other Picard tools.  For simple BAM file merges, use MergeSamFiles.  Note that MergeBamAlignment expects to " +
-            "find a sequence dictionary in the same directory as REFERENCE_SEQUENCE and expects it " +
-            "to have the same base name as the reference FASTA except with the extension \".dict\".  If " +
-            "the output sort order is not coordinate, then reads that are clipped due to adapters or overlapping " +
-            "will not contain the NM, MD, or UQ tags." +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar MergeBamAlignment \\<br /> " +
-            "      ALIGNED=aligned.bam \\ <br /> " +
-            "      UNMAPPED=unmapped.bam \\ <br /> " +
-            "      O=merge_alignments.bam \\<br /> " +
-            "      R=reference_sequence.fasta" +
-            "</pre> " +
-            "<hr />";
+    static final String USAGE_DETAILS = "" +
+            "<h3>Summary</h3>\n" +
+            "A command-line tool for merging BAM/SAM alignment info from a third-party aligner with the data in an " +
+            "unmapped BAM file, producing a third BAM file that has alignment data (from the aligner) and all the remaining " +
+            "data from the unmapped BAM.\n" +
+            "\n" +
+            "Quick note: this is <b>not</b> a tool for taking multiple sam files and creating a bigger file by merging them. For " +
+            "that use-case, see {@link MergeSamFiles}.\n" +
+            "\n" +
+            "<h3>Details</h3>\n" +
+            "Many alignment tools (still!) require fastq format input. The unmapped bam may contain useful information that will " +
+            "be lost in the conversion to fastq (meta-data like sample alias, library, barcodes, etc., and read-level tags.)\n" +
+            "\n" +
+            "This tool takes an unaligned bam with meta-data, and the aligned bam produced by calling {@link SamToFastq} and " +
+            "then passing the result to an aligner/mapper. It produces a new SAM file that includes all aligned and unaligned reads " +
+            "and also carries forward additional read attributes from the unmapped BAM (attributes that are otherwise lost in the " +
+            "process of converting to fastq). The resulting file will be valid for use by Picard and GATK tools.\n" +
+            "\n" +
+            "The output may be coordinate-sorted, in which case the tags, NM, MD, and UQ will be calculated and populated, or " +
+            "query-name sorted, in which case the tags will not be calculated or populated.\n" +
+            "\n" +
+            "<h3>Usage example:</h3>\n" +
+            "\n" +
+            "java -jar picard.jar MergeBamAlignment \\\n" +
+            "     ALIGNED=aligned.bam \\\n" +
+            "     UNMAPPED=unmapped.bam \\\n" +
+            "     O=merge_alignments.bam \\\n" +
+            "     R=reference_sequence.fasta\n" +
+            "\n" +
+            "<h3>Caveats</h3>\n" +
+            "This tool has been developing for a while and many arguments have been added to it over the years. " +
+            "You may be particularly interested in the following (partial) list:\n" +
+            "<ul>\n" +
+            "<li>CLIP_ADAPTERS -- Whether to (soft-)clip the ends of the reads that are identified as belonging to adapters</li>\n" +
+            "<li>IS_BISULFITE_SEQUENCE -- Whether the sequencing originated from bisulfite sequencing, in which case NM will be " +
+            "calculated differently</li>\n" +
+            "<li>ALIGNER_PROPER_PAIR_FLAGS -- Use if the aligner that was used cannot be trusted to set the \"Proper pair\" flag " +
+            "and then the tool will set this flag based on orientation and distance between pairs.</li>\n" +
+            "<li>ADD_MATE_CIGAR -- Whether to use this opportunity to add the MC tag to each read.</li>\n" +
+            "<li>UNMAP_CONTAMINANT_READS (and MIN_UNCLIPPED_BASES) -- Whether to identify extremely short alignments (with " +
+            "clipping on both sides) as cross-species contamination and unmap the reads.</li>\n" +
+            "</ul>\n" +
+            "";
+
+    @ArgumentCollection
+    public final PGTagArgumentCollection pgTagArgumentCollection = new PGTagArgumentCollection();
 
     @Argument(shortName = "UNMAPPED",
             doc = "Original SAM or BAM file of unmapped reads, which must be in queryname order.")
@@ -120,9 +191,10 @@ public class MergeBamAlignment extends ReadOutputCommandLineProgram {
     public String PROGRAM_GROUP_NAME;
 
     @Deprecated
-    @Argument(doc = "This argument is ignored and will be removed.", shortName = "PE", optional=true)
+    @Argument(doc = "DEPRECATED. This argument is ignored and will be removed.", shortName = "PE", optional=true)
     public Boolean PAIRED_RUN = true;
 
+    @Deprecated
     @Argument(doc = "The expected jump size (required if this is a jumping library). Deprecated. Use EXPECTED_ORIENTATIONS instead",
             shortName = "JUMP",
             mutex = "EXPECTED_ORIENTATIONS",
@@ -181,17 +253,7 @@ public class MergeBamAlignment extends ReadOutputCommandLineProgram {
 
     @Argument(doc = "Strategy for selecting primary alignment when the aligner has provided more than one alignment " +
             "for a pair or fragment, and none are marked as primary, more than one is marked as primary, or the primary " +
-            "alignment is filtered out for some reason. " +
-            "BestMapq expects that multiple alignments will be correlated with HI tag, and prefers the pair of " +
-            "alignments with the largest MAPQ, in the absence of a primary selected by the aligner. " +
-            "EarliestFragment prefers the alignment which maps the earliest base in the read. Note that EarliestFragment " +
-            "may not be used for paired reads. " +
-            "BestEndMapq is appropriate for cases in which the aligner is not pair-aware, and does not output the HI tag. " +
-            "It simply picks the alignment for each end with the highest MAPQ, and makes those alignments primary, regardless " +
-            "of whether the two alignments make sense together." +
-            "MostDistant is also for a non-pair-aware aligner, and picks the alignment pair with the largest insert size. " +
-            "If all alignments would be chimeric, it picks the alignments for each end with the best MAPQ.  For all algorithms, " +
-            "ties are resolved arbitrarily.")
+            "alignment is filtered out for some reason. For all strategies, ties are resolved arbitrarily.")
     public PrimaryAlignmentStrategy PRIMARY_ALIGNMENT_STRATEGY = PrimaryAlignmentStrategy.BestMapq;
 
     @Argument(doc = "For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.")
@@ -216,8 +278,6 @@ public class MergeBamAlignment extends ReadOutputCommandLineProgram {
     @Argument(doc = "How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) Currently ignored unless UNMAP_CONTAMINANT_READS = true", optional = true)
     public AbstractAlignmentMerger.UnmappingReadStrategy UNMAPPED_READ_STRATEGY = AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE;
 
-    private static final Log log = Log.getInstance(MergeBamAlignment.class);
-
     @Override
     protected boolean requiresReference() {
         return true;
@@ -226,16 +286,31 @@ public class MergeBamAlignment extends ReadOutputCommandLineProgram {
     /**
      * Mechanism to bridge between command line option and PrimaryAlignmentSelectionStrategy implementation.
      */
-    enum PrimaryAlignmentStrategy {
-        BestMapq(BestMapqPrimaryAlignmentSelectionStrategy.class),
-        EarliestFragment(EarliestFragmentPrimaryAlignmentSelectionStrategy.class),
-        BestEndMapq(BestEndMapqPrimaryAlignmentStrategy.class),
-        MostDistant(MostDistantPrimaryAlignmentSelectionStrategy.class);
+    enum PrimaryAlignmentStrategy implements CommandLineParser.ClpEnum{
+        BestMapq(BestMapqPrimaryAlignmentSelectionStrategy.class,
+                "Expects that multiple alignments will be correlated with HI tag, and prefers the pair of " +
+                "alignments with the largest MAPQ, in the absence of a primary selected by the aligner."),
+        EarliestFragment(EarliestFragmentPrimaryAlignmentSelectionStrategy.class,
+                "Prefers the alignment which maps the earliest base in the read. Note that EarliestFragment " +
+                "may not be used for paired reads."),
+        BestEndMapq(BestEndMapqPrimaryAlignmentStrategy.class,"Appropriate for cases in which the aligner is not pair-aware, " +
+                "and does not output the HI tag. It simply picks the alignment for each end with the highest MAPQ, and makes " +
+                "those alignments primary, regardless of whether the two alignments make sense together."),
+        MostDistant(MostDistantPrimaryAlignmentSelectionStrategy.class, "Appropriate for a non-pair-aware aligner. Picks " +
+                "the alignment pair with the largest insert size. If all alignments would be chimeric, it picks the " +
+                "alignments for each end with the best MAPQ. ");
 
         private final Class<PrimaryAlignmentSelectionStrategy> clazz;
 
-        PrimaryAlignmentStrategy(final Class<?> clazz) {
+        private final String description;
+
+        public String getHelpDoc() {
+            return description;
+        }
+
+        PrimaryAlignmentStrategy(final Class<?> clazz, final String description) {
             this.clazz = (Class<PrimaryAlignmentSelectionStrategy>) clazz;
+            this.description = description;
         }
 
         PrimaryAlignmentSelectionStrategy newInstance() {
@@ -245,11 +320,6 @@ public class MergeBamAlignment extends ReadOutputCommandLineProgram {
                 throw new PicardException("Trouble instantiating " + clazz.getName(), e);
             }
         }
-    }
-
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        System.exit(new MergeBamAlignment().instanceMain(argv));
     }
 
     @Override
@@ -282,7 +352,7 @@ public class MergeBamAlignment extends ReadOutputCommandLineProgram {
         merger.setIncludeSecondaryAlignments(INCLUDE_SECONDARY_ALIGNMENTS);
         merger.setAttributesToReverse(ATTRIBUTES_TO_REVERSE);
         merger.setAttributesToReverseComplement(ATTRIBUTES_TO_REVERSE_COMPLEMENT);
-        merger.setAddPGTagToReads(ADD_PG_TAG_TO_READS);
+        merger.setAddPGTagToReads(pgTagArgumentCollection.ADD_PG_TAG_TO_READS);
         merger.mergeAlignment(REFERENCE_SEQUENCE);
         merger.close();
 

@@ -31,7 +31,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.io.FileReader;
@@ -47,7 +47,7 @@ import java.util.*;
                 " separately for different (genomic) shards of the same callset and we want to combine them into a single result over the entire callset." +
                 " The shards are expected to contain the same samples (although it will not fail if they do not) and to not have been run over overlapping genomic positions.",
         oneLineSummary = "Combines multiple Variant Calling Metrics files into a single file",
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class AccumulateVariantCallingMetrics extends CommandLineProgram {

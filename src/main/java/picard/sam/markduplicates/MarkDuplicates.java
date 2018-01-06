@@ -28,7 +28,7 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.sam.DuplicationMetrics;
 import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.util.Log;
@@ -54,7 +54,7 @@ import java.util.*;
 @CommandLineProgramProperties(
         summary = MarkDuplicates.USAGE_SUMMARY + MarkDuplicates.USAGE_DETAILS,
         oneLineSummary = MarkDuplicates.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     static final String USAGE_SUMMARY = "Identifies duplicate reads.  ";
@@ -400,7 +400,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             if (this.REMOVE_SEQUENCING_DUPLICATES && isOpticalDuplicate) {
                 continue;
             }
-            if (PROGRAM_RECORD_ID != null && ADD_PG_TAG_TO_READS) {
+            if (PROGRAM_RECORD_ID != null && pgTagArgumentCollection.ADD_PG_TAG_TO_READS) {
                 rec.setAttribute(SAMTag.PG.name(), chainedPgIds.get(rec.getStringAttribute(SAMTag.PG.name())));
             }
             out.addAlignment(rec);
@@ -655,7 +655,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      * to be marked as duplicates.
      */
     private void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
-        int entryOverhead;
+        final int entryOverhead;
         if (TAG_DUPLICATE_SET_MEMBERS) {
             // Memory requirements for RepresentativeReadIndexer:
             // three int entries + overhead: (3 * 4) + 4 = 16 bytes
@@ -677,13 +677,13 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             final RepresentativeReadIndexerCodec representativeIndexCodec = new RepresentativeReadIndexerCodec();
             this.representativeReadIndicesForDuplicates = SortingCollection.newInstance(RepresentativeReadIndexer.class,
                     representativeIndexCodec,
-                    new RepresentativeReadComparator(),
+                    Comparator.comparing(read -> read.readIndexInFile),
                     maxInMemory,
                     TMP_DIR);
         }
 
         ReadEndsForMarkDuplicates firstOfNextChunk = null;
-        final List nextChunk = new ArrayList<ReadEndsForMarkDuplicates>(200);
+        final List<ReadEndsForMarkDuplicates> nextChunk = new ArrayList<>(200);
 
         // First just do the pairs
         log.info("Traversing read pair information and detecting duplicates.");
@@ -886,11 +886,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
     }
 
-    // To avoid overflows or underflows when subtracting two large (positive and negative) numbers
-    static int compareInteger(final int x, final int y) {
-        return (x < y) ? -1 : ((x == y) ? 0 : 1);
-    }
-
     /** Comparator for ReadEndsForMarkDuplicates that orders by read1 position then pair orientation then read2 position. */
     static class ReadEndsMDComparator implements Comparator<ReadEndsForMarkDuplicates> {
 
@@ -906,13 +901,13 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 final ReadEndsForMarkDuplicatesWithBarcodes lhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) lhs;
                 final ReadEndsForMarkDuplicatesWithBarcodes rhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) rhs;
                 if (compareDifference == 0) {
-                    compareDifference = compareInteger(lhsWithBarcodes.barcode, rhsWithBarcodes.barcode);
+                    compareDifference = Integer.compare(lhsWithBarcodes.barcode, rhsWithBarcodes.barcode);
                 }
                 if (compareDifference == 0) {
-                    compareDifference = compareInteger(lhsWithBarcodes.readOneBarcode, rhsWithBarcodes.readOneBarcode);
+                    compareDifference = Integer.compare(lhsWithBarcodes.readOneBarcode, rhsWithBarcodes.readOneBarcode);
                 }
                 if (compareDifference == 0) {
-                    compareDifference = compareInteger(lhsWithBarcodes.readTwoBarcode, rhsWithBarcodes.readTwoBarcode);
+                    compareDifference = Integer.compare(lhsWithBarcodes.readTwoBarcode, rhsWithBarcodes.readTwoBarcode);
                 }
             }
             if (compareDifference == 0) {
@@ -940,17 +935,5 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             return compareDifference;
         }
     }
-
-    // order representative read entries based on the record index
-    static class RepresentativeReadComparator implements Comparator<RepresentativeReadIndexer> {
-
-        public RepresentativeReadComparator() {}
-
-        public int compare(final RepresentativeReadIndexer lhs, final RepresentativeReadIndexer rhs) {
-            int compareDifference = lhs.readIndexInFile - rhs.readIndexInFile;
-            return compareDifference;
-        }
-    }
-
 
 }

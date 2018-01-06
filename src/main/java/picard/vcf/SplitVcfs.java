@@ -19,7 +19,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
 
@@ -33,7 +33,7 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary = SplitVcfs.USAGE_SUMMARY + SplitVcfs.USAGE_DETAILS,
         oneLineSummary = SplitVcfs.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class SplitVcfs extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Splits SNPs and INDELs into separate files.  ";

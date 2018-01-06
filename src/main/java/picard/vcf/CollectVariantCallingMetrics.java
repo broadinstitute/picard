@@ -38,7 +38,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.MergeableMetricBase;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.DbSnpBitSetUtil;
 import picard.vcf.processor.VariantProcessor;
 
@@ -50,7 +50,7 @@ import java.util.Optional;
 @CommandLineProgramProperties(
         summary = "Collects per-sample and aggregate (spanning all samples) metrics from the provided VCF file.",
         oneLineSummary = "Collects per-sample and aggregate (spanning all samples) metrics from the provided VCF file",
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CollectVariantCallingMetrics extends CommandLineProgram {

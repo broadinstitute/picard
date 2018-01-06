@@ -35,7 +35,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Fingerprinting;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.fingerprint.CrosscheckMetric.FingerprintResult;
 
 import java.io.*;
@@ -212,7 +212,8 @@ import java.util.stream.Collectors;
                         "When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that " +
                         "it finds. ",
         oneLineSummary = "Checks that all data in the input files appear to have come from the same individual",
-        programGroup = Fingerprinting.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
+
 )
 @DocumentedFeature
 public class CrosscheckFingerprints extends CommandLineProgram {

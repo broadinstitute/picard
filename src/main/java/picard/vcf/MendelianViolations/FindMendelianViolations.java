@@ -48,7 +48,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantEvaluationProgramGroup;
 import picard.pedigree.PedFile;
 import picard.vcf.processor.VariantProcessor;
 
@@ -65,40 +65,82 @@ import java.util.TreeSet;
 import static htsjdk.variant.variantcontext.writer.Options.INDEX_ON_THE_FLY;
 
 /**
- * Finds mendelian violations of all types within a VCF.  Takes in VCF or BCF and a pedigree file and looks
- * for high confidence calls where the genotype of the offspring is incompatible with the genotypes of the
- * parents.  Key features:
- * 1) Checks for regular MVs in diploid regions and invalid transmissions in haploid regions
- * 2) Outputs metrics about the different kinds of MVs found
- * 3) Can output a per-trio VCF with violations; INFO field will contain a MV= attribute with the type of violation
+ * <h3>Summary</h3>
+ * Finds mendelian violations (MVs) of all types within a VCF.
+ * <h3>Detail</h3>
+ * Takes in VCF or BCF and a pedigree file and looks for high confidence calls where the genotype of the offspring
+ * is incompatible with the genotypes of the parents.  <br/>
+ * Key features:
+ * <ol>
+ * <li>
+ * Checks for regular MVs in diploid regions and invalid transmissions in haploid regions (using the declared gender
+ * of the offspring in the pedigree file to determine how to deal with the male and female chromosomes.)
+ * </li>
+ * <li>
+ * Outputs metrics about the different kinds of MVs found
+ * </li>
+ * <li>
+ * Can output a per-trio VCF with violations; INFO field will indicate the type of violation in the MV field
+ * </li>
+ * </ol>
  *
- * This CLP ignores variants that are:
- * - Not SNPs
- * - Filtered
- * - Multiallelic
- * - Monomorphic
- * - Within the SKIP_CHROMS contigs
+ * <h3>Example</h3>
+ * <pre>
+ *     java -jar picard.jar FindMendelianViolations\\
+ *          I=input.vcf \\
+ *          TRIO=pedigree.fam \\
+ *          O=report.mendelian_violation_metrics \\
+ *          MIN_DP=20
+ * </pre>
+ * <h3>Caveates</h3>
+ * <h4>Assumptions</h4>
+ * The tool assumes the existence of FORMAT fields AD, DP, GT, GQ, and PL.
+ * <h4>Ignored Variants</h4>
+ * This tool ignores variants that are:
+ * <ul>
+ * <li>Not SNPs</li>
+ * <li>Filtered</li>
+ * <li>Multiallelic (i.e., trio has more than 2 alleles)</li>
+ * <li>Within the {@link #SKIP_CHROMS} contigs</li>
+ * </ul>
+ * <h4>PseudoAutosomal Region</h4>
+ * This tool assumes that variants in the PAR will be mapped onto the female chromosome, and will treat variants in
+ * that region as as autosomal. The mapping to female requires that the PAR in the male chromosome be masked so that
+ * the aligner maps reads to single contig. This is normally done for the public releases of the human reference.
+ * The tool has default values for PAR that are sensible for humans on either build b37 or hg38.
  *
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        summary = "Finds mendelian violations of all types within a VCF. " +
-           "Takes in VCF or BCF and a pedigree file and looks for high confidence calls " +
-           "where the genotype of the offspring is incompatible with the genotypes of the parents. " +
-                "Assumes the existence of format fields AD, DP, GT, GQ, and PL fields. " +
-                "\n" +
-                "Take note that the implementation assumes that reads from the PAR will be mapped to the female chromosome" +
-                "rather than the male. This requires that the PAR in the male chromosome be masked so that the aligner " +
-                "has a single coting to map to. This is normally done for the public releases of the human reference."+
-                "\n" +
-                "Usage example: java -jar picard.jar FindMendelianViolations I=input.vcf \\\n" +
-                "                 TRIO=family.ped \\\n" +
-                "                 OUTPUT=mendelian.txt \\\n" +
-                "                 MIN_DP=20 \n" +
-                "\n"
-        ,
+        summary = "Takes in VCF or BCF and a pedigree file and looks for high confidence calls where the genotype of the offspring " +
+                "is incompatible with the genotypes of the parents.  \n" +
+                "Key features:\n" +
+                "- Checks for regular MVs in diploid regions and invalid transmissions in haploid regions (using the declared gender " +
+                "of the offspring in the pedigree file to determine how to deal with the male and female chromosomes.)\n" +
+                "- Outputs metrics about the different kinds of MVs found.\n" +
+                "- Can output a per-trio VCF with violations; INFO field will indicate the type of violation in the MV field\n" +
+                "<h3>Example</h3>\n" +
+                "    java -jar picard.jar FindMendelianViolations\\\n" +
+                "         I=input.vcf \\\n" +
+                "         TRIO=pedigree.fam \\\n" +
+                "         O=report.mendelian_violation_metrics \\\n" +
+                "         MIN_DP=20\n" +
+                "<h3>Caveates</h3>\n" +
+                "<h4>Assumptions</h4>\n" +
+                "The tool assumes the existence of FORMAT fields AD, DP, GT, GQ, and PL. \n" +
+                "<h4>Ignored Variants</h4>\n" +
+                "This tool ignores variants that are:\n" +
+                "- Not SNPs\n" +
+                "- Filtered\n" +
+                "- Multiallelic (i.e., trio has more than 2 alleles)\n" +
+                "- Within the SKIP_CHROMS contigs\n" +
+                "<h4>PseudoAutosomal Region</h4>\n" +
+                "This tool assumes that variants in the PAR will be mapped onto the female chromosome, and will treat variants in " +
+                "that region as as autosomal. The mapping to female requires that the PAR in the male chromosome be masked so that " +
+                "the aligner maps reads to single contig. This is normally done for the public releases of the human reference. " +
+                "The tool has default values for PAR that are sensible for humans on either build b37 or hg38.\n",
         oneLineSummary = "Finds mendelian violations of all types within a VCF",
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantEvaluationProgramGroup.class)
 @DocumentedFeature
 public class FindMendelianViolations extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF or BCF with genotypes.")

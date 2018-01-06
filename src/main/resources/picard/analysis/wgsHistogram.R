@@ -1,5 +1,5 @@
 ##
-# Copyright (c) 2016, Nils Homer
+# Copyright (c) 2016-2017, Nils Homer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -72,7 +72,7 @@ for (i in 1:2) {
 	coverage = coverage[!is.na(count)];
 	count = count[!is.na(count)];
 
-	meanCoverage = metrics$MEAN_COVERAGE[i];
+	meanCoverage = as.numeric(metrics$MEAN_COVERAGE[i]);
 	percentOfMean <- coverage / meanCoverage; # x-axis
 	percentCovered <- rep(0, length(count)); # y-axis
 
@@ -91,8 +91,8 @@ for (i in 1:2) {
 	percentCovereds = append(percentCovereds, list(percentCovered));
 }
 
-ymin = min(ymins);
-ymax = max(ymaxs);
+ymin = min(0, min(ymins, na.rm=T));
+ymax = max(ymaxs, na.rm=T);
 
 # Then plot the histogram as a PDF
 pdf(outputFile);

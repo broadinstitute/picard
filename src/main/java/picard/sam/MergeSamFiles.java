@@ -46,7 +46,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -55,20 +55,34 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Reads a SAM or BAM file and combines the output to one file
+ * This tool is used for combining SAM and/or BAM files from different runs or read groups into a single file, similar
+ * to the \"merge\" function of Samtools (http://www.htslib.org/doc/samtools.html).
+ * <br /><br />Note that to prevent errors in downstream processing, it is critical to identify/label read groups appropriately.
+ * If different samples contain identical read group IDs, this tool will avoid collisions by modifying the read group IDs to be
+ * unique. For more information about read groups, see the
+ * <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>GATK Dictionary entry.</a> <br /><br />
+ * <br />
+ * <h4>Usage example:</h4>
+ * <pre>
+ * java -jar picard.jar MergeSamFiles \\<br />
+ *      I=input_1.bam \\<br />
+ *      I=input_2.bam \\<br />
+ *      O=output_merged_files.bam
+ * </pre>
+ * <hr />
  *
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
         summary = MergeSamFiles.USAGE_SUMMARY + MergeSamFiles.USAGE_DETAILS,
         oneLineSummary = MergeSamFiles.USAGE_SUMMARY,
-        programGroup = SamOrBam.class)
+        programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class MergeSamFiles extends CommandLineProgram {
     private static final Log log = Log.getInstance(MergeSamFiles.class);
 
     static final String USAGE_SUMMARY = "Merges multiple SAM and/or BAM files into a single file.  ";
-    static final String USAGE_DETAILS = "This tool is used for combining SAM and/or BAM files from different runs or read groups, similarly " +
+    static final String USAGE_DETAILS = "This tool is used for combining SAM and/or BAM files from different runs or read groups into a single file, similarl " +
             "to the \"merge\" function of Samtools (http://www.htslib.org/doc/samtools.html).  " +
             "<br /><br />Note that to prevent errors in downstream processing, it is critical to identify/label read groups appropriately. " +
             "If different samples contain identical read group IDs, this tool will avoid collisions by modifying the read group IDs to be " +
@@ -80,7 +94,7 @@ public class MergeSamFiles extends CommandLineProgram {
             "java -jar picard.jar MergeSamFiles \\<br />" +
             "      I=input_1.bam \\<br />" +
             "      I=input_2.bam \\<br />" +
-            "      O=merged_files.bam" +
+            "      O=output_merged_files.bam" +
             "</pre>" +
             "<hr />"
            ;

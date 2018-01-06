@@ -43,7 +43,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
-import picard.cmdline.programgroups.Fasta;
+import picard.cmdline.programgroups.ReferenceProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.*;
@@ -63,7 +63,7 @@ import java.util.Set;
 @CommandLineProgramProperties(
         summary = CreateSequenceDictionary.USAGE_SUMMARY + CreateSequenceDictionary.USAGE_DETAILS,
         oneLineSummary = CreateSequenceDictionary.USAGE_SUMMARY,
-        programGroup = Fasta.class
+        programGroup = ReferenceProgramGroup.class
 )
 public class CreateSequenceDictionary extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Creates a sequence dictionary for a reference sequence.  ";

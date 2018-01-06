@@ -37,71 +37,71 @@ import java.util.List;
 
 public class VariantContextComparatorTest {
 
-	private static VariantContext buildVariantContext(final String source, final String contig, final long start) {
-		final Collection<Allele> alleles = new ArrayList<Allele>();
-		alleles.add(Allele.create("AAAA", true));
-		alleles.add(Allele.create("AAGG", false));
-		return new VariantContextBuilder(source, contig, start, start + 3, alleles).make();
-	}
+    private static VariantContext buildVariantContext(final String source, final String contig, final long start) {
+        final Collection<Allele> alleles = new ArrayList<Allele>();
+        alleles.add(Allele.create("AAAA", true));
+        alleles.add(Allele.create("AAGG", false));
+        return new VariantContextBuilder(source, contig, start, start + 3, alleles).make();
+    }
 
-	private static List<String> getOrderedContigList(final VariantContext... variantContexts) {
-		final LinkedHashSet<String> contigs = new LinkedHashSet<String>();
-		for (final VariantContext context : variantContexts) {
-			contigs.add(context.getContig());
-		}
-		return new ArrayList<String>(contigs);
-	}
+    private static List<String> getOrderedContigList(final VariantContext... variantContexts) {
+        final LinkedHashSet<String> contigs = new LinkedHashSet<String>();
+        for (final VariantContext context : variantContexts) {
+            contigs.add(context.getContig());
+        }
+        return new ArrayList<String>(contigs);
+    }
 
-	@Test
-	public void testIdentical() {
-		final VariantContext contextOne = buildVariantContext("source", "one", 100);
-		final List<String> contigs = getOrderedContigList(contextOne);
-		Assert.assertEquals(0, new VariantContextComparator(contigs).compare(contextOne, contextOne));
-	}
+    @Test
+    public void testIdentical() {
+        final VariantContext contextOne = buildVariantContext("source", "one", 100);
+        final List<String> contigs = getOrderedContigList(contextOne);
+        Assert.assertEquals(0, new VariantContextComparator(contigs).compare(contextOne, contextOne));
+    }
 
-	@Test
-	public void testPositions() {
-		final VariantContext contextOne = buildVariantContext("source", "one", 100);
-		final VariantContext contextTwo = buildVariantContext("source", "one", 150);
-		final List<String> contigs = getOrderedContigList(contextOne, contextTwo);
-		Assert.assertTrue(new VariantContextComparator(contigs).compare(contextOne, contextTwo) < 0);
-		Assert.assertTrue(new VariantContextComparator(contigs).compare(contextTwo, contextOne) > 0);
-	}
+    @Test
+    public void testPositions() {
+        final VariantContext contextOne = buildVariantContext("source", "one", 100);
+        final VariantContext contextTwo = buildVariantContext("source", "one", 150);
+        final List<String> contigs = getOrderedContigList(contextOne, contextTwo);
+        Assert.assertTrue(new VariantContextComparator(contigs).compare(contextOne, contextTwo) < 0);
+        Assert.assertTrue(new VariantContextComparator(contigs).compare(contextTwo, contextOne) > 0);
+    }
 
-	@Test
-	public void testContigs() {
-		final VariantContext contextOne = buildVariantContext("source", "one", 100);
-		final VariantContext contextTwo = buildVariantContext("source", "two", 100);
-		final List<String> contigs = getOrderedContigList(contextOne, contextTwo);
-		Assert.assertTrue(new VariantContextComparator(contigs).compare(contextOne, contextTwo) < 0);
-		Assert.assertTrue(new VariantContextComparator(contigs).compare(contextTwo, contextOne) > 0);
-	}
+    @Test
+    public void testContigs() {
+        final VariantContext contextOne = buildVariantContext("source", "one", 100);
+        final VariantContext contextTwo = buildVariantContext("source", "two", 100);
+        final List<String> contigs = getOrderedContigList(contextOne, contextTwo);
+        Assert.assertTrue(new VariantContextComparator(contigs).compare(contextOne, contextTwo) < 0);
+        Assert.assertTrue(new VariantContextComparator(contigs).compare(contextTwo, contextOne) > 0);
+    }
 
-	@Test
-	public void testCombinationOne() {
-		final VariantContext contextOne = buildVariantContext("source", "one", 100);
-		final VariantContext contextTwo = buildVariantContext("source", "two", 150);
-		final List<String> contigs = getOrderedContigList(contextOne, contextTwo);
-		Assert.assertTrue(new VariantContextComparator(contigs).compare(contextOne, contextTwo) < 0);
-		Assert.assertTrue(new VariantContextComparator(contigs).compare(contextTwo, contextOne) > 0);
-	}
+    @Test
+    public void testCombinationOne() {
+        final VariantContext contextOne = buildVariantContext("source", "one", 100);
+        final VariantContext contextTwo = buildVariantContext("source", "two", 150);
+        final List<String> contigs = getOrderedContigList(contextOne, contextTwo);
+        Assert.assertTrue(new VariantContextComparator(contigs).compare(contextOne, contextTwo) < 0);
+        Assert.assertTrue(new VariantContextComparator(contigs).compare(contextTwo, contextOne) > 0);
+    }
 
-	@Test
-	public void testCombinationTwo() {
-		final VariantContext contextOne = buildVariantContext("source", "one", 150);
-		final VariantContext contextTwo = buildVariantContext("source", "two", 100);
-		final List<String> contigs = getOrderedContigList(contextOne, contextTwo);
-		Assert.assertTrue(new VariantContextComparator(contigs).compare(contextOne, contextTwo) < 0);
-		Assert.assertTrue(new VariantContextComparator(contigs).compare(contextTwo, contextOne) > 0);
-	}
+    @Test
+    public void testCombinationTwo() {
+        final VariantContext contextOne = buildVariantContext("source", "one", 150);
+        final VariantContext contextTwo = buildVariantContext("source", "two", 100);
+        final List<String> contigs = getOrderedContigList(contextOne, contextTwo);
+        Assert.assertTrue(new VariantContextComparator(contigs).compare(contextOne, contextTwo) < 0);
+        Assert.assertTrue(new VariantContextComparator(contigs).compare(contextTwo, contextOne) > 0);
+    }
 
-	@Test (expectedExceptions = IllegalArgumentException.class)
-	public void testThrowsOnDuplicateContig() {
-		final List<String> contigs = new ArrayList<String>(3);
-		contigs.add("one");
-		contigs.add("two");
-		contigs.add("one");
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testThrowsOnDuplicateContig() {
+        final List<String> contigs = new ArrayList<String>(3);
+        contigs.add("one");
+        contigs.add("two");
+        contigs.add("one");
 
-		new VariantContextComparator(contigs);
-	}
+        new VariantContextComparator(contigs);
+    }
 }

@@ -11,7 +11,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.programgroups.Intervals;
+import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.File;
@@ -108,7 +108,7 @@ import java.util.*;
 @CommandLineProgramProperties(
         summary = IntervalListTools.USAGE_SUMMARY + IntervalListTools.USAGE_DETAILS,
         oneLineSummary = IntervalListTools.USAGE_SUMMARY,
-        programGroup = Intervals.class
+        programGroup = IntervalsManipulationProgramGroup.class
 )
 @DocumentedFeature
 public class IntervalListTools extends CommandLineProgram {

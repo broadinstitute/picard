@@ -29,6 +29,7 @@ import htsjdk.samtools.util.ListMap;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.vcf.VcfTestUtils;
@@ -43,50 +44,69 @@ import java.util.TreeSet;
  * Tests for VCF filtration
  */
 public class TestFilterVcf {
-    private final File INPUT = new File("testdata/picard/vcf/filter/testFiltering.vcf");
-    private final File BAD_INPUT = new File("testdata/picard/vcf/filter/testFilteringNoSeqDictionary.vcf");
+    private final File TEST_DATA_DIR=new File("testdata/picard/vcf/filter/");
+    private final File INPUT = new File(TEST_DATA_DIR,"testFiltering.vcf");
+    private final File BAD_INPUT = new File(TEST_DATA_DIR, "testFilteringNoSeqDictionary.vcf");
+    private final File SITES_ONLY_INPUT = new File(TEST_DATA_DIR, "testFilteringSitesOnly.vcf");
+
+
+    @DataProvider(name="goodInputVcfs")
+    public Object[][] goodInputVcfs(){
+        return new Object[][]{
+                {INPUT},
+                {SITES_ONLY_INPUT}
+        };
+    }
+
 
     /* write content of javascript in the returned file */
-	private File quickJavascriptFilter(String content) throws Exception {
-		final File out = File.createTempFile("jsfilter", ".js");
-		out.deleteOnExit();
-		try (final PrintWriter pw = new PrintWriter(out)) {
-			pw.println(content);
-		}
-		return out;
-	}
+    private File quickJavascriptFilter(final String content) throws Exception {
+        final File out = File.createTempFile("jsfilter", ".js");
+        out.deleteOnExit();
+        try (final PrintWriter pw = new PrintWriter(out)) {
+            pw.println(content);
+        }
+        return out;
+    }
 
-	@Test
-	public void testJavaScript() throws Exception {
+    @Test(dataProvider = "goodInputVcfs")
+    public void testJavaScript(final File input) throws Exception {
         final File out = VcfTestUtils.createTemporaryIndexedVcfFile("filterVcfTestJS.", ".vcf");
-		final FilterVcf filterer = new FilterVcf();
-		filterer.INPUT = INPUT;
-		filterer.OUTPUT = out;
-		filterer.JAVASCRIPT_FILE = quickJavascriptFilter("variant.getStart()%5 != 0");
+        final FilterVcf filterer = new FilterVcf();
+        filterer.INPUT = input;
+        filterer.OUTPUT = out;
+        filterer.JAVASCRIPT_FILE = quickJavascriptFilter("variant.getStart()%5 != 0");
 
-		final int retval = filterer.doWork();
-		Assert.assertEquals(retval, 0);
+        final int retval = filterer.doWork();
+        Assert.assertEquals(retval, 0);
 
-		//count the number of reads
-		final int expectedNumber = 4;
-		int count=0;
-		VCFFileReader in = new VCFFileReader(filterer.OUTPUT, false);
-		CloseableIterator<VariantContext> iter = in.iterator();
-		while(iter.hasNext()) {
-			final VariantContext ctx = iter.next();
-			count += (ctx.isFiltered()?1:0);
-		}
-		iter.close();
-		in.close();
-		Assert.assertEquals(count, expectedNumber);
-	}
+        //count the number of reads
+        final int expectedNumber = 4;
+        int count = 0;
+        VCFFileReader in = new VCFFileReader(filterer.OUTPUT, false);
+        CloseableIterator<VariantContext> iter = in.iterator();
+        while (iter.hasNext()) {
+            final VariantContext ctx = iter.next();
+            count += (ctx.isFiltered() ? 1 : 0);
+        }
+        iter.close();
+        in.close();
+        Assert.assertEquals(count, expectedNumber);
+    }
 
-    /** Returns a sorted copy of the supplied set, for safer comparison. */
-    <T extends Comparable> SortedSet<T> sorted(Set<T> in) { return new TreeSet<T>(in); }
+    /**
+     * Returns a sorted copy of the supplied set, for safer comparison.
+     */
+    <T extends Comparable> SortedSet<T> sorted(Set<T> in) {
+        return new TreeSet<>(in);
+    }
 
-    /** Tests that all records get PASS set as their filter when extreme values are used for filtering. */
-    @Test public void testNoFiltering() throws Exception {
-        final File out = testFiltering(INPUT, ".vcf.gz", 0, 0, 0, Double.MAX_VALUE);
+    /**
+     * Tests that all records get PASS set as their filter when extreme values are used for filtering.
+     */
+    @Test(dataProvider = "goodInputVcfs")
+    public void testNoFiltering(final File input) throws Exception {
+        final File out = testFiltering(input, ".vcf.gz", 0, 0, 0, Double.MAX_VALUE);
         final VCFFileReader in = new VCFFileReader(out, false);
         for (final VariantContext ctx : in) {
             if (!ctx.filtersWereApplied() || ctx.isFiltered()) {
@@ -96,32 +116,44 @@ public class TestFilterVcf {
         in.close();
     }
 
-    /** Tests that sites with a het allele balance < 0.4 are marked as filtered out. */
-    @Test public void testAbFiltering() throws Exception {
+    /**
+     * Tests that sites with a het allele balance < 0.4 are marked as filtered out.
+     */
+    @Test
+    public void testAbFiltering() throws Exception {
         final Set<String> fails = CollectionUtil.makeSet("tf2", "rs28566954", "rs28548431");
         final File out = testFiltering(INPUT, ".vcf.gz", 0.4, 0, 0, Double.MAX_VALUE);
-        final ListMap<String,String> filters = slurpFilters(out);
+        final ListMap<String, String> filters = slurpFilters(out);
         Assert.assertEquals(sorted(filters.keySet()), sorted(fails), "Failed sites did not match expected set of failed sites.");
     }
 
-    /** Tests that genotypes with DP < 18 are marked as failed, but not >= 18. */
-    @Test public void testDpFiltering() throws Exception {
+    /**
+     * Tests that genotypes with DP < 18 are marked as failed, but not >= 18.
+     */
+    @Test
+    public void testDpFiltering() throws Exception {
         final Set<String> fails = CollectionUtil.makeSet("rs71509448", "rs71628926", "rs13302979", "rs2710876");
         final File out = testFiltering(INPUT, ".vcf.gz", 0, 18, 0, Double.MAX_VALUE);
-        final ListMap<String,String> filters = slurpFilters(out);
+        final ListMap<String, String> filters = slurpFilters(out);
         Assert.assertEquals(sorted(filters.keySet()), sorted(fails), "Failed sites did not match expected set of failed sites.");
     }
 
-    /** Tests that genotypes with DP < 18 are marked as failed, but not >= 18. */
-    @Test public void testDpFilteringToVcf() throws Exception {
+    /**
+     * Tests that genotypes with DP < 18 are marked as failed, but not >= 18.
+     */
+    @Test
+    public void testDpFilteringToVcf() throws Exception {
         final Set<String> fails = CollectionUtil.makeSet("rs71509448", "rs71628926", "rs13302979", "rs2710876");
         final File out = testFiltering(INPUT, ".vcf", 0, 18, 0, Double.MAX_VALUE);
-        final ListMap<String,String> filters = slurpFilters(out);
+        final ListMap<String, String> filters = slurpFilters(out);
         Assert.assertEquals(sorted(filters.keySet()), sorted(fails), "Failed sites did not match expected set of failed sites.");
     }
 
-    /** Tests that genotypes with low GQ are filtered appropriately. */
-    @Test public void testGqFiltering() throws Exception {
+    /**
+     * Tests that genotypes with low GQ are filtered appropriately.
+     */
+    @Test
+    public void testGqFiltering() throws Exception {
         final Set<String> fails = CollectionUtil.makeSet("rs71509448"); // SNP with GQ=21; lowest GQ in file
 
         {
@@ -141,22 +173,28 @@ public class TestFilterVcf {
         }
     }
 
-    /** Tests that genotypes with DP < 18 are marked as failed, but not >= 18. */
-    @Test public void testFsFiltering() throws Exception {
+    /**
+     * Tests that genotypes with DP < 18 are marked as failed, but not >= 18.
+     */
+    @Test(dataProvider = "goodInputVcfs")
+    public void testFsFiltering(final File input) throws Exception {
         final Set<String> fails = CollectionUtil.makeSet("rs13303033", "rs28548431", "rs2799066");
-        final File out = testFiltering(INPUT, ".vcf.gz", 0, 0, 0, 5.0d);
-        final ListMap<String,String> filters = slurpFilters(out);
+        final File out = testFiltering(input, ".vcf.gz", 0, 0, 0, 5.0d);
+        final ListMap<String, String> filters = slurpFilters(out);
         Assert.assertEquals(sorted(filters.keySet()), sorted(fails), "Failed sites did not match expected set of failed sites.");
     }
 
-    @Test public void testCombinedFiltering() throws Exception {
-        final TreeSet<String> fails = new TreeSet<String>(CollectionUtil.makeSet("rs13302979", "rs13303033", "rs2710876" , "rs2799066" , "rs28548431", "rs28566954", "rs71509448", "rs71628926", "tf2"));
+    @Test
+    public void testCombinedFiltering() throws Exception {
+        final TreeSet<String> fails = new TreeSet<String>(CollectionUtil.makeSet("rs13302979", "rs13303033", "rs2710876", "rs2799066", "rs28548431", "rs28566954", "rs71509448", "rs71628926", "tf2"));
         final File out = testFiltering(INPUT, ".vcf.gz", 0.4, 18, 22, 5.0d);
-        final ListMap<String,String> filters = slurpFilters(out);
+        final ListMap<String, String> filters = slurpFilters(out);
         Assert.assertEquals(new TreeSet<String>(filters.keySet()), fails, "Failed sites did not match expected set of failed sites.");
     }
 
-    /** Utility method that takes a a VCF and a set of parameters and filters the VCF. */
+    /**
+     * Utility method that takes a a VCF and a set of parameters and filters the VCF.
+     */
     private File testFiltering(final File vcf, final String outputExtension, final double minAb, final int minDp, final int minGq, final double maxFs) throws Exception {
         final File out = VcfTestUtils.createTemporaryIndexedVcfFile("filterVcfTest.", outputExtension);
 
@@ -177,7 +215,9 @@ public class TestFilterVcf {
         return out;
     }
 
-    /** Tests that attempting to write to an uncompressed vcf fails if the input has no sequence dictionary */
+    /**
+     * Tests that attempting to write to an uncompressed vcf fails if the input has no sequence dictionary
+     */
     @Test(expectedExceptions = PicardException.class)
     public void testFilteringToVcfWithNoSequenceDictionary() throws Exception {
         final File out = File.createTempFile("filterVcfTest.", ".vcf");
@@ -195,10 +235,11 @@ public class TestFilterVcf {
         filterer.doWork();
     }
 
-
-    /** Consumes a VCF and returns a ListMap where each they keys are the IDs of filtered out sites and the values are the set of filters. */
-    private ListMap<String,String> slurpFilters(final File vcf) {
-        final ListMap<String,String> map = new ListMap<String, String>();
+    /**
+     * Consumes a VCF and returns a ListMap where each they keys are the IDs of filtered out sites and the values are the set of filters.
+     */
+    private ListMap<String, String> slurpFilters(final File vcf) {
+        final ListMap<String, String> map = new ListMap<>();
         final VCFFileReader in = new VCFFileReader(vcf, false);
         for (final VariantContext ctx : in) {
             if (ctx.isNotFiltered()) continue;

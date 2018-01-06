@@ -24,10 +24,9 @@
 
 package picard.sam.markduplicates.util;
 
-import org.broadinstitute.barclay.argparser.Argument;
-import picard.cmdline.*;
 import htsjdk.samtools.util.Log;
-import picard.sam.util.ReadOutputCommandLineProgram;
+import org.broadinstitute.barclay.argparser.Argument;
+import picard.cmdline.CommandLineProgram;
 
 /**
  * Abstract class that holds parameters and methods common to classes that optical duplicate detection.  We put them here so that
@@ -35,9 +34,8 @@ import picard.sam.util.ReadOutputCommandLineProgram;
  *
  * @author Tim Fennell
  */
-public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends ReadOutputCommandLineProgram {
+public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends CommandLineProgram {
     protected static Log LOG = Log.getInstance(AbstractOpticalDuplicateFinderCommandLineProgram.class);
-
 
     @Argument(doc = "Regular expression that can be used to parse read names in the incoming SAM file. Read names are " +
             "parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used " +

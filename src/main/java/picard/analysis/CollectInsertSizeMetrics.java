@@ -36,7 +36,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.analysis.directed.InsertSizeMetricsCollector;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -51,7 +51,7 @@ import java.util.Set;
 @CommandLineProgramProperties(
         summary = CollectInsertSizeMetrics.USAGE_SUMMARY + CollectInsertSizeMetrics.USAGE_BRIEF,
         oneLineSummary = CollectInsertSizeMetrics.USAGE_BRIEF,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {

@@ -32,7 +32,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.analysis.artifacts.CollectSequencingArtifactMetrics;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.programgroups.Metrics;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.File;
@@ -49,7 +49,7 @@ import java.util.*;
 
         summary = CollectMultipleMetrics.USAGE_SUMMARY + CollectMultipleMetrics.USAGE_DETAILS,
         oneLineSummary = CollectMultipleMetrics.USAGE_SUMMARY,
-        programGroup = Metrics.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CollectMultipleMetrics extends CommandLineProgram {

@@ -43,7 +43,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.VcfOrBcf;
+import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
 
@@ -55,7 +55,7 @@ import java.io.File;
 @CommandLineProgramProperties(
         summary = VcfFormatConverter.USAGE_SUMMARY + VcfFormatConverter.USAGE_DETAILS,
         oneLineSummary = VcfFormatConverter.USAGE_SUMMARY,
-        programGroup = VcfOrBcf.class)
+        programGroup = VariantManipulationProgramGroup.class)
 @DocumentedFeature
 public class VcfFormatConverter extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Converts VCF to BCF or BCF to VCF.  ";

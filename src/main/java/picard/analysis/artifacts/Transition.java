@@ -4,7 +4,10 @@ import htsjdk.samtools.util.SequenceUtil;
 
 import java.util.Arrays;
 
-enum Transition {
+/**
+ * Enum representation of a transition from one base to any other.
+ */
+public enum Transition {
     AtoA('A','A'), AtoC('A','C'), AtoG('A','G'), AtoT('A','T'),
     CtoA('C','A'), CtoC('C','C'), CtoG('C','G'), CtoT('C','T'),
     GtoA('G','A'), GtoC('G','C'), GtoG('G','G'), GtoT('G','T'),
@@ -22,8 +25,22 @@ enum Transition {
         this.call = call;
     }
 
+    /**
+     * Gets a the enum representing the transition from a 'reference' to a 'call' base.
+     *
+     * <p>For example, a transtion from 'A' to 'T' would return {@link #AtoT}.
+     *
+     * @param ref reference base (one of of {A, C, T, G}).
+     * @param call call base (one of of {A, C, T, G}).
+     *
+     * @return enum representation for the transition.
+     */
     public static Transition transitionOf(final char ref, final char call) {
-        return transitionIndexMap[baseIndexMap[ref]][baseIndexMap[call]];
+        try {
+            return transitionIndexMap[baseIndexMap[ref]][baseIndexMap[call]];
+        } catch (IndexOutOfBoundsException e) {
+            throw new IllegalArgumentException(String.format("Base params should be one of {A, C, T, G} but ref=%s and call=%s", ref, call));
+        }
     }
 
     /**
@@ -38,8 +55,10 @@ enum Transition {
         return transitionOf((char) SequenceUtil.complement((byte) this.ref), (char) SequenceUtil.complement((byte) this.call));
     }
 
+    /** Gets the reference for the transition. */
     public char ref() { return this.ref; }
 
+    /** Gets the call for the transition. */
     public char call() { return this.call; }
 
     @Override

@@ -32,7 +32,7 @@ import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.Fingerprinting;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.GraphUtils;
 
 import java.io.File;
@@ -103,7 +103,8 @@ import java.util.stream.Collectors;
                 "Groups that do not have high LOD scores with any other group (including " +
                 "itself!) will not be included in the metric file. Note that cross-group comparisons are not included in the metric file. ",
         oneLineSummary = "Clusters the results of a CrosscheckFingerprints run by LOD score",
-        programGroup = Fingerprinting.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
+
 )
 @DocumentedFeature
 public class ClusterCrosscheckMetrics extends CommandLineProgram {
