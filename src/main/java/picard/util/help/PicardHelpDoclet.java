@@ -69,7 +69,7 @@ public class PicardHelpDoclet extends HelpDoclet {
      * Adds a super-category so that we can custom-order the categories in the doc index
      *
      * @param docWorkUnit
-     * @return
+     * @return root Map after having added the super-category
      */
     @Override
     protected final Map<String, String> getGroupMap(final DocWorkUnit docWorkUnit) {

@@ -23,10 +23,40 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Replaces read groups in a BAM file
+ * Assigns all the reads in a file to a single new read-group.
+ *
+ * <h3>Summary</h3>
+ * Many tools (Picard and GATK for example) require or assume the presence of at least one <code>RG</code> tag, defining a "read-group"
+ * to which each read can be assigned (as specified in the <code>RG</code> tag in the SAM record).
+ * This tool enables the user to assign all the reads in the {@link #INPUT} to a single new read-group.
+ * For more information about read-groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>
+ * GATK Dictionary entry.</a>
+ * <br />
+ * This tool accepts as INPUT BAM and SAM files or URLs from the
+ * <a href="http://ga4gh.org/#/documentation">Global Alliance for Genomics and Health (GA4GH)</a>.
+ * <h3>Usage example:</h3>
+ * <pre>
+ * java -jar picard.jar AddOrReplaceReadGroups \
+ *       I=input.bam \
+ *       O=output.bam \
+ *       RGID=4 \
+ *       RGLB=lib1 \
+ *       RGPL=illumina \
+ *       RGPU=unit1 \
+ *       RGSM=20
+ * </pre>
+ * <h3>Caveats</h3>
+ * The value of the tags must adhere (according to the <a href="https://samtools.github.io/hts-specs/SAMv1.pdf">SAM-spec</a>)
+ * with the regex <pre>{@value #READGROUP_ID_REGEX}</pre> (one or more characters from the ASCII range 32 through 126). In
+ * particular <code>&lt;Space&gt;</code> is the only non-printing character allowed.
+ * <br/>
+ * The program enables only the wholesale assignment of all the reads in the {@link #INPUT} to a single read-group. If your file
+ * already has reads assigned to multiple read-groups, the original <code>RG</code> value will be lost.
  *
  * @author mdepristo
  */
@@ -36,24 +66,32 @@ import java.util.Arrays;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class AddOrReplaceReadGroups extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Replace read groups in a BAM file.";
-    static final String USAGE_DETAILS = "This tool enables the user to replace all read groups in the INPUT file with a single new read " +
-            "group and assign all reads to this read group in the OUTPUT BAM file.<br /><br />" +
-            "For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>" +
-            "GATK Dictionary entry.</a> <br /><br /> " +
-            "This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation)." +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar AddOrReplaceReadGroups \\<br />" +
-            "      I=input.bam \\<br />" +
-            "      O=output.bam \\<br />" +
-            "      RGID=4 \\<br />" +
-            "      RGLB=lib1 \\<br />" +
-            "      RGPL=illumina \\<br />" +
-            "      RGPU=unit1 \\<br />" +
-            "      RGSM=20" +
-            "</pre>" +
-            "<hr />" ;
+    static final public String READGROUP_ID_REGEX="^[ -~]+$";
+
+    static final String USAGE_SUMMARY = "Assigns all the reads in a file to a single new read-group.";
+    static final String USAGE_DETAILS =
+            "\n\nThis tool accepts INPUT BAM and SAM files or URLs from the <a href=\"http://ga4gh.org/#/documentation\">Global Alliance for Genomics and Health (GA4GH)</a>.\n" +
+            "<h3>Usage example:</h3>" +
+            "\n"+
+            "java -jar picard.jar AddOrReplaceReadGroups \\\n" +
+            "      I=input.bam \\\n" +
+            "      O=output.bam \\\n" +
+            "      RGID=4 \\\n" +
+            "      RGLB=lib1 \\\n" +
+            "      RGPL=illumina \\\n" +
+            "      RGPU=unit1 \\\n" +
+            "      RGSM=20\n " +
+            "\n" +
+            "<h3>Caveats</h3>\n" +
+            "The value of the tags must adhere (according to the <a href=\"https://samtools.github.io/hts-specs/SAMv1.pdf\">SAM-spec</a>) " +
+            "with the regex <code>'" + READGROUP_ID_REGEX + "'</code> (one or more characters from the ASCII range 32 through 126). " +
+                    "In particular &lt;Space&gt; is the only non-printing character allowed.\n" +
+            "\n" +
+            "The program enables only the wholesale assignment of all the reads in the INPUT to a single read-group. If your file " +
+            "already has reads assigned to multiple read-groups, the original RG value will be lost. \n\n" +
+            "For more information about read-groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>" +
+            "GATK Dictionary entry.</a>";
+
     @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (BAM or SAM or a GA4GH url).")
     public String INPUT = null;
 
@@ -64,51 +102,46 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
             doc = "Optional sort order to output in. If not supplied OUTPUT is in the same order as INPUT.")
     public SortOrder SORT_ORDER;
 
-    @Argument(shortName = "ID", doc = "Read Group ID")
+    @Argument(shortName = "ID", doc = "Read-Group ID")
     public String RGID = "1";
 
-    @Argument(shortName = "LB", doc = "Read Group library")
+    @Argument(shortName = "LB", doc = "Read-Group library")
     public String RGLB;
 
-    @Argument(shortName = "PL", doc = "Read Group platform (e.g. illumina, solid)")
+    @Argument(shortName = "PL", doc = "Read-Group platform (e.g. illumina, solid)")
     public String RGPL;
 
-    @Argument(shortName = "PU", doc = "Read Group platform unit (eg. run barcode)")
+    @Argument(shortName = "PU", doc = "Read-Group platform unit (eg. run barcode)")
     public String RGPU;
 
-    @Argument(shortName = "SM", doc = "Read Group sample name")
+    @Argument(shortName = "SM", doc = "Read-Group sample name")
     public String RGSM;
 
-    @Argument(shortName = "CN", doc = "Read Group sequencing center name", optional = true)
+    @Argument(shortName = "CN", doc = "Read-Group sequencing center name", optional = true)
     public String RGCN;
 
-    @Argument(shortName = "DS", doc = "Read Group description", optional = true)
+    @Argument(shortName = "DS", doc = "Read-Group description", optional = true)
     public String RGDS;
 
-    @Argument(shortName = "DT", doc = "Read Group run date", optional = true)
+    @Argument(shortName = "DT", doc = "Read-Group run date", optional = true)
     public Iso8601Date RGDT;
 
-    @Argument(shortName = "KS", doc = "Read Group key sequence", optional = true)
+    @Argument(shortName = "KS", doc = "Read-Group key sequence", optional = true)
     public String RGKS;
 
-    @Argument(shortName = "FO", doc = "Read Group flow order", optional = true)
+    @Argument(shortName = "FO", doc = "Read-Group flow order", optional = true)
     public String RGFO;
 
-    @Argument(shortName = "PI", doc = "Read Group predicted insert size", optional = true)
+    @Argument(shortName = "PI", doc = "Read-Group predicted insert size", optional = true)
     public Integer RGPI;
 
-    @Argument(shortName = "PG", doc = "Read Group program group", optional = true)
+    @Argument(shortName = "PG", doc = "Read-Group program group", optional = true)
     public String RGPG;
     
-    @Argument(shortName = "PM", doc = "Read Group platform model", optional = true)
+    @Argument(shortName = "PM", doc = "Read-Group platform model", optional = true)
     public String RGPM;
 
     private final Log log = Log.getInstance(AddOrReplaceReadGroups.class);
-
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        new AddOrReplaceReadGroups().instanceMainWithExit(argv);
-    }
 
     protected int doWork() {
         IOUtil.assertInputIsValid(INPUT);
@@ -118,7 +151,7 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
             .referenceSequence(REFERENCE_SEQUENCE)
             .open(SamInputResource.of(INPUT));
 
-        // create the read group we'll be using
+        // create the read-group we'll be using
         final SAMReadGroupRecord rg = new SAMReadGroupRecord(RGID);
         rg.setLibrary(RGLB);
         rg.setPlatform(RGPL);
@@ -133,12 +166,12 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
         if (RGKS != null) rg.setKeySequence(RGKS);
         if (RGFO != null) rg.setFlowOrder(RGFO);
 
-        log.info(String.format("Created read group ID=%s PL=%s LB=%s SM=%s%n", rg.getId(), rg.getPlatform(), rg.getLibrary(), rg.getSample()));
+        log.info(String.format("Created read-group ID=%s PL=%s LB=%s SM=%s%n", rg.getId(), rg.getPlatform(), rg.getLibrary(), rg.getSample()));
 
         // create the new header and output file
         final SAMFileHeader inHeader = in.getFileHeader();
         final SAMFileHeader outHeader = inHeader.clone();
-        outHeader.setReadGroups(Arrays.asList(rg));
+        outHeader.setReadGroups(Collections.singletonList(rg));
         if (SORT_ORDER != null) outHeader.setSortOrder(SORT_ORDER);
 
         final SAMFileWriter outWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader,
@@ -156,5 +189,45 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
         CloserUtil.close(in);
         outWriter.close();
         return 0;
+    }
+
+    @Override
+    protected String[] customCommandLineValidation() {
+        final List<String> validationFailures = new ArrayList<>();
+
+        checkTagValue("RGID", RGID).ifPresent(validationFailures::add);
+        checkTagValue("RGLB", RGLB).ifPresent(validationFailures::add);
+        checkTagValue("RGPL", RGPL).ifPresent(validationFailures::add);
+        checkTagValue("RGPU", RGPU).ifPresent(validationFailures::add);
+        checkTagValue("RGSM", RGSM).ifPresent(validationFailures::add);
+        checkTagValue("RGCN", RGCN).ifPresent(validationFailures::add);
+        checkTagValue("RGDS", RGDS).ifPresent(validationFailures::add);
+        checkTagValue("RGKS", RGKS).ifPresent(validationFailures::add);
+        checkTagValue("RGFO", RGFO).ifPresent(validationFailures::add);
+        checkTagValue("RGPG", RGPG).ifPresent(validationFailures::add);
+        checkTagValue("RGPM", RGPM).ifPresent(validationFailures::add);
+
+        if (!validationFailures.isEmpty()) {
+            return validationFailures.toArray(new String[validationFailures.size()]);
+        }
+
+        return super.customCommandLineValidation();
+    }
+
+    private final Pattern pattern = Pattern.compile(READGROUP_ID_REGEX);
+
+    private Optional<String> checkTagValue(final String tagName, final String value) {
+        if (value == null) {
+            return Optional.empty();
+        }
+
+        final Matcher matcher = pattern.matcher(value);
+
+        if (matcher.matches()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(String.format("The values of tags in a SAM header must adhere to the regular expression '%s'," +
+                    "but the value provided for %s, '%s', doesn't.",READGROUP_ID_REGEX, tagName, value));
+        }
     }
 }

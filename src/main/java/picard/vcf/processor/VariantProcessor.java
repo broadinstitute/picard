@@ -36,7 +36,7 @@ import java.util.List;
  * Describes an object that processes variants and produces a result.
  * <p/>
  * A consumer typically builds an instance of this class via {@link Builder}, providing it the appropriate {@link AccumulatorGenerator} and
- * {@link ResultMerger}, then calls {@link #process()} to obtain the {@link RESULT} of the processing.
+ * {@link ResultMerger}, then calls {@link #process()} to obtain the RESULT of the processing.
  * <p/>
  * Future work...?
  * - Make more efficient for the single-thread case.
@@ -69,7 +69,7 @@ public class VariantProcessor<RESULT, ACCUMULATOR extends VariantProcessor.Accum
     }
 
     /**
-     * Takes a collection of results produced by {@link Accumulator#result()} and merges them into a single {@link RESULT}.
+     * Takes a collection of results produced by {@link Accumulator#result()} and merges them into a single RESULT.
      *
      * @author mccowan
      */
