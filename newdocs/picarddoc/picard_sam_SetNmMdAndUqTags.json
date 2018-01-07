@@ -1,0 +1,280 @@
+{
+  "summary": "Fixes the NM, MD, and UQ tags in a SAM file ",
+  "arguments": [
+    {
+      "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
+      "name": "--COMPRESSION_LEVEL",
+      "synonyms": "NA",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "5",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "name": "--CREATE_INDEX",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Whether to create an MD5 digest for any BAM or FASTQ files created.  ",
+      "name": "--CREATE_MD5_FILE",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Google Genomics API client_secrets.json file path.",
+      "name": "--GA4GH_CLIENT_SECRETS",
+      "synonyms": "NA",
+      "type": "String",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "client_secrets.json",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "The BAM or SAM file to fix. ",
+      "name": "--INPUT",
+      "synonyms": "-I",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "Whether the file contains bisulfite sequence (used when calculating the NM tag).",
+      "name": "--IS_BISULFITE_SEQUENCE",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.",
+      "name": "--MAX_RECORDS_IN_RAM",
+      "synonyms": "NA",
+      "type": "Integer",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "500000",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "The fixed BAM or SAM output file. ",
+      "name": "--OUTPUT",
+      "synonyms": "-O",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "Whether to suppress job-summary info on System.err.",
+      "name": "--QUIET",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Reference sequence file.",
+      "name": "--REFERENCE_SEQUENCE",
+      "synonyms": "-R",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "Only set the UQ tag, ignore MD and NM.",
+      "name": "--SET_ONLY_UQ",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
+      "name": "--TMP_DIR",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Use the JDK Deflater instead of the Intel Deflater for writing compressed output",
+      "name": "--USE_JDK_DEFLATER",
+      "synonyms": "-use_jdk_deflater",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Use the JDK Inflater instead of the Intel Inflater for reading compressed input",
+      "name": "--USE_JDK_INFLATER",
+      "synonyms": "-use_jdk_inflater",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.",
+      "name": "--VALIDATION_STRINGENCY",
+      "synonyms": "NA",
+      "type": "ValidationStringency",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "STRICT",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": [
+        {
+          "summary": "",
+          "name": "STRICT"
+        },
+        {
+          "summary": "",
+          "name": "LENIENT"
+        },
+        {
+          "summary": "",
+          "name": "SILENT"
+        }
+      ]
+    },
+    {
+      "summary": "Control verbosity of logging.",
+      "name": "--VERBOSITY",
+      "synonyms": "NA",
+      "type": "LogLevel",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "INFO",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": [
+        {
+          "summary": "",
+          "name": "ERROR"
+        },
+        {
+          "summary": "",
+          "name": "WARNING"
+        },
+        {
+          "summary": "",
+          "name": "INFO"
+        },
+        {
+          "summary": "",
+          "name": "DEBUG"
+        }
+      ]
+    }
+  ],
+  "description": "Fixes the NM, MD, and UQ tags in a SAM or BAM file.\n\n \u003cp\u003eThis tool takes in a coordinate-sorted SAM or BAM file and calculates the NM, MD, and UQ\n tags by comparing with the reference. \u003c/p\u003e\n\n \u003cp\u003eThis may be needed when MergeBamAlignment was run with SORT_ORDER other than \u0027coordinate\u0027\n and thus could not fix these tags then. The input must be coordinate sorted in order to run.\n If specified, the MD and NM tags can be ignored and only the UQ tag be set.\u003c/p\u003e\n\n \u003ch3\u003eInputs\u003c/h3\u003e\n \u003cp\u003e\n     \u003cli\u003e The BAM or SAM file to fix \u003c/li\u003e\n     \u003cli\u003e A reference sequence \u003c/li\u003e\n \u003c/p\u003e\n\n \u003ch3\u003eOutput\u003c/h3\u003e\n \u003cp\u003e\n A BAM or SAM output file with recalculated NM, MD, and UQ tags\n \u003c/p\u003e\n\n \u003cp\u003e\n \u003ch4\u003eUsage example: \u003c/h4\u003e\n \u003ch3\u003eFix the tags in a BAM file:\u003c/h3\u003e\n \u003cpre\u003e\n     java -jar picard.jar SetNmMdAndUqTags \\\n          R\u003dreference_sequence.fasta \\\n          I\u003dsorted.bam \\\n          O\u003dfixed.bam\n \u003c/pre\u003e\n \u003c/p\u003e",
+  "name": "SetNmMdAndUqTags",
+  "group": "Read Data Manipulation",
+  "beta": false,
+  "experimental": false
+}

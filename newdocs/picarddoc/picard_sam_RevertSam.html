@@ -12,7 +12,7 @@
 
 	
 
-	<?php $group = 'SAM/BAM'; ?>
+	<?php $group = 'Read Data Manipulation'; ?>
 
 	<section class="span4">
 		<aside class="well">
@@ -32,64 +32,9 @@
         <ul class="nav nav-pills nav-stacked" id="sidenav">
         		<hr>
         		<hr>
-        		<hr>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#AlphaTools">Alpha Tools</a>
-							<div id="AlphaTools"
-								<?php echo ($group == 'Alpha Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
-											</li>
-											<li>
-												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
-											</li>
-											<li>
-												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
-							<div id="Fasta"
-								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
-											</li>
-											<li>
-												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
-											</li>
-											<li>
-												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
-											</li>
-											<li>
-												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#FingerprintingTools">Fingerprinting Tools</a>
-							<div id="FingerprintingTools"
-								<?php echo ($group == 'Fingerprinting Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IlluminaTools">Illumina Tools</a>
-							<div id="IlluminaTools"
-								<?php echo ($group == 'Illumina Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#BaseCalling">Base Calling</a>
+							<div id="BaseCalling"
+								<?php echo ($group == 'Base Calling')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_illumina_CheckIlluminaDirectory.html">CheckIlluminaDirectory</a>
@@ -115,34 +60,27 @@
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalTools">Interval Tools</a>
-							<div id="IntervalTools"
-								<?php echo ($group == 'Interval Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
-											</li>
-											<li>
-												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
-											</li>
-											<li>
-												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
-											</li>
-											<li>
-												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
-											</li>
-											<li>
-												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Metrics">Metrics</a>
-							<div id="Metrics"
-								<?php echo ($group == 'Metrics')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#DiagnosticsandQualityControl">Diagnostics and Quality Control</a>
+							<div id="DiagnosticsandQualityControl"
+								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
+											</li>
+											<li>
+												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
+											</li>
+											<li>
+												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
 											</li>
 											<li>
 												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
@@ -158,6 +96,9 @@
 											</li>
 											<li>
 												<a href="picard_analysis_directed_CollectHsMetrics.html">CollectHsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
 											</li>
 											<li>
 												<a href="picard_analysis_CollectInsertSizeMetrics.html">CollectInsertSizeMetrics</a>
@@ -196,10 +137,22 @@
 												<a href="picard_analysis_CollectWgsMetrics.html">CollectWgsMetrics</a>
 											</li>
 											<li>
+												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
+											</li>
+											<li>
 												<a href="picard_analysis_CompareMetrics.html">CompareMetrics</a>
 											</li>
 											<li>
+												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
+											</li>
+											<li>
 												<a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
 											</li>
 											<li>
 												<a href="picard_sam_markduplicates_EstimateLibraryComplexity.html">EstimateLibraryComplexity</a>
@@ -210,25 +163,47 @@
 											<li>
 												<a href="picard_analysis_QualityScoreDistribution.html">QualityScoreDistribution</a>
 											</li>
+											<li>
+												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
+											</li>
+											<li>
+												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#MiscellaneousTools">Miscellaneous Tools</a>
-							<div id="MiscellaneousTools"
-								<?php echo ($group == 'Miscellaneous Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalsManipulation">Intervals Manipulation</a>
+							<div id="IntervalsManipulation"
+								<?php echo ($group == 'Intervals Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
-												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
 											</li>
+											<li>
+												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
+											</li>
+											<li>
+												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Other">Other</a>
+							<div id="Other"
+								<?php echo ($group == 'Other')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
 											<li>
 												<a href="picard_util_FifoBuffer.html">FifoBuffer</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#SAMBAM">SAM/BAM</a>
-							<div id="SAMBAM"
-								<?php echo ($group == 'SAM/BAM')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#ReadDataManipulation">Read Data Manipulation</a>
+							<div id="ReadDataManipulation"
+								<?php echo ($group == 'Read Data Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_sam_AddCommentsToBam.html">AddCommentsToBam</a>
@@ -237,25 +212,13 @@
 												<a href="picard_sam_AddOrReplaceReadGroups.html">AddOrReplaceReadGroups</a>
 											</li>
 											<li>
-												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
-											</li>
-											<li>
 												<a href="picard_fastq_BamToBfq.html">BamToBfq</a>
 											</li>
 											<li>
 												<a href="picard_sam_BuildBamIndex.html">BuildBamIndex</a>
 											</li>
 											<li>
-												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
-											</li>
-											<li>
-												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
-											</li>
-											<li>
 												<a href="picard_sam_CleanSam.html">CleanSam</a>
-											</li>
-											<li>
-												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
 											</li>
 											<li>
 												<a href="picard_sam_DownsampleSam.html">DownsampleSam</a>
@@ -312,6 +275,9 @@
 												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
 											</li>
 											<li>
+												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
+											</li>
+											<li>
 												<a href="picard_sam_SortSam.html">SortSam</a>
 											</li>
 											<li>
@@ -321,42 +287,68 @@
 												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
 											</li>
 											<li>
-												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
-											</li>
-											<li>
-												<a href="picard_sam_ViewSam.html">ViewSam</a>
+												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#UnitTesting">Unit Testing</a>
-							<div id="UnitTesting"
-								<?php echo ($group == 'Unit Testing')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Reference">Reference</a>
+							<div id="Reference"
+								<?php echo ($group == 'Reference')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
-												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
+												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+											</li>
+											<li>
+												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
+											</li>
+											<li>
+												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
+											</li>
+											<li>
+												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
+											</li>
+											<li>
+												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VCFBCF">VCF/BCF</a>
-							<div id="VCFBCF"
-								<?php echo ($group == 'VCF/BCF')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantEvaluationandRefinement">Variant Evaluation and Refinement</a>
+							<div id="VariantEvaluationandRefinement"
+								<?php echo ($group == 'Variant Evaluation and Refinement')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantFiltering">Variant Filtering</a>
+							<div id="VariantFiltering"
+								<?php echo ($group == 'Variant Filtering')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_vcf_filter_FilterVcf.html">FilterVcf</a>
 											</li>
-											<li>
-												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
-											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantManipulation">Variant Manipulation</a>
+							<div id="VariantManipulation"
+								<?php echo ($group == 'Variant Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
 											<li>
 												<a href="picard_vcf_FixVcfHeader.html">FixVcfHeader</a>
 											</li>
 											<li>
 												<a href="picard_vcf_GatherVcfs.html">GatherVcfs</a>
-											</li>
-											<li>
-												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
 											</li>
 											<li>
 												<a href="picard_vcf_LiftoverVcf.html">LiftoverVcf</a>
@@ -389,6 +381,7 @@
 							</div>
 						</li>
         		<hr>
+        		<hr>
         </ul>
 		</aside>
 		<?php getForumPosts( 'RevertSam' ) ?>
@@ -402,12 +395,47 @@
 		<p class="lead">Reverts SAM or BAM files to a previous state.  </p>
 
 			<h3>Category
-				<small> SAM/BAM</small>
+				<small> Read Data Manipulation</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
 		Reverts a SAM file by optionally restoring original quality scores and by removing
  all alignment information.
+ <p>
+ <p>
+ This tool removes or restores certain properties of the SAM records, including alignment information.
+ It can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of
+ restoring the original quality scores of a BAM file that has already undergone base quality score recalibration
+ (BQSR) if the original qualities were retained during the calibration (in the OQ tag).
+ <p>
+ <h3>Usage Examples</h3>
+ <h4>Output to a single file</h4>
+ <pre>
+ java -jar picard.jar RevertSam \\
+      I=input.bam \\
+      O=reverted.bam
+ </pre>
+ <p>
+ <h4>Output by read group into multiple files with sample map</h4>
+ <pre>
+ java -jar picard.jar RevertSam \\
+      I=input.bam \\
+      OUTPUT_BY_READGROUP=true \\
+      OUTPUT_MAP=reverted_bam_paths.tsv
+ </pre>
+ <p>
+ <h4>Output by read group with no output map</h4>
+ <pre>
+ java -jar picard.jar RevertSam \\
+      I=input.bam \\
+      OUTPUT_BY_READGROUP=true \\
+      O=/write/reverted/read/group/bams/in/this/dir
+ </pre>
+ This will output a BAM (Can be overridden with OUTPUT_BY_READGROUP_FILE_FORMAT option.)
+ <br/>
+ Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to
+ LENIENT or SILENT if the failures are expected to be obviated by the reversion process
+ (e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).
 
 
 				<h3>RevertSam specific arguments</h3>
@@ -453,7 +481,6 @@
 			</tr>
 				<tr>
 					<td><a href="#--ATTRIBUTE_TO_CLEAR">--ATTRIBUTE_TO_CLEAR</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>List[String]</td> -->
 					<td>[NM, UQ, PG, MD, MQ, SA, MC, AS]</td>
@@ -461,7 +488,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--KEEP_FIRST_DUPLICATE">--KEEP_FIRST_DUPLICATE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -473,11 +499,10 @@
 					</td>
 					<!--<td>String</td> -->
 					<td>null</td>
-					<td>The library name to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same library name </td>
+					<td>The library name to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same library name.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_DISCARD_FRACTION">--MAX_DISCARD_FRACTION</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>double</td> -->
 					<td>0.01</td>
@@ -501,7 +526,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--REMOVE_ALIGNMENT_INFORMATION">--REMOVE_ALIGNMENT_INFORMATION</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
@@ -509,7 +533,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--REMOVE_DUPLICATE_INFORMATION">--REMOVE_DUPLICATE_INFORMATION</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
@@ -529,11 +552,10 @@
 					</td>
 					<!--<td>String</td> -->
 					<td>null</td>
-					<td>The sample alias to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same sample alias </td>
+					<td>The sample alias to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same sample alias.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SANITIZE">--SANITIZE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -552,15 +574,13 @@
 			</tr>
 				<tr>
 					<td><a href="#--COMPRESSION_LEVEL">--COMPRESSION_LEVEL</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>int</td> -->
 					<td>5</td>
-					<td>Compression level for all compressed files created (e.g. BAM and GELI).</td>
+					<td>Compression level for all compressed files created (e.g. BAM and VCF).</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_INDEX">--CREATE_INDEX</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
@@ -568,7 +588,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -576,7 +595,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>String</td> -->
 					<td>client_secrets.json</td>
@@ -584,15 +602,13 @@
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Integer</td> -->
 					<td>500000</td>
-					<td>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</td>
+					<td>When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.</td>
 				</tr>
 				<tr>
 					<td><a href="#--QUIET">--QUIET</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
@@ -608,7 +624,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--TMP_DIR">--TMP_DIR</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>List[File]</td> -->
 					<td>[]</td>
@@ -632,7 +647,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>ValidationStringency</td> -->
 					<td>STRICT</td>
@@ -640,7 +654,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--VERBOSITY">--VERBOSITY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>LogLevel</td> -->
 					<td>INFO</td>
@@ -653,7 +666,7 @@
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ATTRIBUTE_TO_CLEAR">--ATTRIBUTE_TO_CLEAR </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>When removing alignment information, the set of optional tags to remove.</b><br />
@@ -665,10 +678,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Compression level for all compressed files created (e.g. BAM and GELI).</b><br />
+			<b>Compression level for all compressed files created (e.g. BAM and VCF).</b><br />
 			
 		</p>
 		<p>
@@ -679,7 +692,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CREATE_INDEX">--CREATE_INDEX </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
@@ -691,7 +704,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CREATE_MD5_FILE">--CREATE_MD5_FILE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to create an MD5 digest for any BAM or FASTQ files created.  </b><br />
@@ -703,7 +716,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Google Genomics API client_secrets.json file path.</b><br />
@@ -728,7 +741,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--KEEP_FIRST_DUPLICATE">--KEEP_FIRST_DUPLICATE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>If SANITIZE=true keep the first record when we find more than one record with the same name for R1/R2/unpaired reads respectively. For paired end reads, keeps only the first R1 and R2 found respectively, and discards all unpaired reads. Duplicates do not refer to the duplicate flag in the FLAG field, but instead reads with the same name.</b><br />
@@ -743,7 +756,7 @@
 			 / <small>-LIB</small>
 		</h3>
 		<p class="args">
-			<b>The library name to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same library name </b><br />
+			<b>The library name to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same library name.</b><br />
 			
 		</p>
 		<p>
@@ -752,7 +765,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MAX_DISCARD_FRACTION">--MAX_DISCARD_FRACTION </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization thenthe program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.</b><br />
@@ -766,10 +779,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</b><br />
+			<b>When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.</b><br />
 			
 		</p>
 		<p>
@@ -845,7 +858,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--QUIET">--QUIET </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to suppress job-summary info on System.err.</b><br />
@@ -869,7 +882,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--REMOVE_ALIGNMENT_INFORMATION">--REMOVE_ALIGNMENT_INFORMATION </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Remove all alignment information from the file.</b><br />
@@ -881,7 +894,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--REMOVE_DUPLICATE_INFORMATION">--REMOVE_DUPLICATE_INFORMATION </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Remove duplicate read flags from all reads.  Note that if this is true and REMOVE_ALIGNMENT_INFORMATION==false,  the output may have the unusual but sometimes desirable trait of having unmapped reads that are marked as duplicates.</b><br />
@@ -908,7 +921,7 @@
 			 / <small>-ALIAS</small>
 		</h3>
 		<p class="args">
-			<b>The sample alias to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same sample alias </b><br />
+			<b>The sample alias to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same sample alias.</b><br />
 			
 		</p>
 		<p>
@@ -917,7 +930,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--SANITIZE">--SANITIZE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>WARNING: This option is potentially destructive. If enabled will discard reads in order to produce a consistent output BAM. Reads discarded include (but are not limited to) paired reads with missing mates, duplicated records, records with mismatches in length of bases and qualities. This option can only be enabled if the output sort order is queryname and will always cause sorting to occur.</b><br />
@@ -956,7 +969,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>One or more directories with space available to be used by this program for temporary storage of working files</b><br />
@@ -992,7 +1005,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</b><br />
@@ -1015,7 +1028,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--VERBOSITY">--VERBOSITY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Control verbosity of logging.</b><br />
@@ -1048,7 +1061,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.1-SNAPSHOT built at 02-17-2018 12:17:35.
+        <p class="version">Picard version 2.17.2-SNAPSHOT built at 06-51-2018 09:51:38.
         </p>
 
 	</div>

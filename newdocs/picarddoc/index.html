@@ -17,119 +17,20 @@
 
 
 <h1 id="top">Picard Tool Documentation Index
-    <small>2.17.1-SNAPSHOT</small>
+    <small>2.17.2-SNAPSHOT</small>
 </h1>
 <div class="accordion" id="index">
 		<br />
 		<br />
-		<br />
     <div class="accordion-group">
         <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#AlphaTools">
-                <h4>Alpha Tools</h4>
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#BaseCalling">
+                <h4>Base Calling</h4>
             </a>
         </div>
-        <div class="accordion-body collapse" id="AlphaTools">
+        <div class="accordion-body collapse" id="BaseCalling">
             <div class="accordion-inner">
-                <p class="lead">Tools that are currently UNSUPPORTED until further testing and maturation.</p>
-                <table class="table table-striped table-bordered table-condensed">
-                    <tr>
-                        <th>Name</th>
-                        <th>Summary</th>
-                    </tr>
-                            <tr>
-                                <td><a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a></td>
-                                <td>(Experimental) Estimates the rate of independent replication of reads within a bam.</td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a></td>
-                                <td>(Experimental) Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.  </td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a></td>
-                                <td>Identifies duplicate reads using information from read positions and UMIs. </td>
-                            </tr>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="accordion-group">
-        <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#Fasta">
-                <h4>Fasta</h4>
-            </a>
-        </div>
-        <div class="accordion-body collapse" id="Fasta">
-            <div class="accordion-inner">
-                <p class="lead">Tools for manipulating FASTA, or related data.</p>
-                <table class="table table-striped table-bordered table-condensed">
-                    <tr>
-                        <th>Name</th>
-                        <th>Summary</th>
-                    </tr>
-                            <tr>
-                                <td><a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a></td>
-                                <td>Creates a sequence dictionary for a reference sequence.  </td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_reference_ExtractSequences.html">ExtractSequences</a></td>
-                                <td>Subsets intervals from a reference sequence to a new FASTA file.</td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a></td>
-                                <td>Counts the number of non-N bases in a fasta file.</td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a></td>
-                                <td>Normalizes lines of sequence in a FASTA file to be of the same length.</td>
-                            </tr>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="accordion-group">
-        <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#FingerprintingTools">
-                <h4>Fingerprinting Tools</h4>
-            </a>
-        </div>
-        <div class="accordion-body collapse" id="FingerprintingTools">
-            <div class="accordion-inner">
-                <p class="lead">Tools for manipulating fingerprints, or related data.</p>
-                <table class="table table-striped table-bordered table-condensed">
-                    <tr>
-                        <th>Name</th>
-                        <th>Summary</th>
-                    </tr>
-                            <tr>
-                                <td><a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a></td>
-                                <td>Computes a fingerprint from the supplied input (SAM/BAM or VCF) file and compares it to the provided genotypes</td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a></td>
-                                <td>Clusters the results of a CrosscheckFingerprints run by LOD score.</td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a></td>
-                                <td>Checks if all fingerprints appear to come from the same individual.</td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a></td>
-                                <td>DEPRECATED: USE CrosscheckFingerprints. Checks if all read groups appear to come from the same individual.</td>
-                            </tr>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="accordion-group">
-        <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#IlluminaTools">
-                <h4>Illumina Tools</h4>
-            </a>
-        </div>
-        <div class="accordion-body collapse" id="IlluminaTools">
-            <div class="accordion-inner">
-                <p class="lead">Tools for manipulating data specific to Illumina sequencers.</p>
+                <p class="lead">Tools that process sequencing machine data, e.g. Illumina base calls, and detect sequencing level attributes, e.g. adapters</p>
                 <table class="table table-striped table-bordered table-condensed">
                     <tr>
                         <th>Name</th>
@@ -169,51 +70,13 @@
     </div>
     <div class="accordion-group">
         <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#IntervalTools">
-                <h4>Interval Tools</h4>
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#DiagnosticsandQualityControl">
+                <h4>Diagnostics and Quality Control</h4>
             </a>
         </div>
-        <div class="accordion-body collapse" id="IntervalTools">
+        <div class="accordion-body collapse" id="DiagnosticsandQualityControl">
             <div class="accordion-inner">
-                <p class="lead">Tools for manipulating Picard interval lists.</p>
-                <table class="table table-striped table-bordered table-condensed">
-                    <tr>
-                        <th>Name</th>
-                        <th>Summary</th>
-                    </tr>
-                            <tr>
-                                <td><a href="picard_util_BedToIntervalList.html">BedToIntervalList</a></td>
-                                <td>Converts a BED file to a Picard Interval List.  </td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_util_IntervalListToBed.html">IntervalListToBed</a></td>
-                                <td>Converts an Picard IntervalList file to a BED file.</td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_util_IntervalListTools.html">IntervalListTools</a></td>
-                                <td>Manipulates interval lists.  </td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a></td>
-                                <td>Lifts over an interval list from one reference build to another.  </td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a></td>
-                                <td>Writes an interval list based on splitting a reference by Ns.  </td>
-                            </tr>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="accordion-group">
-        <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#Metrics">
-                <h4>Metrics</h4>
-            </a>
-        </div>
-        <div class="accordion-body collapse" id="Metrics">
-            <div class="accordion-inner">
-                <p class="lead">Tools for reporting metrics on various data types.</p>
+                <p class="lead">Tools that collect sequencing quality related and comparative metrics</p>
                 <table class="table table-striped table-bordered table-condensed">
                     <tr>
                         <th>Name</th>
@@ -222,6 +85,26 @@
                             <tr>
                                 <td><a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a></td>
                                 <td>Combines multiple Variant Calling Metrics files into a single file</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_sam_BamIndexStats.html">BamIndexStats</a></td>
+                                <td>Generate index statistics from a BAM file</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a></td>
+                                <td>Creates a hash code based on the read groups (RG).  </td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a></td>
+                                <td>Computes a fingerprint from the supplied input (SAM/BAM or VCF) file and compares it to the provided genotypes</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a></td>
+                                <td>Asserts the provided gzip file's (e.g., BAM) last block is well-formed; RC 100 otherwise</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a></td>
+                                <td>Clusters the results of a CrosscheckFingerprints run by LOD score</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a></td>
@@ -242,6 +125,10 @@
                             <tr>
                                 <td><a href="picard_analysis_directed_CollectHsMetrics.html">CollectHsMetrics</a></td>
                                 <td>Collects hybrid-selection (HS) metrics for a SAM or BAM file.  </td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a></td>
+                                <td>(Experimental) Estimates the rate of independent replication of reads within a bam.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_analysis_CollectInsertSizeMetrics.html">CollectInsertSizeMetrics</a></td>
@@ -292,12 +179,28 @@
                                 <td>Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.</td>
                             </tr>
                             <tr>
+                                <td><a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a></td>
+                                <td>(Experimental) Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.  </td>
+                            </tr>
+                            <tr>
                                 <td><a href="picard_analysis_CompareMetrics.html">CompareMetrics</a></td>
                                 <td>Compare two metrics files.</td>
                             </tr>
                             <tr>
+                                <td><a href="picard_sam_CompareSAMs.html">CompareSAMs</a></td>
+                                <td>Compare two input ".sam" or ".bam" files.  </td>
+                            </tr>
+                            <tr>
                                 <td><a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a></td>
                                 <td>Extract OxoG metrics from generalized artifacts metrics.  </td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a></td>
+                                <td>Checks that all data in the input files appear to have come from the same individual</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a></td>
+                                <td>DEPRECATED: USE CrosscheckFingerprints. Checks if all read groups appear to come from the same individual.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_markduplicates_EstimateLibraryComplexity.html">EstimateLibraryComplexity</a></td>
@@ -311,31 +214,47 @@
                                 <td><a href="picard_analysis_QualityScoreDistribution.html">QualityScoreDistribution</a></td>
                                 <td>Chart the distribution of quality scores.  </td>
                             </tr>
+                            <tr>
+                                <td><a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a></td>
+                                <td>Validates a SAM or BAM file.</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_sam_ViewSam.html">ViewSam</a></td>
+                                <td>Prints a SAM or BAM file to the screen</td>
+                            </tr>
                 </table>
             </div>
         </div>
     </div>
     <div class="accordion-group">
         <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#MiscellaneousTools">
-                <h4>Miscellaneous Tools</h4>
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#IntervalsManipulation">
+                <h4>Intervals Manipulation</h4>
             </a>
         </div>
-        <div class="accordion-body collapse" id="MiscellaneousTools">
+        <div class="accordion-body collapse" id="IntervalsManipulation">
             <div class="accordion-inner">
-                <p class="lead">A set of miscellaneous tools.</p>
+                <p class="lead">Tools that process genomic intervals in various formats</p>
                 <table class="table table-striped table-bordered table-condensed">
                     <tr>
                         <th>Name</th>
                         <th>Summary</th>
                     </tr>
                             <tr>
-                                <td><a href="picard_util_BaitDesigner.html">BaitDesigner</a></td>
-                                <td>Designs oligonucleotide baits for hybrid selection reactions.</td>
+                                <td><a href="picard_util_BedToIntervalList.html">BedToIntervalList</a></td>
+                                <td>Converts a BED file to a Picard Interval List.  </td>
                             </tr>
                             <tr>
-                                <td><a href="picard_util_FifoBuffer.html">FifoBuffer</a></td>
-                                <td>FIFO buffer used to buffer input and output streams with a customizable buffer size </td>
+                                <td><a href="picard_util_IntervalListToBed.html">IntervalListToBed</a></td>
+                                <td>Converts an Picard IntervalList file to a BED file.</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_util_IntervalListTools.html">IntervalListTools</a></td>
+                                <td>A tool for performing various IntervalList manipulations</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a></td>
+                                <td>Lifts over an interval list from one reference build to another. </td>
                             </tr>
                 </table>
             </div>
@@ -343,13 +262,35 @@
     </div>
     <div class="accordion-group">
         <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#SAMBAM">
-                <h4>SAM/BAM</h4>
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#Other">
+                <h4>Other</h4>
             </a>
         </div>
-        <div class="accordion-body collapse" id="SAMBAM">
+        <div class="accordion-body collapse" id="Other">
             <div class="accordion-inner">
-                <p class="lead">Tools for manipulating SAM, BAM, or related data.</p>
+                <p class="lead">Miscellaneous tools, e.g. those that aid in data streaming</p>
+                <table class="table table-striped table-bordered table-condensed">
+                    <tr>
+                        <th>Name</th>
+                        <th>Summary</th>
+                    </tr>
+                            <tr>
+                                <td><a href="picard_util_FifoBuffer.html">FifoBuffer</a></td>
+                                <td>Provides a large, FIFO buffer that can be used to buffer input and output streams between programs.</td>
+                            </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#ReadDataManipulation">
+                <h4>Read Data Manipulation</h4>
+            </a>
+        </div>
+        <div class="accordion-body collapse" id="ReadDataManipulation">
+            <div class="accordion-inner">
+                <p class="lead">Tools that manipulate read data in SAM, BAM or CRAM format</p>
                 <table class="table table-striped table-bordered table-condensed">
                     <tr>
                         <th>Name</th>
@@ -361,47 +302,31 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_AddOrReplaceReadGroups.html">AddOrReplaceReadGroups</a></td>
-                                <td>Replace read groups in a BAM file.</td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_sam_BamIndexStats.html">BamIndexStats</a></td>
-                                <td>Generate index statistics from a BAM file</td>
+                                <td>Assigns all the reads in a file to a single new read-group.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_fastq_BamToBfq.html">BamToBfq</a></td>
-                                <td>Create BFQ files from a BAM file for use by the maq aligner.  </td>
+                                <td>Converts a BAM file into a BFQ (binary fastq formatted) file</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_BuildBamIndex.html">BuildBamIndex</a></td>
                                 <td>Generates a BAM index ".bai" file.  </td>
                             </tr>
                             <tr>
-                                <td><a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a></td>
-                                <td>Creates a hash code based on the read groups (RG).  </td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a></td>
-                                <td>Asserts the provided gzip file's (e.g., BAM) last block is well-formed; RC 100 otherwise</td>
-                            </tr>
-                            <tr>
                                 <td><a href="picard_sam_CleanSam.html">CleanSam</a></td>
                                 <td>Cleans the provided SAM/BAM, soft-clipping beyond-end-of-reference alignments and setting MAPQ to 0 for unmapped reads</td>
                             </tr>
                             <tr>
-                                <td><a href="picard_sam_CompareSAMs.html">CompareSAMs</a></td>
-                                <td>Compare two input ".sam" or ".bam" files.  </td>
-                            </tr>
-                            <tr>
                                 <td><a href="picard_sam_DownsampleSam.html">DownsampleSam</a></td>
-                                <td>Downsample a SAM or BAM file.  </td>
+                                <td>Downsample a SAM or BAM file.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_FastqToSam.html">FastqToSam</a></td>
-                                <td>Converts a FASTQ file to an unaligned BAM or SAM file.  </td>
+                                <td>Converts a FASTQ file to an unaligned BAM or SAM file</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_FilterSamReads.html">FilterSamReads</a></td>
-                                <td>Subset read data from a SAM or BAM file</td>
+                                <td>Subsets reads from a SAM or BAM file by applying one of several filters.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_FixMateInformation.html">FixMateInformation</a></td>
@@ -409,7 +334,7 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_GatherBamFiles.html">GatherBamFiles</a></td>
-                                <td>Concatenate one or more BAM files as efficiently as possible</td>
+                                <td>Concatenate efficiently BAM files that resulted from a scattered parallel analysis</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_markduplicates_MarkDuplicates.html">MarkDuplicates</a></td>
@@ -433,7 +358,7 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_ReorderSam.html">ReorderSam</a></td>
-                                <td>Reorders reads in a SAM or BAM file to match ordering in reference</td>
+                                <td>Reorders reads in a SAM or BAM file to match ordering in a second reference file.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_ReplaceSamHeader.html">ReplaceSamHeader</a></td>
@@ -453,7 +378,7 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SamToFastq.html">SamToFastq</a></td>
-                                <td>Converts a SAM or BAM file to FASTQ.  </td>
+                                <td>Converts a SAM or BAM file to FASTQ.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SetNmAndUqTags.html">SetNmAndUqTags</a></td>
@@ -461,11 +386,15 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a></td>
-                                <td>Fixes the NM, MD, and UQ tags in a SAM file.  </td>
+                                <td>Fixes the NM, MD, and UQ tags in a SAM file </td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a></td>
+                                <td>(Experimental) Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SortSam.html">SortSam</a></td>
-                                <td>Sorts a SAM or BAM file.  </td>
+                                <td>Sorts a SAM or BAM file</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a></td>
@@ -476,12 +405,8 @@
                                 <td>Splits a SAM or BAM file to multiple BAMs.</td>
                             </tr>
                             <tr>
-                                <td><a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a></td>
-                                <td>Validates a SAM or BAM file.  </td>
-                            </tr>
-                            <tr>
-                                <td><a href="picard_sam_ViewSam.html">ViewSam</a></td>
-                                <td>Prints a SAM or BAM file to the screen</td>
+                                <td><a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a></td>
+                                <td>Identifies duplicate reads using information from read positions and UMIs. </td>
                             </tr>
                 </table>
             </div>
@@ -489,21 +414,41 @@
     </div>
     <div class="accordion-group">
         <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#UnitTesting">
-                <h4>Unit Testing</h4>
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#Reference">
+                <h4>Reference</h4>
             </a>
         </div>
-        <div class="accordion-body collapse" id="UnitTesting">
+        <div class="accordion-body collapse" id="Reference">
             <div class="accordion-inner">
-                <p class="lead">Unit testing</p>
+                <p class="lead">Tools that analyze and manipulate FASTA format references</p>
                 <table class="table table-striped table-bordered table-condensed">
                     <tr>
                         <th>Name</th>
                         <th>Summary</th>
                     </tr>
                             <tr>
-                                <td><a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a></td>
-                                <td>(Experimental) Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.</td>
+                                <td><a href="picard_util_BaitDesigner.html">BaitDesigner</a></td>
+                                <td>Designs oligonucleotide baits for hybrid selection reactions.</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a></td>
+                                <td>Creates a sequence dictionary for a reference sequence.  </td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_reference_ExtractSequences.html">ExtractSequences</a></td>
+                                <td>Subsets intervals from a reference sequence to a new FASTA file.</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a></td>
+                                <td>Counts the number of non-N bases in a fasta file.</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a></td>
+                                <td>Normalizes lines of sequence in a FASTA file to be of the same length.</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a></td>
+                                <td>Writes an interval list created by splitting a reference at Ns.</td>
                             </tr>
                 </table>
             </div>
@@ -511,13 +456,39 @@
     </div>
     <div class="accordion-group">
         <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#VCFBCF">
-                <h4>VCF/BCF</h4>
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#VariantEvaluationandRefinement">
+                <h4>Variant Evaluation and Refinement</h4>
             </a>
         </div>
-        <div class="accordion-body collapse" id="VCFBCF">
+        <div class="accordion-body collapse" id="VariantEvaluationandRefinement">
             <div class="accordion-inner">
-                <p class="lead">Tools for manipulating VCF, BCF, or related data.</p>
+                <p class="lead">Tools that evaluate and refine variant calls, e.g. with annotations not offered by the engine</p>
+                <table class="table table-striped table-bordered table-condensed">
+                    <tr>
+                        <th>Name</th>
+                        <th>Summary</th>
+                    </tr>
+                            <tr>
+                                <td><a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a></td>
+                                <td>Finds mendelian violations of all types within a VCF</td>
+                            </tr>
+                            <tr>
+                                <td><a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a></td>
+                                <td>Calculates the concordance between genotype data of one samples in each of two VCFs - one  being considered the truth (or reference) the other being the call.  The concordance is broken into separate results sections for SNPs and indels.  Statistics are reported in three different files.</td>
+                            </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#VariantFiltering">
+                <h4>Variant Filtering</h4>
+            </a>
+        </div>
+        <div class="accordion-body collapse" id="VariantFiltering">
+            <div class="accordion-inner">
+                <p class="lead">Tools that filter variants by annotating the FILTER column</p>
                 <table class="table table-striped table-bordered table-condensed">
                     <tr>
                         <th>Name</th>
@@ -527,10 +498,24 @@
                                 <td><a href="picard_vcf_filter_FilterVcf.html">FilterVcf</a></td>
                                 <td>Hard filters a VCF.</td>
                             </tr>
-                            <tr>
-                                <td><a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a></td>
-                                <td>Finds mendelian violations of all types within a VCF</td>
-                            </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#index" href="#VariantManipulation">
+                <h4>Variant Manipulation</h4>
+            </a>
+        </div>
+        <div class="accordion-body collapse" id="VariantManipulation">
+            <div class="accordion-inner">
+                <p class="lead">Tools that manipulate variant call format (VCF) data</p>
+                <table class="table table-striped table-bordered table-condensed">
+                    <tr>
+                        <th>Name</th>
+                        <th>Summary</th>
+                    </tr>
                             <tr>
                                 <td><a href="picard_vcf_FixVcfHeader.html">FixVcfHeader</a></td>
                                 <td>Replaces or fixes a VCF header.</td>
@@ -540,24 +525,20 @@
                                 <td>Gathers multiple VCF files from a scatter operation into a single VCF file</td>
                             </tr>
                             <tr>
-                                <td><a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a></td>
-                                <td>Evaluate genotype concordance between callsets.</td>
-                            </tr>
-                            <tr>
                                 <td><a href="picard_vcf_LiftoverVcf.html">LiftoverVcf</a></td>
                                 <td>Lifts over a VCF file from one reference build to another.  </td>
                             </tr>
                             <tr>
                                 <td><a href="picard_vcf_MakeSitesOnlyVcf.html">MakeSitesOnlyVcf</a></td>
-                                <td>Creates a VCF bereft of genotype information from an input VCF or BCF</td>
+                                <td>Creates a VCF that contains all the site-level information for all records in the input VCF but no genotype information.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_vcf_MergeVcfs.html">MergeVcfs</a></td>
-                                <td>Merges multiple VCF or BCF files into one VCF file or BCF</td>
+                                <td>Combines multiple variant files into a single variant file</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_vcf_RenameSampleInVcf.html">RenameSampleInVcf</a></td>
-                                <td>Renames a sample within a VCF or BCF.  </td>
+                                <td>Renames a sample within a VCF or BCF.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_vcf_SortVcf.html">SortVcf</a></td>
@@ -577,12 +558,13 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_vcf_VcfToIntervalList.html">VcfToIntervalList</a></td>
-                                <td>Converts a VCF or BCF file to a Picard Interval List.</td>
+                                <td>Converts a VCF or BCF file to a Picard Interval List</td>
                             </tr>
                 </table>
             </div>
         </div>
     </div>
+		<br />
 		<br />
 </div>
 
@@ -595,7 +577,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.1-SNAPSHOT built at 02-17-2018 12:17:35.
+        <p class="version">Picard version 2.17.2-SNAPSHOT built at 06-51-2018 09:51:38.
         </p>
 
 </div></div>

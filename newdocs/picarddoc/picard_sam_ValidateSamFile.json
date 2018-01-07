@@ -1,0 +1,407 @@
+{
+  "summary": "Validates a SAM or BAM file.",
+  "arguments": [
+    {
+      "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
+      "name": "--COMPRESSION_LEVEL",
+      "synonyms": "NA",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "5",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "name": "--CREATE_INDEX",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Whether to create an MD5 digest for any BAM or FASTQ files created.  ",
+      "name": "--CREATE_MD5_FILE",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Google Genomics API client_secrets.json file path.",
+      "name": "--GA4GH_CLIENT_SECRETS",
+      "synonyms": "NA",
+      "type": "String",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "client_secrets.json",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "List of validation error types to ignore.",
+      "name": "--IGNORE",
+      "synonyms": "NA",
+      "type": "List[Type]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "If true, only report errors and ignore warnings.",
+      "name": "--IGNORE_WARNINGS",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "If set to anything other than IndexValidationStringency.NONE and input is a BAM file with an index file, also validates the index at the specified stringency. Until VALIDATE_INDEX is retired, VALIDATE INDEX and INDEX_VALIDATION_STRINGENCY must agree on whether to validate the index.",
+      "name": "--INDEX_VALIDATION_STRINGENCY",
+      "synonyms": "NA",
+      "type": "IndexValidationStringency",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "EXHAUSTIVE",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": [
+        {
+          "summary": "",
+          "name": "EXHAUSTIVE"
+        },
+        {
+          "summary": "",
+          "name": "LESS_EXHAUSTIVE"
+        },
+        {
+          "summary": "",
+          "name": "NONE"
+        }
+      ]
+    },
+    {
+      "summary": "Input SAM/BAM file",
+      "name": "--INPUT",
+      "synonyms": "-I",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "Whether the SAM or BAM file consists of bisulfite sequenced reads. If so, C-\u003eT is not counted as an error in computing the value of the NM tag.",
+      "name": "--IS_BISULFITE_SEQUENCED",
+      "synonyms": "-BISULFITE",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Relevant for a coordinate-sorted file containing read pairs only. Maximum number of file handles to keep open when spilling mate info to disk. Set this number a little lower than the per-process maximum number of file that may be open. This number can be found by executing the \u0027ulimit -n\u0027 command on a Unix system.",
+      "name": "--MAX_OPEN_TEMP_FILES",
+      "synonyms": "NA",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "8000",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "The maximum number of lines output in verbose mode",
+      "name": "--MAX_OUTPUT",
+      "synonyms": "-MO",
+      "type": "Integer",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "100",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.",
+      "name": "--MAX_RECORDS_IN_RAM",
+      "synonyms": "NA",
+      "type": "Integer",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "500000",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Mode of output",
+      "name": "--MODE",
+      "synonyms": "-M",
+      "type": "Mode",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "VERBOSE",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": [
+        {
+          "summary": "",
+          "name": "VERBOSE"
+        },
+        {
+          "summary": "",
+          "name": "SUMMARY"
+        }
+      ]
+    },
+    {
+      "summary": "Output file or standard out if missing",
+      "name": "--OUTPUT",
+      "synonyms": "-O",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Whether to suppress job-summary info on System.err.",
+      "name": "--QUIET",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Reference sequence file.",
+      "name": "--REFERENCE_SEQUENCE",
+      "synonyms": "-R",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "If true, this tool will not attempt to validate mate information. In general cases, this option should not be used.  However, in cases where samples have very high duplication or chimerism rates (\u003e 10%), the mate validation process often requires extremely large amounts of memory to run, so this flag allows you to forego that check.",
+      "name": "--SKIP_MATE_VALIDATION",
+      "synonyms": "-SMV",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
+      "name": "--TMP_DIR",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Use the JDK Deflater instead of the Intel Deflater for writing compressed output",
+      "name": "--USE_JDK_DEFLATER",
+      "synonyms": "-use_jdk_deflater",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Use the JDK Inflater instead of the Intel Inflater for reading compressed input",
+      "name": "--USE_JDK_INFLATER",
+      "synonyms": "-use_jdk_inflater",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "DEPRECATED.  Use INDEX_VALIDATION_STRINGENCY instead.  If true and input is a BAM file with an index file, also validates the index.  Until this parameter is retired VALIDATE INDEX and INDEX_VALIDATION_STRINGENCY must agree on whether to validate the index.",
+      "name": "--VALIDATE_INDEX",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.",
+      "name": "--VALIDATION_STRINGENCY",
+      "synonyms": "NA",
+      "type": "ValidationStringency",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "STRICT",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": [
+        {
+          "summary": "",
+          "name": "STRICT"
+        },
+        {
+          "summary": "",
+          "name": "LENIENT"
+        },
+        {
+          "summary": "",
+          "name": "SILENT"
+        }
+      ]
+    },
+    {
+      "summary": "Control verbosity of logging.",
+      "name": "--VERBOSITY",
+      "synonyms": "NA",
+      "type": "LogLevel",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "INFO",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": [
+        {
+          "summary": "",
+          "name": "ERROR"
+        },
+        {
+          "summary": "",
+          "name": "WARNING"
+        },
+        {
+          "summary": "",
+          "name": "INFO"
+        },
+        {
+          "summary": "",
+          "name": "DEBUG"
+        }
+      ]
+    }
+  ],
+  "description": "\u003cp\u003eThis tool reports on the validity of a SAM or BAM file relative to the SAM format\n specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper\n formatting, faulty alignments, incorrect flag values, etc. \u003c/p\u003e\n\n \u003cp\u003eBy default, the tool runs in VERBOSE mode and will exit after finding 100 errors and output them to the console (stdout).\n Therefore, it is often more practical to run this tool initially using the MODE\u003dSUMMARY option.  This mode outputs a summary\n table listing the numbers of all \u0027errors\u0027 and \u0027warnings\u0027.\u003c/p\u003e\n\n \u003cp\u003eWhen fixing errors in your file, it is often useful to prioritize the severe validation errors and ignore the\n errors/warnings of lesser concern.  This can be done using the IGNORE and/or IGNORE_WARNINGS arguments.  For helpful\n suggestions on error prioritization, please follow this link to obtain additional documentation on \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d7571\u0027\u003eValidateSamFile\u003c/a\u003e.\u003c/p\u003e\n\n \u003cp\u003eAfter identifying and fixing your \u0027warnings/errors\u0027, we recommend that you rerun this tool to validate your SAM/BAM\n file prior to proceeding with your downstream analysis.  This will verify that all problems in your file have been addressed.\u003c/p\u003e\n\n This tool is a wrapper for SamFileValidator.\n\n \u003ch4\u003eUsage example:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar ValidateSamFile \\\\\u003cbr /\u003e\n       I\u003dinput.bam \\\\\u003cbr /\u003e\n       MODE\u003dSUMMARY\n \u003c/pre\u003e\n \u003cp\u003eTo obtain a complete list with descriptions of both \u0027ERROR\u0027 and \u0027WARNING\u0027 messages, please see our additional\n  \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d7571\u0027\u003edocumentation\u003c/a\u003e for this tool.\u003c/p\u003e\n \"\u003chr /\u003e",
+  "name": "ValidateSamFile",
+  "group": "Diagnostics and Quality Control",
+  "beta": false,
+  "experimental": false
+}

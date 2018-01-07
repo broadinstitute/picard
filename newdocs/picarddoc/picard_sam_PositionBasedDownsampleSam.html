@@ -12,7 +12,7 @@
 
 	
 
-	<?php $group = 'SAM/BAM'; ?>
+	<?php $group = 'Read Data Manipulation'; ?>
 
 	<section class="span4">
 		<aside class="well">
@@ -32,64 +32,9 @@
         <ul class="nav nav-pills nav-stacked" id="sidenav">
         		<hr>
         		<hr>
-        		<hr>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#AlphaTools">Alpha Tools</a>
-							<div id="AlphaTools"
-								<?php echo ($group == 'Alpha Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
-											</li>
-											<li>
-												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
-											</li>
-											<li>
-												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
-							<div id="Fasta"
-								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
-											</li>
-											<li>
-												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
-											</li>
-											<li>
-												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
-											</li>
-											<li>
-												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#FingerprintingTools">Fingerprinting Tools</a>
-							<div id="FingerprintingTools"
-								<?php echo ($group == 'Fingerprinting Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IlluminaTools">Illumina Tools</a>
-							<div id="IlluminaTools"
-								<?php echo ($group == 'Illumina Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#BaseCalling">Base Calling</a>
+							<div id="BaseCalling"
+								<?php echo ($group == 'Base Calling')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_illumina_CheckIlluminaDirectory.html">CheckIlluminaDirectory</a>
@@ -115,34 +60,27 @@
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalTools">Interval Tools</a>
-							<div id="IntervalTools"
-								<?php echo ($group == 'Interval Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
-											</li>
-											<li>
-												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
-											</li>
-											<li>
-												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
-											</li>
-											<li>
-												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
-											</li>
-											<li>
-												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Metrics">Metrics</a>
-							<div id="Metrics"
-								<?php echo ($group == 'Metrics')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#DiagnosticsandQualityControl">Diagnostics and Quality Control</a>
+							<div id="DiagnosticsandQualityControl"
+								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
+											</li>
+											<li>
+												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
+											</li>
+											<li>
+												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
 											</li>
 											<li>
 												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
@@ -158,6 +96,9 @@
 											</li>
 											<li>
 												<a href="picard_analysis_directed_CollectHsMetrics.html">CollectHsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
 											</li>
 											<li>
 												<a href="picard_analysis_CollectInsertSizeMetrics.html">CollectInsertSizeMetrics</a>
@@ -196,10 +137,22 @@
 												<a href="picard_analysis_CollectWgsMetrics.html">CollectWgsMetrics</a>
 											</li>
 											<li>
+												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
+											</li>
+											<li>
 												<a href="picard_analysis_CompareMetrics.html">CompareMetrics</a>
 											</li>
 											<li>
+												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
+											</li>
+											<li>
 												<a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
 											</li>
 											<li>
 												<a href="picard_sam_markduplicates_EstimateLibraryComplexity.html">EstimateLibraryComplexity</a>
@@ -210,25 +163,47 @@
 											<li>
 												<a href="picard_analysis_QualityScoreDistribution.html">QualityScoreDistribution</a>
 											</li>
+											<li>
+												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
+											</li>
+											<li>
+												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#MiscellaneousTools">Miscellaneous Tools</a>
-							<div id="MiscellaneousTools"
-								<?php echo ($group == 'Miscellaneous Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalsManipulation">Intervals Manipulation</a>
+							<div id="IntervalsManipulation"
+								<?php echo ($group == 'Intervals Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
-												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
 											</li>
+											<li>
+												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
+											</li>
+											<li>
+												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Other">Other</a>
+							<div id="Other"
+								<?php echo ($group == 'Other')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
 											<li>
 												<a href="picard_util_FifoBuffer.html">FifoBuffer</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#SAMBAM">SAM/BAM</a>
-							<div id="SAMBAM"
-								<?php echo ($group == 'SAM/BAM')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#ReadDataManipulation">Read Data Manipulation</a>
+							<div id="ReadDataManipulation"
+								<?php echo ($group == 'Read Data Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_sam_AddCommentsToBam.html">AddCommentsToBam</a>
@@ -237,25 +212,13 @@
 												<a href="picard_sam_AddOrReplaceReadGroups.html">AddOrReplaceReadGroups</a>
 											</li>
 											<li>
-												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
-											</li>
-											<li>
 												<a href="picard_fastq_BamToBfq.html">BamToBfq</a>
 											</li>
 											<li>
 												<a href="picard_sam_BuildBamIndex.html">BuildBamIndex</a>
 											</li>
 											<li>
-												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
-											</li>
-											<li>
-												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
-											</li>
-											<li>
 												<a href="picard_sam_CleanSam.html">CleanSam</a>
-											</li>
-											<li>
-												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
 											</li>
 											<li>
 												<a href="picard_sam_DownsampleSam.html">DownsampleSam</a>
@@ -312,6 +275,9 @@
 												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
 											</li>
 											<li>
+												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
+											</li>
+											<li>
 												<a href="picard_sam_SortSam.html">SortSam</a>
 											</li>
 											<li>
@@ -321,42 +287,68 @@
 												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
 											</li>
 											<li>
-												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
-											</li>
-											<li>
-												<a href="picard_sam_ViewSam.html">ViewSam</a>
+												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#UnitTesting">Unit Testing</a>
-							<div id="UnitTesting"
-								<?php echo ($group == 'Unit Testing')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Reference">Reference</a>
+							<div id="Reference"
+								<?php echo ($group == 'Reference')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
-												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
+												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+											</li>
+											<li>
+												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
+											</li>
+											<li>
+												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
+											</li>
+											<li>
+												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
+											</li>
+											<li>
+												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VCFBCF">VCF/BCF</a>
-							<div id="VCFBCF"
-								<?php echo ($group == 'VCF/BCF')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantEvaluationandRefinement">Variant Evaluation and Refinement</a>
+							<div id="VariantEvaluationandRefinement"
+								<?php echo ($group == 'Variant Evaluation and Refinement')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantFiltering">Variant Filtering</a>
+							<div id="VariantFiltering"
+								<?php echo ($group == 'Variant Filtering')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_vcf_filter_FilterVcf.html">FilterVcf</a>
 											</li>
-											<li>
-												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
-											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantManipulation">Variant Manipulation</a>
+							<div id="VariantManipulation"
+								<?php echo ($group == 'Variant Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
 											<li>
 												<a href="picard_vcf_FixVcfHeader.html">FixVcfHeader</a>
 											</li>
 											<li>
 												<a href="picard_vcf_GatherVcfs.html">GatherVcfs</a>
-											</li>
-											<li>
-												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
 											</li>
 											<li>
 												<a href="picard_vcf_LiftoverVcf.html">LiftoverVcf</a>
@@ -389,6 +381,7 @@
 							</div>
 						</li>
         		<hr>
+        		<hr>
         </ul>
 		</aside>
 		<?php getForumPosts( 'PositionBasedDownsampleSam' ) ?>
@@ -402,26 +395,66 @@
 		<p class="lead">Downsample a SAM or BAM file to retain a subset of the reads based on the reads location in each tile in the flowcell.</p>
 
 			<h3>Category
-				<small> SAM/BAM</small>
+				<small> Read Data Manipulation</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		Class to downsample a BAM file while respecting that we should either get rid
- of both ends of a pair or neither end of the pair. In addition, this program uses the read-name
- and extracts the position within the tile whence the read came from. The downsampling is based on this position.
- <p/>
- Note 1: This is technology and read-name dependent. If your read-names do not have coordinate information, or if your
- BAM contains reads from multiple technologies (flowcell versions, sequencing machines) this will not work properly.
- This has been designed with Illumina MiSeq/HiSeq in mind.
- <p/>
- Note 2: The downsampling is _not_ random. It is deterministically dependent on the position of the read within its tile. Specifically,
- it draws out an ellipse that covers a FRACTION fraction of the area and each of the edges and uses this to determine whether to keep the
- record. Since reads with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the same for all of them.
- <p/>
- Finally, the code has been designed to simulate sequencing less as accurately as possible, not for getting an exact downsample fraction.
- In particular, since the reads may be distributed non-evenly within the lanes/tiles, the resulting downsampling percentage will not be accurately
- determined by the input argument FRACTION. One should re-MarkDuplicates after downsampling in order to "expose" the duplicates whose representative has
+		<h3>Summary</h3>
+ Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with DownsampleSam, all the
+ reads with the same queryname are either kept or dropped as a unit.
+ <br/>
+
+ <h3>Details</h3>
+ The downsampling is <b>not</b> random (and there is no random seed). It is deterministically determined by the position
+ of each read within its tile. Specifically, it draws an ellipse that covers a #FRACTION of the total tile's
+ area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads
+ with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the
+ same for all of them. The main concern of this downsampling method is that due to "optical duplicates" downsampling
+ randomly can create a result that has a different optical duplicate rate, and therefore a different estimated library
+ size (when running MarkDuplicates). This method keeps (physically) close read together, so that (except
+ for reads near the boundary of the circle) optical duplicates are kept or dropped as a group.
+
+ By default the program expects the read names to have 5 or 7 fields separated by colons (:), and it takes the last two
+ to indicate the x and y coordinates of the reads within the tile whence it was sequenced. See
+ ReadNameParser#DEFAULT_READ_NAME_REGEX for more detail. The program traverses the #INPUT twice: first
+ to find out the size of each of the tiles, and next to perform the downsampling.
+
+ Downsampling invalidates the duplicate flag because duplicate reads before downsampling may not all remain duplicated
+ after downsampling. Thus, the default setting also removes the duplicate information.
+
+ <h3>Example</h3>
+ <pre>
+ java -jar picard.jar PositionBasedDownsampleSam \
+       I=input.bam \
+       O=downsampled.bam \
+       FRACTION=0.1
+ </pre>
+ <h3>Caveats</h3>
+ <ol>
+ <li>
+ This method is <b>technology and read-name dependent</b>. If the read-names do not have coordinate information
+ embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines).
+ this will not work properly. It has been designed to work with Illumina technology and reads-names. Consider
+ modifying #READ_NAME_REGEX in other cases.
+ </li>
+ <li>
+ The code has been designed to simulate, as accurately as possible, sequencing less, <b>not</b> for getting an exact
+ downsampled fraction (Use DownsampleSam for that.) In particular, since the reads may be distributed non-evenly
+ within the lanes/tiles, the resulting downsampling percentage will not be accurately determined by the input argument
+ #FRACTION.
+ </li>
+ <li>
+ Consider running MarkDuplicates after downsampling in order to "expose" the duplicates whose representative has
  been downsampled away.
+ </li>
+ <li>
+ The downsampling assumes a uniform distribution of reads in the flowcell.
+ Input already downsampled with PositionBasedDownsampleSam violates this assumption.
+ To guard against such input,
+ PositionBasedDownsampleSam always places a PG record in the header of its output,
+ and aborts whenever it finds such a PG record in its input.
+ </li>
+ </ol>
 
 
 				<h3>PositionBasedDownsampleSam specific arguments</h3>
@@ -460,22 +493,27 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The output, downsampled, SAM or BAM file to write.</td>
+					<td>The output, downsampled, SAM or BAM file.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
 					<td><a href="#--ALLOW_MULTIPLE_DOWNSAMPLING_DESPITE_WARNINGS">--ALLOW_MULTIPLE_DOWNSAMPLING_DESPITE_WARNINGS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
-					<td>Allow Downsampling again despite this being a bad idea with possibly unexpected results.</td>
+					<td>Allow downsampling again despite this being a bad idea with possibly unexpected results.</td>
+				</tr>
+				<tr>
+					<td><a href="#--READ_NAME_REGEX">--READ_NAME_REGEX</a><br />
+					</td>
+					<!--<td>String</td> -->
+					<td><optimized capture of last three ':' separated fields as numeric values></td>
+					<td>Use these regular expressions to parse read names in the input SAM file. Read names are parsed to extract three variables: tile/region, x coordinate and y coordinate. The x and y coordinates are used to determine the downsample decision. Set this option to null to disable optical duplicate detection, e.g. for RNA-seq The regular expression should contain three capture groups for the three variables, in order. It must match the entire read name. Note that if the default regex is specified, a regex match is not actually done, but instead the read name is split on colons (:). For 5 element names, the 3rd, 4th and 5th elements are assumed to be tile, x and y values. For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values.</td>
 				</tr>
 				<tr>
 					<td><a href="#--REMOVE_DUPLICATE_INFORMATION">--REMOVE_DUPLICATE_INFORMATION</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
@@ -483,7 +521,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--STOP_AFTER">--STOP_AFTER</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Long</td> -->
 					<td>null</td>
@@ -494,15 +531,13 @@
 			</tr>
 				<tr>
 					<td><a href="#--COMPRESSION_LEVEL">--COMPRESSION_LEVEL</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>int</td> -->
 					<td>5</td>
-					<td>Compression level for all compressed files created (e.g. BAM and GELI).</td>
+					<td>Compression level for all compressed files created (e.g. BAM and VCF).</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_INDEX">--CREATE_INDEX</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
@@ -510,7 +545,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -518,7 +552,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>String</td> -->
 					<td>client_secrets.json</td>
@@ -526,15 +559,13 @@
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Integer</td> -->
 					<td>500000</td>
-					<td>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</td>
+					<td>When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.</td>
 				</tr>
 				<tr>
 					<td><a href="#--QUIET">--QUIET</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
@@ -550,7 +581,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--TMP_DIR">--TMP_DIR</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>List[File]</td> -->
 					<td>[]</td>
@@ -574,7 +604,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>ValidationStringency</td> -->
 					<td>STRICT</td>
@@ -582,7 +611,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--VERBOSITY">--VERBOSITY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>LogLevel</td> -->
 					<td>INFO</td>
@@ -595,10 +623,10 @@
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ALLOW_MULTIPLE_DOWNSAMPLING_DESPITE_WARNINGS">--ALLOW_MULTIPLE_DOWNSAMPLING_DESPITE_WARNINGS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Allow Downsampling again despite this being a bad idea with possibly unexpected results.</b><br />
+			<b>Allow downsampling again despite this being a bad idea with possibly unexpected results.</b><br />
 			
 		</p>
 		<p>
@@ -607,10 +635,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Compression level for all compressed files created (e.g. BAM and GELI).</b><br />
+			<b>Compression level for all compressed files created (e.g. BAM and VCF).</b><br />
 			
 		</p>
 		<p>
@@ -621,7 +649,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CREATE_INDEX">--CREATE_INDEX </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
@@ -633,7 +661,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CREATE_MD5_FILE">--CREATE_MD5_FILE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to create an MD5 digest for any BAM or FASTQ files created.  </b><br />
@@ -658,7 +686,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Google Genomics API client_secrets.json file path.</b><br />
@@ -683,10 +711,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</b><br />
+			<b>When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.</b><br />
 			
 		</p>
 		<p>
@@ -700,7 +728,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>The output, downsampled, SAM or BAM file to write.</b><br />
+			<b>The output, downsampled, SAM or BAM file.</b><br />
 			
 		</p>
 		<p>
@@ -710,7 +738,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--QUIET">--QUIET </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to suppress job-summary info on System.err.</b><br />
@@ -719,6 +747,18 @@
 		<p>
 		<span class="label label-info ">Boolean</span>
 			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--READ_NAME_REGEX">--READ_NAME_REGEX </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Use these regular expressions to parse read names in the input SAM file. Read names are parsed to extract three variables: tile/region, x coordinate and y coordinate. The x and y coordinates are used to determine the downsample decision. Set this option to null to disable optical duplicate detection, e.g. for RNA-seq The regular expression should contain three capture groups for the three variables, in order. It must match the entire read name. Note that if the default regex is specified, a regex match is not actually done, but instead the read name is split on colons (:). For 5 element names, the 3rd, 4th and 5th elements are assumed to be tile, x and y values. For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label"><optimized capture of last three ':' separated fields as numeric values></span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE </a>
@@ -734,7 +774,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--REMOVE_DUPLICATE_INFORMATION">--REMOVE_DUPLICATE_INFORMATION </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Determines whether the duplicate tag should be reset since the downsampling requires re-marking duplicates.</b><br />
@@ -746,7 +786,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--STOP_AFTER">--STOP_AFTER </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Stop after processing N reads, mainly for debugging.</b><br />
@@ -758,7 +798,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>One or more directories with space available to be used by this program for temporary storage of working files</b><br />
@@ -794,7 +834,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</b><br />
@@ -817,7 +857,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--VERBOSITY">--VERBOSITY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Control verbosity of logging.</b><br />
@@ -850,7 +890,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.1-SNAPSHOT built at 02-17-2018 12:17:35.
+        <p class="version">Picard version 2.17.2-SNAPSHOT built at 06-51-2018 09:51:38.
         </p>
 
 	</div>

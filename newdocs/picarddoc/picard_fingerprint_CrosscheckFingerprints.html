@@ -12,7 +12,7 @@
 
 	
 
-	<?php $group = 'Fingerprinting Tools'; ?>
+	<?php $group = 'Diagnostics and Quality Control'; ?>
 
 	<section class="span4">
 		<aside class="well">
@@ -32,64 +32,9 @@
         <ul class="nav nav-pills nav-stacked" id="sidenav">
         		<hr>
         		<hr>
-        		<hr>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#AlphaTools">Alpha Tools</a>
-							<div id="AlphaTools"
-								<?php echo ($group == 'Alpha Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
-											</li>
-											<li>
-												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
-											</li>
-											<li>
-												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
-							<div id="Fasta"
-								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
-											</li>
-											<li>
-												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
-											</li>
-											<li>
-												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
-											</li>
-											<li>
-												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#FingerprintingTools">Fingerprinting Tools</a>
-							<div id="FingerprintingTools"
-								<?php echo ($group == 'Fingerprinting Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IlluminaTools">Illumina Tools</a>
-							<div id="IlluminaTools"
-								<?php echo ($group == 'Illumina Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#BaseCalling">Base Calling</a>
+							<div id="BaseCalling"
+								<?php echo ($group == 'Base Calling')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_illumina_CheckIlluminaDirectory.html">CheckIlluminaDirectory</a>
@@ -115,34 +60,27 @@
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalTools">Interval Tools</a>
-							<div id="IntervalTools"
-								<?php echo ($group == 'Interval Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
-											</li>
-											<li>
-												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
-											</li>
-											<li>
-												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
-											</li>
-											<li>
-												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
-											</li>
-											<li>
-												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Metrics">Metrics</a>
-							<div id="Metrics"
-								<?php echo ($group == 'Metrics')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#DiagnosticsandQualityControl">Diagnostics and Quality Control</a>
+							<div id="DiagnosticsandQualityControl"
+								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
+											</li>
+											<li>
+												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
+											</li>
+											<li>
+												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
 											</li>
 											<li>
 												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
@@ -158,6 +96,9 @@
 											</li>
 											<li>
 												<a href="picard_analysis_directed_CollectHsMetrics.html">CollectHsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
 											</li>
 											<li>
 												<a href="picard_analysis_CollectInsertSizeMetrics.html">CollectInsertSizeMetrics</a>
@@ -196,10 +137,22 @@
 												<a href="picard_analysis_CollectWgsMetrics.html">CollectWgsMetrics</a>
 											</li>
 											<li>
+												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
+											</li>
+											<li>
 												<a href="picard_analysis_CompareMetrics.html">CompareMetrics</a>
 											</li>
 											<li>
+												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
+											</li>
+											<li>
 												<a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
 											</li>
 											<li>
 												<a href="picard_sam_markduplicates_EstimateLibraryComplexity.html">EstimateLibraryComplexity</a>
@@ -210,25 +163,47 @@
 											<li>
 												<a href="picard_analysis_QualityScoreDistribution.html">QualityScoreDistribution</a>
 											</li>
+											<li>
+												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
+											</li>
+											<li>
+												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#MiscellaneousTools">Miscellaneous Tools</a>
-							<div id="MiscellaneousTools"
-								<?php echo ($group == 'Miscellaneous Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalsManipulation">Intervals Manipulation</a>
+							<div id="IntervalsManipulation"
+								<?php echo ($group == 'Intervals Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
-												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
 											</li>
+											<li>
+												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
+											</li>
+											<li>
+												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Other">Other</a>
+							<div id="Other"
+								<?php echo ($group == 'Other')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
 											<li>
 												<a href="picard_util_FifoBuffer.html">FifoBuffer</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#SAMBAM">SAM/BAM</a>
-							<div id="SAMBAM"
-								<?php echo ($group == 'SAM/BAM')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#ReadDataManipulation">Read Data Manipulation</a>
+							<div id="ReadDataManipulation"
+								<?php echo ($group == 'Read Data Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_sam_AddCommentsToBam.html">AddCommentsToBam</a>
@@ -237,25 +212,13 @@
 												<a href="picard_sam_AddOrReplaceReadGroups.html">AddOrReplaceReadGroups</a>
 											</li>
 											<li>
-												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
-											</li>
-											<li>
 												<a href="picard_fastq_BamToBfq.html">BamToBfq</a>
 											</li>
 											<li>
 												<a href="picard_sam_BuildBamIndex.html">BuildBamIndex</a>
 											</li>
 											<li>
-												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
-											</li>
-											<li>
-												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
-											</li>
-											<li>
 												<a href="picard_sam_CleanSam.html">CleanSam</a>
-											</li>
-											<li>
-												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
 											</li>
 											<li>
 												<a href="picard_sam_DownsampleSam.html">DownsampleSam</a>
@@ -312,6 +275,9 @@
 												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
 											</li>
 											<li>
+												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
+											</li>
+											<li>
 												<a href="picard_sam_SortSam.html">SortSam</a>
 											</li>
 											<li>
@@ -321,42 +287,68 @@
 												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
 											</li>
 											<li>
-												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
-											</li>
-											<li>
-												<a href="picard_sam_ViewSam.html">ViewSam</a>
+												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#UnitTesting">Unit Testing</a>
-							<div id="UnitTesting"
-								<?php echo ($group == 'Unit Testing')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Reference">Reference</a>
+							<div id="Reference"
+								<?php echo ($group == 'Reference')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
-												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
+												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+											</li>
+											<li>
+												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
+											</li>
+											<li>
+												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
+											</li>
+											<li>
+												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
+											</li>
+											<li>
+												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VCFBCF">VCF/BCF</a>
-							<div id="VCFBCF"
-								<?php echo ($group == 'VCF/BCF')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantEvaluationandRefinement">Variant Evaluation and Refinement</a>
+							<div id="VariantEvaluationandRefinement"
+								<?php echo ($group == 'Variant Evaluation and Refinement')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantFiltering">Variant Filtering</a>
+							<div id="VariantFiltering"
+								<?php echo ($group == 'Variant Filtering')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_vcf_filter_FilterVcf.html">FilterVcf</a>
 											</li>
-											<li>
-												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
-											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantManipulation">Variant Manipulation</a>
+							<div id="VariantManipulation"
+								<?php echo ($group == 'Variant Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
 											<li>
 												<a href="picard_vcf_FixVcfHeader.html">FixVcfHeader</a>
 											</li>
 											<li>
 												<a href="picard_vcf_GatherVcfs.html">GatherVcfs</a>
-											</li>
-											<li>
-												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
 											</li>
 											<li>
 												<a href="picard_vcf_LiftoverVcf.html">LiftoverVcf</a>
@@ -389,6 +381,7 @@
 							</div>
 						</li>
         		<hr>
+        		<hr>
         </ul>
 		</aside>
 		<?php getForumPosts( 'CrosscheckFingerprints' ) ?>
@@ -399,16 +392,92 @@
 
 		<h1>CrosscheckFingerprints</h1>
 
-		<p class="lead">Checks if all fingerprints appear to come from the same individual.</p>
+		<p class="lead">Checks that all data in the input files appear to have come from the same individual</p>
 
 			<h3>Category
-				<small> Fingerprinting Tools</small>
+				<small> Diagnostics and Quality Control</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		Program to check that all fingerprints within the set of input files appear to come from the same
- individual. Can be used to cross-check readgroups, libraries, samples, or files.
+		Checks that all data in the set of input files appear to come from the same
+ individual. Can be used to compare according to readgroups, libraries, samples, or files.
  Operates on bams/sams and vcfs (including gvcfs).
+
+ <h3>Summary</h3>
+ Checks if all the genetic data within a set of files appear to come from the same individual.
+ It quickly determines whether a "group's" genotype matches that of an input SAM/BAM/VCF by selective sampling,
+ and has been designed to work well even for low-depth SAM/BAMs.
+ <br/>
+ The tool collects "fingerprints" (essentially genotype information from different parts of the genome)
+ at the finest level available in the data (readgroup for SAM files
+ and sample for VCF files) and then optionally aggregates it by library, sample or file, to increase power and provide
+ results at the desired resolution. Output is in a "Moltenized" format, one row per comparison. The results will
+ be emitted into a metric file for the class CrosscheckMetric.
+ In this format the output will include the LOD score and also tumor-aware LOD score which can
+ help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could
+ otherwise fail to notice that samples are from the same individual.)
+ A matrix output is also available to facilitate visual inspection of crosscheck results.
+ <br/>
+ Since there can be many rows of output in the metric file, we recommend the use of ClusterCrosscheckMetrics
+ as a follow-up step to running CrosscheckFingerprints.
+ <br/>
+ There are cases where one would like to identify a few groups out of a collection of many possible groups (say
+ to link a bam to it's correct sample in a multi-sample vcf. In this case one would not case for the cross-checking
+ of the various samples in the VCF against each other, but only in checking the identity of the bam against the various
+ samples in the vcf. The #SECOND_INPUT is provided for this use-case. With #SECOND_INPUT provided, CrosscheckFingerprints
+ does the following:
+ <il>
+ <li>aggregation of data happens independently for the input files in #INPUT and #SECOND_INPUT.</li>
+ <li>aggregation of data happens at the SAMPLE level.</li>
+ <li>each samples from #INPUT will only be compared to that same sample in #INPUT.</li>
+ <li>#MATRIX_OUTPUT is disabled.</li>
+ </il>
+ <br/>
+ <h3>Examples</h3>
+ <h4>Check that all the readgroups from a sample match each other:</h4>
+ <pre>
+     java -jar picard.jar CrosscheckFingerprints \
+          INPUT=sample.with.many.readgroups.bam \
+          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+          LOD_THRESHOLD=-5 \
+          OUTPUT=sample.crosscheck_metrics
+ </pre>
+
+
+ <h4>Check that all the readgroups match as expected when providing reads from two samples from the same individual:</h4>
+ <pre>
+     java -jar picard.jar CrosscheckFingerprints \
+          INPUT=sample.one.with.many.readgroups.bam \
+          INPUT=sample.two.with.many.readgroups.bam \
+          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+          LOD_THRESHOLD=-5 \
+          EXPECT_ALL_GROUPS_TO_MATCH=true \
+          OUTPUT=sample.crosscheck_metrics
+ </pre>
+
+
+ <h3> Detailed Explanation</h3>
+
+ This tool calculates the LOD score for identity check between "groups" of data in the INPUT files as defined by
+ the CROSSCHECK_BY argument. A positive value indicates that the data seems to have come from the same individual
+ or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates
+ that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates
+ that the data do not match. A score that is near zero is inconclusive and can result from low coverage
+ or non-informative genotypes. Each group is assigned a sample identifier (for SAM this is taken from the SM tag in
+ the appropriate readgroup header line, for VCF this is taken from the column label in the file-header.
+ After combining all the data from the same "group" together, an all-against-all comparison is performed. Results are
+ categorized a FingerprintResult enum: EXPECTED_MATCH, EXPECTED_MISMATCH, UNEXPECTED_MATCH, UNEXPECTED_MISMATCH,
+ or AMBIGUOUS depending on the LOD score and on whether the sample identifiers of the groups agree: LOD scores that are
+ less than LOD_THRESHOLD are considered mismatches, and those greater than -LOD_THRESHOLD are matches (between is ambiguous).
+ If the sample identifiers are equal, the groups are expected to match. They are expected to mismatch otherwise.
+ <br/>
+
+ The identity check makes use of haplotype blocks defined in the HAPLOTYPE_MAP file to enable it to have higher
+ statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This
+ enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).
+ <br/>
+ When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that
+ it finds.
 
 
 				<h3>CrosscheckFingerprints specific arguments</h3>
@@ -439,14 +508,13 @@
 					</td>
 					<!--<td>List[File]</td> -->
 					<td>[]</td>
-					<td>One or more input files (or lists of files) to compare fingerprints for.</td>
+					<td>One or more input files (or lists of files) with which to compare fingerprints.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
 					<td><a href="#--ALLOW_DUPLICATE_READS">--ALLOW_DUPLICATE_READS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -454,7 +522,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--CROSSCHECK_BY">--CROSSCHECK_BY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>DataType</td> -->
 					<td>READGROUP</td>
@@ -462,7 +529,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--EXIT_CODE_WHEN_MISMATCH">--EXIT_CODE_WHEN_MISMATCH</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>int</td> -->
 					<td>1</td>
@@ -470,7 +536,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--EXPECT_ALL_GROUPS_TO_MATCH">--EXPECT_ALL_GROUPS_TO_MATCH</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -478,11 +543,10 @@
 				</tr>
 				<tr>
 					<td><a href="#--GENOTYPING_ERROR_RATE">--GENOTYPING_ERROR_RATE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>double</td> -->
 					<td>0.01</td>
-					<td>Assumed genotyping error rate that provides a floor on the probability that a genotype comes from the expected sample.</td>
+					<td>Assumed genotyping error rate that provides a floor on the probability that a genotype comes from the expected sample. Must be greater than zero. </td>
 				</tr>
 				<tr>
 					<td><a href="#--LOD_THRESHOLD">--LOD_THRESHOLD</a><br />
@@ -490,13 +554,12 @@
 					</td>
 					<!--<td>double</td> -->
 					<td>0.0</td>
-					<td>If any two groups (with the same sample name) match with a LOD score lower than the threshold the program will exit with a non-zero code to indicate error. Program will also exit with an error if it finds two groups with different sample name that match with a LOD score greater than -LOD_THRESHOLD.
+					<td>If any two groups (with the same sample name) match with a LOD score lower than the threshold the tool will exit with a non-zero code to indicate error. Program will also exit with an error if it finds two groups with different sample name that match with a LOD score greater than -LOD_THRESHOLD.
 
-LOD score 0 means equal likelihoodthat the groups match vs. come from different individuals, negative LOD scores mean N logs more likely that the groups are from different individuals, and positive numbers mean N logs more likely that the groups are from the sample individual. </td>
+LOD score 0 means equal likelihood that the groups match vs. come from different individuals, negative LOD score -N, mean 10^N time more likely that the groups are from different individuals, and +N means 10^N times more likely that the groups are from the same individual. </td>
 				</tr>
 				<tr>
 					<td><a href="#--LOSS_OF_HET_RATE">--LOSS_OF_HET_RATE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>double</td> -->
 					<td>0.5</td>
@@ -508,15 +571,14 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Optional output file to write matrix of LOD scores to. This is less informative than the metrics output and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity). It is however sometimes easier to use visually.</td>
+					<td>Optional output file to write matrix of LOD scores to. This is less informative than the metrics output and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of Heterozygosity). It is however sometimes easier to use visually.</td>
 				</tr>
 				<tr>
 					<td><a href="#--NUM_THREADS">--NUM_THREADS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>int</td> -->
 					<td>1</td>
-					<td>The number of threads to use to process files and generate Fingerprints.</td>
+					<td>The number of threads to use to process files and generate fingerprints.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -528,7 +590,6 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT_ERRORS_ONLY">--OUTPUT_ERRORS_ONLY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -540,22 +601,20 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 					</td>
 					<!--<td>List[File]</td> -->
 					<td>[]</td>
-					<td>One or more input files (or lists of files) to compare fingerprints for. If this option is given the program compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the program will proceed to check the matching samples, but report the missing samples and return a non-zero error-code.</td>
+					<td>A second set of input files (or lists of files) with which to compare fingerprints. If this option is provided the tool compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the tool will proceed to check the matching samples, but report the missing samples and return a non-zero error-code.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
 				<tr>
 					<td><a href="#--COMPRESSION_LEVEL">--COMPRESSION_LEVEL</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>int</td> -->
 					<td>5</td>
-					<td>Compression level for all compressed files created (e.g. BAM and GELI).</td>
+					<td>Compression level for all compressed files created (e.g. BAM and VCF).</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_INDEX">--CREATE_INDEX</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
@@ -563,7 +622,6 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -571,7 +629,6 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 				</tr>
 				<tr>
 					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>String</td> -->
 					<td>client_secrets.json</td>
@@ -579,15 +636,13 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Integer</td> -->
 					<td>500000</td>
-					<td>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</td>
+					<td>When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.</td>
 				</tr>
 				<tr>
 					<td><a href="#--QUIET">--QUIET</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
@@ -603,7 +658,6 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 				</tr>
 				<tr>
 					<td><a href="#--TMP_DIR">--TMP_DIR</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>List[File]</td> -->
 					<td>[]</td>
@@ -627,7 +681,6 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 				</tr>
 				<tr>
 					<td><a href="#--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>ValidationStringency</td> -->
 					<td>STRICT</td>
@@ -635,7 +688,6 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 				</tr>
 				<tr>
 					<td><a href="#--VERBOSITY">--VERBOSITY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>LogLevel</td> -->
 					<td>INFO</td>
@@ -648,7 +700,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ALLOW_DUPLICATE_READS">--ALLOW_DUPLICATE_READS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Allow the use of duplicate reads in performing the comparison. Can be useful when duplicate marking has been overly aggressive and coverage is low.</b><br />
@@ -660,10 +712,10 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Compression level for all compressed files created (e.g. BAM and GELI).</b><br />
+			<b>Compression level for all compressed files created (e.g. BAM and VCF).</b><br />
 			
 		</p>
 		<p>
@@ -674,7 +726,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CREATE_INDEX">--CREATE_INDEX </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
@@ -686,7 +738,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CREATE_MD5_FILE">--CREATE_MD5_FILE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to create an MD5 digest for any BAM or FASTQ files created.  </b><br />
@@ -698,7 +750,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CROSSCHECK_BY">--CROSSCHECK_BY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Specificies which data-type should be used as the basic comparison unit. Fingerprints from readgroups can be "rolled-up" to the LIBRARY, SAMPLE, or FILE level before being compared. Fingerprints from VCF can be be compared by SAMPLE or FILE.</b><br />
@@ -723,7 +775,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--EXIT_CODE_WHEN_MISMATCH">--EXIT_CODE_WHEN_MISMATCH </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>When one or more mismatches between groups is detected, exit with this value instead of 0.</b><br />
@@ -737,7 +789,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--EXPECT_ALL_GROUPS_TO_MATCH">--EXPECT_ALL_GROUPS_TO_MATCH </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Expect all groups' fingerprints to match, irrespective of their sample names.  By default (with this value set to false), groups (readgroups, libraries, files, or samples) with different sample names are expected to mismatch, and those with the same sample name are expected to match. </b><br />
@@ -749,7 +801,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Google Genomics API client_secrets.json file path.</b><br />
@@ -761,10 +813,10 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--GENOTYPING_ERROR_RATE">--GENOTYPING_ERROR_RATE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Assumed genotyping error rate that provides a floor on the probability that a genotype comes from the expected sample.</b><br />
+			<b>Assumed genotyping error rate that provides a floor on the probability that a genotype comes from the expected sample. Must be greater than zero. </b><br />
 			
 		</p>
 		<p>
@@ -791,7 +843,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>One or more input files (or lists of files) to compare fingerprints for.</b><br />
+			<b>One or more input files (or lists of files) with which to compare fingerprints.</b><br />
 			
 		</p>
 		<p>
@@ -804,9 +856,9 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 			 / <small>-LOD</small>
 		</h3>
 		<p class="args">
-			<b>If any two groups (with the same sample name) match with a LOD score lower than the threshold the program will exit with a non-zero code to indicate error. Program will also exit with an error if it finds two groups with different sample name that match with a LOD score greater than -LOD_THRESHOLD.
+			<b>If any two groups (with the same sample name) match with a LOD score lower than the threshold the tool will exit with a non-zero code to indicate error. Program will also exit with an error if it finds two groups with different sample name that match with a LOD score greater than -LOD_THRESHOLD.
 
-LOD score 0 means equal likelihoodthat the groups match vs. come from different individuals, negative LOD scores mean N logs more likely that the groups are from different individuals, and positive numbers mean N logs more likely that the groups are from the sample individual. </b><br />
+LOD score 0 means equal likelihood that the groups match vs. come from different individuals, negative LOD score -N, mean 10^N time more likely that the groups are from different individuals, and +N means 10^N times more likely that the groups are from the same individual. </b><br />
 			
 		</p>
 		<p>
@@ -817,7 +869,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--LOSS_OF_HET_RATE">--LOSS_OF_HET_RATE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>The rate at which a heterozygous genotype in a normal sample turns into a homozygous (via loss of heterozygosity) in the tumor (model assumes independent events, so this needs to be larger than reality).</b><br />
@@ -834,7 +886,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 			 / <small>-MO</small>
 		</h3>
 		<p class="args">
-			<b>Optional output file to write matrix of LOD scores to. This is less informative than the metrics output and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of heterogeneity). It is however sometimes easier to use visually.</b><br />
+			<b>Optional output file to write matrix of LOD scores to. This is less informative than the metrics output and only contains Normal-Normal LOD score (i.e. doesn't account for Loss of Heterozygosity). It is however sometimes easier to use visually.</b><br />
 			
 		</p>
 			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>SECOND_INPUT</code>.</p>
@@ -844,10 +896,10 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</b><br />
+			<b>When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.</b><br />
 			
 		</p>
 		<p>
@@ -858,10 +910,10 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--NUM_THREADS">--NUM_THREADS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>The number of threads to use to process files and generate Fingerprints.</b><br />
+			<b>The number of threads to use to process files and generate fingerprints.</b><br />
 			
 		</p>
 		<p>
@@ -884,7 +936,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--OUTPUT_ERRORS_ONLY">--OUTPUT_ERRORS_ONLY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>If true then only groups that do not relate to each other as expected will have their LODs reported.</b><br />
@@ -896,7 +948,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--QUIET">--QUIET </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to suppress job-summary info on System.err.</b><br />
@@ -923,7 +975,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 			 / <small>-SI</small>
 		</h3>
 		<p class="args">
-			<b>One or more input files (or lists of files) to compare fingerprints for. If this option is given the program compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the program will proceed to check the matching samples, but report the missing samples and return a non-zero error-code.</b><br />
+			<b>A second set of input files (or lists of files) with which to compare fingerprints. If this option is provided the tool compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the tool will proceed to check the matching samples, but report the missing samples and return a non-zero error-code.</b><br />
 			
 		</p>
 			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>MATRIX_OUTPUT, MO</code>.</p>
@@ -933,7 +985,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>One or more directories with space available to be used by this program for temporary storage of working files</b><br />
@@ -969,7 +1021,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</b><br />
@@ -992,7 +1044,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--VERBOSITY">--VERBOSITY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Control verbosity of logging.</b><br />
@@ -1025,7 +1077,7 @@ LOD score 0 means equal likelihoodthat the groups match vs. come from different 
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.1-SNAPSHOT built at 02-17-2018 12:17:35.
+        <p class="version">Picard version 2.17.2-SNAPSHOT built at 06-51-2018 09:51:38.
         </p>
 
 	</div>

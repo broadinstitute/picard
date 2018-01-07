@@ -1,0 +1,338 @@
+{
+  "summary": "Downsample a SAM or BAM file.",
+  "arguments": [
+    {
+      "summary": "The accuracy that the downsampler should try to achieve if the selected strategy supports it. Note that accuracy is never guaranteed, but some strategies will attempt to provide accuracy within the requested bounds.Higher accuracy will generally require more memory.",
+      "name": "--ACCURACY",
+      "synonyms": "-A",
+      "type": "double",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "1.0E-4",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
+      "name": "--COMPRESSION_LEVEL",
+      "synonyms": "NA",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "5",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "name": "--CREATE_INDEX",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Whether to create an MD5 digest for any BAM or FASTQ files created.  ",
+      "name": "--CREATE_MD5_FILE",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Google Genomics API client_secrets.json file path.",
+      "name": "--GA4GH_CLIENT_SECRETS",
+      "synonyms": "NA",
+      "type": "String",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "client_secrets.json",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "The input SAM or BAM file to downsample.",
+      "name": "--INPUT",
+      "synonyms": "-I",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.",
+      "name": "--MAX_RECORDS_IN_RAM",
+      "synonyms": "NA",
+      "type": "Integer",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "500000",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "The metrics file (of type QualityYieldMetrics) which will contain information about the downsampled file.",
+      "name": "--METRICS_FILE",
+      "synonyms": "-M",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "The output, downsampled, SAM or BAM file to write.",
+      "name": "--OUTPUT",
+      "synonyms": "-O",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "The probability of keeping any individual read, between 0 and 1.",
+      "name": "--PROBABILITY",
+      "synonyms": "-P",
+      "type": "double",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "1.0",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Whether to suppress job-summary info on System.err.",
+      "name": "--QUIET",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Random seed used for deterministic results. Setting to null will cause multiple invocations to produce different results.",
+      "name": "--RANDOM_SEED",
+      "synonyms": "-R",
+      "type": "Integer",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "1",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "The reference sequence file.",
+      "name": "--REFERENCE_SEQUENCE",
+      "synonyms": "NA",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "The downsampling strategy to use. See usage for discussion.",
+      "name": "--STRATEGY",
+      "synonyms": "-S",
+      "type": "Strategy",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "ConstantMemory",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": [
+        {
+          "summary": "",
+          "name": "HighAccuracy"
+        },
+        {
+          "summary": "",
+          "name": "ConstantMemory"
+        },
+        {
+          "summary": "",
+          "name": "Chained"
+        }
+      ]
+    },
+    {
+      "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
+      "name": "--TMP_DIR",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Use the JDK Deflater instead of the Intel Deflater for writing compressed output",
+      "name": "--USE_JDK_DEFLATER",
+      "synonyms": "-use_jdk_deflater",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Use the JDK Inflater instead of the Intel Inflater for reading compressed input",
+      "name": "--USE_JDK_INFLATER",
+      "synonyms": "-use_jdk_inflater",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.",
+      "name": "--VALIDATION_STRINGENCY",
+      "synonyms": "NA",
+      "type": "ValidationStringency",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "STRICT",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": [
+        {
+          "summary": "",
+          "name": "STRICT"
+        },
+        {
+          "summary": "",
+          "name": "LENIENT"
+        },
+        {
+          "summary": "",
+          "name": "SILENT"
+        }
+      ]
+    },
+    {
+      "summary": "Control verbosity of logging.",
+      "name": "--VERBOSITY",
+      "synonyms": "NA",
+      "type": "LogLevel",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "INFO",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": [
+        {
+          "summary": "",
+          "name": "ERROR"
+        },
+        {
+          "summary": "",
+          "name": "WARNING"
+        },
+        {
+          "summary": "",
+          "name": "INFO"
+        },
+        {
+          "summary": "",
+          "name": "DEBUG"
+        }
+      ]
+    }
+  ],
+  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n This tool applies a downsampling algorithm to a SAM or BAM file to retain only a (deterministically random) subset of\n the reads. Reads from the same template (e.g. read-pairs, secondary and supplementary reads) are all either kept or\n discarded as a unit, with the goal of retaining reads from \u003ccode\u003ePROBABILITY * (input templates)\u003c/code\u003e. The results\n will contain approximately \u003ccode\u003ePROBABILITY * (input reads)\u003c/code\u003e, however for very small\n probabilities this may not be the case.\n\n A number of different downsampling strategies are supported using the #STRATEGY option:\n \u003cdl\u003e\n \u003cdt\u003eConstantMemory\u003c/dt\u003e\n \u003cdd\u003e\n     Downsamples a stream or file of SAMRecords using a hash-projection strategy such that it can run in constant memory.\n     The downsampling is stochastic, and therefore the actual retained proportion will vary around the requested proportion. Due\n     to working in fixed memory this strategy is good for large inputs, and due to the stochastic nature the accuracy of this strategy\n     is highest with a high number of output records, and diminishes at low output volumes.\n \u003c/dd\u003e\n \u003cdt\u003eHighAccuracy\u003c/dt\u003e\n \u003cdd\u003e\n     Attempts (but does not guarantee) to provide accuracy up to a specified limit. Accuracy is defined as emitting\n     a proportion of reads as close to the requested proportion as possible. In order to do so this strategy requires\n     memory that is proportional to the number of template names in the incoming stream of reads, and will thus require\n     large amounts of memory when running on large input files.\n \u003c/dd\u003e\n \u003cdt\u003eChained\u003c/dt\u003e\n \u003cdd\u003e\n     Attempts to provide a compromise strategy that offers some of the advantages of both the ConstantMemory and HighAccuracy strategies.\n     Uses a ConstantMemory strategy to downsample the incoming stream to approximately the desired proportion, and then a HighAccuracy\n     strategy to finish. Works in a single pass, and will provide accuracy close to (but often not as good as) HighAccuracy while requiring\n     memory proportional to the set of reads emitted from the ConstantMemory strategy to the HighAccuracy strategy. Works well when downsampling\n     large inputs to small proportions (e.g. downsampling hundreds of millions of reads and retaining only 2%. Should be accurate 99.9% of the time\n     when the input contains more than 50,000 templates (read names). For smaller inputs, HighAccuracy is recommended instead.\n \u003c/dd\u003e\n \u003c/dl\u003e\n\n The number of records written can be output to a QualityYieldMetrics metrics file via the #METRICS_FILE.\n\n \u003ch3\u003eUsage examples:\u003c/h3\u003e\n \u003ch4\u003eDownsample file, keeping about 10% of the reads\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar DownsampleSam \\\n       I\u003dinput.bam \\\n       O\u003ddownsampled.bam \\\n       P\u003d0.1\n \u003c/pre\u003e\n\n \u003ch4\u003eDownsample file, keeping 2% of the reads \u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar DownsampleSam \\\n       I\u003dinput.bam \\\n       O\u003ddownsampled.bam \\\n       STRATEGY\u003dChained \\\n       P\u003d0.02 \\\n       ACCURACY\u003d0.0001\n \u003c/pre\u003e\n\n \u003ch4\u003eDownsample file, keeping 0.001% of the reads (may require more memory)\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar DownsampleSam \\\n       I\u003dinput.bam \\\n       O\u003ddownsampled.bam \\\n       STRATEGY\u003dHighAccuracy \\\n       P\u003d0.00001 \\\n       ACCURACY\u003d0.0000001\n \u003c/pre\u003e",
+  "name": "DownsampleSam",
+  "group": "Read Data Manipulation",
+  "beta": false,
+  "experimental": false
+}

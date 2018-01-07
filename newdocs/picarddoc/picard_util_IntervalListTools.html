@@ -12,7 +12,7 @@
 
 	
 
-	<?php $group = 'Interval Tools'; ?>
+	<?php $group = 'Intervals Manipulation'; ?>
 
 	<section class="span4">
 		<aside class="well">
@@ -32,64 +32,9 @@
         <ul class="nav nav-pills nav-stacked" id="sidenav">
         		<hr>
         		<hr>
-        		<hr>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#AlphaTools">Alpha Tools</a>
-							<div id="AlphaTools"
-								<?php echo ($group == 'Alpha Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
-											</li>
-											<li>
-												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
-											</li>
-											<li>
-												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
-							<div id="Fasta"
-								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
-											</li>
-											<li>
-												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
-											</li>
-											<li>
-												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
-											</li>
-											<li>
-												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#FingerprintingTools">Fingerprinting Tools</a>
-							<div id="FingerprintingTools"
-								<?php echo ($group == 'Fingerprinting Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IlluminaTools">Illumina Tools</a>
-							<div id="IlluminaTools"
-								<?php echo ($group == 'Illumina Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#BaseCalling">Base Calling</a>
+							<div id="BaseCalling"
+								<?php echo ($group == 'Base Calling')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_illumina_CheckIlluminaDirectory.html">CheckIlluminaDirectory</a>
@@ -115,34 +60,27 @@
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalTools">Interval Tools</a>
-							<div id="IntervalTools"
-								<?php echo ($group == 'Interval Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
-											</li>
-											<li>
-												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
-											</li>
-											<li>
-												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
-											</li>
-											<li>
-												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
-											</li>
-											<li>
-												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Metrics">Metrics</a>
-							<div id="Metrics"
-								<?php echo ($group == 'Metrics')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#DiagnosticsandQualityControl">Diagnostics and Quality Control</a>
+							<div id="DiagnosticsandQualityControl"
+								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
+											</li>
+											<li>
+												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
+											</li>
+											<li>
+												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
 											</li>
 											<li>
 												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
@@ -158,6 +96,9 @@
 											</li>
 											<li>
 												<a href="picard_analysis_directed_CollectHsMetrics.html">CollectHsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
 											</li>
 											<li>
 												<a href="picard_analysis_CollectInsertSizeMetrics.html">CollectInsertSizeMetrics</a>
@@ -196,10 +137,22 @@
 												<a href="picard_analysis_CollectWgsMetrics.html">CollectWgsMetrics</a>
 											</li>
 											<li>
+												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
+											</li>
+											<li>
 												<a href="picard_analysis_CompareMetrics.html">CompareMetrics</a>
 											</li>
 											<li>
+												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
+											</li>
+											<li>
 												<a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
 											</li>
 											<li>
 												<a href="picard_sam_markduplicates_EstimateLibraryComplexity.html">EstimateLibraryComplexity</a>
@@ -210,25 +163,47 @@
 											<li>
 												<a href="picard_analysis_QualityScoreDistribution.html">QualityScoreDistribution</a>
 											</li>
+											<li>
+												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
+											</li>
+											<li>
+												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#MiscellaneousTools">Miscellaneous Tools</a>
-							<div id="MiscellaneousTools"
-								<?php echo ($group == 'Miscellaneous Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalsManipulation">Intervals Manipulation</a>
+							<div id="IntervalsManipulation"
+								<?php echo ($group == 'Intervals Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
-												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
 											</li>
+											<li>
+												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
+											</li>
+											<li>
+												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Other">Other</a>
+							<div id="Other"
+								<?php echo ($group == 'Other')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
 											<li>
 												<a href="picard_util_FifoBuffer.html">FifoBuffer</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#SAMBAM">SAM/BAM</a>
-							<div id="SAMBAM"
-								<?php echo ($group == 'SAM/BAM')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#ReadDataManipulation">Read Data Manipulation</a>
+							<div id="ReadDataManipulation"
+								<?php echo ($group == 'Read Data Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_sam_AddCommentsToBam.html">AddCommentsToBam</a>
@@ -237,25 +212,13 @@
 												<a href="picard_sam_AddOrReplaceReadGroups.html">AddOrReplaceReadGroups</a>
 											</li>
 											<li>
-												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
-											</li>
-											<li>
 												<a href="picard_fastq_BamToBfq.html">BamToBfq</a>
 											</li>
 											<li>
 												<a href="picard_sam_BuildBamIndex.html">BuildBamIndex</a>
 											</li>
 											<li>
-												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
-											</li>
-											<li>
-												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
-											</li>
-											<li>
 												<a href="picard_sam_CleanSam.html">CleanSam</a>
-											</li>
-											<li>
-												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
 											</li>
 											<li>
 												<a href="picard_sam_DownsampleSam.html">DownsampleSam</a>
@@ -312,6 +275,9 @@
 												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
 											</li>
 											<li>
+												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
+											</li>
+											<li>
 												<a href="picard_sam_SortSam.html">SortSam</a>
 											</li>
 											<li>
@@ -321,42 +287,68 @@
 												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
 											</li>
 											<li>
-												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
-											</li>
-											<li>
-												<a href="picard_sam_ViewSam.html">ViewSam</a>
+												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#UnitTesting">Unit Testing</a>
-							<div id="UnitTesting"
-								<?php echo ($group == 'Unit Testing')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Reference">Reference</a>
+							<div id="Reference"
+								<?php echo ($group == 'Reference')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
-												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
+												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+											</li>
+											<li>
+												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
+											</li>
+											<li>
+												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
+											</li>
+											<li>
+												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
+											</li>
+											<li>
+												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VCFBCF">VCF/BCF</a>
-							<div id="VCFBCF"
-								<?php echo ($group == 'VCF/BCF')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantEvaluationandRefinement">Variant Evaluation and Refinement</a>
+							<div id="VariantEvaluationandRefinement"
+								<?php echo ($group == 'Variant Evaluation and Refinement')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantFiltering">Variant Filtering</a>
+							<div id="VariantFiltering"
+								<?php echo ($group == 'Variant Filtering')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_vcf_filter_FilterVcf.html">FilterVcf</a>
 											</li>
-											<li>
-												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
-											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantManipulation">Variant Manipulation</a>
+							<div id="VariantManipulation"
+								<?php echo ($group == 'Variant Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
 											<li>
 												<a href="picard_vcf_FixVcfHeader.html">FixVcfHeader</a>
 											</li>
 											<li>
 												<a href="picard_vcf_GatherVcfs.html">GatherVcfs</a>
-											</li>
-											<li>
-												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
 											</li>
 											<li>
 												<a href="picard_vcf_LiftoverVcf.html">LiftoverVcf</a>
@@ -389,6 +381,7 @@
 							</div>
 						</li>
         		<hr>
+        		<hr>
         </ul>
 		</aside>
 		<?php getForumPosts( 'IntervalListTools' ) ?>
@@ -399,14 +392,95 @@
 
 		<h1>IntervalListTools</h1>
 
-		<p class="lead">Manipulates interval lists.  </p>
+		<p class="lead">A tool for performing various IntervalList manipulations</p>
 
 			<h3>Category
-				<small> Interval Tools</small>
+				<small> Intervals Manipulation</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		Little class to aid working with interval lists.
+		Performs various IntervalList manipulations.
+
+ <h3>Summary</h3>
+ This tool offers multiple interval list file manipulation capabilities, including: sorting,
+ merging, subtracting, padding, and other set-theoretic operations. The default action
+ is to merge and sort the intervals provided in the #INPUTs. Other options, e.g. interval subtraction, are
+ controlled by the arguments.
+ <br />
+ Both IntervalList and VCF files are accepted as input. IntervalList should be denoted with the extension
+ htsjdk.samtools.util.IOUtil#INTERVAL_LIST_FILE_EXTENSION, while a VCF must have one of htsjdk.samtools.util.IOUtil#VCF_FILE_EXTENSION, htsjdk.samtools.util.IOUtil#COMPRESSED_VCF_FILE_EXTENSION,
+ htsjdk.samtools.util.IOUtil#BCF_FILE_EXTENSION. When VCF file is used as input, each variant is translated into an using its reference allele or the END
+ INFO annotation (if present) to determine the extent of the interval.
+
+ IntervalListTools can also "scatter" the resulting interval-list into many interval-files. This can be useful
+ for creating multiple interval lists for scattering an analysis over.
+
+ <h3>Details</h3>
+  The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and
+  other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,
+  the file then contains records, one per line in text format with the following
+ values tab-separated:
+ <pre>
+ <ul>
+ <li>Sequence name (SN)</li>
+ <li>Start position (1-based)</li>
+ <li>End position (1-based, end inclusive)</li>
+ <li>Strand (either + or -)</li>
+ <li>Interval name (ideally unique names for intervals)</li>
+ </ul>
+ </pre>
+ The coordinate system is 1-based, closed-ended, so that the first base in a sequence is at position 1, and both the start
+ and the end positions are included in an interval.
+
+ For Example:
+ <pre>
+ \@HD	VN:1.0
+ \@SQ	SN:chr1	LN:501
+ \@SQ	SN:chr2	LN:401
+ chr1	1	100	+	starts at the first base of the contig and covers 100 bases
+ chr2	100	100	+	interval with exactly one base
+ </pre>
+
+ <h3>Usage examples</h3>
+ <h4>1. Combine the intervals from two interval lists:</h4>
+ <pre>
+ java -jar picard.jar IntervalListTools \\
+       ACTION=CONCAT \\
+       I=input.interval_list \\
+       I=input_2.interval_list \\
+       O=new.interval_list
+ </pre>
+
+ <h4>2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting
+ intervals:</h4>
+ <pre>
+ java -jar picard.jar IntervalListTools \\
+       ACTION=CONCAT \\
+       SORT=true \\
+       UNIQUE=true \\
+       I=input.interval_list \\
+       I=input_2.interval_list \\
+       O=new.interval_list
+ </pre>
+
+ <h4>3. Subtract the intervals in SECOND_INPUT from those in INPUT:</h4>
+ <pre>
+ java -jar picard.jar IntervalListTools \\
+       ACTION=SUBTRACT \\
+       I=input.interval_list \\
+       SI=input_2.interval_list \\
+       O=new.interval_list
+ </pre>
+
+ <h4>4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:</h4>
+ <pre>
+ java -jar picard.jar IntervalListTools \\
+       ACTION=INTERSECT \\
+       I=input1.interval_list \\
+       I=input2.interval_list \\
+       SI=input3.interval_list \\
+       O=new.interval_list
+ </pre>
 
 
 				<h3>IntervalListTools specific arguments</h3>
@@ -436,7 +510,6 @@
 			</tr>
 				<tr>
 					<td><a href="#--ACTION">--ACTION</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Action</td> -->
 					<td>CONCAT</td>
@@ -448,31 +521,28 @@
 					</td>
 					<!--<td>int</td> -->
 					<td>0</td>
-					<td>If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value.  Set to 0 to NOT break up intervals</td>
+					<td>If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value. Set to 0 to NOT break up intervals.</td>
 				</tr>
 				<tr>
 					<td><a href="#--COMMENT">--COMMENT</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>List[String]</td> -->
 					<td>[]</td>
-					<td>One or more lines of comment to add to the header of the output file.</td>
+					<td>One or more lines of comment to add to the header of the output file (as @CO lines in the SAM header).</td>
 				</tr>
 				<tr>
 					<td><a href="#--INCLUDE_FILTERED">--INCLUDE_FILTERED</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
-					<td>Whether to include filtered variants in the vcf when generating an interval list from vcf</td>
+					<td>Whether to include filtered variants in the vcf when generating an interval list from vcf.</td>
 				</tr>
 				<tr>
 					<td><a href="#--INVERT">--INVERT</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
-					<td>Produce the inverse list</td>
+					<td>Produce the inverse list of intervals, that is, the regions in the genome that are <br>not</br> covered by any of the input intervals. Will merge abutting intervals first. Output will be sorted.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -480,19 +550,17 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1)</td>
+					<td>The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1).</td>
 				</tr>
 				<tr>
 					<td><a href="#--PADDING">--PADDING</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>int</td> -->
 					<td>0</td>
-					<td>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists <b> before </b> the ACTION is performed.</td>
+					<td>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists (both INPUT and SECOND_INPUT, if proivided) <b> before </b> the ACTION is performed.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SCATTER_COUNT">--SCATTER_COUNT</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>int</td> -->
 					<td>1</td>
@@ -508,7 +576,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--SORT">--SORT</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
@@ -520,30 +587,27 @@
 					</td>
 					<!--<td>Mode</td> -->
 					<td>INTERVAL_SUBDIVISION</td>
-					<td>Do not subdivide </td>
+					<td>Selects between various ways in which scattering of the interval-list can happen.</td>
 				</tr>
 				<tr>
 					<td><a href="#--UNIQUE">--UNIQUE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
-					<td>If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true</td>
+					<td>If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
 				<tr>
 					<td><a href="#--COMPRESSION_LEVEL">--COMPRESSION_LEVEL</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>int</td> -->
 					<td>5</td>
-					<td>Compression level for all compressed files created (e.g. BAM and GELI).</td>
+					<td>Compression level for all compressed files created (e.g. BAM and VCF).</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_INDEX">--CREATE_INDEX</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
@@ -551,7 +615,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -559,7 +622,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>String</td> -->
 					<td>client_secrets.json</td>
@@ -567,15 +629,13 @@
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Integer</td> -->
 					<td>500000</td>
-					<td>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</td>
+					<td>When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.</td>
 				</tr>
 				<tr>
 					<td><a href="#--QUIET">--QUIET</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
@@ -591,7 +651,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--TMP_DIR">--TMP_DIR</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>List[File]</td> -->
 					<td>[]</td>
@@ -615,7 +674,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>ValidationStringency</td> -->
 					<td>STRICT</td>
@@ -623,7 +681,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--VERBOSITY">--VERBOSITY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>LogLevel</td> -->
 					<td>INFO</td>
@@ -636,7 +693,7 @@
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ACTION">--ACTION </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Action to take on inputs.</b><br />
@@ -668,7 +725,7 @@
 			 / <small>-BRK</small>
 		</h3>
 		<p class="args">
-			<b>If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value.  Set to 0 to NOT break up intervals</b><br />
+			<b>If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value. Set to 0 to NOT break up intervals.</b><br />
 			
 		</p>
 		<p>
@@ -679,10 +736,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--COMMENT">--COMMENT </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>One or more lines of comment to add to the header of the output file.</b><br />
+			<b>One or more lines of comment to add to the header of the output file (as @CO lines in the SAM header).</b><br />
 			
 		</p>
 		<p>
@@ -691,10 +748,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Compression level for all compressed files created (e.g. BAM and GELI).</b><br />
+			<b>Compression level for all compressed files created (e.g. BAM and VCF).</b><br />
 			
 		</p>
 		<p>
@@ -705,7 +762,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CREATE_INDEX">--CREATE_INDEX </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
@@ -717,7 +774,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CREATE_MD5_FILE">--CREATE_MD5_FILE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to create an MD5 digest for any BAM or FASTQ files created.  </b><br />
@@ -729,7 +786,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Google Genomics API client_secrets.json file path.</b><br />
@@ -741,10 +798,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INCLUDE_FILTERED">--INCLUDE_FILTERED </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to include filtered variants in the vcf when generating an interval list from vcf</b><br />
+			<b>Whether to include filtered variants in the vcf when generating an interval list from vcf.</b><br />
 			
 		</p>
 		<p>
@@ -766,10 +823,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INVERT">--INVERT </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Produce the inverse list</b><br />
+			<b>Produce the inverse list of intervals, that is, the regions in the genome that are <br>not</br> covered by any of the input intervals. Will merge abutting intervals first. Output will be sorted.</b><br />
 			
 		</p>
 		<p>
@@ -778,10 +835,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</b><br />
+			<b>When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.</b><br />
 			
 		</p>
 		<p>
@@ -795,7 +852,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1)</b><br />
+			<b>The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1).</b><br />
 			
 		</p>
 		<p>
@@ -804,10 +861,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--PADDING">--PADDING </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists <b> before </b> the ACTION is performed.</b><br />
+			<b>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists (both INPUT and SECOND_INPUT, if proivided) <b> before </b> the ACTION is performed.</b><br />
 			
 		</p>
 		<p>
@@ -818,7 +875,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--QUIET">--QUIET </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to suppress job-summary info on System.err.</b><br />
@@ -842,7 +899,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--SCATTER_COUNT">--SCATTER_COUNT </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  Note - if > 1, the resultant scattered intervals will be sorted and uniqued.  The sort will be inverted if the INVERT flag is set.</b><br />
@@ -868,7 +925,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--SORT">--SORT </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>If true, sort the resulting interval list by coordinate.</b><br />
@@ -883,34 +940,33 @@
 			 / <small>-M</small>
 		</h3>
 		<p class="args">
-			<b>Do not subdivide </b><br />
+			<b>Selects between various ways in which scattering of the interval-list can happen.</b><br />
 			
 		</p>
 			<p>
 				The --SUBDIVISION_MODE argument is an enumerated type (Mode), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">INTERVAL_SUBDIVISION</dt>
-					<dd class="enum">A simple scatter approach in which all output intervals have size equal to the total base count of the source list divide by the
- scatter count (except for possible variance in the final interval list).</dd>
+					<dd class="enum">A simple scatter approach in which all output intervals have size equal to the total base count of the source list divided by the
+ scatter count (except, possibly, in the last interval list).</dd>
 					<dt class="enum">BALANCING_WITHOUT_INTERVAL_SUBDIVISION</dt>
-					<dd class="enum">A scatter approach that differs from {@link Mode#INTERVAL_SUBDIVISION} in a few ways.
+					<dd class="enum">A scatter approach that differs from {@link Mode#INTERVAL_SUBDIVISION} in a few ways:
  <ol>
- <li>No interval will be subdivided, and consequently, the requested scatter count is an upper bound of scatter count, not a
- guarantee as to how many {@link IntervalList}s will be produced (e.g., if scatterCount = 10 but there is only one input interval,
- only 1 interval list will be emitted).</li>
+ <li>No interval will be subdivided, and consequently, the requested {@link IntervalListTools#SCATTER_COUNT} is
+ an upper bound of scatter count, not a guarante of the number of {@link IntervalList}s that will be produced
+ (e.g., if scatterCount = 10 but there is only one interval in the input, only 1 interval list will be emitted).</li>
  <li>When an interval would otherwise be split, it is instead deferred to the next scatter list.</li>
  <li>The "target width" of each scatter list may be wider than what is computed for {@link Mode#INTERVAL_SUBDIVISION}.
  Specifically, if the widest interval in the source interval list is larger than what would otherwise be the target width, that
- interval's width is used.<br/><br/>The reasoning for this is that this approach produces more consistently-sized interval lists,
- which is one of the objectives of scattering.</li>
+ interval's width is used.<br/><br/>This approach produces more consistently-sized interval lists, which is one of
+ the objectives of scattering.</li>
  </ol></dd>
 					<dt class="enum">BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW</dt>
 					<dd class="enum">A scatter approach that differs from {@link Mode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.
- <ol>
- <li>We try to balance the number of unique bases in each interval list by estimating the remaining interval lists sizes.  This is 
+
+ This approach tries to balance the number of bases in each interval list by estimating the remaining interval lists sizes.  This is
  computed from the total number of unique bases and the bases we have consumed.  This means that the interval list with the most
- number of unique bases is at most the ideal split length larger than the smallest interval list (unique # of bases).</li>
- </ol></dd>
+ number of unique bases is at most the ideal split length larger than the smallest interval list (unique number of bases).</dd>
 			</dl>
 			</p>
 		<p>
@@ -919,7 +975,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>One or more directories with space available to be used by this program for temporary storage of working files</b><br />
@@ -931,10 +987,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--UNIQUE">--UNIQUE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true</b><br />
+			<b>If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true.</b><br />
 			
 		</p>
 		<p>
@@ -967,7 +1023,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</b><br />
@@ -990,7 +1046,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--VERBOSITY">--VERBOSITY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Control verbosity of logging.</b><br />
@@ -1023,7 +1079,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.1-SNAPSHOT built at 02-17-2018 12:17:35.
+        <p class="version">Picard version 2.17.2-SNAPSHOT built at 06-51-2018 09:51:38.
         </p>
 
 	</div>

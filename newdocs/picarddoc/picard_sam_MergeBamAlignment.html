@@ -12,7 +12,7 @@
 
 	
 
-	<?php $group = 'SAM/BAM'; ?>
+	<?php $group = 'Read Data Manipulation'; ?>
 
 	<section class="span4">
 		<aside class="well">
@@ -32,64 +32,9 @@
         <ul class="nav nav-pills nav-stacked" id="sidenav">
         		<hr>
         		<hr>
-        		<hr>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#AlphaTools">Alpha Tools</a>
-							<div id="AlphaTools"
-								<?php echo ($group == 'Alpha Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
-											</li>
-											<li>
-												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
-											</li>
-											<li>
-												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Fasta">Fasta</a>
-							<div id="Fasta"
-								<?php echo ($group == 'Fasta')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
-											</li>
-											<li>
-												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
-											</li>
-											<li>
-												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
-											</li>
-											<li>
-												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#FingerprintingTools">Fingerprinting Tools</a>
-							<div id="FingerprintingTools"
-								<?php echo ($group == 'Fingerprinting Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
-											</li>
-											<li>
-												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IlluminaTools">Illumina Tools</a>
-							<div id="IlluminaTools"
-								<?php echo ($group == 'Illumina Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#BaseCalling">Base Calling</a>
+							<div id="BaseCalling"
+								<?php echo ($group == 'Base Calling')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_illumina_CheckIlluminaDirectory.html">CheckIlluminaDirectory</a>
@@ -115,34 +60,27 @@
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalTools">Interval Tools</a>
-							<div id="IntervalTools"
-								<?php echo ($group == 'Interval Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
-								<ul>
-											<li>
-												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
-											</li>
-											<li>
-												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
-											</li>
-											<li>
-												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
-											</li>
-											<li>
-												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
-											</li>
-											<li>
-												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
-											</li>
-								</ul>
-							</div>
-						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Metrics">Metrics</a>
-							<div id="Metrics"
-								<?php echo ($group == 'Metrics')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#DiagnosticsandQualityControl">Diagnostics and Quality Control</a>
+							<div id="DiagnosticsandQualityControl"
+								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
+											</li>
+											<li>
+												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
+											</li>
+											<li>
+												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
 											</li>
 											<li>
 												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
@@ -158,6 +96,9 @@
 											</li>
 											<li>
 												<a href="picard_analysis_directed_CollectHsMetrics.html">CollectHsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
 											</li>
 											<li>
 												<a href="picard_analysis_CollectInsertSizeMetrics.html">CollectInsertSizeMetrics</a>
@@ -196,10 +137,22 @@
 												<a href="picard_analysis_CollectWgsMetrics.html">CollectWgsMetrics</a>
 											</li>
 											<li>
+												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
+											</li>
+											<li>
 												<a href="picard_analysis_CompareMetrics.html">CompareMetrics</a>
 											</li>
 											<li>
+												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
+											</li>
+											<li>
 												<a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckReadGroupFingerprints.html">CrosscheckReadGroupFingerprints</a>
 											</li>
 											<li>
 												<a href="picard_sam_markduplicates_EstimateLibraryComplexity.html">EstimateLibraryComplexity</a>
@@ -210,25 +163,47 @@
 											<li>
 												<a href="picard_analysis_QualityScoreDistribution.html">QualityScoreDistribution</a>
 											</li>
+											<li>
+												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
+											</li>
+											<li>
+												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#MiscellaneousTools">Miscellaneous Tools</a>
-							<div id="MiscellaneousTools"
-								<?php echo ($group == 'Miscellaneous Tools')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalsManipulation">Intervals Manipulation</a>
+							<div id="IntervalsManipulation"
+								<?php echo ($group == 'Intervals Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
-												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
 											</li>
+											<li>
+												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
+											</li>
+											<li>
+												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Other">Other</a>
+							<div id="Other"
+								<?php echo ($group == 'Other')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
 											<li>
 												<a href="picard_util_FifoBuffer.html">FifoBuffer</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#SAMBAM">SAM/BAM</a>
-							<div id="SAMBAM"
-								<?php echo ($group == 'SAM/BAM')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#ReadDataManipulation">Read Data Manipulation</a>
+							<div id="ReadDataManipulation"
+								<?php echo ($group == 'Read Data Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_sam_AddCommentsToBam.html">AddCommentsToBam</a>
@@ -237,25 +212,13 @@
 												<a href="picard_sam_AddOrReplaceReadGroups.html">AddOrReplaceReadGroups</a>
 											</li>
 											<li>
-												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
-											</li>
-											<li>
 												<a href="picard_fastq_BamToBfq.html">BamToBfq</a>
 											</li>
 											<li>
 												<a href="picard_sam_BuildBamIndex.html">BuildBamIndex</a>
 											</li>
 											<li>
-												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
-											</li>
-											<li>
-												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
-											</li>
-											<li>
 												<a href="picard_sam_CleanSam.html">CleanSam</a>
-											</li>
-											<li>
-												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
 											</li>
 											<li>
 												<a href="picard_sam_DownsampleSam.html">DownsampleSam</a>
@@ -312,6 +275,9 @@
 												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
 											</li>
 											<li>
+												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
+											</li>
+											<li>
 												<a href="picard_sam_SortSam.html">SortSam</a>
 											</li>
 											<li>
@@ -321,42 +287,68 @@
 												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
 											</li>
 											<li>
-												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
-											</li>
-											<li>
-												<a href="picard_sam_ViewSam.html">ViewSam</a>
+												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#UnitTesting">Unit Testing</a>
-							<div id="UnitTesting"
-								<?php echo ($group == 'Unit Testing')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Reference">Reference</a>
+							<div id="Reference"
+								<?php echo ($group == 'Reference')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
-												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
+												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+											</li>
+											<li>
+												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
+											</li>
+											<li>
+												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
+											</li>
+											<li>
+												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
+											</li>
+											<li>
+												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
 											</li>
 								</ul>
 							</div>
 						</li>
-						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VCFBCF">VCF/BCF</a>
-							<div id="VCFBCF"
-								<?php echo ($group == 'VCF/BCF')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantEvaluationandRefinement">Variant Evaluation and Refinement</a>
+							<div id="VariantEvaluationandRefinement"
+								<?php echo ($group == 'Variant Evaluation and Refinement')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantFiltering">Variant Filtering</a>
+							<div id="VariantFiltering"
+								<?php echo ($group == 'Variant Filtering')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
 												<a href="picard_vcf_filter_FilterVcf.html">FilterVcf</a>
 											</li>
-											<li>
-												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
-											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantManipulation">Variant Manipulation</a>
+							<div id="VariantManipulation"
+								<?php echo ($group == 'Variant Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
 											<li>
 												<a href="picard_vcf_FixVcfHeader.html">FixVcfHeader</a>
 											</li>
 											<li>
 												<a href="picard_vcf_GatherVcfs.html">GatherVcfs</a>
-											</li>
-											<li>
-												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
 											</li>
 											<li>
 												<a href="picard_vcf_LiftoverVcf.html">LiftoverVcf</a>
@@ -389,6 +381,7 @@
 							</div>
 						</li>
         		<hr>
+        		<hr>
         </ul>
 		</aside>
 		<?php getForumPosts( 'MergeBamAlignment' ) ?>
@@ -402,13 +395,53 @@
 		<p class="lead">Merge alignment data from a SAM or BAM with data in an unmapped BAM file.  </p>
 
 			<h3>Category
-				<small> SAM/BAM</small>
+				<small> Read Data Manipulation</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		A command-line tool to merge BAM/SAM alignment info from a third-party aligner with the data in an
- unmapped BAM file, producing a third BAM file that has alignment data and all the additional data
- from the unmapped BAM
+		<h3>Summary</h3>
+ A command-line tool for merging BAM/SAM alignment info from a third-party aligner with the data in an
+ unmapped BAM file, producing a third BAM file that has alignment data (from the aligner) and all the remaining
+ data from the unmapped BAM.
+
+ Quick note: this is <b>not</b> a tool for taking multiple sam files and creating a bigger file by merging them. For
+ that use-case, see MergeSamFiles.
+
+ <h3>Details</h3>
+ Many alignment tools (still!) require fastq format input. The unmapped bam may contain useful information that will
+ be lost in the conversion to fastq (meta-data like sample alias, library, barcodes, etc., and read-level tags.)
+
+ This tool takes an unaligned bam with meta-data, and the aligned bam produced by calling SamToFastq and
+ then passing the result to an aligner/mapper. It produces a new SAM file that includes all aligned and unaligned reads
+ and also carries forward additional read attributes from the unmapped BAM (attributes that are otherwise lost in the
+ process of converting to fastq). The resulting file will be valid for use by Picard and GATK tools.
+
+ The output may be coordinate-sorted, in which case the tags, NM, MD, and UQ will be calculated and populated, or
+ query-name sorted, in which case the tags will not be calculated or populated.
+
+ <h3>Usage example:</h3>
+ <pre>
+ java -jar picard.jar MergeBamAlignment \\
+      ALIGNED=aligned.bam \\
+      UNMAPPED=unmapped.bam \\
+      O=merge_alignments.bam \\
+      R=reference_sequence.fasta
+ </pre>
+
+
+ <h3>Caveats</h3>
+ This tool has been developing for a while and many arguments have been added to it over the years.
+ You may be particularly interested in the following (partial) list:
+ <ul>
+     <li>CLIP_ADAPTERS -- Whether to (soft-)clip the ends of the reads that are identified as belonging to adapters</li>
+     <li>IS_BISULFITE_SEQUENCE -- Whether the sequencing originated from bisulfite sequencing, in which case NM will be
+     calculated differently</li>
+     <li>ALIGNER_PROPER_PAIR_FLAGS -- Use if the aligner that was used cannot be trusted to set the "Proper pair" flag
+     and then the tool will set this flag based on orientation and distance between pairs.</li>
+     <li>ADD_MATE_CIGAR -- Whether to use this opportunity to add the MC tag to each read.</li>
+     <li>UNMAP_CONTAMINANT_READS (and MIN_UNCLIPPED_BASES) -- Whether to identify extremely short alignments (with
+     clipping on both sides) as cross-species contamination and unmap the reads.</li>
+ </ul>
 
 
 				<h3>MergeBamAlignment specific arguments</h3>
@@ -470,7 +503,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--ALIGNED_READS_ONLY">--ALIGNED_READS_ONLY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -478,7 +510,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--ALIGNER_PROPER_PAIR_FLAGS">--ALIGNER_PROPER_PAIR_FLAGS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -486,7 +517,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--ATTRIBUTES_TO_REMOVE">--ATTRIBUTES_TO_REMOVE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>List[String]</td> -->
 					<td>[]</td>
@@ -494,7 +524,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--ATTRIBUTES_TO_RETAIN">--ATTRIBUTES_TO_RETAIN</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>List[String]</td> -->
 					<td>[]</td>
@@ -518,7 +547,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--CLIP_ADAPTERS">--CLIP_ADAPTERS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
@@ -526,7 +554,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--CLIP_OVERLAPPING_READS">--CLIP_OVERLAPPING_READS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
@@ -542,7 +569,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--INCLUDE_SECONDARY_ALIGNMENTS">--INCLUDE_SECONDARY_ALIGNMENTS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
@@ -550,23 +576,13 @@
 				</tr>
 				<tr>
 					<td><a href="#--IS_BISULFITE_SEQUENCE">--IS_BISULFITE_SEQUENCE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether the lane is bisulfite sequence (used when calculating the NM tag).</td>
 				</tr>
 				<tr>
-					<td><a href="#--JUMP_SIZE">--JUMP_SIZE</a><br />
-								&nbsp;<em>-JUMP</em>
-					</td>
-					<!--<td>Integer</td> -->
-					<td>null</td>
-					<td>The expected jump size (required if this is a jumping library). Deprecated. Use EXPECTED_ORIENTATIONS instead</td>
-				</tr>
-				<tr>
 					<td><a href="#--MATCHING_DICTIONARY_TAGS">--MATCHING_DICTIONARY_TAGS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>List[String]</td> -->
 					<td>[M5, LN]</td>
@@ -582,7 +598,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--MIN_UNCLIPPED_BASES">--MIN_UNCLIPPED_BASES</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>int</td> -->
 					<td>32</td>
@@ -590,11 +605,10 @@
 				</tr>
 				<tr>
 					<td><a href="#--PRIMARY_ALIGNMENT_STRATEGY">--PRIMARY_ALIGNMENT_STRATEGY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>PrimaryAlignmentStrategy</td> -->
 					<td>BestMapq</td>
-					<td>Strategy for selecting primary alignment when the aligner has provided more than one alignment for a pair or fragment, and none are marked as primary, more than one is marked as primary, or the primary alignment is filtered out for some reason. BestMapq expects that multiple alignments will be correlated with HI tag, and prefers the pair of alignments with the largest MAPQ, in the absence of a primary selected by the aligner. EarliestFragment prefers the alignment which maps the earliest base in the read. Note that EarliestFragment may not be used for paired reads. BestEndMapq is appropriate for cases in which the aligner is not pair-aware, and does not output the HI tag. It simply picks the alignment for each end with the highest MAPQ, and makes those alignments primary, regardless of whether the two alignments make sense together.MostDistant is also for a non-pair-aware aligner, and picks the alignment pair with the largest insert size. If all alignments would be chimeric, it picks the alignments for each end with the best MAPQ.  For all algorithms, ties are resolved arbitrarily.</td>
+					<td>Strategy for selecting primary alignment when the aligner has provided more than one alignment for a pair or fragment, and none are marked as primary, more than one is marked as primary, or the primary alignment is filtered out for some reason. For all strategies, ties are resolved arbitrarily.</td>
 				</tr>
 				<tr>
 					<td><a href="#--PROGRAM_GROUP_COMMAND_LINE">--PROGRAM_GROUP_COMMAND_LINE</a><br />
@@ -678,7 +692,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--UNMAPPED_READ_STRATEGY">--UNMAPPED_READ_STRATEGY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>UnmappingReadStrategy</td> -->
 					<td>DO_NOT_CHANGE</td>
@@ -689,7 +702,6 @@
 			</tr>
 				<tr>
 					<td><a href="#--ADD_PG_TAG_TO_READS">--ADD_PG_TAG_TO_READS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>true</td>
@@ -697,15 +709,13 @@
 				</tr>
 				<tr>
 					<td><a href="#--COMPRESSION_LEVEL">--COMPRESSION_LEVEL</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>int</td> -->
 					<td>5</td>
-					<td>Compression level for all compressed files created (e.g. BAM and GELI).</td>
+					<td>Compression level for all compressed files created (e.g. BAM and VCF).</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_INDEX">--CREATE_INDEX</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
@@ -713,7 +723,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
@@ -721,7 +730,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>String</td> -->
 					<td>client_secrets.json</td>
@@ -729,15 +737,13 @@
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Integer</td> -->
 					<td>500000</td>
-					<td>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</td>
+					<td>When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.</td>
 				</tr>
 				<tr>
 					<td><a href="#--QUIET">--QUIET</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
@@ -745,7 +751,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--TMP_DIR">--TMP_DIR</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>List[File]</td> -->
 					<td>[]</td>
@@ -769,7 +774,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>ValidationStringency</td> -->
 					<td>STRICT</td>
@@ -777,7 +781,6 @@
 				</tr>
 				<tr>
 					<td><a href="#--VERBOSITY">--VERBOSITY</a><br />
-								&nbsp;<em>-</em>
 					</td>
 					<!--<td>LogLevel</td> -->
 					<td>INFO</td>
@@ -787,12 +790,20 @@
 				<th colspan="4" id="row-divider">Deprecated Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--JUMP_SIZE">--JUMP_SIZE</a><br />
+								&nbsp;<em>-JUMP</em>
+					</td>
+					<!--<td>Integer</td> -->
+					<td>null</td>
+					<td>The expected jump size (required if this is a jumping library). Deprecated. Use EXPECTED_ORIENTATIONS instead</td>
+				</tr>
+				<tr>
 					<td><a href="#--PAIRED_RUN">--PAIRED_RUN</a><br />
 								&nbsp;<em>-PE</em>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>true</td>
-					<td>This argument is ignored and will be removed.</td>
+					<td>DEPRECATED. This argument is ignored and will be removed.</td>
 				</tr>
 					</tbody>
 				</table>
@@ -813,7 +824,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ADD_PG_TAG_TO_READS">--ADD_PG_TAG_TO_READS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Add PG tag to each read in a SAM or BAM</b><br />
@@ -838,7 +849,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ALIGNED_READS_ONLY">--ALIGNED_READS_ONLY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to output only aligned reads.  </b><br />
@@ -850,7 +861,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ALIGNER_PROPER_PAIR_FLAGS">--ALIGNER_PROPER_PAIR_FLAGS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Use the aligner's idea of what a proper pair is rather than computing in this program.</b><br />
@@ -862,7 +873,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ATTRIBUTES_TO_REMOVE">--ATTRIBUTES_TO_REMOVE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Attributes from the alignment record that should be removed when merging.  This overrides ATTRIBUTES_TO_RETAIN if they share common tags.</b><br />
@@ -874,7 +885,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ATTRIBUTES_TO_RETAIN">--ATTRIBUTES_TO_RETAIN </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Reserved alignment attributes (tags starting with X, Y, or Z) that should be brought over from the alignment data when merging.</b><br />
@@ -910,7 +921,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CLIP_ADAPTERS">--CLIP_ADAPTERS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to clip adapters where identified.</b><br />
@@ -922,7 +933,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CLIP_OVERLAPPING_READS">--CLIP_OVERLAPPING_READS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.</b><br />
@@ -934,10 +945,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Compression level for all compressed files created (e.g. BAM and GELI).</b><br />
+			<b>Compression level for all compressed files created (e.g. BAM and VCF).</b><br />
 			
 		</p>
 		<p>
@@ -948,7 +959,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CREATE_INDEX">--CREATE_INDEX </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
@@ -960,7 +971,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CREATE_MD5_FILE">--CREATE_MD5_FILE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to create an MD5 digest for any BAM or FASTQ files created.  </b><br />
@@ -985,7 +996,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Google Genomics API client_secrets.json file path.</b><br />
@@ -997,7 +1008,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INCLUDE_SECONDARY_ALIGNMENTS">--INCLUDE_SECONDARY_ALIGNMENTS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>If false, do not write secondary alignments to output.</b><br />
@@ -1009,7 +1020,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--IS_BISULFITE_SEQUENCE">--IS_BISULFITE_SEQUENCE </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether the lane is bisulfite sequence (used when calculating the NM tag).</b><br />
@@ -1034,7 +1045,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MATCHING_DICTIONARY_TAGS">--MATCHING_DICTIONARY_TAGS </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>List of Sequence Records tags that must be equal (if present) in the reference dictionary and in the aligned file. Mismatching tags will cause an error if in this list, and a warning otherwise.</b><br />
@@ -1060,10 +1071,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.</b><br />
+			<b>When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.</b><br />
 			
 		</p>
 		<p>
@@ -1074,7 +1085,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MIN_UNCLIPPED_BASES">--MIN_UNCLIPPED_BASES </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>If UNMAP_CONTAMINANT_READS is set, require this many unclipped bases or else the read will be marked as contaminant.</b><br />
@@ -1104,7 +1115,7 @@
 			 / <small>-PE</small>
 		</h3>
 		<p class="args">
-			<b>This argument is ignored and will be removed.</b><br />
+			<b>DEPRECATED. This argument is ignored and will be removed.</b><br />
 			
 		</p>
 		<p>
@@ -1113,10 +1124,10 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--PRIMARY_ALIGNMENT_STRATEGY">--PRIMARY_ALIGNMENT_STRATEGY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Strategy for selecting primary alignment when the aligner has provided more than one alignment for a pair or fragment, and none are marked as primary, more than one is marked as primary, or the primary alignment is filtered out for some reason. BestMapq expects that multiple alignments will be correlated with HI tag, and prefers the pair of alignments with the largest MAPQ, in the absence of a primary selected by the aligner. EarliestFragment prefers the alignment which maps the earliest base in the read. Note that EarliestFragment may not be used for paired reads. BestEndMapq is appropriate for cases in which the aligner is not pair-aware, and does not output the HI tag. It simply picks the alignment for each end with the highest MAPQ, and makes those alignments primary, regardless of whether the two alignments make sense together.MostDistant is also for a non-pair-aware aligner, and picks the alignment pair with the largest insert size. If all alignments would be chimeric, it picks the alignments for each end with the best MAPQ.  For all algorithms, ties are resolved arbitrarily.</b><br />
+			<b>Strategy for selecting primary alignment when the aligner has provided more than one alignment for a pair or fragment, and none are marked as primary, more than one is marked as primary, or the primary alignment is filtered out for some reason. For all strategies, ties are resolved arbitrarily.</b><br />
 			
 		</p>
 			<p>
@@ -1186,7 +1197,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--QUIET">--QUIET </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Whether to suppress job-summary info on System.err.</b><br />
@@ -1292,7 +1303,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>One or more directories with space available to be used by this program for temporary storage of working files</b><br />
@@ -1329,7 +1340,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--UNMAPPED_READ_STRATEGY">--UNMAPPED_READ_STRATEGY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) Currently ignored unless UNMAP_CONTAMINANT_READS = true</b><br />
@@ -1376,7 +1387,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--VALIDATION_STRINGENCY">--VALIDATION_STRINGENCY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.</b><br />
@@ -1399,7 +1410,7 @@
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--VERBOSITY">--VERBOSITY </a>
-			 / <small>-</small>
+			 / <small>NA</small>
 		</h3>
 		<p class="args">
 			<b>Control verbosity of logging.</b><br />
@@ -1432,7 +1443,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.1-SNAPSHOT built at 02-17-2018 12:17:35.
+        <p class="version">Picard version 2.17.2-SNAPSHOT built at 06-51-2018 09:51:38.
         </p>
 
 	</div>

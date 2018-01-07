@@ -1,0 +1,483 @@
+{
+  "summary": "Reverts SAM or BAM files to a previous state.  ",
+  "arguments": [
+    {
+      "summary": "When removing alignment information, the set of optional tags to remove.",
+      "name": "--ATTRIBUTE_TO_CLEAR",
+      "synonyms": "NA",
+      "type": "List[String]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[NM, UQ, PG, MD, MQ, SA, MC, AS]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
+      "name": "--COMPRESSION_LEVEL",
+      "synonyms": "NA",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "5",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "name": "--CREATE_INDEX",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Whether to create an MD5 digest for any BAM or FASTQ files created.  ",
+      "name": "--CREATE_MD5_FILE",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Google Genomics API client_secrets.json file path.",
+      "name": "--GA4GH_CLIENT_SECRETS",
+      "synonyms": "NA",
+      "type": "String",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "client_secrets.json",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "The input SAM/BAM file to revert the state of.",
+      "name": "--INPUT",
+      "synonyms": "-I",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "If SANITIZE\u003dtrue keep the first record when we find more than one record with the same name for R1/R2/unpaired reads respectively. For paired end reads, keeps only the first R1 and R2 found respectively, and discards all unpaired reads. Duplicates do not refer to the duplicate flag in the FLAG field, but instead reads with the same name.",
+      "name": "--KEEP_FIRST_DUPLICATE",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "The library name to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same library name.",
+      "name": "--LIBRARY_NAME",
+      "synonyms": "-LIB",
+      "type": "String",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "If SANITIZE\u003dtrue and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization thenthe program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.",
+      "name": "--MAX_DISCARD_FRACTION",
+      "synonyms": "NA",
+      "type": "double",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "0.01",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.",
+      "name": "--MAX_RECORDS_IN_RAM",
+      "synonyms": "NA",
+      "type": "Integer",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "500000",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "The output SAM/BAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.",
+      "name": "--OUTPUT",
+      "synonyms": "-O",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "When true, outputs each read group in a separate file.",
+      "name": "--OUTPUT_BY_READGROUP",
+      "synonyms": "-OBR",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "When using OUTPUT_BY_READGROUP, the output file format can be set to a certain format.",
+      "name": "--OUTPUT_BY_READGROUP_FILE_FORMAT",
+      "synonyms": "-OBRFF",
+      "type": "FileType",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "dynamic",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": [
+        {
+          "summary": "",
+          "name": "sam"
+        },
+        {
+          "summary": "",
+          "name": "bam"
+        },
+        {
+          "summary": "",
+          "name": "cram"
+        },
+        {
+          "summary": "",
+          "name": "dynamic"
+        }
+      ]
+    },
+    {
+      "summary": "Tab separated file with two columns, READ_GROUP_ID and OUTPUT, providing file mapping only used if OUTPUT_BY_READGROUP is true.",
+      "name": "--OUTPUT_MAP",
+      "synonyms": "-OM",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "Whether to suppress job-summary info on System.err.",
+      "name": "--QUIET",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Reference sequence file.",
+      "name": "--REFERENCE_SEQUENCE",
+      "synonyms": "-R",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Remove all alignment information from the file.",
+      "name": "--REMOVE_ALIGNMENT_INFORMATION",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Remove duplicate read flags from all reads.  Note that if this is true and REMOVE_ALIGNMENT_INFORMATION\u003d\u003dfalse,  the output may have the unusual but sometimes desirable trait of having unmapped reads that are marked as duplicates.",
+      "name": "--REMOVE_DUPLICATE_INFORMATION",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "True to restore original qualities from the OQ field to the QUAL field if available.",
+      "name": "--RESTORE_ORIGINAL_QUALITIES",
+      "synonyms": "-OQ",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "The sample alias to use in the reverted output file.  This will override the existing sample alias in the file and is used only if all the read groups in the input file have the same sample alias.",
+      "name": "--SAMPLE_ALIAS",
+      "synonyms": "-ALIAS",
+      "type": "String",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "WARNING: This option is potentially destructive. If enabled will discard reads in order to produce a consistent output BAM. Reads discarded include (but are not limited to) paired reads with missing mates, duplicated records, records with mismatches in length of bases and qualities. This option can only be enabled if the output sort order is queryname and will always cause sorting to occur.",
+      "name": "--SANITIZE",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "The sort order to create the reverted output file with.",
+      "name": "--SORT_ORDER",
+      "synonyms": "-SO",
+      "type": "SortOrder",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "queryname",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": [
+        {
+          "summary": "",
+          "name": "unsorted"
+        },
+        {
+          "summary": "",
+          "name": "queryname"
+        },
+        {
+          "summary": "",
+          "name": "coordinate"
+        },
+        {
+          "summary": "",
+          "name": "duplicate"
+        },
+        {
+          "summary": "",
+          "name": "unknown"
+        }
+      ]
+    },
+    {
+      "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
+      "name": "--TMP_DIR",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Use the JDK Deflater instead of the Intel Deflater for writing compressed output",
+      "name": "--USE_JDK_DEFLATER",
+      "synonyms": "-use_jdk_deflater",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Use the JDK Inflater instead of the Intel Inflater for reading compressed input",
+      "name": "--USE_JDK_INFLATER",
+      "synonyms": "-use_jdk_inflater",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.",
+      "name": "--VALIDATION_STRINGENCY",
+      "synonyms": "NA",
+      "type": "ValidationStringency",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "STRICT",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": [
+        {
+          "summary": "",
+          "name": "STRICT"
+        },
+        {
+          "summary": "",
+          "name": "LENIENT"
+        },
+        {
+          "summary": "",
+          "name": "SILENT"
+        }
+      ]
+    },
+    {
+      "summary": "Control verbosity of logging.",
+      "name": "--VERBOSITY",
+      "synonyms": "NA",
+      "type": "LogLevel",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "INFO",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": [
+        {
+          "summary": "",
+          "name": "ERROR"
+        },
+        {
+          "summary": "",
+          "name": "WARNING"
+        },
+        {
+          "summary": "",
+          "name": "INFO"
+        },
+        {
+          "summary": "",
+          "name": "DEBUG"
+        }
+      ]
+    }
+  ],
+  "description": "Reverts a SAM file by optionally restoring original quality scores and by removing\n all alignment information.\n \u003cp\u003e\n \u003cp\u003e\n This tool removes or restores certain properties of the SAM records, including alignment information.\n It can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of\n restoring the original quality scores of a BAM file that has already undergone base quality score recalibration\n (BQSR) if the original qualities were retained during the calibration (in the OQ tag).\n \u003cp\u003e\n \u003ch3\u003eUsage Examples\u003c/h3\u003e\n \u003ch4\u003eOutput to a single file\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar RevertSam \\\\\n      I\u003dinput.bam \\\\\n      O\u003dreverted.bam\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch4\u003eOutput by read group into multiple files with sample map\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar RevertSam \\\\\n      I\u003dinput.bam \\\\\n      OUTPUT_BY_READGROUP\u003dtrue \\\\\n      OUTPUT_MAP\u003dreverted_bam_paths.tsv\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch4\u003eOutput by read group with no output map\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar RevertSam \\\\\n      I\u003dinput.bam \\\\\n      OUTPUT_BY_READGROUP\u003dtrue \\\\\n      O\u003d/write/reverted/read/group/bams/in/this/dir\n \u003c/pre\u003e\n This will output a BAM (Can be overridden with OUTPUT_BY_READGROUP_FILE_FORMAT option.)\n \u003cbr/\u003e\n Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to\n LENIENT or SILENT if the failures are expected to be obviated by the reversion process\n (e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).",
+  "name": "RevertSam",
+  "group": "Read Data Manipulation",
+  "beta": false,
+  "experimental": false
+}
