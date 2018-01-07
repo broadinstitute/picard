@@ -32,6 +32,11 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.StreamSupport;
 
 public class FilterSamReadsTest extends CommandLineProgramTest {
@@ -42,17 +47,114 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
 
     private static final int READ_LENGTH = 151;
     private final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
-    private final static File TEST_DIR = new File("testdata/picard/sam/FilterSamReads/");
-
+    private static final File TEST_DIR = new File("testdata/picard/sam/FilterSamReads/");
 
     @BeforeTest
-    public void setUp() {
+    public void setUp() throws IOException {
         builder.setReadLength(READ_LENGTH);
+
         builder.addPair("mapped_pair_chr1", 0, 1, 151); //should be kept in first test, filtered out in third
         builder.addPair("mapped_pair_chr2", 1, 1, 151); //should be filtered out for first test, and kept in third
         builder.addPair("prove_one_of_pair", 0, 1000, 1000); //neither of these will be kept in any test
         builder.addPair("one_of_pair", 0, 1, 1000); //first read should pass, second should not, but both will be kept in first test
     }
+
+    @DataProvider(name = "dataTestReadFilter")
+    public Object[][] dataTestReadFilter() {
+        List<String> reads = Arrays.asList(
+                "mapped_pair_chr1",
+                "prove_one_of_pair",
+                "one_of_pair");
+
+        return new Object[][]{
+                {FilterSamReads.Filter.includeReadList, reads, 3*2},
+                {FilterSamReads.Filter.excludeReadList, reads, 1*2}
+        };
+    }
+
+    /**
+     * filters a SAM using a reads file
+     */
+    @Test(dataProvider = "dataTestReadFilter")
+    public void testReadFilters(final FilterSamReads.Filter filterType, final List<String> readList, final int expectNumber) throws Exception {
+
+        final File inputSam = File.createTempFile("testSam", ".sam", TEST_DIR);
+        inputSam.deleteOnExit();
+        final File sortedSamIdx = new File(TEST_DIR, inputSam.getName() + ".idx");
+        sortedSamIdx.deleteOnExit();
+
+         try( final SAMFileWriter writer = new SAMFileWriterFactory()
+                .setCreateIndex(true).makeSAMWriter(builder.getHeader(), false, inputSam)) {
+
+             for (final SAMRecord record : builder) {
+                 writer.addAlignment(record);
+             }
+         }
+
+        final File reads = File.createTempFile(TEST_DIR.getAbsolutePath(),"reads");
+        reads.deleteOnExit();
+
+        try (final FileWriter writer = new FileWriter(reads)) {
+            writer.write(String.join("\n", readList));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        FilterSamReads filterTest = setupProgram(reads, inputSam, filterType);
+        Assert.assertEquals(filterTest.doWork(),0);
+
+        long count = getReadCount(filterTest);
+
+        Assert.assertEquals(count, expectNumber);
+    }
+
+
+    @DataProvider(name = "badArgumentCombinationsdata")
+    public Object[][] badArgumentCombinationsdata(){
+        return new Object[][]{
+                {FilterSamReads.Filter.includeJavascript, "READ_LIST_FILE"},
+                {FilterSamReads.Filter.excludeAligned, "READ_LIST_FILE"},
+                {FilterSamReads.Filter.includeAligned, "READ_LIST_FILE"},
+                {FilterSamReads.Filter.includePairedIntervals, "READ_LIST_FILE"},
+
+                {FilterSamReads.Filter.includeJavascript, "INTERVAL_LIST"},
+                {FilterSamReads.Filter.excludeReadList, "INTERVAL_LIST"},
+                {FilterSamReads.Filter.includeReadList, "INTERVAL_LIST"},
+                {FilterSamReads.Filter.excludeAligned, "INTERVAL_LIST"},
+                {FilterSamReads.Filter.includeAligned, "INTERVAL_LIST"},
+
+                {FilterSamReads.Filter.excludeReadList, "JAVASCRIPT_FILE"},
+                {FilterSamReads.Filter.includeReadList, "JAVASCRIPT_FILE"},
+                {FilterSamReads.Filter.excludeAligned, "JAVASCRIPT_FILE"},
+                {FilterSamReads.Filter.includeAligned, "JAVASCRIPT_FILE"},
+                {FilterSamReads.Filter.includePairedIntervals, "JAVASCRIPT_FILE"},
+        };
+    }
+
+    @Test(dataProvider = "badArgumentCombinationsdata")
+    public void testBadArgumentCombinations(final FilterSamReads.Filter filter, final String fileArgument) throws IOException {
+
+        final File dummyFile = File.createTempFile(TEST_DIR.getAbsolutePath(),"dummy");
+        dummyFile.deleteOnExit();
+        try (final FileWriter writer = new FileWriter(dummyFile)) {
+            writer.write("\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        final File temp = File.createTempFile("FilterSamReads.output.", ".sam");
+        temp.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=testdata/picard/sam/aligned.sam",
+                String.format("OUTPUT=%s", temp.getAbsolutePath()),
+                String.format("FILTER=%s", filter.toString()),
+                String.format("%s=%s", fileArgument, dummyFile),
+        };
+
+        // make sure results is successful
+        Assert.assertEquals(runPicardCommandLine(args), 1);
+    }
+
 
     @DataProvider(name = "dataTestJsFilter")
     public Object[][] dataTestJsFilter() {
@@ -61,6 +163,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
                 {"testdata/picard/sam/aligned.sam", "testdata/picard/sam/FilterSamReads/filterReadsWithout5primeSoftClip.js", 0}
         };
     }
+
 
     @DataProvider(name = "dataTestPairedIntervalFilter")
     public Object[][] dataTestPairedIntervalFilter() {
@@ -74,7 +177,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
      * filters a SAM using a javascript filter
      */
     @Test(dataProvider = "dataTestJsFilter")
-    public void testJavaScriptFilters(final String samFilename, final String javascriptFilename,final int expectNumber) throws Exception {
+    public void testJavaScriptFilters(final String samFilename, final String javascriptFilename, final int expectNumber) throws Exception {
         // input as SAM file 
         final File inputSam = new File(samFilename);
         final File javascriptFile = new File(javascriptFilename);
@@ -123,12 +226,19 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         program.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
         program.OUTPUT.deleteOnExit();
         program.FILTER = filter;
-
-        if(filter == FilterSamReads.Filter.includePairedIntervals) {
-            program.INTERVAL_LIST = inputFile;
-        }
-        else {
-            program.JAVASCRIPT_FILE = inputFile;
+        switch (filter) {
+            case includePairedIntervals:
+                program.INTERVAL_LIST = inputFile;
+                break;
+            case includeJavascript:
+                program.JAVASCRIPT_FILE = inputFile;
+                break;
+            case includeReadList:
+            case excludeReadList:
+                program.READ_LIST_FILE = inputFile;
+                break;
+            default:
+                throw new IllegalArgumentException("not configured for filter==" + filter);
         }
 
         return program;
