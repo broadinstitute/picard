@@ -101,7 +101,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
         final SAMFileHeader header = new SAMFileHeader();
 
         try {
-            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(dict));
+            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(dict.toPath()));
             header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
         } catch (final SAMException e) {
             e.printStackTrace();
