@@ -153,7 +153,9 @@ public class FilterSamReads extends CommandLineProgram {
         excludeReadList("Reads whose queryname is not in READ_LIST_FILE. see the READ_LIST_FILE for more detail."),
         includeJavascript("Reads that have been accepted by the JAVASCRIPT_FILE script, that is, reads for which the value of the script is true. " +
                 "See the JAVASCRIPT_FILE argument for more detail. "),
-        includePairedIntervals("Reads (and their mate) that overlap with an interval from INTERVAL_LIST. INPUT must be coordinate sorted.");
+        includePairedIntervals("Reads (and their mate) that overlap with an interval from INTERVAL_LIST. INPUT must be coordinate sorted."),
+        includeTagValues("OUTPUT SAM/BAM will contain reads that have a value of tag TAG that is contained in the values for TAG_VALUES"),
+        excludeTagValues("OUTPUT SAM/BAM will contain reads that do not have a value of tag TAG that is contained in the values for TAG_VALUES");
         private final String description;
 
         Filter(final String description) {
@@ -167,7 +169,6 @@ public class FilterSamReads extends CommandLineProgram {
     }
 
     @Argument(doc = "The SAM or BAM file that will be filtered.",
-            optional = false,
             shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
@@ -184,12 +185,24 @@ public class FilterSamReads extends CommandLineProgram {
             shortName = "IL")
     public File INTERVAL_LIST;
 
+    @Argument(doc = "The tag to select from input SAM/BAM",
+            optional = true,
+            shortName = "T")
+    public String TAG;
+
+    @Argument(doc = "The tag to select from input SAM/BAM",
+            optional = true,
+            shortName = "TV")
+    public List<String> TAG_VALUE;
+
     @Argument(
             doc = "SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.",
-            optional = true, shortName = "SO")
+            optional = true,
+            shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
-    @Argument(doc = "SAM or BAM file for resulting reads.", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc = "SAM or BAM file for resulting reads.",
+            shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
     @Argument(shortName = "JS",
@@ -300,6 +313,16 @@ public class FilterSamReads extends CommandLineProgram {
                 case includePairedIntervals:
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),
                             new IntervalKeepPairFilter(getIntervalList(INTERVAL_LIST)));
+                    break;
+                case includeTagValues:
+                    List<Object> includeTagList = TAG_VALUE.stream().map(T -> (Object) T).collect(Collectors.toList());
+                    filteringIterator = new FilteringSamIterator(samReader.iterator(),
+                            new TagFilter(TAG, includeTagList, true));
+                    break;
+                case excludeTagValues:
+                    List<Object> excludeTagList = TAG_VALUE.stream().map(T -> (Object) T).collect(Collectors.toList());
+                    filteringIterator = new FilteringSamIterator(samReader.iterator(),
+                            new TagFilter(TAG, excludeTagList, false));
                     break;
                 default:
                     throw new UnsupportedOperationException(FILTER.name() + " has not been implemented!");

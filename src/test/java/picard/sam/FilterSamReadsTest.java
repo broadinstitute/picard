@@ -171,6 +171,16 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         };
     }
 
+    @DataProvider(name = "dataTestTagFilter")
+    public Object[][] dataTestTagFilter() {
+        return new Object[][]{
+                {"testdata/picard/sam/aligned.sam", "RG", "0", true, 8},
+                {"testdata/picard/sam/aligned.sam", "RG", "0", false, 0},
+                {"testdata/picard/sam/aligned.sam", "CB", "ACG", false, 3},
+                {"testdata/picard/sam/aligned.sam", "CB", "ACG", true, 5}
+        };
+    }
+
     /**
      * filters a SAM using a javascript filter
      */
@@ -282,6 +292,25 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
     private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter) throws Exception {
         return setupProgram(inputFile, inputSam, filter, null);
     }
+
+       /**
+        * filters a SAM using Tag Values
+        */
+       @Test(dataProvider = "dataTestTagFilter")
+       public void testTagFilter(final String samFilename, final String tag, final String tagValue, final boolean includeReads, final int expectNumber) throws Exception {
+           // input as SAM file
+           final File inputSam = new File(samFilename);
+           final FilterSamReads filterTest = new FilterSamReads();
+           filterTest.INPUT = inputSam;
+           filterTest.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
+           filterTest.OUTPUT.deleteOnExit();
+           filterTest.FILTER = includeReads ? FilterSamReads.Filter.includeTagValues : FilterSamReads.Filter.excludeTagValues;
+           filterTest.TAG = tag;
+           filterTest.TAG_VALUE = Arrays.asList(tagValue);
+           Assert.assertEquals(filterTest.doWork(),0);
+           long count = getReadCount(filterTest);
+           Assert.assertEquals(count, expectNumber);
+           }
 
     private long getReadCount(FilterSamReads filterTest) throws Exception {
         final SamReader samReader = SamReaderFactory.makeDefault().open(filterTest.OUTPUT);
