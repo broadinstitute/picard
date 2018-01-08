@@ -69,7 +69,7 @@ public class CollectWgsMetricsTestUtils {
 
         // check that dictionary file is readable and then set header dictionary
         try {
-            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(reference));
+            header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(reference.toPath()));
             header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
         } catch (final SAMException e) {
             e.printStackTrace();

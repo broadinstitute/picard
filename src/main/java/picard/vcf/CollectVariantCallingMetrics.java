@@ -97,7 +97,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         CloserUtil.close(variantReader);
 
         final SAMSequenceDictionary sequenceDictionary =
-                SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY == null ? INPUT : SEQUENCE_DICTIONARY);
+                SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY == null ? INPUT.toPath() : SEQUENCE_DICTIONARY.toPath());
 
         final IntervalList targetIntervals = (TARGET_INTERVALS == null) ? null : IntervalList.fromFile(TARGET_INTERVALS).uniqued();
 
