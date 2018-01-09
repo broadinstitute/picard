@@ -351,13 +351,22 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
 
     @Test
     public void symlinkLocsTest() {
+        symlinkTest(true);
+    }
+
+    @Test
+    public void noSymlinkLocsTest() {
+        symlinkTest(false);
+    }
+
+    public void symlinkTest(Boolean createSymlinks){
         final List<Integer> tileList = makeList(1101, 1102, 1103, 2101, 2102, 2103);
         final int lane = 5;
         makeFiles(new SupportedIlluminaFormat[]{Bcl}, lane, tileList, IlluminaFileUtilTest.cycleRange(1, 50));
         String[] args =
                 makeCheckerArgs(basecallDir, lane, "50T", new IlluminaDataType[]{Position}, new ArrayList<Integer>(),
                         false,
-                        true);
+                        createSymlinks);
         writeTileMetricsOutFile(makeMap(makeList(lane), makeList(tileList)));
 
         createSingleLocsFile();
@@ -370,7 +379,7 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
                 true);
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-    }
+}
 
     private void createSingleLocsFile() {
         try {

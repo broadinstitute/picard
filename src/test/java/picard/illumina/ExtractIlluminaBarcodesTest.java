@@ -51,6 +51,7 @@ import java.util.List;
 public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
     private static final File SINGLE_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
     private static final File DUAL_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
+    private static final File HISEQX_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T_hiseqx/Data/Intensities/BaseCalls");
     private static final String[] BARCODES = {
             "CAACTCTC",
             "CAACTCTG", // This one is artificial -- one edit away from the first one
@@ -70,6 +71,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
     private File basecallsDir;
     private File dual;
     private File qual;
+    private File noSymlink;
 
     public String getCommandLineProgramName() {
         return ExtractIlluminaBarcodes.class.getSimpleName();
@@ -89,6 +91,11 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         Assert.assertTrue(qual.delete());
         Assert.assertTrue(qual.mkdir());
         IOUtil.copyDirectoryTree(DUAL_DATA_DIR, qual);
+
+        noSymlink = File.createTempFile("eib_nosymlink", ".tmp");
+        Assert.assertTrue(noSymlink.delete());
+        Assert.assertTrue(noSymlink.mkdir());
+        IOUtil.copyDirectoryTree(HISEQX_DATA_DIR, noSymlink);
     }
 
     @AfterTest
@@ -96,6 +103,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         IOUtil.deleteDirectoryTree(basecallsDir);
         IOUtil.deleteDirectoryTree(dual);
         IOUtil.deleteDirectoryTree(qual);
+        IOUtil.deleteDirectoryTree(noSymlink);
     }
 
     @Test
@@ -288,6 +296,26 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
                 {16, 0, 1, 0, "Barcode has good quality, 1 match"},
                 {25, 0, 0, 0, "Barcode has quality failures, no matches"}
         };
+    }
+
+    @Test
+    public void testNoLocsSymlink() throws Exception {
+        final File metricsFile = File.createTempFile("dual.", ".metrics");
+        metricsFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "BASECALLS_DIR=" + noSymlink.getAbsolutePath(),
+                "LANE=" + 1,
+                "METRICS_FILE=" + metricsFile.getPath(),
+                "READ_STRUCTURE=" + "25T8B8B25T",
+                "BARCODE=" + "CAATAGTCCGACTCTC"
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer>();
+        result.read(new FileReader(metricsFile));
+        Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, 2, "Got wrong number of perfect matches");
+        Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, 0, "Got wrong number of one-mismatch matches");
     }
 
     private void testParsing(final IlluminaDataProviderFactory factory, final ReadStructure readStructure, final ExtractIlluminaBarcodes.BarcodeMetric metricACAGTG, final int barcodePosition) {

@@ -47,6 +47,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
 import static htsjdk.samtools.util.CollectionUtil.makeSet;
@@ -161,10 +162,9 @@ public class IlluminaDataProviderFactory {
 
         this.lane = lane;
         /* The types of data that will be returned by any IlluminaDataProviders created by this factory.
-
-      Note: In previous version, data of types not specified might be returned if a data type was specified
-      for data residing in QSeqs (since QSeqs span multiple data types).  This is no longer the case, you
-      MUST specify all data types that should be returned.*/
+          Note: In previous version, data of types not specified might be returned if a data type was specified
+          for data residing in QSeqs (since QSeqs span multiple data types).  This is no longer the case, you
+          MUST specify all data types that should be returned.*/
         final Set<IlluminaDataType> dataTypes = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(dataTypesArg)));
 
         if (dataTypes.isEmpty()) {
@@ -190,6 +190,10 @@ public class IlluminaDataProviderFactory {
             throw new PicardException("No available tiles were found, make sure that " + basecallDirectory.getAbsolutePath() + " has a lane " + lane);
         }
         availableTiles.sort(NewIlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR);
+        //fill in available tiles for run based files
+        formatToDataTypes.keySet().stream()
+                .filter(format -> fileUtil.getUtil(format) instanceof PerTileOrPerRunFileUtil)
+                .forEach(format -> fileUtil.getUtil(format).setTiles(availableTiles));
 
         outputMapping = new OutputMapping(readStructure);
     }

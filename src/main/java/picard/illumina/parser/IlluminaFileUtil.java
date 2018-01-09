@@ -127,7 +127,7 @@ public class IlluminaFileUtil {
                     utils.put(SupportedIlluminaFormat.Bcl, parameterizedFileUtil);
                     break;
                 case Locs:
-                    parameterizedFileUtil = new PerTileFileUtil(".locs", intensityLaneDir, new LocsFileFaker(), lane);
+                    parameterizedFileUtil = new PerTileOrPerRunFileUtil(".locs", intensityLaneDir, new LocsFileFaker(), lane);
                     utils.put(SupportedIlluminaFormat.Locs, parameterizedFileUtil);
                     break;
                 case Clocs:
@@ -201,7 +201,14 @@ public class IlluminaFileUtil {
 
         final List<Integer> tiles = getUtil(formats.get(0)).getTiles();
         for (int i = 1; i < formats.size(); i++) {
-            final List<Integer> fmTiles = getUtil(formats.get(i)).getTiles();
+            ParameterizedFileUtil fileUtil = getUtil(formats.get(i));
+
+            //for run based files we don't care about tile matching.
+            if(fileUtil instanceof PerTileOrPerRunFileUtil && ((PerTileOrPerRunFileUtil)fileUtil).getRunFile() != null)
+            {
+                continue;
+            }
+            final List<Integer> fmTiles = fileUtil.getTiles();
             if (tiles.size() != fmTiles.size() || !tiles.containsAll(fmTiles)) {
                 throw new PicardException(
                         "Formats do not have the same number of tiles! " + summarizeTileCounts(formats));

@@ -16,6 +16,7 @@ import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.OutputMapping;
 import picard.illumina.parser.ParameterizedFileUtil;
+import picard.illumina.parser.PerTileOrPerRunFileUtil;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BaseBclReader;
@@ -309,6 +310,9 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
         for (final IlluminaFileUtil.SupportedIlluminaFormat format : formatToDataTypes.keySet()) {
             final ParameterizedFileUtil util = fileUtil.getUtil(format);
+            if(util instanceof PerTileOrPerRunFileUtil){
+                util.setTiles(expectedTiles);
+            }
             final List<String> failures = util.verify(expectedTiles, cycles);
             //if we have failures and we want to fake files then fake them now.
             if (!failures.isEmpty() && fakeFiles) {
