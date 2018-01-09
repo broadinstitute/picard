@@ -100,6 +100,10 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             optional = true)
     public Boolean FAKE_FILES = false;
 
+    /**
+     * @deprecated It is no longer necessary to create locs file symlinks.
+     */
+    @Deprecated
     @Argument(doc = "A flag to create symlinks to the loc file for the X Ten for each tile.", shortName = "X",
             optional = true)
     public Boolean LINK_LOCS = false;
