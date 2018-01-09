@@ -427,7 +427,8 @@ public class IntervalListTools extends CommandLineProgram {
             errorMsgs.add("BREAK_BANDS_AT_MULTIPLES_OF must be greater than or equal to 0.");
         }
 
-        if (CollectionUtil.makeSet(Action.CONCAT, Action.UNION, Action.INTERSECT).contains(ACTION)) {
+        if (CollectionUtil.makeSet(Action.CONCAT, Action.UNION, Action.INTERSECT).contains(ACTION)
+                && SECOND_INPUT != null && !SECOND_INPUT.isEmpty()) {
             errorMsgs.add(String.format("SECOND_LIST must be null when ACTION is %s, found %s. " +
                             "Please put all the inputs in INPUT for this ACTION.", ACTION.name(), SECOND_INPUT));
         }
