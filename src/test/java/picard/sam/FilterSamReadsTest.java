@@ -67,8 +67,8 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
                 "one_of_pair");
 
         return new Object[][]{
-                {FilterSamReads.Filter.includeReadList, reads, 3*2},
-                {FilterSamReads.Filter.excludeReadList, reads, 1*2}
+                {FilterSamReads.Filter.includeReadList, reads, 3 * 2},
+                {FilterSamReads.Filter.excludeReadList, reads, 1 * 2}
         };
     }
 
@@ -83,15 +83,15 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         final File sortedSamIdx = new File(TEST_DIR, inputSam.getName() + ".idx");
         sortedSamIdx.deleteOnExit();
 
-         try( final SAMFileWriter writer = new SAMFileWriterFactory()
+        try (final SAMFileWriter writer = new SAMFileWriterFactory()
                 .setCreateIndex(true).makeSAMWriter(builder.getHeader(), false, inputSam)) {
 
-             for (final SAMRecord record : builder) {
-                 writer.addAlignment(record);
-             }
-         }
+            for (final SAMRecord record : builder) {
+                writer.addAlignment(record);
+            }
+        }
 
-        final File reads = File.createTempFile(TEST_DIR.getAbsolutePath(),"reads");
+        final File reads = File.createTempFile(TEST_DIR.getAbsolutePath(), "reads");
         reads.deleteOnExit();
 
         try (final FileWriter writer = new FileWriter(reads)) {
@@ -100,16 +100,15 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
             e.printStackTrace();
         }
         FilterSamReads filterTest = setupProgram(reads, inputSam, filterType);
-        Assert.assertEquals(filterTest.doWork(),0);
+        Assert.assertEquals(filterTest.doWork(), 0);
 
         long count = getReadCount(filterTest);
 
         Assert.assertEquals(count, expectNumber);
     }
 
-
     @DataProvider(name = "badArgumentCombinationsdata")
-    public Object[][] badArgumentCombinationsdata(){
+    public Object[][] badArgumentCombinationsdata() {
         return new Object[][]{
                 {FilterSamReads.Filter.includeJavascript, "READ_LIST_FILE"},
                 {FilterSamReads.Filter.excludeAligned, "READ_LIST_FILE"},
@@ -133,7 +132,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
     @Test(dataProvider = "badArgumentCombinationsdata")
     public void testBadArgumentCombinations(final FilterSamReads.Filter filter, final String fileArgument) throws IOException {
 
-        final File dummyFile = File.createTempFile(TEST_DIR.getAbsolutePath(),"dummy");
+        final File dummyFile = File.createTempFile(TEST_DIR.getAbsolutePath(), "dummy");
         dummyFile.deleteOnExit();
         try (final FileWriter writer = new FileWriter(dummyFile)) {
             writer.write("\n");
@@ -148,13 +147,12 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
                 "INPUT=testdata/picard/sam/aligned.sam",
                 String.format("OUTPUT=%s", temp.getAbsolutePath()),
                 String.format("FILTER=%s", filter.toString()),
-                String.format("%s=%s", fileArgument, dummyFile),
+                String.format("%s=%s", fileArgument, dummyFile.getAbsoluteFile()),
         };
 
-        // make sure results is successful
+        // make sure program invocation failed - inputs validation error
         Assert.assertEquals(runPicardCommandLine(args), 1);
     }
-
 
     @DataProvider(name = "dataTestJsFilter")
     public Object[][] dataTestJsFilter() {
@@ -164,7 +162,6 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         };
     }
 
-
     @DataProvider(name = "dataTestPairedIntervalFilter")
     public Object[][] dataTestPairedIntervalFilter() {
         return new Object[][]{
@@ -172,7 +169,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
                 {"testdata/picard/sam/FilterSamReads/filter2.interval_list", 0}
         };
     }
-    
+
     /**
      * filters a SAM using a javascript filter
      */
@@ -183,7 +180,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         final File javascriptFile = new File(javascriptFilename);
 
         FilterSamReads filterTest = setupProgram(javascriptFile, inputSam, FilterSamReads.Filter.includeJavascript);
-        Assert.assertEquals(filterTest.doWork(),0);
+        Assert.assertEquals(filterTest.doWork(), 0);
 
         long count = getReadCount(filterTest);
 
@@ -213,7 +210,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
 
         FilterSamReads filterTest = setupProgram(intervalFile, inputSam, FilterSamReads.Filter.includePairedIntervals);
 
-        Assert.assertEquals(filterTest.doWork(),0);
+        Assert.assertEquals(filterTest.doWork(), 0);
 
         long count = getReadCount(filterTest);
 
@@ -238,7 +235,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
                 program.READ_LIST_FILE = inputFile;
                 break;
             default:
-                throw new IllegalArgumentException("not configured for filter==" + filter);
+                throw new IllegalArgumentException("Not configured for filter=" + filter);
         }
 
         return program;

@@ -48,14 +48,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- *
  * <h3>Summary</h3>
  * Subsets a SAM file by either selecting or excluding certain reads
- *
+ * <p>
  * <h3>Details</h3>
  * Subsets a SAM or BAM file by either excluding or selecting reads as specified by FILTER.
  * Other parameters influence the behavior of the FILTER algorithm as described below.
- *
+ * <p>
  * <h3>Usage examples</h3>
  * <h4>Filter by queryname:</h4>
  * <pre>
@@ -344,7 +343,7 @@ public class FilterSamReads extends CommandLineProgram {
             return Optional.of(String.format("%s must be specified when using FILTER=%s, but it was null.", inputFileVariable, FILTER));
         if (!filters.contains(FILTER) && inputFile != null)
             return Optional.of(String.format("%s may only be specified when using FILTER from %s, FILTER value: %s, %s value: %s",
-                    inputFileVariable, String.join(", ",filters.stream().map(Enum::toString).collect(Collectors.toList())),
+                    inputFileVariable, String.join(", ", filters.stream().map(Enum::toString).collect(Collectors.toList())),
                     FILTER, inputFileVariable, inputFile));
         return Optional.empty();
     }
