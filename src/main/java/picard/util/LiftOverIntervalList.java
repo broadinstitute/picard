@@ -41,7 +41,6 @@ import java.io.File;
 import java.util.List;
 
 /**
- *
  * This tool adjusts the coordinates in an interval list on one reference to its homologous interval list on another
  * reference, based on a chain file that describes the correspondence between the two references. It is based on the
  * <a href="http://genome.ucsc.edu/cgi-bin/hgLiftOver">UCSC LiftOver tool</a> and uses a UCSC chain file to guide its operation.
@@ -55,10 +54,10 @@ import java.util.List;
  *       SD=reference_sequence.dict \
  *       CHAIN=build.chain
  * </pre>
- *
+ * <p>
  * <h3>Return codes</h3>
  * If all the intervals lifted over successfully, program will return 0. It will return 1 otherwise.
- *
+ * <p>
  * <h3>Caveats</h3>
  * An interval is "lifted" in its entirety, but it might intersect (a "hit") with multiple chain-blocks.
  * Instead of placing the interval in multiple hits, it is lifted over using the first hit that passes the
@@ -95,8 +94,8 @@ public class LiftOverIntervalList extends CommandLineProgram {
             "If all the intervals lifted over successfully, program will return 0. It will return 1 otherwise.\n" +
             "\n" +
             "<h3>Caveats</h3>\n" +
-            "An interval is \"lifted\" in its entirety, but it might intersect (a \"hit\") with multiple chain-blocks. "+
-            "Instead of placing the interval in multiple hits, it is lifted over using the first hit that passes the "+
+            "An interval is \"lifted\" in its entirety, but it might intersect (a \"hit\") with multiple chain-blocks. " +
+            "Instead of placing the interval in multiple hits, it is lifted over using the first hit that passes the " +
             "threshold of MIN_LIFTOVER_PCT. For large enough MIN_LIFTOVER_PCT this is non-ambiguous, but if one uses small values of MIN_LIFTOVER_PCT " +
             "(perhaps in order to increase the rate of successful hits...) the liftover could end up going to the smaller of two " +
             "good hits. On the other hand, if none of the hits pass the threshold a warning will be emitted and the interval will " +
@@ -121,7 +120,7 @@ public class LiftOverIntervalList extends CommandLineProgram {
             "and the interval will be dropped from the output. ")
     public double MIN_LIFTOVER_PCT = LiftOver.DEFAULT_LIFTOVER_MINMATCH;
 
-    @Argument( doc = "Interval List file for intervals that were rejected", optional = true)
+    @Argument(doc = "Interval List file for intervals that were rejected", optional = true)
     public File REJECT = null;
 
     /**
@@ -136,16 +135,16 @@ public class LiftOverIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsReadable(CHAIN);
         IOUtil.assertFileIsWritable(OUTPUT);
-        if (REJECT!=null) IOUtil.assertFileIsWritable(REJECT);
+        if (REJECT != null) IOUtil.assertFileIsWritable(REJECT);
 
         final LiftOver liftOver = new LiftOver(CHAIN);
         liftOver.setLiftOverMinMatch(MIN_LIFTOVER_PCT);
 
-        final IntervalList intervalList= IntervalList.fromFile(INPUT);
+        final IntervalList intervalList = IntervalList.fromFile(INPUT);
         final IntervalList rejects = new IntervalList(intervalList.getHeader());
 
         LOG.info("Lifting over " + intervalList.getIntervals().size() + " intervals, encompassing " +
-        intervalList.getBaseCount() + " bases.");
+                intervalList.getBaseCount() + " bases.");
 
         final SAMFileHeader toHeader = SamReaderFactory.makeDefault().getFileHeader(SEQUENCE_DICTIONARY);
         liftOver.validateToSequences(toHeader.getSequenceDictionary());
