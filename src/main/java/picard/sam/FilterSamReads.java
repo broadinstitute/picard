@@ -44,19 +44,17 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
- *
  * <h3>Summary</h3>
  * Subsets a SAM file by either selecting or excluding certain reads
- *
+ * <p>
  * <h3>Details</h3>
  * Subsets a SAM or BAM file by either excluding or selecting reads as specified by FILTER.
  * Other parameters influence the behavior of the FILTER algorithm as described below.
- *
+ * <p>
  * <h3>Usage examples</h3>
  * <h4>Filter by queryname:</h4>
  * <pre>
@@ -331,21 +329,22 @@ public class FilterSamReads extends CommandLineProgram {
 
         if (INPUT.equals(OUTPUT)) errors.add("INPUT file and OUTPUT file must differ!");
 
-        checkInputs(Filter.includeReadList, READ_LIST_FILE, "READ_LIST_FILE").ifPresent(errors::add);
-        checkInputs(Filter.excludeAligned, READ_LIST_FILE, "READ_LIST_FILE").ifPresent(errors::add);
-        checkInputs(Filter.includePairedIntervals, INTERVAL_LIST, "INTERVAL_LIST").ifPresent(errors::add);
-        checkInputs(Filter.includeJavascript, JAVASCRIPT_FILE, "JAVASCRIPT_FILE").ifPresent(errors::add);
+        checkInputs(Arrays.asList(Filter.includeReadList, Filter.excludeReadList), READ_LIST_FILE, "READ_LIST_FILE").ifPresent(errors::add);
+        checkInputs(Collections.singletonList(Filter.includePairedIntervals), INTERVAL_LIST, "INTERVAL_LIST").ifPresent(errors::add);
+        checkInputs(Collections.singletonList(Filter.includeJavascript), JAVASCRIPT_FILE, "JAVASCRIPT_FILE").ifPresent(errors::add);
 
         if (!errors.isEmpty()) return errors.toArray(new String[errors.size()]);
 
         return super.customCommandLineValidation();
     }
 
-    private Optional<String> checkInputs(final Filter filter, final File inputFile, final String inputFileVariable) {
-        if (FILTER == filter && inputFile == null)
+    private Optional<String> checkInputs(final List<Filter> filters, final File inputFile, final String inputFileVariable) {
+        if (filters.contains(FILTER) && inputFile == null)
             return Optional.of(String.format("%s must be specified when using FILTER=%s, but it was null.", inputFileVariable, FILTER));
-        if (FILTER != filter && inputFile != null)
-            return Optional.of(String.format("%s can only be specified when using FILTER=%s, found value: %s", inputFileVariable, FILTER, inputFile));
+        if (!filters.contains(FILTER) && inputFile != null)
+            return Optional.of(String.format("%s may only be specified when using FILTER from %s, FILTER value: %s, %s value: %s",
+                    inputFileVariable, String.join(", ", filters.stream().map(Enum::toString).collect(Collectors.toList())),
+                    FILTER, inputFileVariable, inputFile));
         return Optional.empty();
     }
 }
