@@ -148,6 +148,9 @@ public class LiftoverVcf extends CommandLineProgram {
     @Argument(shortName = "WMC", doc = "Warn on missing contig.", optional = true)
     public boolean WARN_ON_MISSING_CONTIG = false;
 
+    @Argument(shortName = "LFI", doc = "If true, intervals failing due to match below LIFTOVER_MIN_MATCH will be logged as a warning to the console.", optional = true)
+    public boolean LOG_FAILED_INTERVALS = true;
+
     // Option on whether or not to write the original contig/position of the variant to the INFO field
     @Argument(doc = "Write the original contig/position for lifted variants to the INFO field.", optional = true)
     public boolean WRITE_ORIGINAL_POSITION = false;
@@ -255,6 +258,8 @@ public class LiftoverVcf extends CommandLineProgram {
         // Setup the inputs
         ////////////////////////////////////////////////////////////////////////
         final LiftOver liftOver = new LiftOver(CHAIN);
+        liftOver.setShouldLogFailedIntervalsBelowThreshold(LOG_FAILED_INTERVALS);
+
         final VCFFileReader in = new VCFFileReader(INPUT, false);
 
         log.info("Loading up the target reference genome.");
