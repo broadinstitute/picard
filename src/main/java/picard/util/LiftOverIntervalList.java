@@ -31,9 +31,9 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 
@@ -41,7 +41,6 @@ import java.io.File;
 import java.util.List;
 
 /**
- *
  * This tool adjusts the coordinates in an interval list on one reference to its homologous interval list on another
  * reference, based on a chain file that describes the correspondence between the two references. It is based on the
  * <a href="http://genome.ucsc.edu/cgi-bin/hgLiftOver">UCSC LiftOver tool</a> and uses a UCSC chain file to guide its operation.
@@ -55,10 +54,10 @@ import java.util.List;
  *       SD=reference_sequence.dict \
  *       CHAIN=build.chain
  * </pre>
- *
+ * <p>
  * <h3>Return codes</h3>
  * If all the intervals lifted over successfully, program will return 0. It will return 1 otherwise.
- *
+ * <p>
  * <h3>Caveats</h3>
  * An interval is "lifted" in its entirety, but it might intersect (a "hit") with multiple chain-blocks.
  * Instead of placing the interval in multiple hits, it is lifted over using the first hit that passes the
@@ -95,8 +94,8 @@ public class LiftOverIntervalList extends CommandLineProgram {
             "If all the intervals lifted over successfully, program will return 0. It will return 1 otherwise.\n" +
             "\n" +
             "<h3>Caveats</h3>\n" +
-            "An interval is \"lifted\" in its entirety, but it might intersect (a \"hit\") with multiple chain-blocks. "+
-            "Instead of placing the interval in multiple hits, it is lifted over using the first hit that passes the "+
+            "An interval is \"lifted\" in its entirety, but it might intersect (a \"hit\") with multiple chain-blocks. " +
+            "Instead of placing the interval in multiple hits, it is lifted over using the first hit that passes the " +
             "threshold of MIN_LIFTOVER_PCT. For large enough MIN_LIFTOVER_PCT this is non-ambiguous, but if one uses small values of MIN_LIFTOVER_PCT " +
             "(perhaps in order to increase the rate of successful hits...) the liftover could end up going to the smaller of two " +
             "good hits. On the other hand, if none of the hits pass the threshold a warning will be emitted and the interval will " +
@@ -121,9 +120,8 @@ public class LiftOverIntervalList extends CommandLineProgram {
             "and the interval will be dropped from the output. ")
     public double MIN_LIFTOVER_PCT = LiftOver.DEFAULT_LIFTOVER_MINMATCH;
 
-    public static void main(final String[] argv) {
-        new LiftOverIntervalList().instanceMainWithExit(argv);
-    }
+    @Argument(doc = "Interval List file for intervals that were rejected", optional = true)
+    public File REJECT = null;
 
     /**
      * Do the work after command line has been parsed. RuntimeException may be
@@ -137,22 +135,28 @@ public class LiftOverIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsReadable(CHAIN);
         IOUtil.assertFileIsWritable(OUTPUT);
+        if (REJECT != null) IOUtil.assertFileIsWritable(REJECT);
 
         final LiftOver liftOver = new LiftOver(CHAIN);
         liftOver.setLiftOverMinMatch(MIN_LIFTOVER_PCT);
 
-        final IntervalList fromIntervals = IntervalList.fromFile(INPUT);
+        final IntervalList intervalList = IntervalList.fromFile(INPUT);
+        final IntervalList rejects = new IntervalList(intervalList.getHeader());
+
+        final long baseCount = intervalList.getBaseCount();
+        LOG.info("Lifting over " + intervalList.getIntervals().size() + " intervals, encompassing " +
+                baseCount + " bases.");
+
         final SAMFileHeader toHeader = SamReaderFactory.makeDefault().getFileHeader(SEQUENCE_DICTIONARY);
         liftOver.validateToSequences(toHeader.getSequenceDictionary());
         final IntervalList toIntervals = new IntervalList(toHeader);
-        boolean anyFailed = false;
-        for (final Interval fromInterval : fromIntervals) {
+        for (final Interval fromInterval : intervalList) {
             final Interval toInterval = liftOver.liftOver(fromInterval);
             if (toInterval != null) {
                 toIntervals.add(toInterval);
             } else {
-                anyFailed = true;
-                LOG.warn("Liftover failed for ", fromInterval, "(len ", fromInterval.length(), ")");
+                rejects.add(fromInterval);
+                LOG.warn("Liftover failed for ", fromInterval, " (len ", fromInterval.length(), ")");
                 final List<LiftOver.PartialLiftover> partials = liftOver.diagnosticLiftover(fromInterval);
                 for (final LiftOver.PartialLiftover partial : partials) {
                     LOG.info(partial);
@@ -161,6 +165,20 @@ public class LiftOverIntervalList extends CommandLineProgram {
         }
 
         toIntervals.sorted().write(OUTPUT);
-        return anyFailed ? 1 : 0;
+
+        if (REJECT != null) {
+            rejects.write(REJECT);
+        }
+        final long rejectBaseCount = rejects.getBaseCount();
+
+        LOG.info(String.format("Liftover Complete. \n" +
+                        "%d of %d intervals failed (%g%%) to liftover, encompassing %d of %d bases (%g%%).",
+                rejects.getIntervals().size(), intervalList.getIntervals().size(),
+                100 * rejects.getIntervals().size() / (double) intervalList.getIntervals().size(),
+                rejectBaseCount, baseCount,
+                100 * rejectBaseCount / (double) baseCount
+        ));
+
+        return rejects.getIntervals().isEmpty() ? 0 : 1;
     }
 }
