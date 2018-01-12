@@ -151,12 +151,17 @@ public class ReorderSam extends CommandLineProgram {
 
         log.info("Writing reads...");
         if (in.hasIndex()) {
+            final SAMSequenceDictionary samDictionary = in.getFileHeader().getSequenceDictionary();
             try( final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, true, OUTPUT)) {
 
                 // write the reads in contig order
                 for (final SAMSequenceRecord contig : refDict.getSequences()) {
-                    final SAMRecordIterator it = in.query(contig.getSequenceName(), 0, 0, false);
-                    writeReads(out, it, newOrder, contig.getSequenceName());
+                    // only retrieve a contig from the BAM is reads map to it (fix for https://github.com/broadinstitute/picard/issues/974)
+                    if (samDictionary.getSequenceIndex(contig.getSequenceName())!=-1) {
+
+                        final SAMRecordIterator it = in.query(contig.getSequenceName(), 0, 0, false);
+                        writeReads(out, it, newOrder, contig.getSequenceName());
+                    }
                 }
                 // don't forget the unmapped reads
                 writeReads(out, in.queryUnmapped(), newOrder, "unmapped");
