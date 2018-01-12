@@ -143,8 +143,9 @@ public class LiftOverIntervalList extends CommandLineProgram {
         final IntervalList intervalList = IntervalList.fromFile(INPUT);
         final IntervalList rejects = new IntervalList(intervalList.getHeader());
 
+        final long baseCount = intervalList.getBaseCount();
         LOG.info("Lifting over " + intervalList.getIntervals().size() + " intervals, encompassing " +
-                intervalList.getBaseCount() + " bases.");
+                baseCount + " bases.");
 
         final SAMFileHeader toHeader = SamReaderFactory.makeDefault().getFileHeader(SEQUENCE_DICTIONARY);
         liftOver.validateToSequences(toHeader.getSequenceDictionary());
@@ -168,13 +169,14 @@ public class LiftOverIntervalList extends CommandLineProgram {
         if (REJECT != null) {
             rejects.write(REJECT);
         }
+        final long rejectBaseCount = rejects.getBaseCount();
 
         LOG.info(String.format("Liftover Complete. \n" +
                         "%d of %d intervals failed (%g%%) to liftover, encompassing %d of %d bases (%g%%).",
                 rejects.getIntervals().size(), intervalList.getIntervals().size(),
                 100 * rejects.getIntervals().size() / (double) intervalList.getIntervals().size(),
-                rejects.getBaseCount(), intervalList.getBaseCount(),
-                100 * rejects.getBaseCount() / (double) intervalList.getBaseCount()
+                rejectBaseCount, baseCount,
+                100 * rejectBaseCount / (double) baseCount
         ));
 
         return rejects.getIntervals().isEmpty() ? 0 : 1;
