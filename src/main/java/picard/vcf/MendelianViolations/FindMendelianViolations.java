@@ -61,6 +61,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import static htsjdk.variant.variantcontext.writer.Options.INDEX_ON_THE_FLY;
 
@@ -86,13 +87,13 @@ import static htsjdk.variant.variantcontext.writer.Options.INDEX_ON_THE_FLY;
  *
  * <h3>Example</h3>
  * <pre>
- *     java -jar picard.jar FindMendelianViolations\\
- *          I=input.vcf \\
- *          TRIO=pedigree.fam \\
- *          O=report.mendelian_violation_metrics \\
+ *     java -jar picard.jar FindMendelianViolations\
+ *          I=input.vcf \
+ *          TRIO=pedigree.fam \
+ *          O=report.mendelian_violation_metrics \
  *          MIN_DP=20
  * </pre>
- * <h3>Caveates</h3>
+ * <h3>Caveats</h3>
  * <h4>Assumptions</h4>
  * The tool assumes the existence of FORMAT fields AD, DP, GT, GQ, and PL.
  * <h4>Ignored Variants</h4>
@@ -125,7 +126,7 @@ import static htsjdk.variant.variantcontext.writer.Options.INDEX_ON_THE_FLY;
                 "         TRIO=pedigree.fam \\\n" +
                 "         O=report.mendelian_violation_metrics \\\n" +
                 "         MIN_DP=20\n" +
-                "<h3>Caveates</h3>\n" +
+                "<h3>Caveats</h3>\n" +
                 "<h4>Assumptions</h4>\n" +
                 "The tool assumes the existence of FORMAT fields AD, DP, GT, GQ, and PL. \n" +
                 "<h4>Ignored Variants</h4>\n" +
@@ -276,19 +277,20 @@ public class FindMendelianViolations extends CommandLineProgram {
             headerLines.add(new VCFInfoHeaderLine(MendelianViolationDetector.ORIGINAL_AF, VCFHeaderLineCount.A, VCFHeaderLineType.Float, "Original AF"));
             headerLines.add(new VCFInfoHeaderLine(MendelianViolationDetector.ORIGINAL_AN, 1, VCFHeaderLineType.Integer, "Original AN"));
 
-            for (final PedFile.PedTrio trio : pedFile.get().values()) {
-                final File outputFile = new File(VCF_DIR, IOUtil.makeFileNameSafe(trio.getFamilyId() + IOUtil.VCF_FILE_EXTENSION));
-                LOG.info(String.format("Writing %s violation VCF to %s", trio.getFamilyId(), outputFile.getAbsolutePath()));
+            for (final MendelianViolationMetrics metric : result.metrics()){
+
+                final File outputFile = new File(VCF_DIR, IOUtil.makeFileNameSafe(metric.FAMILY_ID + IOUtil.VCF_FILE_EXTENSION));
+                LOG.info(String.format("Writing %s violation VCF to %s", metric.FAMILY_ID, outputFile.getAbsolutePath()));
 
                 final VariantContextWriter out = new VariantContextWriterBuilder()
                         .setOutputFile(outputFile)
-                        .unsetOption(INDEX_ON_THE_FLY)
+                        .setOption(INDEX_ON_THE_FLY)
                         .build();
 
-                final VCFHeader newHeader = new VCFHeader(headerLines, CollectionUtil.makeList(trio.getMaternalId(), trio.getPaternalId(), trio.getIndividualId()));
+                final VCFHeader newHeader = new VCFHeader(headerLines, CollectionUtil.makeList(metric.MOTHER, metric.FATHER, metric.OFFSPRING));
                 final TreeSet<VariantContext> orderedViolations = new TreeSet<>(vcComparator);
 
-                orderedViolations.addAll(result.violations().get(trio.getFamilyId()));
+                orderedViolations.addAll(result.violations().get(metric.FAMILY_ID));
                 out.writeHeader(newHeader);
                 orderedViolations.forEach(out::add);
 
