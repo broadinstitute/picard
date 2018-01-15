@@ -55,7 +55,7 @@ final htsjdkVersion = System.getProperty('htsjdk.version', '2.14.0')
 final javadocJDKFiles = files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs())
 
 dependencies {
-    compile('com.intel.gkl:gkl:0.5.3') {
+    compile('com.intel.gkl:gkl:0.8.2') {
         exclude module: 'htsjdk'
     }
     compile 'com.google.guava:guava:15.0'
