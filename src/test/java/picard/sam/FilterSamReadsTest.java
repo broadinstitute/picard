@@ -115,18 +115,32 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
                 {FilterSamReads.Filter.excludeAligned, "READ_LIST_FILE"},
                 {FilterSamReads.Filter.includeAligned, "READ_LIST_FILE"},
                 {FilterSamReads.Filter.includePairedIntervals, "READ_LIST_FILE"},
+                {FilterSamReads.Filter.includeTagValues, "READ_LIST_FILE"},
+                {FilterSamReads.Filter.excludeTagValues, "READ_LIST_FILE"},
 
                 {FilterSamReads.Filter.includeJavascript, "INTERVAL_LIST"},
                 {FilterSamReads.Filter.excludeReadList, "INTERVAL_LIST"},
                 {FilterSamReads.Filter.includeReadList, "INTERVAL_LIST"},
                 {FilterSamReads.Filter.excludeAligned, "INTERVAL_LIST"},
                 {FilterSamReads.Filter.includeAligned, "INTERVAL_LIST"},
+                {FilterSamReads.Filter.includeTagValues, "INTERVAL_LIST"},
+                {FilterSamReads.Filter.excludeTagValues, "INTERVAL_LIST"},
 
                 {FilterSamReads.Filter.excludeReadList, "JAVASCRIPT_FILE"},
                 {FilterSamReads.Filter.includeReadList, "JAVASCRIPT_FILE"},
                 {FilterSamReads.Filter.excludeAligned, "JAVASCRIPT_FILE"},
                 {FilterSamReads.Filter.includeAligned, "JAVASCRIPT_FILE"},
                 {FilterSamReads.Filter.includePairedIntervals, "JAVASCRIPT_FILE"},
+                {FilterSamReads.Filter.includeTagValues, "JAVASCRIPT_FILE"},
+                {FilterSamReads.Filter.excludeTagValues, "JAVASCRIPT_FILE"},
+
+                {FilterSamReads.Filter.excludeReadList, "TAG"},
+                {FilterSamReads.Filter.includeReadList, "TAG"},
+                {FilterSamReads.Filter.excludeAligned, "TAG"},
+                {FilterSamReads.Filter.includeAligned, "TAG"},
+                {FilterSamReads.Filter.includePairedIntervals, "TAG"},
+                {FilterSamReads.Filter.excludeAligned, "TAG"},
+                {FilterSamReads.Filter.includeAligned, "TAG"}
         };
     }
 

@@ -355,19 +355,20 @@ public class FilterSamReads extends CommandLineProgram {
         checkInputs(Arrays.asList(Filter.includeReadList, Filter.excludeReadList), READ_LIST_FILE, "READ_LIST_FILE").ifPresent(errors::add);
         checkInputs(Collections.singletonList(Filter.includePairedIntervals), INTERVAL_LIST, "INTERVAL_LIST").ifPresent(errors::add);
         checkInputs(Collections.singletonList(Filter.includeJavascript), JAVASCRIPT_FILE, "JAVASCRIPT_FILE").ifPresent(errors::add);
+        checkInputs(Arrays.asList(Filter.includeTagValues, Filter.excludeTagValues), TAG, "TAG").ifPresent(errors::add);
 
         if (!errors.isEmpty()) return errors.toArray(new String[errors.size()]);
 
         return super.customCommandLineValidation();
     }
 
-    private Optional<String> checkInputs(final List<Filter> filters, final File inputFile, final String inputFileVariable) {
-        if (filters.contains(FILTER) && inputFile == null)
+    private Optional<String> checkInputs(final List<Filter> filters, final Object inputObject, final String inputFileVariable) {
+        if (filters.contains(FILTER) && inputObject == null)
             return Optional.of(String.format("%s must be specified when using FILTER=%s, but it was null.", inputFileVariable, FILTER));
-        if (!filters.contains(FILTER) && inputFile != null)
+        if (!filters.contains(FILTER) && inputObject != null)
             return Optional.of(String.format("%s may only be specified when using FILTER from %s, FILTER value: %s, %s value: %s",
                     inputFileVariable, String.join(", ", filters.stream().map(Enum::toString).collect(Collectors.toList())),
-                    FILTER, inputFileVariable, inputFile));
+                    FILTER, inputFileVariable, inputObject));
         return Optional.empty();
     }
 }
