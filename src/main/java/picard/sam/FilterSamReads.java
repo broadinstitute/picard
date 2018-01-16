@@ -190,7 +190,7 @@ public class FilterSamReads extends CommandLineProgram {
             shortName = "T")
     public String TAG;
 
-    @Argument(doc = "The tag to select from input SAM/BAM",
+    @Argument(doc = "The tag value(s) to filter by",
             optional = true,
             shortName = "TV")
     public List<String> TAG_VALUE;
