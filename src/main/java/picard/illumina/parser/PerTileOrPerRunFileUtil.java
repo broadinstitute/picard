@@ -20,15 +20,16 @@ public class PerTileOrPerRunFileUtil extends PerTileFileUtil {
         return super.filesAvailable() || runFile != null;
     }
 
-    public File getRunFile() {
-        return runFile;
-    }
-
     @Override
     public void setTilesForPerRunFile(List<Integer> tiles) {
         if (runFile != null) {
             tiles.forEach(i -> fileMap.put(i, runFile));
             this.tiles = tiles;
         }
+    }
+
+    @Override
+    public boolean checkTileCount() {
+        return runFile == null;
     }
 }

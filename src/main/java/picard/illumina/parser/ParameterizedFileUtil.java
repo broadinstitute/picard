@@ -203,4 +203,8 @@ public abstract class ParameterizedFileUtil {
 
     public void setTilesForPerRunFile(List<Integer> tiles) {
     }
+
+    public boolean checkTileCount() {
+        return true;
+    }
 }

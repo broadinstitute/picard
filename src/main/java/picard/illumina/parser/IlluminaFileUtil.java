@@ -203,12 +203,8 @@ public class IlluminaFileUtil {
         for (int i = 1; i < formats.size(); i++) {
             ParameterizedFileUtil fileUtil = getUtil(formats.get(i));
 
-            // for run based files we don't care about tile matching.
-            if (fileUtil instanceof PerTileOrPerRunFileUtil && ((PerTileOrPerRunFileUtil) fileUtil).getRunFile() != null) {
-                continue;
-            }
             final List<Integer> fmTiles = fileUtil.getTiles();
-            if (tiles.size() != fmTiles.size() || !tiles.containsAll(fmTiles)) {
+            if (fileUtil.checkTileCount() && (tiles.size() != fmTiles.size() || !tiles.containsAll(fmTiles))) {
                 throw new PicardException(
                         "Formats do not have the same number of tiles! " + summarizeTileCounts(formats));
             }
