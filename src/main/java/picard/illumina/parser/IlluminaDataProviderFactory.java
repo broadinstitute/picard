@@ -47,7 +47,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
 import static htsjdk.samtools.util.CollectionUtil.makeSet;
@@ -190,10 +189,10 @@ public class IlluminaDataProviderFactory {
             throw new PicardException("No available tiles were found, make sure that " + basecallDirectory.getAbsolutePath() + " has a lane " + lane);
         }
         availableTiles.sort(NewIlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR);
+
         //fill in available tiles for run based files
-        formatToDataTypes.keySet().stream()
-                .filter(format -> fileUtil.getUtil(format) instanceof PerTileOrPerRunFileUtil)
-                .forEach(format -> fileUtil.getUtil(format).setTiles(availableTiles));
+        formatToDataTypes.keySet().stream().map(fileUtil::getUtil)
+                .forEach(util -> util.setTilesForPerRunFile(availableTiles));
 
         outputMapping = new OutputMapping(readStructure);
     }
@@ -260,8 +259,8 @@ public class IlluminaDataProviderFactory {
     /**
      * Call this method to create a ClusterData iterator over all clusters for a given tile.
      *
-     * @param cbcls              A list of cbcls to use when creating this data provider.
-     * @param filterFiles        A list of the pf filter files to use when creating this data provider.
+     * @param cbcls       A list of cbcls to use when creating this data provider.
+     * @param filterFiles A list of the pf filter files to use when creating this data provider.
      * @return An iterator for reading the Illumina basecall output for the lane specified in the ctor.
      */
     public NewIlluminaDataProvider makeDataProvider(List<File> cbcls,

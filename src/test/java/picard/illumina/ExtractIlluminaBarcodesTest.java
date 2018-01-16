@@ -141,6 +141,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "4M21T8B21T4M");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 5);
     }
+
     @Test
     public void testPairedEndWithBarcodeOnSecondEnd() throws Exception {
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "25T25T8B");
@@ -158,7 +159,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
             final File metricsFile = File.createTempFile("eib.", ".metrics");
             metricsFile.deleteOnExit();
 
-            final List<String> args = new ArrayList<String>(Arrays.asList(
+            final List<String> args = new ArrayList<>(Arrays.asList(
                     "BASECALLS_DIR=" + basecallsDir.getPath(),
                     "LANE=" + lane,
                     "READ_STRUCTURE=" + readStructure,
@@ -181,6 +182,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
      * * inexact match within threshold to TGACCA
      * * inexact match not within threshold to TGACCA
      * * inexact match where the next match is too close to ACAGTG
+     *
      * @throws Exception
      */
     @Test
@@ -257,14 +259,14 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer>();
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<>();
         result.read(new FileReader(metricsFile));
         Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, 1, "Got wrong number of perfect matches");
         Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, 0, "Got wrong number of one-mismatch matches");
     }
 
     /**
-     *  Testing the quality thresholding. Looking at a single barcode (ACAGTG) with a min quality of 25 and no mismatches
+     * Testing the quality thresholding. Looking at a single barcode (ACAGTG) with a min quality of 25 and no mismatches
      */
     @Test(dataProvider = "qualityBarcodeData")
     public void testQualityBarcodes(final int quality,
@@ -284,7 +286,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer>();
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<>();
         result.read(new FileReader(metricsFile));
         Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, perfectMatches, "Got wrong number of perfect matches for test: '" + testName + "'");
         Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, oneMismatch, "Got wrong number of one-mismatch matches for test: '" + testName + "'");
@@ -306,13 +308,13 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         final String[] args = new String[]{
                 "BASECALLS_DIR=" + noSymlink.getAbsolutePath(),
                 "LANE=" + 1,
-                "METRICS_FILE=" + metricsFile.getPath(),
+                "METRICS_FILE=" + metricsFile,
                 "READ_STRUCTURE=" + "25T8B8B25T",
                 "BARCODE=" + "CAATAGTCCGACTCTC"
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer>();
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<>();
         result.read(new FileReader(metricsFile));
         Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, 2, "Got wrong number of perfect matches");
         Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, 0, "Got wrong number of one-mismatch matches");
@@ -342,7 +344,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         final File metricsFile = File.createTempFile("eib.", ".metrics");
         metricsFile.deleteOnExit();
 
-        final List<String> args = new ArrayList<String>(Arrays.asList(
+        final List<String> args = new ArrayList<>(Arrays.asList(
                 "BASECALLS_DIR=" + basecallsDir.getPath(),
                 "LANE=" + lane,
                 "READ_STRUCTURE=" + readStructure,
@@ -358,7 +360,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         // Generate _barcode.txt files and metrics file.
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> retval = new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer>();
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> retval = new MetricsFile<>();
         retval.read(new FileReader(metricsFile));
         return retval;
     }

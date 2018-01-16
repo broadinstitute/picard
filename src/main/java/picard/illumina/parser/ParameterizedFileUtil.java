@@ -167,16 +167,18 @@ public abstract class ParameterizedFileUtil {
             return fileNameEndPattern;
         }
     }
+
     protected File getRunFile(final File baseDirectory, final Pattern pattern) {
         if (baseDirectory.exists()) {
             IOUtil.assertDirectoryIsReadable(baseDirectory);
             final File[] files = IOUtil.getFilesMatchingRegexp(baseDirectory, pattern);
-            if(files.length == 1) {
+            if (files.length == 1) {
                 return files[0];
             }
         }
         return null;
     }
+
     /**
      * Return all files that match pattern of the given file type in the given base directory
      */
@@ -199,4 +201,6 @@ public abstract class ParameterizedFileUtil {
         this.tiles = tiles;
     }
 
+    public void setTilesForPerRunFile(List<Integer> tiles) {
+    }
 }

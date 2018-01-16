@@ -77,11 +77,11 @@ public class IlluminaFileUtil {
     private final int lane;
 
     private final File tileMetricsOut;
-    private final Map<SupportedIlluminaFormat, ParameterizedFileUtil> utils = new EnumMap<SupportedIlluminaFormat, ParameterizedFileUtil>(SupportedIlluminaFormat.class);
+    private final Map<SupportedIlluminaFormat, ParameterizedFileUtil> utils = new EnumMap<>(SupportedIlluminaFormat.class);
 
     public IlluminaFileUtil(final File basecallDir, final int lane) {
-		this(basecallDir, null, lane);
-	}
+        this(basecallDir, null, lane);
+    }
 
 
     public IlluminaFileUtil(final File basecallDir, final File barcodeDir, final int lane) {
@@ -169,20 +169,20 @@ public class IlluminaFileUtil {
     public List<Integer> getExpectedTiles() {
         IOUtil.assertFileIsReadable(tileMetricsOut);
         //Used just to ensure predictable ordering
-        final TreeSet<Integer> expectedTiles = new TreeSet<Integer>();
+        final TreeSet<Integer> expectedTiles = new TreeSet<>();
 
         final Iterator<TileMetricsOutReader.IlluminaTileMetrics> tileMetrics = new TileMetricsOutReader(tileMetricsOut, TileMetricsOutReader.TileMetricsVersion.TWO);
         while (tileMetrics.hasNext()) {
             final TileMetricsOutReader.IlluminaTileMetrics tileMetric = tileMetrics.next();
 
-            if (tileMetric.getLaneNumber() == lane && 
+            if (tileMetric.getLaneNumber() == lane &&
                     !expectedTiles.contains(tileMetric.getTileNumber())) {
                 expectedTiles.add(tileMetric.getTileNumber());
             }
         }
 
         CloserUtil.close(tileMetrics);
-        return new ArrayList<Integer>(expectedTiles);
+        return new ArrayList<>(expectedTiles);
     }
 
     /**
@@ -203,9 +203,8 @@ public class IlluminaFileUtil {
         for (int i = 1; i < formats.size(); i++) {
             ParameterizedFileUtil fileUtil = getUtil(formats.get(i));
 
-            //for run based files we don't care about tile matching.
-            if(fileUtil instanceof PerTileOrPerRunFileUtil && ((PerTileOrPerRunFileUtil)fileUtil).getRunFile() != null)
-            {
+            // for run based files we don't care about tile matching.
+            if (fileUtil instanceof PerTileOrPerRunFileUtil && ((PerTileOrPerRunFileUtil) fileUtil).getRunFile() != null) {
                 continue;
             }
             final List<Integer> fmTiles = fileUtil.getTiles();

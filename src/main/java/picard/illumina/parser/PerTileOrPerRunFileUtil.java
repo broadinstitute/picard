@@ -25,11 +25,10 @@ public class PerTileOrPerRunFileUtil extends PerTileFileUtil {
     }
 
     @Override
-    public void setTiles(List<Integer> tiles){
-        super.setTiles(tiles);
-        //now fill in the file map
-        if(fileMap.isEmpty()){
+    public void setTilesForPerRunFile(List<Integer> tiles) {
+        if (runFile != null) {
             tiles.forEach(i -> fileMap.put(i, runFile));
+            this.tiles = tiles;
         }
     }
 }
