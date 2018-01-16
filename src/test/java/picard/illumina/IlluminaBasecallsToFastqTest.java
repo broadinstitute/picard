@@ -51,9 +51,11 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR_WITH_4M = new File("testdata/picard/illumina/25T8B25T/fastq_with_4M");
     private static final File TEST_DATA_DIR_WITH_4M4M = new File("testdata/picard/illumina/25T8B25T/fastq_with_4M4M");
     private static final File TEST_DATA_DIR_WITH_CBCLS = new File("testdata/picard/illumina/151T8B8B151T_cbcl/Data/Intensities/BaseCalls");
+    private static final File TEST_DATA_HISEQX_SINGLE_LOCS = new File("testdata/picard/illumina/25T8B8B25T_hiseqx/Data/Intensities/BaseCalls");
 
     private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/fastq");
     private static final File DUAL_CBCL_TEST_DATA_DIR = new File("testdata/picard/illumina/151T8B8B151T_cbcl/fastq");
+    private static final File HISEQX_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T_hiseqx/fastq");
 
     public String getCommandLineProgramName() {
         return IlluminaBasecallsToFastq.class.getSimpleName();
@@ -141,6 +143,11 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
     @Test
     public void testCbclConvert() throws Exception {
         runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR);
+    }
+
+    @Test
+    public void testHiseqxSingleLocs() throws Exception {
+        runStandardTest(1, "hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T",TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR);
     }
 
     private void compareFastqs(File testDataDir, File outputSam, String filename) {

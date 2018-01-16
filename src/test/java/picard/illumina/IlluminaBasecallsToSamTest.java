@@ -54,6 +54,8 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR_WITH_4M4M_INDEX = new File("testdata/picard/illumina/25T8B25T/sams_with_4M4M");
     private static final File TEST_DATA_DIR_WITH_CBCLS = new File("testdata/picard/illumina/151T8B8B151T_cbcl/Data/Intensities/BaseCalls");
     private static final File DUAL_CBCL_TEST_DATA_DIR = new File("testdata/picard/illumina/151T8B8B151T_cbcl/sams");
+    private static final File TEST_DATA_HISEQX_SINGLE_LOCS = new File("testdata/picard/illumina/25T8B8B25T_hiseqx/Data/Intensities/BaseCalls");
+    private static final File HISEQX_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T_hiseqx/sams");
 
     public String getCommandLineProgramName() {
         return IlluminaBasecallsToSam.class.getSimpleName();
@@ -269,14 +271,19 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         runStandardTest(1, "singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testDualBarcodes() throws Exception {
-        runStandardTest(1, "dualBarcode.", "barcode_double.params", 1, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
+        runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
     }
 
     @Test
     public void testCbclConvert() throws Exception {
-        runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR);
+        runStandardTest(1, "cbclConvert.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR);
+    }
+
+    @Test
+    public void testHiseqxSingleLocs() throws Exception {
+        runStandardTest(1, "hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T",TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR);
     }
 
     /**

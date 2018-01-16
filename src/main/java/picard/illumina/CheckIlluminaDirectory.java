@@ -5,12 +5,12 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProcessExecutor;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import picard.cmdline.programgroups.BaseCallingProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.BaseCallingProgramGroup;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.IlluminaFileUtil;
@@ -99,7 +99,12 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             optional = true)
     public Boolean FAKE_FILES = false;
 
-    @Argument(doc = "A flag to create symlinks to the loc file for the X Ten for each tile.", shortName = "X",
+    /**
+     * @deprecated It is no longer necessary to create locs file symlinks.
+     */
+    @Deprecated
+    @Argument(doc = "A flag to create symlinks to the loc file for the X Ten for each tile. " +
+            "@deprecated It is no longer necessary to create locs file symlinks.", shortName = "X",
             optional = true)
     public Boolean LINK_LOCS = false;
 
@@ -309,12 +314,14 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
         for (final IlluminaFileUtil.SupportedIlluminaFormat format : formatToDataTypes.keySet()) {
             final ParameterizedFileUtil util = fileUtil.getUtil(format);
+
+            util.setTilesForPerRunFile(expectedTiles);
+
             final List<String> failures = util.verify(expectedTiles, cycles);
             //if we have failures and we want to fake files then fake them now.
             if (!failures.isEmpty() && fakeFiles) {
                 //fake files
                 util.fakeFiles(expectedTiles, cycles, format);
-
             }
             numFailures += failures.size();
             for (final String failure : failures) {
