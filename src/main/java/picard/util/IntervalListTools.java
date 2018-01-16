@@ -412,7 +412,12 @@ public class IntervalListTools extends CommandLineProgram {
     private List<IntervalList> openIntervalLists(final List<File> files){
         final List<IntervalList> lists = new ArrayList<>();
         for (final File f : files) {
-            lists.add(IntervalListInputType.getIntervalList(f, INCLUDE_FILTERED).padded(PADDING));
+            try {
+                lists.add(IntervalListInputType.getIntervalList(f, INCLUDE_FILTERED).padded(PADDING));
+            } catch (final Exception e){
+                LOG.error("There was a problem opening IntervalList file " + f.getAbsolutePath());
+                throw e;
+            }
         }
         return lists;
     }
