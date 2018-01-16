@@ -77,11 +77,11 @@ public class IlluminaFileUtil {
     private final int lane;
 
     private final File tileMetricsOut;
-    private final Map<SupportedIlluminaFormat, ParameterizedFileUtil> utils = new EnumMap<SupportedIlluminaFormat, ParameterizedFileUtil>(SupportedIlluminaFormat.class);
+    private final Map<SupportedIlluminaFormat, ParameterizedFileUtil> utils = new EnumMap<>(SupportedIlluminaFormat.class);
 
     public IlluminaFileUtil(final File basecallDir, final int lane) {
-		this(basecallDir, null, lane);
-	}
+        this(basecallDir, null, lane);
+    }
 
 
     public IlluminaFileUtil(final File basecallDir, final File barcodeDir, final int lane) {
@@ -127,7 +127,7 @@ public class IlluminaFileUtil {
                     utils.put(SupportedIlluminaFormat.Bcl, parameterizedFileUtil);
                     break;
                 case Locs:
-                    parameterizedFileUtil = new PerTileFileUtil(".locs", intensityLaneDir, new LocsFileFaker(), lane);
+                    parameterizedFileUtil = new PerTileOrPerRunFileUtil(".locs", intensityLaneDir, new LocsFileFaker(), lane);
                     utils.put(SupportedIlluminaFormat.Locs, parameterizedFileUtil);
                     break;
                 case Clocs:
@@ -169,20 +169,20 @@ public class IlluminaFileUtil {
     public List<Integer> getExpectedTiles() {
         IOUtil.assertFileIsReadable(tileMetricsOut);
         //Used just to ensure predictable ordering
-        final TreeSet<Integer> expectedTiles = new TreeSet<Integer>();
+        final TreeSet<Integer> expectedTiles = new TreeSet<>();
 
         final Iterator<TileMetricsOutReader.IlluminaTileMetrics> tileMetrics = new TileMetricsOutReader(tileMetricsOut, TileMetricsOutReader.TileMetricsVersion.TWO);
         while (tileMetrics.hasNext()) {
             final TileMetricsOutReader.IlluminaTileMetrics tileMetric = tileMetrics.next();
 
-            if (tileMetric.getLaneNumber() == lane && 
+            if (tileMetric.getLaneNumber() == lane &&
                     !expectedTiles.contains(tileMetric.getTileNumber())) {
                 expectedTiles.add(tileMetric.getTileNumber());
             }
         }
 
         CloserUtil.close(tileMetrics);
-        return new ArrayList<Integer>(expectedTiles);
+        return new ArrayList<>(expectedTiles);
     }
 
     /**
@@ -201,8 +201,10 @@ public class IlluminaFileUtil {
 
         final List<Integer> tiles = getUtil(formats.get(0)).getTiles();
         for (int i = 1; i < formats.size(); i++) {
-            final List<Integer> fmTiles = getUtil(formats.get(i)).getTiles();
-            if (tiles.size() != fmTiles.size() || !tiles.containsAll(fmTiles)) {
+            ParameterizedFileUtil fileUtil = getUtil(formats.get(i));
+
+            final List<Integer> fmTiles = fileUtil.getTiles();
+            if (fileUtil.checkTileCount() && (tiles.size() != fmTiles.size() || !tiles.containsAll(fmTiles))) {
                 throw new PicardException(
                         "Formats do not have the same number of tiles! " + summarizeTileCounts(formats));
             }

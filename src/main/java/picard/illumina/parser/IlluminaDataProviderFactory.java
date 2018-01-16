@@ -161,10 +161,9 @@ public class IlluminaDataProviderFactory {
 
         this.lane = lane;
         /* The types of data that will be returned by any IlluminaDataProviders created by this factory.
-
-      Note: In previous version, data of types not specified might be returned if a data type was specified
-      for data residing in QSeqs (since QSeqs span multiple data types).  This is no longer the case, you
-      MUST specify all data types that should be returned.*/
+          Note: In previous version, data of types not specified might be returned if a data type was specified
+          for data residing in QSeqs (since QSeqs span multiple data types).  This is no longer the case, you
+          MUST specify all data types that should be returned.*/
         final Set<IlluminaDataType> dataTypes = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(dataTypesArg)));
 
         if (dataTypes.isEmpty()) {
@@ -190,6 +189,10 @@ public class IlluminaDataProviderFactory {
             throw new PicardException("No available tiles were found, make sure that " + basecallDirectory.getAbsolutePath() + " has a lane " + lane);
         }
         availableTiles.sort(NewIlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR);
+
+        //fill in available tiles for run based files
+        formatToDataTypes.keySet().stream().map(fileUtil::getUtil)
+                .forEach(util -> util.setTilesForPerRunFile(availableTiles));
 
         outputMapping = new OutputMapping(readStructure);
     }
@@ -256,8 +259,8 @@ public class IlluminaDataProviderFactory {
     /**
      * Call this method to create a ClusterData iterator over all clusters for a given tile.
      *
-     * @param cbcls              A list of cbcls to use when creating this data provider.
-     * @param filterFiles        A list of the pf filter files to use when creating this data provider.
+     * @param cbcls       A list of cbcls to use when creating this data provider.
+     * @param filterFiles A list of the pf filter files to use when creating this data provider.
      * @return An iterator for reading the Illumina basecall output for the lane specified in the ctor.
      */
     public NewIlluminaDataProvider makeDataProvider(List<File> cbcls,

@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class PerTileFileUtil extends ParameterizedFileUtil {
-    private final IlluminaFileMap fileMap;
+    final IlluminaFileMap fileMap;
 
     public PerTileFileUtil(final String extension, final File base,
                            final FileFaker faker, final int lane) {

@@ -24,6 +24,7 @@ public abstract class ParameterizedFileUtil {
     protected Pattern matchPattern;
 
     protected final int lane;
+
     protected List<Integer> tiles;
     /**
      * If you think of the file system as a tree, this is the deepest directory(node) on the tree that
@@ -167,6 +168,17 @@ public abstract class ParameterizedFileUtil {
         }
     }
 
+    protected File getRunFile(final File baseDirectory, final Pattern pattern) {
+        if (baseDirectory.exists()) {
+            IOUtil.assertDirectoryIsReadable(baseDirectory);
+            final File[] files = IOUtil.getFilesMatchingRegexp(baseDirectory, pattern);
+            if (files.length == 1) {
+                return files[0];
+            }
+        }
+        return null;
+    }
+
     /**
      * Return all files that match pattern of the given file type in the given base directory
      */
@@ -185,4 +197,14 @@ public abstract class ParameterizedFileUtil {
         return fileMap;
     }
 
+    public void setTiles(List<Integer> tiles) {
+        this.tiles = tiles;
+    }
+
+    public void setTilesForPerRunFile(List<Integer> tiles) {
+    }
+
+    public boolean checkTileCount() {
+        return true;
+    }
 }
