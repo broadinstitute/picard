@@ -19,14 +19,12 @@ import static org.testng.Assert.*;
 public class LiftoverUtilsTest {
 
     static final Allele A = Allele.create("A", false);
-    static final Allele T = Allele.create("T", false);
     static final Allele C = Allele.create("C", false);
-    static final Allele RefT = Allele.create("T", true);
     static final Allele RefA = Allele.create("A", true);
     static final Allele RefC = Allele.create("C", true);
-    static final Allele RefG = Allele.create("G", true);
 
-    static String AF = "AF", MAX_AF = "MAX_AF";
+    static String AF = "AF";
+    static String MAX_AF = "MAX_AF";
 
     static final List<String> annotationsToDrop = Collections.singletonList(MAX_AF);
     static final List<String> annotationsToSwap = Collections.singletonList(AF);
@@ -83,16 +81,11 @@ public class LiftoverUtilsTest {
         resultBuilder.attribute("AF_MAX_shouldnt_be_dropped", 1);
         tests.add(new Object[]{builder.make(), resultBuilder.make()});
 
-
-
-
-
         return tests.toArray(new Object[0][]);
     }
 
     @Test(dataProvider = "swapRefAltData")
-    public void testSwapRefAlt(final VariantContext swapMe, final VariantContext expected) throws Exception {
-
+    public void testSwapRefAlt(final VariantContext swapMe, final VariantContext expected) {
         VcfTestUtils.assertEquals(LiftoverUtils.swapRefAlt(swapMe, annotationsToSwap, annotationsToDrop), expected);
     }
 }

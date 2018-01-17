@@ -292,7 +292,7 @@ public class LiftoverUtils {
 
                 if (attributeToReverse < 0 || attributeToReverse > 1) {
                     log.warn("Trying to reverse attribute " + key +
-                            "but found value that isn't between 0 and 1: (" + attributeToReverse + ") in variant " + vc + ". Results might be wrong.");
+                            " but found value that isn't between 0 and 1: (" + attributeToReverse + ") in variant " + vc + ". Results might be wrong.");
                 }
                 swappedBuilder.attribute(key, 1 - attributeToReverse);
             }
