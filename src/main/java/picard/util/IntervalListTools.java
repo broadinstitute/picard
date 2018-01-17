@@ -434,10 +434,10 @@ public class IntervalListTools extends CommandLineProgram {
         if (BREAK_BANDS_AT_MULTIPLES_OF < 0) {
             errorMsgs.add("BREAK_BANDS_AT_MULTIPLES_OF must be greater than or equal to 0.");
         }
-        if (SECOND_INPUT.isEmpty() && ACTION.takesSecondInput) {
+        if ((SECOND_INPUT == null || SECOND_INPUT.isEmpty()) && ACTION.takesSecondInput) {
             errorMsgs.add("SECOND_INPUT was not provided but action " + ACTION + " requires a second input.");
         }
-        if (!SECOND_INPUT.isEmpty() && !ACTION.takesSecondInput) {
+        if ((SECOND_INPUT != null && !SECOND_INPUT.isEmpty()) && !ACTION.takesSecondInput) {
             errorMsgs.add("SECOND_INPUT was provided but action " + ACTION + " doesn't take a second input.");
         }
 

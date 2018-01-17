@@ -25,7 +25,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private final File secondInput = new File(TEST_DATA_DIR, "secondInput.interval_list");
 
     @Test
-    public void testSecondInputValidation(){
+    public void testSecondInputValidation() {
         IntervalListTools intervalListTools = new IntervalListTools();
         String[] errors = intervalListTools.customCommandLineValidation();
         Assert.assertNull(errors);
@@ -60,7 +60,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         args.add("ACTION=" + action.toString());
         args.add("INPUT=" + scatterable);
 
-        if (action.takesSecondInput()) {
+        if (action.takesSecondInput) {
             args.add("SECOND_INPUT=" + secondInput);
         }
         args.add("OUTPUT=" + ilOut);
@@ -121,7 +121,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         args.add("ACTION=" + action.toString());
         args.add("INPUT=" + scatterable);
 
-        if (action.takesSecondInput()) {
+        if (action.takesSecondInput) {
             args.add("SECOND_INPUT=" + secondInput);
         } else {
             args.add("INPUT=" + secondInput);
