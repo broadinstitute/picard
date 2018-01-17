@@ -22,10 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Simple little class that combines multiple VCFs that have exactly the same set of samples
@@ -71,20 +68,16 @@ public class GatherVcfs extends CommandLineProgram {
         }
 
         log.info("Checking file headers and first records to ensure compatibility.");
-        try {
-            assertSameSamplesAndValidOrdering(INPUT);
-            if (areAllBlockCompressed(INPUT) && areAllBlockCompressed(CollectionUtil.makeList(OUTPUT))) {
-                log.info("Gathering by copying gzip blocks. Will not be able to validate position non-overlap of files.");
-                if (CREATE_INDEX)
-                    log.warn("Index creation not currently supported when gathering block compressed VCFs.");
-                gatherWithBlockCopying(INPUT, OUTPUT);
-            } else {
-                log.info("Gathering by conventional means.");
-                gatherConventionally(sequenceDictionary, CREATE_INDEX, INPUT, OUTPUT);
+        assertSameSamplesAndValidOrdering(INPUT);
+        if (areAllBlockCompressed(INPUT) && areAllBlockCompressed(Collections.singletonList(OUTPUT))) {
+            log.info("Gathering by copying gzip blocks. Will not be able to validate position non-overlap of files.");
+            if (CREATE_INDEX) {
+                log.warn("Index creation not currently supported when gathering block compressed VCFs.");
             }
-        } catch (IllegalArgumentException e) {
-            log.error(e.getMessage());
-            return 1;
+            gatherWithBlockCopying(INPUT, OUTPUT);
+        } else {
+            log.info("Gathering by conventional means.");
+            gatherConventionally(sequenceDictionary, CREATE_INDEX, INPUT, OUTPUT);
         }
 
         return 0;
@@ -95,7 +88,9 @@ public class GatherVcfs extends CommandLineProgram {
      */
     private boolean areAllBlockCompressed(final List<File> input) {
         for (final File f : input) {
-            if (VCFFileReader.isBCF(f) || !AbstractFeatureReader.hasBlockCompressedExtension(f)) return false;
+            if (VCFFileReader.isBCF(f) || !AbstractFeatureReader.hasBlockCompressedExtension(f)) {
+                return false;
+            }
         }
 
         return true;
@@ -221,8 +216,9 @@ public class GatherVcfs extends CommandLineProgram {
 
                 // a) It's good to check that the end of the file is valid and b) we need to know if there's a terminator block and not copy it
                 final BlockCompressedInputStream.FileTermination term = BlockCompressedInputStream.checkTermination(f);
-                if (term == BlockCompressedInputStream.FileTermination.DEFECTIVE)
+                if (term == BlockCompressedInputStream.FileTermination.DEFECTIVE) {
                     throw new PicardException(f.getAbsolutePath() + " does not have a valid GZIP block at the end of the file.");
+                }
 
                 if (!isFirstFile) {
                     final BlockCompressedInputStream blockIn = new BlockCompressedInputStream(in, false);
