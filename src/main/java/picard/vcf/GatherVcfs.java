@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -68,18 +69,27 @@ public class GatherVcfs extends CommandLineProgram {
         }
 
         log.info("Checking file headers and first records to ensure compatibility.");
-        assertSameSamplesAndValidOrdering(INPUT);
-        if (areAllBlockCompressed(INPUT) && areAllBlockCompressed(Collections.singletonList(OUTPUT))) {
-            log.info("Gathering by copying gzip blocks. Will not be able to validate position non-overlap of files.");
-            if (CREATE_INDEX) {
-                log.warn("Index creation not currently supported when gathering block compressed VCFs.");
+        try {
+            assertSameSamplesAndValidOrdering(INPUT);
+            if (areAllBlockCompressed(INPUT) && areAllBlockCompressed(Collections.singletonList(OUTPUT))) {
+                log.info("Gathering by copying gzip blocks. Will not be able to validate position non-overlap of files.");
+                if (CREATE_INDEX) {
+                    log.warn("Index creation not currently supported when gathering block compressed VCFs.");
+                }
+                gatherWithBlockCopying(INPUT, OUTPUT);
+            } else {
+                log.info("Gathering by conventional means.");
+                gatherConventionally(sequenceDictionary, CREATE_INDEX, INPUT, OUTPUT);
             }
-            gatherWithBlockCopying(INPUT, OUTPUT);
-        } else {
-            log.info("Gathering by conventional means.");
-            gatherConventionally(sequenceDictionary, CREATE_INDEX, INPUT, OUTPUT);
+        } catch (IllegalArgumentException e) {
+            log.error("There was a problem with gathering the INPUT.", e);
+            try {
+                Files.deleteIfExists(OUTPUT.toPath());
+            } catch (Exception ignored) {
+                // no-op
+            }
+            return 1;
         }
-
         return 0;
     }
 
@@ -114,8 +124,8 @@ public class GatherVcfs extends CommandLineProgram {
             final List<String> theseSamples = in.getFileHeader().getGenotypeSamples();
 
             if (!samples.equals(theseSamples)) {
-                final SortedSet<String> s1 = new TreeSet<String>(samples);
-                final SortedSet<String> s2 = new TreeSet<String>(theseSamples);
+                final SortedSet<String> s1 = new TreeSet<>(samples);
+                final SortedSet<String> s2 = new TreeSet<>(theseSamples);
                 s1.removeAll(theseSamples);
                 s2.removeAll(samples);
 
@@ -167,7 +177,7 @@ public class GatherVcfs extends CommandLineProgram {
         for (final File f : inputFiles) {
             log.debug("Gathering from file: ", f.getAbsolutePath());
             final VCFFileReader variantReader = new VCFFileReader(f, false);
-            final PeekableIterator<VariantContext> variantIterator = new PeekableIterator<VariantContext>(variantReader.iterator());
+            final PeekableIterator<VariantContext> variantIterator = new PeekableIterator<>(variantReader.iterator());
             final VCFHeader header = variantReader.getFileHeader();
 
             if (firstHeader == null) {
