@@ -218,7 +218,7 @@ public class FilterSamReads extends CommandLineProgram {
     @Argument(
             doc = "Create <OUTPUT>.reads file containing names of reads from INPUT and OUTPUT (for debugging purposes.)",
             optional = true)
-    public boolean WRITE_READS_FILES = false;
+    public boolean WRITE_READS_FILES = true;
 
     private void filterReads(final FilteringSamIterator filteringIterator) {
 
@@ -289,6 +289,9 @@ public class FilterSamReads extends CommandLineProgram {
             final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
             final FilteringSamIterator filteringIterator;
 
+            // Used for exclude/include tag filter
+            List<Object> tagList = TAG_VALUE.stream().map(T -> (Object) T).collect(Collectors.toList());
+
             switch (FILTER) {
                 case includeAligned:
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),
@@ -315,14 +318,12 @@ public class FilterSamReads extends CommandLineProgram {
                             new IntervalKeepPairFilter(getIntervalList(INTERVAL_LIST)));
                     break;
                 case includeTagValues:
-                    List<Object> includeTagList = TAG_VALUE.stream().map(T -> (Object) T).collect(Collectors.toList());
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),
-                            new TagFilter(TAG, includeTagList, true));
+                            new TagFilter(TAG, tagList, true));
                     break;
                 case excludeTagValues:
-                    List<Object> excludeTagList = TAG_VALUE.stream().map(T -> (Object) T).collect(Collectors.toList());
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),
-                            new TagFilter(TAG, excludeTagList, false));
+                            new TagFilter(TAG, tagList, false));
                     break;
                 default:
                     throw new UnsupportedOperationException(FILTER.name() + " has not been implemented!");
