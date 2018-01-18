@@ -49,11 +49,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * <p> Extracts read sequences and qualities from the input SAM/BAM file and writes them into
@@ -114,7 +110,7 @@ public class SamToFastq extends CommandLineProgram {
     public boolean OUTPUT_PER_RG;
 
     @Argument(shortName = "GZOPRG", doc = "Compress output FASTQ files per read group using gzip and append a .gz extension to the file names.",
-            optional = false, mutex = {"FASTQ", "SECOND_END_FASTQ", "UNPAIRED_FASTQ"})
+            mutex = {"FASTQ", "SECOND_END_FASTQ", "UNPAIRED_FASTQ"})
     public Boolean COMPRESS_OUTPUTS_PER_RG = false;
 
     @Argument(shortName="RGT", doc = "The read group tag (PU or ID) to be used to output a FASTQ file per read group.")
@@ -168,14 +164,29 @@ public class SamToFastq extends CommandLineProgram {
             "value is null then all bases left after trimming will be written.", optional = true)
     public Integer READ2_MAX_BASES_TO_WRITE;
 
-    @Argument(shortName="Q", doc="End-trim reads using the phred/bwa quality trimming algorithm and this quality.", optional=true)
+    @Argument(shortName="Q", doc="End-trim reads using the phred/bwa quality trimming algorithm and this quality.", optional = true)
     public Integer QUALITY;
 
     @Argument(doc = "If true, include non-primary alignments in the output.  Support of non-primary alignments in SamToFastq " +
             "is not comprehensive, so there may be exceptions if this is set to true and there are paired reads with non-primary alignments.")
     public boolean INCLUDE_NON_PRIMARY_ALIGNMENTS = false;
 
+    @Argument(shortName = "STG", doc = "List of comma separated tag values to extract from Input SAM/BAM to be used as read sequence", optional = true)
+    public List<String> SEQUENCE_TAG_GROUP;
+
+    @Argument(shortName = "QTG", doc = "List of comma separated tag values to extract from Input SAM/BAM to be used as read qualities")
+    public List<String> QUALITY_TAG_GROUP;
+
+    @Argument(shortName = "SEP", doc = "List of sequences to put in between each comma separated list of sequence tags (QFT)")
+    public List<String> TAG_GROUP_SEPERATOR;
+
+    @Argument(shortName = "GZOPTG", doc = "Compress output FASTQ files per Tag grouping using gzip and append a .gz extension to the file names.")
+    public Boolean COMPRESS_OUTPUTS_PER_TAG_GROUP = true;
+
     private final Log log = Log.getInstance(SamToFastq.class);
+
+    private final static String TAG_SPLIT_DEFAULT_SEP = "";
+    private final static String TAG_SPLIT_DEFAULT_QUAL = "~";
 
     public static void main(final String[] argv) {
         System.exit(new SamToFastq().instanceMain(argv));
@@ -311,6 +322,41 @@ public class SamToFastq extends CommandLineProgram {
                 : new File(fileName);
         IOUtil.assertFileIsWritable(result);
         return result;
+    }
+
+    private List<File> makeTagWriters(final SAMReadGroupRecord readGroup) {
+        if (SEQUENCE_TAG_GROUP.isEmpty()){
+            return null;
+        }
+        String baseFilename = null;
+        if (readGroup != null) {
+            if (RG_TAG.equalsIgnoreCase("PU")) {
+                baseFilename = readGroup.getPlatformUnit() + "_";
+            } else if (RG_TAG.equalsIgnoreCase("ID")) {
+                baseFilename = readGroup.getReadGroupId() + "_";
+            }
+            if (baseFilename == null) {
+                throw new PicardException("The selected RG_TAG: " + RG_TAG + " is not present in the bam header.");
+            }
+        } else {
+            baseFilename = "";
+        }
+        List<File> tagFiles = new ArrayList<>();
+        for (String tagSplit : SEQUENCE_TAG_GROUP) {
+            String fileName = baseFilename;
+
+            fileName += tagSplit.replace(",", "_");
+            fileName = IOUtil.makeFileNameSafe(fileName);
+
+            fileName += COMPRESS_OUTPUTS_PER_TAG_GROUP ? ".fastq.gz" : ".fastq";
+
+            final File result = (OUTPUT_DIR != null)
+                    ? new File(OUTPUT_DIR, fileName)
+                    : new File(fileName);
+            IOUtil.assertFileIsWritable(result);
+            tagFiles.add(result);
+        }
+        return tagFiles;
     }
 
     void writeRecord(final SAMRecord read, final Integer mateNumber, final FastqWriter writer,
@@ -469,17 +515,29 @@ public class SamToFastq extends CommandLineProgram {
     static final class FastqWriters {
         private final FastqWriter firstOfPair, unpaired;
         private final Lazy<FastqWriter> secondOfPair;
+        private final List<FastqWriter> tagWriters;
 
-        /** Constructor if the consumer wishes for the second-of-pair writer to be built on-the-fly. */
-        private FastqWriters(final FastqWriter firstOfPair, final Lazy<FastqWriter> secondOfPair, final FastqWriter unpaired) {
+        /** Simple constructor; all writers are pre-initialized.. */
+        private FastqWriters(final FastqWriter firstOfPair, final Lazy<FastqWriter> secondOfPair, final FastqWriter unpaired, List<FastqWriter> tagWriters) {
             this.firstOfPair = firstOfPair;
             this.unpaired = unpaired;
             this.secondOfPair = secondOfPair;
+            this.tagWriters = tagWriters == null ? Collections.emptyList(): tagWriters;
+        }
+
+        /** Simple constructor; all writers are pre-initialized.. */
+        private FastqWriters(final FastqWriter firstOfPair, final FastqWriter secondOfPair, final FastqWriter unpaired, List<FastqWriter> tagWriters) {
+            this(firstOfPair, new Lazy<>(() -> secondOfPair), unpaired, tagWriters);
+        }
+
+        /** Constructor if the consumer wishes for the second-of-pair writer to be built on-the-fly. */
+        private FastqWriters(final FastqWriter firstOfPair, final Lazy<FastqWriter> secondOfPair, final FastqWriter unpaired) {
+            this(firstOfPair, secondOfPair, unpaired, null);
         }
 
         /** Simple constructor; all writers are pre-initialized.. */
         private FastqWriters(final FastqWriter firstOfPair, final FastqWriter secondOfPair, final FastqWriter unpaired) {
-            this(firstOfPair, new Lazy<>(() -> secondOfPair), unpaired);
+            this(firstOfPair, new Lazy<>(() -> secondOfPair), unpaired, null);
         }
 
         public FastqWriter getFirstOfPair() {
@@ -498,6 +556,7 @@ public class SamToFastq extends CommandLineProgram {
             final Set<FastqWriter> fastqWriters = new HashSet<FastqWriter>();
             fastqWriters.add(firstOfPair);
             fastqWriters.add(unpaired);
+            fastqWriters.addAll(tagWriters);
             // Make sure this is a no-op if the second writer was never fetched.
             if (secondOfPair.isInitialized()) fastqWriters.add(secondOfPair.get());
             for (final FastqWriter fastqWriter : fastqWriters) {
