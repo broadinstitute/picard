@@ -124,7 +124,16 @@ public class SortVcf extends CommandLineProgram {
                     try {
                         samSequenceDictionary.assertSameDictionary(dict);
                     } catch (final AssertionError e) {
-                        throw new IllegalArgumentException(e);
+                        switch (VALIDATION_STRINGENCY) {
+                            case STRICT:
+                                throw new IllegalArgumentException(e);
+                            case LENIENT:
+                                log.warn(e);
+                                break;
+                            case SILENT:
+                            default:
+                                break;
+                        }
                     }
                 }
             }
