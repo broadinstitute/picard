@@ -412,10 +412,10 @@
        SD=reference_sequence.dict \
        CHAIN=build.chain
  </pre>
-
+ <p>
  <h3>Return codes</h3>
  If all the intervals lifted over successfully, program will return 0. It will return 1 otherwise.
-
+ <p>
  <h3>Caveats</h3>
  An interval is "lifted" in its entirety, but it might intersect (a "hit") with multiple chain-blocks.
  Instead of placing the interval in multiple hits, it is lifted over using the first hit that passes the
@@ -479,6 +479,13 @@
 					<!--<td>double</td> -->
 					<td>0.95</td>
 					<td>Minimum percentage of bases in each input interval that must map to output interval for liftover of that interval to occur. If the program fails to find a good target for an interval, a warning will be emitted and the interval will be dropped from the output. </td>
+				</tr>
+				<tr>
+					<td><a href="#--REJECT">--REJECT</a><br />
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Interval List file for intervals that were rejected</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -717,6 +724,18 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--REJECT">--REJECT </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Interval List file for intervals that were rejected</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--SEQUENCE_DICTIONARY">--SEQUENCE_DICTIONARY </a>
 			 / <small>-SD</small>
 		</h3>
@@ -823,7 +842,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.3-SNAPSHOT built at 09-00-2018 04:00:14.
+        <p class="version">Picard version 2.17.4-SNAPSHOT built at 18-08-2018 12:08:51.
         </p>
 
 	</div>

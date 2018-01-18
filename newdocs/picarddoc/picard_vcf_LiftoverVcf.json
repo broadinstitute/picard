@@ -122,6 +122,21 @@
       "options": []
     },
     {
+      "summary": "If true, intervals failing due to match below LIFTOVER_MIN_MATCH will be logged as a warning to the console.",
+      "name": "--LOG_FAILED_INTERVALS",
+      "synonyms": "-LFI",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.",
       "name": "--MAX_RECORDS_IN_RAM",
       "synonyms": "NA",

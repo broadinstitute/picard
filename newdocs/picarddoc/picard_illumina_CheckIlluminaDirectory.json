@@ -122,7 +122,7 @@
       "options": []
     },
     {
-      "summary": "A flag to create symlinks to the loc file for the X Ten for each tile.",
+      "summary": "A flag to create symlinks to the loc file for the X Ten for each tile. @deprecated It is no longer necessary to create locs file symlinks.",
       "name": "--LINK_LOCS",
       "synonyms": "-X",
       "type": "Boolean",
@@ -133,7 +133,7 @@
       "maxValue": "NA",
       "minRecValue": "NA",
       "maxRecValue": "NA",
-      "kind": "optional",
+      "kind": "deprecated",
       "options": []
     },
     {

@@ -467,14 +467,6 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<td>A flag to determine whether or not to create fake versions of the missing files.</td>
 				</tr>
 				<tr>
-					<td><a href="#--LINK_LOCS">--LINK_LOCS</a><br />
-								&nbsp;<em>-X</em>
-					</td>
-					<!--<td>Boolean</td> -->
-					<td>false</td>
-					<td>A flag to create symlinks to the loc file for the X Ten for each tile.</td>
-				</tr>
-				<tr>
 					<td><a href="#--TILE_NUMBERS">--TILE_NUMBERS</a><br />
 								&nbsp;<em>-T</em>
 					</td>
@@ -571,6 +563,17 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<!--<td>LogLevel</td> -->
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Deprecated Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--LINK_LOCS">--LINK_LOCS</a><br />
+								&nbsp;<em>-X</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>A flag to create symlinks to the loc file for the X Ten for each tile. @deprecated It is no longer necessary to create locs file symlinks.</td>
 				</tr>
 					</tbody>
 				</table>
@@ -682,7 +685,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			 / <small>-X</small>
 		</h3>
 		<p class="args">
-			<b>A flag to create symlinks to the loc file for the X Ten for each tile.</b><br />
+			<b>A flag to create symlinks to the loc file for the X Ten for each tile. @deprecated It is no longer necessary to create locs file symlinks.</b><br />
 			
 		</p>
 		<p>
@@ -852,7 +855,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.3-SNAPSHOT built at 09-00-2018 04:00:14.
+        <p class="version">Picard version 2.17.4-SNAPSHOT built at 18-08-2018 12:08:51.
         </p>
 
 	</div>

@@ -167,6 +167,21 @@
       "options": []
     },
     {
+      "summary": "Interval List file for intervals that were rejected",
+      "name": "--REJECT",
+      "synonyms": "NA",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Sequence dictionary to place in the output interval list. (This should be the dictionary of the target reference.)",
       "name": "--SEQUENCE_DICTIONARY",
       "synonyms": "-SD",
@@ -287,7 +302,7 @@
       ]
     }
   ],
-  "description": "This tool adjusts the coordinates in an interval list on one reference to its homologous interval list on another\n reference, based on a chain file that describes the correspondence between the two references. It is based on the\n \u003ca href\u003d\"http://genome.ucsc.edu/cgi-bin/hgLiftOver\"\u003eUCSC LiftOver tool\u003c/a\u003e and uses a UCSC chain file to guide its operation.\n It accepts both Picard interval_list files or VCF files as interval inputs.\n \u003cbr /\u003e\n \u003ch3\u003eUsage example:\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar LiftOverIntervalList \\\n       I\u003dinput.interval_list \\\n       O\u003doutput.interval_list \\\n       SD\u003dreference_sequence.dict \\\n       CHAIN\u003dbuild.chain\n \u003c/pre\u003e\n\n \u003ch3\u003eReturn codes\u003c/h3\u003e\n If all the intervals lifted over successfully, program will return 0. It will return 1 otherwise.\n\n \u003ch3\u003eCaveats\u003c/h3\u003e\n An interval is \"lifted\" in its entirety, but it might intersect (a \"hit\") with multiple chain-blocks.\n Instead of placing the interval in multiple hits, it is lifted over using the first hit that passes the\n threshold of #MIN_LIFTOVER_PCT. For large enough #MIN_LIFTOVER_PCT this is non-ambiguous,\n but if one uses small values of #MIN_LIFTOVER_PCT (perhaps in order to increase the rate of successful\n hits...) the liftover could end up going to the smaller of two good hits. On the other hand, if none of the hits\n pass the threshold a warning will be emitted and the interval will not be lifted.",
+  "description": "This tool adjusts the coordinates in an interval list on one reference to its homologous interval list on another\n reference, based on a chain file that describes the correspondence between the two references. It is based on the\n \u003ca href\u003d\"http://genome.ucsc.edu/cgi-bin/hgLiftOver\"\u003eUCSC LiftOver tool\u003c/a\u003e and uses a UCSC chain file to guide its operation.\n It accepts both Picard interval_list files or VCF files as interval inputs.\n \u003cbr /\u003e\n \u003ch3\u003eUsage example:\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar LiftOverIntervalList \\\n       I\u003dinput.interval_list \\\n       O\u003doutput.interval_list \\\n       SD\u003dreference_sequence.dict \\\n       CHAIN\u003dbuild.chain\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch3\u003eReturn codes\u003c/h3\u003e\n If all the intervals lifted over successfully, program will return 0. It will return 1 otherwise.\n \u003cp\u003e\n \u003ch3\u003eCaveats\u003c/h3\u003e\n An interval is \"lifted\" in its entirety, but it might intersect (a \"hit\") with multiple chain-blocks.\n Instead of placing the interval in multiple hits, it is lifted over using the first hit that passes the\n threshold of #MIN_LIFTOVER_PCT. For large enough #MIN_LIFTOVER_PCT this is non-ambiguous,\n but if one uses small values of #MIN_LIFTOVER_PCT (perhaps in order to increase the rate of successful\n hits...) the liftover could end up going to the smaller of two good hits. On the other hand, if none of the hits\n pass the threshold a warning will be emitted and the interval will not be lifted.",
   "name": "LiftOverIntervalList",
   "group": "Intervals Manipulation",
   "beta": false,
