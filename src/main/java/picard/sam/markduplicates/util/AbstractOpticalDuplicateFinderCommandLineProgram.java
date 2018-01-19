@@ -38,10 +38,10 @@ public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends C
     protected static Log LOG = Log.getInstance(AbstractOpticalDuplicateFinderCommandLineProgram.class);
 
     @Argument(doc = "MarkDuplicates can use the tile and cluster positions to estimate the rate of optical duplication " +
-            "in addition to the other common sources of duplication (PCR, etc) to provide a more accurate estimation of library size. " +
-            "By default (with no READ_NAME_REGEX specified) MarkDuplicates will attempt to extract coordinates " +
+            "in addition to the dominant source of duplication, PCR, to provide a more accurate estimation of library size. " +
+            "By default (with no READ_NAME_REGEX specified), MarkDuplicates will attempt to extract coordinates " +
             "using a split on ':' (see Note below).  " +
-            "Set this option to "null" to disable optical duplicate detection, e.g. for RNA-seq " +
+            "Set READ_NAME_REGES to "null" to disable optical duplicate detection, e.g. for RNA-seq " +
             "or other data where duplicate sets are extremely large and estimating library complexity is not an aim. " +
             "Note that without optical duplicate counts, library size estimation will be less accurate. " +
             "If the read name does not follow a standard Illumina colon-separation convention, but does contain tile and x,y coordinates, " + 
