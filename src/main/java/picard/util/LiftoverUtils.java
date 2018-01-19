@@ -30,6 +30,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.*;
+import htsjdk.variant.vcf.VCFConstants;
 import org.apache.commons.lang3.ArrayUtils;
 import picard.vcf.LiftoverVcf;
 
@@ -286,18 +287,12 @@ public class LiftoverUtils {
         for (final String key : vc.getAttributes().keySet()) {
             if (annotationsToDrop.contains(key)) {
                 swappedBuilder.rmAttribute(key);
-            } else if (annotationsToReverse.contains(key)) {
+            } else if (annotationsToReverse.contains(key) && !vc.getAttributeAsString(key, "").equals( VCFConstants.MISSING_VALUE_v4)) {
                 final double attributeToReverse = vc.getAttributeAsDouble(key, -1);
-
-                if (attributeToReverse == -1) {
-                    log.warn("Trying to reverse attribute " + key +
-                            "but found value that isn't parsable as a double: (" + vc.getAttribute(key, "") +
-                            ") in variant " + vc + ". Results might be wrong.");
-                }
 
                 if (attributeToReverse < 0 || attributeToReverse > 1) {
                     log.warn("Trying to reverse attribute " + key +
-                            "but found value that isn't between 0 and 1: (" + attributeToReverse + ") in variant " + vc + ". Results might be wrong.");
+                            " but found value that isn't between 0 and 1: (" + attributeToReverse + ") in variant " + vc + ". Results might be wrong.");
                 }
                 swappedBuilder.attribute(key, 1 - attributeToReverse);
             }
