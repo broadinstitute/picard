@@ -230,6 +230,9 @@ public class LiftoverVcf extends CommandLineProgram {
     private SortingCollection<VariantContext> sorter;
 
     private long failedLiftover = 0, failedAlleleCheck = 0;
+    private Map<String, Long> rejectsByContig = new TreeMap<>();
+    private Map<String, Long> liftedByDestContig = new TreeMap<>();
+    private Map<String, Long> liftedBySourceContig = new TreeMap<>();
 
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
@@ -380,6 +383,27 @@ public class LiftoverVcf extends CommandLineProgram {
         log.info(failedAlleleCheck, " variants lifted over but had mismatching reference alleles after lift over.");
         log.info(pct, " of variants were not successfully lifted over and written to the output.");
 
+        final Set<String> contigUnion = new TreeSet<>();
+        contigUnion.addAll(liftedBySourceContig.keySet());
+        contigUnion.addAll(rejectsByContig.keySet());
+
+        log.info("liftover success by source contig:");
+        for (String contig : contigUnion){
+            final long success = liftedBySourceContig.getOrDefault(contig, 0L);
+            final long fail = rejectsByContig.getOrDefault(contig, 0L);
+            final String liftPct = pfmt.format((double)success / (double)(success + fail));
+
+            log.info(contig, ": ", success, " / ", (success + fail), " (", liftPct, ")");
+        }
+
+        log.info("lifted variants by target contig:");
+        for (String contig : liftedByDestContig.keySet()){
+            log.info(contig, ": ", liftedByDestContig.get(contig));
+        }
+        if (liftedByDestContig.isEmpty()){
+            log.info("no successfully lifted variants");
+        }
+
         rejects.close();
         in.close();
 
@@ -404,6 +428,18 @@ public class LiftoverVcf extends CommandLineProgram {
     private void rejectVariant(final VariantContext ctx, final String reason) {
         rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
         failedLiftover++;
+        trackLiftedVariantContig(rejectsByContig, ctx.getContig());
+    }
+
+    private void trackLiftedVariantContig(Map<String, Long> map, String contig) {
+        Long val = map.get(contig);
+        if (val == null){
+            val = 0L;
+        }
+
+        val++;
+
+        map.put(contig, val);
     }
 
     /**
@@ -445,7 +481,10 @@ public class LiftoverVcf extends CommandLineProgram {
                     .attribute(ATTEMPTED_LOCUS, String.format("%s:%d-%d", vc.getContig(), vc.getStart(), vc.getEnd()))
                     .make());
             failedAlleleCheck++;
+            trackLiftedVariantContig(rejectsByContig, source.getContig());
         } else {
+            trackLiftedVariantContig(liftedBySourceContig, source.getContig());
+            trackLiftedVariantContig(liftedByDestContig, vc.getContig());
             sorter.add(vc);
         }
     }
