@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017 The Broad Institute
+ * Copyright (c) 2018 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,9 +24,6 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -37,7 +34,6 @@ import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.Fingerprinting;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -58,35 +54,27 @@ public class IdentifyContaminant extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Name of output fingerprint file (VCF).")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output fingerprint file (VCF).")
     public File OUTPUT;
 
-    @Argument(shortName = "H", doc = "A file of haplotype information.")
+    @Argument(shortName = "H", doc = "A file of haplotype information. The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
+            "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
     public File HAPLOTYPE_MAP;
 
-    @Argument(shortName = "C", doc = "A value of estimated contamination (must be between 0 and 1) in the file. ")
+    @Argument(shortName = "C", doc = "A value of estimated contamination (must be between 0 and 1) in the file. ", minValue = 0D, maxValue = 1D)
     public double CONTAMINATION;
 
-    @Argument(doc = "The sample alias to associate with the resulting fingerprint. When null, uses \"<SAMPLE>-contamination\", where <SAMPLE> is extracted from the header.", optional = true)
+    @Argument(doc = "The sample alias to associate with the resulting fingerprint. When null, uses \"<SAMPLE>-contamination\", where <SAMPLE> is extracted from the input SAM/BAM.", optional = true)
     public String SAMPLE_ALIAS = null;
 
     @Argument(doc = "The maximum number of reads to use as evidence for any given locus. This is provided as a way to limit the " +
             "effect that any given locus may have.")
     public int LOCUS_MAX_READS = 200;
 
-    @Argument(doc = "Extract a fingerprint for the contaminated sample (instead of the contaminant). Setting to true changes the effect of SAMPLE_ALIAS when null. It names the sample in the VCF <SAMPLE>, using the SM value from the SAM header.")
+    @Argument(doc = "Extract a fingerprint for the contaminated sample (instead of the contaminant). Setting to true changes the effect of SAMPLE_ALIAS when null. It names the sample in the VCF <SAMPLE>-contaminated, using the SM value from the SAM header.")
     public boolean EXTRACT_CONTAMINATED = false;
 
     private final Log log = Log.getInstance(IdentifyContaminant.class);
-
-    @Override
-    protected String[] customCommandLineValidation() {
-        if (CONTAMINATION < 0.0 || CONTAMINATION > 1.0) {
-            return new String[]{"Value for CONTAMINATION must be in the range 0-1. Found " + CONTAMINATION};
-
-        }
-        return super.customCommandLineValidation();
-    }
 
     @Override
     protected int doWork() {
@@ -94,9 +82,6 @@ public class IdentifyContaminant extends CommandLineProgram {
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
-
-        final SAMFileHeader header = getHeader();
-
 
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
 
@@ -109,12 +94,23 @@ public class IdentifyContaminant extends CommandLineProgram {
             throw new IllegalArgumentException("Expected exactly 1 fingerprint in Input file, found " + fingerprintMap.size());
         }
 
-        final Fingerprint results = fingerprintMap.values().iterator().next();
+        final Map.Entry<String, Fingerprint> sampleFingerprintEntry = fingerprintMap.entrySet().iterator().next();
+        final String sampleToUse;
         if (SAMPLE_ALIAS == null) {
-            SAMPLE_ALIAS = getSampleAlias(header);
+            // there must be exactly one element in fingerprintMap, this is checked above.
+            final String sample = sampleFingerprintEntry.getKey() + "-contamination";
+            if (EXTRACT_CONTAMINATED) {
+                sampleToUse = String.format("%s-contaminated", sample);
+            } else {
+                sampleToUse = String.format("%s-contamination", sample);
+            }
+
+        } else {
+            sampleToUse = SAMPLE_ALIAS;
         }
+
         try {
-            FingerprintUtils.writeFingerPrint(results, OUTPUT, REFERENCE_SEQUENCE, SAMPLE_ALIAS, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION);
+            FingerprintUtils.writeFingerPrint(sampleFingerprintEntry.getValue(), OUTPUT, REFERENCE_SEQUENCE, sampleToUse, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION);
         } catch (Exception e) {
             log.error(e);
         }
@@ -137,42 +133,8 @@ public class IdentifyContaminant extends CommandLineProgram {
         };
     }
 
-    // take the the sample in the first RG and check that the others are the same.
-    // create a <SAMPLE>-contamination sample id from it.
-    private String getSampleAlias(final SAMFileHeader header) {
-
-        if (header.getReadGroups() == null || header.getReadGroups().isEmpty() || header.getReadGroups().get(0).getSample() == null) {
-            log.error("Cannot find a read-group in bam header. This program requires that input files that include a read-group with an @SM tag.");
-            throw new IllegalArgumentException("Input file doesn't have a readgroup with an @SM tag: Not supported.");
-        }
-        final String bamSample = header.getReadGroups().get(0).getSample();
-
-        for (int i = 1; i < header.getReadGroups().size(); i++) {
-            if (!bamSample.equals(header.getReadGroups().get(i).getSample())) {
-                log.error("File has more than one sample in it (or a null sample): '%s' and '%s'. Not supported.", bamSample, header.getReadGroups().get(i).getSample());
-                throw new IllegalArgumentException("File has more than one sample in it: Not supported.");
-            }
-        }
-
-        final String sampleToUse;
-        if (EXTRACT_CONTAMINATED) {
-            sampleToUse = bamSample;
-        } else {
-            sampleToUse = String.format("%s-contamination", bamSample);
-        }
-        log.info("No sample name provided, Using '%s'", sampleToUse);
-
-        return sampleToUse;
-    }
-
-    private SAMFileHeader getHeader() {
-        final SamReader in = SamReaderFactory.makeDefault().open(INPUT);
-        final SAMFileHeader header = in.getFileHeader();
-        try {
-            in.close();
-        } catch (final IOException e) {
-            log.error(e);
-        }
-        return header;
+    @Override
+    protected boolean requiresReference() {
+        return true;
     }
 }
