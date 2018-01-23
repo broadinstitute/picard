@@ -35,7 +35,7 @@ import picard.cmdline.CommandLineProgramTest;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.StreamSupport;
@@ -231,7 +231,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
      * makes sure debug files are created properly
      */
     @Test(dataProvider = "dataTestDebugOption")
-    public void testDebugOption(Boolean writeDebugReads, Boolean isDebugFileExpected) throws Exception {
+    public void testDebugOption(Boolean writeDebugReads, boolean isDebugFileExpected) throws Exception {
         // input as SAM file
         final File inputSam = new File("testdata/picard/sam/aligned.sam");
         final File javascriptFile = new File("testdata/picard/sam/FilterSamReads/filterOddStarts.js");
@@ -240,20 +240,16 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         Assert.assertEquals(filterTest.doWork(), 0);
 
         final File inputReadsFile = new File(filterTest.OUTPUT.getParentFile(), IOUtil.basename(filterTest.INPUT) + ".reads");
-        Assert.assertEquals(inputReadsFile.exists(), isDebugFileExpected.booleanValue());
+        Assert.assertEquals(inputReadsFile.exists(), isDebugFileExpected);
 
         final File outputReadsFile = new File(filterTest.OUTPUT.getParentFile(), IOUtil.basename(filterTest.OUTPUT) + ".reads");
-        Assert.assertEquals(outputReadsFile.exists(), isDebugFileExpected.booleanValue());
+        outputReadsFile.deleteOnExit();
+        Assert.assertEquals(outputReadsFile.exists(), isDebugFileExpected);
 
         // We have to clean up the debug files after each test is run to make sure a clean state is preserved in between tests
         // This mostly affects the input *.reads file because it will always be called "aligned.reads" and will cause future
         // tests to fail if it sticks around and we dont expect it to be written
-        if (inputReadsFile.exists()) {
-            inputReadsFile.delete();
-        }
-        if (outputReadsFile.exists()) {
-            outputReadsFile.delete();
-        }
+        Files.deleteIfExists(inputReadsFile.toPath());
     }
 
     private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter, final Boolean writeDebugReads) throws Exception {
@@ -276,7 +272,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
             default:
                 throw new IllegalArgumentException("Not configured for filter=" + filter);
         }
-        if (writeDebugReads != null){
+        if (writeDebugReads != null) {
             program.WRITE_READS_FILES = writeDebugReads;
         }
 
@@ -285,7 +281,6 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
 
     private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter) throws Exception {
         return setupProgram(inputFile, inputSam, filter, null);
-
     }
 
     private long getReadCount(FilterSamReads filterTest) throws Exception {
