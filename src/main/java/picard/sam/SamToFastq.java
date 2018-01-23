@@ -184,7 +184,7 @@ public class SamToFastq extends CommandLineProgram {
     public List<String> TAG_GROUP_SEPERATOR;
 
     @Argument(shortName = "GZOPTG", doc = "Compress output FASTQ files per Tag grouping using gzip and append a .gz extension to the file names.")
-    public Boolean COMPRESS_OUTPUTS_PER_TAG_GROUP = true;
+    public Boolean COMPRESS_OUTPUTS_PER_TAG_GROUP = false;
 
     private final Log log = Log.getInstance(SamToFastq.class);
 
@@ -209,6 +209,7 @@ public class SamToFastq extends CommandLineProgram {
         }
 
         final ProgressLogger progress = new ProgressLogger(log);
+        setupTagSplitDefaults();
         for (final SAMRecord currentRecord : reader) {
             if (currentRecord.isSecondaryOrSupplementary() && !INCLUDE_NON_PRIMARY_ALIGNMENTS)
                 continue;
@@ -447,7 +448,7 @@ public class SamToFastq extends CommandLineProgram {
         final String seqHeader = mateNumber == null ? read.getReadName() : read.getReadName() + "/" + mateNumber;
 
         for (int i = 0; i < SEQUENCE_TAG_GROUP.size(); i ++){
-            final String tmpTagSep = TAG_GROUP_SEPERATOR.size() > 0 ? TAG_GROUP_SEPERATOR.get(i): TAG_SPLIT_DEFAULT_SEP;
+            final String tmpTagSep = TAG_GROUP_SEPERATOR.isEmpty() ? TAG_SPLIT_DEFAULT_SEP : TAG_GROUP_SEPERATOR.get(i);
             final String[] sequenceTagsToWrite = SEQUENCE_TAG_GROUP.get(i).trim().split(",");
             final String newSequence = String.join(tmpTagSep, Arrays.stream(sequenceTagsToWrite)
                     .map(read::getStringAttribute)
@@ -455,13 +456,23 @@ public class SamToFastq extends CommandLineProgram {
 
             final String tmpQualSep = StringUtils.repeat(TAG_SPLIT_DEFAULT_QUAL, tmpTagSep.length());
             final String[] qualityTagsToWrite = QUALITY_TAG_GROUP.size() > 0 ? QUALITY_TAG_GROUP.get(i).trim().split(",") : null;
-            final String newQuals = QUALITY_TAG_GROUP.size() > 0 ?  String.join(tmpQualSep, Arrays.stream(qualityTagsToWrite)
+            final String newQual = QUALITY_TAG_GROUP.isEmpty() ? StringUtils.repeat(TAG_SPLIT_DEFAULT_QUAL, newSequence.length()):
+                    String.join(tmpQualSep, Arrays.stream(qualityTagsToWrite)
                     .map(read::getStringAttribute)
-                    .collect(Collectors.toList())) : StringUtils.repeat(TAG_SPLIT_DEFAULT_QUAL, newSequence.length());
+                    .collect(Collectors.toList()));
             FastqWriter writer = tagWriters.get(i);
-            writer.write(new FastqRecord(seqHeader, newSequence, "", newQuals));
+            writer.write(new FastqRecord(seqHeader, newSequence, "", newQual));
         }
 
+    }
+
+    private void setupTagSplitDefaults() {
+        if (SEQUENCE_TAG_GROUP.isEmpty()) return;
+
+        for (int i = 0; i < SEQUENCE_TAG_GROUP.size(); i ++){
+            final String[] sequenceTagsToWrite = SEQUENCE_TAG_GROUP.get(i).trim().split(",");
+            final String[] qualityTagsToWrite = QUALITY_TAG_GROUP.size() > 0 ? QUALITY_TAG_GROUP.get(i).trim().split(",") : null;
+        }
     }
 
     /**
@@ -508,22 +519,20 @@ public class SamToFastq extends CommandLineProgram {
      * messages to be written to the appropriate place.
      */
     protected String[] customCommandLineValidation() {
+
+        List<String> errors = new ArrayList<>();
+
         if (INTERLEAVE && SECOND_END_FASTQ != null) {
-            return new String[]{
-                    "Cannot set INTERLEAVE to true and pass in a SECOND_END_FASTQ"
-            };
+            errors.add("Cannot set INTERLEAVE to true and pass in a SECOND_END_FASTQ");
         }
 
         if (UNPAIRED_FASTQ != null && SECOND_END_FASTQ == null) {
-            return new String[]{
-                    "UNPAIRED_FASTQ may only be set when also emitting read1 and read2 fastqs (so SECOND_END_FASTQ must also be set)."
-            };
+            errors.add("UNPAIRED_FASTQ may only be set when also emitting read1 and read2 fastqs (so SECOND_END_FASTQ must also be set).");
         }
 
         if ((CLIPPING_ATTRIBUTE != null && CLIPPING_ACTION == null) ||
                 (CLIPPING_ATTRIBUTE == null && CLIPPING_ACTION != null)) {
-            return new String[]{
-                    "Both or neither of CLIPPING_ATTRIBUTE and CLIPPING_ACTION should be set."};
+            errors.add("Both or neither of CLIPPING_ATTRIBUTE and CLIPPING_ACTION should be set.");
         }
 
         if (CLIPPING_ACTION != null) {
@@ -533,25 +542,35 @@ public class SamToFastq extends CommandLineProgram {
                 try {
                     Integer.parseInt(CLIPPING_ACTION);
                 } catch (NumberFormatException nfe) {
-                    return new String[]{"CLIPPING ACTION must be one of: N, X, or an integer"};
+                    errors.add("CLIPPING ACTION must be one of: N, X, or an integer");
                 }
             }
         }
 
         if ((OUTPUT_PER_RG && OUTPUT_DIR == null) || ((!OUTPUT_PER_RG) && OUTPUT_DIR != null)) {
-            return new String[]{
-                    "If OUTPUT_PER_RG is true, then OUTPUT_DIR should be set. " +
-                            "If "};
+            errors.add("If OUTPUT_PER_RG is true, then OUTPUT_DIR should be set. If ");
+
         }
 
         if (OUTPUT_PER_RG) {
             if (RG_TAG == null) {
-                return new String[]{"If OUTPUT_PER_RG is true, then RG_TAG should be set."};
+                errors.add("If OUTPUT_PER_RG is true, then RG_TAG should be set.");
             } else if (! (RG_TAG.equalsIgnoreCase("PU") || RG_TAG.equalsIgnoreCase("ID")) ){
-                return new String[]{"RG_TAG must be: PU or ID"};
+                errors.add("RG_TAG must be: PU or ID");
             }
         }
-        return null;
+
+        if (!SEQUENCE_TAG_GROUP.isEmpty() && !QUALITY_TAG_GROUP.isEmpty() && SEQUENCE_TAG_GROUP.size() != QUALITY_TAG_GROUP.size()) {
+            errors.add("QUALITY_TAG_GROUP size must be equal to SEQUENCE_TAG_GROUP or not specified at all.");
+        }
+
+        if (!SEQUENCE_TAG_GROUP.isEmpty() && !TAG_GROUP_SEPERATOR.isEmpty() && SEQUENCE_TAG_GROUP.size() != TAG_GROUP_SEPERATOR.size()) {
+            errors.add("TAG_GROUP_SEPERATOR size must be equal to SEQUENCE_TAG_GROUP or not specified at all.");
+        }
+
+        if (!errors.isEmpty()) return errors.toArray(new String[errors.size()]);
+
+        return super.customCommandLineValidation();
     }
 
     /**
