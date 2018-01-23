@@ -102,8 +102,8 @@ import java.util.stream.Collectors;
 public class FilterSamReads extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Subsets reads from a SAM or BAM file by applying one of several filters.";
     static final String USAGE_DETAILS = "\nTakes a SAM or BAM file and subsets it by either excluding or " +
-            "only including certain reads such as aligned or unaligned reads, or specific reads based on a list of reads names, " +
-            "an interval list, or using a JavaScript script.\n" +
+            "only including certain reads such as aligned or unaligned reads, specific reads based on a list of reads names, " +
+            "an interval list, by Tag Values (type Z / String values only), or using a JavaScript script.\n" +
             "<br />" +
             "<h3>Usage example:</h3>" +
             "<h4>Filter by queryname</h4>" +
@@ -121,6 +121,15 @@ public class FilterSamReads extends CommandLineProgram {
             "      O=output.bam \\ <br /> " +
             "      INTERVAL_LIST=regions.interval_list \\ <br/>" +
             "      FILTER=includePairedIntervals" +
+            "</pre> " +
+            "<h4>Filter by Tag Value (type Z / String values only)</h4>" +
+            "<pre>" +
+            "java -jar picard.jar FilterSamReads \\ <br /> " +
+            "      I=input.bam \\ <br /> " +
+            "      O=output.bam \\ <br /> " +
+            "      TAG=CR \\ <br/>" +
+            "      TAG_VALUE=TTTGTCATCTCGAGTA \\ <br/>" +
+            "      FILTER=includeTagValues" +
             "</pre> " +
             "<h4>Filter reads having a soft clip on the beginning of the read larger than 2 bases with a JavaScript script</h4>" +
             "<pre>" +
@@ -290,7 +299,7 @@ public class FilterSamReads extends CommandLineProgram {
             final FilteringSamIterator filteringIterator;
 
             // Used for exclude/include tag filter
-            List<Object> tagList = TAG_VALUE.stream().map(T -> (Object) T).collect(Collectors.toList());
+            List<Object> tagList = TAG_VALUE == null ? null: TAG_VALUE.stream().map(T -> (Object) T).collect(Collectors.toList());
 
             switch (FILTER) {
                 case includeAligned:
@@ -353,10 +362,17 @@ public class FilterSamReads extends CommandLineProgram {
 
         if (INPUT.equals(OUTPUT)) errors.add("INPUT file and OUTPUT file must differ!");
 
+        List<Filter> tagFilters = Arrays.asList(Filter.includeTagValues, Filter.excludeTagValues);
+
         checkInputs(Arrays.asList(Filter.includeReadList, Filter.excludeReadList), READ_LIST_FILE, "READ_LIST_FILE").ifPresent(errors::add);
         checkInputs(Collections.singletonList(Filter.includePairedIntervals), INTERVAL_LIST, "INTERVAL_LIST").ifPresent(errors::add);
         checkInputs(Collections.singletonList(Filter.includeJavascript), JAVASCRIPT_FILE, "JAVASCRIPT_FILE").ifPresent(errors::add);
-        checkInputs(Arrays.asList(Filter.includeTagValues, Filter.excludeTagValues), TAG, "TAG").ifPresent(errors::add);
+        checkInputs(tagFilters, TAG, "TAG").ifPresent(errors::add);
+
+        if (tagFilters.contains(FILTER) && TAG_VALUE.isEmpty()) {
+            log.warn("Running FilterSamReads with a Tag Filter but no TAG_VALUE argument provided.  This " +
+                    "will recreate the original input file i.e. not filter anything");
+        }
 
         if (!errors.isEmpty()) return errors.toArray(new String[errors.size()]);
 

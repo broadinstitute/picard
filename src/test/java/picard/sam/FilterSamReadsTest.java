@@ -140,7 +140,16 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
                 {FilterSamReads.Filter.includeAligned, "TAG"},
                 {FilterSamReads.Filter.includePairedIntervals, "TAG"},
                 {FilterSamReads.Filter.excludeAligned, "TAG"},
-                {FilterSamReads.Filter.includeAligned, "TAG"}
+                {FilterSamReads.Filter.includeAligned, "TAG"},
+
+                {FilterSamReads.Filter.excludeReadList, "TAG_VALUE"},
+                {FilterSamReads.Filter.includeReadList, "TAG_VALUE"},
+                {FilterSamReads.Filter.excludeAligned, "TAG_VALUE"},
+                {FilterSamReads.Filter.includeAligned, "TAG_VALUE"},
+                {FilterSamReads.Filter.includePairedIntervals, "TAG_VALUE"},
+                {FilterSamReads.Filter.excludeAligned, "TAG_VALUE"},
+                {FilterSamReads.Filter.includeAligned, "TAG_VALUE"},
+
         };
     }
 
