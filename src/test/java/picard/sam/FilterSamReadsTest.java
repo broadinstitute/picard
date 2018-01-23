@@ -24,6 +24,7 @@
 package picard.sam;
 
 import htsjdk.samtools.*;
+import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
@@ -217,7 +218,45 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         Assert.assertEquals(count, expectNumber);
     }
 
-    private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter) throws Exception {
+    @DataProvider(name = "dataTestDebugOption")
+    public Object[][] dataTestDebugOption() {
+        return new Object[][]{
+                {null, false},
+                {true, true},
+                {false, false}
+        };
+    }
+
+    /**
+     * makes sure debug files are created properly
+     */
+    @Test(dataProvider = "dataTestDebugOption")
+    public void testDebugOption(Boolean writeDebugReads, Boolean isDebugFileExpected) throws Exception {
+        // input as SAM file
+        final File inputSam = new File("testdata/picard/sam/aligned.sam");
+        final File javascriptFile = new File("testdata/picard/sam/FilterSamReads/filterOddStarts.js");
+
+        FilterSamReads filterTest = setupProgram(javascriptFile, inputSam, FilterSamReads.Filter.includeJavascript, writeDebugReads);
+        Assert.assertEquals(filterTest.doWork(), 0);
+
+        final File inputReadsFile = new File(filterTest.OUTPUT.getParentFile(), IOUtil.basename(filterTest.INPUT) + ".reads");
+        Assert.assertEquals(inputReadsFile.exists(), isDebugFileExpected.booleanValue());
+
+        final File outputReadsFile = new File(filterTest.OUTPUT.getParentFile(), IOUtil.basename(filterTest.OUTPUT) + ".reads");
+        Assert.assertEquals(outputReadsFile.exists(), isDebugFileExpected.booleanValue());
+
+        // We have to clean up the debug files after each test is run to make sure a clean state is preserved in between tests
+        // This mostly affects the input *.reads file because it will always be called "aligned.reads" and will cause future
+        // tests to fail if it sticks around and we dont expect it to be written
+        if (inputReadsFile.exists()) {
+            inputReadsFile.delete();
+        }
+        if (outputReadsFile.exists()) {
+            outputReadsFile.delete();
+        }
+    }
+
+    private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter, final Boolean writeDebugReads) throws Exception {
         final FilterSamReads program = new FilterSamReads();
         program.INPUT = inputSam;
         program.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
@@ -237,8 +276,16 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
             default:
                 throw new IllegalArgumentException("Not configured for filter=" + filter);
         }
+        if (writeDebugReads != null){
+            program.WRITE_READS_FILES = writeDebugReads;
+        }
 
         return program;
+    }
+
+    private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter) throws Exception {
+        return setupProgram(inputFile, inputSam, filter, null);
+
     }
 
     private long getReadCount(FilterSamReads filterTest) throws Exception {
