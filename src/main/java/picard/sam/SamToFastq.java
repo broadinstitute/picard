@@ -176,10 +176,10 @@ public class SamToFastq extends CommandLineProgram {
     @Argument(shortName = "STG", doc = "List of comma separated tag values to extract from Input SAM/BAM to be used as read sequence", optional = true)
     public List<String> SEQUENCE_TAG_GROUP;
 
-    @Argument(shortName = "QTG", doc = "List of comma separated tag values to extract from Input SAM/BAM to be used as read qualities")
+    @Argument(shortName = "QTG", doc = "List of comma separated tag values to extract from Input SAM/BAM to be used as read qualities", optional = true)
     public List<String> QUALITY_TAG_GROUP;
 
-    @Argument(shortName = "SEP", doc = "List of sequences to put in between each comma separated list of sequence tags (QFT)")
+    @Argument(shortName = "SEP", doc = "List of sequences to put in between each comma separated list of sequence tags (QFT)", optional = true)
     public List<String> TAG_GROUP_SEPERATOR;
 
     @Argument(shortName = "GZOPTG", doc = "Compress output FASTQ files per Tag grouping using gzip and append a .gz extension to the file names.")
@@ -565,11 +565,11 @@ public class SamToFastq extends CommandLineProgram {
         }
 
         if (!SEQUENCE_TAG_GROUP.isEmpty() && !QUALITY_TAG_GROUP.isEmpty() && SEQUENCE_TAG_GROUP.size() != QUALITY_TAG_GROUP.size()) {
-            errors.add("QUALITY_TAG_GROUP size must be equal to SEQUENCE_TAG_GROUP or not specified at all.");
+            errors.add("QUALITY_TAG_GROUP size must be equal to SEQUENCE_TAG_GROUP or not be specified at all.");
         }
 
         if (!SEQUENCE_TAG_GROUP.isEmpty() && !TAG_GROUP_SEPERATOR.isEmpty() && SEQUENCE_TAG_GROUP.size() != TAG_GROUP_SEPERATOR.size()) {
-            errors.add("TAG_GROUP_SEPERATOR size must be equal to SEQUENCE_TAG_GROUP or not specified at all.");
+            errors.add("TAG_GROUP_SEPERATOR size must be equal to SEQUENCE_TAG_GROUP or not be specified at all.");
         }
 
         if (!errors.isEmpty()) return errors.toArray(new String[errors.size()]);
