@@ -51,7 +51,6 @@ import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -191,6 +190,10 @@ public class SamToFastq extends CommandLineProgram {
     private final static String TAG_SPLIT_DEFAULT_SEP = "";
     private final static String TAG_SPLIT_DEFAULT_QUAL = "~";
 
+    private ArrayList<String[]> SPLIT_SEQUENCE_TAGS;
+    private ArrayList<String[]> SPLIT_QUALITY_TAGS;
+    private ArrayList<String> SPLIT_SEPARATOR_TAGS;
+
     public static void main(final String[] argv) {
         System.exit(new SamToFastq().instanceMain(argv));
     }
@@ -209,7 +212,7 @@ public class SamToFastq extends CommandLineProgram {
         }
 
         final ProgressLogger progress = new ProgressLogger(log);
-        setupTagSplitDefaults();
+        setupTagSplitValues();
         for (final SAMRecord currentRecord : reader) {
             if (currentRecord.isSecondaryOrSupplementary() && !INCLUDE_NON_PRIMARY_ALIGNMENTS)
                 continue;
@@ -232,24 +235,17 @@ public class SamToFastq extends CommandLineProgram {
                     final SAMRecord read2 =
                             currentRecord.getFirstOfPairFlag() ? firstRecord : currentRecord;
                     writeRecord(read1, 1, fq.getFirstOfPair(), READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
-                    if (!SEQUENCE_TAG_GROUP.isEmpty()){
-                        writeTagRecords(read1, 1, fq.tagWriters);
-                    }
+                    writeTagRecords(read1, 1, fq.tagWriters);
                     final FastqWriter secondOfPairWriter = fq.getSecondOfPair();
                     if (secondOfPairWriter == null) {
                         throw new PicardException("Input contains paired reads but no SECOND_END_FASTQ specified.");
                     }
                     writeRecord(read2, 2, secondOfPairWriter, READ2_TRIM, READ2_MAX_BASES_TO_WRITE);
-                    if (!SEQUENCE_TAG_GROUP.isEmpty()){
-                        writeTagRecords(read2, 2, fq.tagWriters);
-                    }
+                    writeTagRecords(read2, 2, fq.tagWriters);
                 }
             } else {
-                if (!SEQUENCE_TAG_GROUP.isEmpty()){
-                    writeTagRecords(currentRecord, null, fq.tagWriters);
-                }
-
                 writeRecord(currentRecord, null, fq.getUnpaired(), READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
+                writeTagRecords(currentRecord, null, fq.tagWriters);
             }
 
             progress.record(currentRecord);
@@ -387,7 +383,7 @@ public class SamToFastq extends CommandLineProgram {
         return tagFiles;
     }
 
-    void writeRecord(final SAMRecord read, final Integer mateNumber, final FastqWriter writer,
+    private void writeRecord(final SAMRecord read, final Integer mateNumber, final FastqWriter writer,
                      final int basesToTrim, final Integer maxBasesToWrite) {
         final String seqHeader = mateNumber == null ? read.getReadName() : read.getReadName() + "/" + mateNumber;
         String readString = read.getReadString();
@@ -444,18 +440,20 @@ public class SamToFastq extends CommandLineProgram {
 
     }
 
-    void writeTagRecords (final SAMRecord read, final Integer mateNumber, final List<FastqWriter> tagWriters){
+    private void writeTagRecords (final SAMRecord read, final Integer mateNumber, final List<FastqWriter> tagWriters){
+        if (SEQUENCE_TAG_GROUP.isEmpty()) return;
+
         final String seqHeader = mateNumber == null ? read.getReadName() : read.getReadName() + "/" + mateNumber;
 
         for (int i = 0; i < SEQUENCE_TAG_GROUP.size(); i ++){
-            final String tmpTagSep = TAG_GROUP_SEPERATOR.isEmpty() ? TAG_SPLIT_DEFAULT_SEP : TAG_GROUP_SEPERATOR.get(i);
-            final String[] sequenceTagsToWrite = SEQUENCE_TAG_GROUP.get(i).trim().split(",");
+            final String tmpTagSep = SPLIT_SEPARATOR_TAGS.get(i);
+            final String[] sequenceTagsToWrite = SPLIT_SEQUENCE_TAGS.get(i);
             final String newSequence = String.join(tmpTagSep, Arrays.stream(sequenceTagsToWrite)
                     .map(read::getStringAttribute)
                     .collect(Collectors.toList()));
 
             final String tmpQualSep = StringUtils.repeat(TAG_SPLIT_DEFAULT_QUAL, tmpTagSep.length());
-            final String[] qualityTagsToWrite = QUALITY_TAG_GROUP.size() > 0 ? QUALITY_TAG_GROUP.get(i).trim().split(",") : null;
+            final String[] qualityTagsToWrite = SPLIT_QUALITY_TAGS.get(i);
             final String newQual = QUALITY_TAG_GROUP.isEmpty() ? StringUtils.repeat(TAG_SPLIT_DEFAULT_QUAL, newSequence.length()):
                     String.join(tmpQualSep, Arrays.stream(qualityTagsToWrite)
                     .map(read::getStringAttribute)
@@ -466,12 +464,18 @@ public class SamToFastq extends CommandLineProgram {
 
     }
 
-    private void setupTagSplitDefaults() {
+    // Setting up the Groupings of Sequence Tags, Quality Tags, and Separator Strings so we dont have to calculate them for every loop
+    private void setupTagSplitValues() {
         if (SEQUENCE_TAG_GROUP.isEmpty()) return;
 
+        SPLIT_SEQUENCE_TAGS = new ArrayList<>();
+        SPLIT_QUALITY_TAGS = new ArrayList<>();
+        SPLIT_SEPARATOR_TAGS = new ArrayList<>();
+
         for (int i = 0; i < SEQUENCE_TAG_GROUP.size(); i ++){
-            final String[] sequenceTagsToWrite = SEQUENCE_TAG_GROUP.get(i).trim().split(",");
-            final String[] qualityTagsToWrite = QUALITY_TAG_GROUP.size() > 0 ? QUALITY_TAG_GROUP.get(i).trim().split(",") : null;
+            SPLIT_SEQUENCE_TAGS.add(SEQUENCE_TAG_GROUP.get(i).trim().split(","));
+            SPLIT_QUALITY_TAGS.add(QUALITY_TAG_GROUP.isEmpty() ? null : QUALITY_TAG_GROUP.get(i).trim().split(","));
+            SPLIT_SEPARATOR_TAGS.add(TAG_GROUP_SEPERATOR.isEmpty() ? TAG_SPLIT_DEFAULT_SEP : TAG_GROUP_SEPERATOR.get(i));
         }
     }
 
