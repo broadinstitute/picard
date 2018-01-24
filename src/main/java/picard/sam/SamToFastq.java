@@ -449,14 +449,14 @@ public class SamToFastq extends CommandLineProgram {
             final String tmpTagSep = SPLIT_SEPARATOR_TAGS.get(i);
             final String[] sequenceTagsToWrite = SPLIT_SEQUENCE_TAGS.get(i);
             final String newSequence = String.join(tmpTagSep, Arrays.stream(sequenceTagsToWrite)
-                    .map(read::getStringAttribute)
+                    .map(tag -> assertTagExists(read, tag))
                     .collect(Collectors.toList()));
 
             final String tmpQualSep = StringUtils.repeat(TAG_SPLIT_DEFAULT_QUAL, tmpTagSep.length());
             final String[] qualityTagsToWrite = SPLIT_QUALITY_TAGS.get(i);
             final String newQual = QUALITY_TAG_GROUP.isEmpty() ? StringUtils.repeat(TAG_SPLIT_DEFAULT_QUAL, newSequence.length()):
                     String.join(tmpQualSep, Arrays.stream(qualityTagsToWrite)
-                    .map(read::getStringAttribute)
+                    .map(tag -> assertTagExists(read, tag))
                     .collect(Collectors.toList()));
             FastqWriter writer = tagWriters.get(i);
             writer.write(new FastqRecord(seqHeader, newSequence, "", newQual));
@@ -477,6 +477,14 @@ public class SamToFastq extends CommandLineProgram {
             SPLIT_QUALITY_TAGS.add(QUALITY_TAG_GROUP.isEmpty() ? null : QUALITY_TAG_GROUP.get(i).trim().split(","));
             SPLIT_SEPARATOR_TAGS.add(TAG_GROUP_SEPERATOR.isEmpty() ? TAG_SPLIT_DEFAULT_SEP : TAG_GROUP_SEPERATOR.get(i));
         }
+    }
+
+    private String assertTagExists(final SAMRecord record, final String tag) {
+        String value = record.getStringAttribute(tag);
+        if (value == null) {
+            throw new PicardException("Record: " + record.getReadName() + " does have a value for tag: " + tag );
+        }
+        return value;
     }
 
     /**
