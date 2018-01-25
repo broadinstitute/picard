@@ -95,7 +95,7 @@ public class SamToFastq extends CommandLineProgram {
             "<br />" +
             "This will create the fastq from read sequences alongside two fastq files.  One will be converted from the " +
             " \"CR\" tag with quality from the \"CY\" tag.  The other fastq will be converted from the \"CB\" and \"UR\" " +
-            "tags concatenated together with no separator(not specified on command line) with the qualities croming from " +
+            "tags concatenated together with no separator (not specified on command line) with the qualities coming from " +
             "the \"CY\" and \"UY\" tags concatenated together." +
             "<br />" +
             "<pre>" +
@@ -195,7 +195,7 @@ public class SamToFastq extends CommandLineProgram {
     @Argument(shortName = "QTG", doc = "List of comma separated tag values to extract from Input SAM/BAM to be used as read qualities", optional = true)
     public List<String> QUALITY_TAG_GROUP;
 
-    @Argument(shortName = "SEP", doc = "List of sequences to put in between each comma separated list of sequence tags (QFT)", optional = true)
+    @Argument(shortName = "SEP", doc = "List of sequences to put in between each comma separated list of sequence tags in each SEQUENCE_TAG_GROUP (STG)", optional = true)
     public List<String> TAG_GROUP_SEPERATOR;
 
     @Argument(shortName = "GZOPTG", doc = "Compress output FASTQ files per Tag grouping using gzip and append a .gz extension to the file names.")
