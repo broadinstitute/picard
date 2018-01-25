@@ -68,7 +68,7 @@ import java.util.Set;
 @CommandLineProgramProperties(
         summary = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
                 "All records are then written to the output file with the duplicate records flagged.",
-        oneLineSummary = "(Experimental) Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.",
+        oneLineSummary = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.",
         programGroup = ReadDataManipulationProgramGroup.class
 )
 public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {

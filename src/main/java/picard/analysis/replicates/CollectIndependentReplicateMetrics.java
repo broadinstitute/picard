@@ -108,7 +108,7 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
         summary = "Estimates the rate of independent replication rate of reads within a bam. \n" +
                 "That is, it estimates the fraction of the reads which would be marked as duplicates but " +
                 "are actually biological replicates, independent observations of the data. ",
-        oneLineSummary = "(Experimental) Estimates the rate of independent replication of reads within a bam.",
+        oneLineSummary = "Estimates the rate of independent replication of reads within a bam.",
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
 public class CollectIndependentReplicateMetrics extends CommandLineProgram {
