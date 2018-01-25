@@ -150,7 +150,7 @@ class HitsForInsert {
      * @return the index, or -1 if no primary was found.
      */
     public int getIndexOfEarliestPrimary() {
-        for (int i = 0; i < numHits(); i++) {
+        for (int i = 0; i < numHits(); ++i) {
             final SAMRecord firstAligned = getFirstOfPair(i);
             final SAMRecord secondAligned = getSecondOfPair(i);
             final boolean isPrimaryAlignment = (firstAligned != null && !firstAligned.isSecondaryOrSupplementary()) ||
@@ -247,12 +247,12 @@ class HitsForInsert {
         final List<SAMRecord> newFirstOfPairOrFragment = new ArrayList<>();
         final List<SAMRecord> newSecondOfPair = new ArrayList<>();
 
-        for (int i = 0; i < firstOfPairOrFragment.size(); i++) {
+        for (int i = 0; i < firstOfPairOrFragment.size(); ++i) {
             final SAMRecord first = firstOfPairOrFragment.get(i);
             newFirstOfPairOrFragment.add(i, first);
             newSecondOfPair.add(null);
 
-            for (int k = 0; k < secondOfPair.size(); k++) {
+            for (int k = 0; k < secondOfPair.size(); ++k) {
                 final SAMRecord second = secondOfPair.get(k);
                 if (arePair(first, second)) {
                     newSecondOfPair.set(i, second);
@@ -262,7 +262,7 @@ class HitsForInsert {
             }
         }
 
-        for (int i = 0; i < secondOfPair.size(); i++) {
+        for (int i = 0; i < secondOfPair.size(); ++i) {
             if (secondOfPair.get(i) != null) {
                 newFirstOfPairOrFragment.add(i, null);
                 newSecondOfPair.add(i, secondOfPair.get(i));
@@ -278,7 +278,7 @@ class HitsForInsert {
     }
 
     /**
-     * Identifies weather records present pairwise alignment or not.
+     * Identifies whether records present pairwise alignment or not.
      *
      * It is unnecessary to check QNAME here cause an object of {@code HitsForInsert}
      * presents only records with the same QNAME.

@@ -1929,7 +1929,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void testCoordinateByMateMethodWorksProperly () throws IOException {
+    public void testCoordinateByMateMethodWorksProperly () {
         final HitsForInsert hitsForInsert = new HitsForInsert();
         final SAMFileHeader header = new SAMFileHeader();
         header.setSortOrder(SAMFileHeader.SortOrder.queryname);
@@ -1973,7 +1973,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             hitsForInsert.addFirstOfPairOrFragment(second);
         }
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < hitsForInsert.numHits(); i++) {
             final SAMRecord first = hitsForInsert.getFirstOfPair(i);
             final SAMRecord second = hitsForInsert.getSecondOfPair(i);
 
