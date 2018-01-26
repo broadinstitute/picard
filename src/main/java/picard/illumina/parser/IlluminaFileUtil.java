@@ -26,23 +26,13 @@ package picard.illumina.parser;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
-import picard.illumina.parser.fakers.BarcodeFileFaker;
-import picard.illumina.parser.fakers.BclFileFaker;
-import picard.illumina.parser.fakers.ClocsFileFaker;
-import picard.illumina.parser.fakers.FilterFileFaker;
-import picard.illumina.parser.fakers.LocsFileFaker;
-import picard.illumina.parser.fakers.PosFileFaker;
+import picard.illumina.parser.fakers.*;
 import picard.illumina.parser.readers.TileMetricsOutReader;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * General utils for dealing with IlluminaFiles as well as utils for specific, support formats.
@@ -199,18 +189,25 @@ public class IlluminaFileUtil {
                     "0 Formats were specified.  You need to specify at least SupportedIlluminaFormat to use getTiles");
         }
 
-        final List<Integer> tiles = getUtil(formats.get(0)).getTiles();
-        for (int i = 1; i < formats.size(); i++) {
-            ParameterizedFileUtil fileUtil = getUtil(formats.get(i));
+        final List<ParameterizedFileUtil> tileBasedFormats = formats
+                .stream()
+                .map(this::getUtil)
+                .filter(ParameterizedFileUtil::checkTileCount).collect(Collectors.toList());
 
-            final List<Integer> fmTiles = fileUtil.getTiles();
-            if (fileUtil.checkTileCount() && (tiles.size() != fmTiles.size() || !tiles.containsAll(fmTiles))) {
+        if( tileBasedFormats.size() > 0) {
+            final List<Integer> expectedTiles = tileBasedFormats.get(0).getTiles();
+
+            tileBasedFormats.forEach(util ->   {
+            if (expectedTiles.size() != util.getTiles().size() || !expectedTiles.containsAll(util.getTiles())) {
                 throw new PicardException(
                         "Formats do not have the same number of tiles! " + summarizeTileCounts(formats));
-            }
-        }
+            }});
 
-        return tiles;
+            return expectedTiles;
+        } else {
+            //we have no tile based file formats so we have no tiles.
+            return new ArrayList<>();
+        }
     }
 
     public File tileMetricsOut() {
