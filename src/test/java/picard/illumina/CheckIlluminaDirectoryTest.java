@@ -370,8 +370,11 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
         writeTileMetricsOutFile(makeMap(makeList(lane), makeList(tileList)));
 
         createSingleLocsFile();
-        final File intensityLaneDir = new File(intensityDir, IlluminaFileUtil.longLaneStr(lane));
-        intensityLaneDir.mkdirs();
+        // if we aren't creating symlinks we shouldn't create lane dirs
+        if(createSymlinks) {
+            final File intensityLaneDir = new File(intensityDir, IlluminaFileUtil.longLaneStr(lane));
+            intensityLaneDir.mkdirs();
+        }
         Assert.assertEquals(runPicardCommandLine(args), 0);
         //now that we have created the loc files lets test to make sure they are there
         args = makeCheckerArgs(basecallDir, lane, "50T", new IlluminaDataType[]{IlluminaDataType.Position},
