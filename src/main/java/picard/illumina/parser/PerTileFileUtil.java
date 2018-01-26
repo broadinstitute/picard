@@ -18,7 +18,7 @@ public class PerTileFileUtil extends ParameterizedFileUtil {
     }
 
     public PerTileFileUtil(final String extension, final File base,
-        final FileFaker faker, final int lane, final boolean skipEmptyFiles) {
+                           final FileFaker faker, final int lane, final boolean skipEmptyFiles) {
         super(true, extension, base, faker, lane, skipEmptyFiles);
         this.fileMap = getTiledFiles(base, matchPattern);
         if (!fileMap.isEmpty()) {
@@ -43,16 +43,19 @@ public class PerTileFileUtil extends ParameterizedFileUtil {
 
     @Override
     public List<String> verify(final List<Integer> expectedTiles, final int[] expectedCycles) {
-        final List<String> failures = new LinkedList<String>();
+        return verifyPerTile(this.base, expectedTiles);
+    }
 
-        if (!base.exists()) {
-            failures.add("Base directory(" + base.getAbsolutePath() + ") does not exist!");
+    List<String> verifyPerTile(File baseDir, List<Integer> expectedTiles) {
+        final List<String> failures = new LinkedList<>();
+        if (!baseDir.exists()) {
+            failures.add("Base directory(" + baseDir.getAbsolutePath() + ") does not exist!");
         } else {
-                if (!tiles.containsAll(expectedTiles)) {
-                    final List<Integer> missing = new ArrayList<Integer>(expectedTiles);
-                    missing.removeAll(tiles);
-                    failures.add("Missing tile " + missing + " for file type " + extension + ".");
-                }
+            if (!tiles.containsAll(expectedTiles)) {
+                final List<Integer> missing = new ArrayList<>(expectedTiles);
+                missing.removeAll(tiles);
+                failures.add("Missing tile " + missing + " for file type " + extension + ".");
+            }
         }
         return failures;
     }
@@ -60,7 +63,7 @@ public class PerTileFileUtil extends ParameterizedFileUtil {
     @Override
     public List<String> fakeFiles(final List<Integer> expectedTiles, final int[] cycles,
                                   final IlluminaFileUtil.SupportedIlluminaFormat format) {
-        final List<String> failures = new LinkedList<String>();
+        final List<String> failures = new LinkedList<>();
         if (!base.exists()) {
             failures.add("Base directory(" + base.getAbsolutePath() + ") does not exist!");
         } else {
