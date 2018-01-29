@@ -388,7 +388,7 @@ public class LiftoverVcf extends CommandLineProgram {
         contigUnion.addAll(rejectsByContig.keySet());
 
         log.info("liftover success by source contig:");
-        for (String contig : contigUnion){
+        for (String contig : contigUnion) {
             final long success = liftedBySourceContig.getOrDefault(contig, 0L);
             final long fail = rejectsByContig.getOrDefault(contig, 0L);
             final String liftPct = pfmt.format((double)success / (double)(success + fail));
@@ -397,10 +397,10 @@ public class LiftoverVcf extends CommandLineProgram {
         }
 
         log.info("lifted variants by target contig:");
-        for (String contig : liftedByDestContig.keySet()){
+        for (String contig : liftedByDestContig.keySet()) {
             log.info(contig, ": ", liftedByDestContig.get(contig));
         }
-        if (liftedByDestContig.isEmpty()){
+        if (liftedByDestContig.isEmpty()) {
             log.info("no successfully lifted variants");
         }
 
@@ -433,13 +433,11 @@ public class LiftoverVcf extends CommandLineProgram {
 
     private void trackLiftedVariantContig(Map<String, Long> map, String contig) {
         Long val = map.get(contig);
-        if (val == null){
+        if (val == null) {
             val = 0L;
         }
 
-        val++;
-
-        map.put(contig, val);
+        map.put(contig, ++val);
     }
 
     /**
