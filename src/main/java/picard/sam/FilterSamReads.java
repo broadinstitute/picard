@@ -227,7 +227,7 @@ public class FilterSamReads extends CommandLineProgram {
     @Argument(
             doc = "Create <OUTPUT>.reads file containing names of reads from INPUT and OUTPUT (for debugging purposes.)",
             optional = true)
-    public boolean WRITE_READS_FILES = true;
+    public boolean WRITE_READS_FILES = false;
 
     private void filterReads(final FilteringSamIterator filteringIterator) {
 
