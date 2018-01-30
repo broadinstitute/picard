@@ -298,8 +298,8 @@ public class FilterSamReads extends CommandLineProgram {
             final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
             final FilteringSamIterator filteringIterator;
 
-            // Used for exclude/include tag filter
-            List<Object> tagList = TAG_VALUE == null ? null: TAG_VALUE.stream().map(T -> (Object) T).collect(Collectors.toList());
+            // Used for exclude/include tag filter which expects a List<Object> input so casting here
+            List<Object> tagList = (List) TAG_VALUE;
 
             switch (FILTER) {
                 case includeAligned:
