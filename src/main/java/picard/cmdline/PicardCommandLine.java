@@ -265,15 +265,17 @@ public class PicardCommandLine {
                 if (!commandListOnly) {
                     if (clazz.getSimpleName().length() >= 45) {
                         builder.append(
-                                String.format("%s    %s    %s%s%s%s\n",
+                                String.format("%s    %s    %s%s%s%s%s\n",
                                         KGRN, clazz.getSimpleName(),
-                                        KCYN, getFeaturePrefix(clazz), property.oneLineSummary(),
+                                        KYEL, getToolSummaryPrefix(clazz),
+                                        KCYN, property.oneLineSummary(),
                                         KNRM));
                     } else {
                         builder.append(
-                                String.format("%s    %-45s%s%s%s\n",
+                                String.format("%s    %-45s%s%s%s%s%s\n",
                                         KGRN, clazz.getSimpleName(),
-                                        KCYN, getFeaturePrefix(clazz), property.oneLineSummary(),
+                                        KYEL, getToolSummaryPrefix(clazz),
+                                        KCYN, property.oneLineSummary(),
                                         KNRM));
                     }
                 }
@@ -292,7 +294,7 @@ public class PicardCommandLine {
         }
     }
 
-    public static String getFeaturePrefix(Class clazz){
+    private static String getToolSummaryPrefix(Class<?> clazz){
         if (clazz.getAnnotation(ExperimentalFeature.class) != null){
             return EXPERIMENTAL_PREFIX;
         }
