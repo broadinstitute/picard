@@ -115,18 +115,41 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
                 {FilterSamReads.Filter.excludeAligned, "READ_LIST_FILE"},
                 {FilterSamReads.Filter.includeAligned, "READ_LIST_FILE"},
                 {FilterSamReads.Filter.includePairedIntervals, "READ_LIST_FILE"},
+                {FilterSamReads.Filter.includeTagValues, "READ_LIST_FILE"},
+                {FilterSamReads.Filter.excludeTagValues, "READ_LIST_FILE"},
 
                 {FilterSamReads.Filter.includeJavascript, "INTERVAL_LIST"},
                 {FilterSamReads.Filter.excludeReadList, "INTERVAL_LIST"},
                 {FilterSamReads.Filter.includeReadList, "INTERVAL_LIST"},
                 {FilterSamReads.Filter.excludeAligned, "INTERVAL_LIST"},
                 {FilterSamReads.Filter.includeAligned, "INTERVAL_LIST"},
+                {FilterSamReads.Filter.includeTagValues, "INTERVAL_LIST"},
+                {FilterSamReads.Filter.excludeTagValues, "INTERVAL_LIST"},
 
                 {FilterSamReads.Filter.excludeReadList, "JAVASCRIPT_FILE"},
                 {FilterSamReads.Filter.includeReadList, "JAVASCRIPT_FILE"},
                 {FilterSamReads.Filter.excludeAligned, "JAVASCRIPT_FILE"},
                 {FilterSamReads.Filter.includeAligned, "JAVASCRIPT_FILE"},
                 {FilterSamReads.Filter.includePairedIntervals, "JAVASCRIPT_FILE"},
+                {FilterSamReads.Filter.includeTagValues, "JAVASCRIPT_FILE"},
+                {FilterSamReads.Filter.excludeTagValues, "JAVASCRIPT_FILE"},
+
+                {FilterSamReads.Filter.excludeReadList, "TAG"},
+                {FilterSamReads.Filter.includeReadList, "TAG"},
+                {FilterSamReads.Filter.excludeAligned, "TAG"},
+                {FilterSamReads.Filter.includeAligned, "TAG"},
+                {FilterSamReads.Filter.includePairedIntervals, "TAG"},
+                {FilterSamReads.Filter.excludeAligned, "TAG"},
+                {FilterSamReads.Filter.includeAligned, "TAG"},
+
+                {FilterSamReads.Filter.excludeReadList, "TAG_VALUE"},
+                {FilterSamReads.Filter.includeReadList, "TAG_VALUE"},
+                {FilterSamReads.Filter.excludeAligned, "TAG_VALUE"},
+                {FilterSamReads.Filter.includeAligned, "TAG_VALUE"},
+                {FilterSamReads.Filter.includePairedIntervals, "TAG_VALUE"},
+                {FilterSamReads.Filter.excludeAligned, "TAG_VALUE"},
+                {FilterSamReads.Filter.includeAligned, "TAG_VALUE"},
+
         };
     }
 
@@ -168,6 +191,16 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         return new Object[][]{
                 {"testdata/picard/sam/FilterSamReads/filter1.interval_list", 4},
                 {"testdata/picard/sam/FilterSamReads/filter2.interval_list", 0}
+        };
+    }
+
+    @DataProvider(name = "dataTestTagFilter")
+    public Object[][] dataTestTagFilter() {
+        return new Object[][]{
+                {"testdata/picard/sam/aligned.sam", "RG", "0", true, 8},
+                {"testdata/picard/sam/aligned.sam", "RG", "0", false, 0},
+                {"testdata/picard/sam/aligned.sam", "CB", "ACG", false, 3},
+                {"testdata/picard/sam/aligned.sam", "CB", "ACG", true, 5}
         };
     }
 
@@ -282,6 +315,25 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
     private FilterSamReads setupProgram(final File inputFile, final File inputSam, final FilterSamReads.Filter filter) throws Exception {
         return setupProgram(inputFile, inputSam, filter, null);
     }
+
+       /**
+        * filters a SAM using Tag Values
+        */
+       @Test(dataProvider = "dataTestTagFilter")
+       public void testTagFilter(final String samFilename, final String tag, final String tagValue, final boolean includeReads, final int expectNumber) throws Exception {
+           // input as SAM file
+           final File inputSam = new File(samFilename);
+           final FilterSamReads filterTest = new FilterSamReads();
+           filterTest.INPUT = inputSam;
+           filterTest.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
+           filterTest.OUTPUT.deleteOnExit();
+           filterTest.FILTER = includeReads ? FilterSamReads.Filter.includeTagValues : FilterSamReads.Filter.excludeTagValues;
+           filterTest.TAG = tag;
+           filterTest.TAG_VALUE = Arrays.asList(tagValue);
+           Assert.assertEquals(filterTest.doWork(),0);
+           long count = getReadCount(filterTest);
+           Assert.assertEquals(count, expectNumber);
+           }
 
     private long getReadCount(FilterSamReads filterTest) throws Exception {
         final SamReader samReader = SamReaderFactory.makeDefault().open(filterTest.OUTPUT);
