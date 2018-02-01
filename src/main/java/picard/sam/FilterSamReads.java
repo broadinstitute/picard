@@ -299,6 +299,8 @@ public class FilterSamReads extends CommandLineProgram {
             final FilteringSamIterator filteringIterator;
 
             // Used for exclude/include tag filter which expects a List<Object> input so casting here
+            // This is done to get around poor constructors of TagFilter that should be addressed in
+            // https://github.com/samtools/htsjdk/issues/1082
             List<Object> tagList = (List) TAG_VALUE;
 
             switch (FILTER) {
