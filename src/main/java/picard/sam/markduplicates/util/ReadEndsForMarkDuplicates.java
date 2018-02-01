@@ -30,16 +30,17 @@ package picard.sam.markduplicates.util;
  * @author Nils Homer
  */
 public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
-    /*
-    What do we need to store you ask?  Well, we need to store:
-       - byte: orientation
-       - short: libraryId, readGroup, tile, x, y, score
-       - int: read1ReferenceIndex, read1Coordinate, read2ReferenceIndex, read2Coordinate, duplicateSetSize
-       - long: read1IndexInFile, read2IndexInFile
-     */
-    protected static final int SIZE_OF = (1 * 1) + (5 * 2) + (5 * 4) + (8 * 2) + 1 + 1
-            + 8 + // last 8 == reference overhead
-            13; // This is determined experimentally with JProfiler
+
+    // What do we need to store you ask?  Well, we need to store:
+    protected static final int SIZE_OF =
+              (2 * 1)   // - byte: orientation, orientationForOpticalDuplicates
+            + (6 * 2)   // - short: libraryId, readGroup, tile, x, y, score
+            + (5 * 4)   // - int: read1ReferenceIndex, read1Coordinate, read2ReferenceIndex, read2Coordinate, duplicateSetSize
+            + (2 * 8)   // - long: read1IndexInFile, read2IndexInFile
+            + 1         // - boolean: firstOfPair
+            + 8         // last 8 == reference overhead
+            + 13;       // This is determined experimentally with JProfiler
+
 
     public static int getSizeOf() {
         return SIZE_OF;

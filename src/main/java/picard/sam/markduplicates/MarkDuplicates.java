@@ -434,9 +434,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         reportMemoryStats("After output close");
     }
 
-    // To be overrode in parallel implementation
+    // To be overridden in parallel implementation
     CloseableIterator<RepresentativeReadIndexer> representativeReadIndicesIterator() {
-        return this.representativeReadIndicesForDuplicates.iterator();
+        return representativeReadIndicesForDuplicates.iterator();
     }
 
     /**
