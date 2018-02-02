@@ -31,7 +31,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
-import picard.cmdline.programgroups.Fingerprinting;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.util.Map;
@@ -47,7 +47,7 @@ import java.util.Map;
                 "NOTA BENE: the fingerprint is provided for the contamination (by default) for the main sample. " +
                 "It is given as a list of PLs at the fingerprinting sites.",
         oneLineSummary = "Computes a fingerprint from the supplied SAM/BAM file, given a contamination estimate.",
-        programGroup = Fingerprinting.class)
+        programGroup = DiagnosticsAndQCProgramGroup.class)
 
 public class IdentifyContaminant extends CommandLineProgram {
 
