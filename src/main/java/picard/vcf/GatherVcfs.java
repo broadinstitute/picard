@@ -81,7 +81,7 @@ public class GatherVcfs extends CommandLineProgram {
                 log.info("Gathering by conventional means.");
                 gatherConventionally(sequenceDictionary, CREATE_INDEX, INPUT, OUTPUT);
             }
-        } catch (IllegalArgumentException e) {
+        } catch (RuntimeException e) {
             log.error("There was a problem with gathering the INPUT.", e);
             try {
                 Files.deleteIfExists(OUTPUT.toPath());
