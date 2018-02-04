@@ -14,7 +14,13 @@ import picard.vcf.VcfTestUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+amtools.SAMException;
 
 public class CheckFingerprintTest extends CommandLineProgramTest {
 
@@ -113,6 +119,44 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
                 "H=" + haplotypeFile
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
+    }
+
+    @Test
+    public void testIdentifyContaminant() {
+
+        final File mixture = new File(TEST_DATA_DIR, "NA128791_in_NA12892.25_PCT.sam");
+        final File contaminant = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r2.sam");
+        final File contaminated = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r2.sam");
+
+        final double contamAmount = .25;
+        final String sample = "NA12892";
+        final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+
+        final Fingerprint fpContaminant = checker.identifyContaminant(mixture, contamAmount, 100).get(sample);
+        Assert.assertNotNull(fpContaminant);
+
+        final Fingerprint fpContamination = checker.fingerprintFiles(Collections.singleton(contaminant), 1, 1, TimeUnit.DAYS)
+                .entrySet().stream()
+                .map(Map.Entry::getValue)
+                .reduce((a, b) -> {
+                    a.merge(b);
+                    return a;
+                })
+                .orElseThrow(() -> new IllegalArgumentException("Did not find any data for contaminant"));
+        Assert.assertNotNull(fpContamination);
+
+        final Fingerprint fpContaminated = checker.fingerprintFiles(Collections.singleton(contaminated), 1, 1, TimeUnit.DAYS)
+                .entrySet().stream()
+                .map(Map.Entry::getValue)
+                .reduce((a, b) -> {
+                    a.merge(b);
+                    return a;
+                })
+                .orElseThrow(() -> new IllegalArgumentException("Did not find any data for contaminated"));
+        Assert.assertNotNull(fpContaminated);
+
+        Assert.assertTrue(FingerprintChecker.calculateMatchResults(fpContaminant, fpContamination).getLOD() > 1D);
+        Assert.assertTrue(FingerprintChecker.calculateMatchResults(fpContaminant, fpContaminated).getLOD() < -4D);
     }
 
     @Override

@@ -30,7 +30,6 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
@@ -61,18 +60,24 @@ public class IdentifyContaminant extends CommandLineProgram {
             "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
     public File HAPLOTYPE_MAP;
 
-    @Argument(shortName = "C", doc = "A value of estimated contamination (must be between 0 and 1) in the file. ", minValue = 0D, maxValue = 1D)
+    @Argument(shortName = "C", doc = "A value of estimated contamination in the input. ", minValue = 0D, maxValue = 1D)
     public double CONTAMINATION;
 
-    @Argument(doc = "The sample alias to associate with the resulting fingerprint. When null, uses \"<SAMPLE>-contamination\", where <SAMPLE> is extracted from the input SAM/BAM.", optional = true)
+    @Argument(doc = "The sample alias to associate with the resulting fingerprint. When null, <SAMPLE> is extracted from the input file and \"<SAMPLE>-contamination\" is used.", optional = true)
     public String SAMPLE_ALIAS = null;
 
     @Argument(doc = "The maximum number of reads to use as evidence for any given locus. This is provided as a way to limit the " +
             "effect that any given locus may have.")
     public int LOCUS_MAX_READS = 200;
 
-    @Argument(doc = "Extract a fingerprint for the contaminated sample (instead of the contaminant). Setting to true changes the effect of SAMPLE_ALIAS when null. It names the sample in the VCF <SAMPLE>-contaminated, using the SM value from the SAM header.")
+    @Argument(doc = "Extract a fingerprint for the contaminated sample (instead of the contaminant). Setting to true changes the effect of SAMPLE_ALIAS when null. " +
+            "It names the sample in the VCF <SAMPLE>-contaminated, using the SM value from the SAM header.")
     public boolean EXTRACT_CONTAMINATED = false;
+
+    @Override
+    protected boolean requiresReference() {
+        return true;
+    }
 
     private final Log log = Log.getInstance(IdentifyContaminant.class);
 
@@ -85,56 +90,34 @@ public class IdentifyContaminant extends CommandLineProgram {
 
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
 
-        //if we want the contaminated fingerprint instead, we need to change the value of CONTAMINATION:
+        // if we want the contaminated fingerprint instead, we need to change the value of CONTAMINATION:
         if (EXTRACT_CONTAMINATED) CONTAMINATION = 1 - CONTAMINATION;
 
         final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(INPUT, CONTAMINATION, LOCUS_MAX_READS);
+
         if (fingerprintMap.size() != 1) {
             log.error("Expected exactly 1 fingerprint, found " + fingerprintMap.size());
             throw new IllegalArgumentException("Expected exactly 1 fingerprint in Input file, found " + fingerprintMap.size());
         }
 
-        final Map.Entry<String, Fingerprint> sampleFingerprintEntry = fingerprintMap.entrySet().iterator().next();
-        final String sampleToUse;
-        if (SAMPLE_ALIAS == null) {
-            // there must be exactly one element in fingerprintMap, this is checked above.
-            final String sample = sampleFingerprintEntry.getKey() + "-contamination";
-            if (EXTRACT_CONTAMINATED) {
-                sampleToUse = String.format("%s-contaminated", sample);
-            } else {
-                sampleToUse = String.format("%s-contamination", sample);
-            }
+        final Map.Entry<String, Fingerprint> soleEntry = fingerprintMap.entrySet().iterator().next();
 
-        } else {
-            sampleToUse = SAMPLE_ALIAS;
-        }
+        final String sampleToUse = getSampleToUse(soleEntry.getKey());
 
         try {
-            FingerprintUtils.writeFingerPrint(sampleFingerprintEntry.getValue(), OUTPUT, REFERENCE_SEQUENCE, sampleToUse, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION);
+            FingerprintUtils.writeFingerPrint(soleEntry.getValue(), OUTPUT, REFERENCE_SEQUENCE, sampleToUse, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION);
         } catch (Exception e) {
             log.error(e);
         }
-
         return 0;
     }
 
-    // Return a custom (required) Reference Argument Collection
-    @Override
-    protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
-        return new ReferenceArgumentCollection() {
+    private String getSampleToUse(final String fpSample) {
 
-            @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "The reference sequence to map the genotypes to.")
-            public File REFERENCE_SEQUENCE;
-
-            @Override
-            public File getReferenceFile() {
-                return REFERENCE_SEQUENCE;
-            }
-        };
-    }
-
-    @Override
-    protected boolean requiresReference() {
-        return true;
+        if (SAMPLE_ALIAS == null) {
+            return String.format("%s-%s", fpSample, EXTRACT_CONTAMINATED ? "contaminated" : "contamination");
+        } else {
+            return SAMPLE_ALIAS;
+        }
     }
 }

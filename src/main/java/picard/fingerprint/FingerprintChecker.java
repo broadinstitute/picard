@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010 The Broad Institute
+ * Copyright (c) 2010-2018 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +24,10 @@
 
 package picard.fingerprint;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import htsjdk.samtools.*;
 import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.util.*;
 import htsjdk.tribble.TribbleException;
 import htsjdk.variant.variantcontext.Allele;
@@ -42,7 +42,9 @@ import picard.util.ThreadPoolExecutorWithExceptions;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static htsjdk.samtools.SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES;
@@ -513,7 +515,7 @@ public class FingerprintChecker {
             // non-redundant data in the reads marked as "duplicates'.
             if (this.allowDuplicateReads) {
                 final List<SamRecordFilter> filters = new ArrayList<>(1);
-                filters.add(new NotPrimaryAlignmentFilter());
+                filters.add(new SecondaryAlignmentFilter());
                 iterator.setSamFilters(filters);
             }
 
