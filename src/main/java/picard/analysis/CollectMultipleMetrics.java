@@ -94,9 +94,11 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     public static interface ProgramInterface {
 
         /** By default, this method calls the
-         * {@link #makeInstance(String, String, File, File, Set, File, File,File,Set)} method
+         * {@link #makeInstance(String, String, File, File, Set, File, File, File, Set)} method
          * without 'includeUnpaired' parameter. */
-        default  SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
+        default  SinglePassSamProgram makeInstance(final String outbase,
+                                                   final String outext,
+                                                   final File input,
                                                    final File reference,
                                                    final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                                    final File dbSnp, final File intervals,
@@ -112,7 +114,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                     ignoreSequence);
         }
 
-        SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
+        SinglePassSamProgram makeInstance(final String outbase,
+                                          final String outext,
+                                          final File input,
                                           final File reference,
                                           final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                           final File dbSnp,
@@ -120,25 +124,21 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                           final File refflat,
                                           final  Set<String> ignoreSequence);
 
-        public boolean needsReferenceSequence();
+        default boolean needsReferenceSequence() {
+            return false;
+        }
 
-        public boolean supportsMetricAccumulationLevel();
+        default boolean needsRefflatFile() {
+            return false;
+        }
 
-        public boolean needsRefflatFile();
+        default boolean supportsMetricAccumulationLevel() {
+            return false;
+        }
     }
 
     public static enum Program implements ProgramInterface {
         CollectAlignmentSummaryMetrics {
-
-            @Override
-            public boolean needsReferenceSequence() {
-                return false;
-            }
-
-            @Override
-            public boolean needsRefflatFile() {
-                return false;
-            }
 
             @Override
             public boolean supportsMetricAccumulationLevel() {
@@ -146,7 +146,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
 
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
+            public SinglePassSamProgram makeInstance(final String outbase,
+                                                     final String outext,
+                                                     final File input,
                                                      final File reference,
                                                      final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                                      final File dbSnp,
@@ -166,16 +168,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return program;
             }
         },
-        CollectInsertSizeMetrics {
-            @Override
-            public boolean needsReferenceSequence() {
-                return false;
-            }
 
-            @Override
-            public boolean needsRefflatFile() {
-                return false;
-            }
+        CollectInsertSizeMetrics {
 
             @Override
             public boolean supportsMetricAccumulationLevel() {
@@ -183,7 +177,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
 
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
+            public SinglePassSamProgram makeInstance(final String outbase,
+                                                     final String outext,
+                                                     final File input,
                                                      final File reference,
                                                      final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                                      final File dbSnp,
@@ -203,22 +199,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return program;
             }
         },
+
         QualityScoreDistribution {
-
-            @Override
-            public boolean needsReferenceSequence() {
-                return false;
-            }
-
-            @Override
-            public boolean needsRefflatFile() {
-                return false;
-            }
-
-            @Override
-            public boolean supportsMetricAccumulationLevel() {
-                return false;
-            }
 
             @Override
             public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
@@ -240,25 +222,13 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return program;
             }
         },
+
         MeanQualityByCycle {
 
             @Override
-            public boolean needsReferenceSequence() {
-                return false;
-            }
-
-            @Override
-            public boolean needsRefflatFile() {
-                return false;
-            }
-
-            @Override
-            public boolean supportsMetricAccumulationLevel() {
-                return false;
-            }
-
-            @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
+            public SinglePassSamProgram makeInstance(final String outbase,
+                                                     final String outext,
+                                                     final File input,
                                                      final File reference,
                                                      final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                                      final File dbSnp,
@@ -277,25 +247,13 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return program;
             }
         },
+
         CollectBaseDistributionByCycle {
 
             @Override
-            public boolean needsReferenceSequence() {
-                return false;
-            }
-
-            @Override
-            public boolean needsRefflatFile() {
-                return false;
-            }
-
-            @Override
-            public boolean supportsMetricAccumulationLevel() {
-                return false;
-            }
-
-            @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
+            public SinglePassSamProgram makeInstance(final String outbase,
+                                                     final String outext,
+                                                     final File input,
                                                      final File reference,
                                                      final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                                      final File dbSnp,
@@ -314,6 +272,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return program;
             }
         },
+
         CollectGcBiasMetrics {
 
             @Override
@@ -322,17 +281,14 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
 
             @Override
-            public boolean needsRefflatFile() {
-                return false;
-            }
-
-            @Override
             public boolean supportsMetricAccumulationLevel() {
                 return true;
             }
 
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
+            public SinglePassSamProgram makeInstance(final String outbase,
+                                                     final String outext,
+                                                     final File input,
                                                      final File reference,
                                                      final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                                      final File dbSnp,
@@ -357,12 +313,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return program;
             }
         },
-        RnaSeqMetrics {
 
-            @Override
-            public boolean needsReferenceSequence() {
-                return false;
-            }
+        RnaSeqMetrics {
 
             @Override
             public boolean needsRefflatFile() {
@@ -375,7 +327,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
 
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
+            public SinglePassSamProgram makeInstance(final String outbase,
+                                                     final String outext,
+                                                     final File input,
                                                      final File reference,
                                                      final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                                      final File dbSnp,
@@ -398,6 +352,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return program;
             }
         },
+
         CollectSequencingArtifactMetrics {
 
             @Override
@@ -406,17 +361,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
 
             @Override
-            public boolean needsRefflatFile() {
-                return false;
-            }
-
-            @Override
-            public boolean supportsMetricAccumulationLevel() {
-                return false;
-            }
-
-            @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
+            public SinglePassSamProgram makeInstance(final String outbase,
+                                                     final String outext,
+                                                     final File input,
                                                      final File reference,
                                                      final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                                      final File dbSnp,
@@ -430,10 +377,13 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                         dbSnp,
                         intervals,
                         refflat,
-                        ignoreSequence);
+                        ignoreSequence,
+                        false);
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
+            public SinglePassSamProgram makeInstance(final String outbase,
+                                                     final String outext,
+                                                     final File input,
                                                      final File reference,
                                                      final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                                      final File dbSnp,
@@ -456,25 +406,13 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return program;
             }
         },
+
         CollectQualityYieldMetrics {
 
             @Override
-            public boolean needsReferenceSequence() {
-                return false;
-            }
-
-            @Override
-            public boolean needsRefflatFile() {
-                return false;
-            }
-
-            @Override
-            public boolean supportsMetricAccumulationLevel() {
-                return false;
-            }
-
-            @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
+            public SinglePassSamProgram makeInstance(final String outbase,
+                                                     final String outext,
+                                                     final File input,
                                                      final File reference,
                                                      final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                                      final File dbSnp,

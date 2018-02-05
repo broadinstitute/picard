@@ -9,19 +9,13 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SAMTextHeaderCodec;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.BufferedLineReader;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.StringUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
-import picard.annotation.RefFlatReader;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
-
 import static picard.analysis.GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector.*;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -34,7 +28,7 @@ import java.util.Set;
 /**
  * Tests the two default "programs" that have tests in CollectMultipleMetrics
  *
- * @author Yossi farjoun
+ * @author Yossi farjouns
  */
 public class CollectMultipleMetricsTest extends CommandLineProgramTest {
 
@@ -264,7 +258,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         final File outfile = File.createTempFile("tmp.", ".rna_metrics");
         final File intervals = new File(TEST_DATA_DIR, "rna_seq_metrics.interval_list");
         final File refflat = new File(TEST_DATA_DIR, "rna_seq_metrics.refflat");
-        Set<String> ignoreSequence = new HashSet<>();
+        final Set<String> ignoreSequence = new HashSet<>();
         ignoreSequence.add("chrM");
         outfile.deleteOnExit();
         final String[] args = new String[]{
