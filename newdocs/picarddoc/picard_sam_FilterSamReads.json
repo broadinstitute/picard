@@ -83,6 +83,14 @@
         {
           "summary": "",
           "name": "includePairedIntervals"
+        },
+        {
+          "summary": "",
+          "name": "includeTagValues"
+        },
+        {
+          "summary": "",
+          "name": "excludeTagValues"
         }
       ]
     },
@@ -258,6 +266,36 @@
       ]
     },
     {
+      "summary": "The tag to select from input SAM/BAM",
+      "name": "--TAG",
+      "synonyms": "-T",
+      "type": "String",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "The tag value(s) to filter by",
+      "name": "--TAG_VALUE",
+      "synonyms": "-TV",
+      "type": "List[String]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "NA",
@@ -369,7 +407,7 @@
       "type": "boolean",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "true",
+      "defaultValue": "false",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",

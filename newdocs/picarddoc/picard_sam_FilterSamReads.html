@@ -522,10 +522,26 @@
 					<td>SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.</td>
 				</tr>
 				<tr>
+					<td><a href="#--TAG">--TAG</a><br />
+								&nbsp;<em>-T</em>
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>The tag to select from input SAM/BAM</td>
+				</tr>
+				<tr>
+					<td><a href="#--TAG_VALUE">--TAG_VALUE</a><br />
+								&nbsp;<em>-TV</em>
+					</td>
+					<!--<td>List[String]</td> -->
+					<td>[]</td>
+					<td>The tag value(s) to filter by</td>
+				</tr>
+				<tr>
 					<td><a href="#--WRITE_READS_FILES">--WRITE_READS_FILES</a><br />
 					</td>
 					<!--<td>boolean</td> -->
-					<td>true</td>
+					<td>false</td>
 					<td>Create <OUTPUT>.reads file containing names of reads from INPUT and OUTPUT (for debugging purposes.)</td>
 				</tr>
 			<tr>
@@ -684,6 +700,10 @@
 					<dd class="enum"></dd>
 					<dt class="enum">includePairedIntervals</dt>
 					<dd class="enum"></dd>
+					<dt class="enum">includeTagValues</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">excludeTagValues</dt>
+					<dd class="enum"></dd>
 			</dl>
 			</p>
 		<p>
@@ -834,6 +854,30 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--TAG">--TAG </a>
+			 / <small>-T</small>
+		</h3>
+		<p class="args">
+			<b>The tag to select from input SAM/BAM</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--TAG_VALUE">--TAG_VALUE </a>
+			 / <small>-TV</small>
+		</h3>
+		<p class="args">
+			<b>The tag value(s) to filter by</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[String]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
 			 / <small>NA</small>
 		</h3>
@@ -927,7 +971,7 @@
 		</p>
 		<p>
 		<span class="label label-info ">boolean</span>
-			&nbsp;<span class="label">true</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 
         <hr>
@@ -939,7 +983,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.6-SNAPSHOT built at 29-20-2018 10:20:30.
+        <p class="version">Picard version 2.17.8-SNAPSHOT built at 05-47-2018 05:47:06.
         </p>
 
 	</div>
