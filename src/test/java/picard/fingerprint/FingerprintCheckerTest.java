@@ -202,7 +202,7 @@ public class FingerprintCheckerTest {
         new CrosscheckFingerprints().instanceMain(args);
     }
 
-    @DataProvider(name="queryableData")
+    @DataProvider(name = "queryableData")
     public Iterator<Object[]> queryableData() throws IOException {
         List<Object[]> tests = new ArrayList<>();
         tests.add(new Object[]{new File(TEST_DATA_DIR, "NA12891.fp.vcf"), false});
@@ -219,8 +219,24 @@ public class FingerprintCheckerTest {
 
         return tests.iterator();
     }
+
     @Test(dataProvider = "queryableData")
-    public void testQueryable(final File vcf, boolean expectedQueryable){
-        Assert.assertEquals(FingerprintChecker.isQueryable(vcf),expectedQueryable);
+    public void testQueryable(final File vcf, boolean expectedQueryable) {
+        Assert.assertEquals(FingerprintChecker.isQueryable(vcf), expectedQueryable);
+    }
+
+    @Test
+    public void testWriteFingerprint() throws IOException {
+        final File haplotype_db = new File(TEST_DATA_DIR, "haplotypeMap_small.vcf");
+        final File vcfInput = new File(TEST_DATA_DIR, "testSample_small.vcf");
+        final File fasta = new File(TEST_DATA_DIR, "reference.fasta");
+        final File vcfExpected = new File(TEST_DATA_DIR, "expectedFingerprint_small.vcf");
+        final FingerprintChecker fpchecker = new FingerprintChecker(haplotype_db);
+        final Fingerprint fp = fpchecker.fingerprintVcf(vcfInput).values().iterator().next();
+
+        final File vcfOutput = File.createTempFile("fingerprint", ".vcf");
+        FingerprintUtils.writeFingerPrint(fp, vcfOutput, fasta, "Dummy", "Testing");
+
+        VcfTestUtils.assertVcfFilesAreEqual(vcfOutput, vcfExpected);
     }
 }

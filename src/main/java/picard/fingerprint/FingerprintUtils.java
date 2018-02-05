@@ -25,16 +25,14 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFConstants;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLine;
-import htsjdk.variant.vcf.VCFStandardHeaderLines;
+import htsjdk.variant.vcf.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,7 +88,9 @@ public class FingerprintUtils {
         lines.add(VCFStandardHeaderLines.getFormatLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS));
         lines.add(VCFStandardHeaderLines.getFormatLine(VCFConstants.DEPTH_KEY));
 
-        variantContextWriter.writeHeader(new VCFHeader(lines, Collections.singletonList(sample)));
+        final VCFHeader header = new VCFHeader(lines, Collections.singletonList(sample));
+        header.setSequenceDictionary(ref.getSequenceDictionary());
+        variantContextWriter.writeHeader(header);
         return variantContextWriter;
     }
 
@@ -105,8 +105,8 @@ public class FingerprintUtils {
     public static VariantContextSet createVCSetFromFingerprint(final Fingerprint fingerPrint, final ReferenceSequenceFile reference, final String sample) {
 
         final VariantContextSet variantContexts = new VariantContextSet(reference.getSequenceDictionary());
-        final Set<String> snpNames = new HashSet<>();
 
+        // check that the same snp name isn't twice in the fingerprint.
         fingerPrint.values().stream()
                 .map(hp -> hp.getRepresentativeSnp().getName())
                 .filter(Objects::nonNull)
@@ -116,11 +116,11 @@ public class FingerprintUtils {
                 .stream()
                 .filter(e -> e.getValue() > 1)
                 .findFirst()
-                .ifPresent(e->{
+                .ifPresent(e -> {
                     throw new IllegalArgumentException("Found same SNP name twice (" + e.getKey() + ") in fingerprint. Cannot create a VCF.");
                 });
 
-
+        // convert all the haplotypes to variant contexts and add them to the set.
         fingerPrint.values().stream()
                 .map(hp -> getVariantContext(reference, sample, hp))
                 .forEach(variantContexts::add);
@@ -141,7 +141,6 @@ public class FingerprintUtils {
         final Allele allele2 = Allele.create(snp.getAllele2(), snp.getAllele2() == refAllele);
         final List<Allele> alleles = Arrays.asList(allele1, allele2);
 
-
         final Genotype gt = new GenotypeBuilder()
                 .DP(haplotypeProbabilities.getTotalObs())
                 .noAttributes()
@@ -149,30 +148,31 @@ public class FingerprintUtils {
                 .AD(new int[]{haplotypeProbabilities.getObsAllele1(), haplotypeProbabilities.getObsAllele2()})
                 .name(sample)
                 .make();
-
-        return new VariantContextBuilder(
-                snp.getName(),
-                snp.getChrom(),
-                snp.getPos(),
-                snp.getPos(),
-                alleles)
-                .log10PError(VariantContext.NO_LOG10_PERROR)
-                .genotypes(gt)
-                .unfiltered().make();
+        try {
+            return new VariantContextBuilder(
+                    snp.getName(),
+                    snp.getChrom(),
+                    snp.getPos(),
+                    snp.getPos(),
+                    alleles)
+                    .log10PError(VariantContext.NO_LOG10_PERROR)
+                    .genotypes(gt)
+                    .unfiltered().make();
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(String.format("Trouble creating variant at %s-%d", snp.getChrom(), snp.getPos()), e);
+        }
     }
 
     /**
      * A class that holds VariantContexts sorted by genomic position
      */
     public static class VariantContextSet extends TreeSet<VariantContext> {
-        public VariantContextSet(final SAMSequenceDictionary dict) {
+        VariantContextSet(final SAMSequenceDictionary dict) {
             super((lhs, rhs) -> {
                 final int lhsContig = dict.getSequenceIndex(lhs.getContig());
                 final int rhsContig = dict.getSequenceIndex(rhs.getContig());
 
-                int retval;
-
-                retval = lhsContig - rhsContig;
+                final int retval = lhsContig - rhsContig;
                 if (retval != 0) return retval;
 
                 return lhs.getStart() - rhs.getStart();

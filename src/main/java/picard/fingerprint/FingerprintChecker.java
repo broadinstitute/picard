@@ -319,6 +319,8 @@ public class FingerprintChecker {
 
                 // TODO: when multiple genotypes are available for a Haplotype check that they
                 // TODO: agree. Not urgent since DownloadGenotypes already does this.
+                // TODO: more urgent now as we convert vcfs to haplotypeProbabilities and
+                // TODO: there could be different VCs with information we'd like to use...
                 if (fp.containsKey(h)) continue;
 
                 final boolean hom = genotype.isHom();
@@ -331,7 +333,6 @@ public class FingerprintChecker {
                         (!hom) ? accuracy : halfError,
                         (hom && allele == snp.getAllele2()) ? accuracy : halfError
                 };
-
                 fp.add(new HaplotypeProbabilitiesFromGenotype(snp, h, probs[0], probs[1], probs[2]));
             }
         }
