@@ -4,6 +4,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.vcf.VcfTestUtils;
 
 import java.io.File;
@@ -127,7 +128,7 @@ public class FingerprintCheckerTest {
         Assert.assertFalse(fp1.isEmpty());
     }
 
-    @Test(expectedExceptions = RuntimeException.class)
+    @Test(expectedExceptions = PicardException.class)
     public void testTerminateOnBadFile() {
         final FingerprintChecker fpChecker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
         final File badSam = new File(TEST_DATA_DIR, "aligned_queryname_sorted.sam");
@@ -186,7 +187,7 @@ public class FingerprintCheckerTest {
         };
     }
 
-    @Test(dataProvider = "checkFingerprintsSamDataProviderFail", expectedExceptions = RuntimeException.class)
+    @Test(dataProvider = "checkFingerprintsSamDataProviderFail", expectedExceptions = PicardException.class)
     public void testCheckFingerprintsFail(final File samFile1, final File samFile2, final boolean expectedMatch) {
 
         final String[] args = {
@@ -200,6 +201,8 @@ public class FingerprintCheckerTest {
         };
 
         new CrosscheckFingerprints().instanceMain(args);
+
+        throw new IllegalStateException("Code should have thrown before getting here!!");
     }
 
     @DataProvider(name = "queryableData")

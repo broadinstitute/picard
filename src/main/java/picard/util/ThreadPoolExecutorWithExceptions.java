@@ -43,4 +43,12 @@ public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
             throw new PicardException(t.getMessage(), t);
         }
     }
+
+    @Override
+    protected void beforeExecute(Thread t, Runnable r) {
+        super.beforeExecute(t, r);
+        t.setUncaughtExceptionHandler((t1, e) -> {
+            throw new PicardException("Uncaught exception in thread: " + t1.getName() +" : " + e.getMessage(), e);
+        });
+    }
 }

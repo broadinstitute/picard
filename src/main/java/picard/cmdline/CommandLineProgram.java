@@ -267,7 +267,11 @@ public abstract class CommandLineProgram {
         int ret = -1;
         try {
             ret = doWork();
-        } finally {
+        } catch (Exception e){
+           System.err.print("this shouldn't happen");
+        }
+            finally
+        {
             try {
                 // Emit the time even if program throws
                 if (!QUIET) {

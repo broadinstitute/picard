@@ -397,7 +397,7 @@ public class FingerprintChecker {
         // non-redundant data in the reads marked as "duplicates'.
         if (this.allowDuplicateReads) {
             final List<SamRecordFilter> filters = new ArrayList<>(1);
-            filters.add(new NotPrimaryAlignmentFilter());
+            filters.add(new SecondaryAlignmentFilter());
             iterator.setSamFilters(filters);
         }
 
@@ -439,7 +439,7 @@ public class FingerprintChecker {
             for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
                 final FingerprintIdDetails details;
-                if (rg == null && !fingerprintIdDetailsMap.containsKey(rg)) {
+                if (rg == null || !fingerprintIdDetailsMap.containsKey(rg)) {
                     final FingerprintIdDetails unknownFPDetails = createUnknownFP(samFile, rec.getRecord());
                     fingerprintIdDetailsMap.put(null, unknownFPDetails);
 
@@ -628,8 +628,7 @@ public class FingerprintChecker {
                         log.info("Processed " + filesRead.get() + " out of " + files.size());
                     }
                 } catch (final Exception e) {
-                    log.warn("Exception thrown in thread:" + e.getMessage());
-                    throw e;
+                    throw new PicardException("Exception thrown in thread:", e);
                 }
             });
         }
