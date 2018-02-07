@@ -162,10 +162,10 @@ public class FilterSamReads extends CommandLineProgram {
         excludeReadList("Output reads with names *not* contained in READ_LIST_FILE. See READ_LIST_FILE for more detail."),
         includeJavascript("Output reads that have been accepted by the JAVASCRIPT_FILE script, that is, reads for which the value of the script is true. " +
                 "See the JAVASCRIPT_FILE argument for more detail. "),
-<       includePairedIntervals("Output reads that overlap with an interval from INTERVAL_LIST (and their mate). INPUT must be coordinate sorted.");
-=       includeTagValues("OUTPUT SAM/BAM will contain reads that have a value of tag TAG that is contained in the values for TAG_VALUES"),
+        includePairedIntervals("Output reads that overlap with an interval from INTERVAL_LIST (and their mate). INPUT must be coordinate sorted."),
+        includeTagValues("OUTPUT SAM/BAM will contain reads that have a value of tag TAG that is contained in the values for TAG_VALUES"),
         excludeTagValues("OUTPUT SAM/BAM will contain reads that do not have a value of tag TAG that is contained in the values for TAG_VALUES");
->       private final String description;
+       private final String description;
 
         Filter(final String description) {
             this.description = description;
