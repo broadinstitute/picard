@@ -24,6 +24,7 @@
 
 package picard.fingerprint;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import htsjdk.samtools.*;
 import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
@@ -42,9 +43,7 @@ import picard.util.ThreadPoolExecutorWithExceptions;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static htsjdk.samtools.SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES;
@@ -610,54 +609,42 @@ public class FingerprintChecker {
 
         // Generate fingerprints from each file
         final AtomicInteger filesRead = new AtomicInteger(0);
+
         final ExecutorService executor = new ThreadPoolExecutorWithExceptions(threads);
+        final ExecutorCompletionService<File> executorCompletionService = new ExecutorCompletionService<>(executor);
         final IntervalList intervals = this.haplotypes.getIntervalList();
         final Map<FingerprintIdDetails, Fingerprint> retval = new ConcurrentHashMap<>();
 
-        try {
-            for (final File f : files) {
-                executor.submit(() -> {
-                    try {
-                        if (CheckFingerprint.isBamOrSamFile(f)) {
-                            retval.putAll(fingerprintSamFile(f, intervals));
-                        } else {
-                            retval.putAll(fingerprintVcf(f));
-                        }
-
-                        log.debug("Processed file: " + f.getAbsolutePath() + " (" + filesRead.get() + ")");
-                        if (filesRead.incrementAndGet() % 100 == 0) {
-                            log.info("Processed " + filesRead.get() + " out of " + files.size());
-                        }
-                    } catch (final Exception e) {
-                        log.warn("Exception thrown in thread:" + e.getMessage());
-                        throw e;
+        for (final File f : files) {
+            executorCompletionService.submit(() -> {
+                    if (CheckFingerprint.isBamOrSamFile(f)) {
+                        retval.putAll(fingerprintSamFile(f, intervals));
+                    } else {
+                        retval.putAll(fingerprintVcf(f));
                     }
-                });
 
-            }
-
-            executor.shutdown();
-            try {
-                if (!executor.awaitTermination(waitTime, waitTimeUnit)) {
-
-                    log.error("Fingerprinting thread pool timeout exceeded... shutting down.");
-                    executor.shutdownNow(); // Cancel any still-executing tasks
-                    // Wait a while for tasks to respond to being cancelled
-                    executor.awaitTermination(60, TimeUnit.SECONDS);
-
-                    throw new PicardException("Pool did not terminate");
-                }
-            } catch (final InterruptedException ie) {
-                log.warn(ie, "Interrupted while waiting for executor to terminate.");
-            }
-        } catch (final Throwable e) {
-            // (Re-)Cancel if current thread also interrupted
-            log.error(e, "Parent thread encountered problem submitting extractors to thread pool or " +
-                    "awaiting shutdown of threadpool.  Attempting to kill threadpool.");
-            executor.shutdownNow();
-            throw new PicardException("Jobs didn't complete properly", e);
+                    log.debug("Processed file: " + f.getAbsolutePath() + " (" + filesRead.get() + ")");
+                    if (filesRead.incrementAndGet() % 100 == 0) {
+                        log.info("Processed " + filesRead.get() + " out of " + files.size());
+                    }
+                return f;
+            });
         }
 
+        executor.shutdown();
+        try {
+            executor.awaitTermination(waitTime, waitTimeUnit);
+        } catch (final InterruptedException ie) {
+            throw new PicardException("Interrupted while waiting for executor to terminate.", ie);
+        }
+
+        for (int i = 0; i < files.size(); i++) {
+            try {
+                executorCompletionService.take().get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new PicardException("Failed to fingerprint", e);
+            }
+        }
 
         return retval;
     }

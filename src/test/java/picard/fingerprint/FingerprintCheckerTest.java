@@ -202,7 +202,6 @@ public class FingerprintCheckerTest {
 
         new CrosscheckFingerprints().instanceMain(args);
 
-        throw new IllegalStateException("Code should have thrown before getting here!!");
     }
 
     @DataProvider(name = "queryableData")
