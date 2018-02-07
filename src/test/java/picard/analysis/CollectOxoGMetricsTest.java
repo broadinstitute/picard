@@ -31,23 +31,139 @@ public class CollectOxoGMetricsTest {
         final MetricsFile<CollectOxoGMetrics.CpcgMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outputFile));
 
-        final int metricsNumber = 4; // metrics number for testing (randomly chosen) that corresponds "TCT" context string.
+        {
+            final int metricsNumber = 4; // metrics number for testing (randomly chosen) that corresponds "TCT" context string.
+            final CollectOxoGMetrics.CpcgMetrics metrics = output.getMetrics().get(metricsNumber);
+
+            Assert.assertEquals(metrics.SAMPLE_ALIAS, "Hi,Momma!");
+            Assert.assertEquals(metrics.LIBRARY, "whatever");
+            Assert.assertEquals(metrics.CONTEXT, "TCT");
+            Assert.assertEquals(metrics.TOTAL_SITES, 3);
+            Assert.assertEquals(metrics.TOTAL_BASES, 3);
+            Assert.assertEquals(metrics.REF_NONOXO_BASES, 0);
+            Assert.assertEquals(metrics.REF_OXO_BASES, 3);
+            Assert.assertEquals(metrics.REF_TOTAL_BASES, 3);
+            Assert.assertEquals(metrics.ALT_NONOXO_BASES, 0);
+            Assert.assertEquals(metrics.ALT_OXO_BASES, 0);
+            Assert.assertEquals(metrics.OXIDATION_ERROR_RATE, 0.333333);
+            Assert.assertEquals(metrics.OXIDATION_Q, 4.771213);
+            Assert.assertEquals(metrics.C_REF_REF_BASES, 0);
+            Assert.assertEquals(metrics.G_REF_REF_BASES, 3);
+            Assert.assertEquals(metrics.C_REF_ALT_BASES, 0);
+            Assert.assertEquals(metrics.G_REF_ALT_BASES, 0);
+            Assert.assertEquals(metrics.C_REF_OXO_ERROR_RATE, Double.NaN);
+            Assert.assertEquals(metrics.C_REF_OXO_Q, Double.NaN);
+            Assert.assertEquals(metrics.G_REF_OXO_ERROR_RATE, Double.NaN);
+            Assert.assertEquals(metrics.G_REF_OXO_Q, Double.NaN);
+
+        }
+
+        {
+            // metrics number for testing that corresponds "GCA" context string
+            // (which is at the end of chr8 and is covered by a read).
+            final int metricsNumber = 3;
+            final CollectOxoGMetrics.CpcgMetrics metrics = output.getMetrics().get(metricsNumber);
+
+            Assert.assertEquals(metrics.SAMPLE_ALIAS, "Hi,Momma!");
+            Assert.assertEquals(metrics.LIBRARY, "whatever");
+            Assert.assertEquals(metrics.CONTEXT, "GCA");
+            Assert.assertEquals(metrics.TOTAL_SITES, 1);
+            Assert.assertEquals(metrics.TOTAL_BASES, 1);
+            Assert.assertEquals(metrics.REF_NONOXO_BASES, 1);
+            Assert.assertEquals(metrics.REF_OXO_BASES, 0);
+            Assert.assertEquals(metrics.REF_TOTAL_BASES, 1);
+            Assert.assertEquals(metrics.ALT_NONOXO_BASES, 0);
+            Assert.assertEquals(metrics.ALT_OXO_BASES, 0);
+            Assert.assertEquals(metrics.OXIDATION_ERROR_RATE, 1D);
+            Assert.assertEquals(metrics.OXIDATION_Q, -0D);
+            Assert.assertEquals(metrics.C_REF_REF_BASES, 1);
+            Assert.assertEquals(metrics.G_REF_REF_BASES, 0);
+            Assert.assertEquals(metrics.C_REF_ALT_BASES, 0);
+            Assert.assertEquals(metrics.G_REF_ALT_BASES, 0);
+            Assert.assertEquals(metrics.C_REF_OXO_ERROR_RATE, Double.NaN);
+            Assert.assertEquals(metrics.C_REF_OXO_Q, Double.NaN);
+            Assert.assertEquals(metrics.G_REF_OXO_ERROR_RATE, Double.NaN);
+            Assert.assertEquals(metrics.G_REF_OXO_Q, Double.NaN);
+        }
+    }
+
+
+    @Test
+    public void testCollectOxoGMetricsShortContext() throws IOException {
+        final File outputFile = File.createTempFile("test", ".oxo_g_metrics", TEST_DATA_DIR);
+        outputFile.deleteOnExit();
+        final String[] args = new String[]{
+                "INPUT=" + SAM_FILE.getAbsolutePath(),
+                "OUTPUT=" + outputFile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + REFERENCE_SEQUENCE.getAbsolutePath(),
+                "CONTEXT_SIZE=0"
+        };
+        CollectOxoGMetrics collectOxoGMetrics = new CollectOxoGMetrics();
+        Assert.assertEquals(collectOxoGMetrics.instanceMain(args), 0,
+                "Can't process " + SAM_FILE.getAbsolutePath() + " correctly");
+
+        final MetricsFile<CollectOxoGMetrics.CpcgMetrics, Comparable<?>> output = new MetricsFile<>();
+        output.read(new FileReader(outputFile));
+
+        final int metricsNumber = 0; // metrics number that corresponds "C" context string.
         final CollectOxoGMetrics.CpcgMetrics metrics = output.getMetrics().get(metricsNumber);
 
         Assert.assertEquals(metrics.SAMPLE_ALIAS, "Hi,Momma!");
         Assert.assertEquals(metrics.LIBRARY, "whatever");
-        Assert.assertEquals(metrics.CONTEXT, "TCT");
-        Assert.assertEquals(metrics.TOTAL_SITES, 3);
-        Assert.assertEquals(metrics.TOTAL_BASES, 3);
-        Assert.assertEquals(metrics.REF_NONOXO_BASES, 0);
-        Assert.assertEquals(metrics.REF_OXO_BASES, 3);
-        Assert.assertEquals(metrics.REF_TOTAL_BASES, 3);
+        Assert.assertEquals(metrics.CONTEXT, "C");
+        Assert.assertEquals(metrics.TOTAL_SITES, 22);
+        Assert.assertEquals(metrics.TOTAL_BASES, 22);
+        Assert.assertEquals(metrics.REF_NONOXO_BASES, 9);
+        Assert.assertEquals(metrics.REF_OXO_BASES, 13);
+        Assert.assertEquals(metrics.REF_TOTAL_BASES, 22);
         Assert.assertEquals(metrics.ALT_NONOXO_BASES, 0);
         Assert.assertEquals(metrics.ALT_OXO_BASES, 0);
-        Assert.assertEquals(metrics.OXIDATION_ERROR_RATE, 0.333333);
-        Assert.assertEquals(metrics.OXIDATION_Q, 4.771213);
+        Assert.assertEquals(metrics.OXIDATION_ERROR_RATE, .045455);
+        Assert.assertEquals(metrics.OXIDATION_Q, 13.424227);
+        Assert.assertEquals(metrics.C_REF_REF_BASES, 9);
+        Assert.assertEquals(metrics.G_REF_REF_BASES, 13);
+        Assert.assertEquals(metrics.C_REF_ALT_BASES, 0);
+        Assert.assertEquals(metrics.G_REF_ALT_BASES, 0);
+        Assert.assertEquals(metrics.C_REF_OXO_ERROR_RATE, 0D);
+        Assert.assertEquals(metrics.C_REF_OXO_Q, 100D);
+        Assert.assertEquals(metrics.G_REF_OXO_ERROR_RATE, 0D);
+        Assert.assertEquals(metrics.G_REF_OXO_Q, 100D);
+    }
+
+    @Test
+    public void testCollectOxoGMetricsLongContext() throws IOException {
+        final File outputFile = File.createTempFile("test", ".oxo_g_metrics", TEST_DATA_DIR);
+        outputFile.deleteOnExit();
+        final String[] args = new String[]{
+                "INPUT=" + SAM_FILE.getAbsolutePath(),
+                "OUTPUT=" + outputFile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + REFERENCE_SEQUENCE.getAbsolutePath(),
+                "CONTEXT_SIZE=2"
+        };
+        CollectOxoGMetrics collectOxoGMetrics = new CollectOxoGMetrics();
+        Assert.assertEquals(collectOxoGMetrics.instanceMain(args), 0,
+                "Can't process " + SAM_FILE.getAbsolutePath() + " correctly");
+
+        final MetricsFile<CollectOxoGMetrics.CpcgMetrics, Comparable<?>> output = new MetricsFile<>();
+        output.read(new FileReader(outputFile));
+
+        final int metricsNumber = 141; // metrics number that corresponds "GGCTG" context string.
+        final CollectOxoGMetrics.CpcgMetrics metrics = output.getMetrics().get(metricsNumber);
+
+        Assert.assertEquals(metrics.SAMPLE_ALIAS, "Hi,Momma!");
+        Assert.assertEquals(metrics.LIBRARY, "whatever");
+        Assert.assertEquals(metrics.CONTEXT, "GGCTG");
+        Assert.assertEquals(metrics.TOTAL_SITES, 1);
+        Assert.assertEquals(metrics.TOTAL_BASES, 1);
+        Assert.assertEquals(metrics.REF_NONOXO_BASES, 0);
+        Assert.assertEquals(metrics.REF_OXO_BASES, 1);
+        Assert.assertEquals(metrics.REF_TOTAL_BASES, 1);
+        Assert.assertEquals(metrics.ALT_NONOXO_BASES, 0);
+        Assert.assertEquals(metrics.ALT_OXO_BASES, 0);
+        Assert.assertEquals(metrics.OXIDATION_ERROR_RATE, 1D);
+        Assert.assertEquals(metrics.OXIDATION_Q, -0D);
         Assert.assertEquals(metrics.C_REF_REF_BASES, 0);
-        Assert.assertEquals(metrics.G_REF_REF_BASES, 3);
+        Assert.assertEquals(metrics.G_REF_REF_BASES, 1);
         Assert.assertEquals(metrics.C_REF_ALT_BASES, 0);
         Assert.assertEquals(metrics.G_REF_ALT_BASES, 0);
         Assert.assertEquals(metrics.C_REF_OXO_ERROR_RATE, Double.NaN);
@@ -55,6 +171,7 @@ public class CollectOxoGMetricsTest {
         Assert.assertEquals(metrics.G_REF_OXO_ERROR_RATE, Double.NaN);
         Assert.assertEquals(metrics.G_REF_OXO_Q, Double.NaN);
     }
+
 
     @DataProvider(name = "RightOptions")
     public static Object[][] rightOptions() {

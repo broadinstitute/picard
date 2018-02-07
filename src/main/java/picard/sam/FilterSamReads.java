@@ -156,16 +156,16 @@ public class FilterSamReads extends CommandLineProgram {
 
     @VisibleForTesting
     protected enum Filter implements CommandLineParser.ClpEnum {
-        includeAligned("Aligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note: first and second of paired reads must both be aligned to be included in OUTPUT.)"),
-        excludeAligned("Unaligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note: first and second of pair must both be aligned to be excluded from  OUTPUT.)"),
-        includeReadList("Reads whose queryname is in READ_LIST_FILE."),
-        excludeReadList("Reads whose queryname is not in READ_LIST_FILE. see the READ_LIST_FILE for more detail."),
-        includeJavascript("Reads that have been accepted by the JAVASCRIPT_FILE script, that is, reads for which the value of the script is true. " +
+        includeAligned("Output aligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note: first and second of paired reads must both be aligned to be included in OUTPUT.)"),
+        excludeAligned("Output Unmapped reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note: first and second of pair must both be aligned to be excluded from OUTPUT.)"),
+        includeReadList("Output reads with names contained in READ_LIST_FILE. See READ_LIST_FILE for more detail."),
+        excludeReadList("Output reads with names *not* contained in READ_LIST_FILE. See READ_LIST_FILE for more detail."),
+        includeJavascript("Output reads that have been accepted by the JAVASCRIPT_FILE script, that is, reads for which the value of the script is true. " +
                 "See the JAVASCRIPT_FILE argument for more detail. "),
-        includePairedIntervals("Reads (and their mate) that overlap with an interval from INTERVAL_LIST. INPUT must be coordinate sorted."),
+        includePairedIntervals("Output reads that overlap with an interval from INTERVAL_LIST (and their mate). INPUT must be coordinate sorted."),
         includeTagValues("OUTPUT SAM/BAM will contain reads that have a value of tag TAG that is contained in the values for TAG_VALUES"),
         excludeTagValues("OUTPUT SAM/BAM will contain reads that do not have a value of tag TAG that is contained in the values for TAG_VALUES");
-        private final String description;
+       private final String description;
 
         Filter(final String description) {
             this.description = description;
@@ -184,12 +184,12 @@ public class FilterSamReads extends CommandLineProgram {
     @Argument(doc = "Which filter to use.")
     public Filter FILTER = null;
 
-    @Argument(doc = "File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file.",
+    @Argument(doc = "File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file, when using FILTER=includeReadList or FILTER=includeReadList.",
             optional = true,
             shortName = "RLF")
     public File READ_LIST_FILE;
 
-    @Argument(doc = "Interval List File containing intervals that will be included in the OUTPUT if using FILTER=includePairedIntervals",
+    @Argument(doc = "Interval List File containing intervals that will be included in the OUTPUT when using FILTER=includePairedIntervals",
             optional = true,
             shortName = "IL")
     public File INTERVAL_LIST;
@@ -205,7 +205,7 @@ public class FilterSamReads extends CommandLineProgram {
     public List<String> TAG_VALUE;
 
     @Argument(
-            doc = "SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.",
+            doc = "SortOrder of the OUTPUT file, otherwise use the SortOrder of the INPUT file.",
             optional = true,
             shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
@@ -215,7 +215,7 @@ public class FilterSamReads extends CommandLineProgram {
     public File OUTPUT;
 
     @Argument(shortName = "JS",
-            doc = "Filters the INPUT with a javascript expression using the java javascript-engine. "
+            doc = "Filters the INPUT with a javascript expression using the java javascript-engine, when using FILTER=includeJavascript. "
                     + " The script puts the following variables in the script context: \n"
                     + " 'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and \n "
                     + " 'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ).\n"
@@ -282,7 +282,7 @@ public class FilterSamReads extends CommandLineProgram {
         IOUtil.assertFileIsReadable(readsFile);
     }
 
-    private List<Interval> getIntervalList(final File intervalFile) throws IOException {
+    private List<Interval> getIntervalList (final File intervalFile) throws IOException {
         IOUtil.assertFileIsReadable(intervalFile);
         return IntervalList.fromFile(intervalFile).getIntervals();
     }
@@ -322,7 +322,9 @@ public class FilterSamReads extends CommandLineProgram {
                     break;
                 case includeJavascript:
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),
-                            new JavascriptSamRecordFilter(JAVASCRIPT_FILE, samReader.getFileHeader()));
+                            new JavascriptSamRecordFilter(
+                                    JAVASCRIPT_FILE,
+                                    samReader.getFileHeader()));
                     break;
                 case includePairedIntervals:
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),

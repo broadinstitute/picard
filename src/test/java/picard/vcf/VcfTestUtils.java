@@ -17,14 +17,13 @@ import java.util.Iterator;
 public class VcfTestUtils {
 
     /**
-     * This method creates a temporary VCF file and it's appropriately named index file, and will delete them on exit.
-     *
+     * This method creates a temporary VCF or Bam file and its appropriately named index file, and will delete them on exit.
      * @param prefix - The prefix string to be used in generating the file's name; must be at least three characters long
      * @param suffix - The suffix string to be used in generating the file's name; may be null, in which case the suffix ".tmp" will be used
-     * @return A File object referencing the newly created temporary VCF file
+     * @return A File object referencing the newly created temporary file
      * @throws IOException - if a file could not be created.
      */
-    public static File createTemporaryIndexedVcfFile(final String prefix, final String suffix) throws IOException {
+    public static File createTemporaryIndexedFile(final String prefix, final String suffix) throws IOException {
         final File out = File.createTempFile(prefix, suffix);
         out.deleteOnExit();
         String indexFileExtension = null;
@@ -32,7 +31,10 @@ public class VcfTestUtils {
             indexFileExtension = ".tbi";
         } else if (suffix.endsWith("vcf")) {
             indexFileExtension = ".idx";
+        } else if (suffix.endsWith(".bam")) {
+            indexFileExtension = ".bai";
         }
+
         if (indexFileExtension != null) {
             final File indexOut = new File(out.getAbsolutePath() + indexFileExtension);
             indexOut.deleteOnExit();
@@ -41,22 +43,43 @@ public class VcfTestUtils {
     }
 
     /**
-     * This method makes a copy of the input VCF and creates an index file for it in the same location.
-     * This is done so that we don't need to store the index file in the same repo
-     * The copy of the input is done so that it and its index are in the same directory which is typically required.
      *
-     * @param vcfFile the vcf file to index
-     * @return File a vcf file (index file is created in same path).
+     * @param vcfFile
+     * @param tempFilePrefix
+     * @return
+     * @throws IOException
+     *
+     * @deprecated use createTemporaryIndexedFile instead
      */
+    @Deprecated
     public static File createTemporaryIndexedVcfFromInput(final File vcfFile, final String tempFilePrefix) throws IOException {
+        return createTemporaryIndexedVcfFromInput(vcfFile, tempFilePrefix, null);
+    }
+
+        /**
+         * This method makes a copy of the input VCF and creates an index file for it in the same location.
+         * This is done so that we don't need to store the index file in the same repo
+         * The copy of the input is done so that it and its index are in the same directory which is typically required.
+         * @param vcfFile the vcf file to index
+         * @return File a vcf file (index file is created in same path).
+         */
+    public static File createTemporaryIndexedVcfFromInput(final File vcfFile, final String tempFilePrefix, final String suffix) throws IOException {
         final String extension;
 
-        if (vcfFile.getAbsolutePath().endsWith(".vcf")) extension = ".vcf";
-        else if (vcfFile.getAbsolutePath().endsWith(".vcf.gz")) extension = ".vcf.gz";
-        else
+        if (suffix != null) {
+            extension = suffix;
+        } else if (vcfFile.getAbsolutePath().endsWith(".vcf") ) {
+            extension = ".vcf";
+        } else if (vcfFile.getAbsolutePath().endsWith(".vcf.gz") ) {
+            extension = ".vcf.gz";
+        } else {
+            extension = "nope!";
+        }
+
+        if (!extension.equals(".vcf") && !extension.equals(".vcf.gz"))
             throw new IllegalArgumentException("couldn't find a .vcf or .vcf.gz ending for input file " + vcfFile.getAbsolutePath());
 
-        File output = createTemporaryIndexedVcfFile(tempFilePrefix, extension);
+        File output = createTemporaryIndexedFile(tempFilePrefix, extension);
 
         final VCFFileReader in = new VCFFileReader(vcfFile, false);
         final VCFHeader header = in.getFileHeader();

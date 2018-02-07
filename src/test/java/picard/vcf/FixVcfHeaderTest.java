@@ -27,7 +27,6 @@ package picard.vcf;
 
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
-import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -62,7 +61,7 @@ public class FixVcfHeaderTest {
                                  final File replacementHeader,
                                  final boolean enforceSampleSamples) throws IOException {
         final FixVcfHeader program = new FixVcfHeader();
-        final File outputVcf = VcfTestUtils.createTemporaryIndexedVcfFile("output.", ".vcf");
+        final File outputVcf = VcfTestUtils.createTemporaryIndexedFile("output.", ".vcf");
 
         program.INPUT      = INPUT_VCF;
         program.OUTPUT     = outputVcf;

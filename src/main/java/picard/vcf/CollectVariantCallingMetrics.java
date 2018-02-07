@@ -89,7 +89,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(DBSNP);
         if (TARGET_INTERVALS != null) IOUtil.assertFileIsReadable(TARGET_INTERVALS);
-        if (SEQUENCE_DICTIONARY != null) IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
+        if (SEQUENCE_DICTIONARY != null) IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY.toPath());
 
         final boolean requiresIndex = this.TARGET_INTERVALS != null || this.THREAD_COUNT > 1;
         final VCFFileReader variantReader = new VCFFileReader(INPUT, requiresIndex);

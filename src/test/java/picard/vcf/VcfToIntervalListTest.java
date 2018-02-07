@@ -56,5 +56,4 @@ public class VcfToIntervalListTest extends CommandLineProgramTest {
 
         Assert.assertEquals(intervals.size(), expectedIntervalsSize);
     }
-
 }
