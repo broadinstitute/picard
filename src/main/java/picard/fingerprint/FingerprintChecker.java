@@ -614,31 +614,50 @@ public class FingerprintChecker {
         final IntervalList intervals = this.haplotypes.getIntervalList();
         final Map<FingerprintIdDetails, Fingerprint> retval = new ConcurrentHashMap<>();
 
-        for (final File f : files) {
-            executor.submit(() -> {
-                try {
-                    if (CheckFingerprint.isBamOrSamFile(f)) {
-                        retval.putAll(fingerprintSamFile(f, intervals));
-                    } else {
-                        retval.putAll(fingerprintVcf(f));
-                    }
-
-                    log.debug("Processed file: " + f.getAbsolutePath() + " (" + filesRead.get() + ")");
-                    if (filesRead.incrementAndGet() % 100 == 0) {
-                        log.info("Processed " + filesRead.get() + " out of " + files.size());
-                    }
-                } catch (final Exception e) {
-                    throw new PicardException("Exception thrown in thread:", e);
-                }
-            });
-        }
-
-        executor.shutdown();
         try {
-            executor.awaitTermination(waitTime, waitTimeUnit);
-        } catch (final InterruptedException ie) {
-            log.warn(ie, "Interrupted while waiting for executor to terminate.");
+            for (final File f : files) {
+                executor.submit(() -> {
+                    try {
+                        if (CheckFingerprint.isBamOrSamFile(f)) {
+                            retval.putAll(fingerprintSamFile(f, intervals));
+                        } else {
+                            retval.putAll(fingerprintVcf(f));
+                        }
+
+                        log.debug("Processed file: " + f.getAbsolutePath() + " (" + filesRead.get() + ")");
+                        if (filesRead.incrementAndGet() % 100 == 0) {
+                            log.info("Processed " + filesRead.get() + " out of " + files.size());
+                        }
+                    } catch (final Exception e) {
+                        log.warn("Exception thrown in thread:" + e.getMessage());
+                        throw e;
+                    }
+                });
+
+            }
+
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(waitTime, waitTimeUnit)) {
+
+                    log.error("Fingerprinting thread pool timeout exceeded... shutting down.");
+                    executor.shutdownNow(); // Cancel any still-executing tasks
+                    // Wait a while for tasks to respond to being cancelled
+                    executor.awaitTermination(60, TimeUnit.SECONDS);
+
+                    throw new PicardException("Pool did not terminate");
+                }
+            } catch (final InterruptedException ie) {
+                log.warn(ie, "Interrupted while waiting for executor to terminate.");
+            }
+        } catch (final Throwable e) {
+            // (Re-)Cancel if current thread also interrupted
+            log.error(e, "Parent thread encountered problem submitting extractors to thread pool or " +
+                    "awaiting shutdown of threadpool.  Attempting to kill threadpool.");
+            executor.shutdownNow();
+            throw new PicardException("Jobs didn't complete properly", e);
         }
+
 
         return retval;
     }
