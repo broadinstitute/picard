@@ -245,7 +245,7 @@ public class CheckFingerprint extends CommandLineProgram {
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(INPUT.toPath()), checker.getHeader().getSequenceDictionary(), true);
 
             // Verify that there's only one sample in the SAM/BAM.
-            final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+            final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT.toPath());
             for (final SAMReadGroupRecord rec : in.getFileHeader().getReadGroups()) {
                 if (observedSampleAlias == null) {
                     observedSampleAlias = rec.getSample();

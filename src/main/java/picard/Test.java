@@ -29,7 +29,7 @@ public class Test {
         watch.stop();
         System.out.println("StringUtil.split() took " + watch.getElapsedTime());
         watch.reset();
-        
+
         watch.start();
         for (int i=0; i<ITERATIONS; ++i) {
             if (split(TEXT, fields, "\t") > 100) {
@@ -49,7 +49,7 @@ public class Test {
 
         return i;
     }
-    
+
 
 
 

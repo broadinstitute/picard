@@ -29,7 +29,7 @@ public abstract class CommandLineProgramTest {
     }
 
     public String[] makePicardCommandLineArgs(final Map<String, String> kwargs) {
-        final List<String> args = new ArrayList<String>();
+        final List<String> args = new ArrayList<>();
         for (final String key : kwargs.keySet()) {
             args.add(key + "=" + kwargs.get(key));
         }

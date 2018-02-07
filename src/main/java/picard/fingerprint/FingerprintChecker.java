@@ -337,6 +337,8 @@ public class FingerprintChecker {
      * Takes a set of fingerprints and returns an IntervalList containing all the loci that
      * can be productively examined in sequencing data to compare to one or more of the
      * fingerprints.
+     *
+     *
      */
     public IntervalList getLociToGenotype(final Collection<Fingerprint> fingerprints) {
         final IntervalList intervals = new IntervalList(this.haplotypes.getHeader());

@@ -46,7 +46,7 @@ public class IntervalListScattererTest {
         Assert.assertEquals(LIST_TO_SCATTER.getUniqueBaseCount(), 200, "Wrong unique base count");
     }
 
-    private static class Testcase {
+    static class Testcase {
         final IntervalList source;
         final List<IntervalList> expectedScatter;
         final int scatterWidth;
@@ -68,7 +68,7 @@ public class IntervalListScattererTest {
         }
     }
 
-    private static final List<Testcase> testcases = new ArrayList<Testcase>();
+    static final List<Testcase> testcases = new ArrayList<Testcase>();
 
     static {
         testcases.add(new Testcase(
@@ -164,11 +164,49 @@ public class IntervalListScattererTest {
                                 30200, 30249
                         )
                 )
+        ));  testcases.add(new Testcase(
+                LIST_TO_SCATTER, 6, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
+                Arrays.asList(
+                        composeIntervalList(LIST_TO_SCATTER, "1",
+                                30000, 30098
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER, "1",
+                                30100, 30150
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER, "1",
+                                30200, 30249
+                        )
+                )
+        ));
+
+        testcases.add(new Testcase(
+                LIST_TO_SCATTER, 2, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
+                Arrays.asList(
+                        composeIntervalList(LIST_TO_SCATTER, "1",
+                                30000, 30098,
+                                30100, 30150
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER, "1",
+                                30200, 30249
+                        )
+                )
+        ));
+
+        testcases.add(new Testcase(
+                LIST_TO_SCATTER, 1, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
+                Arrays.asList(
+                        composeIntervalList(LIST_TO_SCATTER, "1",
+                                30000, 30098,
+                                30100, 30150,
+                                30200, 30249
+                        )
+                )
         ));
     }
 
     @DataProvider
-    public Object[][] testScatterTestcases() {
+    public static Object[][] testScatterTestcases() {
+
         final Object[][] objects = new Object[testcases.size()][];
         for (int i = 0; i < objects.length; i++) {
             objects[i] = new Object[]{testcases.get(i)};
@@ -180,6 +218,7 @@ public class IntervalListScattererTest {
     public void testScatter(final Testcase tc) {
         final IntervalListScatterer scatterer = new IntervalListScatterer(tc.mode);
         final List<IntervalList> scatter = scatterer.scatter(tc.source, tc.scatterWidth);
+        Assert.assertEquals(scatter.size(), tc.expectedScatter.size());
         Assert.assertEquals(scatter, tc.expectedScatter);
     }
     

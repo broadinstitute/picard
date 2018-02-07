@@ -85,15 +85,19 @@ public class FingerprintCheckerTest {
     @DataProvider(name = "checkFingerprintsVcfDataProvider")
     public Object[][] testCheckFingerprintsVcfDataProvider() {
         return new Object[][]{
-                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12891.fp.vcf"), "NA12891", "NA12891", -0.02128, -1.026742, 1.005462},
-                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12892.fp.vcf"), "NA12892", "NA12892", -0.021945, -1.08308, 1.061135},
+                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12891.fp.vcf"), "NA12891", "NA12891", -0.021280, -1.026742,  1.005462},
+                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"),  "NA12891", "NA12891", -0.014720, -1.026742,  1.012022},
+                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12892.fp.vcf"), "NA12892", "NA12892", -0.021945, -1.083080,  1.061135},
+                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12892.g.vcf"),  "NA12892", "NA12892", -0.014852, -1.083080,  1.068227},
                 {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12892.fp.vcf"), "NA12891", "NA12892", -5.941691, -1.026742, -4.914948},
-                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.fp.vcf"), "NA12892", "NA12891", -5.998029, -1.08308, -4.914948}
+                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12892.g.vcf"),  "NA12891", "NA12892", -6.638797, -1.026742, -5.612055},
+                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.fp.vcf"), "NA12892", "NA12891", -5.998029, -1.083080, -4.914948},
+                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"),  "NA12892", "NA12891", -6.656826, -1.083080, -5.573746}
         };
     }
 
     @Test(dataProvider = "checkFingerprintsVcfDataProvider")
-    public void testCheckFingerprints(final File vcfFile, final File genotypesFile, final String observedSampleAlias, final String expectedSampleAlias,
+    public void testCheckFingerprintsVcf(final File vcfFile, final File genotypesFile, final String observedSampleAlias, final String expectedSampleAlias,
                                       final double llExpectedSample, final double llRandomSample, final double lodExpectedSample) throws IOException {
         final File indexedInputVcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(vcfFile, "fingerprintcheckertest.tmp.");
         final File indexedGenotypesVcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(genotypesFile, "fingerprintcheckertest.tmp.");
@@ -155,7 +159,7 @@ public class FingerprintCheckerTest {
     }
 
     @Test(dataProvider = "checkFingerprintsSamDataProvider")
-    public void testCheckFingerprints(final File samFile1, final File samFile2, final boolean expectedMatch, final boolean silent) {
+    public void testCheckFingerprintsSam(final File samFile1, final File samFile2, final boolean expectedMatch, final boolean silent) {
 
         final String[] args = {
                 "EXPECT_ALL_GROUPS_TO_MATCH=true",

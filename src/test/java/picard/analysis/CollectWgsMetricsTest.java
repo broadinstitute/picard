@@ -34,12 +34,14 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import htsjdk.variant.vcf.VCF3Codec;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
+import picard.vcf.VcfTestUtils;
 
 import java.io.*;
 import java.util.Random;
@@ -135,14 +137,9 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final String readName = "TESTBARCODE";
 
         //Create Sam Files
-        tempSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
-        final File tempSamIndex = new File(tempSamFile.getAbsolutePath().replace("bam", "bai"));
+        tempSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectWgsMetrics", ".bam");
         final File tempSamFileUnsorted = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
         tempSamFileUnsorted.deleteOnExit();
-        tempSamIndex.deleteOnExit();
-        tempSamFile.deleteOnExit();
-        final File sortedSamIdx = new File(TEST_DIR, tempSamFile.getName() + ".idx");
-        sortedSamIdx.deleteOnExit();
 
         final SAMFileHeader header = new SAMFileHeader();
 
@@ -216,10 +213,10 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
     public void testLargeIntervals(final String useFastAlgorithm) throws IOException {
         final File input = new File(TEST_DIR, "forMetrics.sam");
         final File outfile = File.createTempFile("test", ".wgs_metrics");
+        outfile.deleteOnExit();
         final File ref = new File(TEST_DIR, "merger.fasta");
         final File intervals = new File(TEST_DIR, "largeIntervals.interval_list");
         final int sampleSize = 1000;
-        outfile.deleteOnExit();
         final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
@@ -244,9 +241,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
     @Test(dataProvider = "wgsAlgorithm")
     public void testExclusions(final String useFastAlgorithm) throws IOException {
         final File reference = new File("testdata/picard/sam/merger.fasta");
-        final File tempSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
-        tempSamFile.deleteOnExit();
-
+        final File tempSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectWgsMetrics", ".bam");
 
         final SAMRecordSetBuilder setBuilder = CollectWgsMetricsTestUtils.createTestSAMBuilder(reference, READ_GROUP_ID, SAMPLE, PLATFORM, LIBRARY);
 
@@ -309,8 +304,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
     @Test(dataProvider = "wgsAlgorithm")
     public void testPoorQualityBases(final String useFastAlgorithm) throws IOException {
         final File reference = new File("testdata/picard/quality/chrM.reference.fasta");
-        final File testSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
-        testSamFile.deleteOnExit();
+        final File testSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectWgsMetrics", ".bam");
 
         /**
          *  Our test SAM looks as follows:
@@ -371,8 +365,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
     @Test(dataProvider = "wgsAlgorithm")
     public void testGiantDeletion(final String useFastAlgorithm) throws IOException {
         final File reference = new File("testdata/picard/quality/chrM.reference.fasta");
-        final File testSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
-        testSamFile.deleteOnExit();
+        final File testSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectWgsMetrics", ".bam");
 
         final SAMRecordSetBuilder setBuilder = CollectWgsMetricsTestUtils.createTestSAMBuilder(reference, READ_GROUP_ID, SAMPLE, PLATFORM, LIBRARY);
         setBuilder.setReadLength(10);
