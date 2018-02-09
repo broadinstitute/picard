@@ -1,13 +1,12 @@
 package picard.sam;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
-import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -26,20 +25,20 @@ public class SamToFastqWithTags extends SamToFastq {
     static final String USAGE_SUMMARY = "Converts a SAM or BAM file to FASTQ.";
     static final String USAGE_DETAILS =
             "This will create the fastq from read sequences alongside two fastq files.  One will be converted from the " +
-            " \"CR\" tag with quality from the \"CY\" tag.  The other fastq will be converted from the \"CB\" and \"UR\" " +
-            "tags concatenated together with no separator (not specified on command line) with the qualities coming from " +
-            "the \"CY\" and \"UY\" tags concatenated together." +
-            "<br />" +
-            "<pre>" +
-            "java -jar picard.jar SamToFastq <br />" +
-            "     I=input.bam<br />" +
-            "     FASTQ=output.fastq<br />" +
-            "     SEQUENCE_TAG_GROUP=CR<br />" +
-            "     QUALITY_TAG_GROUP=CY<br />" +
-            "     SEQUENCE_TAG_GROUP=\"CB,UR\"<br />" +
-            "     QUALITY_TAG_GROUP=\"CY,UY\"" +
-            "</pre>" +
-            "<hr />";
+                    " \"CR\" tag with quality from the \"CY\" tag.  The other fastq will be converted from the \"CB\" and \"UR\" " +
+                    "tags concatenated together with no separator (not specified on command line) with the qualities coming from " +
+                    "the \"CY\" and \"UY\" tags concatenated together." +
+                    "<br />" +
+                    "<pre>" +
+                    "java -jar picard.jar SamToFastq <br />" +
+                    "     I=input.bam<br />" +
+                    "     FASTQ=output.fastq<br />" +
+                    "     SEQUENCE_TAG_GROUP=CR<br />" +
+                    "     QUALITY_TAG_GROUP=CY<br />" +
+                    "     SEQUENCE_TAG_GROUP=\"CB,UR\"<br />" +
+                    "     QUALITY_TAG_GROUP=\"CY,UY\"" +
+                    "</pre>" +
+                    "<hr />";
 
     @Argument(shortName = "STG", doc = "List of comma separated tag values to extract from Input SAM/BAM to be used as read sequence", minElements = 1)
     public List<String> SEQUENCE_TAG_GROUP;
@@ -63,83 +62,12 @@ public class SamToFastqWithTags extends SamToFastq {
     private ArrayList<String> SPLIT_SEPARATOR_TAGS;
 
     @Override
-    protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
+    protected void initializeAdditionalWriters() {
         setupTagSplitValues();
-        final FastqWriterFactory factory = new FastqWriterFactory();
-        factory.setCreateMd5(CREATE_MD5_FILE);
-        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-        final Map<String, SAMRecord> firstSeenMates = new HashMap<>();
-
-        final Map<SAMReadGroupRecord, FastqWriters> writers = super.generateWriters(reader.getFileHeader().getReadGroups(), factory);
-        final Map<SAMReadGroupRecord, List<FastqWriter>> tagWriters = generateTagWriters(reader.getFileHeader().getReadGroups(), factory);
-
-        if (writers.isEmpty()) {
-            final String msgBase = INPUT + " does not contain Read Groups";
-            final String msg = OUTPUT_PER_RG ? msgBase + ", consider not using the OUTPUT_PER_RG option" : msgBase;
-            throw new PicardException(msg);
-        }
-
-        final ProgressLogger progress = new ProgressLogger(log);
-
-        for (final SAMRecord currentRecord : reader) {
-            super.handleRecord(currentRecord, writers, firstSeenMates);
-            handleTagRecord(currentRecord, tagWriters, firstSeenMates);
-            progress.record(currentRecord);
-        }
-
-
-        CloserUtil.close(reader);
-        for (final FastqWriters writerMapping : new HashSet<>(writers.values())) {
-            writerMapping.closeAll();
-
-        }
-
-        for (final List<FastqWriter> writersToClose : new HashSet<>(tagWriters.values())){
-            for (FastqWriter writer : writersToClose){
-                writer.close();
-            }
-        }
-
-        if (!firstSeenMates.isEmpty()) {
-            SAMUtils.processValidationError(new SAMValidationError(SAMValidationError.Type.MATE_NOT_FOUND,
-                    "Found " + firstSeenMates.size() + " unpaired mates", null), VALIDATION_STRINGENCY);
-        }
-
-        return 0;
     }
 
-
-    private Map<SAMReadGroupRecord, List<FastqWriter>> generateTagWriters(final List<SAMReadGroupRecord> samReadGroupRecords,
-                                                                  final FastqWriterFactory factory) {
-
-        final Map<SAMReadGroupRecord, List<FastqWriter>> writerMap = new HashMap<>();
-
-        final FastqWriters fastqWriters;
-        if (!OUTPUT_PER_RG) {
-            /* Prepare tag writers if tag groupings are provided to the tool */
-
-            final List<FastqWriter> tagFastqWriters = makeTagWriters(null).stream().map(factory::newWriter).collect(Collectors.toList());
-
-            writerMap.put(null, tagFastqWriters);
-            for (final SAMReadGroupRecord rg : samReadGroupRecords) {
-                writerMap.put(rg, tagFastqWriters);
-            }
-        } else {
-            // When we're creating a fastq-group per readgroup, by convention we do not emit a special fastq for unpaired reads.
-            for (final SAMReadGroupRecord rg : samReadGroupRecords) {
-                List<FastqWriter> tagWriters = null;
-
-                /* Prepare tag writers if tag groupings are provided to the tool */
-                tagWriters = makeTagWriters(rg).stream().map(factory::newWriter).collect(Collectors.toList());
-
-                writerMap.put(rg, tagWriters);
-            }
-        }
-        return writerMap;
-    }
-
-    private void handleTagRecord(final SAMRecord currentRecord,final Map<SAMReadGroupRecord, List<FastqWriter>> tagWriters, final Map<String, SAMRecord> firstSeenMates ){
+    @Override
+    protected void handleAdditionalRecords(SAMRecord currentRecord, Map<SAMReadGroupRecord, List<FastqWriter>> tagWriters, Map<String, SAMRecord> firstSeenMates) {
         if (currentRecord.isSecondaryOrSupplementary() && !INCLUDE_NON_PRIMARY_ALIGNMENTS)
             return;
 
@@ -166,6 +94,36 @@ public class SamToFastqWithTags extends SamToFastq {
         } else {
             writeTagRecords(currentRecord, null, rgTagWriters);
         }
+    }
+
+    @Override
+    protected Map<SAMReadGroupRecord, List<FastqWriter>> generateAdditionalWriters(List<SAMReadGroupRecord> readGroups, FastqWriterFactory factory) {
+        return generateTagWriters(readGroups, factory);
+    }
+
+    private Map<SAMReadGroupRecord, List<FastqWriter>> generateTagWriters(final List<SAMReadGroupRecord> samReadGroupRecords,
+                                                                          final FastqWriterFactory factory) {
+
+        final Map<SAMReadGroupRecord, List<FastqWriter>> writerMap = new HashMap<>();
+
+        if (!OUTPUT_PER_RG) {
+            /* Prepare tag writers if tag groupings are provided to the tool */
+
+            final List<FastqWriter> tagFastqWriters = makeTagWriters(null).stream().map(factory::newWriter).collect(Collectors.toList());
+
+            writerMap.put(null, tagFastqWriters);
+            for (final SAMReadGroupRecord rg : samReadGroupRecords) {
+                writerMap.put(rg, tagFastqWriters);
+            }
+        } else {
+            // When we're creating a fastq-group per readgroup, by convention we do not emit a special fastq for unpaired reads.
+            for (final SAMReadGroupRecord rg : samReadGroupRecords) {
+                List<FastqWriter> tagWriters = makeTagWriters(rg).stream().map(factory::newWriter).collect(Collectors.toList());
+
+                writerMap.put(rg, tagWriters);
+            }
+        }
+        return writerMap;
     }
 
     private List<File> makeTagWriters(final SAMReadGroupRecord readGroup) {
@@ -208,19 +166,19 @@ public class SamToFastqWithTags extends SamToFastq {
         SPLIT_QUALITY_TAGS = new ArrayList<>();
         SPLIT_SEPARATOR_TAGS = new ArrayList<>();
 
-        for (int i = 0; i < SEQUENCE_TAG_GROUP.size(); i ++){
+        for (int i = 0; i < SEQUENCE_TAG_GROUP.size(); i++) {
             SPLIT_SEQUENCE_TAGS.add(SEQUENCE_TAG_GROUP.get(i).trim().split(","));
             SPLIT_QUALITY_TAGS.add(QUALITY_TAG_GROUP.isEmpty() ? null : QUALITY_TAG_GROUP.get(i).trim().split(","));
             SPLIT_SEPARATOR_TAGS.add(TAG_GROUP_SEPERATOR.isEmpty() ? TAG_SPLIT_DEFAULT_SEP : TAG_GROUP_SEPERATOR.get(i));
         }
     }
 
-    private void writeTagRecords (final SAMRecord read, final Integer mateNumber, final List<FastqWriter> tagWriters){
+    private void writeTagRecords(final SAMRecord read, final Integer mateNumber, final List<FastqWriter> tagWriters) {
         if (SEQUENCE_TAG_GROUP.isEmpty()) return;
 
         final String seqHeader = mateNumber == null ? read.getReadName() : read.getReadName() + "/" + mateNumber;
 
-        for (int i = 0; i < SEQUENCE_TAG_GROUP.size(); i ++){
+        for (int i = 0; i < SEQUENCE_TAG_GROUP.size(); i++) {
             final String tmpTagSep = SPLIT_SEPARATOR_TAGS.get(i);
             final String[] sequenceTagsToWrite = SPLIT_SEQUENCE_TAGS.get(i);
             final String newSequence = String.join(tmpTagSep, Arrays.stream(sequenceTagsToWrite)
@@ -229,7 +187,7 @@ public class SamToFastqWithTags extends SamToFastq {
 
             final String tmpQualSep = StringUtils.repeat(TAG_SPLIT_DEFAULT_QUAL, tmpTagSep.length());
             final String[] qualityTagsToWrite = SPLIT_QUALITY_TAGS.get(i);
-            final String newQual = QUALITY_TAG_GROUP.isEmpty() ? StringUtils.repeat(TAG_SPLIT_DEFAULT_QUAL, newSequence.length()):
+            final String newQual = QUALITY_TAG_GROUP.isEmpty() ? StringUtils.repeat(TAG_SPLIT_DEFAULT_QUAL, newSequence.length()) :
                     String.join(tmpQualSep, Arrays.stream(qualityTagsToWrite)
                             .map(tag -> assertTagExists(read, tag))
                             .collect(Collectors.toList()));
@@ -241,7 +199,7 @@ public class SamToFastqWithTags extends SamToFastq {
     private String assertTagExists(final SAMRecord record, final String tag) {
         String value = record.getStringAttribute(tag);
         if (value == null) {
-            throw new PicardException("Record: " + record.getReadName() + " does have a value for tag: " + tag );
+            throw new PicardException("Record: " + record.getReadName() + " does have a value for tag: " + tag);
         }
         return value;
     }
@@ -258,9 +216,6 @@ public class SamToFastqWithTags extends SamToFastq {
             errors.add("TAG_GROUP_SEPERATOR size must be equal to SEQUENCE_TAG_GROUP or not be specified at all.");
         }
 
-
-        if (!errors.isEmpty()) return errors.toArray(new String[errors.size()]);
-
-        return super.customCommandLineValidation();
+        return errors.isEmpty() ? super.customCommandLineValidation() : errors.toArray(new String[errors.size()]);
     }
 }
