@@ -492,7 +492,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Interval List File containing intervals that will be included in the OUTPUT if using FILTER=includePairedIntervals</td>
+					<td>Interval List File containing intervals that will be included in the OUTPUT when using FILTER=includePairedIntervals</td>
 				</tr>
 				<tr>
 					<td><a href="#--JAVASCRIPT_FILE">--JAVASCRIPT_FILE</a><br />
@@ -500,7 +500,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Filters the INPUT with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context: 
+					<td>Filters the INPUT with a javascript expression using the java javascript-engine, when using FILTER=includeJavascript.  The script puts the following variables in the script context: 
  'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and 
   'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ).
  all the public members of SamRecord and SAMFileHeader are accessible. A record is accepted if the last value of the script evaluates to true.</td>
@@ -511,7 +511,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file.</td>
+					<td>File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file, when using FILTER=includeReadList or FILTER=includeReadList.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SORT_ORDER">--SORT_ORDER</a><br />
@@ -519,7 +519,7 @@
 					</td>
 					<!--<td>SortOrder</td> -->
 					<td>null</td>
-					<td>SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.</td>
+					<td>SortOrder of the OUTPUT file, otherwise use the SortOrder of the INPUT file.</td>
 				</tr>
 				<tr>
 					<td><a href="#--TAG">--TAG</a><br />
@@ -741,7 +741,7 @@
 			 / <small>-IL</small>
 		</h3>
 		<p class="args">
-			<b>Interval List File containing intervals that will be included in the OUTPUT if using FILTER=includePairedIntervals</b><br />
+			<b>Interval List File containing intervals that will be included in the OUTPUT when using FILTER=includePairedIntervals</b><br />
 			
 		</p>
 		<p>
@@ -753,7 +753,7 @@
 			 / <small>-JS</small>
 		</h3>
 		<p class="args">
-			<b>Filters the INPUT with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context: 
+			<b>Filters the INPUT with a javascript expression using the java javascript-engine, when using FILTER=includeJavascript.  The script puts the following variables in the script context: 
  'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and 
   'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ).
  all the public members of SamRecord and SAMFileHeader are accessible. A record is accepted if the last value of the script evaluates to true.</b><br />
@@ -807,7 +807,7 @@
 			 / <small>-RLF</small>
 		</h3>
 		<p class="args">
-			<b>File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file.</b><br />
+			<b>File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file, when using FILTER=includeReadList or FILTER=includeReadList.</b><br />
 			
 		</p>
 		<p>
@@ -831,7 +831,7 @@
 			 / <small>-SO</small>
 		</h3>
 		<p class="args">
-			<b>SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.</b><br />
+			<b>SortOrder of the OUTPUT file, otherwise use the SortOrder of the INPUT file.</b><br />
 			
 		</p>
 			<p>
@@ -983,7 +983,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.8-SNAPSHOT built at 05-47-2018 05:47:06.
+        <p class="version">Picard version 2.17.9-SNAPSHOT built at 12-10-2018 01:10:10.
         </p>
 
 	</div>
