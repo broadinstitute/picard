@@ -23,22 +23,22 @@ import java.util.stream.Collectors;
         programGroup = ReadDataManipulationProgramGroup.class)
 public class SamToFastqWithTags extends SamToFastq {
     static final String USAGE_SUMMARY = "Converts a SAM or BAM file to FASTQ.";
-    static final String USAGE_DETAILS =
-            "This will create the fastq from read sequences alongside two fastq files.  One will be converted from the " +
-                    " \"CR\" tag with quality from the \"CY\" tag.  The other fastq will be converted from the \"CB\" and \"UR\" " +
-                    "tags concatenated together with no separator (not specified on command line) with the qualities coming from " +
-                    "the \"CY\" and \"UY\" tags concatenated together." +
-                    "<br />" +
-                    "<pre>" +
-                    "java -jar picard.jar SamToFastq <br />" +
-                    "     I=input.bam<br />" +
-                    "     FASTQ=output.fastq<br />" +
-                    "     SEQUENCE_TAG_GROUP=CR<br />" +
-                    "     QUALITY_TAG_GROUP=CY<br />" +
-                    "     SEQUENCE_TAG_GROUP=\"CB,UR\"<br />" +
-                    "     QUALITY_TAG_GROUP=\"CY,UY\"" +
-                    "</pre>" +
-                    "<hr />";
+    static final String USAGE_DETAILS = "This will create the fastq from read sequences alongside two fastq files whose sequence is generated from tags.  " +
+            "One will be converted from the \"CR\" tag with quality from the \"CY\" tag.  The other fastq will be " +
+            "converted from the \"CB\" and \"UR\" tags concatenated together with no separator (not specified on " +
+            "command line) with the qualities coming from the \"CY\" and \"UY\" tags concatenated together.  The two files " +
+            "will be named CR.fastq and CB_UR.fastq" +
+            "<br />" +
+            "<pre>" +
+            "java -jar picard.jar SamToFastq <br />" +
+            "     I=input.bam<br />" +
+            "     FASTQ=output.fastq<br />" +
+            "     SEQUENCE_TAG_GROUP=CR<br />" +
+            "     QUALITY_TAG_GROUP=CY<br />" +
+            "     SEQUENCE_TAG_GROUP=\"CB,UR\"<br />" +
+            "     QUALITY_TAG_GROUP=\"CY,UY\"" +
+            "</pre>" +
+            "<hr />";
 
     @Argument(shortName = "STG", doc = "List of comma separated tag values to extract from Input SAM/BAM to be used as read sequence", minElements = 1)
     public List<String> SEQUENCE_TAG_GROUP;
@@ -67,7 +67,7 @@ public class SamToFastqWithTags extends SamToFastq {
     }
 
     @Override
-    protected void handleAdditionalRecords(SAMRecord currentRecord, Map<SAMReadGroupRecord, List<FastqWriter>> tagWriters, Map<String, SAMRecord> firstSeenMates) {
+    protected void handleAdditionalRecords(SAMRecord currentRecord, Map<SAMReadGroupRecord, List<FastqWriter>> tagWriters, SAMRecord read1, SAMRecord read2) {
         if (currentRecord.isSecondaryOrSupplementary() && !INCLUDE_NON_PRIMARY_ALIGNMENTS)
             return;
 
@@ -77,17 +77,7 @@ public class SamToFastqWithTags extends SamToFastq {
 
         final List<FastqWriter> rgTagWriters = tagWriters.get(currentRecord.getReadGroup());
         if (currentRecord.getReadPairedFlag()) {
-            final String currentReadName = currentRecord.getReadName();
-            final SAMRecord firstRecord = firstSeenMates.remove(currentReadName);
-            if (firstRecord == null) {
-                firstSeenMates.put(currentReadName, currentRecord);
-            } else {
-                super.assertPairedMates(firstRecord, currentRecord);
-
-                final SAMRecord read1 =
-                        currentRecord.getFirstOfPairFlag() ? currentRecord : firstRecord;
-                final SAMRecord read2 =
-                        currentRecord.getFirstOfPairFlag() ? firstRecord : currentRecord;
+            if (read1 != null && read2 !=null){
                 writeTagRecords(read1, 1, rgTagWriters);
                 writeTagRecords(read2, 2, rgTagWriters);
             }
@@ -107,7 +97,7 @@ public class SamToFastqWithTags extends SamToFastq {
         final Map<SAMReadGroupRecord, List<FastqWriter>> writerMap = new HashMap<>();
 
         if (!OUTPUT_PER_RG) {
-            /* Prepare tag writers if tag groupings are provided to the tool */
+            /* Prepare tag writers based on sequence tag groups provided in command line */
 
             final List<FastqWriter> tagFastqWriters = makeTagWriters(null).stream().map(factory::newWriter).collect(Collectors.toList());
 
@@ -116,7 +106,7 @@ public class SamToFastqWithTags extends SamToFastq {
                 writerMap.put(rg, tagFastqWriters);
             }
         } else {
-            // When we're creating a fastq-group per readgroup, by convention we do not emit a special fastq for unpaired reads.
+            /* prepare tag writers based on readgroup names */
             for (final SAMReadGroupRecord rg : samReadGroupRecords) {
                 List<FastqWriter> tagWriters = makeTagWriters(rg).stream().map(factory::newWriter).collect(Collectors.toList());
 
@@ -126,6 +116,7 @@ public class SamToFastqWithTags extends SamToFastq {
         return writerMap;
     }
 
+    /* Creates fastq writers based on readgroup passed in and sequence tag groupings from command line */
     private List<File> makeTagWriters(final SAMReadGroupRecord readGroup) {
         String baseFilename = null;
         if (readGroup != null) {
@@ -140,6 +131,7 @@ public class SamToFastqWithTags extends SamToFastq {
         } else {
             baseFilename = "";
         }
+
         List<File> tagFiles = new ArrayList<>();
         for (String tagSplit : SEQUENCE_TAG_GROUP) {
             String fileName = baseFilename;
@@ -151,7 +143,7 @@ public class SamToFastqWithTags extends SamToFastq {
 
             final File result = (OUTPUT_DIR != null)
                     ? new File(OUTPUT_DIR, fileName)
-                    : new File(fileName);
+                    : new File(FASTQ.getParent(), fileName);
             IOUtil.assertFileIsWritable(result);
             tagFiles.add(result);
         }

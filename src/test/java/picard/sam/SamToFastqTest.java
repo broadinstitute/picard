@@ -146,7 +146,7 @@ public class SamToFastqTest extends CommandLineProgramTest {
         verifyFastq(pair1File, pair2File, samFile);
     }
 
-    @Test(dataProvider =  "okFiles")
+    @Test(dataProvider = "okFiles")
     public void testOkInterleavedFile(final String samFilename) throws IOException {
         final File samFile = new File(TEST_DATA_DIR,samFilename);
         final File pairFile = newTempFastqFile("pair");
@@ -359,12 +359,12 @@ public class SamToFastqTest extends CommandLineProgramTest {
         };
     }
 
-    private Set<String> createFastqReadHeaderSet(final File file) {
+    protected static Set<String> createFastqReadHeaderSet(final File file) {
         final Set<String> set = new HashSet<String>();
         final FastqReader freader = new FastqReader(file);
         while (freader.hasNext()) {
             final FastqRecord frec = freader.next();
-            set.add(frec.getReadHeader());
+            set.add(frec.getReadName());
         }
         return set ;
     }
@@ -387,7 +387,7 @@ public class SamToFastqTest extends CommandLineProgramTest {
     }
 
 
-    private Map<String, Map<String, MatePair>> createPUPairsMap(final File samFile) throws IOException {
+    protected static Map<String, Map<String, MatePair>> createPUPairsMap(final File samFile) throws IOException {
         IOUtil.assertFileIsReadable(samFile);
         final SamReader reader = SamReaderFactory.makeDefault().open(samFile);
         final Map<String, Map<String, MatePair>> map = new LinkedHashMap<String, Map<String,MatePair>>();
@@ -435,7 +435,7 @@ public class SamToFastqTest extends CommandLineProgramTest {
         }
     }
 
-    class MatePair {
+    static class MatePair {
         SAMRecord mate1 ;
         SAMRecord mate2 ;
         void add(final SAMRecord record) {
@@ -463,7 +463,7 @@ public class SamToFastqTest extends CommandLineProgramTest {
         return newTempFastqFile(filename, ".fastq");
     }
 
-    @Test(dataProvider =  "okFiles")
+    @Test(dataProvider = "okFiles")
     public void testFileCompression(final String samFilename) throws IOException {
         final File samFile = new File(TEST_DATA_DIR,samFilename);
         final File pair1File = newTempFastqFile("pair1", ".fastq.gz");

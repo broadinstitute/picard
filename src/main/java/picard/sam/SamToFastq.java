@@ -99,7 +99,7 @@ public class SamToFastq extends CommandLineProgram {
     public File INPUT;
 
     @Argument(shortName = "F", doc = "Output FASTQ file (single-end fastq or, if paired, first end of the pair FASTQ).",
-            mutex = {"OUTPUT_PER_RG", "COMPRESS_OUTPUTS_PER_RG"})
+            mutex = {"OUTPUT_PER_RG", "COMPRESS_OUTPUTS_PER_RG", "OUTPUT_DIR"})
     public File FASTQ;
 
     @Argument(shortName = "F2", doc = "Output FASTQ file (if paired, second end of the pair FASTQ).", optional = true,
@@ -285,6 +285,8 @@ public class SamToFastq extends CommandLineProgram {
             return;
 
         final FastqWriters fq = writers.get(currentRecord.getReadGroup());
+        SAMRecord read1 = null;
+        SAMRecord read2 = null;
         if (currentRecord.getReadPairedFlag()) {
             final String currentReadName = currentRecord.getReadName();
             final SAMRecord firstRecord = firstSeenMates.remove(currentReadName);
@@ -293,10 +295,8 @@ public class SamToFastq extends CommandLineProgram {
             } else {
                 assertPairedMates(firstRecord, currentRecord);
 
-                final SAMRecord read1 =
-                        currentRecord.getFirstOfPairFlag() ? currentRecord : firstRecord;
-                final SAMRecord read2 =
-                        currentRecord.getFirstOfPairFlag() ? firstRecord : currentRecord;
+                read1 = currentRecord.getFirstOfPairFlag() ? currentRecord : firstRecord;
+                read2 = currentRecord.getFirstOfPairFlag() ? firstRecord : currentRecord;
                 writeRecord(read1, 1, fq.getFirstOfPair(), READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
                 final FastqWriter secondOfPairWriter = fq.getSecondOfPair();
                 if (secondOfPairWriter == null) {
@@ -308,10 +308,10 @@ public class SamToFastq extends CommandLineProgram {
             writeRecord(currentRecord, null, fq.getUnpaired(), READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
         }
 
-        handleAdditionalRecords(currentRecord, fq.additionalWriters, firstSeenMates);
+        handleAdditionalRecords(currentRecord, fq.additionalWriters, read1, read2);
     }
 
-    protected void handleAdditionalRecords(SAMRecord currentRecord, Map<SAMReadGroupRecord, List<FastqWriter>> additionalWriters, Map<String, SAMRecord> firstSeenMates) {
+    protected void handleAdditionalRecords(SAMRecord currentRecord, Map<SAMReadGroupRecord, List<FastqWriter>> additionalWriters, SAMRecord read1, SAMRecord read2) {
     }
 
 
