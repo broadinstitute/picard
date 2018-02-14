@@ -30,7 +30,7 @@ public class SamToFastqWithTags extends SamToFastq {
             "will be named CR.fastq and CB_UR.fastq" +
             "<br />" +
             "<pre>" +
-            "java -jar picard.jar SamToFastq <br />" +
+            "java -jar picard.jar SamToFastqWithTags <br />" +
             "     I=input.bam<br />" +
             "     FASTQ=output.fastq<br />" +
             "     SEQUENCE_TAG_GROUP=CR<br />" +
