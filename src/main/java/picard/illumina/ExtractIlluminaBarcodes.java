@@ -50,6 +50,7 @@ import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.illumina.parser.readers.LocsFileReader;
 import picard.util.IlluminaUtil;
+import picard.util.StringDistanceUtils;
 import picard.util.TabbedTextFileWithHeaderParser;
 import picard.util.ThreadPoolExecutorWithExceptions;
 
@@ -484,10 +485,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         return messages.toArray(new String[messages.size()]);
     }
 
-    public static void main(final String[] argv) {
-        new ExtractIlluminaBarcodes().instanceMainWithExit(argv);
-    }
-
     private void parseBarcodeFile(final ArrayList<String> messages) {
         final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE);
         final String sequenceColumn = barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)
@@ -854,7 +851,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             int numMismatchesInSecondBestBarcode = totalBarcodeReadBases + 1;
 
             for (final BarcodeMetric barcodeMetric : metrics.values()) {
-                final int numMismatches = countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
+
+//                final int numMismatches = StringDistanceUtils.countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
+                final int numMismatches = StringDistanceUtils.countMismatchesWithIndelEvents(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
                 if (numMismatches < numMismatchesInBestBarcode) {
                     if (bestBarcodeMetric != null) {
                         numMismatchesInSecondBestBarcode = numMismatchesInBestBarcode;
@@ -913,30 +912,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             return match;
         }
 
-        /**
-         * Compare barcode sequence to bases from read
-         *
-         * @return how many bases did not match
-         */
-        private static int countMismatches(final byte[][] barcodeBytes, final byte[][] readSubsequence, final byte[][] qualities, final int minimumBaseQuality) {
-            int numMismatches = 0;
 
-            for (int j = 0; j < barcodeBytes.length; j++) {
-                for (int i = 0; (i < barcodeBytes[j].length && readSubsequence[j].length > i); ++i) {
-                    if (SequenceUtil.isNoCall(readSubsequence[j][i])) {
-                        continue;
-                    }
-                    if (!SequenceUtil.basesEqual(barcodeBytes[j][i], readSubsequence[j][i])) {
-                        ++numMismatches;
-                        continue;
-                    }
-                    if (qualities != null && qualities[j][i] < minimumBaseQuality) {
-                        ++numMismatches;
-                    }
-                }
-            }
-
-            return numMismatches;
-        }
-    }
+}
 }
