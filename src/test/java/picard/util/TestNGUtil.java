@@ -1,15 +1,19 @@
 package picard.util;
 
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.testng.collections.Sets;
+import picard.cmdline.ClassFinder;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
-
-import org.testng.Assert;
-import org.testng.collections.Sets;
-import picard.cmdline.ClassFinder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import static java.lang.Math.abs;
 
