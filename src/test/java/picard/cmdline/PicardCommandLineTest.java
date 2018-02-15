@@ -66,49 +66,7 @@ public class PicardCommandLineTest {
 
 
     @Test
-    public void testPrintUsage() throws Exception {
-        PrintStream stdOut = System.out;
-        ByteArrayOutputStream stdOutData = new ByteArrayOutputStream();
-        PrintStream stdOutProxy = new PrintStream(stdOutData);
-        System.setOut(stdOutProxy);
-
-        String preDescription =
-                "\u001B[1m\u001B[31mUSAGE:  \u001B[32m<program name>\u001B[1m\u001B[31m [-h]\n" +
-                "\n" +
-                "\u001B[0m\u001B[1m\u001B[31mAvailable Programs:\n" +
-                "\u001B[0m\u001B[37m--------------------------------------------------------------------------------------\n" +
-                "\n" +
-                "\u001B[0m";
-        String checkIlluminaWithDesc = "\u001B[1m\u001B[31mUSAGE:  \u001B[32m<program name>\u001B[1m\u001B[31m [-h]\n" +
-                "\n" +
-                "\u001B[0m\u001B[1m\u001B[31mAvailable Programs:\n" +
-                "\u001B[0m\u001B[37m--------------------------------------------------------------------------------------\n" +
-                "\u001B[0m\u001B[31mBase Calling:                                    Tools that process sequencing machine data, e.g. Illumina base calls, and detect sequencing level attributes, e.g. adapters\u001B[0m\n" +
-                "\u001B[32m    CheckIlluminaDirectory                       \u001B[33m\u001B[36mAsserts the validity for specified Illumina basecalling data.  \u001B[0m\n" +
-                "\n" +
-                "\u001B[37m--------------------------------------------------------------------------------------\n" +
-                "\n" +
-                "\u001B[0m";
-        String checkIlluminaOnlyName = "CheckIlluminaDirectory\n";
-
-
-        Method method = PicardCommandLine.class.getDeclaredMethod("printUsage", Set.class, String.class, Boolean.TYPE, Boolean.TYPE);
-        method.setAccessible(true);
-
-        Set<Class<?>> classes = new HashSet<>();
-        method.invoke(null, classes, "", false, true);
-        Assert.assertEquals(stdOutData.toString(), preDescription);
-        stdOutData.reset();
-        method.invoke(null, classes, "", true, true);
-        Assert.assertEquals(stdOutData.toString(), "");
-
-        classes.add(CheckIlluminaDirectory.class);
-        method.invoke(null, classes, "", false, true);
-        Assert.assertEquals(stdOutData.toString(), checkIlluminaWithDesc);
-        stdOutData.reset();
-        method.invoke(null, classes, "", true, true);
-        Assert.assertEquals(stdOutData.toString(), checkIlluminaOnlyName);
-
-        System.setOut(stdOut);
+    public void testPrintUsage() {
+        Assert.assertEquals(new PicardCommandLine().instanceMain(new String[]{"-h"}), 1);
     }
 }

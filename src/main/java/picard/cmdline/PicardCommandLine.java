@@ -263,21 +263,14 @@ public class PicardCommandLine {
                     throw new RuntimeException(String.format("Unexpected error: did not find the CommandLineProgramProperties annotation for '%s'", clazz.getSimpleName()));
                 }
                 if (!commandListOnly) {
-                    if (clazz.getSimpleName().length() >= 45) {
-                        builder.append(
-                                String.format("%s    %s    %s%s%s%s%s\n",
-                                        KGRN, clazz.getSimpleName(),
-                                        KYEL, getToolSummaryPrefix(clazz),
-                                        KCYN, property.oneLineSummary(),
-                                        KNRM));
-                    } else {
-                        builder.append(
-                                String.format("%s    %-45s%s%s%s%s%s\n",
-                                        KGRN, clazz.getSimpleName(),
-                                        KYEL, getToolSummaryPrefix(clazz),
-                                        KCYN, property.oneLineSummary(),
-                                        KNRM));
-                    }
+                    builder.append(String.format(
+                            clazz.getSimpleName().length() >= 45
+                                ? "%s    %s    %s%s%s%s%s\n"
+                                : "%s    %-45s%s%s%s%s%s\n",
+                            KGRN, clazz.getSimpleName(),
+                            KRED, getToolSummaryPrefix(clazz),
+                            KCYN, property.oneLineSummary(),
+                            KNRM));
                 }
                 else {
                     builder.append(clazz.getSimpleName() + "\n");
