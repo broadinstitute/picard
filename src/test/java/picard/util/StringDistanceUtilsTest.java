@@ -1,6 +1,8 @@
 package picard.util;
 
+import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
+import org.testng.TestNGUtils;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -47,6 +49,13 @@ public class StringDistanceUtilsTest {
 
     @Test(dataProvider = "levensteinDistanceSymmetricData")
     public void levenshteinDistanceTest(final String string1, final String string2, final int expectedDistance) {
-        Assert.assertEquals(StringDistanceUtils.levenshteinDistance(string1.getBytes(), string2.getBytes(), 5), expectedDistance);
+        final byte[] string1Bytes = string1.getBytes();
+        final byte[] string2Bytes = string2.getBytes();
+
+        Assert.assertEquals(StringDistanceUtils.levenshteinDistance(string1Bytes, string2Bytes, 5), expectedDistance);
+
+        //make sure that the code doesn't modify the input strings...
+        TestNGUtil.assertEquals(string1Bytes, string1.getBytes());
+        TestNGUtil.assertEquals(string2Bytes, string2.getBytes());
     }
 }

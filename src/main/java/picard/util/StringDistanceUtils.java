@@ -108,14 +108,14 @@ public class StringDistanceUtils {
     }
 
     public static int levenshteinDistanceForBarcodes(final byte[] barcodeBases, final byte[] readBases, final byte[] readQualities, final int minimumBaseQuality) {
-        final byte[] maskedReadBases ;
-        if (readQualities==null || !anySmaller(readQualities, minimumBaseQuality)) {
+        final byte[] maskedReadBases;
+        if (readQualities == null || !anySmaller(readQualities, minimumBaseQuality)) {
             maskedReadBases = readBases;
         } else {
-            maskedReadBases = maskSmaller(readBases,readQualities,minimumBaseQuality);
+            maskedReadBases = maskSmaller(readBases, readQualities, minimumBaseQuality);
         }
 
-        return levenshteinDistance(barcodeBases,readBases,4);
+        return levenshteinDistance(barcodeBases, readBases, 10);
     }
 
     /**
@@ -139,7 +139,7 @@ public class StringDistanceUtils {
      * <p>
      * One subtlety comes from needing to ignore entries on the border of
      * our stripe eg. p[] = |#|#|#|* d[] = *|#|#|#| We must ignore the entry
-     * to the left of the leftmost member We must ignore the entry above the
+     * to the leftRev of the leftmost member We must ignore the entry above the
      * rightmost member
      * *
      * As a concrete example, suppose s is of length 5, t is of length 7,
@@ -180,9 +180,12 @@ public class StringDistanceUtils {
             return 0;
         }
 
-        // it's easier to ignore indels in the begining than in the end...so we reverse the arrays
-        SequenceUtil.reverse(left, 0, left.length);
-        SequenceUtil.reverse(right, 0, right.length);
+        // it's easier to ignore indels in the begining than in the end...so we copy and reverse the arrays
+        final byte[] leftRev = Arrays.copyOf(left, left.length);
+        final byte[] rightRev = Arrays.copyOf(right, right.length);
+
+        SequenceUtil.reverse(leftRev, 0, leftRev.length);
+        SequenceUtil.reverse(rightRev, 0, rightRev.length);
 
         int[] previousCost = new int[n + 1]; // 'previous' cost array, horizontally
         int[] cost = new int[n + 1]; // cost array, horizontally
@@ -200,7 +203,7 @@ public class StringDistanceUtils {
 
         // iterates through t
         for (int j = 1; j <= m; j++) {
-            final byte rightJ = right[j - 1]; // jth character of right
+            final byte rightJ = rightRev[j - 1]; // jth character of rightRev
             cost[0] = 0;
 
             // compute stripe indices, constrain to array size
@@ -208,15 +211,15 @@ public class StringDistanceUtils {
             final int max = j > Integer.MAX_VALUE - threshold ? n : Math.min(
                     n, j + threshold);
 
-            // ignore entry left of leftmost ?????
+            // ignore entry leftRev of leftmost ?????
             if (min > 1) {
                 cost[min - 1] = Integer.MAX_VALUE;
             }
 
             // iterates through [min, max] in s
             for (int i = min; i <= max; i++) {
-                if (left[i - 1] == rightJ) {
-                    // diagonally left and up
+                if (leftRev[i - 1] == rightJ) {
+                    // diagonally leftRev and up
                     cost[i] = previousCost[i - 1];
                 } else {
                     final int snpCost = previousCost[i - 1];

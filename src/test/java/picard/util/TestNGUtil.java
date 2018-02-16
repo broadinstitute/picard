@@ -96,6 +96,15 @@ public class TestNGUtil {
         }
     }
 
+    public static void assertEquals(final byte[] actual, final byte[] expected) {
+        Assert.assertEquals(actual.length,expected.length,"Arrays do not have equal lengths");
+
+        for(int i=0;i<actual.length;++i){
+            Assert.assertEquals(actual[i], expected[i],"Array differ at position " +i);
+        }
+    }
+
+
     /** A Method that returns all the Methods that are annotated with @DataProvider
      * in a given package. Should be moved to htsjdk and used from there
      *
