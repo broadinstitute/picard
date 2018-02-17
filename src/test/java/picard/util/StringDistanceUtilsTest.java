@@ -1,8 +1,6 @@
 package picard.util;
 
-import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
-import org.testng.TestNGUtils;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -31,24 +29,44 @@ public class StringDistanceUtilsTest {
                 {"HELLO!", "HELLO!", 0},
                 {"very large distances are not measured well",
                         "so this should return the threshold plus 1", 6},
-                {"-ELLO", "ELLO-", 1}
+                {"-ELLO", "ELLO-", 1},
+
         };
     }
-
+    @DataProvider
+    private Object[][] levensteinDistanceWithNoCallsData() {
+        return new Object[][] {
+                //see that no-calls are not "charged" for snps:
+                {"one", ".ne", 0},
+                {"any", "...", 0},
+                {"hello", "hell.", 0},
+                // but they still count for indels
+                {"goodbye--", "good.bye-", 1},
+                {"goodddbye", "good.bye-", 1},
+                {"--goodbye", "good.bye-", 3},
+        };
+    }
     @DataProvider
     public Object[][] levensteinDistanceSymmetricData() {
         final List<Object[]> tests = Arrays.asList(levensteinDistanceData());
 
         final List<Object[]> symmetricTests = new ArrayList<>(2 * tests.size());
         symmetricTests.addAll(tests);
-        tests.forEach(t -> {
-            symmetricTests.add(new Object[]{t[1], t[0], t[2]});
-        });
+        tests.forEach(t -> symmetricTests.add(new Object[]{t[1], t[0], t[2]}));
         return symmetricTests.toArray(new Object[symmetricTests.size()][]);
     }
 
     @Test(dataProvider = "levensteinDistanceSymmetricData")
     public void levenshteinDistanceTest(final String string1, final String string2, final int expectedDistance) {
+        distanceHelper(string1, string2, expectedDistance);
+    }
+
+    @Test(dataProvider = "levensteinDistanceWithNoCallsData")
+    public void levenshteinDistanceWithNocallsTest(final String string1, final String string2, final int expectedDistance) {
+        distanceHelper(string1, string2, expectedDistance);
+    }
+
+    private void distanceHelper(String string1, String string2, int expectedDistance) {
         final byte[] string1Bytes = string1.getBytes();
         final byte[] string2Bytes = string2.getBytes();
 

@@ -166,9 +166,9 @@ public class StringDistanceUtils {
      * some discussion.
      */
 
-    public static int levenshteinDistance(final byte[] left, final byte[] right, final int threshold) {
-        int n = left.length; // length of left
-        int m = right.length; // length of right
+    public static int levenshteinDistance(final byte[] barcode, final byte[] read, final int threshold) {
+        int n = barcode.length; // length of left
+        int m = read.length; // length of right
 
         if (n != m) {
             throw new IllegalArgumentException("This version of levenshteinDistance is speficially made for comparing strings " +
@@ -181,11 +181,11 @@ public class StringDistanceUtils {
         }
 
         // it's easier to ignore indels in the begining than in the end...so we copy and reverse the arrays
-        final byte[] leftRev = Arrays.copyOf(left, left.length);
-        final byte[] rightRev = Arrays.copyOf(right, right.length);
+        final byte[] barcodeRev = Arrays.copyOf(barcode, barcode.length);
+        final byte[] readRev = Arrays.copyOf(read, read.length);
 
-        SequenceUtil.reverse(leftRev, 0, leftRev.length);
-        SequenceUtil.reverse(rightRev, 0, rightRev.length);
+        SequenceUtil.reverse(barcodeRev, 0, barcodeRev.length);
+        SequenceUtil.reverse(readRev, 0, readRev.length);
 
         int[] previousCost = new int[n + 1]; // 'previous' cost array, horizontally
         int[] cost = new int[n + 1]; // cost array, horizontally
@@ -203,7 +203,7 @@ public class StringDistanceUtils {
 
         // iterates through t
         for (int j = 1; j <= m; j++) {
-            final byte rightJ = rightRev[j - 1]; // jth character of rightRev
+            final byte readJ = readRev[j - 1]; // jth character of readRev
             cost[0] = 0;
 
             // compute stripe indices, constrain to array size
@@ -211,15 +211,15 @@ public class StringDistanceUtils {
             final int max = j > Integer.MAX_VALUE - threshold ? n : Math.min(
                     n, j + threshold);
 
-            // ignore entry leftRev of leftmost ?????
+            // ignore entry barcodeRev of leftmost ?????
             if (min > 1) {
-                cost[min - 1] = Integer.MAX_VALUE;
+                cost[min - 1] = Integer.MAX_VALUE-10;
             }
 
             // iterates through [min, max] in s
             for (int i = min; i <= max; i++) {
-                if (leftRev[i - 1] == rightJ) {
-                    // diagonally leftRev and up
+                if (barcodeRev[i - 1] == readJ || SequenceUtil.isNoCall(readJ) ) {
+                    // diagonally left and up
                     cost[i] = previousCost[i - 1];
                 } else {
                     final int snpCost = previousCost[i - 1];
