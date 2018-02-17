@@ -44,6 +44,9 @@ public class StringDistanceUtilsTest {
                 {"goodbye--", "good.bye-", 1},
                 {"goodddbye", "good.bye-", 1},
                 {"--goodbye", "good.bye-", 3},
+                {"CGCCTTCC","C.CCCTCC",1},
+                {"AATCGCTG","A.CCGCTG",1},
+                {"TCTGCAAGGCCAGAAG","T.TGCAAGGCCAGAAG",0}
         };
     }
     @DataProvider
