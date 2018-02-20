@@ -11,8 +11,15 @@ groups:
     conditions:
       branches:
         - master
-    teams:
-      - dsde-pipelines-developers
     users:
-      - yfarjoun
+      - als364
+      - apchagi
+      - danxmoran
+      - gbggrant
+      - hensonc
+      - jacarey
       - ktibbett
+      - pshapiro4broad
+      - tbl3rd
+      - tlangs
+      - yfarjoun
