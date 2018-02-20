@@ -11,7 +11,8 @@ groups:
     conditions:
       branches:
         - master
-    teams: dsde-pipelines-developers
+    teams:
+      - dsde-pipelines-developers
     users:
       - yfarjoun
       - ktibbett
