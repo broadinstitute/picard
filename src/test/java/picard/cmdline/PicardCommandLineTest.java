@@ -5,11 +5,6 @@ import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import picard.illumina.CheckIlluminaDirectory;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.lang.reflect.Method;
 import java.util.*;
 
 /**
