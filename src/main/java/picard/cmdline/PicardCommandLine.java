@@ -57,7 +57,6 @@ import java.util.stream.Collectors;
  */
 public class PicardCommandLine {
     private static final Log log = Log.getInstance(PicardCommandLine.class);
-
     private static String initializeColor(final String color) {
         if (CommandLineDefaults.COLOR_STATUS) return color;
         else return "";
