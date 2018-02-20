@@ -1,0 +1,19 @@
+version: 2
+
+group_defaults:
+  approve_by_comment:
+    approve_regex: '^:\+1:'
+    enabled: true
+
+groups:
+  reviewers:
+    required: 1
+    conditions:
+      branches:
+        - master
+    teams:
+      - dsde-pipelines-developers
+    users:
+      - nh13
+      - tfenne
+      - yfarjoun
