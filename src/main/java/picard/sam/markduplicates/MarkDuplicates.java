@@ -401,11 +401,11 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
             // Output the record if desired and bump the record index
             recordInFileIndex++;
-            if (this.REMOVE_DUPLICATES && rec.getDuplicateReadFlag()) {
+            if (REMOVE_DUPLICATES && rec.getDuplicateReadFlag()) {
                 continue;
             }
             // If read is secondary, supplementary or unmapped and it is in duplicate set - it is not included into result file
-            if (this.REMOVE_DUPLICATES
+            if (REMOVE_DUPLICATES
                     && (rec.getReadUnmappedFlag() || rec.isSecondaryOrSupplementary())
                     && nonProperlyMappedPairDuplicatesNames.contains(rec.getReadName())) {
                 continue;
@@ -670,8 +670,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      */
     private void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
         final int entryOverhead;
-
-
         if (TAG_DUPLICATE_SET_MEMBERS) {
             // Memory requirements for RepresentativeReadIndexer:
             // three int entries + overhead: (3 * 4) + 4 = 16 bytes
@@ -955,7 +953,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             return compareDifference;
         }
     }
-    private Set<String> getNonProperlyMappedPairDuplicatesNames(long nextDuplicateIndex) {
+    private Set<String> getNonProperlyMappedPairDuplicatesNames(long inputNextDuplicateIndex) {
+        long nextDuplicateIndex = inputNextDuplicateIndex;
         final Set<String> duplicatesNames = new HashSet<>();
         final SamHeaderAndIterator headerAndIteratorForRemoveDuplicates = openInputs(false);
         final SAMFileHeader header = headerAndIteratorForRemoveDuplicates.header;
