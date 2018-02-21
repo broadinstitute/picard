@@ -10,6 +10,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.DuplicationMetrics;
 
@@ -147,6 +148,24 @@ public class MarkDuplicatesIntegrationTests extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 0);
         examineDuplicationMetrics(input, output, metrics, true);
     }
+
+
+    @Test(expectedExceptions = PicardException.class,
+            expectedExceptionsMessageRegExp = "This program requires input that are either coordinate or query sorted. Found unsorted")
+    public void testExceptionCoordinateOrQuerySortRequired() {
+        final String input = "sort_exception_test.bam";
+        final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".", ".tmp");
+        outputDir.deleteOnExit();
+        final ArrayList<String> args = new ArrayList<>();
+        args.add("INPUT=" + new File(TEST_DATA_DIR, input).getAbsolutePath());
+        final File output = new File(outputDir, TEST_BASE_NAME + ".sam");
+        args.add("OUTPUT=" + output.getAbsolutePath());
+        final File metrics = new File(outputDir, TEST_BASE_NAME + ".integration_metrics");
+        args.add("METRICS_FILE=" + metrics.getAbsolutePath());
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+    }
+
 
     private void examineDuplicationMetrics(String input, File output, File metrics, boolean removeDuplicates) {
         final List<DuplicationMetrics> metricList = MetricsFile.readBeans(metrics);
