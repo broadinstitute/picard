@@ -68,23 +68,15 @@ public class MarkDuplicatesIntegrationTests extends CommandLineProgramTest {
 
     @Test(dataProvider = "MarkDuplicatesIntegrationTest")
     public void markDuplicatesWithRemovingDuplicatesIntegrationTest(final String input) {
-        final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".", ".tmp");
-        outputDir.deleteOnExit();
-        final List<String> args = new ArrayList<>();
-        args.add("INPUT=" + new File(TEST_DATA_DIR,input).getAbsolutePath());
-        final File output = new File(outputDir, TEST_BASE_NAME + ".sam");
-        args.add("OUTPUT=" + output.getAbsolutePath());
-        final File metrics = new File(outputDir, TEST_BASE_NAME + ".integration_metrics");
-        args.add("METRICS_FILE=" + metrics.getAbsolutePath());
-        args.add("REMOVE_DUPLICATES=true");
-
-        Assert.assertEquals(runPicardCommandLine(args), 0);
-        examineDuplicationMetrics(input, output, metrics, true);
+        removingDuplicatesIntegrationTest(input);
     }
-
 
     @Test(dataProvider = "SecondarySupplementaryUnmappedTest")
     public void secondarySupplementaryUnmappedWithRemovingDuplicatesIntegrationTest(final String input) {
+       removingDuplicatesIntegrationTest(input);
+    }
+
+    private void removingDuplicatesIntegrationTest(String input){
         final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".", ".tmp");
         outputDir.deleteOnExit();
         final List<String> args = new ArrayList<>();
@@ -97,6 +89,7 @@ public class MarkDuplicatesIntegrationTests extends CommandLineProgramTest {
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
         examineDuplicationMetrics(input, output, metrics, true);
+
     }
 
 
