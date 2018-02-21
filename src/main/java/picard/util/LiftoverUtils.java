@@ -342,7 +342,7 @@ public class LiftoverUtils {
      *    Note: this will modify the start/stop and alleles of this builder.
      *    Also note: if the reference allele does not match the reference sequence, this method will throw an exception
      *
-     *    Based on Adrian Tan, Gonçalo R. Abecasis and Hyun Min Kang. (2015)
+     *    Based on Adrian Tan, Gon&ccedil;alo R. Abecasis and Hyun Min Kang. (2015)
      *    Unified Representation of Genetic Variants. Bioinformatics.
      *
      */
