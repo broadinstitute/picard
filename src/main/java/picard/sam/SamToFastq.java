@@ -64,7 +64,7 @@ import java.util.stream.Collectors;
 @DocumentedFeature
 public class SamToFastq extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Converts a SAM or BAM file to FASTQ.";
-    static final String USAGE_DETAILS = "Extracts read sequences and qualities from the input SAM/BAM file and writes them into" +
+    static final String USAGE_DETAILS = " Extracts read sequences and qualities from the input SAM/BAM file and writes them into" +
             "the output file in Sanger FASTQ format." +
             "See <a href=\"http://maq.sourceforge.net/fastq.shtml\">MAQ FASTQ specification</a> for details." +
             "This tool can be used by way of a pipe to run BWA MEM on unmapped BAM (uBAM) files efficiently.</p>" +

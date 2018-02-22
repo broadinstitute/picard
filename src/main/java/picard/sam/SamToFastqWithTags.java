@@ -40,9 +40,9 @@ import java.util.stream.Collectors;
         programGroup = ReadDataManipulationProgramGroup.class)
 public class SamToFastqWithTags extends SamToFastq {
     static final String USAGE_SUMMARY = "Converts a SAM or BAM file to FASTQ alongside FASTQs created from tags.";
-    static final String USAGE_DETAILS = "Extracts read sequences and qualities from the input SAM/BAM file and SAM/BAM tags" +
+    static final String USAGE_DETAILS = " Extracts read sequences and qualities from the input SAM/BAM file and SAM/BAM tags" +
             " and writes them into the output file in Sanger FASTQ format." +
-            "See <a href=\"http://maq.sourceforge.net/fastq.shtml\">MAQ FASTQ specification</a> for details.<br /> <br />" +
+            " See <a href=\"http://maq.sourceforge.net/fastq.shtml\">MAQ FASTQ specification</a> for details.<br /> <br />" +
             "The following example will create two FASTQs from tags.  One will be converted with the base sequence coming from " +
             "the \"CR\" tag and base quality from the \"CY\" tag.  The other fastq will be converted with the base sequence coming" +
             " from the \"CB\" and \"UR\" tags concatenated together with no separator (not specified on command line) with the base" +
