@@ -38,6 +38,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
     final private Set<Integer> ignoredSequenceIndices;
 
     private final OverlapDetector<Gene> geneOverlapDetector;
+    private final Set<Gene> allGenes;
     private final OverlapDetector<Interval> ribosomalSequenceOverlapDetector;
     private final boolean collectCoverageStatistics;
     
@@ -48,6 +49,8 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         this.ribosomalInitialValue  = ribosomalBasesInitialValue;
         this.ignoredSequenceIndices = ignoredSequenceIndices;
         this.geneOverlapDetector    = geneOverlapDetector;
+        // This is an expensive operation, so do it once up front.
+        this.allGenes               = geneOverlapDetector.getAll();
         this.ribosomalSequenceOverlapDetector = ribosomalSequenceOverlapDetector;
         this.minimumLength          = minimumLength;
         this.strandSpecificity      = strandSpecificity;
@@ -435,7 +438,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             final Map<Gene.Transcript, Double> bestPerGene = new HashMap<Gene.Transcript, Double>();
 
             // Make a map of the best transcript per gene to it's mean coverage
-            for (final Gene gene : geneOverlapDetector.getAll()) {
+            for (final Gene gene : allGenes) {
                 Gene.Transcript best = null;
                 double bestMean = 0;
 
