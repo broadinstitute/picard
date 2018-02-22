@@ -160,6 +160,9 @@ public class SamToFastq extends CommandLineProgram {
             "is not comprehensive, so there may be exceptions if this is set to true and there are paired reads with non-primary alignments.")
     public boolean INCLUDE_NON_PRIMARY_ALIGNMENTS = false;
 
+    private static final String CLIP_TRIM = "X";
+    private static final String CLIP_TO_N = "N";
+
     private final Log log = Log.getInstance(SamToFastq.class);
 
     public static void main(final String[] argv) {
@@ -261,12 +264,14 @@ public class SamToFastq extends CommandLineProgram {
 
     private void handleRecord(final SAMRecord currentRecord, final Map<SAMReadGroupRecord, FastqWriters> writers,
                               final Map<String, SAMRecord> firstSeenMates) {
-        if (currentRecord.isSecondaryOrSupplementary() && !INCLUDE_NON_PRIMARY_ALIGNMENTS)
+        if (currentRecord.isSecondaryOrSupplementary() && !INCLUDE_NON_PRIMARY_ALIGNMENTS) {
             return;
+        }
 
         // Skip non-PF reads as necessary
-        if (currentRecord.getReadFailsVendorQualityCheckFlag() && !INCLUDE_NON_PF_READS)
+        if (currentRecord.getReadFailsVendorQualityCheckFlag() && !INCLUDE_NON_PF_READS) {
             return;
+        }
 
         final FastqWriters fq = writers.get(currentRecord.getReadGroup());
         SAMRecord read1 = null;
@@ -310,7 +315,9 @@ public class SamToFastq extends CommandLineProgram {
             throw new PicardException("The selected RG_TAG: " + RG_TAG + " is not present in the bam header.");
         }
         fileName = IOUtil.makeFileNameSafe(fileName);
-        if (preExtSuffix != null) fileName += preExtSuffix;
+        if (preExtSuffix != null) {
+            fileName += preExtSuffix;
+        }
         fileName += COMPRESS_OUTPUTS_PER_RG ? ".fastq.gz" : ".fastq";
 
         final File result = (OUTPUT_DIR != null)
@@ -334,11 +341,11 @@ public class SamToFastq extends CommandLineProgram {
             }
 
             if (clipPoint != null) {
-                if (CLIPPING_ACTION.equalsIgnoreCase("X")) {
+                if (CLIPPING_ACTION.equalsIgnoreCase(CLIP_TRIM)) {
                     readString = clip(readString, clipPoint, null, !read.getReadNegativeStrandFlag());
                     baseQualities = clip(baseQualities, clipPoint, null, !read.getReadNegativeStrandFlag());
-                } else if (CLIPPING_ACTION.equalsIgnoreCase("N")) {
-                    readString = clip(readString, clipPoint, 'N', !read.getReadNegativeStrandFlag());
+                } else if (CLIPPING_ACTION.equalsIgnoreCase(CLIP_TO_N)) {
+                    readString = clip(readString, clipPoint, CLIP_TO_N.charAt(0), !read.getReadNegativeStrandFlag());
                 } else {
                     final char newQual = SAMUtils.phredToFastq(new byte[]{(byte) Integer.parseInt(CLIPPING_ACTION)}).charAt(0);
                     baseQualities = clip(baseQualities, clipPoint, newQual, !read.getReadNegativeStrandFlag());
@@ -386,7 +393,7 @@ public class SamToFastq extends CommandLineProgram {
      * @param posStrand   Whether the read is on the positive strand
      * @return String       The clipped read or qualities
      */
-    private String clip(final String src, final int point, final Character replacement, final boolean posStrand) {
+    private static String clip(final String src, final int point, final Character replacement, final boolean posStrand) {
         final int len = src.length();
         StringBuilder result = new StringBuilder(posStrand ? src.substring(0, point - 1) : src.substring(len - point + 1));
         if (replacement != null) {
@@ -403,7 +410,7 @@ public class SamToFastq extends CommandLineProgram {
         return result.toString();
     }
 
-    protected void assertPairedMates(final SAMRecord record1, final SAMRecord record2) {
+    protected static void assertPairedMates(final SAMRecord record1, final SAMRecord record2) {
         if (!(record1.getFirstOfPairFlag() && record2.getSecondOfPairFlag() ||
                 record2.getFirstOfPairFlag() && record1.getSecondOfPairFlag())) {
             throw new PicardException("Illegal mate state: " + record1.getReadName());
@@ -436,7 +443,7 @@ public class SamToFastq extends CommandLineProgram {
         }
 
         if (CLIPPING_ACTION != null) {
-            if (!CLIPPING_ACTION.equals("N") && !CLIPPING_ACTION.equals("X")) {
+            if (!CLIPPING_ACTION.equals(CLIP_TO_N) && !CLIPPING_ACTION.equals(CLIP_TRIM)) {
                 try {
                     Integer.parseInt(CLIPPING_ACTION);
                 } catch (NumberFormatException nfe) {
@@ -467,7 +474,7 @@ public class SamToFastq extends CommandLineProgram {
      * Allows for lazy construction of the second-of-pair writer, since when we are in the "output per read group mode", we only wish to
      * generate a second-of-pair fastq if we encounter a second-of-pair read.
      */
-    static final class FastqWriters {
+    private static final class FastqWriters {
         private final FastqWriter firstOfPair, unpaired;
         private final Lazy<FastqWriter> secondOfPair;
         private final Map<SAMReadGroupRecord, List<FastqWriter>> additionalWriters;
@@ -491,25 +498,27 @@ public class SamToFastq extends CommandLineProgram {
             this(firstOfPair, new Lazy<>(() -> secondOfPair), unpaired, additionalWriters);
         }
 
-        public FastqWriter getFirstOfPair() {
+        private FastqWriter getFirstOfPair() {
             return firstOfPair;
         }
 
-        public FastqWriter getSecondOfPair() {
+        private FastqWriter getSecondOfPair() {
             return secondOfPair.get();
         }
 
-        public FastqWriter getUnpaired() {
+        private FastqWriter getUnpaired() {
             return unpaired;
         }
 
-        public void closeAll() {
+        private void closeAll() {
             final Set<FastqWriter> fastqWriters = new HashSet<>();
             fastqWriters.add(firstOfPair);
             fastqWriters.add(unpaired);
             fastqWriters.addAll(additionalWriters.values().stream().flatMap(Collection::stream).collect(Collectors.toList()));
             // Make sure this is a no-op if the second writer was never fetched.
-            if (secondOfPair.isInitialized()) fastqWriters.add(secondOfPair.get());
+            if (secondOfPair.isInitialized()) {
+                fastqWriters.add(secondOfPair.get());
+            }
             for (final FastqWriter fastqWriter : fastqWriters) {
                 fastqWriter.close();
             }
