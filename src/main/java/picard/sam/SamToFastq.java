@@ -78,22 +78,6 @@ public class SamToFastq extends CommandLineProgram {
             "     I=input.bam<br />" +
             "     FASTQ=output.fastq" +
             "</pre>" +
-            "<h4>Tag Usage example:</h4>" +
-            "<br />" +
-            "This will create the fastq from read sequences alongside two fastq files.  One will be converted from the " +
-            " \"CR\" tag with quality from the \"CY\" tag.  The other fastq will be converted from the \"CB\" and \"UR\" " +
-            "tags concatenated together with no separator (not specified on command line) with the qualities coming from " +
-            "the \"CY\" and \"UY\" tags concatenated together." +
-            "<br />" +
-            "<pre>" +
-            "java -jar picard.jar SamToFastq <br />" +
-            "     I=input.bam<br />" +
-            "     FASTQ=output.fastq<br />" +
-            "     SEQUENCE_TAG_GROUP=CR<br />" +
-            "     QUALITY_TAG_GROUP=CY<br />" +
-            "     SEQUENCE_TAG_GROUP=\"CB,UR\"<br />" +
-            "     QUALITY_TAG_GROUP=\"CY,UY\"" +
-            "</pre>" +
             "<hr />";
     @Argument(doc = "Input SAM/BAM file to extract reads from", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
