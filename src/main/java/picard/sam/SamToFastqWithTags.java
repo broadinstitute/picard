@@ -22,17 +22,17 @@ import java.util.stream.Collectors;
  * output files in Sanger FASTQ format.
  * See <a href="http://maq.sourceforge.net/fastq.shtml">MAQ FASTQ specification</a> for details.
  * <br />
- * " <h4>Usage example:</h4>" +
- * " <pre>" +
- * "java -jar picard.jar SamToFastqWithTags <br />" +
- * "     I=input.bam<br />" +
- * "     FASTQ=output.fastq<br />" +
- * "     SEQUENCE_TAG_GROUP=CR<br />" +
- * "     QUALITY_TAG_GROUP=CY<br />" +
- * "     SEQUENCE_TAG_GROUP=\"CB,UR\"<br />" +
- * "     QUALITY_TAG_GROUP=\"CY,UY\"" +
- * " </pre>" +
- * " <hr />"
+ * <h4>Usage example:</h4>
+ * <pre>
+ * java -jar picard.jar SamToFastqWithTags
+ *     I=input.bam
+ *     FASTQ=output.fastq
+ *     SEQUENCE_TAG_GROUP="CR"
+ *     QUALITY_TAG_GROUP="CY"
+ *     SEQUENCE_TAG_GROUP="CB,UR"
+ *     QUALITY_TAG_GROUP="CY,UY"
+ * </pre>
+ * <hr />
  */
 @CommandLineProgramProperties(
         summary = SamToFastqWithTags.USAGE_SUMMARY + SamToFastqWithTags.USAGE_DETAILS,
