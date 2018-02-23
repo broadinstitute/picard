@@ -20,20 +20,21 @@ public class SamToFastqWithTagsTest extends CommandLineProgramTest {
         return SamToFastqWithTags.class.getSimpleName();
     }
 
+    private static final String[] STG_ARRAY = {"UR,CR", "CR,UR"};
     @DataProvider(name = "argumentCombinationsdata")
     public Object[][] argumentCombinationsdata() {
         return new Object[][]{
                 // not supplying any arguments
                 {null, null, null, 1},
                 // only supply STGs and no QTG or SEP
-                {new String[]{"UR,CR", "CR,UR"}, null, null, 0},
+                {STG_ARRAY, null, null, 0},
                 // not supplying the correct number of QTGs or SEPs
-                {new String[]{"UR,CR", "CR,UR"}, new String[]{"UY"}, null, 1},
-                {new String[]{"UR,CR", "CR,UR"}, null, new String[]{"AAAAA"}, 1},
+                {STG_ARRAY, new String[]{"UY"}, null, 1},
+                {STG_ARRAY, null, new String[]{"AAAAA"}, 1},
                 // supplying correct number of QTGs or SEPs
-                {new String[]{"UR,CR", "CR,UR"}, new String[]{"CY", "CY,UY"}, null, 0},
-                {new String[]{"UR,CR", "CR,UR"}, null, new String[]{"AAA", "AAAAA"}, 0},
-                {new String[]{"UR,CR", "CR,UR"}, new String[]{"CY", "CY,UY"}, new String[]{"AAA", "AAAAA"}, 0},
+                {new String[]{"UR,CR"}, new String[]{"CY,UY"}, null, 0},
+                {STG_ARRAY, null, new String[]{"AAA", "AAAAA"}, 0},
+                {STG_ARRAY, new String[]{"CY", "CY,UY"}, new String[]{"AAA", "AAAAA"}, 0},
 
         };
     }
@@ -87,7 +88,7 @@ public class SamToFastqWithTagsTest extends CommandLineProgramTest {
         };
     }
 
-    @Test (dataProvider = "queryNonExistantTag", expectedExceptions = PicardException.class)
+    @Test (dataProvider = "queryNonExistantTag", expectedExceptions =  PicardException.class)
     public void testQueryNonExistantTag(final String samFilename) throws IOException {
         final File temp_input = File.createTempFile("input", ".fastq");
         temp_input.deleteOnExit();
@@ -113,7 +114,7 @@ public class SamToFastqWithTagsTest extends CommandLineProgramTest {
         final Map<String, Set<String>> outputSets = new HashMap<>(groupFiles.length);
 
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath() + "/";
-        final String [] args = new String[]{
+        final String [] args = {
                 "INPUT=" + samFile.getAbsolutePath(),
                 "OUTPUT_PER_RG=true",
                 "OUTPUT_DIR=" + tmpDir,
@@ -123,22 +124,15 @@ public class SamToFastqWithTagsTest extends CommandLineProgramTest {
         };
         runPicardCommandLine(args);
 
-        File f1;
-        File f2;
-        String fname1;
-        String fname2;
-        String keyName1;
-        String keyName2;
         Set<String> outputHeaderSet1;
         Set<String> outputHeaderSet2;
-        for(final String groupPUName : groupFiles)
-        {
-            keyName1 = groupPUName + "_1";
-            keyName2 = groupPUName + "_CR_UR";
-            fname1 = tmpDir + "/" + keyName1 + ".fastq";
-            fname2 = tmpDir + "/" + keyName2 + ".fastq";
-            f1 = new File(fname1);
-            f2 = new File(fname2);
+        for (final String groupPUName : groupFiles) {
+            String keyName1 = groupPUName + "_1";
+            String keyName2 = groupPUName + "_CR_UR";
+            String fname1 = tmpDir + "/" + keyName1 + ".fastq";
+            String fname2 = tmpDir + "/" + keyName2 + ".fastq";
+            File f1 = new File(fname1);
+            File f2 = new File(fname2);
             f1.deleteOnExit();
             f2.deleteOnExit();
             IOUtil.assertFileIsReadable(f1);
@@ -166,8 +160,8 @@ public class SamToFastqWithTagsTest extends CommandLineProgramTest {
                 Assert.assertNotNull(mpair.mate2);
                 Assert.assertEquals(mpair.mate1.getReadName(),mpair.mate2.getReadName());
                 final String readName = mpair.mate1.getReadName() ;
-                Assert.assertTrue(outputHeaderSet1.contains(readName+"/1")); // ensure mate is in correct file
-                Assert.assertTrue(outputHeaderSet2.contains(readName+"/2"));
+                Assert.assertTrue(outputHeaderSet1.contains(readName + "/1")); // ensure mate is in correct file
+                Assert.assertTrue(outputHeaderSet2.contains(readName + "/2"));
             }
         }
     }
@@ -178,7 +172,7 @@ public class SamToFastqWithTagsTest extends CommandLineProgramTest {
                 {new String[]{"CR"}, new String[]{"CY"}, null, "AAAAA", "11111", "CCCCC", "22222", null, null, null, null, "One Sequence Tag Group"},
                 {new String[]{"CR,UR"}, new String[]{"CY,UY"}, null, "AAAAATTT", "11111222", "CCCCCGGG", "22222111", null, null, null, null, "One Sequence Tag Group with Two Tags"},
                 {new String[]{"CR,UR", "UR,CR"}, new String[]{"CY,UY", "UY,CY"}, null, "AAAAATTT", "11111222", "CCCCCGGG", "22222111", "TTTAAAAA", "22211111", "GGGCCCCC", "11122222", "Two Sequence Tag Groups with Two Tags"},
-                {new String[]{"CR,UR", "UR,CR"}, new String[]{"CY,UY", "UY,CY"}, new String[]{"ATGC", "CGTA"} , "AAAAAATGCTTT", "11111~~~~222", "CCCCCATGCGGG", "22222~~~~111", "TTTCGTAAAAAA", "222~~~~11111", "GGGCGTACCCCC", "111~~~~22222", "Two Sequence Tag Groups with Two Tags"},
+                {new String[]{"CR,UR", "UR,CR"}, new String[]{"CY,UY", "UY,CY"}, new String[]{"ATGC", "CGTA"} , "AAAAAATGCTTT", "11111~~~~222", "CCCCCATGCGGG", "22222~~~~111", "TTTCGTAAAAAA", "222~~~~11111", "GGGCGTACCCCC", "111~~~~22222", "Two Sequence Tag Groups with Two Tags with Separators"},
 
         };
     }
@@ -202,10 +196,8 @@ public class SamToFastqWithTagsTest extends CommandLineProgramTest {
         args.add("INPUT=" + samFile.getAbsolutePath());
         args.add("FASTQ=" + fastq.getAbsolutePath());
 
-        if (sequenceTags != null) {
-            for (String value : sequenceTags) {
-                args.add("STG=" + value);
-            }
+        for (String value : sequenceTags) {
+            args.add("STG=" + value);
         }
         if (qualityTags != null) {
             for (String value : qualityTags) {

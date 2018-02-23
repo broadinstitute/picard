@@ -88,15 +88,6 @@ public class SamToFastqWithTags extends SamToFastq {
 
     @Override
     protected void handleAdditionalRecords(SAMRecord currentRecord, Map<SAMReadGroupRecord, List<FastqWriter>> tagWriters, SAMRecord read1, SAMRecord read2) {
-        if (currentRecord.isSecondaryOrSupplementary() && !INCLUDE_NON_PRIMARY_ALIGNMENTS) {
-            return;
-        }
-
-        // Skip non-PF reads as necessary
-        if (currentRecord.getReadFailsVendorQualityCheckFlag() && !INCLUDE_NON_PF_READS) {
-            return;
-        }
-
         final List<FastqWriter> rgTagWriters = tagWriters.get(currentRecord.getReadGroup());
         if (currentRecord.getReadPairedFlag()) {
             if (read1 != null && read2 !=null){
@@ -113,9 +104,9 @@ public class SamToFastqWithTags extends SamToFastq {
         return generateTagWriters(readGroups, factory);
     }
 
+    // generate writers
     private Map<SAMReadGroupRecord, List<FastqWriter>> generateTagWriters(final List<SAMReadGroupRecord> samReadGroupRecords,
                                                                           final FastqWriterFactory factory) {
-
         final Map<SAMReadGroupRecord, List<FastqWriter>> writerMap = new HashMap<>();
 
         if (!OUTPUT_PER_RG) {
@@ -138,7 +129,7 @@ public class SamToFastqWithTags extends SamToFastq {
         return writerMap;
     }
 
-    /* Creates fastq writers based on readgroup passed in and sequence tag groupings from command line */
+    // Creates fastq writers based on readgroup passed in and sequence tag groupings from command line
     private List<File> makeTagWriters(final SAMReadGroupRecord readGroup) {
         String baseFilename = null;
         if (readGroup != null) {
@@ -156,11 +147,8 @@ public class SamToFastqWithTags extends SamToFastq {
 
         List<File> tagFiles = new ArrayList<>();
         for (String tagSplit : SEQUENCE_TAG_GROUP) {
-            String fileName = baseFilename;
-
-            fileName += tagSplit.replace(",", "_");
+            String fileName = baseFilename + tagSplit.replace(",", "_");
             fileName = IOUtil.makeFileNameSafe(fileName);
-
             fileName += COMPRESS_OUTPUTS_PER_TAG_GROUP ? ".fastq.gz" : ".fastq";
 
             final File result = (OUTPUT_DIR != null)

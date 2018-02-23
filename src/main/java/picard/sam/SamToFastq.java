@@ -178,7 +178,8 @@ public class SamToFastq extends CommandLineProgram {
 
         initializeAdditionalWriters();
         final Map<SAMReadGroupRecord, FastqWriters> writers = generateWriters(reader.getFileHeader().getReadGroups(),
-                factory, generateAdditionalWriters(reader.getFileHeader().getReadGroups(), factory));
+                factory);
+        final Map<SAMReadGroupRecord, List<FastqWriter>> additionalWriters = generateAdditionalWriters(reader.getFileHeader().getReadGroups(), factory);
         if (writers.isEmpty()) {
             final String msgBase = INPUT + " does not contain Read Groups";
             final String msg = OUTPUT_PER_RG ? msgBase + ", consider not using the OUTPUT_PER_RG option" : msgBase;
@@ -188,7 +189,7 @@ public class SamToFastq extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(log);
 
         for (final SAMRecord currentRecord : reader) {
-            handleRecord(currentRecord, writers, firstSeenMates);
+            handleRecord(currentRecord, writers, additionalWriters, firstSeenMates);
             progress.record(currentRecord);
         }
 
@@ -197,6 +198,13 @@ public class SamToFastq extends CommandLineProgram {
         // Close all the fastq writers being careful to close each one only once!
         for (final FastqWriters writerMapping : new HashSet<>(writers.values())) {
             writerMapping.closeAll();
+        }
+
+        // close all `additionalWriters` only once
+        final Set<FastqWriter> additionalWriterSet = new HashSet<>();
+        additionalWriters.values().forEach(additionalWriterSet::addAll);
+        for (final FastqWriter fastqWriter : additionalWriterSet) {
+            fastqWriter.close();
         }
 
         if (!firstSeenMates.isEmpty()) {
@@ -208,8 +216,7 @@ public class SamToFastq extends CommandLineProgram {
     }
 
     private Map<SAMReadGroupRecord, FastqWriters> generateWriters(List<SAMReadGroupRecord> samReadGroupRecords,
-                                                                  FastqWriterFactory factory,
-                                                                  Map<SAMReadGroupRecord, List<FastqWriter>> additionalWriters) {
+                                                                  FastqWriterFactory factory) {
 
         final Map<SAMReadGroupRecord, FastqWriters> writerMap = new HashMap<>();
 
@@ -233,7 +240,7 @@ public class SamToFastq extends CommandLineProgram {
              * the other two fastqs are accepting only paired end reads. */
             final FastqWriter unpairedWriter = UNPAIRED_FASTQ == null ? firstOfPairWriter : factory.newWriter(UNPAIRED_FASTQ);
 
-            fastqWriters = new FastqWriters(firstOfPairWriter, secondOfPairWriter, unpairedWriter, additionalWriters);
+            fastqWriters = new FastqWriters(firstOfPairWriter, secondOfPairWriter, unpairedWriter);
 
             // For all read groups we may find in the bam, register this single set of writers for them.
             writerMap.put(null, fastqWriters);
@@ -248,7 +255,7 @@ public class SamToFastq extends CommandLineProgram {
                 // if we're interleaving).
                 final Lazy<FastqWriter> lazySecondOfPairWriter = new Lazy<>(() -> INTERLEAVE ? firstOfPairWriter : factory.newWriter(makeReadGroupFile(rg, "_2")));
 
-                writerMap.put(rg, new FastqWriters(firstOfPairWriter, lazySecondOfPairWriter, firstOfPairWriter, additionalWriters));
+                writerMap.put(rg, new FastqWriters(firstOfPairWriter, lazySecondOfPairWriter, firstOfPairWriter));
             }
         }
         return writerMap;
@@ -263,6 +270,7 @@ public class SamToFastq extends CommandLineProgram {
     }
 
     private void handleRecord(final SAMRecord currentRecord, final Map<SAMReadGroupRecord, FastqWriters> writers,
+                              final Map<SAMReadGroupRecord, List<FastqWriter>> additionalWriters,
                               final Map<String, SAMRecord> firstSeenMates) {
         if (currentRecord.isSecondaryOrSupplementary() && !INCLUDE_NON_PRIMARY_ALIGNMENTS) {
             return;
@@ -297,12 +305,11 @@ public class SamToFastq extends CommandLineProgram {
             writeRecord(currentRecord, null, fq.getUnpaired(), READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
         }
 
-        handleAdditionalRecords(currentRecord, fq.additionalWriters, read1, read2);
+        handleAdditionalRecords(currentRecord, additionalWriters, read1, read2);
     }
 
     protected void handleAdditionalRecords(SAMRecord currentRecord, Map<SAMReadGroupRecord, List<FastqWriter>> additionalWriters, SAMRecord read1, SAMRecord read2) {
     }
-
 
     private File makeReadGroupFile(final SAMReadGroupRecord readGroup, final String preExtSuffix) {
         String fileName = null;
@@ -379,7 +386,6 @@ public class SamToFastq extends CommandLineProgram {
         }
 
         writer.write(new FastqRecord(seqHeader, readString, "", baseQualities));
-
     }
 
     /**
@@ -477,25 +483,21 @@ public class SamToFastq extends CommandLineProgram {
     private static final class FastqWriters {
         private final FastqWriter firstOfPair, unpaired;
         private final Lazy<FastqWriter> secondOfPair;
-        private final Map<SAMReadGroupRecord, List<FastqWriter>> additionalWriters;
 
         /**
          * Constructor if the consumer wishes for the second-of-pair writer to be built on-the-fly.
          */
-        private FastqWriters(final FastqWriter firstOfPair, final Lazy<FastqWriter> secondOfPair, final FastqWriter unpaired,
-                             Map<SAMReadGroupRecord, List<FastqWriter>> additionalWriters) {
+        private FastqWriters(final FastqWriter firstOfPair, final Lazy<FastqWriter> secondOfPair, final FastqWriter unpaired) {
             this.firstOfPair = firstOfPair;
             this.unpaired = unpaired;
             this.secondOfPair = secondOfPair;
-            this.additionalWriters = additionalWriters;
         }
 
         /**
          * Simple constructor; all writers are pre-initialized..
          */
-        private FastqWriters(final FastqWriter firstOfPair, final FastqWriter secondOfPair, final FastqWriter unpaired,
-                             Map<SAMReadGroupRecord, List<FastqWriter>> additionalWriters) {
-            this(firstOfPair, new Lazy<>(() -> secondOfPair), unpaired, additionalWriters);
+        private FastqWriters(final FastqWriter firstOfPair, final FastqWriter secondOfPair, final FastqWriter unpaired) {
+            this(firstOfPair, new Lazy<>(() -> secondOfPair), unpaired);
         }
 
         private FastqWriter getFirstOfPair() {
@@ -514,7 +516,6 @@ public class SamToFastq extends CommandLineProgram {
             final Set<FastqWriter> fastqWriters = new HashSet<>();
             fastqWriters.add(firstOfPair);
             fastqWriters.add(unpaired);
-            fastqWriters.addAll(additionalWriters.values().stream().flatMap(Collection::stream).collect(Collectors.toList()));
             // Make sure this is a no-op if the second writer was never fetched.
             if (secondOfPair.isInitialized()) {
                 fastqWriters.add(secondOfPair.get());
