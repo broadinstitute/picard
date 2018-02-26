@@ -41,8 +41,9 @@ public class CollectIlluminaBasecallingMetricsTest {
 
     @Test(dataProvider="testIndexedRunLane1DataProvider")
     public void testIndexedRunLane1(final boolean useBarcodesDir) throws Exception {
-        final File barcodesDir = (useBarcodesDir) ? new File(rootTestDir + "/25T8B25T/barcodes_dir") : null;
-        final MetricsFile<IlluminaBasecallingMetrics, Integer> metricsFile = runIt(1, "25T8B25T","25T8B25T/Data/Intensities/BaseCalls", barcodesDir, true);
+        final File barcodesDir = (useBarcodesDir) ? new File(rootTestDir, "/25T8B25T/barcodes_dir") : null;
+        final MetricsFile<IlluminaBasecallingMetrics, Integer> metricsFile = runIt(1, "25T8B25T",
+                new File(rootTestDir, "25T8B25T/Data/Intensities/BaseCalls"), barcodesDir, true);
         final IlluminaBasecallingMetrics metric1 = metricsFile.getMetrics().get(0);
         Assert.assertEquals(metric1.LANE, "1");
         Assert.assertEquals(metric1.MOLECULAR_BARCODE_SEQUENCE_1, "AACAATGG");
@@ -130,7 +131,8 @@ public class CollectIlluminaBasecallingMetricsTest {
 
     @Test
     public void testNonIndexedRunLane1() throws Exception {
-        final MetricsFile<IlluminaBasecallingMetrics, Integer> metricsFile = runIt(1, "125T125T","125T125T/Data/Intensities/BaseCalls", null, false);
+        final MetricsFile<IlluminaBasecallingMetrics, Integer> metricsFile = runIt(1, "125T125T",
+                new File(rootTestDir, "125T125T/Data/Intensities/BaseCalls"), null, false);
         final IlluminaBasecallingMetrics laneMetric = metricsFile.getMetrics().get(0);
 
         Assert.assertEquals(laneMetric.LANE, "1");
@@ -151,11 +153,34 @@ public class CollectIlluminaBasecallingMetricsTest {
         Assert.assertEquals(metricsFile.getMetrics().size(),1);
     }
 
-    private MetricsFile<IlluminaBasecallingMetrics, Integer> runIt(final int lane, final String readStructure, final String basecallsDirName, final File barcodesDir, final boolean isIndexed) throws Exception {
+    @Test
+    public void testNovaseqIndexedRun() throws Exception {
+        final MetricsFile<IlluminaBasecallingMetrics, Integer> metricsFile = runIt(1, "151T8B8B151T",
+                new File("testdata/picard/illumina/151T8B8B151T_cbcl/Data/Intensities/BaseCalls"), null, true);
+        final IlluminaBasecallingMetrics laneMetric = metricsFile.getMetrics().get(0);
+        Assert.assertEquals(laneMetric.LANE, "1");
+        Assert.assertEquals(laneMetric.MOLECULAR_BARCODE_SEQUENCE_1, "CACCTAGTACTCGAGT");
+        Assert.assertEquals(laneMetric.MOLECULAR_BARCODE_NAME, "SA_CACCTAGTACTCGAGT");
+        Assert.assertEquals(laneMetric.MEAN_CLUSTERS_PER_TILE, 1.0);
+        Assert.assertEquals(laneMetric.SD_CLUSTERS_PER_TILE, 0.0);
+        Assert.assertEquals(laneMetric.MEAN_PF_CLUSTERS_PER_TILE,1.0);
+        Assert.assertEquals(laneMetric.SD_PF_CLUSTERS_PER_TILE, 0.0);
+        Assert.assertEquals(laneMetric.MEAN_PCT_PF_CLUSTERS_PER_TILE, 100.0);
+        Assert.assertEquals(laneMetric.SD_PCT_PF_CLUSTERS_PER_TILE, 0.0);
+        Assert.assertEquals(laneMetric.TOTAL_BASES, 302);
+        Assert.assertEquals(laneMetric.TOTAL_READS, 2);
+        Assert.assertEquals(laneMetric.PF_BASES, 302);
+        Assert.assertEquals(laneMetric.PF_READS, 2);
+
+
+        Assert.assertEquals(metricsFile.getMetrics().size(),6);
+    }
+
+    private MetricsFile<IlluminaBasecallingMetrics, Integer> runIt(final int lane, final String readStructure,
+                                                                   final File basecallsDir, final File barcodesDir,
+                                                                   final boolean isIndexed) throws Exception {
         final File metricsFile = File.createTempFile("cibm.", ".metrics");
         metricsFile.deleteOnExit();
-
-        File basecallsDir = new File(rootTestDir.getPath(),basecallsDirName);
 
         ArrayList<String> argsList = new ArrayList<String>();
         argsList.add("BASECALLS_DIR=" + basecallsDir.getPath());
