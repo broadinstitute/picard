@@ -52,6 +52,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
     private static final File SINGLE_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
     private static final File DUAL_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
     private static final File HISEQX_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T_hiseqx/Data/Intensities/BaseCalls");
+    private static final File CBCL_DATA_DIR = new File("testdata/picard/illumina/151T8B8B151T_cbcl/Data/Intensities");
     private static final String[] BARCODES = {
             "CAACTCTC",
             "CAACTCTG", // This one is artificial -- one edit away from the first one
@@ -72,6 +73,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
     private File dual;
     private File qual;
     private File noSymlink;
+    private File cbcl;
 
     public String getCommandLineProgramName() {
         return ExtractIlluminaBarcodes.class.getSimpleName();
@@ -96,6 +98,11 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         Assert.assertTrue(noSymlink.delete());
         Assert.assertTrue(noSymlink.mkdir());
         IOUtil.copyDirectoryTree(HISEQX_DATA_DIR, noSymlink);
+
+        cbcl = File.createTempFile("eib_cbcl", ".tmp");
+        Assert.assertTrue(cbcl.delete());
+        Assert.assertTrue(cbcl.mkdir());
+        IOUtil.copyDirectoryTree(CBCL_DATA_DIR, cbcl);
     }
 
     @AfterTest
@@ -256,6 +263,26 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
                 "METRICS_FILE=" + metricsFile.getPath(),
                 "READ_STRUCTURE=" + "25T8B8B25T",
                 "BARCODE=" + "CAATAGTCCGACTCTC"
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<>();
+        result.read(new FileReader(metricsFile));
+        Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, 1, "Got wrong number of perfect matches");
+        Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, 0, "Got wrong number of one-mismatch matches");
+    }
+
+    @Test
+    public void testCbclDualBarcodes() throws Exception {
+        final File metricsFile = File.createTempFile("cbcl.", ".metrics");
+        metricsFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "BASECALLS_DIR=" + cbcl.getAbsolutePath() + "/BaseCalls",
+                "LANE=" + 1,
+                "METRICS_FILE=" + metricsFile.getPath(),
+                "READ_STRUCTURE=" + "151T8B8B151T",
+                "BARCODE=" + "CACCTAGTACTCGAGT"
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);

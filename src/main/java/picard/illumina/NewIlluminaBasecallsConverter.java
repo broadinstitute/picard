@@ -120,7 +120,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         if (demultiplex) {
             final Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
-                    ParameterizedFileUtil.makeLaneTileRegex("_barcode.txt(\\.gz|\\.bz2)?", lane)));
+                    ParameterizedFileUtil.makeBarcodeRegex(lane)));
             final File[] barcodeTileFiles = getTiledFiles(barcodesDir, barcodeRegex);
             if (barcodeTileFiles.length != tiles.size()) {
                 throw new PicardException(String.format(
