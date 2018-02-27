@@ -430,12 +430,22 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             return out;
         }
 
+        /**
+         * Derived class may override this method in order to return a different set of genes for
+         * picking transcripts for computing coverage, or to cache the value returned by geneOverlapDetector.getAll(),
+         * because it can be expensive to compute repeatedly.
+         */
+        protected Set<Gene> getGenesForPickTranscripts() {
+            return geneOverlapDetector.getAll();
+        }
+
         /** Picks the set of transcripts on which the coverage metrics are to be calculated. */
         public Map<Gene.Transcript, int[]> pickTranscripts(final Map<Gene.Transcript, int[]> transcriptCoverage) {
-            final Map<Gene.Transcript, Double> bestPerGene = new HashMap<Gene.Transcript, Double>();
+            final Set<Gene> genesWithTranscripts = getGenesWithTranscripts(transcriptCoverage.keySet());
 
             // Make a map of the best transcript per gene to it's mean coverage
-            for (final Gene gene : geneOverlapDetector.getAll()) {
+            final Map<Gene.Transcript, Double> bestPerGene = new HashMap<Gene.Transcript, Double>();
+            for (final Gene gene : genesWithTranscripts) {
                 Gene.Transcript best = null;
                 double bestMean = 0;
 
@@ -443,7 +453,6 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                     final int[] cov = transcriptCoverage.get(tx);
 
                     if (tx.length() < Math.max(minimumLength, 100)) continue;
-                    if (cov == null) continue;
 
                     final double mean = MathUtil.mean(MathUtil.promote(cov), 0, cov.length);
                     if (mean < 1d) continue;
@@ -475,6 +484,24 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             }
 
             return retval;
+        }
+
+        /**
+         * @param transcripts
+         * @return The set of genes for which the given transcripts come from, intersected with genesForPickTranscripts
+         */
+        private Set<Gene> getGenesWithTranscripts(Collection<Gene.Transcript> transcripts) {
+            // Note that the size of transcriptCoverage may be << than size of genesForPickTranscripts, so iterating
+            // over that set should be much faster.  If the size is not much smaller, it shouldn't be significantly
+            // larger.
+            final Set<Gene> genesWithTranscripts = new HashSet<>();
+            final Set<Gene> genesForPickTranscripts = getGenesForPickTranscripts();
+            for (final Gene.Transcript transcript: transcripts) {
+                if (genesForPickTranscripts.contains(transcript.getGene())) {
+                    genesWithTranscripts.add(transcript.getGene());
+                }
+            }
+            return genesWithTranscripts;
         }
 
     }
