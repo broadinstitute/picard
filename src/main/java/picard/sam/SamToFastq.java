@@ -215,6 +215,9 @@ public class SamToFastq extends CommandLineProgram {
         return 0;
     }
 
+    /**
+     * Generates the writers for the given read groups or, if we are not emitting per-read-group, just returns the single set of writers.
+     */
     private Map<SAMReadGroupRecord, FastqWriters> generateWriters(List<SAMReadGroupRecord> samReadGroupRecords,
                                                                   FastqWriterFactory factory) {
 

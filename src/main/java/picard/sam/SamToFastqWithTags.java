@@ -90,7 +90,7 @@ public class SamToFastqWithTags extends SamToFastq {
     protected void handleAdditionalRecords(SAMRecord currentRecord, Map<SAMReadGroupRecord, List<FastqWriter>> tagWriters, SAMRecord read1, SAMRecord read2) {
         final List<FastqWriter> rgTagWriters = tagWriters.get(currentRecord.getReadGroup());
         if (currentRecord.getReadPairedFlag()) {
-            if (read1 != null && read2 !=null){
+            if (read1 != null && read2 !=null) {
                 writeTagRecords(read1, 1, rgTagWriters);
                 writeTagRecords(read2, 2, rgTagWriters);
             }
@@ -112,7 +112,7 @@ public class SamToFastqWithTags extends SamToFastq {
         if (!OUTPUT_PER_RG) {
             /* Prepare tag writers based on sequence tag groups provided in command line */
 
-            final List<FastqWriter> tagFastqWriters = makeTagWriters(null).stream().map(factory::newWriter).collect(Collectors.toList());
+            final List<FastqWriter> tagFastqWriters = makeTagWriters(null, factory);
 
             writerMap.put(null, tagFastqWriters);
             for (final SAMReadGroupRecord rg : samReadGroupRecords) {
@@ -121,7 +121,7 @@ public class SamToFastqWithTags extends SamToFastq {
         } else {
             /* prepare tag writers based on readgroup names */
             for (final SAMReadGroupRecord rg : samReadGroupRecords) {
-                List<FastqWriter> tagWriters = makeTagWriters(rg).stream().map(factory::newWriter).collect(Collectors.toList());
+                final List<FastqWriter> tagWriters = makeTagWriters(rg, factory);
 
                 writerMap.put(rg, tagWriters);
             }
@@ -129,8 +129,10 @@ public class SamToFastqWithTags extends SamToFastq {
         return writerMap;
     }
 
-    // Creates fastq writers based on readgroup passed in and sequence tag groupings from command line
-    private List<File> makeTagWriters(final SAMReadGroupRecord readGroup) {
+    /**
+     *     Creates fastq writers based on readgroup passed in and sequence tag groupings from command line
+     */
+    private List<FastqWriter> makeTagWriters(final SAMReadGroupRecord readGroup, final FastqWriterFactory factory) {
         String baseFilename = null;
         if (readGroup != null) {
             if (RG_TAG.equalsIgnoreCase("PU")) {
@@ -157,13 +159,11 @@ public class SamToFastqWithTags extends SamToFastq {
             IOUtil.assertFileIsWritable(result);
             tagFiles.add(result);
         }
-        return tagFiles;
+        return tagFiles.stream().map(factory::newWriter).collect(Collectors.toList());
     }
 
-    // Setting up the Groupings of Sequence Tags, Quality Tags, and Separator Strings so we dont have to calculate them for every loop
+    // Sets up the Groupings of Sequence Tags, Quality Tags, and Separator Strings so we dont have to calculate them for every loop
     private void setupTagSplitValues() {
-        if (SEQUENCE_TAG_GROUP.isEmpty()) return;
-
         SPLIT_SEQUENCE_TAGS = new ArrayList<>();
         SPLIT_QUALITY_TAGS = new ArrayList<>();
         SPLIT_SEPARATOR_TAGS = new ArrayList<>();
