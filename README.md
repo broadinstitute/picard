@@ -88,22 +88,27 @@ Picard are [here](https://github.com/broadinstitute/picard/wiki/How-to-release-P
 
 #### Path providers
 
-Picard has limited support for reading from Path providers. Currently only google's api is supported, and only a few tools support this.
-To run with this support you will need to download the google nio jar (e.g. from [maven](http://central.maven.org/maven2/com/google/cloud/google-cloud-nio/0.29.0-alpha/google-cloud-nio-0.29.0-alpha.jar))
-and then run picard as follows:
+Picard has limited support for reading from Path providers. 
+Currently only google's api is supported, and only a few tools support this.
+To run with this support you need to compile the cloudJar target with gradle:
+```bash
+./gradlew cloudJar
 
 ```
-java -cp <PATH TO google-cloud-nio> -cp <PATH TO picard.jar> picard.cmdline.PicardCommandLine <Picard arguments starting from program>
+then run picard as follows:
+
+```bash
+java -jar build/lib/picardcloud.jar <Picard arguments starting from program>
 ```
 For example:
 
-```
-java -cp google-cloud-nio.jar -cp picard.jar picard.cmdline.PicardCommandLine CrosscheckFingerprints \
-I=gs://sample1.vcf \
-I=gs://sample2.vcf \
-CROSSCHECK_BY=FILE \
-H=Haplotype_db.txt \
-O=crosscheck.out
+```bash 
+java -jar build/lib/picardcloud.jar CrosscheckFingerprints \
+   I=gs://sample1.vcf \
+   I=gs://sample2.vcf \
+   CROSSCHECK_BY=FILE \
+   H=Haplotype_db.txt \
+   O=crosscheck.out
 ```
 
 Alternatively, you can run the tool via the [GATK](https://software.broadinstitute.org/gatk/download/) which bundles the Google-Cloud
