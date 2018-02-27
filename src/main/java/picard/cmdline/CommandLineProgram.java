@@ -251,12 +251,14 @@ public abstract class CommandLineProgram {
 
             // Output a one liner about who/where and what software/os we're running on
             try {
-                StringBuilder pathProvidersBuilder = new StringBuilder();
+                final StringBuilder pathProvidersBuilder = new StringBuilder();
 
                 for(PathHelper.PathProviders providers : PathHelper.PathProviders.values()) {
                     pathProvidersBuilder.append(String.format("Provider %s is%s available; ",
                             providers.name(), providers.isAvailable() ? "" : " not"));
                 }
+                final int lastSpacePos = pathProvidersBuilder.lastIndexOf(" ");
+                pathProvidersBuilder.delete(lastSpacePos, lastSpacePos+1);
 
 
                 final boolean usingIntelDeflater = (BlockCompressedOutputStream.getDefaultDeflaterFactory() instanceof IntelDeflaterFactory &&
@@ -264,7 +266,7 @@ public abstract class CommandLineProgram {
                 final boolean usingIntelInflater = (BlockGunzipper.getDefaultInflaterFactory() instanceof IntelInflaterFactory &&
                         ((IntelInflaterFactory)BlockGunzipper.getDefaultInflaterFactory()).usingIntelInflater());
                 final String msg = String.format(
-                    "[%s] Executing as %s@%s on %s %s %s; %s %s; Deflater: %s; Inflater: %s; %sPicard version: %s",
+                    "[%s] Executing as %s@%s on %s %s %s; %s %s; Deflater: %s; Inflater: %s; %s Picard version: %s",
                     new Date(), System.getProperty("user.name"), InetAddress.getLocalHost().getHostName(),
                     System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"),
                     System.getProperty("java.vm.name"), System.getProperty("java.runtime.version"),

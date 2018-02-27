@@ -150,8 +150,8 @@ import static picard.fingerprint.CrosscheckFingerprints.CrosscheckMode.CHECK_SAM
                         "Checks if all the genetic data within a set of files appear to come from the same individual. " +
                         "It quickly determines whether a group's genotype matches that of an input SAM/BAM/VCF by selective sampling, " +
                         "and has been designed to work well for low-depth SAM/BAMs (as well as high depth ones and VCFs.) " +
-                        "The tool collects fingerprints (essentially, genotype information from different parts of the genome)" +
-                        " at the finest level available in the data (readgroup for SAM files " +
+                        "The tool collects fingerprints (essentially, genotype information from different parts of the genome) " +
+                        "at the finest level available in the data (readgroup for SAM files " +
                         "and sample for VCF files) and then optionally aggregates it by library, sample or file, to increase power and provide " +
                         "results at the desired resolution. Output is in a \"Moltenized\" format, one row per comparison. The results are " +
                         "emitted into a CrosscheckMetric metric file. " +
@@ -239,11 +239,11 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Argument(shortName = "SI", optional = true, mutex={"MATRIX_OUTPUT"},
             doc = "A second set of input files (or lists of files) with which to compare fingerprints. If this option is provided " +
-                    "the tool compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID." +
-                    " In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY."+
-                    " When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. " +
-                    "If this is violated, the tool will proceed to check the matching samples, but report the missing samples" +
-                    " and return a non-zero error-code." )
+                    "the tool compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. " +
+                    "In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. " +
+                    "When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. " +
+                    "If this is violated, the tool will proceed to check the matching samples, but report the missing samples " +
+                    "and return a non-zero error-code." )
     public List<String> SECOND_INPUT;
 
     @Argument(doc = "A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and " +
@@ -464,16 +464,15 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
     }
 
-    /** inspects the contents of sampleMapFile building a map of Sample->Sample.
+    /** Inspects the contents of sampleMapFile building a map of Sample->Sample.
      * Checks for sanity, and then replaces in the fpMap,
      * @param fpMap
      * @param sampleMapFile
      */
-
     private void remapFingerprints(final Map<FingerprintIdDetails, Fingerprint> fpMap, final File sampleMapFile, final String inputFieldName) {
         final Map<String, String> sampleMap = new HashMap<>();
 
-        TabbedInputParser parser = new TabbedInputParser(false, sampleMapFile);
+        final TabbedInputParser parser = new TabbedInputParser(false, sampleMapFile);
 
         // build the map
         for (final String[] strings : parser) {
@@ -519,7 +518,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
 
         // replace samples with their mapped values:
-        Set<FingerprintIdDetails> ids = fpMap.keySet();
+        final Set<FingerprintIdDetails> ids = fpMap.keySet();
         ids.forEach(id -> {
             // if sample isn't in sampleMap, leave it alone
             if (!sampleMap.containsKey(id.sample)) return;

@@ -88,7 +88,7 @@ Picard are [here](https://github.com/broadinstitute/picard/wiki/How-to-release-P
 
 #### Path providers
 
-Picard has limited support for reading from Path providers. Currently only google's api is supported, and only a few tools support this
+Picard has limited support for reading from Path providers. Currently only google's api is supported, and only a few tools support this.
 To run with this support you will need to download the google nio jar (e.g. from [maven](http://central.maven.org/maven2/com/google/cloud/google-cloud-nio/0.29.0-alpha/google-cloud-nio-0.29.0-alpha.jar))
 and then run picard as follows:
 
@@ -110,6 +110,7 @@ Alternatively, you can run the tool via the [GATK](https://software.broadinstitu
 jar, and should thus "Just Work".
 
 #### GA4GH API
+
 It's also possible to build a version of Picard that supports reading from
 GA4GH API, e.g. Google Genomics:
 
