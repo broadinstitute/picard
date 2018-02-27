@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010 The Broad Institute
+ * Copyright (c) 2010-2018 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import htsjdk.samtools.*;
 import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.util.*;
 import htsjdk.tribble.TribbleException;
 import htsjdk.variant.variantcontext.Allele;
@@ -37,8 +38,10 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import picard.PicardException;
 import picard.util.AlleleSubsettingUtils;
+import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -315,6 +318,8 @@ public class FingerprintChecker {
 
                 // TODO: when multiple genotypes are available for a Haplotype check that they
                 // TODO: agree. Not urgent since DownloadGenotypes already does this.
+                // TODO: more urgent now as we convert vcfs to haplotypeProbabilities and
+                // TODO: there could be different VCs with information we'd like to use...
                 if (fp.containsKey(h)) continue;
 
                 final boolean hom = genotype.isHom();
@@ -327,7 +332,6 @@ public class FingerprintChecker {
                         (!hom) ? accuracy : halfError,
                         (hom && allele == snp.getAllele2()) ? accuracy : halfError
                 };
-
                 fp.add(new HaplotypeProbabilitiesFromGenotype(snp, h, probs[0], probs[1], probs[2]));
             }
         }
@@ -392,7 +396,7 @@ public class FingerprintChecker {
         // non-redundant data in the reads marked as "duplicates'.
         if (this.allowDuplicateReads) {
             final List<SamRecordFilter> filters = new ArrayList<>(1);
-            filters.add(new NotPrimaryAlignmentFilter());
+            filters.add(new SecondaryAlignmentFilter());
             iterator.setSamFilters(filters);
         }
 
@@ -434,7 +438,7 @@ public class FingerprintChecker {
             for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
                 final FingerprintIdDetails details;
-                if (rg == null && !fingerprintIdDetailsMap.containsKey(rg)) {
+                if (rg == null || !fingerprintIdDetailsMap.containsKey(rg)) {
                     final FingerprintIdDetails unknownFPDetails = createUnknownFP(samFile, rec.getRecord());
                     fingerprintIdDetailsMap.put(null, unknownFPDetails);
 
@@ -495,74 +499,77 @@ public class FingerprintChecker {
      * Data is aggregated by sample, not read-group.
      */
     public Map<String, Fingerprint> identifyContaminant(final File samFile, final double contamination, final int locusMaxReads) {
-        final SamReader in = SamReaderFactory.makeDefault().enable(CACHE_FILE_BASED_INDEXES).open(samFile);
-        SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
-                in.getFileHeader().getSequenceDictionary());
-
-        final SamLocusIterator iterator = new SamLocusIterator(in, haplotypes.getIntervalList(), in.hasIndex());
-        iterator.setEmitUncoveredLoci(true);
-        iterator.setMappingQualityScoreCutoff(this.minimumMappingQuality);
-        iterator.setQualityScoreCutoff(this.minimumBaseQuality);
-
-        // In some cases it is useful to allow duplicate reads to be used - the most common is in single-end
-        // sequence data where the duplicate marking may have been overly aggressive, and there is useful
-        // non-redundant data in the reads marked as "duplicates'.
-        if (this.allowDuplicateReads) {
-            final List<SamRecordFilter> filters = new ArrayList<>(1);
-            filters.add(new NotPrimaryAlignmentFilter());
-            iterator.setSamFilters(filters);
-        }
-
         final Map<String, Fingerprint> fingerprintsBySample = new HashMap<>();
-        for (final SAMReadGroupRecord rg : in.getFileHeader().getReadGroups()) {
-            if (!fingerprintsBySample.containsKey(rg.getSample())) {
-                final Fingerprint fingerprint = new Fingerprint(rg.getSample(),
-                        samFile,
-                        rg.getSample());
 
-                for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
-                    fingerprint.add(new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
-                }
-                fingerprintsBySample.put(rg.getSample(), fingerprint);
+        try (final SamReader in = SamReaderFactory.makeDefault().enable(CACHE_FILE_BASED_INDEXES).open(samFile)) {
+            SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
+                    in.getFileHeader().getSequenceDictionary());
+
+            final SamLocusIterator iterator = new SamLocusIterator(in, haplotypes.getIntervalList(), in.hasIndex());
+            iterator.setEmitUncoveredLoci(true);
+            iterator.setMappingQualityScoreCutoff(this.minimumMappingQuality);
+            iterator.setQualityScoreCutoff(this.minimumBaseQuality);
+
+            // In some cases it is useful to allow duplicate reads to be used - the most common is in single-end
+            // sequence data where the duplicate marking may have been overly aggressive, and there is useful
+            // non-redundant data in the reads marked as "duplicates'.
+            if (this.allowDuplicateReads) {
+                final List<SamRecordFilter> filters = new ArrayList<>(1);
+                filters.add(new SecondaryAlignmentFilter());
+                iterator.setSamFilters(filters);
             }
-        }
 
-        // Set of read/template names from which we have already sampled a base and a qual. Since we assume
-        // that all evidence for a haplotype is independent we can't sample two or more bases from a single
-        // read or read-pair because they would not be independent!
-        final Set<String> usedReadNames = new HashSet<>(10000);
+            for (final SAMReadGroupRecord rg : in.getFileHeader().getReadGroups()) {
+                if (!fingerprintsBySample.containsKey(rg.getSample())) {
+                    final Fingerprint fingerprint = new Fingerprint(rg.getSample(),
+                            samFile,
+                            rg.getSample());
 
-        // Now go through the data at each locus and figure stuff out!
-        for (final SamLocusIterator.LocusInfo info : iterator) {
+                    for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
+                        fingerprint.add(new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
+                    }
+                    fingerprintsBySample.put(rg.getSample(), fingerprint);
+                }
+            }
 
-            // Find the matching Snp and HaplotypeProbs
-            final HaplotypeBlock haplotypeBlock = this.haplotypes.getHaplotype(info.getSequenceName(), info.getPosition());
-            final Snp snp = this.haplotypes.getSnp(info.getSequenceName(), info.getPosition());
+            // Set of read/template names from which we have already sampled a base and a qual. Since we assume
+            // that all evidence for a haplotype is independent we can't sample two or more bases from a single
+            // read or read-pair because they would not be independent!
+            final Set<String> usedReadNames = new HashSet<>(10000);
 
-            // randomly select locusMaxReads elements from the list
-            final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = randomSublist(info.getRecordAndPositions(), locusMaxReads);
+            // Now go through the data at each locus and figure stuff out!
+            for (final SamLocusIterator.LocusInfo info : iterator) {
 
-            for (final SamLocusIterator.RecordAndOffset rec : recordAndOffsetList) {
-                final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
-                if (rg == null || !fingerprintsBySample.containsKey(rg.getSample())) {
-                    final PicardException e = new PicardException("Unknown sample: " + (rg != null ? rg.getSample() : "(null readgroup)"));
-                    log.error(e);
-                    throw e;
-                } else {
-                    final String readName = rec.getRecord().getReadName();
-                    if (!usedReadNames.contains(readName)) {
-                        final HaplotypeProbabilitiesFromContaminatorSequence probs =
-                                (HaplotypeProbabilitiesFromContaminatorSequence) fingerprintsBySample.get(rg.getSample()).get(haplotypeBlock);
-                        final byte base = StringUtil.toUpperCase(rec.getReadBase());
-                        final byte qual = rec.getBaseQuality();
+                // Find the matching Snp and HaplotypeProbs
+                final HaplotypeBlock haplotypeBlock = this.haplotypes.getHaplotype(info.getSequenceName(), info.getPosition());
+                final Snp snp = this.haplotypes.getSnp(info.getSequenceName(), info.getPosition());
 
-                        probs.addToProbs(snp, base, qual);
-                        usedReadNames.add(readName);
+                // randomly select locusMaxReads elements from the list
+                final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = randomSublist(info.getRecordAndPositions(), locusMaxReads);
+
+                for (final SamLocusIterator.RecordAndOffset rec : recordAndOffsetList) {
+                    final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
+                    if (rg == null || !fingerprintsBySample.containsKey(rg.getSample())) {
+                        final PicardException e = new PicardException("Unknown sample: " + (rg != null ? rg.getSample() : "(null readgroup)"));
+                        log.error(e);
+                        throw e;
+                    } else {
+                        final String readName = rec.getRecord().getReadName();
+                        if (!usedReadNames.contains(readName)) {
+                            final HaplotypeProbabilitiesFromContaminatorSequence probs =
+                                    (HaplotypeProbabilitiesFromContaminatorSequence) fingerprintsBySample.get(rg.getSample()).get(haplotypeBlock);
+                            final byte base = StringUtil.toUpperCase(rec.getReadBase());
+                            final byte qual = rec.getBaseQuality();
+
+                            probs.addToProbs(snp, base, qual);
+                            usedReadNames.add(readName);
+                        }
                     }
                 }
             }
+        } catch (IOException e) {
+            log.error("Unexpected Error while reading from " + samFile + ". Trying to continue.", e.getMessage(), e.getStackTrace());
         }
-
         return fingerprintsBySample;
     }
 
@@ -602,15 +609,14 @@ public class FingerprintChecker {
 
         // Generate fingerprints from each file
         final AtomicInteger filesRead = new AtomicInteger(0);
-        final ExecutorService executor = Executors.newFixedThreadPool(threads, new ThreadFactoryBuilder().setDaemon(true).build());
+
+        final ExecutorService executor = new ThreadPoolExecutorWithExceptions(threads);
+        final ExecutorCompletionService<File> executorCompletionService = new ExecutorCompletionService<>(executor);
         final IntervalList intervals = this.haplotypes.getIntervalList();
         final Map<FingerprintIdDetails, Fingerprint> retval = new ConcurrentHashMap<>();
 
-        final Map<Future<?>, File> futures = new HashMap<>(files.size());
-
         for (final File f : files) {
-            futures.put(executor.submit(() -> {
-                try {
+            executorCompletionService.submit(() -> {
                     if (CheckFingerprint.isBamOrSamFile(f)) {
                         retval.putAll(fingerprintSamFile(f, intervals));
                     } else {
@@ -621,26 +627,22 @@ public class FingerprintChecker {
                     if (filesRead.incrementAndGet() % 100 == 0) {
                         log.info("Processed " + filesRead.get() + " out of " + files.size());
                     }
-                } catch (final Exception e) {
-                    log.warn("Exception thrown in thread:" + e.getMessage());
-                    throw e;
-                }
-            }), f);
+                return f;
+            });
         }
 
         executor.shutdown();
         try {
             executor.awaitTermination(waitTime, waitTimeUnit);
         } catch (final InterruptedException ie) {
-            log.warn(ie, "Interrupted while waiting for executor to terminate.");
+            throw new PicardException("Interrupted while waiting for executor to terminate.", ie);
         }
 
-        for (final Map.Entry<Future<?>, File> futureFileEntry : futures.entrySet()) {
+        for (int i = 0; i < files.size(); i++) {
             try {
-                futureFileEntry.getKey().get();
+                executorCompletionService.take().get();
             } catch (InterruptedException | ExecutionException e) {
-                log.error("Failed to fingerprint on file: " + futureFileEntry.getValue());
-                throw new RuntimeException(e);
+                throw new PicardException("Failed to fingerprint", e);
             }
         }
 
