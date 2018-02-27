@@ -68,7 +68,6 @@ public class SamToFastqTest extends CommandLineProgramTest {
         };
     }
 
-
     @DataProvider(name = "badFiles")
     public Object[][] badFiles() {
         return new Object[][] {
@@ -146,7 +145,7 @@ public class SamToFastqTest extends CommandLineProgramTest {
         verifyFastq(pair1File, pair2File, samFile);
     }
 
-    @Test(dataProvider =  "okFiles")
+    @Test(dataProvider = "okFiles")
     public void testOkInterleavedFile(final String samFilename) throws IOException {
         final File samFile = new File(TEST_DATA_DIR,samFilename);
         final File pairFile = newTempFastqFile("pair");
@@ -169,11 +168,10 @@ public class SamToFastqTest extends CommandLineProgramTest {
             Assert.assertNotNull(mpair.mate2);
             Assert.assertEquals(mpair.mate1.getReadName(),mpair.mate2.getReadName());
             final String readName = mpair.mate1.getReadName() ;
-            Assert.assertTrue(outputHeaderSet.contains(readName+"/1")); // ensure mate is in correct file
-            Assert.assertTrue(outputHeaderSet.contains(readName+"/2"));
+            Assert.assertTrue(outputHeaderSet.contains(readName + "/1")); // ensure mate is in correct file
+            Assert.assertTrue(outputHeaderSet.contains(readName + "/2"));
         }
     }
-
 
     @Test (dataProvider = "badFiles", expectedExceptions= SAMFormatException.class)
     public void testBadFile(final String samFilename) throws IOException {
@@ -196,7 +194,6 @@ public class SamToFastqTest extends CommandLineProgramTest {
         };
     }
 
-
     @DataProvider(name = "badGroupedFiles")
     public Object[][] badGroupedFiles() {
         return new Object[][] {
@@ -217,29 +214,22 @@ public class SamToFastqTest extends CommandLineProgramTest {
         final Map<String, Set<String>> outputSets = new HashMap<>(groupFiles.length);
 
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath() + "/";
-        final String [] args = new String[]{
+        final String [] args = {
               "INPUT=" + samFile.getAbsolutePath(),
               "OUTPUT_PER_RG=true",
               "OUTPUT_DIR=" + tmpDir,
         };
         runPicardCommandLine(args);
 
-        File f1;
-        File f2;
-        String fname1;
-        String fname2;
-        String keyName1;
-        String keyName2;
         Set<String> outputHeaderSet1;
         Set<String> outputHeaderSet2;
-        for(final String groupPUName : groupFiles)
-        {
-            keyName1 = groupPUName + "_1";
-            keyName2 = groupPUName + "_2";
-            fname1 = tmpDir + "/" + keyName1 + ".fastq";
-            fname2 = tmpDir + "/" + keyName2 + ".fastq";
-            f1 = new File(fname1);
-            f2 = new File(fname2);
+        for (final String groupPUName : groupFiles) {
+            String keyName1 = groupPUName + "_1";
+            String keyName2 = groupPUName + "_2";
+            String fname1 = tmpDir + "/" + keyName1 + ".fastq";
+            String fname2 = tmpDir + "/" + keyName2 + ".fastq";
+            File f1 = new File(fname1);
+            File f2 = new File(fname2);
             f1.deleteOnExit();
             f2.deleteOnExit();
             IOUtil.assertFileIsReadable(f1);
@@ -267,8 +257,8 @@ public class SamToFastqTest extends CommandLineProgramTest {
                 Assert.assertNotNull(mpair.mate2);
                 Assert.assertEquals(mpair.mate1.getReadName(),mpair.mate2.getReadName());
                 final String readName = mpair.mate1.getReadName() ;
-                Assert.assertTrue(outputHeaderSet1.contains(readName+"/1")); // ensure mate is in correct file
-                Assert.assertTrue(outputHeaderSet2.contains(readName+"/2"));
+                Assert.assertTrue(outputHeaderSet1.contains(readName + "/1")); // ensure mate is in correct file
+                Assert.assertTrue(outputHeaderSet2.contains(readName + "/2"));
             }
         }
     }
@@ -284,7 +274,6 @@ public class SamToFastqTest extends CommandLineProgramTest {
 
     @Test (dataProvider = "badGroupedFiles", expectedExceptions=SAMFormatException.class)
     public void testBadGroupedFile(final String samFilename) throws IOException {
-        final File samFile = new File(TEST_DATA_DIR, samFilename);
         final File pair1File = newTempFastqFile("pair1");
         final File pair2File = newTempFastqFile("pair2");
 
@@ -359,12 +348,12 @@ public class SamToFastqTest extends CommandLineProgramTest {
         };
     }
 
-    private Set<String> createFastqReadHeaderSet(final File file) {
+    protected static Set<String> createFastqReadHeaderSet(final File file) {
         final Set<String> set = new HashSet<String>();
         final FastqReader freader = new FastqReader(file);
         while (freader.hasNext()) {
             final FastqRecord frec = freader.next();
-            set.add(frec.getReadHeader());
+            set.add(frec.getReadName());
         }
         return set ;
     }
@@ -386,19 +375,17 @@ public class SamToFastqTest extends CommandLineProgramTest {
         return map;
     }
 
-
-    private Map<String, Map<String, MatePair>> createPUPairsMap(final File samFile) throws IOException {
+    protected static Map<String, Map<String, MatePair>> createPUPairsMap(final File samFile) throws IOException {
         IOUtil.assertFileIsReadable(samFile);
         final SamReader reader = SamReaderFactory.makeDefault().open(samFile);
-        final Map<String, Map<String, MatePair>> map = new LinkedHashMap<String, Map<String,MatePair>>();
+        final Map<String, Map<String, MatePair>> map = new LinkedHashMap<>();
 
         Map<String,MatePair> curFileMap;
         for (final SAMRecord record : reader ) {
             final String platformUnit = record.getReadGroup().getPlatformUnit();
             curFileMap = map.get(platformUnit);
-            if(curFileMap == null)
-            {
-                curFileMap = new LinkedHashMap<String, MatePair>();
+            if(curFileMap == null) {
+                curFileMap = new LinkedHashMap<>();
                 map.put(platformUnit, curFileMap);
             }
 
@@ -430,12 +417,12 @@ public class SamToFastqTest extends CommandLineProgramTest {
             Assert.assertNotNull(mpair.mate2);
             Assert.assertEquals(mpair.mate1.getReadName(),mpair.mate2.getReadName());
             final String readName = mpair.mate1.getReadName() ;
-            Assert.assertTrue(outputHeaderSet1.contains(readName+"/1")); // ensure mate is in correct file
-            Assert.assertTrue(outputHeaderSet2.contains(readName+"/2"));
+            Assert.assertTrue(outputHeaderSet1.contains(readName + "/1")); // ensure mate is in correct file
+            Assert.assertTrue(outputHeaderSet2.contains(readName + "/2"));
         }
     }
 
-    class MatePair {
+    static class MatePair {
         SAMRecord mate1 ;
         SAMRecord mate2 ;
         void add(final SAMRecord record) {
@@ -463,7 +450,7 @@ public class SamToFastqTest extends CommandLineProgramTest {
         return newTempFastqFile(filename, ".fastq");
     }
 
-    @Test(dataProvider =  "okFiles")
+    @Test(dataProvider = "okFiles")
     public void testFileCompression(final String samFilename) throws IOException {
         final File samFile = new File(TEST_DATA_DIR,samFilename);
         final File pair1File = newTempFastqFile("pair1", ".fastq.gz");
@@ -490,6 +477,4 @@ public class SamToFastqTest extends CommandLineProgramTest {
         fis.close();
         Assert.assertEquals(observedMagicNumber, expectedMagicNumber);
     }
-
-
 }
