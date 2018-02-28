@@ -229,7 +229,7 @@ public class FingerprintCheckerTest {
         final File fasta = new File(TEST_DATA_DIR, "reference.fasta");
         final File vcfExpected = new File(TEST_DATA_DIR, "expectedFingerprint_small.vcf");
         final FingerprintChecker fpchecker = new FingerprintChecker(haplotype_db);
-        final Fingerprint fp = fpchecker.fingerprintVcf(vcfInput).values().iterator().next();
+        final Fingerprint fp = fpchecker.fingerprintVcf(vcfInput.toPath()).values().iterator().next();
 
         final File vcfOutput = File.createTempFile("fingerprint", ".vcf");
         FingerprintUtils.writeFingerPrint(fp, vcfOutput, fasta, "Dummy", "Testing");
