@@ -220,7 +220,7 @@ public class FingerprintChecker {
             try {
                 getFingerprintFromVc(fingerprints, ctx);
             } catch (final IllegalArgumentException e) {
-                log.warn("There was a genotyping error in File: " + source.toUri().toString() + "\n" + e.getMessage());
+                log.warn(e,"There was a genotyping error in File: " + source.toUri().toString() + "\n" + e.getMessage());
             }
         }
 
