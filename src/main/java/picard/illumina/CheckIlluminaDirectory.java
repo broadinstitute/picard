@@ -23,6 +23,7 @@ import picard.illumina.parser.readers.CbclReader;
 import picard.illumina.parser.readers.LocsFileReader;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -56,7 +57,8 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             "and are reasonably sized for every tile and cycle.  Reasonably sized means non-zero sized for files that exist per tile and " +
             "equal size for binary files that exist per cycle or per tile. If DATA_TYPES {Position, BaseCalls, QualityScores, PF," +
             " or Barcodes} are not specified, then the default data types used by IlluminaBasecallsToSam are used.  " +
-            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.</p>" +
+            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed. If there are errors, " +
+            "the number of errors is written in a file called 'errors.count' in the working directory</p>" +
             "" +
             "<h4>Usage example:</h4> " +
             "<pre>" +
@@ -233,6 +235,12 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             log.info("SUCCEEDED!  All required files are present and non-empty.");
         } else {
             status = 1;
+            try {
+                Files.write(Paths.get(".", "errors.count"), Integer.toString(totalFailures).getBytes());
+            }
+            catch (IOException e) {
+                log.error("Unable to write number off errors to file");
+            }
             log.info("FAILED! There were " + totalFailures + " in the following lanes: " + StringUtil
                     .join(", ", failingLanes));
         }
