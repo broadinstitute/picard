@@ -23,6 +23,8 @@ import picard.illumina.parser.readers.CbclReader;
 import picard.illumina.parser.readers.LocsFileReader;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -230,7 +232,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         if (totalFailures == 0) {
             log.info("SUCCEEDED!  All required files are present and non-empty.");
         } else {
-            status = totalFailures;
+            status = 1;
             log.info("FAILED! There were " + totalFailures + " in the following lanes: " + StringUtil
                     .join(", ", failingLanes));
         }
