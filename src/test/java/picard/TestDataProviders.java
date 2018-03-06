@@ -13,7 +13,7 @@ import java.util.stream.StreamSupport;
 /**
  * This test is a mechanism to check that none of the data-providers fail to run.
  * It is needed because in the case that a data-provider fails (for some reason, perhaps a change in some other code
- * causes it to throw an exception) the tests that rely on it will be sliently skipped.
+ * causes it to throw an exception) the tests that rely on it will be silently skipped.
  * The only mention of this will be in test logs but since we normally avoid reading these logs and rely on the
  * exit code, it will look like all the tests have passed.
  *

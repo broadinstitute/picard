@@ -109,11 +109,22 @@ public class TestNGUtil {
         classFinder.find(packageName, Object.class);
 
         for (final Class<?> testClass : classFinder.getClasses()) {
-            if (Modifier.isAbstract(testClass.getModifiers()) || Modifier.isInterface(testClass.getModifiers()))
+            final int modifiers;
+            final Method[] declaredMethods;
+            final Method[] methods;
+
+            try {
+                modifiers = testClass.getModifiers();
+                declaredMethods = testClass.getDeclaredMethods();
+                methods = testClass.getMethods();
+            } catch (final  NoClassDefFoundError e){
+                continue;
+            }
+            if (Modifier.isAbstract(modifiers) || Modifier.isInterface(modifiers))
                 continue;
             Set<Method> methodSet = Sets.newHashSet();
-            methodSet.addAll(Arrays.asList(testClass.getDeclaredMethods()));
-            methodSet.addAll(Arrays.asList(testClass.getMethods()));
+            methodSet.addAll(Arrays.asList(declaredMethods));
+            methodSet.addAll(Arrays.asList(methods));
 
             for (final Method method : methodSet) {
                 if (method.isAnnotationPresent(DataProvider.class)) {

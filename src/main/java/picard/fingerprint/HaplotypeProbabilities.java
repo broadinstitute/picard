@@ -24,8 +24,6 @@
 
 package picard.fingerprint;
 
-import java.util.Arrays;
-
 import static java.lang.Math.log10;
 import static picard.util.MathUtil.multiply;
 import static picard.util.MathUtil.pNormalizeVector;
@@ -166,7 +164,7 @@ public abstract class HaplotypeProbabilities {
      * Throws an exception if the passed SNP is not part of this haplotype.
      */
     void assertSnpPartOfHaplotype(final Snp snp) {
-        if (!this.haplotypeBlock.getSnps().contains(snp)) {
+        if (!this.haplotypeBlock.contains(snp)) {
             throw new IllegalArgumentException("Snp " + snp + " does not belong to haplotype " + this.haplotypeBlock);
         }
     }
@@ -240,13 +238,21 @@ public abstract class HaplotypeProbabilities {
      */
     public double getLodMostProbableGenotype() {
         final double[] probs = getPosteriorProbabilities();
-        final double[] logs = new double[probs.length];
-        for (int i = 0; i < probs.length; ++i) {
-            logs[i] = log10(probs[i]);
-        }
+        //since probabilities are positive, we can start with 0;
+        double biggest = 0;
+        double secondBiggest = 0;
 
-        Arrays.sort(logs);
-        return logs[2] - logs[1];
+        for (double prob : probs) {
+            if (prob > biggest) {
+                secondBiggest = biggest;
+                biggest = prob;
+                continue;
+            }
+            if (prob > secondBiggest) {
+                secondBiggest = prob;
+            }
+        }
+        return log10(biggest) - log10(secondBiggest);
     }
 
     /**

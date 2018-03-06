@@ -24,7 +24,7 @@
 
 package picard.fingerprint;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -36,10 +36,10 @@ import java.util.*;
  */
 public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities> {
     private final String sample;
-    private final File source;
+    private final Path source;
     private final String info;
 
-    public Fingerprint(final String sample, final File source, final String info) {
+    public Fingerprint(final String sample, final Path source, final String info) {
         this.sample = sample;
         this.source = source;
         this.info = info;
@@ -47,12 +47,12 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
 
     public String getSample() { return sample; }
 
-    public File getSource() { return source; }
+    public Path getSource() { return source; }
 
     public String getInfo() { return info; }
 
     public String getPrintableId() {
-        return getSample() + "@" + (source == null ? "" : source.getName()) + (info == null ? "" : (":" + info));
+        return getSample() + "@" + (source == null ? "" : source.toUri().toString()) + (info == null ? "" : (":" + info));
     }
 
     public void add(final HaplotypeProbabilities h) {

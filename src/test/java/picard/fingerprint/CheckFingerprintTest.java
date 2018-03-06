@@ -27,27 +27,27 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/fingerprint/");
     private static final File SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING =
             new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
-    private static final File TEST_INPUT_VCF1 = new File(TEST_DATA_DIR, "NA12892.vcf");
-    private static final File TEST_INPUT_VCF_EMPTY = new File(TEST_DATA_DIR, "/tempCheckFPDir/void.vcf");
-    private static final File TEST_INPUT_VCF_NO_FILE = new File(TEST_DATA_DIR, "noFile.vcf");
-    private static final File TEST_OUTPUT = new File(TEST_DATA_DIR + "/tempCheckFPDir/otp.fp");
-    private static final File TEST_GENOTYPES_VCF1 = new File(TEST_DATA_DIR, "NA12892.g.vcf");
-    private static final File TEST_GENOTYPES_VCF_NO_FILE = new File(TEST_DATA_DIR, "noFile.g.vcf");
+    private static final String TEST_INPUT_VCF1 = new File(TEST_DATA_DIR, "NA12892.vcf").getAbsolutePath();
+    private static final String TEST_INPUT_VCF_EMPTY = new File(TEST_DATA_DIR, "/tempCheckFPDir/void.vcf").getAbsolutePath();
+    private static final String TEST_INPUT_VCF_NO_FILE = new File(TEST_DATA_DIR, "noFile.vcf").getAbsolutePath();
+    private static final String TEST_OUTPUT = new File(TEST_DATA_DIR + "/tempCheckFPDir/otp.fp").getAbsolutePath();
+    private static final String TEST_GENOTYPES_VCF1 = new File(TEST_DATA_DIR, "NA12892.g.vcf").getAbsolutePath();
+    private static final String TEST_GENOTYPES_VCF_NO_FILE = new File(TEST_DATA_DIR, "noFile.g.vcf").getAbsolutePath();
     private static final File RESULT_EXAMPLE_SUMMARY =
             new File(TEST_DATA_DIR, "fingerprinting_summary_metrics.example");
     private static final File RESULT_EXAMPLE_DETAIL =
             new File(TEST_DATA_DIR, "fingerprinting_detail_metrics.example");
 
-    private final File HAPLOTYPE_MAP = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+    private static final File HAPLOTYPE_MAP = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
 
-    private final File NA12891_r1_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam");
-    private final File NA12892_r1_sam = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r1.sam");
+    private static final File NA12891_r1_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam");
+    private static final File NA12892_r1_sam = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r1.sam");
 
     private static File NA12892_1_vcf;
     private static File NA12891_named_NA12892_vcf;
 
-    final File na12891_fp = new File(TEST_DATA_DIR, "NA12891.fp.vcf");
-    final File na12892_fp = new File(TEST_DATA_DIR, "NA12892.fp.vcf");
+    private static final File na12891_fp = new File(TEST_DATA_DIR, "NA12891.fp.vcf");
+    private static final File na12892_fp = new File(TEST_DATA_DIR, "NA12892.fp.vcf");
 
     @BeforeClass
     private void mkTemp() {
@@ -83,6 +83,7 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
                 "G=" + TEST_GENOTYPES_VCF1,
                 "H=" + SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING
         };
+
         Assert.assertEquals(runPicardCommandLine(args), 0);
         Assert.assertTrue(MetricsFile.areMetricsEqual(new File(TEST_OUTPUT + ".fingerprinting_summary_metrics"),
                 RESULT_EXAMPLE_SUMMARY));
@@ -107,15 +108,15 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "badData", expectedExceptions = {MalformedFeatureFile.class, SAMException.class})
-    public void testBadData(final File inputVcf,
-                            final File outputLoc,
-                            final File genotypesFile,
+    public void testBadData(final String inputVcf,
+                            final String outputLoc,
+                            final String genotypesFile,
                             final File haplotypeFile) {
         String[] args = new String[]{
                 "I=" + inputVcf,
                 "O=" + outputLoc,
                 "G=" + genotypesFile,
-                "H=" + haplotypeFile
+                "H=" + haplotypeFile.getAbsolutePath()
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
     }
@@ -131,10 +132,10 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         final String sample = "NA12892";
         final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
 
-        final Fingerprint fpContaminant = checker.identifyContaminant(mixture, contamAmount, 100).get(sample);
+        final Fingerprint fpContaminant = checker.identifyContaminant(mixture.toPath(), contamAmount, 100).get(sample);
         Assert.assertNotNull(fpContaminant);
 
-        final Fingerprint fpContamination = checker.fingerprintFiles(Collections.singleton(contaminant), 1, 1, TimeUnit.DAYS)
+        final Fingerprint fpContamination = checker.fingerprintFiles(Collections.singleton(contaminant.toPath()), 1, 1, TimeUnit.DAYS)
                 .entrySet().stream()
                 .map(Map.Entry::getValue)
                 .reduce((a, b) -> {
@@ -144,7 +145,7 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
                 .orElseThrow(() -> new IllegalArgumentException("Did not find any data for contaminant"));
         Assert.assertNotNull(fpContamination);
 
-        final Fingerprint fpContaminated = checker.fingerprintFiles(Collections.singleton(contaminated), 1, 1, TimeUnit.DAYS)
+        final Fingerprint fpContaminated = checker.fingerprintFiles(Collections.singleton(contaminated.toPath()), 1, 1, TimeUnit.DAYS)
                 .entrySet().stream()
                 .map(Map.Entry::getValue)
                 .reduce((a, b) -> {
