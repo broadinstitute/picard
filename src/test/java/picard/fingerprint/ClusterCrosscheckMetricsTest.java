@@ -66,7 +66,7 @@ public class ClusterCrosscheckMetricsTest extends CommandLineProgramTest {
         final MetricsFile<ClusteredCrosscheckMetric, Comparable<?>> metricsOutput = new MetricsFile<>();
         metricsOutput.read(new FileReader(clusteredMetrics));
 
-        Assert.assertEquals(metricsOutput.getMetrics().size(),6);
+        Assert.assertEquals(metricsOutput.getMetrics().size(),8);
         metricsOutput.getMetrics().forEach(m->Assert.assertEquals(m.CLUSTER_SIZE, (Integer) 2));
 
         final Map<String, Integer> clusterMap = new HashMap<>();

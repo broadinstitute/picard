@@ -25,6 +25,7 @@
 package picard.fingerprint;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -37,7 +38,7 @@ import java.util.TreeSet;
  * @author Tim Fennell
  */
 public class MatchResults implements Comparable<MatchResults> {
-    private final File fingerprintFile;
+    private final Path fingerprintFile;
     private final String sample;
     private final double sampleLikelihood;
     private final double populationLikelihood;
@@ -55,9 +56,9 @@ public class MatchResults implements Comparable<MatchResults> {
         return lodTN;
     }
 
-    private final SortedSet<LocusResult> locusResults = new TreeSet<LocusResult>();
+    private final SortedSet<LocusResult> locusResults;
 
-    MatchResults(final File fingerprintFile, final String sample,
+    MatchResults(final Path fingerprintFile, final String sample,
                  final double sampleLikelihood, final double populationLikelihood, final double lodTN, final double lodNT,
                  final Collection<LocusResult> locusResults) {
         this.fingerprintFile = fingerprintFile;
@@ -69,20 +70,17 @@ public class MatchResults implements Comparable<MatchResults> {
         this.lodNT = lodNT;
 
         if (locusResults != null) {
-            this.locusResults.addAll(locusResults);
+            this.locusResults = new TreeSet<>(locusResults);
+        } else {
+            this.locusResults = null;
         }
-    }
-
-    public void addLocusResult(final LocusResult result) {
-        this.locusResults.add(result);
     }
 
     /** Provides a natural sort so that better matches (by LOD) sort earlier. */
-    @Override public int compareTo(final MatchResults that) {
+    @Override public int compareTo(MatchResults that) {
         if (this.LOD != that.LOD) {
             return this.LOD > that.LOD ? -1 : 1;
-        }
-        else {
+        } else {
             return this.sample.compareTo(that.sample);
         }
     }
@@ -92,5 +90,5 @@ public class MatchResults implements Comparable<MatchResults> {
     public double getPopulationLikelihood() { return populationLikelihood; }
     public double getLOD() { return LOD; }
     public SortedSet<LocusResult> getLocusResults() { return locusResults; }
-    public File getFingerprintFile() { return this.fingerprintFile; }
+    public Path getFingerprintFile() { return this.fingerprintFile; }
 }

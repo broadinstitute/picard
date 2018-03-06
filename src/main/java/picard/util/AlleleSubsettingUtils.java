@@ -1,5 +1,6 @@
 package picard.util;
 
+import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.*;
 import picard.fingerprint.Snp;
 
@@ -46,7 +47,8 @@ public final class AlleleSubsettingUtils {
 
         // one of the alleles in snp must match the reference allele
         final Optional<Byte> referenceAlleleMaybe = Stream.of(snp.getAllele1(), snp.getAllele2())
-                .filter(b -> b == ctx.getReference().getBases()[0]).findAny();
+                .filter(b -> StringUtil.toUpperCase(b) == StringUtil.toUpperCase(ctx.getReference().getBases()[0]))
+                .findAny();
         if (!referenceAlleleMaybe.isPresent()) return null;
 
         final byte refAllele = referenceAlleleMaybe.get();
@@ -55,7 +57,7 @@ public final class AlleleSubsettingUtils {
         // do we have otherAllele in ctx?
         final Optional<Allele> altAlleleMaybe = ctx.getAlternateAlleles()
                 .stream()
-                .filter(a -> a.length() == 1 && a.getBases()[0] == otherAllele)
+                .filter(a -> a.length() == 1 && StringUtil.toUpperCase(a.getBases()[0]) == StringUtil.toUpperCase(otherAllele))
                 .findAny();
 
         if (altAlleleMaybe.isPresent()) {

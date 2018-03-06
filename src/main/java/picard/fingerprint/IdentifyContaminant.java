@@ -93,7 +93,7 @@ public class IdentifyContaminant extends CommandLineProgram {
         // if we want the contaminated fingerprint instead, we need to change the value of CONTAMINATION:
         if (EXTRACT_CONTAMINATED) CONTAMINATION = 1 - CONTAMINATION;
 
-        final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(INPUT, CONTAMINATION, LOCUS_MAX_READS);
+        final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(INPUT.toPath(), CONTAMINATION, LOCUS_MAX_READS);
 
         if (fingerprintMap.size() != 1) {
             log.error("Expected exactly 1 fingerprint, found " + fingerprintMap.size());

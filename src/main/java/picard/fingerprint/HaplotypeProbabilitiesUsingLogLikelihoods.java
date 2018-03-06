@@ -25,13 +25,12 @@
 package picard.fingerprint;
 
 import picard.util.MathUtil;
-import java.util.Arrays;
+
 import static java.lang.Math.log10;
 
 /**
  * Represents the probability of the underlying haplotype using log likelihoods as the basic datum for each of the SNPs. By convention the
  * alleles stored for each SNP are in phase.
- *
  *
  * @author Tim Fennell
  * @author Yossi Farjoun
@@ -41,12 +40,22 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
     // some derived classes might need to incorporate accumulated data before logLikelihood is usable.
     // use the getter to allow these classes to calculate the likelihood from the data.
     private final double[] loglikelihoods = new double[Genotype.values().length];
+    private boolean likelihoodsNeedUpdating = true;
+
+    // stored in order to reduce computation we store these partial results.
+    // they need to be recalculated if loglikelihoodNeedsUpdating
+    private double[] likelihoods = new double[Genotype.values().length];
+    private double[] posteriorProbabilities = new double[Genotype.values().length];
+    private double[] shiftedLogPosteriors = new double[Genotype.values().length];
+
 
     public HaplotypeProbabilitiesUsingLogLikelihoods(final HaplotypeBlock haplotypeBlock) {
         super(haplotypeBlock);
     }
 
-    /** Simple returns the SNP from the haplotype that has the lowest genome coordinate. */
+    /**
+     * Simple returns the SNP from the haplotype that has the lowest genome coordinate.
+     */
     @Override
     public Snp getRepresentativeSnp() {
         return getHaplotype().getFirstSnp();
@@ -54,10 +63,10 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
 
     @Override
     public boolean hasEvidence() {
-        final double [] ll = this.getLogLikelihoods();
-        return ll[Genotype.HOM_ALLELE1.v]  != 0 ||
-               ll[Genotype.HET_ALLELE12.v] != 0 ||
-               ll[Genotype.HOM_ALLELE2.v]  != 0;
+        final double[] ll = this.getLogLikelihoods();
+        return ll[Genotype.HOM_ALLELE1.v] != 0 ||
+                ll[Genotype.HET_ALLELE12.v] != 0 ||
+                ll[Genotype.HOM_ALLELE2.v] != 0;
     }
 
     /**
@@ -66,7 +75,6 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
      * read group, e.g. the sample or individual.
      *
      * @param other Another haplotype probabilities object to merge in (must of the the same class and for the same HaplotypeBlock)
-     *
      */
     @Override
     public void merge(final HaplotypeProbabilities other) {
@@ -86,20 +94,28 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
 
     /**
      * Returns the posterior probability of the haplotypes given the evidence (uses the internal prior)
-     *
      */
-    public double[] getPosteriorProbabilities() {
-        return MathUtil.pNormalizeLogProbability(getShiftedLogPosterior());
+    private double[] getPosteriorProbabilities0() {
+        return MathUtil.pNormalizeLogProbability(getShiftedLogPosterior0());
     }
 
-    /** Makes a copy of the loglikelihoods array and applies the priors.
+    /**
+     * getter for posteriors
+     */
+    public double[] getPosteriorProbabilities() {
+        updateDependentValues();
+        return posteriorProbabilities;
+    }
+
+    /**
+     * Makes a copy of the loglikelihoods array and applies the priors.
      * returns log10( P(haplotype | evidence) ) + C where C is unknown.
      * One can recover C by normalizing, but this might be unneeded depending on the application
      * uses Bayes P(m|x)=P(x|m)*P(m)/P(x) but then doesn't divide by P(x)
-     *
+     * <p>
      * uses the internal prior as P(m)
-     * */
-    private double[] getShiftedLogPosterior() {
+     */
+    private double[] getShiftedLogPosterior0() {
         final double[] ll = this.getLogLikelihoods();
         final double[] shiftedLogPosterior = new double [Genotype.values().length];
         final double[] haplotypeFrequencies = getPriorProbablities();
@@ -110,13 +126,28 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
     }
 
     /**
+     * getter for shiftedLogPosterior
+     */
+    private double[] getShiftedLogPosterior() {
+        updateDependentValues();
+        return shiftedLogPosteriors;
+    }
+
+    /**
      * Converts the loglikelihoods into linear-space.
      */
-    @Override
-    public double[] getLikelihoods() {
+    private double[] getLikelihoods0() {
         return MathUtil.pNormalizeLogProbability(getLogLikelihoods());
     }
 
+    /**
+     * getter for likelihoods;
+     */
+    @Override
+    public double[] getLikelihoods() {
+        updateDependentValues();
+        return likelihoods;
+    }
     /**
      * Since this class uses loglikelihoods natively, we override and return the native variable
      */
@@ -129,8 +160,9 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
         assert (ll.length == Genotype.values().length);
 
         System.arraycopy(ll, 0, loglikelihoods, 0, ll.length);
-
+        likelihoodsNeedUpdating = true;
     }
+
     /**
      * Overridden to calculate the LOD from the loglikelihoods instead of the probabilities
      * because it will allow for more accurate calculation before overflowing.
@@ -138,8 +170,28 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
     @Override
     public double getLodMostProbableGenotype() {
         final double[] logs = getShiftedLogPosterior();
-        Arrays.sort(logs);
-        return logs[Genotype.values().length-1] - logs[Genotype.values().length-2];
+        double biggest = -Double.MAX_VALUE;
+        double secondBiggest = biggest;
+
+        for (double prob : logs) {
+            if (prob > biggest) {
+                secondBiggest = biggest;
+                biggest = prob;
+                continue;
+            }
+            if (prob > secondBiggest) {
+                secondBiggest = prob;
+            }
+        }
+        return biggest - secondBiggest;
     }
 
+    private void updateDependentValues() {
+        if (likelihoodsNeedUpdating){
+            likelihoods = getLikelihoods0();
+            posteriorProbabilities = getPosteriorProbabilities0();
+            shiftedLogPosteriors = getShiftedLogPosterior0();
+            likelihoodsNeedUpdating = false;
+        }
+    }
 }

@@ -68,18 +68,18 @@ public class CrosscheckReadGroupFingerprintsTest {
     @DataProvider(name = "bamFilesRGs")
     public Object[][] bamFilesRGs() {
         return new Object[][]{
-                {NA12891_r1, NA12891_r2, false, 0, (NA12891_r1_RGs + NA12891_r2_RGs) + 1},
-                {NA12891_r1, NA12892_r1, false, 0, (NA12891_r1_RGs + NA12892_r1_RGs) + 1},
-                {NA12891_r1, NA12892_r2, false, 0, (NA12891_r1_RGs + NA12892_r2_RGs) + 1},
-                {NA12892_r1, NA12892_r2, false, 0, (NA12892_r1_RGs + NA12892_r2_RGs) + 1},
-                {NA12892_r2, NA12891_r2, false, 0, (NA12892_r2_RGs + NA12891_r2_RGs) + 1},
-                {NA12892_r2, NA12891_r1, false, 0, (NA12892_r2_RGs + NA12891_r1_RGs) + 1},
-                {NA12891_r1, NA12891_r2, true, 0, (NA12891_r1_RGs + NA12891_r2_RGs) + 1},
-                {NA12891_r1, NA12892_r1, true, 1, (NA12891_r1_RGs + NA12892_r1_RGs) + 1},
-                {NA12891_r1, NA12892_r2, true, 1, (NA12891_r1_RGs + NA12892_r2_RGs) + 1},
-                {NA12892_r1, NA12892_r2, true, 0, (NA12892_r1_RGs + NA12892_r2_RGs) + 1},
-                {NA12892_r2, NA12891_r2, true, 1, (NA12892_r2_RGs + NA12891_r2_RGs) + 1},
-                {NA12892_r2, NA12891_r1, true, 1, (NA12892_r2_RGs + NA12891_r1_RGs) + 1}
+                {NA12891_r1, NA12891_r2, false, 0, NA12891_r1_RGs + NA12891_r2_RGs },
+                {NA12891_r1, NA12892_r1, false, 0, NA12891_r1_RGs + NA12892_r1_RGs },
+                {NA12891_r1, NA12892_r2, false, 0, NA12891_r1_RGs + NA12892_r2_RGs },
+                {NA12892_r1, NA12892_r2, false, 0, NA12892_r1_RGs + NA12892_r2_RGs },
+                {NA12892_r2, NA12891_r2, false, 0, NA12892_r2_RGs + NA12891_r2_RGs },
+                {NA12892_r2, NA12891_r1, false, 0, NA12892_r2_RGs + NA12891_r1_RGs },
+                {NA12891_r1, NA12891_r2, true, 0, NA12891_r1_RGs + NA12891_r2_RGs },
+                {NA12891_r1, NA12892_r1, true, 1, NA12891_r1_RGs + NA12892_r1_RGs },
+                {NA12891_r1, NA12892_r2, true, 1, NA12891_r1_RGs + NA12892_r2_RGs },
+                {NA12892_r1, NA12892_r2, true, 0, NA12892_r1_RGs + NA12892_r2_RGs },
+                {NA12892_r2, NA12891_r2, true, 1, NA12892_r2_RGs + NA12891_r2_RGs },
+                {NA12892_r2, NA12891_r1, true, 1, NA12892_r2_RGs + NA12891_r1_RGs}
         };
     }
 
@@ -98,7 +98,7 @@ public class CrosscheckReadGroupFingerprintsTest {
                 "EXPECT_ALL_GROUPS_TO_MATCH=" + expectAllMatch
         };
 
-        doTest(args, metrics, expectedRetVal, expectedNMetrics * (expectedNMetrics - 1) / 2, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
+        doTest(args, metrics, expectedRetVal, expectedNMetrics * expectedNMetrics , CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
 
     @DataProvider(name = "bamFilesLBs")

@@ -24,7 +24,7 @@
 
 package picard.fingerprint;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -35,12 +35,12 @@ import java.util.TreeSet;
  * @author Tim Fennell
  */
 public class FingerprintResults {
-    private final File inputFile;
+    private final Path inputFile;
     private final String readGroup;         // null if the input is a VCF.
     private final String sampleAlias;
     private final SortedSet<MatchResults> matchResults = new TreeSet<>();
 
-    public FingerprintResults(final File inputFile, final String readGroup, final String sampleAlias) {
+    public FingerprintResults(final Path inputFile, final String readGroup, final String sampleAlias) {
         this.inputFile = inputFile;
         this.readGroup = readGroup;
         this.sampleAlias = sampleAlias;
@@ -50,7 +50,7 @@ public class FingerprintResults {
         this.matchResults.add(matchResults);
     }
 
-    public File getInputFile() { return inputFile; }
+    public Path getInputFile() { return inputFile; }
     public String getReadGroup() { return readGroup; }
     public String getSampleAlias() { return sampleAlias; }
 
