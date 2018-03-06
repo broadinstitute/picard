@@ -253,13 +253,12 @@ public abstract class CommandLineProgram {
             try {
                 final StringBuilder pathProvidersBuilder = new StringBuilder();
 
-                for(PathHelper.PathProviders providers : PathHelper.PathProviders.values()) {
+                for (PathHelper.PathProviders providers : PathHelper.PathProviders.values()) {
                     pathProvidersBuilder.append(String.format("Provider %s is%s available; ",
                             providers.name(), providers.isAvailable() ? "" : " not"));
                 }
                 final int lastSpacePos = pathProvidersBuilder.lastIndexOf(" ");
-                pathProvidersBuilder.delete(lastSpacePos, lastSpacePos+1);
-
+                pathProvidersBuilder.delete(lastSpacePos, lastSpacePos + 1);
 
                 final boolean usingIntelDeflater = (BlockCompressedOutputStream.getDefaultDeflaterFactory() instanceof IntelDeflaterFactory &&
                         ((IntelDeflaterFactory)BlockCompressedOutputStream.getDefaultDeflaterFactory()).usingIntelDeflater());
