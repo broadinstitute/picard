@@ -429,13 +429,15 @@ public class RevertSam extends CommandLineProgram {
                         if (unpairedRecord == null) unpairedRecord = rec;
                         ++unpaired;
                     }
-                    if (rec.getFirstOfPairFlag()) {
-                        if (firstRecord == null) firstRecord = rec;
-                        ++firsts;
-                    }
-                    if (rec.getSecondOfPairFlag()) {
-                        if (secondRecord == null) secondRecord = rec;
-                        ++seconds;
+                    else {
+                        if (rec.getFirstOfPairFlag()) {
+                            if (firstRecord == null) firstRecord = rec;
+                            ++firsts;
+                        }
+                        if (rec.getSecondOfPairFlag()) {
+                            if (secondRecord == null) secondRecord = rec;
+                            ++seconds;
+                        }
                     }
                 }
 
