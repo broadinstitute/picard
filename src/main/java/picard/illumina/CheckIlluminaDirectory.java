@@ -165,8 +165,8 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
                 //check s.locs
                 final File locsFile = new File(BASECALLS_DIR.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
-                List<AbstractIlluminaPositionFileReader.PositionInfo> locs;
-                Map<Integer, File> filterFileMap;
+                final List<AbstractIlluminaPositionFileReader.PositionInfo> locs;
+                final Map<Integer, File> filterFileMap;
                 try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
                     locs = new ArrayList<>();
                     while (locsFileReader.hasNext()) {
@@ -238,9 +238,9 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         } else {
             status = 1;
             try {
-                Files.write(Paths.get(".", "errors.count"), Integer.toString(totalFailures).getBytes());
+                Files.write(Paths.get("./errors.count"), Integer.toString(totalFailures).getBytes());
             } catch (IOException e) {
-                log.error("Unable to write number off errors to file");
+                log.error("Unable to write number of errors to file", e);
             }
             log.info("FAILED! There were " + totalFailures + " in the following lanes: " + StringUtil
                     .join(", ", failingLanes));

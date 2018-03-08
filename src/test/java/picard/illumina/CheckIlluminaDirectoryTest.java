@@ -303,9 +303,10 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
         Assert.assertEquals(returnCode, 1);
 
         try {
-            final int numErrors = Integer.parseInt(new String(Files.readAllBytes(Paths.get("./errors.count"))));
+            final Path errorPath = Paths.get("./errors.count");
+            final int numErrors = Integer.parseInt(new String(Files.readAllBytes(errorPath)));
             Assert.assertEquals(numErrors, expectedNumErrors);
-            Files.deleteIfExists(Paths.get("./errors.count"));
+            Files.deleteIfExists(errorPath);
         }
         catch (IOException e) {
             Assert.fail("Could not read the number of errors from file", e);
