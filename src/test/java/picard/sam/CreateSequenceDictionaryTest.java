@@ -126,7 +126,7 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
     
     @Test
     public void testAltNames() throws Exception {
-        final File altFile = File.createTempFile("CreateSequenceDictionaryTest.", ".alt");
+        final File altFile = File.createTempFile("CreateSequenceDictionaryTest", ".alt");
         final PrintWriter pw = new PrintWriter(altFile);
         pw.println("chr1\t1");
         pw.println("chr1\t01");
@@ -168,7 +168,7 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         
         // check chrM
         ssr = dict.getSequence("chrM");
-        Assert.assertNull(ssr, "chrM presnt in dictionary");
+        Assert.assertNull(ssr, "chrM present in dictionary");
     }
 
 }

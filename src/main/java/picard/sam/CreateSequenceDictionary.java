@@ -52,6 +52,7 @@ import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -118,6 +119,18 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     public File ALT_NAMES = null;
 
     private final MessageDigest md5;
+    
+    /** 
+     * Regular expression defined in the sam spec. Any alternative contig should match this regular expression 
+     * TODO: replace the pattern with a constant : see https://github.com/samtools/htsjdk/pull/956/files
+     */
+    private static final Pattern ALTERNATIVE_CONTIG_NAME_PATTERN = Pattern.compile("[0-9A-Za-z][0-9A-Za-z\\*\\+@\\|\\-]*");
+    
+    /**  
+     * 'AN' attribute in the dictionary
+     * TODO: replace "AN" with a constant : see https://github.com/samtools/htsjdk/pull/956/files
+     */
+    private static final String AN_ATTRIBUTE = "AN";
 
     public CreateSequenceDictionary() {
         try {
@@ -196,57 +209,8 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                     " already exists.  Delete this file and try again, or specify a different output file.");
         }
 
-        // map for aliases mapping a contig to its' aliases
-        final Map<String, Set<String>> contig2aliases = new HashMap<>();
-        
-        // fill the alias map
-        if(this.ALT_NAMES != null) {
-            try {
-                // regex defined in the sam spec
-                final Pattern altNameRegex = Pattern.compile("[0-9A-Za-z][0-9A-Za-z\\*\\+@\\|\\-]*");
-                for(final String line :IOUtil.slurpLines(this.ALT_NAMES)) {
-                    if(StringUtil.isBlank(line)) continue;
-                    final int tab = line.indexOf('\t');
-                    if(tab == -1 ) throw new IOException("tabulation missing in " + line);
-                    final String contigName = line.substring(0,tab);
-                    final String altName = line.substring(tab + 1);
-                    //check for empty values
-                    if(StringUtil.isBlank(contigName)) {
-                        throw new IOException("empty contig in  " + line);
-                    }
-                    if(StringUtil.isBlank(altName)) {
-                        throw new IOException("empty alternative name in  " + line);
-                    }
-                    if(altName.equals(contigName)) continue;
-                    if(!altNameRegex.matcher(altName).matches()) {
-                        throw new IOException("alternative name in  " + line +
-                                " doesn't match the regular expression : " +
-                                altNameRegex.pattern());
-                    }
-                    //check alias not previously defined as contig
-                    if(contig2aliases.containsKey(altName)) {
-                        throw new IOException("alternate name  " + altName +
-                                "previously defined as a contig in " + line);
-                    }
-                    //check contig not previously defined as alias
-                    if(contig2aliases.keySet().stream().
-                            filter(K->!K.equals(contigName)). // not an error is defined twice for same contig
-                            flatMap(K->contig2aliases.get(K).stream()).
-                            anyMatch(S->S.contains(contigName))) {
-                        throw new IOException("contig  " + contigName +
-                                "previously defined as an alternate name in " + line);
-                    }
-                    //add alias
-                    if(!contig2aliases.containsKey(contigName)) {
-                        contig2aliases.put(contigName, new HashSet<>());
-                    }
-                    contig2aliases.get(contigName).add(altName);
-                }
-            }
-            catch (final IOException e) {
-                throw new PicardException("Can't read alias file " + ALT_NAMES, e);
-            }
-        }
+        // map for aliases mapping a contig to its aliases
+        final Map<String, Set<String>> aliasesByContig = loadContigAliasesMap();
 
         // SortingCollection is used to check uniqueness of sequence names
         final SortingCollection<String> sequenceNames = makeSortingCollection();
@@ -260,10 +224,10 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             for (ReferenceSequence refSeq = refSeqFile.nextSequence(); refSeq != null; refSeq = refSeqFile.nextSequence()) {
                 final SAMSequenceRecord samSequenceRecord = makeSequenceRecord(refSeq);
                 //add aliases
-                if(contig2aliases.containsKey(samSequenceRecord.getSequenceName())) {
-                    final Set<String> aliases = contig2aliases.get(samSequenceRecord.getSequenceName());
+                if (aliasesByContig.containsKey(samSequenceRecord.getSequenceName())) {
+                    final Set<String> aliases = aliasesByContig.get(samSequenceRecord.getSequenceName());
                     // "Alternative names is a comma separated list of alternative names"
-                    samSequenceRecord.setAttribute("AN",String.join(",",aliases)); //TODO replace "AN" with constants/methods: https://github.com/samtools/htsjdk/pull/956/files
+                    samSequenceRecord.setAttribute(AN_ATTRIBUTE, String.join(",", aliases));
                 }
                 samDictCodec.encodeSequenceRecord(samSequenceRecord);
                 sequenceNames.add(refSeq.getName());
@@ -351,6 +315,63 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                 (int) Math.min(maxNamesInRam, Integer.MAX_VALUE),
                 tmpDir
         );
+    }
+
+    /**
+     * Load the file ALT_NAMES containing the alternative contig names
+     * @author Pierre Lindenbaum
+     * @return a <code>Map&lt;src_contig,Set&lt;new_names&gt;&gt;</code>. Never null. May be empty if ALT_NAMES is null.
+     * @throws PicardException if there is any error in the file ALT_NAMES
+     */
+    private Map<String, Set<String>> loadContigAliasesMap() throws PicardException {
+    	// return an empty map if no mapping file was provided
+    	if (this.ALT_NAMES == null) return Collections.emptyMap();
+    	// the map returned by the function
+    	final Map<String, Set<String>> aliasesByContig = new HashMap<>();
+        try {
+	        for(final String line :IOUtil.slurpLines(this.ALT_NAMES)) {
+	            if (StringUtil.isBlank(line)) continue;
+	            final int tab = line.indexOf('\t');
+	            if (tab == -1 ) throw new IOException("tabulation missing in " + line);
+	            final String contigName = line.substring(0,tab);
+	            final String altName = line.substring(tab + 1);
+	            //check for empty values
+	            if (StringUtil.isBlank(contigName)) {
+	                throw new IOException("empty contig in  " + line);
+	            }
+	            if (StringUtil.isBlank(altName)) {
+	                throw new IOException("empty alternative name in  " + line);
+	            }
+	            if (altName.equals(contigName)) continue;
+	            if (!ALTERNATIVE_CONTIG_NAME_PATTERN.matcher(altName).matches()) {
+	                throw new IOException("alternative name in  " + line +
+	                        " doesn't match the regular expression : " +
+	                        ALTERNATIVE_CONTIG_NAME_PATTERN.pattern());
+	            }
+	            //check alias not previously defined as contig
+	            if (aliasesByContig.containsKey(altName)) {
+	                throw new IOException("alternate name  " + altName +
+	                        "previously defined as a contig in " + line);
+	            }
+	            //check contig not previously defined as alias
+	            if (aliasesByContig.keySet().stream().
+	                    filter(K->!K.equals(contigName)). // not an error is defined twice for same contig
+	                    anyMatch(K->aliasesByContig.get(K).contains(contigName))) {
+	                throw new IOException("contig  " + contigName +
+	                        "previously defined as an alternate name in " + line);
+	            }
+	            //add alias
+	            if (!aliasesByContig.containsKey(contigName)) {
+	                aliasesByContig.put(contigName, new HashSet<>());
+	            }
+	            aliasesByContig.get(contigName).add(altName);
+	        }
+	        return aliasesByContig;  
+        }
+        catch (final IOException e) {
+            throw new PicardException("Can't read alias file " + ALT_NAMES, e);
+        }
+   
     }
 
     private static class StringCodec implements SortingCollection.Codec<String> {
