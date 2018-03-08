@@ -165,16 +165,13 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
                 //check s.locs
                 final File locsFile = new File(BASECALLS_DIR.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
-                final List<AbstractIlluminaPositionFileReader.PositionInfo> locs;
-                final Map<Integer, File> filterFileMap;
+                final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
+                final Map<Integer, File> filterFileMap = new HashMap<>();
                 try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
-                    locs = new ArrayList<>();
                     while (locsFileReader.hasNext()) {
                         locs.add(locsFileReader.next());
                     }
                 }
-
-                filterFileMap = new HashMap<>();
                 for (final File filterFile : filterFiles) {
                     filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
                 }
