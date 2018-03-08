@@ -4,15 +4,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
-public class PipedDataTest extends CommandLineProgramTest {
+public class PipedDataTest {
 
     private String classPath = "\"" + System.getProperty("java.class.path") + "\" ";
-
-
-    @Override
-    public String getCommandLineProgramName() {
-        return SortSam.class.getSimpleName();
-    }
 
     @Test
     public void testSortSam() {
