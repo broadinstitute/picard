@@ -6,6 +6,8 @@ import picard.cmdline.CommandLineProgramTest;
 
 public class PipedDataTest extends CommandLineProgramTest {
 
+    private String classPath = "\"" + System.getProperty("java.class.path") + "\" ";
+
 
     @Override
     public String getCommandLineProgramName() {
@@ -13,11 +15,29 @@ public class PipedDataTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void testPipedData() {
+    public void testSortSam() {
+        String sortCommand = "SortSam " +
+                "I=/dev/stdin " +
+                "O=/dev/null " +
+                "SORT_ORDER=queryname";
+        testPiping(sortCommand);
+    }
 
-        String classPath = "\"" + System.getProperty("java.class.path") + "\" ";
+    @Test
+    public void testRevertSam() {
+        String revertCommand = "RevertSam " +
+                "I=/dev/stdin " +
+                "O=/dev/null " +
+                "SORT_ORDER=queryname " +
+                "RESTORE_ORIGINAL_QUALITIES=false " +
+                "REMOVE_DUPLICATE_INFORMATION=false " +
+                "REMOVE_ALIGNMENT_INFORMATION=false " +
+                "ATTRIBUTE_TO_CLEAR=[] SANITIZE=true";
+        testPiping(revertCommand);
+    }
 
-        String[] readCommand = {
+    private void testPiping(String picardCommand) {
+        String[] command = {
                 "/bin/bash",
                 "-c",
                 "java -classpath " +
@@ -31,21 +51,17 @@ public class PipedDataTest extends CommandLineProgramTest {
                         "java -classpath " +
                         classPath +
                         "picard.cmdline.PicardCommandLine " +
-                        "SortSam " +
-                        "I=/dev/stdin " +
-                        "O=/dev/null " +
-                        "SORT_ORDER=queryname"
+                        picardCommand
         };
         try {
-            ProcessBuilder readProcess = new ProcessBuilder(readCommand);
-            readProcess.inheritIO();
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.inheritIO();
 
-            Process read = readProcess.start();
-            Assert.assertEquals(read.waitFor(), 0);
+            Process process = processBuilder.start();
+            Assert.assertEquals(process.waitFor(), 0);
 
         } catch (Exception e) {
             Assert.fail("Failed to pipe data from htsjdk to picard", e);
         }
-
     }
 }
