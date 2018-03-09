@@ -223,9 +223,9 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             // read reference sequence one by one and write its metadata
             for (ReferenceSequence refSeq = refSeqFile.nextSequence(); refSeq != null; refSeq = refSeqFile.nextSequence()) {
                 final SAMSequenceRecord samSequenceRecord = makeSequenceRecord(refSeq);
-                //add aliases
-                if (aliasesByContig.containsKey(samSequenceRecord.getSequenceName())) {
-                    final Set<String> aliases = aliasesByContig.get(samSequenceRecord.getSequenceName());
+                // retrieve aliases, if any
+                final Set<String> aliases = aliasesByContig.get(samSequenceRecord.getSequenceName());
+                if (aliases != null) {
                     // "Alternative names is a comma separated list of alternative names"
                     samSequenceRecord.setAttribute(AN_ATTRIBUTE, String.join(",", aliases));
                 }
@@ -241,7 +241,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         // check uniqueness of sequences names
         final CloseableIterator<String> iterator = sequenceNames.iterator();
 
-        if(!iterator.hasNext()) return 0;
+        if (!iterator.hasNext()) return 0;
 
         String current = iterator.next();
         while (iterator.hasNext()) {
@@ -324,51 +324,59 @@ public class CreateSequenceDictionary extends CommandLineProgram {
      * @throws PicardException if there is any error in the file ALT_NAMES
      */
     private Map<String, Set<String>> loadContigAliasesMap() throws PicardException {
-    	// return an empty map if no mapping file was provided
-    	if (this.ALT_NAMES == null) return Collections.emptyMap();
-    	// the map returned by the function
-    	final Map<String, Set<String>> aliasesByContig = new HashMap<>();
-        try {
-	        for(final String line :IOUtil.slurpLines(this.ALT_NAMES)) {
-	            if (StringUtil.isBlank(line)) continue;
-	            final int tab = line.indexOf('\t');
-	            if (tab == -1 ) throw new IOException("tabulation missing in " + line);
-	            final String contigName = line.substring(0,tab);
-	            final String altName = line.substring(tab + 1);
-	            //check for empty values
-	            if (StringUtil.isBlank(contigName)) {
-	                throw new IOException("empty contig in  " + line);
-	            }
-	            if (StringUtil.isBlank(altName)) {
-	                throw new IOException("empty alternative name in  " + line);
-	            }
-	            if (altName.equals(contigName)) continue;
-	            if (!ALTERNATIVE_CONTIG_NAME_PATTERN.matcher(altName).matches()) {
-	                throw new IOException("alternative name in  " + line +
-	                        " doesn't match the regular expression : " +
-	                        ALTERNATIVE_CONTIG_NAME_PATTERN.pattern());
-	            }
-	            //check alias not previously defined as contig
-	            if (aliasesByContig.containsKey(altName)) {
-	                throw new IOException("alternate name  " + altName +
-	                        "previously defined as a contig in " + line);
-	            }
-	            //check contig not previously defined as alias
-	            if (aliasesByContig.keySet().stream().
-	                    filter(K->!K.equals(contigName)). // not an error is defined twice for same contig
-	                    anyMatch(K->aliasesByContig.get(K).contains(contigName))) {
-	                throw new IOException("contig  " + contigName +
-	                        "previously defined as an alternate name in " + line);
-	            }
-	            //add alias
-	            if (!aliasesByContig.containsKey(contigName)) {
-	                aliasesByContig.put(contigName, new HashSet<>());
-	            }
-	            aliasesByContig.get(contigName).add(altName);
-	        }
-	        return aliasesByContig;  
+        // return an empty map if no mapping file was provided
+        if (this.ALT_NAMES == null) {
+            return Collections.emptyMap();
         }
-        catch (final IOException e) {
+        // the map returned by the function
+        final Map<String, Set<String>> aliasesByContig = new HashMap<>();
+        try {
+            for (final String line :IOUtil.slurpLines(this.ALT_NAMES)) {
+            if (StringUtil.isBlank(line)) {
+                    continue;
+                }
+                final int tab = line.indexOf('\t');
+                if (tab == -1 ) {
+                    throw new IOException("tabulation missing in " + line);
+                }
+                final String contigName = line.substring(0,tab);
+                final String altName = line.substring(tab + 1);
+                // check for empty values
+                if (StringUtil.isBlank(contigName)) {
+                    throw new IOException("empty contig in  " + line);
+                }
+                if (StringUtil.isBlank(altName)) {
+                    throw new IOException("empty alternative name in  " + line);
+                }
+                if (altName.equals(contigName)) {
+                    continue;
+                }
+                if (!ALTERNATIVE_CONTIG_NAME_PATTERN.matcher(altName).matches()) {
+                    throw new IOException("alternative name in  " + line +
+                            " doesn't match the regular expression : " +
+                            ALTERNATIVE_CONTIG_NAME_PATTERN.pattern());
+                }
+                // check alias not previously defined as contig
+                if (aliasesByContig.containsKey(altName)) {
+                    throw new IOException("alternate name  " + altName +
+                            "previously defined as a contig in " + line);
+                }
+                // check contig not previously defined as alias
+                if (aliasesByContig.keySet().stream().
+                        // not an error if defined twice for same contig
+                        filter(K->!K.equals(contigName)). 
+                        anyMatch(K->aliasesByContig.get(K).contains(contigName))) {
+                        throw new IOException("contig  " + contigName +
+                            "previously defined as an alternate name in " + line);
+                }
+                // add alias
+                if (!aliasesByContig.containsKey(contigName)) {
+                    aliasesByContig.put(contigName, new HashSet<>());
+                }
+                aliasesByContig.get(contigName).add(altName);
+            }
+            return aliasesByContig;  
+        } catch (final IOException e) {
             throw new PicardException("Can't read alias file " + ALT_NAMES, e);
         }
    
