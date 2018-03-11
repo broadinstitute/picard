@@ -58,7 +58,7 @@ import htsjdk.variant.vcf.VCFContigHeaderLine;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.BetaFeature;
+import org.broadinstitute.barclay.argparser.ExperimentalFeature;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -103,7 +103,7 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
  *
  */
 @DocumentedFeature
-@BetaFeature
+@ExperimentalFeature
 @CommandLineProgramProperties(
         summary = "Estimates the rate of independent replication rate of reads within a bam. \n" +
                 "That is, it estimates the fraction of the reads which would be marked as duplicates but " +

@@ -32,7 +32,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
-import org.broadinstitute.barclay.argparser.BetaFeature;
+import org.broadinstitute.barclay.argparser.ExperimentalFeature;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -46,7 +46,7 @@ import java.io.File;
 import java.util.List;
 
 @DocumentedFeature
-@BetaFeature
+@ExperimentalFeature
 @CommandLineProgramProperties(
         summary = CollectWgsMetricsWithNonZeroCoverage.USAGE_SUMMARY + CollectWgsMetricsWithNonZeroCoverage.USAGE_DETAILS,
         oneLineSummary = CollectWgsMetricsWithNonZeroCoverage.USAGE_SUMMARY,

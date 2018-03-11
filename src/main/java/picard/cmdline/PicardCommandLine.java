@@ -286,19 +286,17 @@ public class PicardCommandLine {
         }
     }
 
-    private static String getToolSummaryPrefix(Class<?> clazz){
-        if (clazz.getAnnotation(ExperimentalFeature.class) != null){
+    private static String getToolSummaryPrefix(Class<?> clazz) {
+        if (clazz.getAnnotation(ExperimentalFeature.class) != null) {
             return EXPERIMENTAL_PREFIX;
         }
 
-        if (clazz.getAnnotation(BetaFeature.class) != null){
+        if (clazz.getAnnotation(BetaFeature.class) != null) {
             return BETA_PREFIX;
         }
 
         return "";
     }
-
-
 
     /** similarity floor for matching in printUnknown **/
     private final static int HELP_SIMILARITY_FLOOR = 7;

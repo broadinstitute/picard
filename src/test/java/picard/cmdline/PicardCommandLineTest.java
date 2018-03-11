@@ -59,7 +59,6 @@ public class PicardCommandLineTest {
         );
     }
 
-
     @Test
     public void testPrintUsage() {
         Assert.assertEquals(new PicardCommandLine().instanceMain(new String[]{"-h"}), 1);
