@@ -188,6 +188,14 @@ public class RevertSamTest extends CommandLineProgramTest {
         Assert.assertEquals(result, 0, "Validation of reverted single-end sample failed.");
     }
 
+    @Test
+    public void testSingleEndSanitize() throws Exception {
+        final File output = File.createTempFile("single_end_reverted", ".sam");
+        output.deleteOnExit();
+        final String args[] = { "INPUT=" + singleEndSamToRevert, "OUTPUT=" + output.getAbsolutePath(), "SANITIZE=true"};
+        Assert.assertEquals(runPicardCommandLine(args), 0, "Sanitation of single-end sample failed.");
+    }
+
     private void verifyPositiveResults(
             final File outputFile,
             final RevertSam reverter,
