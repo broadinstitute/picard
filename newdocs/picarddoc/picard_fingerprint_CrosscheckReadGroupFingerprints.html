@@ -429,7 +429,7 @@
 					<td><a href="#--INPUT">--INPUT</a><br />
 								&nbsp;<em>-I</em>
 					</td>
-					<!--<td>List[File]</td> -->
+					<!--<td>List[String]</td> -->
 					<td>[]</td>
 					<td>One or more input files (or lists of files) with which to compare fingerprints.</td>
 				</tr>
@@ -444,6 +444,13 @@
 					<td>Allow the use of duplicate reads in performing the comparison. Can be useful when duplicate marking has been overly aggressive and coverage is low.</td>
 				</tr>
 				<tr>
+					<td><a href="#--CALCULATE_TUMOR_AWARE_RESULTS">--CALCULATE_TUMOR_AWARE_RESULTS</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>true</td>
+					<td>specifies whether the Tumor-aware result should be calculated. These are time consuming and can roughly double the runtime of the tool. When crosschecking many groups not calculating the tumor-aware  results can result in a significant speedup.</td>
+				</tr>
+				<tr>
 					<td><a href="#--CROSSCHECK_BY">--CROSSCHECK_BY</a><br />
 					</td>
 					<!--<td>DataType</td> -->
@@ -456,6 +463,13 @@
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Instead of producing the normal comparison of read-groups, roll fingerprints up to the library level and print out a library x library matrix with LOD scores.</td>
+				</tr>
+				<tr>
+					<td><a href="#--CROSSCHECK_MODE">--CROSSCHECK_MODE</a><br />
+					</td>
+					<!--<td>CrosscheckMode</td> -->
+					<td>CHECK_SAME_SAMPLE</td>
+					<td>An argument that controls how crosschecking with both INPUT and SECOND_INPUT should occur. </td>
 				</tr>
 				<tr>
 					<td><a href="#--CROSSCHECK_SAMPLES">--CROSSCHECK_SAMPLES</a><br />
@@ -491,6 +505,13 @@
 					<!--<td>double</td> -->
 					<td>0.01</td>
 					<td>Assumed genotyping error rate that provides a floor on the probability that a genotype comes from the expected sample. Must be greater than zero. </td>
+				</tr>
+				<tr>
+					<td><a href="#--INPUT_SAMPLE_MAP">--INPUT_SAMPLE_MAP</a><br />
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>A tsv with two columns representing the sample as it appears in the INPUT data (in column 1) and the sample as it should be used for comparisons to SECOND_INPUT (in the second column). Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. </td>
 				</tr>
 				<tr>
 					<td><a href="#--LOD_THRESHOLD">--LOD_THRESHOLD</a><br />
@@ -543,9 +564,16 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 					<td><a href="#--SECOND_INPUT">--SECOND_INPUT</a><br />
 								&nbsp;<em>-SI</em>
 					</td>
-					<!--<td>List[File]</td> -->
+					<!--<td>List[String]</td> -->
 					<td>[]</td>
 					<td>A second set of input files (or lists of files) with which to compare fingerprints. If this option is provided the tool compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the tool will proceed to check the matching samples, but report the missing samples and return a non-zero error-code.</td>
+				</tr>
+				<tr>
+					<td><a href="#--SECOND_INPUT_SAMPLE_MAP">--SECOND_INPUT_SAMPLE_MAP</a><br />
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and the sample as it should be used for comparisons to INPUT (in the second column). Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. </td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -655,6 +683,18 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CALCULATE_TUMOR_AWARE_RESULTS">--CALCULATE_TUMOR_AWARE_RESULTS </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>specifies whether the Tumor-aware result should be calculated. These are time consuming and can roughly double the runtime of the tool. When crosschecking many groups not calculating the tumor-aware  results can result in a significant speedup.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
 			 / <small>NA</small>
 		</h3>
@@ -728,6 +768,27 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--CROSSCHECK_MODE">--CROSSCHECK_MODE </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>An argument that controls how crosschecking with both INPUT and SECOND_INPUT should occur. </b><br />
+			
+		</p>
+			<p>
+				The --CROSSCHECK_MODE argument is an enumerated type (CrosscheckMode), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">CHECK_SAME_SAMPLE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">CHECK_ALL_OTHERS</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">CrosscheckMode</span>
+			&nbsp;<span class="label">CHECK_SAME_SAMPLE</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CROSSCHECK_SAMPLES">--CROSSCHECK_SAMPLES </a>
@@ -829,8 +890,20 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 		</p>
 		<p>
 				<span class="badge badge-important">R</span>
-		<span class="label label-info ">List[File]</span>
+		<span class="label label-info ">List[String]</span>
 			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--INPUT_SAMPLE_MAP">--INPUT_SAMPLE_MAP </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>A tsv with two columns representing the sample as it appears in the INPUT data (in column 1) and the sample as it should be used for comparisons to SECOND_INPUT (in the second column). Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. </b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--LOD_THRESHOLD">--LOD_THRESHOLD </a>
@@ -961,8 +1034,20 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 		</p>
 			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>MATRIX_OUTPUT, MO</code>.</p>
 		<p>
-		<span class="label label-info ">List[File]</span>
+		<span class="label label-info ">List[String]</span>
 			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--SECOND_INPUT_SAMPLE_MAP">--SECOND_INPUT_SAMPLE_MAP </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and the sample as it should be used for comparisons to INPUT (in the second column). Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. </b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
@@ -1058,7 +1143,7 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.17.11-SNAPSHOT built at 27-42-2018 09:42:07.
+        <p class="version">Picard version 2.18.0-SNAPSHOT built at 19-47-2018 01:47:53.
         </p>
 
 	</div>

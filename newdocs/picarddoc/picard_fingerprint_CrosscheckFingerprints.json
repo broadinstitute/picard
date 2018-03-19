@@ -17,6 +17,21 @@
       "options": []
     },
     {
+      "summary": "specifies whether the Tumor-aware result should be calculated. These are time consuming and can roughly double the runtime of the tool. When crosschecking many groups not calculating the tumor-aware  results can result in a significant speedup.",
+      "name": "--CALCULATE_TUMOR_AWARE_RESULTS",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
       "synonyms": "NA",
@@ -90,6 +105,30 @@
         {
           "summary": "",
           "name": "READGROUP"
+        }
+      ]
+    },
+    {
+      "summary": "An argument that controls how crosschecking with both INPUT and SECOND_INPUT should occur. ",
+      "name": "--CROSSCHECK_MODE",
+      "synonyms": "NA",
+      "type": "CrosscheckMode",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "CHECK_SAME_SAMPLE",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": [
+        {
+          "summary": "",
+          "name": "CHECK_SAME_SAMPLE"
+        },
+        {
+          "summary": "",
+          "name": "CHECK_ALL_OTHERS"
         }
       ]
     },
@@ -172,7 +211,7 @@
       "summary": "One or more input files (or lists of files) with which to compare fingerprints.",
       "name": "--INPUT",
       "synonyms": "-I",
-      "type": "List[File]",
+      "type": "List[String]",
       "required": "yes",
       "fulltext": "",
       "defaultValue": "[]",
@@ -181,6 +220,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "A tsv with two columns representing the sample as it appears in the INPUT data (in column 1) and the sample as it should be used for comparisons to SECOND_INPUT (in the second column). Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. ",
+      "name": "--INPUT_SAMPLE_MAP",
+      "synonyms": "NA",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -322,10 +376,25 @@
       "summary": "A second set of input files (or lists of files) with which to compare fingerprints. If this option is provided the tool compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the tool will proceed to check the matching samples, but report the missing samples and return a non-zero error-code.",
       "name": "--SECOND_INPUT",
       "synonyms": "-SI",
-      "type": "List[File]",
+      "type": "List[String]",
       "required": "no",
       "fulltext": "",
       "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and the sample as it should be used for comparisons to INPUT (in the second column). Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. ",
+      "name": "--SECOND_INPUT_SAMPLE_MAP",
+      "synonyms": "NA",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",

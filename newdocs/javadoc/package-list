@@ -16,6 +16,7 @@ picard.illumina.parser.fakers
 picard.illumina.parser.readers
 picard.illumina.quality
 picard.metrics
+picard.nio
 picard.pedigree
 picard.reference
 picard.sam
