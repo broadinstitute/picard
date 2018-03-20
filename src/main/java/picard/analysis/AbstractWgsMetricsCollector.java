@@ -184,8 +184,7 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
                 basesExcludedByCapping,
                 coverageCap,
                 getUnfilteredBaseQHistogram(),
-                collectWgsMetrics.SAMPLE_SIZE
-        );
+                collectWgsMetrics.SAMPLE_SIZE);
     }
 
     /**
