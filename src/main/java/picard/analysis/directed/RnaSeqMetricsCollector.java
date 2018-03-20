@@ -40,7 +40,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
     private final OverlapDetector<Gene> geneOverlapDetector;
     private final OverlapDetector<Interval> ribosomalSequenceOverlapDetector;
     private final boolean collectCoverageStatistics;
-    
+
     public RnaSeqMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
                                   final Long ribosomalBasesInitialValue, OverlapDetector<Gene> geneOverlapDetector, OverlapDetector<Interval> ribosomalSequenceOverlapDetector,
                                   final HashSet<Integer> ignoredSequenceIndices, final int minimumLength, final StrandSpecificity strandSpecificity,
@@ -168,7 +168,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                 if (intersectionLength/(double)fragmentInterval.length() >= rrnaFragmentPercentage) {
                     // Assume entire read is ribosomal.
                     // TODO: Should count reads, not bases?
-                    metrics.RIBOSOMAL_BASES += rec.getReadLength();
+                    metrics.RIBOSOMAL_BASES += getNumAlignedBases(rec);
                     metrics.PF_ALIGNED_BASES += getNumAlignedBases(rec);
                     return;
                 }

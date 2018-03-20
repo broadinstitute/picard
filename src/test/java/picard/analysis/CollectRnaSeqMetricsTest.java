@@ -382,6 +382,60 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.PCT_R2_TRANSCRIPT_STRAND_READS, 0.333333);
     }
 
+    @Test
+    public void testPctRibosomalBases() throws Exception {
+        final String sequence = "chr1";
+        final String ignoredSequence = "chrM";
+
+        // Create some alignments that hit the ribosomal sequence, various parts of the gene, and intergenic.
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
+        // Set seed so that strandedness is consistent among runs.
+        builder.setRandomSeed(0);
+        final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
+
+        builder.addPair("rrnaPair", sequenceIndex, 400, 500, false, false, "35I1M", "35I1M", true, true, -1);
+        builder.addFrag("frag1", sequenceIndex, 150, true,false,"34I2M","*",-1);
+        builder.addFrag("frag2", sequenceIndex, 190, true,false,"35I1M","*",-1);
+        builder.addFrag("ignoredFrag", builder.getHeader().getSequenceIndex(ignoredSequence), 1, false);
+        final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
+        samFile.deleteOnExit();
+
+        final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
+        for (final SAMRecord rec : builder.getRecords()) {
+            samWriter.addAlignment(rec);
+        }
+        samWriter.close();
+
+        // Create an interval list with one ribosomal interval.
+        final Interval rRnaInterval = new Interval(sequence, 300, 520, true, "rRNA");
+        final IntervalList rRnaIntervalList = new IntervalList(builder.getHeader());
+        rRnaIntervalList.add(rRnaInterval);
+        final File rRnaIntervalsFile = File.createTempFile("tmp.rRna.", ".interval_list");
+        rRnaIntervalsFile.deleteOnExit();
+        rRnaIntervalList.write(rRnaIntervalsFile);
+
+        // Generate the metrics.
+        final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+        metricsFile.deleteOnExit();
+
+        final String[] args = new String[] {
+                "INPUT=" + samFile.getAbsolutePath(),
+                "OUTPUT=" + metricsFile.getAbsolutePath(),
+                "REF_FLAT=" + getRefFlatFile(sequence).getAbsolutePath(),
+                "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
+                "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
+                "IGNORE_SEQUENCE=" + ignoredSequence
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<>();
+        output.read(new FileReader(metricsFile));
+
+        final RnaSeqMetrics metrics = output.getMetrics().get(0);
+
+        Assert.assertEquals(metrics.PCT_RIBOSOMAL_BASES, 0.4);
+    }
+
     public File getRefFlatFile(String sequence) throws Exception {
         // Create a refFlat file with a single gene containing two exons, one of which is overlapped by the
         // ribosomal interval.
