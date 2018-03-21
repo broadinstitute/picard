@@ -58,6 +58,9 @@ final javadocJDKFiles = files(((URLClassLoader) ToolProvider.getSystemToolClassL
 configurations {
     cloudConfiguration {
         extendsFrom runtime
+        dependencies {
+            cloudConfiguration('com.google.cloud:google-cloud-nio:' + googleNioVersion)
+        }
     }
 }
 
@@ -68,10 +71,6 @@ dependencies {
     compile 'com.google.guava:guava:15.0'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     compile 'org.broadinstitute:barclay:2.0.0'
-    configurations.cloudConfiguration {
-        compile ('com.google.cloud:google-cloud-nio:' + googleNioVersion)
-    }
-
     compileOnly 'com.google.cloud:google-cloud-nio:' + googleNioVersion
 
     // javadoc utilities; compile/test only to prevent redistribution of sdk jars
@@ -80,8 +79,6 @@ dependencies {
 
     testCompile 'org.testng:testng:6.9.10'
     testCompile 'org.apache.commons:commons-lang3:3.6'
-
-
 }
 
 configurations.all {
