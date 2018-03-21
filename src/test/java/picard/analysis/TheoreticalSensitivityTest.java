@@ -328,6 +328,6 @@ public class TheoreticalSensitivityTest {
         final double resultFromTS = TheoreticalSensitivity.theoreticalSensitivity(depthDistribution, qualityDistribution, sampleSize, 3, 0.5);
         final double resultFromTHS = TheoreticalSensitivity.hetSNPSensitivity(depthDistribution, qualityDistribution, sampleSize, 3);
 
-        Assert.assertEquals(resultFromTHS, resultFromTS, tolerance);
+        Assert.assertEquals(resultFromTS, resultFromTHS, tolerance);
     }
 }

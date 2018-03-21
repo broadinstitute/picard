@@ -304,12 +304,21 @@ public class TheoreticalSensitivity {
         if (alleleFraction > 1.0 || alleleFraction < 0.0) {
             throw new PicardException("Allele fractions must be between 0 and 1.");
         }
+
+        // Bin depth distribution
         double sensitivity = 0.0;
-        for (int k = 0; k < depthDistribution.length; k++) {
-            if (k % 100 == 0) {
-                log.info("Calculting sensitivity for allele fraction " + alleleFraction + " at depth " + k + " of " + depthDistribution.length);
+        int skip = 5;
+        double right = sensitivityAtConstantDepth(0, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction);
+        for(int k = skip;k < depthDistribution.length;k+=skip) {
+
+            double width = 0;
+            for(int j = 0;j < skip;++j) {
+                width += depthDistribution[k-j];
             }
-            sensitivity += sensitivityAtConstantDepth(k, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction) * depthDistribution[k];
+            double left = right;
+            right = sensitivityAtConstantDepth(k, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction);
+//            sensitivity += (depthDistribution[k]*skip) * (left + right) / 2.0;
+            sensitivity += (width) * (left + right) / 2.0;
         }
         return sensitivity;
     }
