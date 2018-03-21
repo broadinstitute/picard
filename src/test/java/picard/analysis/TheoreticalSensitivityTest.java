@@ -235,7 +235,6 @@ public class TheoreticalSensitivityTest {
         return new Object[][]{
                 // Expected sensitivity, metrics file, allele fraction, constant depth, sample size.
                 {1.00, wgsMetricsFile, .5, 30, 10000},
-                {1.00, wgsMetricsFile, .5, 30, 10000},
                 {0.78, targetedMetricsFile, .1, 30, 10000},
                 {0.26, targetedMetricsFile, 0.1, 10, 10000}
         };
@@ -268,10 +267,10 @@ public class TheoreticalSensitivityTest {
         // is not quite large enough to converge properly, but is used for the purpose of
         // keeping the compute time of the tests short.
         return new Object[][] {
-                {0.90, wgsMetricsFile,       .5, 100},
-                {0.77, wgsMetricsFile,       .3, 100},
-                {0.29, wgsMetricsFile,       .1, 100},
-                {0.08, wgsMetricsFile,       .05, 100},
+                {0.90, wgsMetricsFile, 0.5, 100},
+                {0.77, wgsMetricsFile, 0.3, 100},
+                {0.29, wgsMetricsFile, 0.1, 100},
+                {0.08, wgsMetricsFile, 0.05, 100},
         };
     }
 
