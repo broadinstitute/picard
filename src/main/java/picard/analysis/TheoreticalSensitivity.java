@@ -307,17 +307,17 @@ public class TheoreticalSensitivity {
 
         // Bin depth distribution
         double sensitivity = 0.0;
-        int skip = 5;
+        int k = 0;
         double right = sensitivityAtConstantDepth(0, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction);
-        for(int k = skip;k < depthDistribution.length;k+=skip) {
-
-            double width = 0;
-            for(int j = 0;j < skip;++j) {
-                width += depthDistribution[k-j];
+        while(k < depthDistribution.length) {
+            System.out.println(k);
+            double width = 0.0;
+            while(width < 0.01 && k < depthDistribution.length) {
+                width += depthDistribution[k];
+                k++;
             }
             double left = right;
             right = sensitivityAtConstantDepth(k, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction);
-//            sensitivity += (depthDistribution[k]*skip) * (left + right) / 2.0;
             sensitivity += (width) * (left + right) / 2.0;
         }
         return sensitivity;

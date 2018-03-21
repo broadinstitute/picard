@@ -307,7 +307,7 @@ public class TheoreticalSensitivityTest {
                 // The sample sizes chosen here for these tests are smaller than what would normally be used
                 // in order to keep the test time low.  It should be noted that for larger sample sizes
                 // the values converge.
-                {wgsMetricsFile, 0.01, 300},
+                {wgsMetricsFile, 0.02, 200},
                 {targetedMetricsFile, 0.01, 50}
         };
     }
