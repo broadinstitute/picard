@@ -581,9 +581,9 @@ public class RevertSam extends CommandLineProgram {
 
         final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<>();
 
-        List<PeekableIterator<SAMRecord>> iterators = sorter.iterators();
-        for (PeekableIterator<SAMRecord> iterator : iterators) {
-            SAMReadGroupRecord readGroup = iterator.peek().getReadGroup();
+        final List<PeekableIterator<SAMRecord>> iterators = sorter.iterators();
+        for (final PeekableIterator<SAMRecord> iterator : iterators) {
+            final SAMReadGroupRecord readGroup = iterator.peek().getReadGroup();
 
             if (readGroup == null) {
                 continue;
