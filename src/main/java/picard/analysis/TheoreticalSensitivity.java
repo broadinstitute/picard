@@ -304,21 +304,25 @@ public class TheoreticalSensitivity {
         if (alleleFraction > 1.0 || alleleFraction < 0.0) {
             throw new PicardException("Allele fractions must be between 0 and 1.");
         }
+        final double depthBinWidth = 0.01;
 
-        // Bin depth distribution
+        // Integrate sensitivity over depth distribution
         double sensitivity = 0.0;
         int k = 0;
         double right = sensitivityAtConstantDepth(0, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction);
         while(k < depthDistribution.length) {
-            System.out.println(k);
             double width = 0.0;
-            while(width < 0.01 && k < depthDistribution.length) {
+            // Accumulate amount of depth distribution to compute sensitivity.
+            // This helps prevent us from spending lots of compute in regions of relative
+            // low coverage that don't contribute much to sensitivity anyway.
+            while(width < depthBinWidth && k < depthDistribution.length) {
                 width += depthDistribution[k];
                 k++;
             }
             double left = right;
+            // Calculate sensitivity for a particular depth, and use trapeziod rule to integrate sensitivity
             right = sensitivityAtConstantDepth(k, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction);
-            sensitivity += (width) * (left + right) / 2.0;
+            sensitivity += width * (left + right) / 2.0;
         }
         return sensitivity;
     }
