@@ -16,13 +16,14 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import picard.analysis.MetricAccumulationLevel;
+import picard.analysis.TheoreticalSensitivity;
+import picard.analysis.TheoreticalSensitivityMetrics;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.metrics.MultilevelMetrics;
 
 import java.io.File;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
@@ -98,6 +99,11 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     @Argument(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
     public int SAMPLE_SIZE=10000;
 
+    @Argument(doc="Output for Theoretical Sensitivity metrics where the allele fractions are provided by the ALLELE_FRACTION argument.  Default is null.", optional = true)
+    public File THEORETICAL_SENSITIVITY_OUTPUT;
+
+    @Argument(doc="Allele fraction to run theoretical sensitivity on.", optional = true)
+    public List<Double> ALLELE_FRACTION = new ArrayList<>(Arrays.asList(0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5));
     /**
      * Asserts that files are readable and writable and then fires off an
      * HsMetricsCalculator instance to do the real work.
@@ -155,6 +161,11 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
         collector.addAllLevelsToFile(metrics);
 
         metrics.write(OUTPUT);
+
+        if (THEORETICAL_SENSITIVITY_OUTPUT != null) {
+            final MetricsFile<TheoreticalSensitivityMetrics, Double> theoreticalSensitivityMetrics = getMetricsFile();
+            TheoreticalSensitivity.writeOutput(THEORETICAL_SENSITIVITY_OUTPUT, theoreticalSensitivityMetrics, SAMPLE_SIZE, collector.getDepthHistogram(), collector.getBaseQualityHistogram(), ALLELE_FRACTION);
+        }
 
         CloserUtil.close(reader);
         return 0;
