@@ -394,17 +394,16 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
 
         builder.addPair("rrnaPair", sequenceIndex, 400, 500, false, false, "35I1M", "35I1M", true, true, -1);
-        builder.addFrag("frag1", sequenceIndex, 150, true,false,"34I2M","*",-1);
-        builder.addFrag("frag2", sequenceIndex, 190, true,false,"35I1M","*",-1);
+        builder.addFrag("frag1", sequenceIndex, 150, true, false, "34I2M", "*", -1);
+        builder.addFrag("frag2", sequenceIndex, 190, true, false, "35I1M", "*", -1);
         builder.addFrag("ignoredFrag", builder.getHeader().getSequenceIndex(ignoredSequence), 1, false);
         final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
         samFile.deleteOnExit();
-
-        final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
-        for (final SAMRecord rec : builder.getRecords()) {
-            samWriter.addAlignment(rec);
+        try (SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile)) {
+            for (final SAMRecord rec : builder.getRecords()) {
+                samWriter.addAlignment(rec);
+            }
         }
-        samWriter.close();
 
         // Create an interval list with one ribosomal interval.
         final Interval rRnaInterval = new Interval(sequence, 300, 520, true, "rRNA");
@@ -418,7 +417,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
         metricsFile.deleteOnExit();
 
-        final String[] args = new String[] {
+        final String[] args = new String[]{
                 "INPUT=" + samFile.getAbsolutePath(),
                 "OUTPUT=" + metricsFile.getAbsolutePath(),
                 "REF_FLAT=" + getRefFlatFile(sequence).getAbsolutePath(),

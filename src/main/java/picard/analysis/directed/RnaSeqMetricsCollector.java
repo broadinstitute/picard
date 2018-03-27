@@ -167,7 +167,6 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                 }
                 if (intersectionLength/(double)fragmentInterval.length() >= rrnaFragmentPercentage) {
                     // Assume entire read is ribosomal.
-                    // TODO: Should count reads, not bases?
                     metrics.RIBOSOMAL_BASES += getNumAlignedBases(rec);
                     metrics.PF_ALIGNED_BASES += getNumAlignedBases(rec);
                     return;
