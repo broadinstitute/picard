@@ -212,8 +212,8 @@ public abstract class HaplotypeProbabilities {
      */
     public double shiftedLogEvidenceProbabilityGivenOtherEvidence(final HaplotypeProbabilities otherHp) {
         if (!this.haplotypeBlock.equals(otherHp.getHaplotype()) &&
-                this.haplotypeBlock.getSnps().stream().map(Snp::getName).noneMatch(n->n.equals(otherHp.getRepresentativeSnp().getName()))) {
-            throw new IllegalArgumentException("Haplotypes are from different HaplotypeBlocks!");
+                !this.haplotypeBlock.getFirstSnp().getName().equals(otherHp.haplotypeBlock.getFirstSnp().getName())) {
+            throw new IllegalArgumentException(String.format("Haplotypes are from different HaplotypeBlocks: %s and %s with names: %s and %s", this, otherHp, this.getRepresentativeSnp().getName(), otherHp.getRepresentativeSnp().getName()));
         }
         /*
          * Get the posterior from the other otherHp. Use this posterior as the prior to calculate probability.

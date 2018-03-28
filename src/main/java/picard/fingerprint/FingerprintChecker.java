@@ -820,7 +820,7 @@ public class FingerprintChecker {
                 // this is slower so we only do this when the hashmap lookup has failed.
                 final Optional<HaplotypeBlock> matchingHaploBlock = observedFp.keySet().stream().filter(
                         k -> k.getFirstSnp().getName().equals(haplotypeBlock.getFirstSnp().getName())).findAny();
-                probs1 = matchingHaploBlock.map(k -> observedFp.get(k)).orElse(null);
+                probs1 = matchingHaploBlock.map(observedFp::get).orElse(null);
             }
 
             if (probs1 == null) continue;
