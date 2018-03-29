@@ -142,7 +142,7 @@ public class DuplicationMetrics extends MergeableMetricBase {
             }
 
             // find value of M, large enough to act as other side for bisection method
-            while (f(M * uniqueReadPairs, uniqueReadPairs, readPairs) >= 0){
+            while (f(M * uniqueReadPairs, uniqueReadPairs, readPairs) > 0){
                 M *= 10.0;
             }
 
