@@ -88,4 +88,9 @@ public class DuplicationMetricsTest {
                 {nonEmptyMetrics(1), nonEmptyMetrics(2), nonEmptyMetrics(3)}
         };
     }
+
+    @Test(timeOut = 1000)
+    public void infiniteLoopFromGithub_1146() {
+        DuplicationMetrics.estimateLibrarySize(357087883,357087881);
+    }
 }
