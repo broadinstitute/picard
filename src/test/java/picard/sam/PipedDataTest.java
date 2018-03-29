@@ -10,27 +10,6 @@ public class PipedDataTest {
 
     @Test
     public void testSortSam() {
-        String sortCommand = "SortSam " +
-                "I=/dev/stdin " +
-                "O=/dev/null " +
-                "SORT_ORDER=queryname";
-        testPiping(sortCommand);
-    }
-
-    @Test
-    public void testRevertSam() {
-        String revertCommand = "RevertSam " +
-                "I=/dev/stdin " +
-                "O=/dev/null " +
-                "SORT_ORDER=queryname " +
-                "RESTORE_ORIGINAL_QUALITIES=false " +
-                "REMOVE_DUPLICATE_INFORMATION=false " +
-                "REMOVE_ALIGNMENT_INFORMATION=false " +
-                "ATTRIBUTE_TO_CLEAR=[] SANITIZE=true";
-        testPiping(revertCommand);
-    }
-
-    private void testPiping(String picardCommand) {
         String[] command = {
                 "/bin/bash",
                 "-c",
@@ -45,8 +24,12 @@ public class PipedDataTest {
                         "java -classpath " +
                         classPath +
                         "picard.cmdline.PicardCommandLine " +
-                        picardCommand
+                        "SortSam " +
+                        "I=/dev/stdin " +
+                        "O=/dev/null " +
+                        "SORT_ORDER=queryname"
         };
+
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.inheritIO();
