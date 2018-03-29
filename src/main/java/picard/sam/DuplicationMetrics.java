@@ -142,7 +142,7 @@ public class DuplicationMetrics extends MergeableMetricBase {
             }
 
             // find value of M, large enough to act as other side for bisection method
-            while (f(M * uniqueReadPairs, uniqueReadPairs, readPairs) > 0){
+            while (f(M * uniqueReadPairs, uniqueReadPairs, readPairs) > 0) {
                 M *= 10.0;
             }
 
@@ -150,9 +150,13 @@ public class DuplicationMetrics extends MergeableMetricBase {
             for (int i = 0; i < 40; i++) {
                 double r = (m + M) / 2.0;
                 double u = f(r * uniqueReadPairs, uniqueReadPairs, readPairs);
-                if (u == 0) break;
-                else if (u > 0) m = r;
-                else if (u < 0) M = r;
+                if (u == 0) {
+                    break;
+                } else if (u > 0) {
+                    m = r;
+                } else if (u < 0) {
+                    M = r;
+                }
             }
 
             return (long) (uniqueReadPairs * (m + M) / 2.0);
@@ -191,7 +195,9 @@ public class DuplicationMetrics extends MergeableMetricBase {
         if (ESTIMATED_LIBRARY_SIZE == null) {
             try {
                 calculateDerivedFields();
-                if (ESTIMATED_LIBRARY_SIZE == null) return null;
+                if (ESTIMATED_LIBRARY_SIZE == null) {
+                    return null;
+                }
             } catch (IllegalStateException ise) {
                 return null;
             }
