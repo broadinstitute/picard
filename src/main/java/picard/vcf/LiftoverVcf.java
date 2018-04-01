@@ -161,6 +161,12 @@ public class LiftoverVcf extends CommandLineProgram {
     @Argument(doc = "Allow INFO and FORMAT in the records that are not found in the header", optional = true)
     public boolean ALLOW_MISSING_FIELDS_IN_HEADER = false;
 
+
+    @Argument(doc = "Normally if the REF allele of the listed site does not match the target genome, that variant is discarded. " +
+            "For bi-allelic SNPs, if this is set to true, and the alternate equals the new reference, the REF and ALT alleles will be swapped.  This can rescue " +
+            "some variants; however, do this carefully as some annotations may become invalid.  See also TAGS_TO_REVERSE and TAGS_TO_DROP.", optional = true)
+    public boolean ATTEMPT_TO_SWAP_REF_ALT = true;
+
     @Argument(doc = "INFO field annotations that behave like an Allele Frequency and should be transformed with x->1-x " +
             "when swapping reference with variant alleles.", optional = true)
     public Collection<String> TAGS_TO_REVERSE = new ArrayList<>(LiftoverUtils.DEFAULT_TAGS_TO_REVERSE);
@@ -462,7 +468,7 @@ public class LiftoverVcf extends CommandLineProgram {
 
                 if (!refString.equalsIgnoreCase(allele.getBaseString())) {
                     // consider that the ref and the alt may have been swapped in a simple biallelic SNP
-                    if (vc.isBiallelic() && vc.isSNP() &&
+                    if (ATTEMPT_TO_SWAP_REF_ALT && vc.isBiallelic() && vc.isSNP() &&
                             refString.equalsIgnoreCase(vc.getAlternateAllele(0).getBaseString())) {
                         sorter.add(LiftoverUtils.swapRefAlt(vc, TAGS_TO_REVERSE, TAGS_TO_DROP));
                         return;
