@@ -155,11 +155,21 @@ public class LiftoverVcf extends CommandLineProgram {
     @Argument(doc = "Write the original contig/position for lifted variants to the INFO field.", optional = true)
     public boolean WRITE_ORIGINAL_POSITION = false;
 
+    // Option on whether or not to write the original alleles of the variant to the INFO field
+    @Argument(doc = "Write the original alleles for lifted variants to the INFO field.  If the alleles are identical, this attribute will be omitted.", optional = true)
+    public boolean WRITE_ORIGINAL_ALLELES = false;
+
     @Argument(doc = "The minimum percent match required for a variant to be lifted.", optional = true)
     public double LIFTOVER_MIN_MATCH = 1.0;
 
     @Argument(doc = "Allow INFO and FORMAT in the records that are not found in the header", optional = true)
     public boolean ALLOW_MISSING_FIELDS_IN_HEADER = false;
+
+
+    @Argument(doc = "If the REF allele of the lifted site does not match the target genome, that variant is normally rejected. " +
+            "For bi-allelic SNPs, if this is set to true and the ALT allele equals the new REF allele, the REF and ALT alleles will be swapped.  This can rescue " +
+            "some variants; however, do this carefully as some annotations may become invalid, such as any that are alelle-specifc.  See also TAGS_TO_REVERSE and TAGS_TO_DROP.", optional = true)
+    public boolean RECOVER_SWAPPED_REF_ALT = false;
 
     @Argument(doc = "INFO field annotations that behave like an Allele Frequency and should be transformed with x->1-x " +
             "when swapping reference with variant alleles.", optional = true)
@@ -213,6 +223,11 @@ public class LiftoverVcf extends CommandLineProgram {
     public static final String ORIGINAL_START = "OriginalStart";
 
     /**
+     * Attribute used to store the list of original alleles (including REF), in the original order prior to liftover.
+     */
+    public static final String ORIGINAL_ALLELES = "OriginalAlleles";
+
+    /**
      * Attribute used to store the position of the failed variant on the target contig prior to finding out that alleles do not match.
      */
     public static final String ATTEMPTED_LOCUS = "AttemptedLocus";
@@ -222,14 +237,15 @@ public class LiftoverVcf extends CommandLineProgram {
      */
     private static final List<VCFInfoHeaderLine> ATTRS = CollectionUtil.makeList(
             new VCFInfoHeaderLine(ORIGINAL_CONTIG, 1, VCFHeaderLineType.String, "The name of the source contig/chromosome prior to liftover."),
-            new VCFInfoHeaderLine(ORIGINAL_START, 1, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover.")
+            new VCFInfoHeaderLine(ORIGINAL_START, 1, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover."),
+            new VCFInfoHeaderLine(ORIGINAL_ALLELES, VCFHeaderLineCount.R, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover.")
             );
 
     private VariantContextWriter rejects;
     private final Log log = Log.getInstance(LiftoverVcf.class);
     private SortingCollection<VariantContext> sorter;
 
-    private long failedLiftover = 0, failedAlleleCheck = 0;
+    private long failedLiftover = 0, failedAlleleCheck = 0, totalRecoveredBySwapRefAlt = 0, totalNotRecoveredSwapRefAlt = 0;
     private Map<String, Long> rejectsByContig = new TreeMap<>();
     private Map<String, Long> liftedByDestContig = new TreeMap<>();
     private Map<String, Long> liftedBySourceContig = new TreeMap<>();
@@ -365,7 +381,7 @@ public class LiftoverVcf extends CommandLineProgram {
             } else {
                 refSeq = refSeqs.get(target.getContig());
 
-                final VariantContext liftedVC = LiftoverUtils.liftVariant(ctx, target, refSeq, WRITE_ORIGINAL_POSITION);
+                final VariantContext liftedVC = LiftoverUtils.liftVariant(ctx, target, refSeq, WRITE_ORIGINAL_POSITION, WRITE_ORIGINAL_ALLELES);
                 // the liftedVC can be null if the liftover fails because of a problem with reverse complementing
                 if (liftedVC == null) {
                     rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_INDEL);
@@ -404,6 +420,13 @@ public class LiftoverVcf extends CommandLineProgram {
             log.info("no successfully lifted variants");
         }
 
+        if (RECOVER_SWAPPED_REF_ALT){
+            log.info(totalRecoveredBySwapRefAlt, " variants were lifted by swapping REF/ALT alleles.");
+        }
+        else {
+            log.info(totalNotRecoveredSwapRefAlt, " variants with a swapped REF/ALT were identified, but were not recovered.  See RECOVER_SWAPPED_REF_ALT.");
+        }
+
         rejects.close();
         in.close();
 
@@ -440,6 +463,12 @@ public class LiftoverVcf extends CommandLineProgram {
         map.put(contig, ++val);
     }
 
+    private void addAndTrack(VariantContext toAdd, VariantContext source){
+        trackLiftedVariantContig(liftedBySourceContig, source.getContig());
+        trackLiftedVariantContig(liftedByDestContig, toAdd.getContig());
+        sorter.add(toAdd);
+    }
+
     /**
      *  utility function to attempt to add a variant. Checks that the reference allele still matches the reference (which may have changed)
      *
@@ -462,10 +491,15 @@ public class LiftoverVcf extends CommandLineProgram {
 
                 if (!refString.equalsIgnoreCase(allele.getBaseString())) {
                     // consider that the ref and the alt may have been swapped in a simple biallelic SNP
-                    if (vc.isBiallelic() && vc.isSNP() &&
-                            refString.equalsIgnoreCase(vc.getAlternateAllele(0).getBaseString())) {
-                        sorter.add(LiftoverUtils.swapRefAlt(vc, TAGS_TO_REVERSE, TAGS_TO_DROP));
-                        return;
+                    if (vc.isBiallelic() && vc.isSNP() && refString.equalsIgnoreCase(vc.getAlternateAllele(0).getBaseString())) {
+                        if (RECOVER_SWAPPED_REF_ALT){
+                            totalRecoveredBySwapRefAlt++;
+                            addAndTrack(LiftoverUtils.swapRefAlt(vc, TAGS_TO_REVERSE, TAGS_TO_DROP), source);
+                            return;
+                        }
+                        else {
+                            totalNotRecoveredSwapRefAlt++;
+                        }
                     }
                     mismatchesReference = true;
                 }
@@ -481,9 +515,7 @@ public class LiftoverVcf extends CommandLineProgram {
             failedAlleleCheck++;
             trackLiftedVariantContig(rejectsByContig, source.getContig());
         } else {
-            trackLiftedVariantContig(liftedBySourceContig, source.getContig());
-            trackLiftedVariantContig(liftedByDestContig, vc.getContig());
-            sorter.add(vc);
+            addAndTrack(vc, source);
         }
     }
 }

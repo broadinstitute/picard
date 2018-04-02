@@ -82,6 +82,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 "REJECT=" + rejectOutputFile.getAbsolutePath(),
                 "CHAIN=" + CHAIN_FILE,
                 "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "RECOVER_SWAPPED_REF_ALT=true",
                 "CREATE_INDEX=false"
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -109,6 +110,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 "REJECT=" + rejectOutputFile.getAbsolutePath(),
                 "CHAIN=" + CHAIN_FILE,
                 "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "RECOVER_SWAPPED_REF_ALT=true",
                 "CREATE_INDEX=false"
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -263,6 +265,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 "REJECT=" + rejectOutputFile.getAbsolutePath(),
                 "CHAIN=" + TWO_INTERVAL_CHAIN_FILE,
                 "REFERENCE_SEQUENCE=" + TWO_INTERVALS_REFERENCE_FILE,
+                "RECOVER_SWAPPED_REF_ALT=true",
                 "CREATE_INDEX=false"
         };
 
@@ -300,6 +303,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 "REJECT=" + rejectOutputFile.getAbsolutePath(),
                 "CHAIN=" + CHAIN_FILE,
                 "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "RECOVER_SWAPPED_REF_ALT=true",
                 "CREATE_INDEX=false"
         };
 
@@ -545,7 +549,40 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             throw new RuntimeException("not reversed");
         }
 
-        final VariantContext flipped = LiftoverUtils.liftVariant(source, target, reference, false);
+        final VariantContext flipped = LiftoverUtils.liftVariant(source, target, reference, false, false);
+
+        VcfTestUtils.assertEquals(flipped, result);
+    }
+
+    @DataProvider(name = "indelFlipDataWithOriginalAllele")
+    public Iterator<Object[]> indelFlipDataWithOriginalAllele() {
+        final List<Object[]> tests = new ArrayList<>();
+        indelFlipData().forEachRemaining(x -> {
+            if (x[2] == null){
+                tests.add(x);
+            }
+            else {
+                VariantContext source = (VariantContext)x[0];
+                VariantContextBuilder result_builder = new VariantContextBuilder((VariantContext)x[2]);
+                result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, allelesToStringList(source.getAlleles()));
+                tests.add(new Object[]{x[0], x[1], result_builder.make()});
+            }
+        });
+
+        return tests.iterator();
+    }
+
+    @Test(dataProvider = "indelFlipDataWithOriginalAllele")
+    public void testFlipIndelWithOriginalAlleles(final VariantContext source, final ReferenceSequence reference, final VariantContext result) {
+
+        final LiftOver liftOver = new LiftOver(CHAIN_FILE);
+        final Interval originalLocus = new Interval(source.getContig(), source.getStart(), source.getEnd());
+        final Interval target = liftOver.liftOver(originalLocus);
+        if (target != null && !target.isNegativeStrand()) {
+            throw new RuntimeException("not reversed");
+        }
+
+        final VariantContext flipped = LiftoverUtils.liftVariant(source, target, reference, false, true);
 
         VcfTestUtils.assertEquals(flipped, result);
     }
@@ -554,7 +591,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
     public Iterator<Object[]> snpWithChangedRef() {
 
         final ReferenceSequence reference = new ReferenceSequence("chr1", 0,
-                "CAAAAAAAAAACGTACGTACTCTCTCTCTACGT".getBytes());
+                refString.getBytes());
         //       123456789 123456789 123456789 123
 
         final Allele RefT = Allele.create("T", true);
@@ -1036,6 +1073,12 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         VcfTestUtils.assertEquals(vcb == null ? null : vcb.make(), result);
     }
 
+    private List<String> allelesToStringList(final List<Allele> alleles) {
+        final List<String> ret = new ArrayList<>();
+        alleles.forEach(a -> ret.add(a.getDisplayString()));
+        return ret;
+    }
+
     @DataProvider(name = "noCallAndSymbolicData")
     public Iterator<Object[]> noCallAndSymbolicData() {
 
@@ -1086,6 +1129,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(CRef, T, DEL));
         result_builder.start(liftedStart).stop(liftedStart).alleles(CollectionUtil.makeList(GRef, A, DEL));
         result_builder.attribute(LiftoverVcf.ORIGINAL_START, start);
+        result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, allelesToStringList(builder.getAlleles()));
         result_builder.attribute(LiftoverUtils.REV_COMPED_ALLELES, true);
 
         genotypeBuilder.alleles(CollectionUtil.makeList(T, DEL));
@@ -1102,7 +1146,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(CRef, T));
         result_builder.start(liftedStart).stop(liftedStart).alleles(CollectionUtil.makeList(GRef, A));
         result_builder.attribute(LiftoverVcf.ORIGINAL_START, start);
-
+        result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, allelesToStringList(builder.getAlleles()));
         genotypeBuilder.alleles(CollectionUtil.makeList(T, Allele.NO_CALL));
         resultGenotypeBuilder.alleles(CollectionUtil.makeList(A, Allele.NO_CALL));
         builder.genotypes(genotypeBuilder.make());
@@ -1120,10 +1164,16 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         Assert.assertEquals(target.isNegativeStrand(), expectReversed);
 
-        VariantContext vc = LiftoverUtils.liftVariant(source, target, REFERENCE, true);
+        VariantContext vc = LiftoverUtils.liftVariant(source, target, REFERENCE, true, true);
         VcfTestUtils.assertEquals(vc, result);
 
         Assert.assertEquals(vc.getAttribute(LiftoverVcf.ORIGINAL_CONTIG), source.getContig());
         Assert.assertEquals(vc.getAttribute(LiftoverVcf.ORIGINAL_START), source.getStart());
+        Assert.assertTrue(source.getAlleles().equals(result.getAlleles()) != result.hasAttribute(LiftoverVcf.ORIGINAL_ALLELES));
+        if (!source.getAlleles().equals(result.getAlleles())){
+            List<String> resultAlleles = new ArrayList<>();
+            source.getAlleles().forEach(a -> resultAlleles.add(a.getDisplayString()));
+            Assert.assertEquals(resultAlleles, result.getAttributeAsStringList(LiftoverVcf.ORIGINAL_ALLELES, null));
+        }
     }
 }
