@@ -63,7 +63,7 @@ public class LiftoverUtils {
      * @param target The target interval
      * @param refSeq The reference sequence, which should match the target interval
      * @param writeOriginalPosition If true, INFO field annotations will be added to store the original position and contig
-     * @param writeOriginalAlleles If true, INFO an field annotation will be added to store the original alleles in order.  This can be useful in the case of more complex liftovers, like reverse complements, left aligned indels or swapped REF/ALT
+     * @param writeOriginalAlleles If true, an INFO field annotation will be added to store the original alleles in order.  This can be useful in the case of more complex liftovers, like reverse complements, left aligned indels or swapped REF/ALT
      * @return The lifted VariantContext.  This will be null if the input VariantContext could not be lifted.
      */
     public static VariantContext liftVariant(final VariantContext source, final Interval target, final ReferenceSequence refSeq, final boolean writeOriginalPosition, final boolean writeOriginalAlleles){
@@ -102,7 +102,7 @@ public class LiftoverUtils {
         }
 
         if (writeOriginalAlleles && !source.getAlleles().equals(builder.getAlleles())) {
-            List<String> alleles = new ArrayList<>();
+            final List<String> alleles = new ArrayList<>();
             source.getAlleles().forEach(a -> alleles.add(a.getDisplayString()));
             builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, alleles);
         }

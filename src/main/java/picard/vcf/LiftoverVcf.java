@@ -238,7 +238,7 @@ public class LiftoverVcf extends CommandLineProgram {
     private static final List<VCFInfoHeaderLine> ATTRS = CollectionUtil.makeList(
             new VCFInfoHeaderLine(ORIGINAL_CONTIG, 1, VCFHeaderLineType.String, "The name of the source contig/chromosome prior to liftover."),
             new VCFInfoHeaderLine(ORIGINAL_START, 1, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover."),
-            new VCFInfoHeaderLine(ORIGINAL_ALLELES, VCFHeaderLineCount.R, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover.")
+            new VCFInfoHeaderLine(ORIGINAL_ALLELES, VCFHeaderLineCount.R, VCFHeaderLineType.String, "A list of the original alleles (including REF) of the variant prior to liftover.")
             );
 
     private VariantContextWriter rejects;
@@ -463,7 +463,7 @@ public class LiftoverVcf extends CommandLineProgram {
         map.put(contig, ++val);
     }
 
-    private void addAndTrack(VariantContext toAdd, VariantContext source){
+    private void addAndTrack(final VariantContext toAdd, final VariantContext source){
         trackLiftedVariantContig(liftedBySourceContig, source.getContig());
         trackLiftedVariantContig(liftedByDestContig, toAdd.getContig());
         sorter.add(toAdd);
