@@ -223,6 +223,11 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Argument(doc = "If set, process no more than this many tiles (used for debugging).", optional = true)
     public Integer TILE_LIMIT;
 
+    @Argument(doc ="If set, process only the tile number given and append the tile number to the output file name.",
+            mutex = "FIRST_TILE",
+            optional = true)
+    public Integer PROCESS_SINGLE_TILE;
+
     @Argument(doc = "If true, call System.gc() periodically.  This is useful in cases in which the -Xmx value passed " +
             "is larger than the available memory.")
     public Boolean FORCE_GC = true;
@@ -418,7 +423,16 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 samHeaderParams.put(tagName, row.getField(tagName));
             }
 
-            final SAMFileWriterWrapper writer = buildSamFileWriter(new File(row.getField("OUTPUT")),
+            File outputFile = new File(row.getField("OUTPUT"));
+
+            // If we are processing a single tile we want to append the tile number to the output file name. This is
+            // done to avoid file overwrites if you are running tile based processing in parallel.
+            if(PROCESS_SINGLE_TILE != null){
+                outputFile = new File(outputFile.getParentFile().getAbsolutePath(),
+                        PROCESS_SINGLE_TILE.toString() +"."+ outputFile.getName());
+            }
+
+            final SAMFileWriterWrapper writer = buildSamFileWriter(outputFile,
                     row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), samHeaderParams, true);
             barcodeSamWriterMap.put(key, writer);
         }
@@ -516,6 +530,13 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         if ((FIVE_PRIME_ADAPTER == null) != (THREE_PRIME_ADAPTER == null)) {
             messages.add("THREE_PRIME_ADAPTER and FIVE_PRIME_ADAPTER must either both be null or both be set.");
+        }
+
+        // If we are processing a single tile we need to set TILE_LIMIT and FIRST_TILE for the underlying
+        // basecalls converter.
+        if(PROCESS_SINGLE_TILE != null) {
+            TILE_LIMIT = 1;
+            FIRST_TILE = PROCESS_SINGLE_TILE;
         }
 
         if (messages.isEmpty()) {
