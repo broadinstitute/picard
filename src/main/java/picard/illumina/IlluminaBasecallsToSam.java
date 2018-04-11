@@ -428,7 +428,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             // If we are processing a single tile we want to append the tile number to the output file name. This is
             // done to avoid file overwrites if you are running tile based processing in parallel.
             if(PROCESS_SINGLE_TILE != null){
-                outputFile = new File(outputFile.getParentFile().getAbsolutePath(),
+                outputFile = new File(outputFile.getParentFile(),
                         PROCESS_SINGLE_TILE.toString() +"."+ outputFile.getName());
             }
 

@@ -285,7 +285,15 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     public void testHiseqxSingleLocs() throws Exception {
         runStandardTest(1, "hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T",TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR);
     }
+    @Test
+    public void testDualBarcodesSingleTile() throws Exception {
+        runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, 1101);
+    }
 
+    @Test
+    public void testCbclConvertSingleTile() throws Exception {
+        runStandardTest(1, "cbclConvert.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, 1102);
+    }
     /**
      * Ensures that a run missing a barcode from the parameters file throws an error.
      * 
@@ -304,6 +312,11 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         }
     }
 
+    private void runStandardTest(final int lane, final String jobName, final String libraryParamsFile,
+                                 final int concatNColumnFields, final String readStructure,
+                                 final File baseCallsDir, final File testDataDir) throws Exception {
+        runStandardTest(lane, jobName, libraryParamsFile, concatNColumnFields, readStructure, baseCallsDir, testDataDir, null);
+    }
     /**
      * This test utility takes a libraryParamsFile and generates output sam files through IlluminaBasecallsToSam to compare against
      * preloaded test data
@@ -316,11 +329,13 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
      */
     private void runStandardTest(final int lane, final String jobName, final String libraryParamsFile,
                                  final int concatNColumnFields, final String readStructure,
-                                 final File baseCallsDir, final File testDataDir) throws Exception {
+                                 final File baseCallsDir, final File testDataDir, final Integer tile) throws Exception {
         final File outputDir = File.createTempFile(jobName, ".dir");
         outputDir.delete();
         outputDir.mkdir();
         outputDir.deleteOnExit();
+        final String tilePrefix = (tile != null) ? tile.toString() + "." : "";
+
         // Create barcode.params with output files in the temp directory
         final File libraryParams = new File(outputDir, libraryParamsFile);
         libraryParams.deleteOnExit();
@@ -337,22 +352,28 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
             final String[] fields = line.split("\t");
             final File outputSam = new File(outputDir, StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)) + ".sam");
             outputSam.deleteOnExit();
-            samFiles.add(outputSam);
+            samFiles.add(new File(outputSam.getParentFile(), tilePrefix + outputSam.getName()));
             writer.println(line + "\t" + outputSam);
         }
         writer.close();
         reader.close();
 
-        Assert.assertEquals(runPicardCommandLine(new String[]{
-                "BASECALLS_DIR=" + baseCallsDir,
-                "LANE=" + lane,
-                "RUN_BARCODE=HiMom",
-                "READ_STRUCTURE=" + readStructure,
-                "LIBRARY_PARAMS=" + libraryParams
-        }), 0);
+        List<String> args = new ArrayList<>();
+        args.add("BASECALLS_DIR=" + baseCallsDir);
+        args.add("LANE=" + lane);
+        args.add("RUN_BARCODE=HiMom");
+        args.add("READ_STRUCTURE=" + readStructure);
+        args.add("LIBRARY_PARAMS=" + libraryParams);
+        if(tile != null){
+            args.add("PROCESS_SINGLE_TILE=" + tile);
+        }
+
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         for (final File outputSam : samFiles) {
             IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
+            outputSam.deleteOnExit();
         }
         TestUtil.recursiveDelete(outputDir);
     }
