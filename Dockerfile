@@ -18,7 +18,7 @@ WORKDIR /usr/picard
 
 # Build the distribution jar, clean up everything else
 RUN ./gradlew ${build_command} && \
-    mv build/libs/${jar_name} ${jar_name} && \
+    mv build/libs/${jar_name} picard.jar && \
     mv src/main/resources/picard/docker_helper.sh docker_helper.sh && \
     ./gradlew clean && \
     rm -rf src && \
