@@ -24,4 +24,4 @@ done
 shift $(expr $OPTIND - 1)
 TOOL_WITH_ARGS=$@
 
-java ${JVM_ARGS} -jar /usr/picard/picard.jar ${TOOL_WITH_ARGS}
+java ${JVM_ARGS} -jar /usr/picard/picard*.jar ${TOOL_WITH_ARGS}

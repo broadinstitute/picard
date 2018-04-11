@@ -1,6 +1,9 @@
 FROM broadinstitute/java-baseimage
 MAINTAINER Broad Institute DSDE <dsde-engineering@broadinstitute.org>
 
+ARG build_command=shadowJar
+ARG jar_name=picard.jar
+
 # Install ant, git for building
 RUN apt-get update && \
     apt-get --no-install-recommends install -y --force-yes \
@@ -14,8 +17,8 @@ COPY / /usr/picard/
 WORKDIR /usr/picard
 
 # Build the distribution jar, clean up everything else
-RUN ./gradlew shadowJar && \
-    mv build/libs/picard.jar picard.jar && \
+RUN ./gradlew ${build_command} && \
+    mv build/libs/${jar_name} picard.jar && \
     mv src/main/resources/picard/docker_helper.sh docker_helper.sh && \
     ./gradlew clean && \
     rm -rf src && \
