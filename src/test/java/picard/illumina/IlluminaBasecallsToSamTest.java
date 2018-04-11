@@ -35,6 +35,8 @@ import picard.cmdline.CommandLineProgramTest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -211,7 +213,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     @Test
     public void testNonBarcodedWithTagPerMolecularIndexDualFourMolecularIndexes() throws Exception {
         final File outputBam = File.createTempFile("nonBarcodedWithDualMI.", ".sam");
-        //outputBam.deleteOnExit();
+        outputBam.deleteOnExit();
         final int lane = 1;
 
         Assert.assertEquals(runPicardCommandLine(new String[]{
@@ -283,8 +285,9 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
 
     @Test
     public void testHiseqxSingleLocs() throws Exception {
-        runStandardTest(1, "hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T",TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR);
+        runStandardTest(1, "hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR);
     }
+
     @Test
     public void testDualBarcodesSingleTile() throws Exception {
         runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, 1101);
@@ -294,13 +297,14 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     public void testCbclConvertSingleTile() throws Exception {
         runStandardTest(1, "cbclConvert.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, 1102);
     }
+
     /**
      * Ensures that a run missing a barcode from the parameters file throws an error.
-     * 
+     * <p>
      * TODO: This testcase isn't broken, but can spawn an issue with FileChannelJDKBugWorkAround since it expects
      * an exception to be thrown.
      */
-    @Test(groups={"broken"})
+    @Test(groups = {"broken"})
     public void testCorruptDataReturnCode() throws Exception {
         boolean exceptionThrown = false;
         try {
@@ -317,6 +321,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                                  final File baseCallsDir, final File testDataDir) throws Exception {
         runStandardTest(lane, jobName, libraryParamsFile, concatNColumnFields, readStructure, baseCallsDir, testDataDir, null);
     }
+
     /**
      * This test utility takes a libraryParamsFile and generates output sam files through IlluminaBasecallsToSam to compare against
      * preloaded test data
@@ -330,51 +335,50 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     private void runStandardTest(final int lane, final String jobName, final String libraryParamsFile,
                                  final int concatNColumnFields, final String readStructure,
                                  final File baseCallsDir, final File testDataDir, final Integer tile) throws Exception {
-        final File outputDir = File.createTempFile(jobName, ".dir");
-        outputDir.delete();
-        outputDir.mkdir();
-        outputDir.deleteOnExit();
-        final String tilePrefix = (tile != null) ? tile.toString() + "." : "";
+        final Path outputDir = Files.createTempDirectory(jobName);
+        try {
+            final String tilePrefix = (tile != null) ? tile + "." : "";
 
-        // Create barcode.params with output files in the temp directory
-        final File libraryParams = new File(outputDir, libraryParamsFile);
-        libraryParams.deleteOnExit();
-        final List<File> samFiles = new ArrayList<File>();
-        final LineReader reader = new BufferedLineReader(new FileInputStream(new File(testDataDir, libraryParamsFile)));
-        final PrintWriter writer = new PrintWriter(libraryParams);
-        final String header = reader.readLine();
-        writer.println(header + "\tOUTPUT");
-        while (true) {
-            final String line = reader.readLine();
-            if (line == null) {
-                break;
+            // Create barcode.params with output files in the temp directory
+            final File libraryParams = new File(outputDir.toFile(), libraryParamsFile);
+            libraryParams.deleteOnExit();
+            final List<File> samFiles = new ArrayList<File>();
+            final LineReader reader = new BufferedLineReader(new FileInputStream(new File(testDataDir, libraryParamsFile)));
+            final PrintWriter writer = new PrintWriter(libraryParams);
+            final String header = reader.readLine();
+            writer.println(header + "\tOUTPUT");
+            while (true) {
+                final String line = reader.readLine();
+                if (line == null) {
+                    break;
+                }
+                final String[] fields = line.split("\t");
+                final File outputSam = new File(outputDir.toFile(), StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)) + ".sam");
+                outputSam.deleteOnExit();
+                samFiles.add(new File(outputSam.getParentFile(), tilePrefix + outputSam.getName()));
+                writer.println(line + "\t" + outputSam);
             }
-            final String[] fields = line.split("\t");
-            final File outputSam = new File(outputDir, StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)) + ".sam");
-            outputSam.deleteOnExit();
-            samFiles.add(new File(outputSam.getParentFile(), tilePrefix + outputSam.getName()));
-            writer.println(line + "\t" + outputSam);
+            writer.close();
+            reader.close();
+
+            List<String> args = new ArrayList<>();
+            args.add("BASECALLS_DIR=" + baseCallsDir);
+            args.add("LANE=" + lane);
+            args.add("RUN_BARCODE=HiMom");
+            args.add("READ_STRUCTURE=" + readStructure);
+            args.add("LIBRARY_PARAMS=" + libraryParams);
+            if (tile != null) {
+                args.add("PROCESS_SINGLE_TILE=" + tile);
+            }
+
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+
+            for (final File outputSam : samFiles) {
+                IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
+            }
+        } finally {
+            TestUtil.recursiveDelete(outputDir.toFile());
+            Files.delete(outputDir);
         }
-        writer.close();
-        reader.close();
-
-        List<String> args = new ArrayList<>();
-        args.add("BASECALLS_DIR=" + baseCallsDir);
-        args.add("LANE=" + lane);
-        args.add("RUN_BARCODE=HiMom");
-        args.add("READ_STRUCTURE=" + readStructure);
-        args.add("LIBRARY_PARAMS=" + libraryParams);
-        if(tile != null){
-            args.add("PROCESS_SINGLE_TILE=" + tile);
-        }
-
-
-        Assert.assertEquals(runPicardCommandLine(args), 0);
-
-        for (final File outputSam : samFiles) {
-            IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
-            outputSam.deleteOnExit();
-        }
-        TestUtil.recursiveDelete(outputDir);
     }
 }

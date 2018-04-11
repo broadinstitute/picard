@@ -42,8 +42,8 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.programgroups.BaseCallingProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.BaseCallingProgramGroup;
 import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
@@ -217,13 +217,14 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     @Argument(doc = "If set, this is the first tile to be processed (used for debugging).  Note that tiles are not processed" +
             " in numerical order.",
+            mutex = "PROCESS_SINGLE_TILE",
             optional = true)
     public Integer FIRST_TILE;
 
     @Argument(doc = "If set, process no more than this many tiles (used for debugging).", optional = true)
     public Integer TILE_LIMIT;
 
-    @Argument(doc ="If set, process only the tile number given and append the tile number to the output file name.",
+    @Argument(doc = "If set, process only the tile number given and append the tile number to the output file name.",
             mutex = "FIRST_TILE",
             optional = true)
     public Integer PROCESS_SINGLE_TILE;
@@ -295,8 +296,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         final int numOutputRecords = readStructure.templates.length();
         // Combine any adapters and custom adapter pairs from the command line into an array for use in clipping
-        final List<AdapterPair> adapters = new ArrayList<>();
-        adapters.addAll(ADAPTERS_TO_CHECK);
+        final List<AdapterPair> adapters = new ArrayList<>(ADAPTERS_TO_CHECK);
+
         if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
             adapters.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
         }
@@ -427,9 +428,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
             // If we are processing a single tile we want to append the tile number to the output file name. This is
             // done to avoid file overwrites if you are running tile based processing in parallel.
-            if(PROCESS_SINGLE_TILE != null){
+            if (PROCESS_SINGLE_TILE != null) {
                 outputFile = new File(outputFile.getParentFile(),
-                        PROCESS_SINGLE_TILE.toString() +"."+ outputFile.getName());
+                        PROCESS_SINGLE_TILE + "." + outputFile.getName());
             }
 
             final SAMFileWriterWrapper writer = buildSamFileWriter(outputFile,
@@ -534,7 +535,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         // If we are processing a single tile we need to set TILE_LIMIT and FIRST_TILE for the underlying
         // basecalls converter.
-        if(PROCESS_SINGLE_TILE != null) {
+        if (PROCESS_SINGLE_TILE != null) {
             TILE_LIMIT = 1;
             FIRST_TILE = PROCESS_SINGLE_TILE;
         }
