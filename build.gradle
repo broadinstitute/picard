@@ -48,7 +48,7 @@ jacoco {
 }
 
 final requiredJavaVersion = "8"
-final buildPrerequisitesMessage = "See https://github.com/broadinstitute/picard/blob/master/README.md for information on how to build picard"
+final buildPrerequisitesMessage = "See https://github.com/broadinstitute/picard/blob/master/README.md#building-picard for information on how to build picard"
 // Ensure that we have the right JDK version, a clone of the git repository
 def ensureBuildPrerequisites(requiredJavaVersion, largeResourcesFolder, buildPrerequisitesMessage) {
     // Make sure we can get a ToolProvider class loader. If not we may have just a JRE, or a JDK from the future.
