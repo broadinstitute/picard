@@ -47,6 +47,23 @@ jacoco {
     toolVersion = "0.7.5.201505241946"
 }
 
+final requiredJavaVersion = "8"
+final buildPrerequisitesMessage = "See https://github.com/broadinstitute/picard/blob/master/README.md#building-picard for information on how to build picard"
+// Ensure that we have the right JDK version, a clone of the git repository
+def ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage) {
+    // Make sure we can get a ToolProvider class loader. If not we may have just a JRE, or a JDK from the future.
+    if (ToolProvider.getSystemToolClassLoader() == null) {
+        throw new GradleException(
+                "The ClassLoader obtained from the Java ToolProvider is null. "
+                + "A Java $requiredJavaVersion JDK must be installed. $buildPrerequisitesMessage")
+    }
+    if (!file(".git").isDirectory()) {
+        throw new GradleException("The Picard Github repository must be cloned using \"git clone\" to run the build. "
+                + "$buildPrerequisitesMessage")
+    }
+}
+ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage)
+
 final htsjdkVersion = System.getProperty('htsjdk.version', '2.14.3')
 
 // We use a custom shaded build of the NIO library to avoid a regression in the authentication layer.
