@@ -5,7 +5,6 @@ import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import java.util.*;
 
 /**
@@ -58,5 +57,10 @@ public class PicardCommandLineTest {
                     }
                 }
         );
+    }
+
+    @Test
+    public void testPrintUsage() {
+        Assert.assertEquals(new PicardCommandLine().instanceMain(new String[]{"-h"}), 1);
     }
 }

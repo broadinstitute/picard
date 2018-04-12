@@ -32,7 +32,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
-import org.broadinstitute.barclay.argparser.BetaFeature;
+import org.broadinstitute.barclay.argparser.ExperimentalFeature;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -46,7 +46,7 @@ import java.io.File;
 import java.util.List;
 
 @DocumentedFeature
-@BetaFeature
+@ExperimentalFeature
 @CommandLineProgramProperties(
         summary = CollectWgsMetricsWithNonZeroCoverage.USAGE_SUMMARY + CollectWgsMetricsWithNonZeroCoverage.USAGE_DETAILS,
         oneLineSummary = CollectWgsMetricsWithNonZeroCoverage.USAGE_SUMMARY,
@@ -54,7 +54,7 @@ import java.util.List;
 )
 public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
-    static final String USAGE_SUMMARY = "(Experimental) Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.  ";
+    static final String USAGE_SUMMARY = "Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.  ";
     static final String USAGE_DETAILS = "This tool collects metrics about the percentages of reads that pass base- and mapping- quality " +
             "filters as well as coverage (read-depth) levels. Both minimum base- and mapping-quality values as well as the maximum " +
             "read depths (coverage cap) are user defined.  This extends CollectWgsMetrics by including metrics related only to sites" +
