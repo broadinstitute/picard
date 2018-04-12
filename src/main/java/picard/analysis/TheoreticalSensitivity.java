@@ -34,6 +34,8 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.IntStream;
 
+import org.apache.commons.math3.distribution.BinomialDistribution;
+
 /**
  * Created by David Benjamin on 5/13/15.
  */
@@ -216,31 +218,10 @@ public class TheoreticalSensitivity {
      * @param logOddsThreshold Log odds threshold necessary for variant to be called
      * @return
      */
-    public static boolean isCalled(final int totalDepth, final int altDepth, final double sumOfAltQualities, final double alleleFraction, final double logOddsThreshold) {
+    private static boolean isCalled(final int totalDepth, final int altDepth, final double sumOfAltQualities, final double alleleFraction, final double logOddsThreshold) {
         final double threshold = 10.0 * (altDepth * -Math.log10(alleleFraction) + (totalDepth - altDepth) * -Math.log10(1.0 - alleleFraction) + logOddsThreshold);
 
         return sumOfAltQualities > threshold;
-    }
-
-    /**
-     * Draw from a binomial distribution.
-     * @param trials Number of trials to perform
-     * @param p Probability of individual success
-     * @param uniformRNG Random number generator to use for making draw
-     * @return Number of total successes
-     */
-    public static int binomialDraw(final int trials, final double p, final Random uniformRNG) {
-        if (p > 1.0 || p < 0) {
-            throw new PicardException("Probabilities should be between 0 and 1, found value " + p + ".");
-        }
-
-        int successes = 0;
-        for (int i = 0; i < trials; i++) {
-            if (uniformRNG.nextDouble() < p) {
-                successes++;
-            }
-        }
-        return successes;
     }
 
     public TheoreticalSensitivity() {
@@ -261,11 +242,31 @@ public class TheoreticalSensitivity {
         final RouletteWheel qualityRW = new RouletteWheel(trimDistribution(qualityDistribution));
         final Random uniformRNG = new Random(randomSeed);
 
+        final Random r = new Random(randomSeed);
+
+        final BinomialDistribution bd = new BinomialDistribution(depth, alleleFraction);
+
+        double averageQuality = IntStream.range(0, qualityDistribution.length-1).mapToDouble(n -> n * qualityDistribution[n]).sum();
+        double var = IntStream.range(0, qualityDistribution.length-1).mapToDouble(n -> qualityDistribution[n] * Math.pow(n - averageQuality, 2.0)).sum() / (qualityDistribution.length - 1);
+//        System.out.println(qualityDistribution);
+//        System.out.println("averageQuality = " + averageQuality + "  var = " + var);
+
+//        IntStream.range(0, qualityDistribution.length-1).forEach((n) -> {
+//            System.out.println(n + " " + qualityDistribution[n]);
+//        });
+
         int calledVariants = 0;
         for (int k = 0; k < sampleSize; k++) {
-            final int altDepth = binomialDraw(depth, alleleFraction, uniformRNG);
+            final int altDepth = bd.inverseCumulativeProbability(uniformRNG.nextDouble());
 
-            final int sumOfQualities = IntStream.range(0, altDepth).map(n -> qualityRW.draw()).sum();
+            int sumOfQualities;
+            if(altDepth < 10) {
+                sumOfQualities = IntStream.range(0, altDepth).map(n -> qualityRW.draw()).sum();
+            }
+            else {
+                sumOfQualities = (int) (averageQuality * altDepth + r.nextGaussian() * var * altDepth);
+            }
+            //System.out.println(sumOfQualities + " " + (averageQuality*altDepth+r.nextGaussian()*var*altDepth));
             if (isCalled(depth, altDepth, (double) sumOfQualities, alleleFraction, logOddsThreshold)) {
                 calledVariants++;
             }
@@ -322,6 +323,8 @@ public class TheoreticalSensitivity {
             double left = right;
             right = sensitivityAtConstantDepth(k, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction);
             sensitivity += width * (left + right) / 2.0;
+            log.info("k = " + k + " of " + depthDistribution.length);
+
         }
         return sensitivity;
     }
@@ -332,7 +335,7 @@ public class TheoreticalSensitivity {
      * @param distribution Distribution of base qualities
      * @return Distribution of base qualities removing any trailing zeros
      */
-    public static double[] trimDistribution(final double[] distribution) {
+    private static double[] trimDistribution(final double[] distribution) {
         int endOfDistribution = 0;
 
         // Locate the index of the distribution where all the values remaining at

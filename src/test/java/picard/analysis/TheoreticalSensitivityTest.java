@@ -234,17 +234,16 @@ public class TheoreticalSensitivityTest {
         // These magic numbers come from a separate implementation of the code in R.
         return new Object[][]{
                 // Expected sensitivity, metrics file, allele fraction, constant depth, sample size.
-                {1.00, wgsMetricsFile, .5, 30, 10000},
-                {0.78, targetedMetricsFile, .1, 30, 10000},
-                {0.26, targetedMetricsFile, 0.1, 10, 10000}
+                {1.00, wgsMetricsFile, .5, 30, 10000, 0.01},
+                {0.78, targetedMetricsFile, .1, 30, 10000, 0.02},
+                {0.26, targetedMetricsFile, 0.1, 10, 10000, 0.01}
         };
     }
 
     @Test(dataProvider = "TheoreticalSensitivityConstantDepthDataProvider")
-    public void testSensitivityAtConstantDepth(final double expected, final File metricsFile, final double alleleFraction, final int depth, final int sampleSize) throws Exception {
+    public void testSensitivityAtConstantDepth(final double expected, final File metricsFile, final double alleleFraction, final int depth, final int sampleSize, final double tolerance) throws Exception {
         // This tests Theoretical Sensitivity assuming a uniform depth with a distribution of base quality scores.
         // Because this only tests sensitivity at a constant depth, we use this for testing the code at high depths.
-        final double tolerance = 0.01;
         final MetricsFile Metrics = new MetricsFile();
         Metrics.read(new FileReader(metricsFile));
         final List<Histogram> histograms = Metrics.getAllHistograms();
