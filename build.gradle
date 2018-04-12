@@ -50,7 +50,7 @@ jacoco {
 final requiredJavaVersion = "8"
 final buildPrerequisitesMessage = "See https://github.com/broadinstitute/picard/blob/master/README.md#building-picard for information on how to build picard"
 // Ensure that we have the right JDK version, a clone of the git repository
-def ensureBuildPrerequisites(requiredJavaVersion, largeResourcesFolder, buildPrerequisitesMessage) {
+def ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage) {
     // Make sure we can get a ToolProvider class loader. If not we may have just a JRE, or a JDK from the future.
     if (ToolProvider.getSystemToolClassLoader() == null) {
         throw new GradleException(
@@ -62,7 +62,7 @@ def ensureBuildPrerequisites(requiredJavaVersion, largeResourcesFolder, buildPre
                 + "$buildPrerequisitesMessage")
     }
 }
-ensureBuildPrerequisites(requiredJavaVersion, largeResourcesFolder, buildPrerequisitesMessage)
+ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage)
 
 final htsjdkVersion = System.getProperty('htsjdk.version', '2.14.3')
 
