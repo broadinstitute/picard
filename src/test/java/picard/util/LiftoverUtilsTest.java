@@ -3,15 +3,13 @@ package picard.util;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
-import htsjdk.variant.variantcontext.VariantContextComparator;
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.vcf.VcfTestUtils;
 
-import java.lang.reflect.Array;
 import java.util.*;
-
-import static org.testng.Assert.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by farjoun on 1/16/18.
@@ -87,5 +85,36 @@ public class LiftoverUtilsTest {
     @Test(dataProvider = "swapRefAltData")
     public void testSwapRefAlt(final VariantContext swapMe, final VariantContext expected) {
         VcfTestUtils.assertEquals(LiftoverUtils.swapRefAlt(swapMe, annotationsToSwap, annotationsToDrop), expected);
+    }
+
+    @DataProvider
+    public Iterator<Object[]> allelesToStringData() {
+
+        final List<Object[]> tests = new ArrayList<>();
+        tests.add(new Object[]{Arrays.asList(Allele.create("A", true), Allele.create("G")), Arrays.asList("A", "G")});
+        tests.add(new Object[]{Arrays.asList(Allele.create("A", false), Allele.create("G")), Arrays.asList("A", "G")});
+        tests.add(new Object[]{Arrays.asList(Allele.create("T", true), Allele.create("T")), Arrays.asList("T", "T")});
+        tests.add(new Object[]{Arrays.asList(Allele.create("*", false), Allele.create("G")), Arrays.asList("*", "G")});
+        tests.add(new Object[]{Arrays.asList(Allele.create("ATG", true), Allele.create("G")), Arrays.asList("ATG", "G")});
+        tests.add(new Object[]{Arrays.asList(Allele.create("A", true), Allele.create("GGGTGT")), Arrays.asList("A", "GGGTGT")});
+        tests.add(new Object[]{Arrays.asList(Allele.create("A", false), Allele.create("A")), Arrays.asList("A", "A")});
+
+        tests.add(new Object[]{Arrays.asList(Allele.NO_CALL, Allele.NO_CALL), Arrays.asList(Allele.NO_CALL_STRING, Allele.NO_CALL_STRING)});
+        tests.add(new Object[]{Arrays.asList(Allele.SPAN_DEL, Allele.create("A", true)), Arrays.asList(Allele.SPAN_DEL_STRING, "A")});
+        tests.add(new Object[]{Arrays.asList(Allele.create("A", true), Allele.create(".")), Arrays.asList("A", Allele.NO_CALL_STRING)});
+        tests.add(new Object[]{Arrays.asList(Allele.create("TT", true), Allele.create(".")), Arrays.asList("TT", Allele.NO_CALL_STRING)});
+
+        return tests.iterator();
+    }
+
+    @Test(dataProvider = "allelesToStringData")
+    public void testAllelesToString(final List<Allele> input, final List<String> output) {
+        Assert.assertEquals(LiftoverUtils.allelesToStringList(input), output);
+
+        //these should back-convert into the same alleles.
+        List<Allele> restoredAlleles = output.stream().map(Allele::create).collect(Collectors.toList());
+        for (int i = 0;i<input.size();i++){
+            Assert.assertTrue(restoredAlleles.get(i).basesMatch(input.get(i)));
+        }
     }
 }

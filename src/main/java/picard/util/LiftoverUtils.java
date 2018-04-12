@@ -108,9 +108,16 @@ public class LiftoverUtils {
         return builder.make();
     }
 
+    /**
+     * This is a utility method that will convert a list of alleles into a list of base strings.  Reference status
+     * is ignored when creating these strings (i.e. 'A', not 'A*').  These strings should be sufficient
+     * to recreate an Allele using Allele.create()
+     * @param alleles The list of alleles
+     * @return A list of strings representing the bases of the input alleles.
+     */
     protected static List<String> allelesToStringList(final List<Allele> alleles) {
         final List<String> ret = new ArrayList<>();
-        alleles.forEach(a -> ret.add(a.getDisplayString()));
+        alleles.forEach(a -> ret.add(a.isNoCall() ? Allele.NO_CALL_STRING : a.getDisplayString()));
         return ret;
     }
 
