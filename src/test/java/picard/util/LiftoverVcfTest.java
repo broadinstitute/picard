@@ -558,13 +558,12 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
     public Iterator<Object[]> indelFlipDataWithOriginalAllele() {
         final List<Object[]> tests = new ArrayList<>();
         indelFlipData().forEachRemaining(x -> {
-            if (x[2] == null){
+            if (x[2] == null) {
                 tests.add(x);
-            }
-            else {
+            } else {
                 VariantContext source = (VariantContext)x[0];
                 VariantContextBuilder result_builder = new VariantContextBuilder((VariantContext)x[2]);
-                result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, allelesToStringList(source.getAlleles()));
+                result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, LiftoverUtils.allelesToStringList(source.getAlleles()));
                 tests.add(new Object[]{x[0], x[1], result_builder.make()});
             }
         });
@@ -1073,12 +1072,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         VcfTestUtils.assertEquals(vcb == null ? null : vcb.make(), result);
     }
 
-    private List<String> allelesToStringList(final List<Allele> alleles) {
-        final List<String> ret = new ArrayList<>();
-        alleles.forEach(a -> ret.add(a.getDisplayString()));
-        return ret;
-    }
-
     @DataProvider(name = "noCallAndSymbolicData")
     public Iterator<Object[]> noCallAndSymbolicData() {
 
@@ -1129,7 +1122,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(CRef, T, DEL));
         result_builder.start(liftedStart).stop(liftedStart).alleles(CollectionUtil.makeList(GRef, A, DEL));
         result_builder.attribute(LiftoverVcf.ORIGINAL_START, start);
-        result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, allelesToStringList(builder.getAlleles()));
+        result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, LiftoverUtils.allelesToStringList(builder.getAlleles()));
         result_builder.attribute(LiftoverUtils.REV_COMPED_ALLELES, true);
 
         genotypeBuilder.alleles(CollectionUtil.makeList(T, DEL));
@@ -1146,7 +1139,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(CRef, T));
         result_builder.start(liftedStart).stop(liftedStart).alleles(CollectionUtil.makeList(GRef, A));
         result_builder.attribute(LiftoverVcf.ORIGINAL_START, start);
-        result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, allelesToStringList(builder.getAlleles()));
+        result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, LiftoverUtils.allelesToStringList(builder.getAlleles()));
         genotypeBuilder.alleles(CollectionUtil.makeList(T, Allele.NO_CALL));
         resultGenotypeBuilder.alleles(CollectionUtil.makeList(A, Allele.NO_CALL));
         builder.genotypes(genotypeBuilder.make());
@@ -1170,7 +1163,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         Assert.assertEquals(vc.getAttribute(LiftoverVcf.ORIGINAL_CONTIG), source.getContig());
         Assert.assertEquals(vc.getAttribute(LiftoverVcf.ORIGINAL_START), source.getStart());
         Assert.assertTrue(source.getAlleles().equals(result.getAlleles()) != result.hasAttribute(LiftoverVcf.ORIGINAL_ALLELES));
-        if (!source.getAlleles().equals(result.getAlleles())){
+        if (!source.getAlleles().equals(result.getAlleles())) {
             List<String> resultAlleles = new ArrayList<>();
             source.getAlleles().forEach(a -> resultAlleles.add(a.getDisplayString()));
             Assert.assertEquals(resultAlleles, result.getAttributeAsStringList(LiftoverVcf.ORIGINAL_ALLELES, null));

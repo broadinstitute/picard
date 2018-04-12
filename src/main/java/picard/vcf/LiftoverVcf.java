@@ -238,14 +238,14 @@ public class LiftoverVcf extends CommandLineProgram {
     private static final List<VCFInfoHeaderLine> ATTRS = CollectionUtil.makeList(
             new VCFInfoHeaderLine(ORIGINAL_CONTIG, 1, VCFHeaderLineType.String, "The name of the source contig/chromosome prior to liftover."),
             new VCFInfoHeaderLine(ORIGINAL_START, 1, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover."),
-            new VCFInfoHeaderLine(ORIGINAL_ALLELES, VCFHeaderLineCount.R, VCFHeaderLineType.String, "A list of the original alleles (including REF) of the variant prior to liftover.")
+            new VCFInfoHeaderLine(ORIGINAL_ALLELES, VCFHeaderLineCount.R, VCFHeaderLineType.String, "A list of the original alleles (including REF) of the variant prior to liftover.  If the alleles are identical, this attribute will be omitted.")
             );
 
     private VariantContextWriter rejects;
     private final Log log = Log.getInstance(LiftoverVcf.class);
     private SortingCollection<VariantContext> sorter;
 
-    private long failedLiftover = 0, failedAlleleCheck = 0, totalRecoveredBySwapRefAlt = 0, totalNotRecoveredSwapRefAlt = 0;
+    private long failedLiftover = 0, failedAlleleCheck = 0, totalTrackedAsSwapRefAlt = 0;
     private Map<String, Long> rejectsByContig = new TreeMap<>();
     private Map<String, Long> liftedByDestContig = new TreeMap<>();
     private Map<String, Long> liftedBySourceContig = new TreeMap<>();
@@ -421,9 +421,9 @@ public class LiftoverVcf extends CommandLineProgram {
         }
 
         if (RECOVER_SWAPPED_REF_ALT) {
-            log.info(totalRecoveredBySwapRefAlt, " variants were lifted by swapping REF/ALT alleles.");
+            log.info(totalTrackedAsSwapRefAlt, " variants were lifted by swapping REF/ALT alleles.");
         } else {
-            log.info(totalNotRecoveredSwapRefAlt, " variants with a swapped REF/ALT were identified, but were not recovered.  See RECOVER_SWAPPED_REF_ALT.");
+            log.warn(totalTrackedAsSwapRefAlt, " variants with a swapped REF/ALT were identified, but were not recovered.  See RECOVER_SWAPPED_REF_ALT and associated caveats.");
         }
 
         rejects.close();
@@ -492,11 +492,11 @@ public class LiftoverVcf extends CommandLineProgram {
                     // consider that the ref and the alt may have been swapped in a simple biallelic SNP
                     if (vc.isBiallelic() && vc.isSNP() && refString.equalsIgnoreCase(vc.getAlternateAllele(0).getBaseString())) {
                         if (RECOVER_SWAPPED_REF_ALT) {
-                            totalRecoveredBySwapRefAlt++;
+                            totalTrackedAsSwapRefAlt++;
                             addAndTrack(LiftoverUtils.swapRefAlt(vc, TAGS_TO_REVERSE, TAGS_TO_DROP), source);
                             return;
                         } else {
-                            totalNotRecoveredSwapRefAlt++;
+                            totalTrackedAsSwapRefAlt++;
                         }
                     }
                     mismatchesReference = true;

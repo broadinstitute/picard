@@ -102,12 +102,16 @@ public class LiftoverUtils {
         }
 
         if (writeOriginalAlleles && !source.getAlleles().equals(builder.getAlleles())) {
-            final List<String> alleles = new ArrayList<>();
-            source.getAlleles().forEach(a -> alleles.add(a.getDisplayString()));
-            builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, alleles);
+            builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, allelesToStringList(source.getAlleles()));
         }
 
         return builder.make();
+    }
+
+    protected static List<String> allelesToStringList(final List<Allele> alleles) {
+        final List<String> ret = new ArrayList<>();
+        alleles.forEach(a -> ret.add(a.getDisplayString()));
+        return ret;
     }
 
     protected static VariantContextBuilder liftSimpleVariantContext(VariantContext source, Interval target){
