@@ -63,9 +63,10 @@ public class LiftoverUtils {
      * @param target The target interval
      * @param refSeq The reference sequence, which should match the target interval
      * @param writeOriginalPosition If true, INFO field annotations will be added to store the original position and contig
+     * @param writeOriginalAlleles If true, an INFO field annotation will be added to store the original alleles in order.  This can be useful in the case of more complex liftovers, like reverse complements, left aligned indels or swapped REF/ALT
      * @return The lifted VariantContext.  This will be null if the input VariantContext could not be lifted.
      */
-    public static VariantContext liftVariant(final VariantContext source, final Interval target, final ReferenceSequence refSeq, final boolean writeOriginalPosition){
+    public static VariantContext liftVariant(final VariantContext source, final Interval target, final ReferenceSequence refSeq, final boolean writeOriginalPosition, final boolean writeOriginalAlleles){
         if (target == null) {
             return null;
         }
@@ -100,7 +101,24 @@ public class LiftoverUtils {
             builder.attribute(LiftoverVcf.ORIGINAL_START, source.getStart());
         }
 
+        if (writeOriginalAlleles && !source.getAlleles().equals(builder.getAlleles())) {
+            builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, allelesToStringList(source.getAlleles()));
+        }
+
         return builder.make();
+    }
+
+    /**
+     * This is a utility method that will convert a list of alleles into a list of base strings.  Reference status
+     * is ignored when creating these strings (i.e. 'A', not 'A*').  These strings should be sufficient
+     * to recreate an Allele using Allele.create()
+     * @param alleles The list of alleles
+     * @return A list of strings representing the bases of the input alleles.
+     */
+    protected static List<String> allelesToStringList(final List<Allele> alleles) {
+        final List<String> ret = new ArrayList<>();
+        alleles.forEach(a -> ret.add(a.isNoCall() ? Allele.NO_CALL_STRING : a.getDisplayString()));
+        return ret;
     }
 
     protected static VariantContextBuilder liftSimpleVariantContext(VariantContext source, Interval target){
