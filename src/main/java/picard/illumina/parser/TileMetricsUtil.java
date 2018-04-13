@@ -36,6 +36,8 @@ import picard.illumina.parser.readers.TileMetricsOutReader.IlluminaTileMetrics;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Utility for reading the tile data from an Illumina run directory's TileMetricsOut.bin file
@@ -56,10 +59,7 @@ import java.util.stream.Collectors;
 public class TileMetricsUtil {
 
     private static final Log log = Log.getInstance(TileMetricsUtil.class);
-    /**
-     * The cycle directory that contain the tile metrics output. (Cycle 25 for NovaSeq)
-     */
-    public static String CYCLE_CONTAINING_TILE_METRICS = "C25.1";
+
     /**
      * The path to the directory containing the tile metrics file relative to the basecalling directory.
      */
@@ -75,12 +75,31 @@ public class TileMetricsUtil {
     /**
      * Returns the path to the TileMetrics file given the basecalling directory.
      */
-    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, boolean isNovaSeq) {
+    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
+        return fileTileMetricsFile(illuminaRunDirectory, numCycles, isNovaSeq);
+    }
+
+    private static File fileTileMetricsFile(File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
+        Path interOpDir = illuminaRunDirectory.toPath().resolve(INTEROP_SUBDIRECTORY_NAME);
+        final List<Path> pathsToTest = new ArrayList<>();
+
+        pathsToTest.add(interOpDir.resolve(TILE_METRICS_OUT_FILE_NAME));
+
         if (isNovaSeq) {
-            return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME + File.separator + CYCLE_CONTAINING_TILE_METRICS), TILE_METRICS_OUT_FILE_NAME);
-        } else {
-            return new File(new File(illuminaRunDirectory, INTEROP_SUBDIRECTORY_NAME), TILE_METRICS_OUT_FILE_NAME);
+            // check cycles in reverse order.
+            pathsToTest.addAll(IntStream.range(1, numCycles + 1).map(i -> 1 + (numCycles - i)).mapToObj(
+                    cycleNum -> interOpDir.resolve(String.format("C%d.1/%s", cycleNum, TILE_METRICS_OUT_FILE_NAME)))
+                    .collect(Collectors.toList()));
         }
+
+        return pathsToTest.stream().filter(path -> Files.exists(path)).findFirst().orElseThrow(() -> {
+            StringBuilder message = new StringBuilder(
+                    String.format("No %s file found in %s", INTEROP_SUBDIRECTORY_NAME, interOpDir));
+            if (isNovaSeq) {
+                message.append(" or any of its cycle directories.");
+            }
+            return new IllegalStateException(message.toString());
+        }).toFile();
     }
 
     public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile,
