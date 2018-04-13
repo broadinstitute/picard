@@ -97,7 +97,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     public int COVERAGE_CAP = 200;
 
     @Argument(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
-    public int SAMPLE_SIZE=1000;
+    public int SAMPLE_SIZE=10000;
 
     @Argument(doc="Output for Theoretical Sensitivity metrics where the allele fractions are provided by the ALLELE_FRACTION argument.  Default is null.", optional = true)
     public File THEORETICAL_SENSITIVITY_OUTPUT;

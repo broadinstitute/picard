@@ -328,4 +328,27 @@ public class TheoreticalSensitivityTest {
 
         Assert.assertEquals(resultFromTS, resultFromTHS, tolerance);
     }
+
+    @DataProvider(name = "callingThresholdDataProvider")
+    public Object[][] callingThreshold() {
+        return new Object[][] {
+                // These values were tested with an independent implementation in R.
+                // Test a transition due to a change in the logOddsThreshold
+                {100, 10, 10*20, .1, 5.8, true},
+                {100, 10, 10*20, .1, 5.9, false},
+
+                // Test a transition due to change in average base quality from 20 to 21
+                {100, 10, 10*21, .1, 6.2, true},
+                {100, 10, 10*20, .1, 6.2, false},
+
+                // Test a transition due to change in total depth
+                {115, 10, 10*21, .1, 6.2, false},
+                {114, 10, 10*21, .1, 6.2, true}
+        };
+    }
+
+    @Test(dataProvider = "callingThresholdDataProvider")
+    public void testCallingThreshold(final int totalDepth, final int altDepth, final double sumOfAltQualities, final double alleleFraction, final double logOddsThreshold, final boolean expectedCall) {
+        Assert.assertEquals(TheoreticalSensitivity.isCalled(totalDepth, altDepth, sumOfAltQualities, alleleFraction, logOddsThreshold), expectedCall);
+    }
 }

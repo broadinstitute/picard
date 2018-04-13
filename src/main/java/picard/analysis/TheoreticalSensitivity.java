@@ -45,6 +45,7 @@ public class TheoreticalSensitivity {
     private static final int SAMPLING_MAX = 600; //prevent 'infinite' loops
     private static final int MAX_CONSIDERED_DEPTH = 10000; //no point in looking any deeper than this, otherwise GC overhead is too high.
     private static final int randomSeed = 51;
+    private static final int largeNumberOfDraws = 10; // The number of draws at which we believe a Gaussian approximation to sum random variables.
 
     /**
      * @param depthDistribution   the probability of depth n is depthDistribution[n] for n = 0, 1. . . N - 1
@@ -218,7 +219,7 @@ public class TheoreticalSensitivity {
      * @param logOddsThreshold Log odds threshold necessary for variant to be called
      * @return
      */
-    private static boolean isCalled(final int totalDepth, final int altDepth, final double sumOfAltQualities, final double alleleFraction, final double logOddsThreshold) {
+     static boolean isCalled(final int totalDepth, final int altDepth, final double sumOfAltQualities, final double alleleFraction, final double logOddsThreshold) {
         final double threshold = 10.0 * (altDepth * -Math.log10(alleleFraction) + (totalDepth - altDepth) * -Math.log10(1.0 - alleleFraction) + logOddsThreshold);
 
         return sumOfAltQualities > threshold;
@@ -236,37 +237,30 @@ public class TheoreticalSensitivity {
      * @param sampleSize sampleSize is the total number of simulations to run
      * @param alleleFraction the allele fraction to evaluate sensitivity at
      * @param randomSeed random number seed to use for random number generator
-     * @return
+     * @return Theoretical sensitivity for the given arguments at a constant depth.
      */
     public static double sensitivityAtConstantDepth(final int depth, final double[] qualityDistribution, final double logOddsThreshold, final int sampleSize, final double alleleFraction, final int randomSeed) {
         final RouletteWheel qualityRW = new RouletteWheel(trimDistribution(qualityDistribution));
-        final Random uniformRNG = new Random(randomSeed);
-
-        final Random r = new Random(randomSeed);
-
+        final Random randomNumberGenerator = new Random(randomSeed);
         final BinomialDistribution bd = new BinomialDistribution(depth, alleleFraction);
 
-        double averageQuality = IntStream.range(0, qualityDistribution.length-1).mapToDouble(n -> n * qualityDistribution[n]).sum();
-        double var = IntStream.range(0, qualityDistribution.length-1).mapToDouble(n -> qualityDistribution[n] * Math.pow(n - averageQuality, 2.0)).sum() / (qualityDistribution.length - 1);
-//        System.out.println(qualityDistribution);
-//        System.out.println("averageQuality = " + averageQuality + "  var = " + var);
-
-//        IntStream.range(0, qualityDistribution.length-1).forEach((n) -> {
-//            System.out.println(n + " " + qualityDistribution[n]);
-//        });
+        // Calculate mean and deviation of quality score distribution to enable Gaussian sampling below.
+        final double averageQuality = IntStream.range(0, qualityDistribution.length-1).mapToDouble(n -> n * qualityDistribution[n]).sum();
+        final double qualityScoreVariance = IntStream.range(0, qualityDistribution.length-1).mapToDouble(n -> qualityDistribution[n] * Math.pow(n - averageQuality, 2.0)).sum() / (qualityDistribution.length - 1);
 
         int calledVariants = 0;
         for (int k = 0; k < sampleSize; k++) {
-            final int altDepth = bd.inverseCumulativeProbability(uniformRNG.nextDouble());
+            final int altDepth = bd.inverseCumulativeProbability(randomNumberGenerator.nextDouble());
 
-            int sumOfQualities;
-            if(altDepth < 10) {
+            final int sumOfQualities;
+            if (altDepth < largeNumberOfDraws) {
+                // If the number of alt reads is "small" we draw from the actual base quality distribution.
                 sumOfQualities = IntStream.range(0, altDepth).map(n -> qualityRW.draw()).sum();
+            } else {
+                // If the number of alt reads is "large" we draw from a Gaussian approximation of the base
+                // quality distribution to speed up the code.
+                sumOfQualities = (int) (averageQuality * altDepth + randomNumberGenerator.nextGaussian() * qualityScoreVariance * altDepth);
             }
-            else {
-                sumOfQualities = (int) (averageQuality * altDepth + r.nextGaussian() * var * altDepth);
-            }
-            //System.out.println(sumOfQualities + " " + (averageQuality*altDepth+r.nextGaussian()*var*altDepth));
             if (isCalled(depth, altDepth, (double) sumOfQualities, alleleFraction, logOddsThreshold)) {
                 calledVariants++;
             }
@@ -282,7 +276,7 @@ public class TheoreticalSensitivity {
      * @param logOddsThreshold Log odds threshold necessary for variant to be called
      * @param sampleSize the total number of simulations to run
      * @param alleleFraction the allele fraction to evaluate sensitivity at
-     * @return
+     * @return Theoretical sensitivity for the given arguments at a constant depth.
      */
     public static double sensitivityAtConstantDepth(final int depth, final double[] qualityDistribution, final double logOddsThreshold, final int sampleSize, final double alleleFraction) {
         return sensitivityAtConstantDepth(depth, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction, randomSeed);
@@ -296,7 +290,7 @@ public class TheoreticalSensitivity {
      * @param sampleSize the total number of simulations to run
      * @param logOddsThreshold Log odds threshold necessary for variant to be called
      * @param alleleFraction the allele fraction to evaluate sensitivity at
-     * @return
+     * @return Theoretical sensitivity for the given arguments over a particular depth distribution.
      */
     public static double theoreticalSensitivity(final double[] depthDistribution, final double[] qualityDistribution,
                                                 final int sampleSize, final double logOddsThreshold, final double alleleFraction) {
@@ -323,8 +317,6 @@ public class TheoreticalSensitivity {
             double left = right;
             right = sensitivityAtConstantDepth(k, qualityDistribution, logOddsThreshold, sampleSize, alleleFraction);
             sensitivity += width * (left + right) / 2.0;
-            log.info("k = " + k + " of " + depthDistribution.length);
-
         }
         return sensitivity;
     }
@@ -376,6 +368,7 @@ public class TheoreticalSensitivity {
         sensitivityHistogram.setBinLabel("allele_fraction");
         sensitivityHistogram.setValueLabel("theoretical_sensitivity");
         for (Double alleleFraction : alleleFractions) {
+            log.info("Calculating theoretical sensitivity for AF = " + alleleFraction + ".");
             sensitivityHistogram.increment(alleleFraction, TheoreticalSensitivity.theoreticalSensitivity(depthDistribution, baseQualityDistribution, simulationSize, logOddsThreshold, alleleFraction));
         }
 
