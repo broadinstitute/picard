@@ -425,7 +425,6 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
                 program.INPUT = input;
-                program.setReferenceSequence(reference);
 
                 return program;
             }
@@ -485,7 +484,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     public File REF_FLAT;
 
     @Argument(doc="If a read maps to a sequence specified with this option, " +
-            "all the bases in the read are counted as ignored bases. These reads are not counted as ",
+            "all the bases in the read are counted as ignored bases.",
             optional = true)
     public Set<String> IGNORE_SEQUENCE = new HashSet<>();
 
