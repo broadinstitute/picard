@@ -49,7 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Utility for reading the tile data from an Illumina run directory's TileMetricsOut.bin file
@@ -87,12 +86,12 @@ public class TileMetricsUtil {
 
         if (isNovaSeq) {
             // check cycles in reverse order.
-            pathsToTest.addAll(IntStream.range(1, numCycles + 1).map(i -> 1 + (numCycles - i)).mapToObj(
-                    cycleNum -> interOpDir.resolve(String.format("C%d.1/%s", cycleNum, TILE_METRICS_OUT_FILE_NAME)))
-                    .collect(Collectors.toList()));
+            for (int i = numCycles; i > 0; i--) {
+                pathsToTest.add(interOpDir.resolve(String.format("C%d.1/%s", i, TILE_METRICS_OUT_FILE_NAME)));
+            }
         }
 
-        return pathsToTest.stream().filter(path -> Files.exists(path)).findFirst().orElseThrow(() -> {
+        return pathsToTest.stream().filter(Files::exists).findFirst().orElseThrow(() -> {
             StringBuilder message = new StringBuilder(
                     String.format("No %s file found in %s", INTEROP_SUBDIRECTORY_NAME, interOpDir));
             if (isNovaSeq) {
