@@ -35,7 +35,7 @@ import static java.lang.Math.log10;
  * @author Tim Fennell
  * @author Yossi Farjoun
  */
-abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbabilities {
+class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbabilities {
 
     // some derived classes might need to incorporate accumulated data before logLikelihood is usable.
     // use the getter to allow these classes to calculate the likelihood from the data.
@@ -48,6 +48,10 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
     private double[] posteriorProbabilities = new double[Genotype.values().length];
     private double[] shiftedLogPosteriors = new double[Genotype.values().length];
 
+    public HaplotypeProbabilitiesUsingLogLikelihoods(final HaplotypeProbabilities haplotypeProbabilities) {
+        super(haplotypeProbabilities.getHaplotype());
+        setLogLikelihoods(haplotypeProbabilities.getLogLikelihoods());
+    }
 
     public HaplotypeProbabilitiesUsingLogLikelihoods(final HaplotypeBlock haplotypeBlock) {
         super(haplotypeBlock);
@@ -74,7 +78,7 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
      * this object. Useful for when probabilities need to be merged to levels higher than the
      * read group, e.g. the sample or individual.
      *
-     * @param other Another haplotype probabilities object to merge in (must of the the same class and for the same HaplotypeBlock)
+     * @param other Another haplotype probabilities object to merge in
      */
     @Override
     public void merge(final HaplotypeProbabilities other) {

@@ -39,8 +39,8 @@ import java.util.Map;
  */
 public class HaplotypeBlock implements Comparable<HaplotypeBlock> {
     private final double maf;
-    private final Map<String, Snp> snpsByName    = new HashMap<>();
-    private final double[] haplotypeFrequencies  = new double[3];
+    private final Map<String, Snp> snpsByName   = new HashMap<>();
+    private final double[] haplotypeFrequencies = new double[3];
 
     private Snp firstSnp;
     private String chrom;
@@ -153,6 +153,41 @@ public class HaplotypeBlock implements Comparable<HaplotypeBlock> {
 
         return retval;
     }
+
+    public boolean overlaps(final HaplotypeBlock that) {
+        // speed up the general case
+        if (this.equals(that)) return true;
+
+        //
+        // a little extra boost
+        if (this.getFirstSnp().getName().equals( that.getFirstSnp().getName())) return true;
+
+        // any overlap is an indication of the two haplotype blocks overlapping
+        return this.getSnps().stream().map(Snp::getName).anyMatch(n -> that.getSnps().contains(n));
+    }
+
+    /**
+     * Checks if another haplotype block is compatible with this one. This compatibility
+     * enables the same haplotype block one two different references to be compared
+     * For this to happen, there needs to exist overlapping SNP names, and
+     * the SNPs that have the same names must have compatible Alleles. Alleles are compatible
+     * if they are one of the following:
+     * 1. Exactly identical (similar MAFs)
+     * 2. Swapped (A/T <--> T/A) (MAF <--> 1-MAF)
+     * 3. Complemented (A/C <--> T/G) (Similar MAFs)
+     * 4. Swapped and Complemented  (A/C <--> G/T) (MAF <--> 1-MAF)
+     * @param that the other {@link #HaplotypeBlock} that is being compared
+     * @return 0 if not compatible, 1 if compatible with no change, -1 if compatible but
+     * snps (and thus PLs) need to be swapped
+     */
+    public int isCompatible(final HaplotypeBlock that) {
+
+???????????
+        return 0;
+    }
+
+
+
 
     @Override public boolean equals(final Object o) {
         if (this == o) return true;

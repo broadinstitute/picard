@@ -87,5 +87,4 @@ public class HaplotypeProbabilitiesFromGenotypeLikelihoods extends HaplotypeProb
         // if we are here it means that there was a mismatch in alleles...
         assert true;
     }
-
 }

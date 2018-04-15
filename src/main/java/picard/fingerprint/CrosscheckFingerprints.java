@@ -653,7 +653,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 .collect(Collectors.toMap(
                         entry -> {
                             // merge the keys (unequal values are eliminated by merge).
-
                             final FingerprintIdDetails finalId = new FingerprintIdDetails();
                             entry.getValue().forEach(id -> finalId.merge(id.getKey()));
                             finalId.group = entry.getKey();
@@ -662,7 +661,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                         }, entry -> {
                             // merge the values by merging the fingerprints.
                             final FingerprintIdDetails firstDetail = entry.getValue().get(0).getKey();
-                            //use the "by" function to determine the "info" part of the fingerprint
+                            // use the "by" function to determine the "info" part of the fingerprint
                             final Fingerprint sampleFp = new Fingerprint(firstDetail.sample, null, by.apply(firstDetail));
                             entry.getValue().stream().map(Map.Entry::getValue).collect(Collectors.toSet()).forEach(sampleFp::merge);
                             return sampleFp;

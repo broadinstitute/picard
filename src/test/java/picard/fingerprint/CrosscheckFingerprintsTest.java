@@ -279,17 +279,17 @@ public class CrosscheckFingerprintsTest {
 
         Object[][] newTests = new Object[][]{
 
-                {NA12891_1_hg38_vcf, NA12891_1_hg38_vcf, 0, 1},
-                {NA12891_2_hg38_vcf, NA12891_2_hg38_vcf, 0, 1},
-                {NA12892_1_hg38_vcf, NA12892_1_hg38_vcf, 0, 1},
-                {NA12892_2_hg38_vcf, NA12892_2_hg38_vcf, 0, 1},
-                {NA12891_1_vcf, NA12891_1_hg38_vcf, 0, 2 * 2},
+//                {NA12891_1_hg38_vcf, NA12891_1_hg38_vcf, 0, 1},
+//                {NA12891_2_hg38_vcf, NA12891_2_hg38_vcf, 0, 1},
+//                {NA12892_1_hg38_vcf, NA12892_1_hg38_vcf, 0, 1},
+//                {NA12892_2_hg38_vcf, NA12892_2_hg38_vcf, 0, 1},
+//                {NA12891_1_vcf, NA12891_1_hg38_vcf, 0, 2 * 2},
                 {NA12891_2_vcf, NA12891_2_hg38_vcf, 0, 2 * 2},
-                {NA12892_1_vcf, NA12892_1_hg38_vcf, 0, 2 * 2},
-                {NA12892_2_vcf, NA12892_2_hg38_vcf, 0, 2 * 2},
+//                {NA12892_1_vcf, NA12892_1_hg38_vcf, 0, 2 * 2},
+//                {NA12892_2_vcf, NA12892_2_hg38_vcf, 0, 2 * 2},
         };
         final List<Object[]> allTests = new ArrayList<>();
-        allTests.addAll(tests);
+   //     allTests.addAll(tests);
         allTests.addAll(Arrays.asList(newTests));
         return allTests.iterator();
     }

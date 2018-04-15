@@ -25,7 +25,6 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.*;
-import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.util.*;
@@ -37,6 +36,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import picard.PicardException;
 import picard.util.AlleleSubsettingUtils;
+import picard.util.MathUtil;
 import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
@@ -45,6 +45,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static htsjdk.samtools.SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES;
 
@@ -178,7 +179,6 @@ public class FingerprintChecker {
      * @param specificSample  - null to load genotypes for all samples contained in the file or the name
      *                        of an individual sample to load (and exclude all others).
      * @return a Map of Sample name to Fingerprint
-     *
      */
     public Map<String, Fingerprint> loadFingerprintsFromNonIndexedVcf(final Path fingerprintFile, final String specificSample) {
         final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
@@ -221,9 +221,9 @@ public class FingerprintChecker {
                 samples.forEach(s -> fingerprints.put(s, new Fingerprint(s, source, null)));
             }
             try {
-                getFingerprintFromVc(fingerprints, ctx);
+                addLiklihoodFromVcToFingerprint(fingerprints, ctx);
             } catch (final IllegalArgumentException e) {
-                log.warn(e,"There was a genotyping error in File: " + source.toUri().toString() + "\n" + e.getMessage());
+                log.warn(e, "There was a genotyping error in File: " + source.toUri().toString() + "\n" + e.getMessage());
             }
         }
 
@@ -278,7 +278,7 @@ public class FingerprintChecker {
      * @param fingerprints a map from Sample to fingerprint
      * @param ctx          the VC from which to extract (part of ) a fingerprint
      */
-    private void getFingerprintFromVc(final Map<String, Fingerprint> fingerprints, final VariantContext ctx) throws IllegalArgumentException {
+    private void addLiklihoodFromVcToFingerprint(final Map<String, Fingerprint> fingerprints, final VariantContext ctx) throws IllegalArgumentException {
         final HaplotypeBlock h = this.haplotypes.getHaplotype(ctx.getContig(), ctx.getStart());
         if (h == null) return;
 
@@ -325,17 +325,19 @@ public class FingerprintChecker {
             if (genotype == null) {
                 throw new IllegalArgumentException("Cannot find sample " + sample + " in provided file. ");
             }
+            final HaplotypeProbabilitiesUsingLogLikelihoods currentHp = new HaplotypeProbabilitiesFromGenotypeLikelihoods(h);
+            final HaplotypeProbabilitiesFromGenotypeLikelihoods hFp = new HaplotypeProbabilitiesFromGenotypeLikelihoods(h);
+            if (fp.containsKey(h)) {
+                currentHp.setLogLikelihoods(fp.get(h).getLogLikelihoods());
+            }
+
+            final double[] newPls;
             if (genotype.hasPL()) {
 
-                final HaplotypeProbabilitiesFromGenotypeLikelihoods hFp = new HaplotypeProbabilitiesFromGenotypeLikelihoods(h);
                 //do not modify the PL array directly fragile!!!!!
                 final int[] pls = genotype.getPL();
-                final int[] newPLs = new int[pls.length];
-                for (int i = 0; i < pls.length; i++) {
-                    newPLs[i] = Math.min(maximalPLDifference, pls[i]);
-                }
-                hFp.addToLogLikelihoods(snp, usableSnp.getAlleles(), GenotypeLikelihoods.fromPLs(newPLs).getAsVector());
-                fp.add(hFp);
+                newPls = MathUtil.sum(MathUtil.promote(pls), currentHp.getLogLikelihoods());
+
             } else {
 
                 if (genotype.isNoCall()) continue;
@@ -356,8 +358,18 @@ public class FingerprintChecker {
                         (!hom) ? accuracy : halfError,
                         (hom && allele == snp.getAllele2()) ? accuracy : halfError
                 };
-                fp.add(new HaplotypeProbabilitiesFromGenotype(snp, h, probs[0], probs[1], probs[2]));
+
+                final HaplotypeProbabilitiesFromGenotype genotypeHp = new HaplotypeProbabilitiesFromGenotype(snp, h, probs[0], probs[1], probs[2]);
+                newPls = MathUtil.sum(genotypeHp.getLogLikelihoods(), currentHp.getLogLikelihoods());
             }
+
+            final double min = MathUtil.min(newPls);
+            final int[] nomalizedPl = new int[newPls.length];
+            for (int i = 0; i < newPls.length; i++) {
+                nomalizedPl[i] = (int) Math.min(maximalPLDifference, Math.round(newPls[i] - min));
+            }
+            hFp.addToLogLikelihoods(snp, usableSnp.getAlleles(), GenotypeLikelihoods.fromPLs(nomalizedPl).getAsVector());
+            fp.add(hFp);
         }
     }
 
@@ -388,7 +400,7 @@ public class FingerprintChecker {
 
         sampleFpMap.forEach((key, value) -> {
             final FingerprintIdDetails fpId = new FingerprintIdDetails();
-            fpId.fileIndex=fileIndex;
+            fpId.fileIndex = fileIndex;
             fpId.sample = key;
             fpId.file = vcfFile.toUri().toString();
 
@@ -646,7 +658,7 @@ public class FingerprintChecker {
                 if (CheckFingerprint.isBamOrSam(p)) {
                     retval.putAll(fingerprintSamFile(p, intervals, index));
                 } else {
-                    retval.putAll(fingerprintVcf(p,index));
+                    retval.putAll(fingerprintVcf(p, index));
                 }
 
                 log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
@@ -806,9 +818,11 @@ public class FingerprintChecker {
 
         final double lminPExpected = Math.log10(minPExpected);
 
+        final Map<String, HaplotypeBlock> snpNameToHaplotypeBlockMap = new HashMap<>();
+        observedFp.keySet().forEach(h -> h.getSnps().forEach(s -> snpNameToHaplotypeBlockMap.put(s.getName(), h)));
+
         for (final HaplotypeProbabilities probs2 : expectedFp.values()) {
             final HaplotypeBlock haplotypeBlock = probs2.getHaplotype();
-
 
             final HaplotypeProbabilities probs1;
 
@@ -816,11 +830,30 @@ public class FingerprintChecker {
                 probs1 = observedFp.get(haplotypeBlock);
             } else {
                 // in the case that there are two haplotype maps (from different builds)
-                // we find the matching hapltype block by the id of the "firstSnp"
+                // we find the matching haplotype block by the id of the "firstSnp"
                 // this is slower so we only do this when the hashmap lookup has failed.
-                final Optional<HaplotypeBlock> matchingHaploBlock = observedFp.keySet().stream().filter(
-                        k -> k.getFirstSnp().getName().equals(haplotypeBlock.getFirstSnp().getName())).findAny();
-                probs1 = matchingHaploBlock.map(observedFp::get).orElse(null);
+
+                // TODO: this also gets triggered if a haplotype block is missing from one FP, slowing things down.
+                // TODO: possibly add a dictionary to the haplotypeBlock object and only trigger this code if
+                // TODO: the dictionaries differ?
+
+                final Set<HaplotypeBlock> matchingHaploBlocks = haplotypeBlock.getSnps().stream()
+                        .map(Snp::getName)
+                        .filter(snpNameToHaplotypeBlockMap::containsKey)
+                        .map(snpNameToHaplotypeBlockMap::get)
+                        .collect(Collectors.toSet());
+
+                if (matchingHaploBlocks.size() > 1) {
+                    final Iterator<HaplotypeBlock> haplotypeBlockIterator = matchingHaploBlocks.iterator();
+                    final HaplotypeBlock first = haplotypeBlockIterator.next();
+                    final HaplotypeBlock second = haplotypeBlockIterator.next();
+                    throw new IllegalArgumentException(String.format("Found two haplotypeblocks (%s and %s) that contain overlapping snps with a third: %s", first, second, haplotypeBlock));
+                }
+
+                probs1 = matchingHaploBlocks.stream()
+                        .map(observedFp::get)
+                        .findFirst()
+                        .orElse(null);
             }
 
             if (probs1 == null) continue;

@@ -211,6 +211,7 @@ public abstract class HaplotypeProbabilities {
      * @return log10(P(evidence| P(h_i)=P(h_i|otherHp) ) + c where c is an unknown constant
      */
     public double shiftedLogEvidenceProbabilityGivenOtherEvidence(final HaplotypeProbabilities otherHp) {
+        // TODO: replace strict equality with more lenient version.
         if (!this.haplotypeBlock.equals(otherHp.getHaplotype()) &&
                 !this.haplotypeBlock.getFirstSnp().getName().equals(otherHp.haplotypeBlock.getFirstSnp().getName())) {
             throw new IllegalArgumentException(String.format("Haplotypes are from different HaplotypeBlocks: %s and %s with names: %s and %s", this, otherHp, this.getRepresentativeSnp().getName(), otherHp.getRepresentativeSnp().getName()));
@@ -227,6 +228,7 @@ public abstract class HaplotypeProbabilities {
          */
         return shiftedLogEvidenceProbabilityUsingGenotypeFrequencies(otherHp.getPosteriorProbabilities());
     }
+
 
     /**
      * Returns log (p(evidence)) + c assuming that the prior on haplotypes is given by
