@@ -163,7 +163,7 @@ public class HaplotypeBlock implements Comparable<HaplotypeBlock> {
         if (this.getFirstSnp().getName().equals( that.getFirstSnp().getName())) return true;
 
         // any overlap is an indication of the two haplotype blocks overlapping
-        return this.getSnps().stream().map(Snp::getName).anyMatch(n -> that.getSnps().contains(n));
+        return this.getSnps().stream().map(Snp::getName).anyMatch(n -> that.getSnps().contains(n)); // BUG!!!
     }
 
     /**
