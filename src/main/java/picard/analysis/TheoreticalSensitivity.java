@@ -286,18 +286,20 @@ public class TheoreticalSensitivity {
     /**
      * Calculates the theoretical sensitivity with a given Phred-scaled quality score distribution and depth
      * distribution.
-     * @param depthDistribution Depth distribution to compute theoretical sensitivity over
+     * @param depthHistogram Depth histogram to compute theoretical sensitivity over
      * @param qualityHistogram Phred-scaled quality score histogram
      * @param sampleSize the total number of simulations to run
      * @param logOddsThreshold Log odds threshold necessary for variant to be called
      * @param alleleFraction the allele fraction to evaluate sensitivity at
      * @return Theoretical sensitivity for the given arguments over a particular depth distribution.
      */
-    public static double theoreticalSensitivity(final double[] depthDistribution, final Histogram<Integer> qualityHistogram,
+    public static double theoreticalSensitivity(final Histogram<Integer> depthHistogram, final Histogram<Integer> qualityHistogram,
                                                 final int sampleSize, final double logOddsThreshold, final double alleleFraction) {
         if (alleleFraction > 1.0 || alleleFraction < 0.0) {
             throw new PicardException("Allele fractions must be between 0 and 1.");
         }
+
+        final double[] depthDistribution = normalizeHistogram(depthHistogram);
 
         // Integrate sensitivity over depth distribution
         double sensitivity = 0.0;
@@ -357,7 +359,6 @@ public class TheoreticalSensitivity {
         if (theoreticalSensitivityOutput == null) return;
 
         final double logOddsThreshold = 6.2; // This threshold is used because it is the value used for MuTect2.
-        final double[] depthDistribution = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
 
         final TheoreticalSensitivityMetrics theoreticalSensitivityMetrics = new TheoreticalSensitivityMetrics();
 
@@ -368,7 +369,7 @@ public class TheoreticalSensitivity {
         sensitivityHistogram.setValueLabel("theoretical_sensitivity");
         for (Double alleleFraction : alleleFractions) {
             log.info("Calculating theoretical sensitivity for AF = " + alleleFraction + ".");
-            sensitivityHistogram.increment(alleleFraction, TheoreticalSensitivity.theoreticalSensitivity(depthDistribution, baseQHistogram, simulationSize, logOddsThreshold, alleleFraction));
+            sensitivityHistogram.increment(alleleFraction, TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, baseQHistogram, simulationSize, logOddsThreshold, alleleFraction));
         }
 
         // Write out results to file.
