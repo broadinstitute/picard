@@ -249,11 +249,9 @@ public class TheoreticalSensitivityTest {
         final List<Histogram> histograms = Metrics.getAllHistograms();
         final Histogram qualityHistogram = histograms.get(1);
 
-        final double[] qualityDistribution = TheoreticalSensitivity.normalizeHistogram(qualityHistogram);
-
         // We ensure that even using different random seeds we converge to roughly the same value.
         for (int i = 0;i < 3;i++) {
-            double result = TheoreticalSensitivity.sensitivityAtConstantDepth(depth, qualityDistribution, 3, sampleSize, alleleFraction, i);
+            double result = TheoreticalSensitivity.sensitivityAtConstantDepth(depth, qualityHistogram, 3, sampleSize, alleleFraction, i);
             Assert.assertEquals(result, expected, tolerance);
         }
     }
@@ -288,10 +286,9 @@ public class TheoreticalSensitivityTest {
         final Histogram depthHistogram = histograms.get(0);
         final Histogram qualityHistogram = histograms.get(1);
 
-        final double[] qualityDistribution = TheoreticalSensitivity.normalizeHistogram(qualityHistogram);
         final double[] depthDistribution = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
 
-        final double result = TheoreticalSensitivity.theoreticalSensitivity(depthDistribution, qualityDistribution, sampleSize, 3, alleleFraction);
+        final double result = TheoreticalSensitivity.theoreticalSensitivity(depthDistribution, qualityHistogram, sampleSize, 3, alleleFraction);
 
         Assert.assertEquals(result, expected, tolerance);
     }
@@ -323,7 +320,7 @@ public class TheoreticalSensitivityTest {
         final double[] qualityDistribution = TheoreticalSensitivity.normalizeHistogram(qualityHistogram);
         final double[] depthDistribution = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
 
-        final double resultFromTS = TheoreticalSensitivity.theoreticalSensitivity(depthDistribution, qualityDistribution, sampleSize, 3, 0.5);
+        final double resultFromTS = TheoreticalSensitivity.theoreticalSensitivity(depthDistribution, qualityHistogram, sampleSize, 3, 0.5);
         final double resultFromTHS = TheoreticalSensitivity.hetSNPSensitivity(depthDistribution, qualityDistribution, sampleSize, 3);
 
         Assert.assertEquals(resultFromTS, resultFromTHS, tolerance);
