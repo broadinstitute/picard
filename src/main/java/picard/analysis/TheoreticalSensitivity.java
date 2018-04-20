@@ -44,9 +44,9 @@ public class TheoreticalSensitivity {
     private static final Log log = Log.getInstance(TheoreticalSensitivity.class);
     private static final int SAMPLING_MAX = 600; //prevent 'infinite' loops
     private static final int MAX_CONSIDERED_DEPTH = 10000; //no point in looking any deeper than this, otherwise GC overhead is too high.
-    private static final int RANDOM_SEED = 51;
     private static final int LARGE_NUMBER_OF_DRAWS = 10; // The number of draws at which we believe a Gaussian approximation to sum random variables.
     private static final double DEPTH_BIN_WIDTH = 0.01;
+    static final int RANDOM_SEED = 51;
 
     /**
      * @param depthDistribution   the probability of depth n is depthDistribution[n] for n = 0, 1. . . N - 1
@@ -260,13 +260,28 @@ public class TheoreticalSensitivity {
             } else {
                 // If the number of alt reads is "large" we draw from a Gaussian approximation of the base
                 // quality distribution to speed up the code.
-                sumOfQualities = (int) (altDepth * averageQuality + randomNumberGenerator.nextGaussian() * Math.sqrt(altDepth) * qualityScoreStandardDistribution);
+                sumOfQualities = drawSumOfQScores(altDepth, averageQuality, qualityScoreStandardDistribution, randomNumberGenerator.nextGaussian());
             }
+
             if (isCalled(depth, altDepth, (double) sumOfQualities, alleleFraction, logOddsThreshold)) {
                 calledVariants++;
             }
         }
         return (double) calledVariants / sampleSize;
+    }
+
+    /**
+     * Simulates the sum of base qualities taken from reads that support the alternate allele by
+     * taking advantage of the fact that the sum of draws from a distribution tends towards a
+     * Gaussian per the Central Limit Theorem.
+     * @param altDepth Number of draws to take from base quality distribution
+     * @param averageQuality Average quality of alt bases
+     * @param qualityScoreStandardDistribution Sample standard deviation of base quality scores
+     * @param z number of standard deviation from the mean to take sum over
+     * @return Simulated sum of base qualities the support the alternate allele
+     */
+    static int drawSumOfQScores(final int altDepth, final double averageQuality, final double qualityScoreStandardDistribution, final double z) {
+        return (int) (altDepth * averageQuality + z * Math.sqrt(altDepth) * qualityScoreStandardDistribution);
     }
 
     /**
@@ -329,7 +344,7 @@ public class TheoreticalSensitivity {
      * @param distribution Distribution of base qualities
      * @return Distribution of base qualities removing any trailing zeros
      */
-    private static double[] trimDistribution(final double[] distribution) {
+     static double[] trimDistribution(final double[] distribution) {
         int endOfDistribution = 0;
 
         // Locate the index of the distribution where all the values remaining at

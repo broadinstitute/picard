@@ -26,16 +26,15 @@ package picard.analysis;
 
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
+import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
+import java.util.*;
 import java.io.FileReader;
 import java.io.File;
-import java.util.Scanner;
+import java.util.stream.IntStream;
 
 /**
  * Created by davidben on 5/18/15.
@@ -345,5 +344,44 @@ public class TheoreticalSensitivityTest {
     @Test(dataProvider = "callingThresholdDataProvider")
     public void testCallingThreshold(final int totalDepth, final int altDepth, final double sumOfAltQualities, final double alleleFraction, final double logOddsThreshold, final boolean expectedCall) {
         Assert.assertEquals(TheoreticalSensitivity.isCalled(totalDepth, altDepth, sumOfAltQualities, alleleFraction, logOddsThreshold), expectedCall);
+    }
+
+    @DataProvider(name = "sumOfGaussiansDataProvider")
+    public Object[][] sumOfGaussians() {
+        final File wgsMetricsFile = new File(TEST_DIR, "test_Solexa-332667.wgs_metrics");
+        final File targetedMetricsFile = new File(TEST_DIR, "test_25103070136.targeted_pcr_metrics");
+
+        // When we sum more base qualities from a particular distribution, it should look increasingly Gaussian.
+        return new Object[][]{
+                {wgsMetricsFile, 500, 0.03},
+                {wgsMetricsFile, 20,  0.05},
+                {wgsMetricsFile, 10,  0.10},
+                {targetedMetricsFile, 500, 0.03},
+                {targetedMetricsFile, 20, 0.05},
+                {targetedMetricsFile, 10, 0.10}
+        };
+    }
+
+    @Test(dataProvider = "sumOfGaussiansDataProvider")
+    public void testDrawSumOfQScores(final File metricsFile, final int altDepth, final double tolerance) throws Exception {
+        final MetricsFile Metrics = new MetricsFile();
+        Metrics.read(new FileReader(metricsFile));
+        final List<Histogram> histograms = Metrics.getAllHistograms();
+
+        final Histogram qualityHistogram = histograms.get(1);
+        final TheoreticalSensitivity.RouletteWheel qualityRW = new TheoreticalSensitivity.RouletteWheel(TheoreticalSensitivity.trimDistribution(TheoreticalSensitivity.normalizeHistogram(qualityHistogram)));
+
+        final Random randomNumberGenerator = new Random(TheoreticalSensitivity.RANDOM_SEED);
+
+        // Calculate mean and deviation of quality score distribution to enable Gaussian sampling below
+        final double averageQuality = qualityHistogram.getMean();
+        final double qualityScoreStandardDistribution = qualityHistogram.getStandardDeviation();
+
+        for(int k = 0;k < 1;k++) {
+            int sumOfQualitiesFull = IntStream.range(0, altDepth).map(n -> qualityRW.draw()).sum();
+            int sumOfQualities = TheoreticalSensitivity.drawSumOfQScores(altDepth, averageQuality, qualityScoreStandardDistribution, randomNumberGenerator.nextGaussian());
+
+            Assert.assertEquals(sumOfQualitiesFull, sumOfQualities, sumOfQualitiesFull*tolerance);
+        }
     }
 }
