@@ -23,12 +23,11 @@
  */
 package picard.illumina;
 
-import htsjdk.samtools.util.BufferedLineReader;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.LineReader;
-import htsjdk.samtools.util.StringUtil;
-import htsjdk.samtools.util.TestUtil;
+import htsjdk.samtools.SamFileValidator;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.*;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
@@ -48,16 +47,17 @@ import java.util.List;
  */
 public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
 
-    private static final File BASECALLS_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
-    private static final File DUAL_BASECALLS_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
-    private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/sams");
-    private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/sams");
-    private static final File TEST_DATA_DIR_WITH_4M_INDEX = new File("testdata/picard/illumina/25T8B25T/sams_with_4M");
-    private static final File TEST_DATA_DIR_WITH_4M4M_INDEX = new File("testdata/picard/illumina/25T8B25T/sams_with_4M4M");
-    private static final File TEST_DATA_DIR_WITH_CBCLS = new File("testdata/picard/illumina/151T8B8B151T_cbcl/Data/Intensities/BaseCalls");
-    private static final File DUAL_CBCL_TEST_DATA_DIR = new File("testdata/picard/illumina/151T8B8B151T_cbcl/sams");
-    private static final File TEST_DATA_HISEQX_SINGLE_LOCS = new File("testdata/picard/illumina/25T8B8B25T_hiseqx/Data/Intensities/BaseCalls");
-    private static final File HISEQX_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T_hiseqx/sams");
+    private static final File ILLUMINA_TEST_DIR = new File("testdata/picard/illumina/");
+    private static final File BASECALLS_DIR = new File(ILLUMINA_TEST_DIR, "25T8B25T/Data/Intensities/BaseCalls");
+    private static final File DUAL_BASECALLS_DIR = new File(ILLUMINA_TEST_DIR, "25T8B8B25T/Data/Intensities/BaseCalls");
+    private static final File TEST_DATA_DIR = new File(ILLUMINA_TEST_DIR, "25T8B25T/sams");
+    private static final File DUAL_TEST_DATA_DIR = new File(ILLUMINA_TEST_DIR, "25T8B8B25T/sams");
+    private static final File TEST_DATA_DIR_WITH_4M_INDEX = new File(ILLUMINA_TEST_DIR, "25T8B25T/sams_with_4M");
+    private static final File TEST_DATA_DIR_WITH_4M4M_INDEX = new File(ILLUMINA_TEST_DIR, "25T8B25T/sams_with_4M4M");
+    private static final File TEST_DATA_DIR_WITH_CBCLS = new File(ILLUMINA_TEST_DIR, "151T8B8B151T_cbcl/Data/Intensities/BaseCalls");
+    private static final File DUAL_CBCL_TEST_DATA_DIR = new File(ILLUMINA_TEST_DIR, "151T8B8B151T_cbcl/sams");
+    private static final File TEST_DATA_HISEQX_SINGLE_LOCS = new File(ILLUMINA_TEST_DIR, "25T8B8B25T_hiseqx/Data/Intensities/BaseCalls");
+    private static final File HISEQX_TEST_DATA_DIR = new File(ILLUMINA_TEST_DIR, "25T8B8B25T_hiseqx/sams");
 
     public String getCommandLineProgramName() {
         return IlluminaBasecallsToSam.class.getSimpleName();
@@ -70,9 +70,12 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(10, 10) == 0, "");
     }
 
+
+    // TODO: this test will break when https://github.com/samtools/htsjdk/issues/1108 is fixed (since the tab should be illegal).
+    // This is expected. When that happens add an expected exception to the test.
     @Test
-    public void testNonBarcoded() throws Exception {
-        final File outputBam = File.createTempFile("nonBarcoded.", ".sam");
+    public void testNonBarcodedWithDescriptionAndCenterWithInjection() throws Exception {
+        final File outputBam = File.createTempFile("nonBarcodedDescriptionNonBI.", ".sam");
         outputBam.deleteOnExit();
         final int lane = 1;
 
@@ -83,158 +86,18 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                 "OUTPUT=" + outputBam,
                 "RUN_BARCODE=HiMom",
                 "SAMPLE_ALIAS=HiDad",
+                "SEQUENCING_CENTER=TEST_CENTER123",
+                "DESCRIPTION=my favorite protocol has an INJECTION!\tPI:100",
                 "LIBRARY_NAME=Hello, World"
         }), 0);
-        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcoded.sam"));
+        final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
+        validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
+        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedDescriptionNonBIWithInjection.sam"));
     }
 
     @Test
-    public void testNonBarcodedWithMolecularIndex() throws Exception {
-        final File outputBam = File.createTempFile("nonBarcodedWithMI.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 1;
-
-        Assert.assertEquals(runPicardCommandLine(new String[]{
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "READ_STRUCTURE=25S8M25T",
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "LIBRARY_NAME=Hello, World"
-        }), 0);
-        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithMolecularIndex8M.sam"));
-    }
-
-    @Test
-    public void testNonBarcodedWithTagPerMolecularIndexIsNUll() throws Exception {
-        final File outputBam = File.createTempFile("nonBarcodedWithMI.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 1;
-
-        Assert.assertEquals(runPicardCommandLine(new String[]{
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "READ_STRUCTURE=25S8M25T",
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "LIBRARY_NAME=Hello, World",
-                "TAG_PER_MOLECULAR_INDEX=null"
-        }), 0);
-        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithMolecularIndex8M.sam"));
-    }
-
-    @Test
-    public void testNonBarcodedWithDualMoleclarIndex() throws Exception {
-        final File outputBam = File.createTempFile("nonBarcodedWithDualMI.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 1;
-
-        Assert.assertEquals(runPicardCommandLine(new String[]{
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "READ_STRUCTURE=25S4M4M25T",
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "LIBRARY_NAME=Hello, World"
-        }), 0);
-        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithMolecularIndex4M4M.sam"));
-    }
-
-    // This *should* store molecular indexes individually in ZA and ZB
-    @Test
-    public void testNonBarcodedWithTagPerMolecularIndexDual() throws Exception {
-        final File outputBam = File.createTempFile("nonBarcodedWithDualMI.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 1;
-
-        Assert.assertEquals(runPicardCommandLine(new String[]{
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "READ_STRUCTURE=25S4M4M25T",
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "LIBRARY_NAME=Hello, World",
-                "TAG_PER_MOLECULAR_INDEX=ZA",
-                "TAG_PER_MOLECULAR_INDEX=ZB"
-
-        }), 0);
-        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithTagPerMolecularIndex4M4M.sam"));
-    }
-
-    // Too many tags
-    @Test
-    public void testNonBarcodedWithTagPerMolecularIndexDualTooManyTags() throws Exception {
-        final File outputBam = File.createTempFile("nonBarcodedWithDualMI.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 1;
-
-        Assert.assertEquals(runPicardCommandLine(new String[]{
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "READ_STRUCTURE=25S4M4M25T",
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "LIBRARY_NAME=Hello, World",
-                "TAG_PER_MOLECULAR_INDEX=ZA",
-                "TAG_PER_MOLECULAR_INDEX=ZB",
-                "TAG_PER_MOLECULAR_INDEX=ZC"
-
-        }), 1);
-    }
-
-    // Too few tags
-    @Test
-    public void testNonBarcodedWithTagPerMolecularIndexDualTooFewTags() throws Exception {
-        final File outputBam = File.createTempFile("nonBarcodedWithDualMI.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 1;
-
-        Assert.assertEquals(runPicardCommandLine(new String[]{
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "READ_STRUCTURE=25S2M2M2M2M25T",
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "LIBRARY_NAME=Hello, World",
-                "TAG_PER_MOLECULAR_INDEX=ZA",
-                "TAG_PER_MOLECULAR_INDEX=ZB",
-                "TAG_PER_MOLECULAR_INDEX=ZC"
-
-        }), 1);
-    }
-
-    // Just the right number of tags
-    @Test
-    public void testNonBarcodedWithTagPerMolecularIndexDualFourMolecularIndexes() throws Exception {
-        final File outputBam = File.createTempFile("nonBarcodedWithDualMI.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 1;
-
-        Assert.assertEquals(runPicardCommandLine(new String[]{
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "READ_STRUCTURE=25S2M2M2M2M25T",
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "LIBRARY_NAME=Hello, World",
-                "TAG_PER_MOLECULAR_INDEX=ZA",
-                "TAG_PER_MOLECULAR_INDEX=ZB",
-                "TAG_PER_MOLECULAR_INDEX=ZC",
-                "TAG_PER_MOLECULAR_INDEX=ZD"
-        }), 0);
-        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithTagPerMolecularIndex2M2M2M2M.sam"));
-    }
-
-    @Test
-    public void testNonBarcodedTileSubset() throws Exception {
-        final File outputBam = File.createTempFile("nonBarcoded.", ".sam");
+    public void testNonBarcodedWithDescriptionAndCenter() throws Exception {
+        final File outputBam = File.createTempFile("nonBarcodedDescriptionNonBI.", ".sam");
         outputBam.deleteOnExit();
         final int lane = 1;
 
@@ -245,70 +108,109 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                 "OUTPUT=" + outputBam,
                 "RUN_BARCODE=HiMom",
                 "SAMPLE_ALIAS=HiDad",
-                "LIBRARY_NAME=Hello, World",
-                "FIRST_TILE=1201",
-                "TILE_LIMIT=1"
+                "SEQUENCING_CENTER=TEST_CENTER123",
+                "DESCRIPTION=my favorite protocol is the best!",
+                "LIBRARY_NAME=Hello, World"
         }), 0);
-        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedTileSubset.sam"));
+        final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
+        validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
+        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedDescriptionNonBI.sam"));
     }
 
-    @Test
-    public void testMultiplexed() throws Exception {
-        runStandardTest(1, "multiplexedBarcode.", "barcode.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR);
+    @DataProvider
+    public Object[][] molecularBarcodeData() {
+        return new Object[][]{
+                {"25S8S25T", null, null, "nonBarcoded.sam", 0},
+                {"25S8M25T", null, null, "nonBarcodedWithMolecularIndex8M.sam", 0},
+                {"25S8M25T", null, new String[]{"TAG_PER_MOLECULAR_INDEX=null"}, "nonBarcodedWithMolecularIndex8M.sam", 0},
+                {"25S4M4M25T", null, null, "nonBarcodedWithMolecularIndex4M4M.sam", 0},
+                {"25S4M4M25T", new String[]{"ZA", "ZB"}, null, "nonBarcodedWithTagPerMolecularIndex4M4M.sam", 0},
+                {"25S4M4M25T", new String[]{"ZA", "ZB", "ZC"}, null, null, 1},
+                {"25S2M2M2M2M25T", new String[]{"ZA", "ZB", "ZC"}, null, null, 1},
+                {"25S2M2M2M2M25T", new String[]{"ZA", "ZB", "ZC", "ZD"}, null, "nonBarcodedWithTagPerMolecularIndex2M2M2M2M.sam", 0},
+                {"25S8S25T", null, new String[]{"FIRST_TILE=1201", "TILE_LIMIT=1"}, "nonBarcodedTileSubset.sam", 0}
+        };
     }
 
-    @Test
-    public void testMultiplexedWith4MIndex() throws Exception {
-        runStandardTest(1, "multiplexedBarcode.", "barcode.params", 1, "25T8B4M21T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M_INDEX);
+    @Test(dataProvider = "molecularBarcodeData")
+    public void testMolecularBarcodes(final String readStructure, final String[] umiTags, final String[] extraArgs, final String expectedSam, final int expectedReturn) throws Exception {
+        final File outputBam = File.createTempFile("molecularBarcodeTest.", ".sam");
+        outputBam.deleteOnExit();
+        final int lane = 1;
+        List<String> args = new ArrayList<>(CollectionUtil.makeList(
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=" + readStructure,
+                "OUTPUT=" + outputBam,
+                "RUN_BARCODE=HiMom",
+                "SAMPLE_ALIAS=HiDad",
+                "SEQUENCING_CENTER=BI",
+                "LIBRARY_NAME=Hello, World"));
+
+        if (umiTags != null) {
+            for (final String umiTag : umiTags) {
+                args.add("TAG_PER_MOLECULAR_INDEX=" + umiTag);
+            }
+        }
+
+        if (extraArgs != null) {
+            args.addAll(Arrays.asList(extraArgs));
+        }
+
+        Assert.assertEquals(runPicardCommandLine(args), expectedReturn);
+        if (expectedSam != null) {
+            final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
+            validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
+            IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, expectedSam));
+        }
     }
 
-    @Test
-    public void testMultiplexedWith4M4MIndex() throws Exception {
-        runStandardTest(1, "multiplexedBarcode2.", "barcode.params", 1, "25T8B4M4M17T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M_INDEX);
+    @DataProvider
+    public Object[][] multiplexedData() {
+        final File testDirParent = TEST_DATA_DIR.getParentFile();
+        return new Object[][]{
+                {true, ClusterDataToSamConverter.PopulateBarcode.ALWAYS, false, new File(testDirParent, "sams_with_BC_ALWAYS")},
+                {false, ClusterDataToSamConverter.PopulateBarcode.INEXACT_MATCH, true, new File(testDirParent, "sams_with_INEXACT_MATCH_QUALITY")},
+                {true, ClusterDataToSamConverter.PopulateBarcode.ALWAYS, true, new File(testDirParent, "sams_with_BC_ALWAYS_QUALITY")},
+                {false, ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY, false, TEST_DATA_DIR}
+        };
     }
 
-    //Same as testMultiplexed except we use BARCODE_1 instead of BARCODE
-    @Test
-    public void testMultiplexedWithAlternateBarcodeName() throws Exception {
-        runStandardTest(1, "singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR);
+    @Test(dataProvider = "multiplexedData")
+    public void testMultiplexed(final boolean includeBcInHeader, final ClusterDataToSamConverter.PopulateBarcode populateBarcode,
+                                final boolean includeBarcodeQuality, final File testDataDir) throws Exception {
+        runStandardTest(1, "multiplexedBarcode.", "barcode.params", 1, "25T8B25T", BASECALLS_DIR, testDataDir, null, includeBcInHeader, populateBarcode, includeBarcodeQuality);
     }
 
-    @Test
-    public void testDualBarcodes() throws Exception {
-        runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
+    @DataProvider
+    public Object[][] variousConfigurationsData() {
+        return new Object[][]{
+                {"multiplexedBarcode.", "barcode.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR, null},
+                {"multiplexedBarcode.", "barcode.params", 1, "25T8B4M21T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M_INDEX, null},
+                {"multiplexedBarcode2.", "barcode.params", 1, "25T8B4M4M17T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M_INDEX, null},
+                {"singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR, null},
+                {"dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, null},
+                {"cbclConvert.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, null},
+                {"hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null},
+                {"hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null},
+                {"dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, 1101},
+                {"cbclConvert.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, 1102}
+        };
     }
 
-    @Test
-    public void testCbclConvert() throws Exception {
-        runStandardTest(1, "cbclConvert.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR);
-    }
-
-    @Test
-    public void testHiseqxSingleLocs() throws Exception {
-        runStandardTest(1, "hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR);
-    }
-
-    @Test
-    public void testDualBarcodesSingleTile() throws Exception {
-        runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, 1101);
-    }
-
-    @Test
-    public void testCbclConvertSingleTile() throws Exception {
-        runStandardTest(1, "cbclConvert.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, 1102);
+    @Test(dataProvider = "variousConfigurationsData")
+    public void testVariousConfigurations(final String jobName, final String libraryParamsFile, final int nColumnFields, final String cigar, final File baseCallingDir, final File samDir, final Integer tile) throws Exception {
+        runStandardTest(1, jobName, libraryParamsFile, nColumnFields, cigar, baseCallingDir, samDir, tile, false, ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY, false);
     }
 
     /**
      * Ensures that a run missing a barcode from the parameters file throws an error.
-     * <p>
-     * TODO: This testcase isn't broken, but can spawn an issue with FileChannelJDKBugWorkAround since it expects
-     * an exception to be thrown.
      */
-    @Test(groups = {"broken"})
+    @Test
     public void testCorruptDataReturnCode() throws Exception {
         boolean exceptionThrown = false;
         try {
-            runStandardTest(9, "dualBarcode.", "negative_test.params", 2, "30T8B8B", BASECALLS_DIR, TEST_DATA_DIR);
+            runStandardTest(9, "dualBarcode.", "negative_test.params", 2, "30T8B8B", BASECALLS_DIR, TEST_DATA_DIR, null, false, ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY, false);
         } catch (Throwable e) {
             exceptionThrown = true;
         } finally {
@@ -319,7 +221,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     private void runStandardTest(final int lane, final String jobName, final String libraryParamsFile,
                                  final int concatNColumnFields, final String readStructure,
                                  final File baseCallsDir, final File testDataDir) throws Exception {
-        runStandardTest(lane, jobName, libraryParamsFile, concatNColumnFields, readStructure, baseCallsDir, testDataDir, null);
+        runStandardTest(lane, jobName, libraryParamsFile, concatNColumnFields, readStructure, baseCallsDir, testDataDir, null,false, ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY,false);
     }
 
     /**
@@ -330,11 +232,14 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
      * @param libraryParamsFile
      * @param concatNColumnFields
      * @param readStructure
-     * @throws Exception
+     * @param includeBcInHeader
+     * @param populateBarcode
+     * @param includeBarcodeQuality @throws Exception
      */
     private void runStandardTest(final int lane, final String jobName, final String libraryParamsFile,
                                  final int concatNColumnFields, final String readStructure,
-                                 final File baseCallsDir, final File testDataDir, final Integer tile) throws Exception {
+                                 final File baseCallsDir, final File testDataDir, final Integer tile, final boolean includeBcInHeader, final ClusterDataToSamConverter.PopulateBarcode populateBarcode,
+                                 final boolean includeBarcodeQuality) throws Exception {
         final Path outputDir = Files.createTempDirectory(jobName);
         try {
             final String tilePrefix = (tile != null) ? tile + "." : "";
@@ -367,11 +272,13 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
             args.add("RUN_BARCODE=HiMom");
             args.add("READ_STRUCTURE=" + readStructure);
             args.add("LIBRARY_PARAMS=" + libraryParams);
+            args.add("INCLUDE_BC_IN_RG_TAG=" + includeBcInHeader);
+            args.add("BARCODE_POPULATION_STRATEGY=" + populateBarcode.name());
+            args.add("INCLUDE_BARCODE_QUALITY=" + includeBarcodeQuality);
+
             if (tile != null) {
                 args.add("PROCESS_SINGLE_TILE=" + tile);
             }
-
-            Assert.assertEquals(runPicardCommandLine(args), 0);
 
             for (final File outputSam : samFiles) {
                 IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));

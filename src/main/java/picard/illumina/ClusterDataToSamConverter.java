@@ -29,6 +29,7 @@ import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SolexaNoiseFilter;
+import org.broadinstitute.barclay.argparser.CommandLineParser;
 import picard.PicardException;
 import picard.fastq.IlluminaReadNameEncoder;
 import picard.fastq.ReadNameEncoder;
@@ -47,21 +48,20 @@ import java.util.List;
  * Takes ClusterData provided by an IlluminaDataProvider into one or two SAMRecords,
  * as appropriate, and optionally marking adapter sequence.  There is one converter per
  * IlluminaBasecallsToSam run, and all the TileProcessors use the same converter.
- * 
+ *
  * @author jburke@broadinstitute.org
  */
 public class ClusterDataToSamConverter implements
         IlluminaBasecallsConverter.ClusterDataConverter<IlluminaBasecallsToSam.SAMRecordsForCluster> {
-
 
     private final String readGroupId;
     private final SamRecordFilter filters = new SolexaNoiseFilter();
     private final boolean isPairedEnd;
     private final boolean hasSampleBarcode;
     private final boolean hasMolecularBarcode;
-    private final int [] templateIndices;
-    private final int [] sampleBarcodeIndices;
-    private final int [] molecularBarcodeIndices;
+    private final int[] templateIndices;
+    private final int[] sampleBarcodeIndices;
+    private final int[] molecularBarcodeIndices;
 
     private final AdapterMarker adapterMarker;
     private final int outputRecordsPerCluster;
@@ -72,26 +72,51 @@ public class ClusterDataToSamConverter implements
     // TODO: - https://github.com/broadinstitute/picard/issues/287
     // TODO: - HTS-spec issue: https://github.com/samtools/hts-specs/issues/109
     // TODO: - https://github.com/samtools/hts-specs/pull/119
-    private String molecularIndexTag             = "RX";
-    private String molecularIndexQualityTag      = "QX";
+    private String molecularIndexTag = "RX";
+    private String molecularIndexQualityTag = "QX";
     private final String molecularIndexDelimiter = "-";
-    private List<String> tagPerMolecularIndex    = Collections.emptyList();
+    private List<String> tagPerMolecularIndex = Collections.emptyList();
+
+    private PopulateBarcode barcodePopulationStrategy;
+    private boolean includeQualitiesWithBarcode;
+    // used also in IlluminaBasecallsToSam
+    enum PopulateBarcode implements CommandLineParser.ClpEnum {
+        ORPHANS_ONLY("Put barcodes only into the records that were not assigned to any declared barcode."),
+        INEXACT_MATCH("Put barcodes into records for which an exact match with a declared barcode was not found."),
+        ALWAYS("Put barcodes into all the records.");
+
+        private final String description;
+
+        PopulateBarcode(final String description) {
+            this.description = description;
+        }
+
+        @Override
+        public String getHelpDoc() {
+            return description;
+        }
+    }
 
     /**
      * Constructor
      *
-     * @param runBarcode        Used to construct read names.
-     * @param readGroupId       If non-null, set RG attribute on SAMRecord to this.
-     * @param readStructure     The expected structure (number of reads and indexes,
-     *                          and their length) in the read.
-     * @param adapters          The list of adapters to check for in the read
+     * @param runBarcode                Used to construct read names.
+     * @param readGroupId               If non-null, set RG attribute on SAMRecord to this.
+     * @param readStructure             The expected structure (number of reads and indexes,
+     *                                  and their length) in the read.
+     * @param adapters                  The list of adapters to check for in the read
+     * @param barcodePopulationStrategy
      */
     public ClusterDataToSamConverter(final String runBarcode,
                                      final String readGroupId,
                                      final ReadStructure readStructure,
-                                     final List<AdapterPair> adapters) {
+                                     final List<AdapterPair> adapters,
+                                     final PopulateBarcode barcodePopulationStrategy,
+                                     final boolean includeQualitiesWithBarcode) {
+        this.barcodePopulationStrategy = barcodePopulationStrategy;
+        this.includeQualitiesWithBarcode = includeQualitiesWithBarcode;
         this.readGroupId = readGroupId;
-        
+
         this.readNameEncoder = new IlluminaReadNameEncoder(runBarcode);
 
         this.isPairedEnd = readStructure.templates.length() == 2;
@@ -112,7 +137,7 @@ public class ClusterDataToSamConverter implements
     }
 
     /**
-     *  Sets the SAM tag to use to store the molecular index bases.  If multiple molecular indexes exist, it will concatenate them
+     * Sets the SAM tag to use to store the molecular index bases.  If multiple molecular indexes exist, it will concatenate them
      * and store them in this tag.
      */
     public ClusterDataToSamConverter withMolecularIndexTag(final String molecularIndexTag) {
@@ -126,7 +151,9 @@ public class ClusterDataToSamConverter implements
      * and store them in this tag.
      */
     public ClusterDataToSamConverter withMolecularIndexQualityTag(final String molecularIndexQualityTag) {
-        if (molecularIndexQualityTag == null) throw new IllegalArgumentException("Molecular index quality tag was null");
+        if (molecularIndexQualityTag == null) {
+            throw new IllegalArgumentException("Molecular index quality tag was null");
+        }
         this.molecularIndexQualityTag = molecularIndexQualityTag;
         return this;
     }
@@ -137,7 +164,9 @@ public class ClusterDataToSamConverter implements
      * in the last tag.  If more tags are provided than molecular indexes found, the additional tags will not be used.
      */
     public ClusterDataToSamConverter withTagPerMolecularIndex(final List<String> tagPerMolecularIndex) {
-        if (tagPerMolecularIndex == null) throw new IllegalArgumentException("Null given for tagPerMolecularIndex");
+        if (tagPerMolecularIndex == null) {
+            throw new IllegalArgumentException("Null given for tagPerMolecularIndex");
+        }
         this.tagPerMolecularIndex = tagPerMolecularIndex;
         return this;
     }
@@ -146,7 +175,7 @@ public class ClusterDataToSamConverter implements
      * Creates a new SAM record from the basecall data
      */
     private SAMRecord createSamRecord(final ReadData readData, final String readName, final boolean isPf, final boolean firstOfPair,
-                                      final String unmatchedBarcode,
+                                      final String unmatchedBarcode, final String barcodeQuality,
                                       final List<String> molecularIndexes, final List<String> molecularIndexQualities) {
         final SAMRecord sam = new SAMRecord(null);
         sam.setReadName(readName);
@@ -171,10 +200,12 @@ public class ClusterDataToSamConverter implements
             sam.setAttribute(SAMTag.RG.name(), readGroupId);
         }
 
-        // If it's a barcoded run and the read isn't assigned to a barcode, then add the barcode
-        // that was read as an optional tag
+        // If it's a barcoded run and it has been decided that the original BC value should be added to the record, do it
         if (unmatchedBarcode != null) {
             sam.setAttribute(SAMTag.BC.name(), unmatchedBarcode);
+            if (barcodeQuality != null ) {
+                sam.setAttribute(SAMTag.QT.name(), barcodeQuality);
+            }
         }
 
         if (!molecularIndexes.isEmpty()) {
@@ -206,13 +237,24 @@ public class ClusterDataToSamConverter implements
         final String readName = readNameEncoder.generateReadName(cluster, null); // Use null here to prevent /1 or /2 suffixes on read name.
 
         // Get and transform the unmatched barcode, if any, to store with the reads
-        String unmatchedBarcode = null;
-        if (hasSampleBarcode && cluster.getMatchedBarcode() == null) {
-            final byte[][] barcode = new byte[sampleBarcodeIndices.length][];
-            for (int i = 0; i < sampleBarcodeIndices.length; i++) {
-                barcode[i] = cluster.getRead(sampleBarcodeIndices[i]).getBases();
+        final String unmatchedBarcode;
+        final String barcodeQuality;
+        if (hasSampleBarcode) {
+            if (this.barcodePopulationStrategy == PopulateBarcode.ALWAYS ||
+                    this.barcodePopulationStrategy == PopulateBarcode.ORPHANS_ONLY && cluster.getMatchedBarcode() == null ||
+                    this.barcodePopulationStrategy == PopulateBarcode.INEXACT_MATCH && !getUnmatchedBarcode(cluster, false).equals(cluster.getMatchedBarcode())) {
+                unmatchedBarcode = getUnmatchedBarcode(cluster, true);
+            } else {
+                unmatchedBarcode = null;
             }
-            unmatchedBarcode = IlluminaUtil.barcodeSeqsToString(barcode).replace('.', 'N'); //TODO: This has a separator, where as in other places we do not use a separator
+        } else {
+            unmatchedBarcode = null;
+        }
+
+        if (unmatchedBarcode != null && includeQualitiesWithBarcode){
+            barcodeQuality = getBarcodeQuality(cluster);
+        } else {
+            barcodeQuality = null;
         }
 
         final List<String> molecularIndexes;
@@ -230,14 +272,29 @@ public class ClusterDataToSamConverter implements
         }
 
         final SAMRecord firstOfPair = createSamRecord(
-            cluster.getRead(templateIndices[0]), readName, cluster.isPf(), true, unmatchedBarcode, molecularIndexes, molecularIndexQualities);
+                cluster.getRead(templateIndices[0]),
+                readName,
+                cluster.isPf(),
+                true,
+                unmatchedBarcode,
+                barcodeQuality,
+                molecularIndexes,
+                molecularIndexQualities);
         ret.records[0] = firstOfPair;
+
 
         SAMRecord secondOfPair = null;
 
-        if(isPairedEnd) {
-            secondOfPair  = createSamRecord(
-                cluster.getRead(templateIndices[1]), readName, cluster.isPf(), false, unmatchedBarcode, molecularIndexes, molecularIndexQualities);
+        if (isPairedEnd) {
+            secondOfPair = createSamRecord(
+                    cluster.getRead(templateIndices[1]),
+                    readName,
+                    cluster.isPf(),
+                    false,
+                    unmatchedBarcode,
+                    barcodeQuality,
+                    molecularIndexes,
+                    molecularIndexQualities);
             ret.records[1] = secondOfPair;
         }
 
@@ -245,11 +302,31 @@ public class ClusterDataToSamConverter implements
             // Clip the read
             if (isPairedEnd) {
                 adapterMarker.adapterTrimIlluminaPairedReads(firstOfPair, secondOfPair);
-            }
-            else {
+            } else {
                 adapterMarker.adapterTrimIlluminaSingleRead(firstOfPair);
             }
         }
         return ret;
+    }
+
+    private String getBarcodeQuality(ClusterData cluster) {
+        final String[] barcodeQ = new String[sampleBarcodeIndices.length];
+        for (int i = 0; i < sampleBarcodeIndices.length; i++) {
+            barcodeQ[i] = SAMUtils.phredToFastq(cluster.getRead(sampleBarcodeIndices[i]).getQualities());
+        }
+        return String.join("~", barcodeQ);
+    }
+
+    private String getUnmatchedBarcode(ClusterData cluster, boolean withSeparator) {
+        final byte[][] barcode = new byte[sampleBarcodeIndices.length][];
+        for (int i = 0; i < sampleBarcodeIndices.length; i++) {
+            barcode[i] = cluster.getRead(sampleBarcodeIndices[i]).getBases();
+        }
+        if (withSeparator) {
+            //TODO: This has a separator, where as in other places we do not use a separator
+            return IlluminaUtil.barcodeSeqsToString(barcode).replace('.', 'N');
+        } else {
+            return IlluminaUtil.byteArrayToString(barcode, "").replace('.', 'N');
+        }
     }
 }
