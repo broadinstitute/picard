@@ -247,7 +247,7 @@ public class TheoreticalSensitivity {
 
         // Calculate mean and deviation of quality score distribution to enable Gaussian sampling below
         final double averageQuality = qualityHistogram.getMean();
-        final double qualityScoreStandardDistribution = qualityHistogram.getStandardDeviation();
+        final double standardDeviationQuality = qualityHistogram.getStandardDeviation();
 
         int calledVariants = 0;
         for (int k = 0; k < sampleSize; k++) {
@@ -260,7 +260,7 @@ public class TheoreticalSensitivity {
             } else {
                 // If the number of alt reads is "large" we draw from a Gaussian approximation of the base
                 // quality distribution to speed up the code.
-                sumOfQualities = drawSumOfQScores(altDepth, averageQuality, qualityScoreStandardDistribution, randomNumberGenerator.nextGaussian());
+                sumOfQualities = drawSumOfQScores(altDepth, averageQuality, standardDeviationQuality, randomNumberGenerator.nextGaussian());
             }
 
             if (isCalled(depth, altDepth, (double) sumOfQualities, alleleFraction, logOddsThreshold)) {

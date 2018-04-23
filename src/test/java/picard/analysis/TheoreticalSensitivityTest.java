@@ -375,11 +375,11 @@ public class TheoreticalSensitivityTest {
 
         // Calculate mean and deviation of quality score distribution to enable Gaussian sampling below
         final double averageQuality = qualityHistogram.getMean();
-        final double qualityScoreStandardDistribution = qualityHistogram.getStandardDeviation();
+        final double standardDeviationQuality = qualityHistogram.getStandardDeviation();
 
         for(int k = 0;k < 1;k++) {
             int sumOfQualitiesFull = IntStream.range(0, altDepth).map(n -> qualityRW.draw()).sum();
-            int sumOfQualities = TheoreticalSensitivity.drawSumOfQScores(altDepth, averageQuality, qualityScoreStandardDistribution, randomNumberGenerator.nextGaussian());
+            int sumOfQualities = TheoreticalSensitivity.drawSumOfQScores(altDepth, averageQuality, standardDeviationQuality, randomNumberGenerator.nextGaussian());
 
             Assert.assertEquals(sumOfQualitiesFull, sumOfQualities, sumOfQualitiesFull*tolerance);
         }
