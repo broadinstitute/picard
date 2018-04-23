@@ -276,12 +276,12 @@ public class TheoreticalSensitivity {
      * Gaussian per the Central Limit Theorem.
      * @param altDepth Number of draws to take from base quality distribution
      * @param averageQuality Average quality of alt bases
-     * @param qualityScoreStandardDistribution Sample standard deviation of base quality scores
+     * @param standardDeviationQuality Sample standard deviation of base quality scores
      * @param z number of standard deviation from the mean to take sum over
      * @return Simulated sum of base qualities the support the alternate allele
      */
-    static int drawSumOfQScores(final int altDepth, final double averageQuality, final double qualityScoreStandardDistribution, final double z) {
-        return (int) (altDepth * averageQuality + z * Math.sqrt(altDepth) * qualityScoreStandardDistribution);
+    static int drawSumOfQScores(final int altDepth, final double averageQuality, final double standardDeviationQuality, final double z) {
+        return (int) (altDepth * averageQuality + z * Math.sqrt(altDepth) * standardDeviationQuality);
     }
 
     /**
