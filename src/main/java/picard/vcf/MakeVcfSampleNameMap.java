@@ -1,6 +1,7 @@
 package picard.vcf;
 
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.TribbleException;
 import htsjdk.tribble.readers.LineIterator;
@@ -66,11 +67,16 @@ public class MakeVcfSampleNameMap extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file to write the sample-name map to.")
     public File OUTPUT;
 
+    private static final Log log = Log.getInstance(MakeVcfSampleNameMap.class);
+
     @Override
     protected int doWork() {
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final Map<String, String> nameMap = new HashMap<>(INPUT.size());
+        // For building the output-map without sample-name collisions.
+        final Map<String, String> pathToNameMap = new HashMap<>(INPUT.size());
+        // For detecting sample-name collisions, so we can warn about them.
+        final Map<String, String> nameToPathMap = new HashMap<>(INPUT.size());
 
         for (final String variantPathString : INPUT) {
             final Path variantPath = getVariantPath(variantPathString);
@@ -83,15 +89,16 @@ public class MakeVcfSampleNameMap extends CommandLineProgram {
             }
 
             final String sampleName = header.getGenotypeSamples().get(0);
-            final String previousPath = nameMap.put(sampleName, variantPathString);
+            pathToNameMap.put(variantPathString, sampleName);
+            final String previousPath = nameToPathMap.put(sampleName, variantPathString);
             if (previousPath != null) {
-                throw new PicardException("Duplicate sample: " + sampleName + ". Sample was found in both " +
-                        previousPath + " and in " + variantPath.toUri() + ".");
+                log.warn("Duplicate sample: " + sampleName + ". Sample was found in both " +
+                        previousPath + " and in " + variantPathString);
             }
         }
 
         final List<String> mapLines = new ArrayList<>(INPUT.size());
-        nameMap.forEach((name, path) -> mapLines.add(name + "\t" + path));
+        pathToNameMap.forEach((path, name) -> mapLines.add(path + "\t" + name));
 
         try {
             Files.write(OUTPUT.toPath(), mapLines);

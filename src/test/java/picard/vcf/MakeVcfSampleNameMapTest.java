@@ -52,16 +52,4 @@ public class MakeVcfSampleNameMapTest extends CommandLineProgramTest {
         final MakeVcfSampleNameMap clp = new MakeVcfSampleNameMap();
         clp.instanceMain(args);
     }
-
-    @Test(expectedExceptions = PicardException.class)
-    public void testFailSameSampleMultipleVcfs() {
-        final String[] args = new String[]{
-                "I=" + TEST_RESOURCE_DIR.getParent().resolve("NIST.selected.vcf").toString(),
-                "I=" + TEST_RESOURCE_DIR.getParent().resolve("mini_gvcf.vcf").toString(),
-                "O=" + TEST_RESOURCE_DIR.resolve("not-used").toString()
-        };
-
-        final MakeVcfSampleNameMap clp = new MakeVcfSampleNameMap();
-        clp.instanceMain(args);
-    }
 }
