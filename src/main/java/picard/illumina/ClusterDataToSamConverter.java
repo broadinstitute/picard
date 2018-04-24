@@ -43,6 +43,9 @@ import picard.util.IlluminaUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.StringJoiner;
+
+import static picard.util.IlluminaUtil.BARCODE_DELIMITER;
 
 /**
  * Takes ClusterData provided by an IlluminaDataProvider into one or two SAMRecords,
@@ -237,38 +240,28 @@ public class ClusterDataToSamConverter implements
         final String readName = readNameEncoder.generateReadName(cluster, null); // Use null here to prevent /1 or /2 suffixes on read name.
 
         // Get and transform the unmatched barcode, if any, to store with the reads
-        final String unmatchedBarcode;
-        final String barcodeQuality;
-        if (hasSampleBarcode) {
-            if (this.barcodePopulationStrategy == PopulateBarcode.ALWAYS ||
-                    this.barcodePopulationStrategy == PopulateBarcode.ORPHANS_ONLY && cluster.getMatchedBarcode() == null ||
-                    this.barcodePopulationStrategy == PopulateBarcode.INEXACT_MATCH && !getUnmatchedBarcode(cluster, false).equals(cluster.getMatchedBarcode())) {
-                unmatchedBarcode = getUnmatchedBarcode(cluster, true);
-            } else {
-                unmatchedBarcode = null;
-            }
-        } else {
-            unmatchedBarcode = null;
+        String unmatchedBarcode = null;
+        if (hasSampleBarcode && (this.barcodePopulationStrategy == PopulateBarcode.ALWAYS ||
+                this.barcodePopulationStrategy == PopulateBarcode.ORPHANS_ONLY &&
+                        cluster.getMatchedBarcode() == null ||
+                this.barcodePopulationStrategy == PopulateBarcode.INEXACT_MATCH &&
+                        !getUnmatchedBarcode(cluster, false).equals(cluster.getMatchedBarcode()))) {
+            unmatchedBarcode = getUnmatchedBarcode(cluster, true);
         }
 
-        if (unmatchedBarcode != null && includeQualitiesWithBarcode){
+        String barcodeQuality = null;
+        if (unmatchedBarcode != null && includeQualitiesWithBarcode) {
             barcodeQuality = getBarcodeQuality(cluster);
-        } else {
-            barcodeQuality = null;
         }
 
-        final List<String> molecularIndexes;
-        final List<String> molecularIndexQualities;
+
+        final List<String> molecularIndexes = new ArrayList<>();
+        final List<String> molecularIndexQualities = new ArrayList<>();
         if (hasMolecularBarcode) {
-            molecularIndexes        = new ArrayList<>();
-            molecularIndexQualities = new ArrayList<>();
-            for (int i = 0; i < molecularBarcodeIndices.length; i++) {
-                molecularIndexes.add(new String(cluster.getRead(molecularBarcodeIndices[i]).getBases()).replace('.', 'N'));
-                molecularIndexQualities.add(SAMUtils.phredToFastq(cluster.getRead(molecularBarcodeIndices[i]).getQualities()));
+            for (int molecularBarcodeIndice : molecularBarcodeIndices) {
+                molecularIndexes.add(new String(cluster.getRead(molecularBarcodeIndice).getBases()).replace('.', 'N'));
+                molecularIndexQualities.add(SAMUtils.phredToFastq(cluster.getRead(molecularBarcodeIndice).getQualities()));
             }
-        } else {
-            molecularIndexes        = Collections.emptyList();
-            molecularIndexQualities = Collections.emptyList();
         }
 
         final SAMRecord firstOfPair = createSamRecord(
@@ -310,11 +303,12 @@ public class ClusterDataToSamConverter implements
     }
 
     private String getBarcodeQuality(ClusterData cluster) {
-        final String[] barcodeQ = new String[sampleBarcodeIndices.length];
-        for (int i = 0; i < sampleBarcodeIndices.length; i++) {
-            barcodeQ[i] = SAMUtils.phredToFastq(cluster.getRead(sampleBarcodeIndices[i]).getQualities());
+        final StringJoiner barcodeQ = new StringJoiner("~");
+
+        for (int sampleBarcodeIndex : sampleBarcodeIndices) {
+            barcodeQ.add(SAMUtils.phredToFastq(cluster.getRead(sampleBarcodeIndex).getQualities()));
         }
-        return String.join("~", barcodeQ);
+        return barcodeQ.toString();
     }
 
     private String getUnmatchedBarcode(ClusterData cluster, boolean withSeparator) {
