@@ -218,12 +218,6 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         }
     }
 
-    private void runStandardTest(final int lane, final String jobName, final String libraryParamsFile,
-                                 final int concatNColumnFields, final String readStructure,
-                                 final File baseCallsDir, final File testDataDir) throws Exception {
-        runStandardTest(lane, jobName, libraryParamsFile, concatNColumnFields, readStructure, baseCallsDir, testDataDir, null,false, ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY,false);
-    }
-
     /**
      * This test utility takes a libraryParamsFile and generates output sam files through IlluminaBasecallsToSam to compare against
      * preloaded test data
@@ -247,7 +241,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
             // Create barcode.params with output files in the temp directory
             final File libraryParams = new File(outputDir.toFile(), libraryParamsFile);
             libraryParams.deleteOnExit();
-            final List<File> samFiles = new ArrayList<File>();
+            final List<File> samFiles = new ArrayList<>();
             final LineReader reader = new BufferedLineReader(new FileInputStream(new File(testDataDir, libraryParamsFile)));
             final PrintWriter writer = new PrintWriter(libraryParams);
             final String header = reader.readLine();
@@ -271,6 +265,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
             args.add("LANE=" + lane);
             args.add("RUN_BARCODE=HiMom");
             args.add("READ_STRUCTURE=" + readStructure);
+            args.add("SEQUENCING_CENTER=BI");
             args.add("LIBRARY_PARAMS=" + libraryParams);
             args.add("INCLUDE_BC_IN_RG_TAG=" + includeBcInHeader);
             args.add("BARCODE_POPULATION_STRATEGY=" + populateBarcode.name());
@@ -279,6 +274,8 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
             if (tile != null) {
                 args.add("PROCESS_SINGLE_TILE=" + tile);
             }
+
+            Assert.assertEquals(runPicardCommandLine(args), 0);
 
             for (final File outputSam : samFiles) {
                 IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
