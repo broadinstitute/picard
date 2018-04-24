@@ -164,6 +164,9 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         // if there was an exception reading then purge the completion and writer queues and initiate shutdown.
         if(tileProcessingExecutor.exception != null) {
+            completedWorkExecutor.purge();
+            barcodeWriterThreads.values().forEach(ThreadPoolExecutor::purge);
+
             List<Runnable> tasksStillRunning = new ArrayList<>(completedWorkExecutor.shutdownNow());
             barcodeWriterThreads.values().forEach(executor -> tasksStillRunning.addAll(executor.shutdownNow()));
             throw new PicardException("Reading executor had exceptions " + tasksStillRunning.size()
