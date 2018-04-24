@@ -162,14 +162,11 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         awaitThreadPoolTermination("Reading executor", tileProcessingExecutor);
 
-        // if there was an exception reading then purge the completion and writer queues and initiate shutdown.
-        if(tileProcessingExecutor.exception != null) {
-            completedWorkExecutor.purge();
-            barcodeWriterThreads.values().forEach(ThreadPoolExecutor::purge);
-
-            List<Runnable> tasksStillRunning = new ArrayList<>(completedWorkExecutor.shutdownNow());
-            barcodeWriterThreads.values().forEach(executor -> tasksStillRunning.addAll(executor.shutdownNow()));
-            throw new PicardException("Reading executor had exceptions " + tasksStillRunning.size()
+        // if there was an exception reading then initiate an immediate shutdown.
+        if (tileProcessingExecutor.exception != null) {
+            int tasksStillRunning = completedWorkExecutor.shutdownNow().size();
+            tasksStillRunning += barcodeWriterThreads.values().stream().mapToLong(executor -> executor.shutdownNow().size()).sum();
+            throw new PicardException("Reading executor had exceptions. There were " + tasksStillRunning
                     + " tasks were still running or queued and have been cancelled.", tileProcessingExecutor.exception);
         } else {
             awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor);
