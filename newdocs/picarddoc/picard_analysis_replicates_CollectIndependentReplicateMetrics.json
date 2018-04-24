@@ -1,5 +1,5 @@
 {
-  "summary": "(Experimental) Estimates the rate of independent replication of reads within a bam.",
+  "summary": "Estimates the rate of independent replication of reads within a bam.",
   "arguments": [
     {
       "summary": "Barcode Quality SAM tag.",
@@ -395,6 +395,6 @@
   "description": "A CLP that, given a BAM and a VCF with genotypes of the same sample, estimates the rate of independent replication of reads within the bam.\n That is, it estimates the fraction of the reads which look like duplicates (in the MarkDuplicates sense of the word) but are actually\n independent observations of the data. In the presence of Unique Molecular Identifiers (UMIs), various metrics are collected regarding the\n utility of the UMI\u0027s for the purpose of increasing coverage.\n \u003cp\u003e\n The estimation is based on duplicate-sets of size 2 and 3 and gives separate estimates from each. The assumption is that the duplication\n rate (biological or otherwise) is independent of the duplicate-set size. A significant difference between the two rates may be an indication that\n this assumption is incorrect.\n \u003cp\u003e\n The duplicate sets are found using the mate-cigar tag (MC) which is added by picard.sam.MergeBamAlignment , or picard.sam.FixMateInformation.\n This program will not work without the MC tag.\n \u003cp\u003e\n Explanation of the calculation behind the estimation can be found in the IndependentReplicateMetric class.\n \u003cp\u003e\n The calculation Assumes a diploid organism (more accurately, assumes that only two alleles can appear at a HET site and that\n these two alleles will appear at equal probabilities. It requires as input a VCF with genotypes for the sample in question.\n\n NOTE: This class is very much in alpha stage, and still under heavy development (feel free to join!)",
   "name": "CollectIndependentReplicateMetrics",
   "group": "Diagnostics and Quality Control",
-  "beta": true,
-  "experimental": false
+  "beta": false,
+  "experimental": true
 }

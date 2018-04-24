@@ -619,6 +619,13 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<td>The name of the sequencing technology that produced the read.</td>
 				</tr>
 				<tr>
+					<td><a href="#--PROCESS_SINGLE_TILE">--PROCESS_SINGLE_TILE</a><br />
+					</td>
+					<!--<td>Integer</td> -->
+					<td>null</td>
+					<td>If set, process only the tile number given and append the tile number to the output file name.</td>
+				</tr>
+				<tr>
 					<td><a href="#--READ_GROUP_ID">--READ_GROUP_ID</a><br />
 								&nbsp;<em>-RG</em>
 					</td>
@@ -865,6 +872,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			<b>If set, this is the first tile to be processed (used for debugging).  Note that tiles are not processed in numerical order.</b><br />
 			
 		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>PROCESS_SINGLE_TILE</code>.</p>
 		<p>
 		<span class="label label-info ">Integer</span>
 			&nbsp;<span class="label">null</span>
@@ -1074,6 +1082,19 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">illumina</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PROCESS_SINGLE_TILE">--PROCESS_SINGLE_TILE </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>If set, process only the tile number given and append the tile number to the output file name.</b><br />
+			
+		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>FIRST_TILE</code>.</p>
+		<p>
+		<span class="label label-info ">Integer</span>
+			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--QUIET">--QUIET </a>
@@ -1311,7 +1332,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.18.2-SNAPSHOT built at 04-07-2018 11:07:13.
+        <p class="version">Picard version 2.18.3-SNAPSHOT built at 24-11-2018 09:11:24.
         </p>
 
 	</div>

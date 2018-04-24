@@ -182,6 +182,21 @@
       "options": []
     },
     {
+      "summary": "If the REF allele of the lifted site does not match the target genome, that variant is normally rejected. For bi-allelic SNPs, if this is set to true and the ALT allele equals the new REF allele, the REF and ALT alleles will be swapped.  This can rescue some variants; however, do this carefully as some annotations may become invalid, such as any that are alelle-specifc.  See also TAGS_TO_REVERSE and TAGS_TO_DROP.",
+      "name": "--RECOVER_SWAPPED_REF_ALT",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "The reference sequence (fasta) for the TARGET genome build (i.e., the new one.  The fasta file must have an accompanying sequence dictionary (.dict file).",
       "name": "--REFERENCE_SEQUENCE",
       "synonyms": "-R",
@@ -350,6 +365,21 @@
       "summary": "Warn on missing contig.",
       "name": "--WARN_ON_MISSING_CONTIG",
       "synonyms": "-WMC",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Write the original alleles for lifted variants to the INFO field.  If the alleles are identical, this attribute will be omitted.",
+      "name": "--WRITE_ORIGINAL_ALLELES",
+      "synonyms": "NA",
       "type": "boolean",
       "required": "no",
       "fulltext": "",

@@ -515,6 +515,13 @@
 					<td>If true, intervals failing due to match below LIFTOVER_MIN_MATCH will be logged as a warning to the console.</td>
 				</tr>
 				<tr>
+					<td><a href="#--RECOVER_SWAPPED_REF_ALT">--RECOVER_SWAPPED_REF_ALT</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>If the REF allele of the lifted site does not match the target genome, that variant is normally rejected. For bi-allelic SNPs, if this is set to true and the ALT allele equals the new REF allele, the REF and ALT alleles will be swapped.  This can rescue some variants; however, do this carefully as some annotations may become invalid, such as any that are alelle-specifc.  See also TAGS_TO_REVERSE and TAGS_TO_DROP.</td>
+				</tr>
+				<tr>
 					<td><a href="#--TAGS_TO_DROP">--TAGS_TO_DROP</a><br />
 					</td>
 					<!--<td>Collection[String]</td> -->
@@ -535,6 +542,13 @@
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Warn on missing contig.</td>
+				</tr>
+				<tr>
+					<td><a href="#--WRITE_ORIGINAL_ALLELES">--WRITE_ORIGINAL_ALLELES</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Write the original alleles for lifted variants to the INFO field.  If the alleles are identical, this attribute will be omitted.</td>
 				</tr>
 				<tr>
 					<td><a href="#--WRITE_ORIGINAL_POSITION">--WRITE_ORIGINAL_POSITION</a><br />
@@ -784,6 +798,18 @@
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--RECOVER_SWAPPED_REF_ALT">--RECOVER_SWAPPED_REF_ALT </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>If the REF allele of the lifted site does not match the target genome, that variant is normally rejected. For bi-allelic SNPs, if this is set to true and the ALT allele equals the new REF allele, the REF and ALT alleles will be swapped.  This can rescue some variants; however, do this carefully as some annotations may become invalid, such as any that are alelle-specifc.  See also TAGS_TO_REVERSE and TAGS_TO_DROP.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE </a>
 			 / <small>-R</small>
 		</h3>
@@ -930,6 +956,18 @@
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--WRITE_ORIGINAL_ALLELES">--WRITE_ORIGINAL_ALLELES </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Write the original alleles for lifted variants to the INFO field.  If the alleles are identical, this attribute will be omitted.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--WRITE_ORIGINAL_POSITION">--WRITE_ORIGINAL_POSITION </a>
 			 / <small>NA</small>
 		</h3>
@@ -951,7 +989,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.18.2-SNAPSHOT built at 04-07-2018 11:07:13.
+        <p class="version">Picard version 2.18.3-SNAPSHOT built at 24-11-2018 09:11:24.
         </p>
 
 	</div>

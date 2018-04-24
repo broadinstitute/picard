@@ -1,5 +1,5 @@
 {
-  "summary": "(Experimental) Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.  ",
+  "summary": "Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.  ",
   "arguments": [
     {
       "summary": "A file (with .pdf extension) to write the chart to.",
@@ -425,6 +425,6 @@
   "description": "",
   "name": "CollectWgsMetricsWithNonZeroCoverage",
   "group": "Diagnostics and Quality Control",
-  "beta": true,
-  "experimental": false
+  "beta": false,
+  "experimental": true
 }

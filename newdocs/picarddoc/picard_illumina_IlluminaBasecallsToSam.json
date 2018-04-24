@@ -377,6 +377,21 @@
       "options": []
     },
     {
+      "summary": "If set, process only the tile number given and append the tile number to the output file name.",
+      "name": "--PROCESS_SINGLE_TILE",
+      "synonyms": "NA",
+      "type": "Integer",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Whether to suppress job-summary info on System.err.",
       "name": "--QUIET",
       "synonyms": "NA",

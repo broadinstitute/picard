@@ -1,5 +1,5 @@
 {
-  "summary": "(Experimental) Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.",
+  "summary": "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.",
   "arguments": [
     {
       "summary": "Add PG tag to each read in a SAM or BAM",
@@ -652,6 +652,6 @@
   "description": "This is a simple tool to mark duplicates using the DuplicateSetIterator, DuplicateSet, and SAMRecordDuplicateComparator.\n \n Users should continue to use MarkDuplicates in general.  The main motivation of this tool was the fact that \n MarkDuplicates has many, many, many useful test cases, but few unit tests for validating individual duplicate sets. To\n test the DuplicateSetIterator, DuplicateSet, and SAMRecordDuplicateComparator, the most expedient method was to write\n this tool and make sure it behaves similarly to MarkDuplicates.  Not the best, I know, but good enough.  NH 06/25/2015.\n  \n \n See MarkDuplicates for more details.",
   "name": "SimpleMarkDuplicatesWithMateCigar",
   "group": "Read Data Manipulation",
-  "beta": true,
-  "experimental": false
+  "beta": false,
+  "experimental": true
 }
