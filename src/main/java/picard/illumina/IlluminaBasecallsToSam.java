@@ -173,9 +173,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Argument(doc = "The name of the sequencing center that produced the reads.  Used to set the @RG->CN header tag.")
     public String SEQUENCING_CENTER = null;
 
-    @Argument(doc = "Description of the readgroup.  Used to set the @RG->DS header tag.", optional = true)
-    public String DESCRIPTION = null;
-
     @Argument(doc = "The start date of the run.", optional = true)
     public Date RUN_START_DATE;
 
@@ -482,7 +479,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         params.put(SAMReadGroupRecord.PLATFORM_UNIT_TAG, platformUnit);
         if (SEQUENCING_CENTER != null) params.put(SAMReadGroupRecord.SEQUENCING_CENTER_TAG, SEQUENCING_CENTER);
         params.put(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG, RUN_START_DATE == null ? null : new Iso8601Date(RUN_START_DATE).toString());
-        if (DESCRIPTION != null) params.put(SAMReadGroupRecord.DESCRIPTION_TAG, DESCRIPTION);
 
         return params;
     }

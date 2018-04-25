@@ -71,10 +71,10 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     }
 
 
-    // TODO: this test will break when https://github.com/samtools/htsjdk/issues/1108 is fixed (since the tab should be illegal).
-    // This is expected. When that happens add an expected exception to the test.
+
+
     @Test
-    public void testNonBarcodedWithDescriptionAndCenterWithInjection() throws Exception {
+    public void testNonBarcodedWithCenter() throws Exception {
         final File outputBam = File.createTempFile("nonBarcodedDescriptionNonBI.", ".sam");
         outputBam.deleteOnExit();
         final int lane = 1;
@@ -87,29 +87,6 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                 "RUN_BARCODE=HiMom",
                 "SAMPLE_ALIAS=HiDad",
                 "SEQUENCING_CENTER=TEST_CENTER123",
-                "DESCRIPTION=my favorite protocol has an INJECTION!\tPI:100",
-                "LIBRARY_NAME=Hello, World"
-        }), 0);
-        final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
-        validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
-        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedDescriptionNonBIWithInjection.sam"));
-    }
-
-    @Test
-    public void testNonBarcodedWithDescriptionAndCenter() throws Exception {
-        final File outputBam = File.createTempFile("nonBarcodedDescriptionNonBI.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 1;
-
-        Assert.assertEquals(runPicardCommandLine(new String[]{
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "READ_STRUCTURE=25S8S25T",
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "SEQUENCING_CENTER=TEST_CENTER123",
-                "DESCRIPTION=my favorite protocol is the best!",
                 "LIBRARY_NAME=Hello, World"
         }), 0);
         final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
@@ -185,16 +162,18 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     @DataProvider
     public Object[][] variousConfigurationsData() {
         return new Object[][]{
-                {"multiplexedBarcode.", "barcode.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR, null},
-                {"multiplexedBarcode.", "barcode.params", 1, "25T8B4M21T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M_INDEX, null},
-                {"multiplexedBarcode2.", "barcode.params", 1, "25T8B4M4M17T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M_INDEX, null},
-                {"singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR, null},
-                {"dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, null},
-                {"cbclConvert.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, null},
-                {"hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null},
-                {"hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null},
-                {"dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, 1101},
-                {"cbclConvert.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, 1102}
+
+                {"multiplexedBarcode.", "barcode.params", 1, "25T8B25T", BASECALLS_DIR, new File(TEST_DATA_DIR.getParentFile(),"sams_with_DS"), null},
+//                {"multiplexedBarcode.", "barcode.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR, null},
+//                {"multiplexedBarcode.", "barcode.params", 1, "25T8B4M21T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M_INDEX, null},
+//                {"multiplexedBarcode2.", "barcode.params", 1, "25T8B4M4M17T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M_INDEX, null},
+//                {"singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR, null},
+//                {"dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, null},
+//                {"cbclConvert.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, null},
+//                {"hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null},
+//                {"hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null},
+//                {"dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, 1101},
+//                {"cbclConvert.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, 1102}
         };
     }
 
