@@ -227,14 +227,6 @@ public abstract class CommandLineProgram {
 
         SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
 
-        if (!USE_JDK_DEFLATER) {
-            BlockCompressedOutputStream.setDefaultDeflaterFactory(new IntelDeflaterFactory());
-        }
-
-        if (!USE_JDK_INFLATER) {
-            BlockGunzipper.setDefaultInflaterFactory(new IntelInflaterFactory());
-        }
-
         for (final File f : TMP_DIR) {
             // Intentionally not checking the return values, because it may be that the program does not
             // need a tmp_dir. If this fails, the problem will be discovered downstream.
@@ -242,6 +234,14 @@ public abstract class CommandLineProgram {
             f.setReadable(true, false);
             f.setWritable(true, false);
             System.setProperty("java.io.tmpdir", f.getAbsolutePath()); // in loop so that last one takes effect
+        }
+
+        if (!USE_JDK_DEFLATER) {
+            BlockCompressedOutputStream.setDefaultDeflaterFactory(new IntelDeflaterFactory());
+        }
+
+        if (!USE_JDK_INFLATER) {
+            BlockGunzipper.setDefaultInflaterFactory(new IntelInflaterFactory());
         }
 
         PathHelper.initilizeAll();
