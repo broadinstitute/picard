@@ -66,6 +66,14 @@ public abstract class HaplotypeProbabilities {
         return pNormalizeVector(multiply(getLikelihoods(), getPriorProbablities()));
     }
 
+    /** calculates the p_value for the data.
+     *
+     * @return
+     */
+    public double pValue(){
+
+    }
+
     /**
      * Returns the likelihoods, in order, of the AA, Aa and aa haplotypes given the evidence
      * <p>
