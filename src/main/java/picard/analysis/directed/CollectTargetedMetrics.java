@@ -99,10 +99,10 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     @Argument(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
     public int SAMPLE_SIZE=10000;
 
-    @Argument(doc="Output for Theoretical Sensitivity metrics where the allele fractions are provided by the ALLELE_FRACTION argument.  Default is null.", optional = true)
+    @Argument(doc="Output for Theoretical Sensitivity metrics where the allele fractions are provided by the ALLELE_FRACTION argument.", optional = true)
     public File THEORETICAL_SENSITIVITY_OUTPUT;
 
-    @Argument(doc="Allele fraction to run theoretical sensitivity on.", optional = true)
+    @Argument(doc="Allele fraction for which to calculate theoretical sensitivity.", optional = true)
     public List<Double> ALLELE_FRACTION = new ArrayList<>(Arrays.asList(0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5));
     /**
      * Asserts that files are readable and writable and then fires off an
@@ -163,8 +163,11 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
         metrics.write(OUTPUT);
 
         if (THEORETICAL_SENSITIVITY_OUTPUT != null) {
-            final MetricsFile<TheoreticalSensitivityMetrics, Double> theoreticalSensitivityMetrics = getMetricsFile();
-            TheoreticalSensitivity.writeOutput(THEORETICAL_SENSITIVITY_OUTPUT, theoreticalSensitivityMetrics, SAMPLE_SIZE, collector.getDepthHistogram(), collector.getBaseQualityHistogram(), ALLELE_FRACTION);
+            // Write out theoretical sensitivity results.
+            final MetricsFile<TheoreticalSensitivityMetrics, ?> theoreticalSensitivityMetrics = getMetricsFile();
+            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE, collector.getDepthHistogram(), collector.getBaseQualityHistogram(), ALLELE_FRACTION);
+            theoreticalSensitivityMetrics.addAllMetrics(tsm);
+            theoreticalSensitivityMetrics.write(THEORETICAL_SENSITIVITY_OUTPUT);
         }
 
         CloserUtil.close(reader);

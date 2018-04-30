@@ -211,9 +211,9 @@ public class TheoreticalSensitivityTest {
 
         final MetricsFile Metrics = new MetricsFile();
         Metrics.read(new FileReader(metricsFile));
-        final List<Histogram> histograms = Metrics.getAllHistograms();
-        final Histogram depthHistogram = histograms.get(0);
-        final Histogram qualityHistogram = histograms.get(1);
+        final List<Histogram<Integer>> histograms = Metrics.getAllHistograms();
+        final Histogram<Integer> depthHistogram = histograms.get(0);
+        final Histogram<Integer> qualityHistogram = histograms.get(1);
 
         final double[] depthDistribution = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
         final double[] qualityDistribution = TheoreticalSensitivity.normalizeHistogram(qualityHistogram);
@@ -245,8 +245,8 @@ public class TheoreticalSensitivityTest {
         // Because this only tests sensitivity at a constant depth, we use this for testing the code at high depths.
         final MetricsFile Metrics = new MetricsFile();
         Metrics.read(new FileReader(metricsFile));
-        final List<Histogram> histograms = Metrics.getAllHistograms();
-        final Histogram qualityHistogram = histograms.get(1);
+        final List<Histogram<Integer>> histograms = Metrics.getAllHistograms();
+        final Histogram<Integer> qualityHistogram = histograms.get(1);
 
         // We ensure that even using different random seeds we converge to roughly the same value.
         for (int i = 0;i < 3;i++) {
@@ -259,7 +259,7 @@ public class TheoreticalSensitivityTest {
     public Object[][] arbFracSensDataProvider() {
         final File wgsMetricsFile = new File(TEST_DIR, "test_Solexa-332667.wgs_metrics");
 
-        // This test acts primarily as an intergration test.  The sample size of 100
+        // This test acts primarily as an integration test.  The sample size of 100
         // is not quite large enough to converge properly, but is used for the purpose of
         // keeping the compute time of the tests short.
         return new Object[][] {
@@ -281,9 +281,9 @@ public class TheoreticalSensitivityTest {
 
         final MetricsFile Metrics = new MetricsFile();
         Metrics.read(new FileReader(metricsFile));
-        final List<Histogram> histograms = Metrics.getAllHistograms();
-        final Histogram depthHistogram = histograms.get(0);
-        final Histogram qualityHistogram = histograms.get(1);
+        final List<Histogram<Integer>> histograms = Metrics.getAllHistograms();
+        final Histogram<Integer> depthHistogram = histograms.get(0);
+        final Histogram<Integer> qualityHistogram = histograms.get(1);
 
         final double result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction);
 
@@ -310,9 +310,9 @@ public class TheoreticalSensitivityTest {
         // model.  Since allele fraction of 0.5 is equivalent to a het, these should provide the same answer.
         final MetricsFile Metrics = new MetricsFile();
         Metrics.read(new FileReader(metricsFile));
-        final List<Histogram> histograms = Metrics.getAllHistograms();
-        final Histogram depthHistogram = histograms.get(0);
-        final Histogram qualityHistogram = histograms.get(1);
+        final List<Histogram<Integer>> histograms = Metrics.getAllHistograms();
+        final Histogram<Integer> depthHistogram = histograms.get(0);
+        final Histogram<Integer> qualityHistogram = histograms.get(1);
 
         final double[] qualityDistribution = TheoreticalSensitivity.normalizeHistogram(qualityHistogram);
         final double[] depthDistribution = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
@@ -364,11 +364,11 @@ public class TheoreticalSensitivityTest {
 
     @Test(dataProvider = "sumOfGaussiansDataProvider")
     public void testDrawSumOfQScores(final File metricsFile, final int altDepth, final double tolerance) throws Exception {
-        final MetricsFile Metrics = new MetricsFile();
+        final MetricsFile<TheoreticalSensitivityMetrics, Integer> Metrics = new MetricsFile<>();
         Metrics.read(new FileReader(metricsFile));
-        final List<Histogram> histograms = Metrics.getAllHistograms();
+        final List<Histogram<Integer>> histograms = Metrics.getAllHistograms();
 
-        final Histogram qualityHistogram = histograms.get(1);
+        final Histogram<Integer> qualityHistogram = histograms.get(1);
         final TheoreticalSensitivity.RouletteWheel qualityRW = new TheoreticalSensitivity.RouletteWheel(TheoreticalSensitivity.trimDistribution(TheoreticalSensitivity.normalizeHistogram(qualityHistogram)));
 
         final Random randomNumberGenerator = new Random(TheoreticalSensitivity.RANDOM_SEED);

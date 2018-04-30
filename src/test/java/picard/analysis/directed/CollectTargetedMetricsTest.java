@@ -9,6 +9,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.analysis.TheoreticalSensitivity;
 import picard.analysis.TheoreticalSensitivityMetrics;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
@@ -18,10 +19,7 @@ import picard.vcf.VcfTestUtils;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
@@ -169,16 +167,14 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
                 // too long to run.
                 {tempSamFile, outfile, tsOutfile, perTargetOutfile, referenceFile, singleIntervals, 10,
                         Arrays.asList(0.01, 0.05, 0.10,  0.30,  0.50), // Allele fraction
-                        Arrays.asList(0.01, 0.66, 0.95,  0.99,  0.99), // Expected sensitivity
-                        0.12, 0.96
+                        Arrays.asList(0.01, 0.66, 0.95,  0.99,  0.99)  // Expected sensitivity
                 }
         };
     }
 
     @Test(dataProvider = "theoreticalSensitivityDataProvider")
     public void runCollectTargetedMetricsTheoreticalSensitivityTest(final File input, final File outfile, final File tsOutfile, final File perTargetOutfile, final String referenceFile,
-                                              final String targetIntervals, final int sampleSize, final List<Double> alleleFractions, final List<Double> expectedSensitivities,
-                                              final double additionalAlleleFraction, final double additionalExpectedSensitivity) throws IOException {
+                                              final String targetIntervals, final int sampleSize, final List<Double> alleleFractions, final List<Double> expectedSensitivities) throws IOException {
 
         final String[] args = new String[] {
                 "TARGET_INTERVALS=" + targetIntervals,
@@ -188,7 +184,6 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
                 "PER_TARGET_COVERAGE=" + perTargetOutfile.getAbsolutePath(),
                 "LEVEL=ALL_READS",
                 "AMPLICON_INTERVALS=" + targetIntervals,
-                "ALLELE_FRACTION=" + additionalAlleleFraction,
                 "THEORETICAL_SENSITIVITY_OUTPUT=" + tsOutfile.getAbsolutePath(),
                 "SAMPLE_SIZE=" + sampleSize
         };
@@ -198,21 +193,24 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         final MetricsFile<TheoreticalSensitivityMetrics, Double> output = new MetricsFile<>();
         output.read(new FileReader(tsOutfile.getAbsolutePath()));
 
-        final Histogram h = output.getHistogram();
 
-        // Ensure that the sensitivity calculated for the option ALLELE_FRACTION is correct
-        Assert.assertEquals(h.get(additionalAlleleFraction).getValue(), additionalExpectedSensitivity, 0.01);
-
-        // Ensure that the sensitivities calculated for the default allele fractions are correct.
-        Iterator<Double> alleleFraction = alleleFractions.iterator();
-        Iterator<Double> expectedSensitivity = expectedSensitivities.iterator();
-        Assert.assertEquals(alleleFractions.size(), expectedSensitivities.size(), "List of allele fractions to test is not the same size as the list of expected sensitivities.");
-        while (alleleFraction.hasNext() && expectedSensitivity.hasNext()) {
-            final double af = h.get(alleleFraction.next()).getValue();
-            final double es = expectedSensitivity.next();
-
-            Assert.assertEquals(af, es, 0.01);
+        // Create map of theoretical sensitivities read from file
+        final Iterator<TheoreticalSensitivityMetrics> metrics = output.getMetrics().iterator();
+        final Map<Double, Double> map = new HashMap<>();
+        while (metrics.hasNext()) {
+            TheoreticalSensitivityMetrics m = metrics.next();
+            map.put(m.ALLELE_FRACTION, m.THEORETICAL_SENSITIVITY);
         }
+
+        // Compare theoretical sensitivities created by CollectTargetedMetrics
+        // with those in the test data provider.
+        final Iterator<Double> alleleFraction = alleleFractions.iterator();
+        final Iterator<Double> expectedSensitivity = expectedSensitivities.iterator();
+        while (alleleFraction.hasNext() || expectedSensitivity.hasNext()) {
+            // Provide wiggle room of 1% in the comparisons
+            Assert.assertEquals(map.get(alleleFraction.next()), expectedSensitivity.next(), 0.01);
+        }
+
     }
 
 

@@ -120,10 +120,10 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     @ArgumentCollection
     protected IntervalArgumentCollection intervalArugmentCollection = makeIntervalArgumentCollection();
 
-    @Argument(doc="Output for Theoretical Sensitivity metrics.  Default is null.", optional = true)
+    @Argument(doc="Output for Theoretical Sensitivity metrics.", optional = true)
     public File THEORETICAL_SENSITIVITY_OUTPUT;
 
-    @Argument(doc="Allele fraction to run theoretical sensitivity on.", optional = true)
+    @Argument(doc="Allele fraction for which to calculate theoretical sensitivity.", optional = true)
     public List<Double> ALLELE_FRACTION = new ArrayList<>(Arrays.asList(0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5));
 
     @Argument(doc = "If true, fast algorithm is used.")
@@ -499,7 +499,11 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         out.write(OUTPUT);
 
         if (THEORETICAL_SENSITIVITY_OUTPUT != null) {
-            TheoreticalSensitivity.writeOutput(THEORETICAL_SENSITIVITY_OUTPUT, getMetricsFile(), SAMPLE_SIZE, collector.getUnfilteredDepthHistogram(),collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION);
+            // Write out theoretical sensitivity results.
+            final MetricsFile<TheoreticalSensitivityMetrics, ?> theoreticalSensitivityMetrics = getMetricsFile();
+            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE, collector.getUnfilteredDepthHistogram(), collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION);
+            theoreticalSensitivityMetrics.addAllMetrics(tsm);
+            theoreticalSensitivityMetrics.write(THEORETICAL_SENSITIVITY_OUTPUT);
         }
 
         return 0;

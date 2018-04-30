@@ -46,6 +46,7 @@ import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
+import org.omg.PortableInterceptor.INACTIVE;
 import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
 import picard.filter.CountingMapQFilter;
@@ -924,11 +925,11 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         }
     }
 
-    public Histogram getBaseQualityHistogram() {
+    public Histogram<Integer> getBaseQualityHistogram() {
         return unfilteredBaseQHistogram;
     }
 
-    public Histogram getDepthHistogram() {
+    public Histogram<Integer> getDepthHistogram() {
         return unfilteredDepthHistogram;
     }
 }
