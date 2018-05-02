@@ -371,9 +371,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     public static void finalizeMetrics(final Map<String, BarcodeMetric> barcodeToMetrics,
                                        final BarcodeMetric noMatchMetric) {
         // Finish metrics tallying.
-        int totalReads = noMatchMetric.READS;
-        int totalPfReads = noMatchMetric.PF_READS;
-        int totalPfReadsAssigned = 0;
+        long totalReads = noMatchMetric.READS;
+        long totalPfReads = noMatchMetric.PF_READS;
+        long totalPfReadsAssigned = 0;
         for (final BarcodeMetric barcodeMetric : barcodeToMetrics.values()) {
             totalReads += barcodeMetric.READS;
             totalPfReads += barcodeMetric.PF_READS;
@@ -548,27 +548,27 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         /**
          * The total number of reads matching the barcode.
          */
-        public int READS = 0;
+        public long READS = 0;
         /**
          * The number of PF reads matching this barcode (always less than or equal to READS).
          */
-        public int PF_READS = 0;
+        public long PF_READS = 0;
         /**
          * The number of all reads matching this barcode that matched with 0 errors or no-calls.
          */
-        public int PERFECT_MATCHES = 0;
+        public long PERFECT_MATCHES = 0;
         /**
          * The number of PF reads matching this barcode that matched with 0 errors or no-calls.
          */
-        public int PF_PERFECT_MATCHES = 0;
+        public long PF_PERFECT_MATCHES = 0;
         /**
          * The number of all reads matching this barcode that matched with 1 error or no-call.
          */
-        public int ONE_MISMATCH_MATCHES = 0;
+        public long ONE_MISMATCH_MATCHES = 0;
         /**
          * The number of PF reads matching this barcode that matched with 1 error or no-call.
          */
-        public int PF_ONE_MISMATCH_MATCHES = 0;
+        public long PF_ONE_MISMATCH_MATCHES = 0;
         /**
          * The fraction of all reads in the lane that matched to this barcode.
          */
