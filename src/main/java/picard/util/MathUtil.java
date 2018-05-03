@@ -24,6 +24,9 @@
 
 package picard.util;
 
+import org.apache.commons.math3.random.RandomDataGenerator;
+import org.apache.commons.math3.random.RandomGenerator;
+
 import java.math.BigDecimal;
 import java.util.Arrays;
 
@@ -62,7 +65,11 @@ final public class MathUtil {
         return total / (stop - start);
     }
 
-    /** Calculated the standard deviation of an array of doubles. */
+    public static double mean(final double[] in) {
+        return mean(in,0, in.length);
+    }
+
+        /** Calculated the standard deviation of an array of doubles. */
     public static double stddev(final double[] in, final int start, final int length) {
         return stddev(in, start, length, mean(in, start, length));
     }
@@ -77,7 +84,15 @@ final public class MathUtil {
         return Math.sqrt((total / (stop - start)) - (mean * mean));
     }
 
-    public static int compare(final int v1, final int v2) {
+
+    /** Calculated the standard deviation of an array of doubles. */
+    public static double stddev(final double[] in, final double mean) {
+        return stddev(in, 0, in.length, mean);
+    }
+
+
+
+        public static int compare(final int v1, final int v2) {
         return (v1 < v2 ? -1 : (v1 == v2 ? 0 : 1));
     }
 
@@ -380,7 +395,34 @@ final public class MathUtil {
             return Math.log10(nonLogValue);
         }
     };
-    
+
+
+    /** Calculate the KL divergence from measured to distribution
+    // https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+    */
+    public static double klDivergance(double [] measured, double [] distribution){
+        assert measured.length == distribution.length;
+
+        return -sum(multiply(measured, NATURAL_LOG_MATH.getLogValue(divide(distribution, measured))));
+    }
+
+    /**
+     * permute the input array randomly (using a RandomDataGenerator)
+     * @param array input array
+     * @param rdg a RandomDataGenerator for drawing a permutation from
+     * @return a newly allocated array with a permuted version of the original data.
+     */
+    public static double [] permute(double [] array, RandomDataGenerator rdg){
+
+        final int n = array.length;
+        final double[] retVal = new double[n];
+        final int[] randomPermutation = rdg.nextPermutation(n, n);
+        for (int i = 0; i < n; i++) {
+            retVal[i] = array[randomPermutation[i]];
+        }
+        return retVal;
+    }
+
     /** 
      * A collection of common math operations that work with log values. To use it, pass values from log space, the operation will be
      * computed in non-log space, and a value in log space will be returned.

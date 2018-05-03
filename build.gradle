@@ -69,6 +69,7 @@ dependencies {
         exclude module: 'htsjdk'
     }
     compile 'com.google.guava:guava:15.0'
+    compile 'org.apache.commons:commons-math3:3.5'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     compile 'org.broadinstitute:barclay:2.0.0'
     compileOnly 'com.google.cloud:google-cloud-nio:' + googleNioVersion

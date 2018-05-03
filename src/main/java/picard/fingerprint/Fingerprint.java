@@ -24,6 +24,13 @@
 
 package picard.fingerprint;
 
+import htsjdk.samtools.metrics.MetricBase;
+import org.apache.commons.math3.random.MersenneTwister;
+import org.apache.commons.math3.random.RandomDataGenerator;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.stat.inference.ChiSquareTest;
+import picard.util.MathUtil;
+
 import java.nio.file.Path;
 import java.util.*;
 
@@ -35,6 +42,9 @@ import java.util.*;
  * @author Tim Fennell
  */
 public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities> {
+    private static final double GENOTYPE_LOD_THRESHOLD = 3;
+    private static final int NUMBER_OF_SAMPLING = 100;
+    private static final int RANDOM_SEED = 42;
     private final String sample;
     private final Path source;
     private final String info;
@@ -79,6 +89,76 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
         }
     }
 
+    public FingerprintMetrics getFingerprintMetrics() {
+
+        //get expectation of counts and expected fractions
+        double[] genotypeCounts = new double[] {0, 0, 0};
+        double[] expectedRatios = new double[] {0, 0, 0};
+
+        for (HaplotypeProbabilities haplotypeProbabilities : this.values()) {
+            genotypeCounts = MathUtil.sum(genotypeCounts, haplotypeProbabilities.getPosteriorProbabilities());
+            expectedRatios = MathUtil.sum(expectedRatios, haplotypeProbabilities.getPriorProbablities());
+        }
+        final long[] actualGenotypeCounts = new long[3];
+        for (int i = 0; i < HaplotypeProbabilities.Genotype.values().length; i++) {
+            // TODO: it would be more accurate to not round the genotype counts, but commons doesn't have a
+            // TODO: chi-squared statistic method with double[], double[] signature....(can be remedied)
+            actualGenotypeCounts[i] = Math.round(genotypeCounts[i]);
+        }
+
+        // calculate p-value
+        ChiSquareTest chiSquareTest = new ChiSquareTest();
+        final double chiSquaredTest = chiSquareTest.chiSquareTest(expectedRatios, actualGenotypeCounts);
+
+        // calculate LOD (cross-entropy)
+        final double crossEntropy = MathUtil.klDivergance(genotypeCounts, expectedRatios);
+
+        final double lodSelfCheck = FingerprintChecker.calculateMatchResults(this, this).getLOD();
+
+        final double[] randomizationTrials = new double[NUMBER_OF_SAMPLING];
+        RandomGenerator rg = new MersenneTwister(RANDOM_SEED);
+        for (int i = 0; i < NUMBER_OF_SAMPLING; i++) {
+            randomizationTrials[i] = FingerprintChecker.calculateMatchResults(this, randomizeFingerprint(rg)).getLOD();
+        }
+
+        FingerprintMetrics fingerprintMetrics = new FingerprintMetrics();
+
+        fingerprintMetrics.SAMPLE_NAME = sample;
+        fingerprintMetrics.SOURCE = source.toUri().toString();
+        fingerprintMetrics.INFO = info;
+        fingerprintMetrics.HAPLOTYPE = values().size();
+        fingerprintMetrics.HAPLOTYPES_WITH_EVIDENCE = values().stream().filter(HaplotypeProbabilities::hasEvidence).count();
+        fingerprintMetrics.DEFINITE_GENOTYPES = values().stream().filter(h -> h.getLodMostProbableGenotype() > GENOTYPE_LOD_THRESHOLD).count();
+        fingerprintMetrics.CHI_SQUARED_PVALUE = chiSquaredTest;
+        fingerprintMetrics.CROSS_ENTROPY_LOD = crossEntropy;
+        fingerprintMetrics.LOD_SELF_CHECK = lodSelfCheck;
+        fingerprintMetrics.DISCRIMINATORY_POWER = lodSelfCheck - MathUtil.mean(randomizationTrials);
+
+        return fingerprintMetrics;
+    }
+
+    /** Creates a new fingerprint from the current one by randomizing the genotypes
+     *
+     * @return
+     */
+
+    private Fingerprint randomizeFingerprint(final RandomGenerator rg) {
+        final Fingerprint retVal = new Fingerprint(null, null, null);
+
+        RandomDataGenerator rng = new RandomDataGenerator(rg);
+        for (Map.Entry<HaplotypeBlock, HaplotypeProbabilities> entry : entrySet()) {
+            final HaplotypeProbabilities haplotypeProbabilities = entry.getValue();
+            final HaplotypeProbabilitiesFromGenotypeLikelihoods permutedHaplotypeProbabilities = new HaplotypeProbabilitiesFromGenotypeLikelihoods(entry.getKey());
+            permutedHaplotypeProbabilities.addToLogLikelihoods(
+                    haplotypeProbabilities.getRepresentativeSnp(),
+                    haplotypeProbabilities.getRepresentativeSnp().getAlleles(),
+                    MathUtil.permute(haplotypeProbabilities.getLogLikelihoods(), rng));
+            retVal.add(permutedHaplotypeProbabilities);
+        }
+        return retVal;
+    }
+
+
     /**
      * Attempts to filter out haplotypes that may have suspect genotyping by removing haplotypes that reach
      * a minimum confidence score yet have a significant fraction of observations from a third or fourth allele.
@@ -96,5 +176,19 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
                 }
             }
         }
+    }
+
+    public static class FingerprintMetrics extends MetricBase {
+        public String SAMPLE_NAME;
+        public String SOURCE;
+        public String INFO;
+        public long HAPLOTYPE;
+        public long HAPLOTYPES_WITH_EVIDENCE;
+        public long DEFINITE_GENOTYPES;
+        public double CHI_SQUARED_PVALUE;
+        public double CROSS_ENTROPY_LOD;
+        public double DISCRIMINATORY_POWER;
+        public double LOD_SELF_CHECK;
+
     }
 }

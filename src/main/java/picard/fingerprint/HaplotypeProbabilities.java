@@ -24,6 +24,9 @@
 
 package picard.fingerprint;
 
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
+import org.apache.commons.math3.stat.inference.ChiSquareTest;
+
 import static java.lang.Math.log10;
 import static picard.util.MathUtil.multiply;
 import static picard.util.MathUtil.pNormalizeVector;
@@ -64,14 +67,6 @@ public abstract class HaplotypeProbabilities {
      */
     public double[] getPosteriorProbabilities() {
         return pNormalizeVector(multiply(getLikelihoods(), getPriorProbablities()));
-    }
-
-    /** calculates the p_value for the data.
-     *
-     * @return
-     */
-    public double pValue(){
-
     }
 
     /**

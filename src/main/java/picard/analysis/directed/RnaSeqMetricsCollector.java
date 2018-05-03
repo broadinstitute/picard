@@ -369,10 +369,10 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                     if (tx.getGene().isPositiveStrand())  coverage = tmp;
                     else coverage = copyAndReverse(tmp);
                 }
-                final double mean = MathUtil.mean(coverage, 0, coverage.length);
+                final double mean = MathUtil.mean(coverage);
 
                 // Calculate the CV of coverage for this tx
-                final double stdev = MathUtil.stddev(coverage, 0, coverage.length, mean);
+                final double stdev = MathUtil.stddev(coverage, mean);
                 final double cv    = stdev / mean;
                 cvs.increment(cv);
 

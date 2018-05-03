@@ -24,7 +24,9 @@
 
 package picard.fingerprint;
 
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.StringUtil;
+import htsjdk.variant.variantcontext.Allele;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +73,11 @@ public class Snp implements Comparable<Snp> {
     public int getPos() { return pos; }
     public byte getAllele1() { return allele1; }
     public byte getAllele2() { return allele2; }
+
+    public List<Allele> getAlleles() {
+        return CollectionUtil.makeList(Allele.create(getAllele1()), Allele.create(getAllele2()));
+    }
+
     public double getMaf() { return maf; }
     public List<String> getFingerprintPanels() { return this.fingerprintPanels; }
 
