@@ -124,6 +124,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
     private static final double LOG_ODDS_THRESHOLD = 3.0;
 
+    private final File theoreticalSensitivityOutput = null;
+
     private final int minimumMappingQuality;
     private final int minimumBaseQuality;
     private final boolean clipOverlappingReads;
@@ -920,5 +922,13 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         public String toString() {
             return "TargetedMetricCollector(interval=" + interval + ", depths = [" + StringUtil.intValuesToString(this.depths) + "])";
         }
+    }
+
+    public Histogram getBaseQualityHistogram() {
+        return unfilteredBaseQHistogram;
+    }
+
+    public Histogram getDepthHistogram() {
+        return unfilteredDepthHistogram;
     }
 }
