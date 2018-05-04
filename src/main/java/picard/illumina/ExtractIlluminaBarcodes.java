@@ -51,6 +51,7 @@ import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.illumina.parser.readers.LocsFileReader;
 import picard.util.IlluminaUtil;
 import picard.util.TabbedTextFileWithHeaderParser;
+import picard.util.ThreadPoolExecutorUtil;
 import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.BufferedWriter;
@@ -64,7 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -92,13 +92,21 @@ import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
 @DocumentedFeature
 public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
-    /** Column header for the first barcode sequence (preferred). */
+    /**
+     * Column header for the first barcode sequence (preferred).
+     */
     public static final String BARCODE_SEQUENCE_COLUMN = "barcode_sequence";
-    /** Column header for the first barcode sequence. */
+    /**
+     * Column header for the first barcode sequence.
+     */
     public static final String BARCODE_SEQUENCE_1_COLUMN = "barcode_sequence_1";
-    /** Column header for the barcode name. */
+    /**
+     * Column header for the barcode name.
+     */
     public static final String BARCODE_NAME_COLUMN = "barcode_name";
-    /** Column header for the library name. */
+    /**
+     * Column header for the library name.
+     */
     public static final String LIBRARY_NAME_COLUMN = "library_name";
 
     static final String USAGE_SUMMARY = "Tool determines the barcode for each read in an Illumina lane.  ";
@@ -110,7 +118,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             "sample (B) and not molecular barcodes (M).</p>" +
             "" +
             "<p>Barcodes can be provided in the form of a list (BARCODE_FILE) or a string representing the barcode (BARCODE).  " +
-            "The BARCODE_FILE contains multiple fields including '" + BARCODE_SEQUENCE_COLUMN + "' (or '"+ BARCODE_SEQUENCE_1_COLUMN + "'), " +
+            "The BARCODE_FILE contains multiple fields including '" + BARCODE_SEQUENCE_COLUMN + "' (or '" + BARCODE_SEQUENCE_1_COLUMN + "'), " +
             "'barcode_sequence_2' (optional), '" + BARCODE_NAME_COLUMN + "', and '" + LIBRARY_NAME_COLUMN + "'. " +
             "In contrast, the BARCODE argument is used for runs with reads containing a single " +
             "barcode (nonmultiplexed) and can be added directly as a string of text e.g. BARCODE=CAATAGCG.</p>" +
@@ -166,8 +174,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     public List<String> BARCODE = new ArrayList<>();
 
     @Argument(doc = "Tab-delimited file of barcode sequences, barcode name and, optionally, library name.  " +
-            "Barcodes must be unique and all the same length.  Column headers must be '" + BARCODE_SEQUENCE_COLUMN + "' (or '"+ BARCODE_SEQUENCE_1_COLUMN + "'), " +
-            "'barcode_sequence_2' (optional), '" + BARCODE_NAME_COLUMN + "', and '" + LIBRARY_NAME_COLUMN + "'." , mutex = {"BARCODE"})
+            "Barcodes must be unique and all the same length.  Column headers must be '" + BARCODE_SEQUENCE_COLUMN + "' (or '" + BARCODE_SEQUENCE_1_COLUMN + "'), " +
+            "'barcode_sequence_2' (optional), '" + BARCODE_NAME_COLUMN + "', and '" + LIBRARY_NAME_COLUMN + "'.", mutex = {"BARCODE"})
     public File BARCODE_FILE;
 
     @Argument(doc = "Per-barcode and per-lane metrics written to this file.", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME)
@@ -317,26 +325,12 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 extractors.add(extractor);
             }
         }
-        try {
-            for (final PerTileBarcodeExtractor extractor : extractors) {
-                pool.submit(extractor);
-            }
-            pool.shutdown();
-            // Wait a while for existing tasks to terminate
-            if (!pool.awaitTermination(6, TimeUnit.HOURS)) {
-                LOG.error("Barcode extractor thread pool timeout exceeded... shutting down.");
-                pool.shutdownNow(); // Cancel any still-executing tasks
-                // Wait a while for tasks to respond to being cancelled
-                if (!pool.awaitTermination(60, TimeUnit.SECONDS))
-                    LOG.error("Pool did not terminate");
-                return 1;
-            }
-        } catch (final Throwable e) {
-            // (Re-)Cancel if current thread also interrupted
-            LOG.error(e, "Parent thread encountered problem submitting extractors to thread pool or awaiting shutdown of threadpool.  Attempting to kill threadpool.");
-            pool.shutdownNow();
-            return 2;
+
+        for (final PerTileBarcodeExtractor extractor : extractors) {
+            pool.submit(extractor);
         }
+        pool.shutdown();
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Per tile extractor executor", pool);
 
         LOG.info("Processed " + extractors.size() + " tiles.");
         for (final PerTileBarcodeExtractor extractor : extractors) {
