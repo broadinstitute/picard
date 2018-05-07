@@ -160,7 +160,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         tileProcessingExecutor.shutdown();
 
-        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileProcessingExecutor);
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileProcessingExecutor, 5);
 
         // if there was an exception reading then initiate an immediate shutdown.
         if (tileProcessingExecutor.exception != null) {
@@ -169,9 +169,9 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
             throw new PicardException("Reading executor had exceptions. There were " + tasksStillRunning
                     + " tasks were still running or queued and have been cancelled.", tileProcessingExecutor.exception);
         } else {
-            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor);
+            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor, 5);
             barcodeWriterThreads.values().forEach(ThreadPoolExecutor::shutdown);
-            barcodeWriterThreads.forEach((barcode, executor) -> ThreadPoolExecutorUtil.awaitThreadPoolTermination(barcode + " writer", executor));
+            barcodeWriterThreads.forEach((barcode, executor) -> ThreadPoolExecutorUtil.awaitThreadPoolTermination(barcode + " writer", executor, 5));
         }
     }
 

@@ -330,7 +330,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             pool.submit(extractor);
         }
         pool.shutdown();
-        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Per tile extractor executor", pool);
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Per tile extractor executor", pool, 5);
 
         LOG.info("Processed " + extractors.size() + " tiles.");
         for (final PerTileBarcodeExtractor extractor : extractors) {

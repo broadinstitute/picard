@@ -8,9 +8,10 @@ import java.util.concurrent.TimeUnit;
 public class ThreadPoolExecutorUtil {
     private static final Log log = Log.getInstance(ThreadPoolExecutorUtil.class);
 
-    public static void awaitThreadPoolTermination(final String executorName, final ThreadPoolExecutor executorService) {
+    public static void awaitThreadPoolTermination(final String executorName, final ThreadPoolExecutor executorService,
+                                                  final long minutesBetweenChecks) {
         try {
-            while (!executorService.awaitTermination(300, TimeUnit.SECONDS)) {
+            while (!executorService.awaitTermination(minutesBetweenChecks, TimeUnit.MINUTES)) {
                 log.info(String.format("%s waiting for job completion. Finished jobs - %d : Running jobs - %d : Queued jobs  - %d",
                         executorName, executorService.getCompletedTaskCount(), executorService.getActiveCount(),
                         executorService.getQueue().size()));
