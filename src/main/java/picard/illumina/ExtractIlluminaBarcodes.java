@@ -57,6 +57,7 @@ import picard.util.ThreadPoolExecutorWithExceptions;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.text.NumberFormat;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -330,7 +331,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             pool.submit(extractor);
         }
         pool.shutdown();
-        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Per tile extractor executor", pool, 5);
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Per tile extractor executor", pool, Duration.ofMinutes(5));
 
         LOG.info("Processed " + extractors.size() + " tiles.");
         for (final PerTileBarcodeExtractor extractor : extractors) {
