@@ -14,9 +14,11 @@ import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.illumina.parser.readers.LocsFileReader;
+import picard.util.ThreadPoolExecutorUtil;
 import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -160,7 +161,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         tileProcessingExecutor.shutdown();
 
-        awaitThreadPoolTermination("Reading executor", tileProcessingExecutor);
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileProcessingExecutor, Duration.ofMinutes(5));
 
         // if there was an exception reading then initiate an immediate shutdown.
         if (tileProcessingExecutor.exception != null) {
@@ -169,21 +170,9 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
             throw new PicardException("Reading executor had exceptions. There were " + tasksStillRunning
                     + " tasks were still running or queued and have been cancelled.", tileProcessingExecutor.exception);
         } else {
-            awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor);
+            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor, Duration.ofMinutes(5));
             barcodeWriterThreads.values().forEach(ThreadPoolExecutor::shutdown);
-            barcodeWriterThreads.forEach((barcode, executor) -> awaitThreadPoolTermination(barcode + " writer", executor));
-        }
-    }
-
-    private void awaitThreadPoolTermination(final String executorName, final ThreadPoolExecutor executorService) {
-        try {
-            while (!executorService.awaitTermination(300, TimeUnit.SECONDS)) {
-                log.info(String.format("%s waiting for job completion. Finished jobs - %d : Running jobs - %d : Queued jobs  - %d",
-                        executorName, executorService.getCompletedTaskCount(), executorService.getActiveCount(),
-                        executorService.getQueue().size()));
-            }
-        } catch (final InterruptedException e) {
-            log.error("Interrupted exception caught: ", e);
+            barcodeWriterThreads.forEach((barcode, executor) -> ThreadPoolExecutorUtil.awaitThreadPoolTermination(barcode + " writer", executor, Duration.ofMinutes(5)));
         }
     }
 
