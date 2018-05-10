@@ -193,7 +193,6 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         final MetricsFile<TheoreticalSensitivityMetrics, Double> output = new MetricsFile<>();
         output.read(new FileReader(tsOutfile.getAbsolutePath()));
 
-
         // Create map of theoretical sensitivities read from file
         final Iterator<TheoreticalSensitivityMetrics> metrics = output.getMetrics().iterator();
         final Map<Double, Double> map = new HashMap<>();
@@ -210,9 +209,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
             // Provide wiggle room of 1% in the comparisons
             Assert.assertEquals(map.get(alleleFraction.next()), expectedSensitivity.next(), 0.01);
         }
-
     }
-
 
     @Test()
     public void testRawBqDistributionWithSoftClips() throws IOException {

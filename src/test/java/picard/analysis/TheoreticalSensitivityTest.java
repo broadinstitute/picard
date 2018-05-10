@@ -209,9 +209,12 @@ public class TheoreticalSensitivityTest {
     public void testHetSensTargeted(final double expected, final File metricsFile) throws Exception {
         final double tolerance = 0.000_000_01;
 
-        final MetricsFile Metrics = new MetricsFile();
-        Metrics.read(new FileReader(metricsFile));
-        final List<Histogram<Integer>> histograms = Metrics.getAllHistograms();
+        final MetricsFile metrics = new MetricsFile();
+        try (final FileReader metricsFileReader = new FileReader(metricsFile)) {
+            metrics.read(metricsFileReader);
+        }
+
+        final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
         final Histogram<Integer> depthHistogram = histograms.get(0);
         final Histogram<Integer> qualityHistogram = histograms.get(1);
 
@@ -243,9 +246,13 @@ public class TheoreticalSensitivityTest {
     public void testSensitivityAtConstantDepth(final double expected, final File metricsFile, final double alleleFraction, final int depth, final int sampleSize, final double tolerance) throws Exception {
         // This tests Theoretical Sensitivity assuming a uniform depth with a distribution of base quality scores.
         // Because this only tests sensitivity at a constant depth, we use this for testing the code at high depths.
-        final MetricsFile Metrics = new MetricsFile();
-        Metrics.read(new FileReader(metricsFile));
-        final List<Histogram<Integer>> histograms = Metrics.getAllHistograms();
+
+        final MetricsFile metrics = new MetricsFile();
+        try (final FileReader metricsFileReader = new FileReader(metricsFile)) {
+            metrics.read(metricsFileReader);
+        }
+
+        final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
         final Histogram<Integer> qualityHistogram = histograms.get(1);
 
         // We ensure that even using different random seeds we converge to roughly the same value.
@@ -279,9 +286,12 @@ public class TheoreticalSensitivityTest {
         // we are not using large enough sample sizes to converge.
         final double tolerance = 0.02;
 
-        final MetricsFile Metrics = new MetricsFile();
-        Metrics.read(new FileReader(metricsFile));
-        final List<Histogram<Integer>> histograms = Metrics.getAllHistograms();
+        final MetricsFile metrics = new MetricsFile();
+        try (final FileReader metricsFileReader = new FileReader(metricsFile)) {
+            metrics.read(metricsFileReader);
+        }
+
+        final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
         final Histogram<Integer> depthHistogram = histograms.get(0);
         final Histogram<Integer> qualityHistogram = histograms.get(1);
 
@@ -308,9 +318,9 @@ public class TheoreticalSensitivityTest {
     public void testHetVsArbitrary(final File metricsFile, final double tolerance, final int sampleSize) throws Exception {
         // This test compares Theoretical Sensitivity for arbitrary allele fractions with the theoretical het sensitivity
         // model.  Since allele fraction of 0.5 is equivalent to a het, these should provide the same answer.
-        final MetricsFile Metrics = new MetricsFile();
-        Metrics.read(new FileReader(metricsFile));
-        final List<Histogram<Integer>> histograms = Metrics.getAllHistograms();
+        final MetricsFile metrics = new MetricsFile();
+        metrics.read(new FileReader(metricsFile));
+        final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
         final Histogram<Integer> depthHistogram = histograms.get(0);
         final Histogram<Integer> qualityHistogram = histograms.get(1);
 
@@ -364,14 +374,14 @@ public class TheoreticalSensitivityTest {
 
     @Test(dataProvider = "sumOfGaussiansDataProvider")
     public void testDrawSumOfQScores(final File metricsFile, final int altDepth, final double tolerance) throws Exception {
-        final MetricsFile<TheoreticalSensitivityMetrics, Integer> Metrics = new MetricsFile<>();
-        Metrics.read(new FileReader(metricsFile));
-        final List<Histogram<Integer>> histograms = Metrics.getAllHistograms();
+        final MetricsFile<TheoreticalSensitivityMetrics, Integer> metrics = new MetricsFile<>();
+        metrics.read(new FileReader(metricsFile));
+        final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
 
         final Histogram<Integer> qualityHistogram = histograms.get(1);
         final TheoreticalSensitivity.RouletteWheel qualityRW = new TheoreticalSensitivity.RouletteWheel(TheoreticalSensitivity.trimDistribution(TheoreticalSensitivity.normalizeHistogram(qualityHistogram)));
 
-        final Random randomNumberGenerator = new Random(TheoreticalSensitivity.RANDOM_SEED);
+        final Random randomNumberGenerator = new Random(51);
 
         // Calculate mean and deviation of quality score distribution to enable Gaussian sampling below
         final double averageQuality = qualityHistogram.getMean();

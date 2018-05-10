@@ -36,11 +36,14 @@ import htsjdk.samtools.metrics.MetricBase;
  * @author Mark Fleharty
  */
 public class TheoreticalSensitivityMetrics extends MetricBase {
+    /** The allele fraction which theoretical sensitivity is calculated for. */
     public double ALLELE_FRACTION;
+    /** Estimation of sensitivity at a particular allele fraction. */
     public double THEORETICAL_SENSITIVITY;
+    /** Phred-scaled value of 1-THEORETICAL_SENSITIVITY. */
+    public int THEORETICAL_SENSITIVITY_Q;
+    /** Log-likelihood ratio is used as a threshold to distinguish a positive site with a given allele fraction from HOM_REF. */
     public double LOG_ODDS_THRESHOLD;
-    public double SIMULATION_SIZE;
-    public double DEPTH_BIN_WIDTH;
-    public double LARGE_NUMBER_OF_DRAWS;
-    public double RANDOM_SEED;
+    /** Number of samples drawn at each depth in the depth distribution.  Larger values allow for increased precision at the cost of compute time. */
+    public int SAMPLE_SIZE;
 }

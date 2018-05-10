@@ -24,13 +24,12 @@
 
 package picard.analysis;
 
-import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.QualityUtil;
 import picard.PicardException;
 import picard.util.MathUtil;
 
-import java.io.File;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -46,7 +45,7 @@ public class TheoreticalSensitivity {
     private static final int MAX_CONSIDERED_DEPTH_HET_SENS = 1000; // No point in looking any deeper than this, otherwise GC overhead is too high.  Only used for HET sensitivity.
     private static final int LARGE_NUMBER_OF_DRAWS = 10; // The number of draws at which we believe a Gaussian approximation to sum random variables.
     private static final double DEPTH_BIN_WIDTH = 0.01; // Minimal fraction of depth histogram to use when integrating theoretical sensitivity.  This ensures we don't calculate theoretical sensitivity at every depth, which would be computationally expensive.
-    static final int RANDOM_SEED = 51;
+    private static final int RANDOM_SEED = 51;
 
     /**
      * @param depthDistribution   the probability of depth n is depthDistribution[n] for n = 0, 1. . . N - 1
@@ -296,7 +295,7 @@ public class TheoreticalSensitivity {
      * @param alleleFraction the allele fraction to evaluate sensitivity at
      * @return Theoretical sensitivity for the given arguments at a constant depth.
      */
-    public static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram, final double logOddsThreshold, final int sampleSize, final double alleleFraction) {
+    private static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram, final double logOddsThreshold, final int sampleSize, final double alleleFraction) {
         return sensitivityAtConstantDepth(depth, qualityHistogram, logOddsThreshold, sampleSize, alleleFraction, RANDOM_SEED);
     }
 
@@ -329,14 +328,14 @@ public class TheoreticalSensitivity {
             // that occur with low probability and don't contribute much to sensitivity anyway, but
             // it complicates things a bit by having a variable deltaDepthProbability which
             // amount of the depth distribution to use with the trapezoid rule integration step.
-            while (deltaDepthProbability==0 && currentDepth < depthDistribution.length ||
+            while (deltaDepthProbability == 0 && currentDepth < depthDistribution.length ||
                     deltaDepthProbability < DEPTH_BIN_WIDTH && currentDepth < depthDistribution.length &&
                     depthDistribution[currentDepth] < DEPTH_BIN_WIDTH / 2.0) {
                 deltaDepthProbability += depthDistribution[currentDepth];
                 currentDepth++;
             }
             // Calculate sensitivity for a particular depth, and use trapezoid rule to integrate sensitivity.
-            double left = right;
+            final double left = right;
             right = sensitivityAtConstantDepth(currentDepth, qualityHistogram, logOddsThreshold, sampleSize, alleleFraction);
             sensitivity += deltaDepthProbability * (left + right) / 2.0;
         }
@@ -380,19 +379,13 @@ public class TheoreticalSensitivity {
 
         // For each allele fraction in alleleFractions calculate theoretical sensitivity and add the results
         // to the histogram sensitivityHistogram.
-        final Histogram<Double> sensitivityHistogram = new Histogram<>();
-        sensitivityHistogram.setBinLabel("allele_fraction");
-        sensitivityHistogram.setValueLabel("theoretical_sensitivity");
-        for (Double alleleFraction : alleleFractions) {
+        for (final Double alleleFraction : alleleFractions) {
             final TheoreticalSensitivityMetrics theoreticalSensitivityMetrics = new TheoreticalSensitivityMetrics();
-            log.info("Calculating theoretical sensitivity for AF = " + alleleFraction + ".");
             theoreticalSensitivityMetrics.ALLELE_FRACTION = alleleFraction;
             theoreticalSensitivityMetrics.THEORETICAL_SENSITIVITY = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, baseQHistogram, simulationSize, logOddsThreshold, alleleFraction);
-            theoreticalSensitivityMetrics.SIMULATION_SIZE = simulationSize;
+            theoreticalSensitivityMetrics.THEORETICAL_SENSITIVITY_Q = QualityUtil.getPhredScoreFromErrorProbability((1 - theoreticalSensitivityMetrics.THEORETICAL_SENSITIVITY));
+            theoreticalSensitivityMetrics.SAMPLE_SIZE = simulationSize;
             theoreticalSensitivityMetrics.LOG_ODDS_THRESHOLD = logOddsThreshold;
-            theoreticalSensitivityMetrics.LARGE_NUMBER_OF_DRAWS = LARGE_NUMBER_OF_DRAWS;
-            theoreticalSensitivityMetrics.DEPTH_BIN_WIDTH = DEPTH_BIN_WIDTH;
-            theoreticalSensitivityMetrics.RANDOM_SEED = RANDOM_SEED;
             metricsOverVariousAlleleFractions.add(theoreticalSensitivityMetrics);
         }
 
