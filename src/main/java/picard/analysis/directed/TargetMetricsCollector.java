@@ -46,7 +46,6 @@ import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
-import org.omg.PortableInterceptor.INACTIVE;
 import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
 import picard.filter.CountingMapQFilter;
