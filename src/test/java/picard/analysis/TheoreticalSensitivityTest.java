@@ -246,7 +246,6 @@ public class TheoreticalSensitivityTest {
     public void testSensitivityAtConstantDepth(final double expected, final File metricsFile, final double alleleFraction, final int depth, final int sampleSize, final double tolerance) throws Exception {
         // This tests Theoretical Sensitivity assuming a uniform depth with a distribution of base quality scores.
         // Because this only tests sensitivity at a constant depth, we use this for testing the code at high depths.
-
         final MetricsFile metrics = new MetricsFile();
         try (final FileReader metricsFileReader = new FileReader(metricsFile)) {
             metrics.read(metricsFileReader);
@@ -319,7 +318,10 @@ public class TheoreticalSensitivityTest {
         // This test compares Theoretical Sensitivity for arbitrary allele fractions with the theoretical het sensitivity
         // model.  Since allele fraction of 0.5 is equivalent to a het, these should provide the same answer.
         final MetricsFile metrics = new MetricsFile();
-        metrics.read(new FileReader(metricsFile));
+        try (final FileReader metricsFileReader = new FileReader(metricsFile)) {
+            metrics.read(metricsFileReader);
+        }
+
         final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
         final Histogram<Integer> depthHistogram = histograms.get(0);
         final Histogram<Integer> qualityHistogram = histograms.get(1);
@@ -375,7 +377,10 @@ public class TheoreticalSensitivityTest {
     @Test(dataProvider = "sumOfGaussiansDataProvider")
     public void testDrawSumOfQScores(final File metricsFile, final int altDepth, final double tolerance) throws Exception {
         final MetricsFile<TheoreticalSensitivityMetrics, Integer> metrics = new MetricsFile<>();
-        metrics.read(new FileReader(metricsFile));
+        try (final FileReader metricsFileReader = new FileReader(metricsFile)) {
+            metrics.read(metricsFileReader);
+        }
+
         final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
 
         final Histogram<Integer> qualityHistogram = histograms.get(1);
