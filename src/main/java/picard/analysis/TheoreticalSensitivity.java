@@ -24,7 +24,6 @@
 
 package picard.analysis;
 
-import com.sun.deploy.util.ParameterUtil;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.QualityUtil;
