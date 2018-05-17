@@ -265,14 +265,14 @@ public class TheoreticalSensitivityTest {
     public Object[][] arbFracSensDataProvider() {
         final File wgsMetricsFile = new File(TEST_DIR, "test_Solexa-332667.wgs_metrics");
 
-        // This test acts primarily as an integration test.  The sample size of 100
+        // This test acts primarily as an integration test.  The sample size of 200
         // is not quite large enough to converge properly, but is used for the purpose of
         // keeping the compute time of the tests short.
         return new Object[][] {
-                {0.90, wgsMetricsFile, 0.5, 100},
-                {0.77, wgsMetricsFile, 0.3, 100},
-                {0.29, wgsMetricsFile, 0.1, 100},
-                {0.08, wgsMetricsFile, 0.05, 100},
+                {0.90, wgsMetricsFile, 0.5, 200},
+                {0.77, wgsMetricsFile, 0.3, 200},
+                {0.29, wgsMetricsFile, 0.1, 200},
+                {0.08, wgsMetricsFile, 0.05, 200},
         };
     }
 

@@ -24,6 +24,7 @@
 
 package picard.analysis;
 
+import com.sun.deploy.util.ParameterUtil;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.QualityUtil;
@@ -239,7 +240,7 @@ public class TheoreticalSensitivity {
      * @param randomSeed random number seed to use for random number generator
      * @return Theoretical sensitivity for the given arguments at a constant depth.
      */
-    public static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram, final double logOddsThreshold, final int sampleSize, final double alleleFraction, final int randomSeed) {
+    public static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram, final double logOddsThreshold, final int sampleSize, final double alleleFraction, final long randomSeed) {
         final RouletteWheel qualityRW = new RouletteWheel(trimDistribution(normalizeHistogram(qualityHistogram)));
         final Random randomNumberGenerator = new Random(randomSeed);
         final BinomialDistribution bd = new BinomialDistribution(depth, alleleFraction);
@@ -252,7 +253,7 @@ public class TheoreticalSensitivity {
         // Sample simulated variants, and count the number that would get called.  The ratio
         // of the number called to the total sampleSize is the sensitivity.
         for (int sample = 0; sample < sampleSize; sample++) {
-            final int altDepth = bd.inverseCumulativeProbability(randomNumberGenerator.nextDouble());
+            final int altDepth = bd.sample();
 
             final int sumOfQualities;
             if (altDepth < LARGE_NUMBER_OF_DRAWS) {
@@ -349,15 +350,10 @@ public class TheoreticalSensitivity {
      * @return Distribution of base qualities removing any trailing zeros
      */
      static double[] trimDistribution(final double[] distribution) {
-        int endOfDistribution = 0;
-
-        // Locate the index of the distribution where all the values remaining at
-        // larger indices are zero.
-        for (endOfDistribution = distribution.length - 1; endOfDistribution >= 0; endOfDistribution--) {
-            if (distribution[endOfDistribution] != 0) {
-                break;
-            }
-        }
+         int endOfDistribution = distribution.length - 1;
+         while(distribution[endOfDistribution] == 0) {
+             endOfDistribution--;
+         }
 
         // Remove trailing zeros and return.
         return Arrays.copyOfRange(distribution, 0, endOfDistribution);
@@ -379,7 +375,7 @@ public class TheoreticalSensitivity {
 
         // For each allele fraction in alleleFractions calculate theoretical sensitivity and add the results
         // to the histogram sensitivityHistogram.
-        for (final Double alleleFraction : alleleFractions) {
+        for (final double alleleFraction : alleleFractions) {
             final TheoreticalSensitivityMetrics theoreticalSensitivityMetrics = new TheoreticalSensitivityMetrics();
             theoreticalSensitivityMetrics.ALLELE_FRACTION = alleleFraction;
             theoreticalSensitivityMetrics.THEORETICAL_SENSITIVITY = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, baseQHistogram, simulationSize, logOddsThreshold, alleleFraction);
