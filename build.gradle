@@ -64,7 +64,7 @@ def ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage) {
 }
 ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage)
 
-final htsjdkVersion = System.getProperty('htsjdk.version', '2.14.3')
+final htsjdkVersion = System.getProperty('htsjdk.version', '2.15.0')
 
 // We use a custom shaded build of the NIO library to avoid a regression in the authentication layer.
 // GATK does the same, see https://github.com/broadinstitute/gatk/issues/3591
