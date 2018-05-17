@@ -33,6 +33,7 @@ import picard.util.MathUtil;
 import java.util.*;
 import java.util.stream.IntStream;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
 /**
@@ -219,6 +220,7 @@ public class TheoreticalSensitivity {
      * @param logOddsThreshold Log odds threshold necessary for variant to be called
      * @return Whether or not the model would call a variant given the parameters
      */
+    @VisibleForTesting
      static boolean isCalled(final int totalDepth, final int altDepth, final double sumOfAltQualities, final double alleleFraction, final double logOddsThreshold) {
         final double threshold = 10.0 * (altDepth * -Math.log10(alleleFraction) + (totalDepth - altDepth) * -Math.log10(1.0 - alleleFraction) + logOddsThreshold);
 

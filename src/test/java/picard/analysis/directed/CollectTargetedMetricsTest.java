@@ -163,11 +163,11 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
         return new Object[][] {
                 // This test is primarily used as an integration test since theoretical sensitivity doesn't converge
-                // well with a sample size of 10.  The sample size is set so low as to prevent the tests from taking
-                // too long to run.
-                {tempSamFile, outfile, tsOutfile, perTargetOutfile, referenceFile, singleIntervals, 10,
+                // well with a sample size of 1000 rather than 10,000.  The sample size is set so low as to prevent
+                // the tests from taking too long to run.
+                {tempSamFile, outfile, tsOutfile, perTargetOutfile, referenceFile, singleIntervals, 1000,
                         Arrays.asList(0.01, 0.05, 0.10,  0.30,  0.50), // Allele fraction
-                        Arrays.asList(0.01, 0.66, 0.95,  0.99,  0.99)  // Expected sensitivity
+                        Arrays.asList(0.01, 0.52, 0.93,  0.99,  0.99)  // Expected sensitivity
                 }
         };
     }
