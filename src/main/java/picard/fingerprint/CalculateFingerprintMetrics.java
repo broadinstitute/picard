@@ -29,10 +29,7 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
@@ -49,6 +46,7 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.text.Normalizer;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -129,7 +127,7 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
             final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap = checker.fingerprintSamFile(inputPath, new HaplotypeMap(HAPLOTYPE_MAP).getIntervalList());
             fingerprintIdDetailsFingerprintMap.forEach((fd,f)-> metricsFile.addMetric(f.getFingerprintMetrics()));
 
-            final Fingerprint combinedFp = new Fingerprint(observedSampleAlias, inputPath, "merged");
+            final Fingerprint combinedFp = new Fingerprint(observedSampleAlias, inputPath, "<MERGED>");
             fingerprintIdDetailsFingerprintMap.values().forEach(combinedFp::merge);
 
             metricsFile.addMetric(combinedFp.getFingerprintMetrics());

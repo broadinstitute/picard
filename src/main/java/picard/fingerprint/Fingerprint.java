@@ -95,6 +95,7 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
         double[] genotypeCounts = new double[] {0, 0, 0};
         double[] expectedRatios = new double[] {0, 0, 0};
 
+
         for (HaplotypeProbabilities haplotypeProbabilities : this.values()) {
             genotypeCounts = MathUtil.sum(genotypeCounts, haplotypeProbabilities.getPosteriorProbabilities());
             expectedRatios = MathUtil.sum(expectedRatios, haplotypeProbabilities.getPriorProbablities());
@@ -105,13 +106,32 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
             // TODO: chi-squared statistic method with double[], double[] signature....(can be remedied)
             actualGenotypeCounts[i] = Math.round(genotypeCounts[i]);
         }
+        double[] hetVsHomexpectedRatios = new double[]{expectedRatios[0] + expectedRatios[2], expectedRatios[1]};
+        double[] homRefVsVarexpectedRatios = new double[]{expectedRatios[0], expectedRatios[2]};
+
+        double[] hetVsHomCounts = new double[]{actualGenotypeCounts[0] + actualGenotypeCounts[2], actualGenotypeCounts[1]};
+        double[] homRefVsVarCounts = new double[]{genotypeCounts[0], genotypeCounts[2]};
+
+        long[] actualHomRefVsVarCounts = new long[]{Math.round(homRefVsVarCounts[0]), Math.round(homRefVsVarCounts[1])};
+        long[] actualHetVsHomCounts = new long[]{Math.round(hetVsHomCounts[0]), Math.round(hetVsHomCounts[1])};
 
         // calculate p-value
         ChiSquareTest chiSquareTest = new ChiSquareTest();
         final double chiSquaredTest = chiSquareTest.chiSquareTest(expectedRatios, actualGenotypeCounts);
-
         // calculate LOD (cross-entropy)
-        final double crossEntropy = MathUtil.klDivergance(genotypeCounts, expectedRatios);
+        final double crossEntropy = -MathUtil.klDivergance(genotypeCounts, expectedRatios);
+
+        // calculate p-value
+        final double hetsChiSquaredTest = chiSquareTest.chiSquareTest(hetVsHomexpectedRatios, actualHetVsHomCounts);
+        // calculate LOD (cross-entropy)
+        final double hetsCrossEntropy = -MathUtil.klDivergance(hetVsHomexpectedRatios, hetVsHomCounts);
+
+        // calculate p-value
+        final double homsChiSquaredTest = chiSquareTest.chiSquareTest(homRefVsVarexpectedRatios, actualHomRefVsVarCounts);
+        // calculate LOD (cross-entropy)
+        final double homsCrossEntropy = -MathUtil.klDivergance(homRefVsVarexpectedRatios, homRefVsVarCounts);
+
+
 
         final double lodSelfCheck = FingerprintChecker.calculateMatchResults(this, this).getLOD();
 
@@ -129,8 +149,18 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
         fingerprintMetrics.HAPLOTYPE = values().size();
         fingerprintMetrics.HAPLOTYPES_WITH_EVIDENCE = values().stream().filter(HaplotypeProbabilities::hasEvidence).count();
         fingerprintMetrics.DEFINITE_GENOTYPES = values().stream().filter(h -> h.getLodMostProbableGenotype() > GENOTYPE_LOD_THRESHOLD).count();
+        fingerprintMetrics.NUM_HOM_REF = actualGenotypeCounts[0];
+        fingerprintMetrics.NUM_HET = actualGenotypeCounts[1];
+        fingerprintMetrics.NUM_HOM_VAR = actualGenotypeCounts[2];
         fingerprintMetrics.CHI_SQUARED_PVALUE = chiSquaredTest;
+        fingerprintMetrics.LOG10_CHI_SQUARED_PVALUE = Math.log10(chiSquaredTest);
         fingerprintMetrics.CROSS_ENTROPY_LOD = crossEntropy;
+        fingerprintMetrics.HET_CHI_SQUARED_PVALUE = hetsChiSquaredTest;
+        fingerprintMetrics.HET_LOG10_CHI_SQUARED_PVALUE = Math.log10(hetsChiSquaredTest);
+        fingerprintMetrics.HET_CROSS_ENTROPY_LOD = hetsCrossEntropy;
+        fingerprintMetrics.HOM_CHI_SQUARED_PVALUE = homsChiSquaredTest;
+        fingerprintMetrics.HOM_LOG10_CHI_SQUARED_PVALUE = Math.log10(homsChiSquaredTest);
+        fingerprintMetrics.HOM_CROSS_ENTROPY_LOD = homsCrossEntropy;
         fingerprintMetrics.LOD_SELF_CHECK = lodSelfCheck;
         fingerprintMetrics.DISCRIMINATORY_POWER = lodSelfCheck - MathUtil.mean(randomizationTrials);
 
@@ -185,8 +215,18 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
         public long HAPLOTYPE;
         public long HAPLOTYPES_WITH_EVIDENCE;
         public long DEFINITE_GENOTYPES;
+        public long NUM_HOM_REF;
+        public long NUM_HET;
+        public long NUM_HOM_VAR;
         public double CHI_SQUARED_PVALUE;
+        public double LOG10_CHI_SQUARED_PVALUE;
         public double CROSS_ENTROPY_LOD;
+        public double HET_CHI_SQUARED_PVALUE;
+        public double HET_LOG10_CHI_SQUARED_PVALUE;
+        public double HET_CROSS_ENTROPY_LOD;
+        public double HOM_CHI_SQUARED_PVALUE;
+        public double HOM_LOG10_CHI_SQUARED_PVALUE;
+        public double HOM_CROSS_ENTROPY_LOD;
         public double DISCRIMINATORY_POWER;
         public double LOD_SELF_CHECK;
 

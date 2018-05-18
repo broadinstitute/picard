@@ -375,7 +375,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
 
         if (!SECOND_INPUT.isEmpty() && CROSSCHECK_MODE == CrosscheckMode.CHECK_ALL_OTHERS) {
-            log.info("SECOND_INPUT is not empty, and CROSSCHECK_MODE==CHECK_ALL_OTHERS. Will only compare fingerprints from INPUT against all the fingerprints in SECOND_INPUT.");
+            log.info("SECOND_INPUT is not empty, and CROSSCHECK_MODE==CHECK_ALL_OTHERS. Will compare fingerprints from INPUT against all the fingerprints in SECOND_INPUT.");
         }
 
         if (MATRIX_OUTPUT != null) IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
