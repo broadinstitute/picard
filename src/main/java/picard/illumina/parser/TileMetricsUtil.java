@@ -50,8 +50,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static java.lang.Float.NaN;
-
 /**
  * Utility for reading the tile data from an Illumina run directory's TileMetricsOut.bin file
  *
