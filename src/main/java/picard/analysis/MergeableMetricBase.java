@@ -32,6 +32,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -75,6 +76,7 @@ abstract public class MergeableMetricBase extends MetricBase {
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
     protected @interface NoMergingKeepsValue {}
+
 
     /** checks if this instance can be merged with another
      *
@@ -143,13 +145,24 @@ abstract public class MergeableMetricBase extends MetricBase {
         for (final Field field : getAllFields(this.getClass())) {
             if (field.isSynthetic()) continue;
 
-            if (field.getAnnotationsByType(MergeByAdding.class).length +
+            final boolean isAnnotated =
+                    field.getAnnotationsByType(MergeByAdding.class).length +
                     field.getAnnotationsByType(MergeByAssertEquals.class).length +
                     field.getAnnotationsByType(NoMergingIsDerived.class).length +
                     field.getAnnotationsByType(MergingIsManual.class).length +
-                    field.getAnnotationsByType(NoMergingKeepsValue.class).length == 0) {
-                throw new IllegalStateException("All fields of this class must be annotated with @MergeByAdding, @NoMergingIsDerived, or @MergeByAssertEquals. " +
+                    field.getAnnotationsByType(NoMergingKeepsValue.class).length != 0;
+
+            final boolean isStatic = Modifier.isStatic(field.getModifiers());
+            final boolean isAnnotatedActive = field.getAnnotationsByType(MergeByAdding.class).length != 0;
+
+            if (!isAnnotated && !isStatic) {
+                throw new IllegalStateException("All (non-static) fields of this class must be annotated with @MergeByAdding, @NoMergingIsDerived, @MergeByAssertEquals, @MergingIsManual, or @NoMergingKeepsValue. " +
                         "Field " + field.getName() + " isn't annotated.");
+            }
+
+            if (isStatic && isAnnotatedActive) {
+                throw new IllegalStateException("Static fields of classes derived from MergeableMetricBase cannot be annotated with @MergeByAdding, " +
+                        "Field " + field.getName() + " has that annotation.");
             }
 
             final Annotation[] summableAnnotations = field.getAnnotationsByType(MergeByAdding.class);
