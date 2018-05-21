@@ -155,6 +155,7 @@ public class TileMetricsUtil {
         throw new RuntimeException("None of the following input files contained cluster records:" + pathsString);
     }
 
+    @Deprecated // Use parseClusterRecordsFromTileMetricsV3 instead
     public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile,
                                                     final Map<Integer, File> phasingMetricsFiles,
                                                     final ReadStructure readStructure,
