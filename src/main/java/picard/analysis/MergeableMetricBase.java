@@ -148,8 +148,8 @@ abstract public class MergeableMetricBase extends MetricBase {
             if (Modifier.isStatic(field.getModifiers())) {
                 final boolean isAnnotatedMergeByAdding = field.getAnnotationsByType(MergeByAdding.class).length != 0;
                 if (isAnnotatedMergeByAdding) {
-                    throw new IllegalStateException("All (non-static) fields of this class must be annotated with @MergeByAdding, @NoMergingIsDerived, @MergeByAssertEquals, @MergingIsManual, or @NoMergingKeepsValue. " +
-                            "Field " + field.getName() + " isn't annotated.");
+                    throw new IllegalStateException("Static fields of classes derived from MergeableMetricBase cannot be annotated with @MergeByAdding, " +
+                            "Field " + field.getName() + " has that annotation.");
                 }
             } else {
                 final boolean isAnnotated =
@@ -160,8 +160,8 @@ abstract public class MergeableMetricBase extends MetricBase {
                         field.getAnnotationsByType(NoMergingKeepsValue.class).length != 0;
                 ;
                 if (!isAnnotated) {
-                    throw new IllegalStateException("Static fields of classes derived from MergeableMetricBase cannot be annotated with @MergeByAdding, " +
-                            "Field " + field.getName() + " has that annotation.");
+                    throw new IllegalStateException("All (non-static) fields of this class must be annotated with @MergeByAdding, @NoMergingIsDerived, @MergeByAssertEquals, @MergingIsManual, or @NoMergingKeepsValue. " +
+                            "Field " + field.getName() + " isn't annotated.");
                 }
             }
 
