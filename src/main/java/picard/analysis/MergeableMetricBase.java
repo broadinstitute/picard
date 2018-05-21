@@ -46,7 +46,7 @@ import java.util.List;
  * merge-by-adding is only enabled for the following types: int, Integer, float, Float, double, Double, short, Short, long, Long, byte, Byte.
  * Overflow will be detected (for the short, and byte types) and an exception thrown.
  *
- * Every (public, non-static) field in this class _must_ be @Annotated by one of: MergeByAdding, MergeByAssertEquals, NoMergingIsDerived, MergingIsManual, NoMergingKeepsValue.
+ * Every (non-static) field in this class _must_ be @Annotated by one of: MergeByAdding, MergeByAssertEquals, NoMergingIsDerived, MergingIsManual, NoMergingKeepsValue.
  * Static fields may be annotated, but not with @MergeByAdding.
  *
  * MergeByAdding: When merging another metric into this one, the value of the field in the other class will be added to the value in this.
