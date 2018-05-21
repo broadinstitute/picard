@@ -46,6 +46,18 @@ import java.util.List;
  * merge-by-adding is only enabled for the following types: int, Integer, float, Float, double, Double, short, Short, long, Long, byte, Byte.
  * Overflow will be detected (for the short, and byte types) and an exception thrown.
  *
+ * Every (public, non-static) field in this class _must_ be @Annotated by one of: MergeByAdding, MergeByAssertEquals, NoMergingIsDerived, MergingIsManual, NoMergingKeepsValue.
+ * Static fields may be annotated, but not with @MergeByAdding.
+ *
+ * MergeByAdding: When merging another metric into this one, the value of the field in the other class will be added to the value in this.
+ * This will happen automatically!
+ * MergeByAssertEquals: When merging another metric into this one, the code will assert that value of the field in the other class is equal to the value in this.
+ * NoMergingIsDerived:  When merging another metric into this one, no action will be taken since the value of this field should be derived from the other field.
+ * This derivation should happen in the "calculateDerivedFields" method.
+ * MergingIsManual:  When merging another metric into this one, the resulting value will be calculated "manually", i.e. by custom code in the merge
+ * method. The resulting value can depend on both this and other objects.
+ * NoMergingKeepsValue:  When merging another metric into this one, the value of the field in this remains unchanged by design.
+ *
  * @author Yossi Farjoun
  */
 abstract public class MergeableMetricBase extends MetricBase {
@@ -231,7 +243,7 @@ abstract public class MergeableMetricBase extends MetricBase {
         return this;
     }
 
-    private static List<Field> getAllFields(Class clazz){
+    private static List<Field> getAllFields(Class clazz) {
         final List<Field> fields = new ArrayList<>();
         fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
         final Class superClass = clazz.getSuperclass();
