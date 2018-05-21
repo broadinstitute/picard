@@ -19,7 +19,7 @@ public class TileMetricsUtilTest {
     public void testFindTileMetrics() throws IOException {
         List<Integer> populatedCycleDirs = new ArrayList<>();
         Path baseDir = createTestDirs(0, populatedCycleDirs, true);
-        List<File> tileMetricsFiles = TileMetricsUtil.renderTileMetricsFilesFromBasecallingDirectory(
+        List<File> tileMetricsFiles = TileMetricsUtil.findTileMetricsFiles(
                 baseDir.toFile(), 0, false);
 
         List<File> expected = generateFindTileMetricsExpected(baseDir, populatedCycleDirs, true);
@@ -31,7 +31,7 @@ public class TileMetricsUtilTest {
     public void testMissingTileMetrics() throws IOException {
         List<Integer> populatedCycleDirs = new ArrayList<>();
         Path baseDir = createTestDirs(0, populatedCycleDirs, false);
-        TileMetricsUtil.renderTileMetricsFilesFromBasecallingDirectory(
+        TileMetricsUtil.findTileMetricsFiles(
                 baseDir.toFile(), 0, false);
 
         IOUtil.deleteDirectoryTree(baseDir.toFile());
@@ -57,7 +57,7 @@ public class TileMetricsUtilTest {
     ) throws IOException {
 
         Path baseDir = createTestDirs(numCycles, populatedCycleDirs, baseMetricsFile);
-        List<File> tileMetricsFiles = TileMetricsUtil.renderTileMetricsFilesFromBasecallingDirectory(
+        List<File> tileMetricsFiles = TileMetricsUtil.findTileMetricsFiles(
             baseDir.toFile(), numCycles, true);
 
         List<File> expected = generateFindTileMetricsExpected(baseDir, populatedCycleDirs, baseMetricsFile);
@@ -86,7 +86,7 @@ public class TileMetricsUtilTest {
             boolean baseMetricsFile
     ) throws IOException {
         Path baseDir = Files.createTempDirectory("TileMetricsUtilTest");
-        // create numCylcleMetricsFiles cycle dirs put tile metrics in those indicated by populatedCycleDirs
+        // create numCycleMetricsFiles cycle dirs put tile metrics in those indicated by populatedCycleDirs
         Path baseOpDir = Files.createDirectory(getBaseOpDir(baseDir));
         IntStream.range(1, numCycleMetricsFiles + 1).forEach(i -> {
             try {

@@ -74,11 +74,12 @@ public class TileMetricsUtil {
     /**
      * Returns the path to the TileMetrics file given the basecalling directory.
      */
-    public static List<File> renderTileMetricsFilesFromBasecallingDirectory(final File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
-        return findTileMetricsFiles(illuminaRunDirectory, numCycles, isNovaSeq);
+    @Deprecated // Use findTileMetricsFiles instead; the illumina directory hierarchy for novaSeq is unreliable.
+    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
+        return findTileMetricsFiles(illuminaRunDirectory, numCycles, isNovaSeq).get(0);
     }
 
-    private static List<File> findTileMetricsFiles(File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
+    public static List<File> findTileMetricsFiles(File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
         Path interOpDir = illuminaRunDirectory.toPath().resolve(INTEROP_SUBDIRECTORY_NAME);
         final List<Path> pathsToTest = new ArrayList<>();
 
