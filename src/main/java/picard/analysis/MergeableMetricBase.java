@@ -42,12 +42,12 @@ import java.util.List;
  * An extension of MetricBase that knows how to merge-by-adding fields that are appropriately annotated ({@link MergeByAdding}). It also provides an interface
  * for calculating derived fields {@link #calculateDerivedFields()}  (and an annotation that informs that said fields are derived {@link NoMergingIsDerived}). Finally, it also allows for an annotation
  * that suggests that a field will be used as an ID and thus merging will simply ensure that these fields are equal {@link MergeByAssertEquals}. Other annotations are available,
- * though they all currently imply that no _implicit_ action will be taken {@link MergingIsManual} and {@link NoMergingKeepsValue}.
- *
+ * though they all currently imply that no <it>implicit</it> action will be taken {@link MergingIsManual} and {@link NoMergingKeepsValue}.
+ *<p>
  * {@link MergeByAdding} is only enabled for the following types: int, Integer, float, Float, double, Double, short, Short, long, Long, byte, Byte.
  * Overflow will be detected (for the short, and byte types) and an exception thrown.
- *
- * Every (non-static) field in this class _must_ be @Annotated by one of: {@link MergeByAdding}, {@link MergeByAssertEquals}, {@link NoMergingIsDerived}, {@link MergingIsManual}, {@link NoMergingKeepsValue}.
+ *<p><
+ * Every (non-static) field in this class <it>must</it> be @Annotated by one of: {@link MergeByAdding}, {@link MergeByAssertEquals}, {@link NoMergingIsDerived}, {@link MergingIsManual}, {@link NoMergingKeepsValue}.
  * Static fields may be annotated, but not with {@link MergeByAdding}, there will be no automatic modification of static fields
  *
  * <dl>
@@ -98,7 +98,7 @@ abstract public class MergeableMetricBase extends MetricBase {
     protected @interface NoMergingKeepsValue {}
 
 
-    /** checks if this instance can be merged with another
+    /** Checks if this instance can be merged with another
      *
      * Other must have all the fields that this instance has, and
      * the fields that are annotated as MergeByAssertEquals must contain the same value
