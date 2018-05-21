@@ -74,7 +74,7 @@ public class TileMetricsUtil {
     /**
      * Returns the path to the TileMetrics file given the basecalling directory.
      */
-    public static List<File> renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
+    public static List<File> renderTileMetricsFilesFromBasecallingDirectory(final File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
         return findTileMetricsFiles(illuminaRunDirectory, numCycles, isNovaSeq);
     }
 
@@ -101,16 +101,18 @@ public class TileMetricsUtil {
             if (isNovaSeq) {
                 message.append(" or any of its cycle directories.");
             }
-            throw new IllegalArgumentException(message.toString());
+            throw new IllegalStateException(message.toString());
         }
         return files;
     }
 
-    private static Collection<Tile> getTileClusterRecordsV3(Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap,
-                                            final Map<Integer, File> phasingMetricsFiles,
-                                            final ReadStructure readStructure,
-                                            final ValidationStringency validationStringency,
-                                            final Float density) {
+    private static Collection<Tile> getTileClusterRecordsV3(
+            Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap,
+            final Map<Integer, File> phasingMetricsFiles,
+            final ReadStructure readStructure,
+            final ValidationStringency validationStringency,
+            final Float density) {
+
         final Collection<Tile> tiles = new LinkedList<>();
         for (final Map.Entry<String, ? extends Collection<IlluminaTileMetrics>> entry : locationToMetricsMap.entrySet()) {
             final Collection<IlluminaTileMetrics> tileRecords = entry.getValue();
@@ -130,11 +132,12 @@ public class TileMetricsUtil {
         return Collections.unmodifiableCollection(tiles);
     }
 
-    public static Collection<Tile> parseClusterRecordsFromTileMetricsV3(final Collection<File> tileMetricsOutFiles,
-                                                        final Map<Integer, File> phasingMetricsFiles,
-                                                        final ReadStructure readStructure,
-                                                        final ValidationStringency validationStringency)
-            throws FileNotFoundException {
+    public static Collection<Tile> parseClusterRecordsFromTileMetricsV3(
+            final Collection<File> tileMetricsOutFiles,
+            final Map<Integer, File> phasingMetricsFiles,
+            final ReadStructure readStructure,
+            final ValidationStringency validationStringency
+    ) throws FileNotFoundException {
         for (File tileMetricsOutfile : tileMetricsOutFiles) {
             TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutfile, TileMetricsOutReader.TileMetricsVersion.THREE);
             final float density = tileMetricsIterator.getDensity();
