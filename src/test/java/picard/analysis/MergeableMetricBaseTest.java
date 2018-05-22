@@ -30,7 +30,7 @@ import org.testng.annotations.Test;
 
 public class MergeableMetricBaseTest {
 
-    class TestMergeableMetric extends MergeableMetricBase {
+    static class TestMergeableMetric extends MergeableMetricBase {
         @MergeByAdding
         public Integer boxedInt = 1;
         @MergeByAdding
@@ -85,7 +85,7 @@ public class MergeableMetricBaseTest {
         }
     }
 
-     class TestMergeableMetricWithRestrictedMembers extends TestMergeableMetric {
+     static class TestMergeableMetricWithRestrictedMembers extends TestMergeableMetric {
 
         @MergeByAdding
         private Integer privateIntDerived = 1;
@@ -100,9 +100,73 @@ public class MergeableMetricBaseTest {
         public void calculateDerivedFields() {}
     }
 
+
+    static class TestMergeableMetricWithStaticMembers extends TestMergeableMetric {
+
+        public static int staticInteger = 1;
+
+        protected static String staticString = "hi!";
+        @MergeByAssertEquals
+        protected static String staticEqualsString = "hi!";
+        @NoMergingIsDerived
+        protected static String staticDerivedString = "hi!";
+        @MergingIsManual
+        protected static String staticManualString = "hi!";
+
+        @MergeByAdding
+        private Integer privateIntDerived = 1;
+
+        @MergeByAdding
+        protected Integer protectedIntDerived = 1;
+
+        @MergeByAssertEquals
+        private String privateString = "hi!";
+
+        @Override
+        public void calculateDerivedFields() {}
+    }
+
+
+
+    @Test
+    public void testMergingWithStaticMembers() {
+        final TestMergeableMetricWithStaticMembers metric1 = new TestMergeableMetricWithStaticMembers();
+        final TestMergeableMetricWithStaticMembers metric2 = new TestMergeableMetricWithStaticMembers();
+
+        metric1.merge(metric2);
+        Assert.assertEquals(metric1.boxedInt, (Integer) 2);
+        Assert.assertEquals(metric1.unboxedInt, 4);
+        Assert.assertEquals(metric1.privateIntDerived, (Integer) 2);
+        Assert.assertEquals(metric1.protectedIntDerived, (Integer) 2);
+        Assert.assertEquals(metric1.protectedIntBase, (Integer) 2);
+        Assert.assertEquals(((TestMergeableMetric)metric1).privateIntBase, (Integer) 2);
+        Assert.assertEquals(metric1.privateString, "hi!");
+
+        Assert.assertEquals(metric1.staticInteger,1);
+        Assert.assertEquals(metric1.staticString, "hi!");
+    }
+
+    static class TestMergeableMetricWithStaticAnnotatedMembers extends TestMergeableMetric {
+        // should fail
+        @MergeByAdding
+        public static int staticInteger = 1;
+    }
+
+
+    @Test(expectedExceptions = IllegalStateException.class)
+    public void testMergingWithStaticAnnotatedMembers() {
+        final TestMergeableMetricWithStaticAnnotatedMembers metric1 = new TestMergeableMetricWithStaticAnnotatedMembers();
+        final TestMergeableMetricWithStaticAnnotatedMembers metric2 = new TestMergeableMetricWithStaticAnnotatedMembers();
+
+        metric1.merge(metric2);
+
+    }
+
+
     @Test
     public void testMergingWithRestrictedMembers() {
-        final TestMergeableMetricWithRestrictedMembers metric1 = new TestMergeableMetricWithRestrictedMembers(), metric2 = new TestMergeableMetricWithRestrictedMembers();
+        final TestMergeableMetricWithRestrictedMembers metric1 = new TestMergeableMetricWithRestrictedMembers();
+        final TestMergeableMetricWithRestrictedMembers metric2 = new TestMergeableMetricWithRestrictedMembers();
         metric1.merge(metric2);
 
         Assert.assertEquals(metric1.boxedInt, (Integer) 2);
@@ -116,7 +180,8 @@ public class MergeableMetricBaseTest {
 
     @Test
     public void testMergingWithRestrictedMembersUsingBaseClass() {
-        final MergeableMetricBase metric1 = new TestMergeableMetricWithRestrictedMembers(), metric2 = new TestMergeableMetricWithRestrictedMembers();
+        final MergeableMetricBase metric1 = new TestMergeableMetricWithRestrictedMembers();
+        final MergeableMetricBase metric2 = new TestMergeableMetricWithRestrictedMembers();
         metric1.merge(metric2);
 
         Assert.assertEquals(((TestMergeableMetricWithRestrictedMembers)metric1).boxedInt, (Integer) 2);
@@ -128,7 +193,8 @@ public class MergeableMetricBaseTest {
 
     @Test
     public void testMerging() {
-        final TestMergeableMetric metric1 = new TestMergeableMetric(), metric2 = new TestMergeableMetric();
+        final TestMergeableMetric metric1 = new TestMergeableMetric();
+        final TestMergeableMetric metric2 = new TestMergeableMetric();
         metric1.merge(metric2);
 
         Assert.assertEquals(metric1.boxedInt, (Integer) 2);
@@ -161,7 +227,8 @@ public class MergeableMetricBaseTest {
     @Test(expectedExceptions = IllegalStateException.class)
     public void testMergingUnequalString() {
 
-        final TestMergeableMetric metric1 = new TestMergeableMetric(), metric2 = new TestMergeableMetric();
+        final TestMergeableMetric metric1 = new TestMergeableMetric();
+        final TestMergeableMetric metric2 = new TestMergeableMetric();
         metric1.mustBeEqualString = "goodbye";
 
         Assert.assertFalse(metric1.canMerge(metric2));
@@ -171,7 +238,8 @@ public class MergeableMetricBaseTest {
     @Test
     public void testMergingANull() {
 
-        final TestMergeableMetric metric1 = new TestMergeableMetric(), metric2 = new TestMergeableMetric();
+        final TestMergeableMetric metric1 = new TestMergeableMetric();
+        final TestMergeableMetric metric2 = new TestMergeableMetric();
         metric1.mustBeEqualString = "goodbye";
         metric2.mustBeEqualString = null;
 
@@ -188,7 +256,8 @@ public class MergeableMetricBaseTest {
     @Test(expectedExceptions = IllegalStateException.class)
     public void testMergingUnequalDouble() {
 
-        final TestMergeableMetric metric1 = new TestMergeableMetric(), metric2 = new TestMergeableMetric();
+        final TestMergeableMetric metric1 = new TestMergeableMetric();
+        final TestMergeableMetric metric2 = new TestMergeableMetric();
         metric1.mustBeEqualDouble = 1D;
 
         Assert.assertFalse(metric1.canMerge(metric2));
@@ -198,7 +267,8 @@ public class MergeableMetricBaseTest {
     @Test(expectedExceptions = IllegalStateException.class)
     public void testMergingUnequalBoolean() {
 
-        final TestMergeableMetric metric1 = new TestMergeableMetric(), metric2 = new TestMergeableMetric();
+        final TestMergeableMetric metric1 = new TestMergeableMetric();
+        final TestMergeableMetric metric2 = new TestMergeableMetric();
         metric1.mustBeEqualUnboxedBoolean = true;
 
         Assert.assertFalse(metric1.canMerge(metric2));
@@ -214,7 +284,8 @@ public class MergeableMetricBaseTest {
 
     @Test(expectedExceptions = IllegalStateException.class)
     public void testIllegalClass() {
-        final TestMergeableMetricIllegal illegal1 = new TestMergeableMetricIllegal(), illegal2 = new TestMergeableMetricIllegal();
+        final TestMergeableMetricIllegal illegal1 = new TestMergeableMetricIllegal();
+        final TestMergeableMetricIllegal illegal2 = new TestMergeableMetricIllegal();
 
         illegal1.merge(illegal2);
     }
