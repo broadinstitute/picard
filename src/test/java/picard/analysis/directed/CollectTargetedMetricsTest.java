@@ -1,12 +1,6 @@
 package picard.analysis.directed;
 
-import htsjdk.samtools.SAMException;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Interval;
@@ -15,6 +9,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.analysis.TheoreticalSensitivity;
+import picard.analysis.TheoreticalSensitivityMetrics;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
 import picard.util.TestNGUtil;
@@ -23,7 +19,7 @@ import picard.vcf.VcfTestUtils;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Random;
+import java.util.*;
 
 public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
@@ -31,8 +27,10 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
     private final File dict = new File(TEST_DATA_DIR+"chrM.reference.dict");
     private File tempSamFile;
     private File outfile;
+    private File tsOutfile; // Theoretical sensitivity file
     private File perTargetOutfile;
-    private static final int LENGTH = 99;
+    private final static int LENGTH = 99;
+    private final static int RANDOM_SEED = 51;
 
     final String referenceFile = TEST_DATA_DIR + "chrM.reference.fasta";
     final String emptyIntervals = TEST_DATA_DIR + "chrM.empty.interval_list";
@@ -79,6 +77,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
         //Add to setBuilder
         final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
+        setBuilder.setRandomSeed(RANDOM_SEED);
         setBuilder.setReadGroup(readGroupRecord);
         setBuilder.setUseNmFlag(true);
         setBuilder.setHeader(header);
@@ -118,8 +117,10 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         //create output files for tests
         outfile = File.createTempFile("test", ".TargetedMetrics_Coverage");
         perTargetOutfile = File.createTempFile("perTarget", ".perTargetCoverage");
+        tsOutfile = File.createTempFile("test", ".TheoreticalSensitivityMetrics");
         outfile.deleteOnExit();
         perTargetOutfile.deleteOnExit();
+        tsOutfile.deleteOnExit();
     }
 
     @DataProvider(name = "targetedIntervalDataProvider")
@@ -154,6 +155,59 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         for (final TargetedPcrMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.TOTAL_READS, numReads * 2);
             Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, .997972, .02);
+        }
+    }
+
+    @DataProvider(name = "theoreticalSensitivityDataProvider")
+    public Object[][] theoreticalSensitivityDataProvider() {
+
+        return new Object[][] {
+                // This test is primarily used as an integration test since theoretical sensitivity doesn't converge
+                // well with a sample size of 1000 rather than 10,000.  The sample size is set so low as to prevent
+                // the tests from taking too long to run.
+                {tempSamFile, outfile, tsOutfile, perTargetOutfile, referenceFile, singleIntervals, 1000,
+                        Arrays.asList(0.01, 0.05, 0.10,  0.30,  0.50), // Allele fraction
+                        Arrays.asList(0.01, 0.52, 0.93,  0.99,  0.99)  // Expected sensitivity
+                }
+        };
+    }
+
+    @Test(dataProvider = "theoreticalSensitivityDataProvider")
+    public void runCollectTargetedMetricsTheoreticalSensitivityTest(final File input, final File outfile, final File tsOutfile, final File perTargetOutfile, final String referenceFile,
+                                              final String targetIntervals, final int sampleSize, final List<Double> alleleFractions, final List<Double> expectedSensitivities) throws IOException {
+
+        final String[] args = new String[] {
+                "TARGET_INTERVALS=" + targetIntervals,
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + referenceFile,
+                "PER_TARGET_COVERAGE=" + perTargetOutfile.getAbsolutePath(),
+                "LEVEL=ALL_READS",
+                "AMPLICON_INTERVALS=" + targetIntervals,
+                "THEORETICAL_SENSITIVITY_OUTPUT=" + tsOutfile.getAbsolutePath(),
+                "SAMPLE_SIZE=" + sampleSize
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<TheoreticalSensitivityMetrics, Double> output = new MetricsFile<>();
+        output.read(new FileReader(tsOutfile.getAbsolutePath()));
+
+        // Create map of theoretical sensitivities read from file
+        final Iterator<TheoreticalSensitivityMetrics> metrics = output.getMetrics().iterator();
+        final Map<Double, Double> map = new HashMap<>();
+        while (metrics.hasNext()) {
+            TheoreticalSensitivityMetrics m = metrics.next();
+            map.put(m.ALLELE_FRACTION, m.THEORETICAL_SENSITIVITY);
+        }
+
+        // Compare theoretical sensitivities created by CollectTargetedMetrics
+        // with those in the test data provider.
+        final Iterator<Double> alleleFraction = alleleFractions.iterator();
+        final Iterator<Double> expectedSensitivity = expectedSensitivities.iterator();
+        while (alleleFraction.hasNext() || expectedSensitivity.hasNext()) {
+            // Provide wiggle room of 1% in the comparisons
+            Assert.assertEquals(map.get(alleleFraction.next()), expectedSensitivity.next(), 0.01);
         }
     }
 
