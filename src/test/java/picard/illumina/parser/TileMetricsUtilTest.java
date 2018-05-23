@@ -2,78 +2,74 @@ package picard.illumina.parser;
 
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class TileMetricsUtilTest {
-    @Test
-    public void testFindTileMetrics() throws IOException {
-        List<Integer> populatedCycleDirs = new ArrayList<>();
-        Path baseDir = createTestDirs(0, populatedCycleDirs, true);
-        List<File> tileMetricsFiles = TileMetricsUtil.findTileMetricsFiles(
-                baseDir.toFile(), 0, false);
 
-        List<File> expected = generateFindTileMetricsExpected(baseDir, populatedCycleDirs, true);
-        Assert.assertEquals(tileMetricsFiles, expected);
-        IOUtil.deleteDirectoryTree(baseDir.toFile());
+    private Path testDir;
+
+    @BeforeClass
+    public void setupTestDir() throws IOException {
+        this.testDir = Files.createTempDirectory("TileMetricsUtilTests");
+    }
+
+    @AfterClass
+    public void cleanupTestDir() {
+        IOUtil.deleteDirectoryTree(testDir.toFile());
+    }
+
+    @DataProvider
+    public Object[][] testCases() {
+        List<Integer> oneCycleFile = Collections.singletonList(1);
+        List<Integer> allCycleFiles = Arrays.asList(1, 2, 3, 4, 5);
+        List<Integer> someCycleFiles = Arrays.asList(2, 4);
+
+        return new Object[][]{
+            //specificTestDir, numCycleMetricsFiles, populatedCycleDirs, baseMetricsFile, isNovaSeq
+            {"notNovaSeq", 0, Collections.emptyList(), true, false},
+            {"novaSeqBaseFileOnly", 0, Collections.emptyList(), true, true},
+            {"novaSeqSingleCycleFile", 1, oneCycleFile, false, true},
+            {"novaSeqBaseAndSingleCycleFile", 1, oneCycleFile, true, true},
+            {"novaSeqAllCycleFiles", 5, allCycleFiles, false, true},
+            {"novaSeqBaseAndAllCycleFiles", 5, allCycleFiles, true, true},
+            {"novaSeqSomeCycleFiles", 5, someCycleFiles, false, true},
+            {"novaSeqBaseAndSomeCycleFiles", 5, someCycleFiles, true, true}
+        };
     }
 
     @Test(expectedExceptions = IllegalStateException.class)
     public void testMissingTileMetrics() throws IOException {
-        List<Integer> populatedCycleDirs = new ArrayList<>();
-        Path baseDir = createTestDirs(0, populatedCycleDirs, false);
+        List<Integer> populatedCycleDirs = Collections.emptyList();
+        Path baseDir = createTestDirs("missingTileMetrics",0, populatedCycleDirs, false);
         TileMetricsUtil.findTileMetricsFiles(
                 baseDir.toFile(), 0, false);
-
-        IOUtil.deleteDirectoryTree(baseDir.toFile());
     }
 
-    // put tile metrics file in several permutations of random cycle dirs
-    // and make sure we get all metricsFiles each time
-    @Test
-    public void testFindTileMetricsNovaSeq() throws IOException {
-        int numCycles = 15;
-        int numRandomDirectoryPermutations = 5;
-        for (int i=0; i<numRandomDirectoryPermutations; i++) {
-            List<Integer> populatedCycleDirs = randomPopulatedCycleDirs(numCycles);
-            testPermutation(populatedCycleDirs, numCycles, true);
-            testPermutation(populatedCycleDirs, numCycles, false);
-        }
-    }
-
-    private void testPermutation(
-            List<Integer> populatedCycleDirs,
+    @Test(dataProvider = "testCases")
+    public void testFilePresencePermutation(
+            String specificTestDir,
             int numCycles,
-            boolean baseMetricsFile
+            List<Integer> populatedCycleDirs,
+            boolean baseMetricsFile,
+            boolean isNovaSeq
     ) throws IOException {
 
-        Path baseDir = createTestDirs(numCycles, populatedCycleDirs, baseMetricsFile);
+        Path baseDir = createTestDirs(specificTestDir, numCycles, populatedCycleDirs, baseMetricsFile);
         List<File> tileMetricsFiles = TileMetricsUtil.findTileMetricsFiles(
-            baseDir.toFile(), numCycles, true);
+            baseDir.toFile(), numCycles, isNovaSeq);
 
         List<File> expected = generateFindTileMetricsExpected(baseDir, populatedCycleDirs, baseMetricsFile);
         Assert.assertEquals(tileMetricsFiles, expected);
-        IOUtil.deleteDirectoryTree(baseDir.toFile());
-    }
-
-    private List<Integer> randomPopulatedCycleDirs(int maxDirNum) {
-        List<Integer> populatedCycleDirs = new ArrayList<>();
-        Random rng = new Random();
-        IntStream.range(1, maxDirNum).forEach(i -> {
-            if (rng.nextBoolean()) {
-                populatedCycleDirs.add(i);
-            }
-        });
-        return populatedCycleDirs;
     }
 
     private Path getBaseOpDir(Path baseDir) {
@@ -81,11 +77,12 @@ public class TileMetricsUtilTest {
     }
 
     private Path createTestDirs(
+            String specificTestDir,
             int numCycleMetricsFiles,
             List<Integer> populatedCycleDirs,
             boolean baseMetricsFile
     ) throws IOException {
-        Path baseDir = Files.createTempDirectory("TileMetricsUtilTest");
+        Path baseDir = Files.createDirectory(testDir.resolve(specificTestDir));
         // create numCycleMetricsFiles cycle dirs put tile metrics in those indicated by populatedCycleDirs
         Path baseOpDir = Files.createDirectory(getBaseOpDir(baseDir));
         IntStream.range(1, numCycleMetricsFiles + 1).forEach(i -> {
@@ -107,21 +104,21 @@ public class TileMetricsUtilTest {
     private List<File> generateFindTileMetricsExpected(Path baseDir, List<Integer> populatedCycleDirs, boolean baseMetricsFile) {
         List<File> expected = new ArrayList<>();
         if (baseMetricsFile) {
-            expected.add(new File(
+            expected.add(
                 baseDir
                     .resolve(TileMetricsUtil.INTEROP_SUBDIRECTORY_NAME)
-                    .resolve(TileMetricsUtil.TILE_METRICS_OUT_FILE_NAME).toUri())
+                    .resolve(TileMetricsUtil.TILE_METRICS_OUT_FILE_NAME).toFile()
             );
         }
         if (populatedCycleDirs.size() > 0) {
             Path baseOpDir = getBaseOpDir(baseDir);
             populatedCycleDirs.stream().sorted(Comparator.reverseOrder()).forEach(i ->
-                expected.add(new File(
+                expected.add(
                     baseOpDir
                         .resolve("C" + i + ".1")
                         .resolve(TileMetricsUtil.TILE_METRICS_OUT_FILE_NAME)
-                        .toUri()
-                ))
+                        .toFile()
+                )
             );
         }
         return expected;

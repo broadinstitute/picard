@@ -73,13 +73,15 @@ public class TileMetricsUtil {
 
     /**
      * Returns the path to the TileMetrics file given the basecalling directory.
+     *
+     * @deprecated use {@link #findTileMetricsFiles(File, int, boolean)} instead
      */
-    @Deprecated // Use findTileMetricsFiles instead; the illumina directory hierarchy for novaSeq is unreliable.
-    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
+    @Deprecated
+    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, int numCycles, boolean isNovaSeq) {
         return findTileMetricsFiles(illuminaRunDirectory, numCycles, isNovaSeq).get(0);
     }
 
-    public static List<File> findTileMetricsFiles(File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
+    public static List<File> findTileMetricsFiles(File illuminaRunDirectory, int numCycles, boolean isNovaSeq) {
         Path interOpDir = illuminaRunDirectory.toPath().resolve(INTEROP_SUBDIRECTORY_NAME);
         final List<Path> pathsToTest = new ArrayList<>();
 
@@ -112,7 +114,7 @@ public class TileMetricsUtil {
             final Map<Integer, File> phasingMetricsFiles,
             final ReadStructure readStructure,
             final ValidationStringency validationStringency,
-            final Float density) {
+            final float density) {
 
         final Collection<Tile> tiles = new LinkedList<>();
         for (final Map.Entry<String, ? extends Collection<IlluminaTileMetrics>> entry : locationToMetricsMap.entrySet()) {
@@ -155,7 +157,10 @@ public class TileMetricsUtil {
         throw new RuntimeException("None of the following input files contained cluster records:" + pathsString);
     }
 
-    @Deprecated // Use parseClusterRecordsFromTileMetricsV3 instead
+    /**
+     * @deprecated use {@link #parseClusterRecordsFromTileMetricsV3(Collection, Map, ReadStructure, ValidationStringency)} instead
+     */
+    @Deprecated
     public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile,
                                                     final Map<Integer, File> phasingMetricsFiles,
                                                     final ReadStructure readStructure,
