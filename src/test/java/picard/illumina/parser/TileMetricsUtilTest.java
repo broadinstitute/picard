@@ -50,7 +50,7 @@ public class TileMetricsUtilTest {
     @Test(expectedExceptions = IllegalStateException.class)
     public void testMissingTileMetrics() throws IOException {
         List<Integer> populatedCycleDirs = Collections.emptyList();
-        Path baseDir = createTestDirs("missingTileMetrics",0, populatedCycleDirs, false);
+        Path baseDir = createTestDirs("missingTileMetrics", 0, populatedCycleDirs, false);
         TileMetricsUtil.findTileMetricsFiles(
                 baseDir.toFile(), 0, false);
     }
