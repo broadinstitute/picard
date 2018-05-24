@@ -2,6 +2,21 @@
   "summary": "Collect whole genome sequencing-related metrics.  ",
   "arguments": [
     {
+      "summary": "Allele fraction for which to calculate theoretical sensitivity.",
+      "name": "--ALLELE_FRACTION",
+      "synonyms": "NA",
+      "type": "List[Double]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
       "synonyms": "NA",
@@ -281,6 +296,21 @@
       "defaultValue": "-1",
       "minValue": "-Infinity",
       "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Output for Theoretical Sensitivity metrics.",
+      "name": "--THEORETICAL_SENSITIVITY_OUTPUT",
+      "synonyms": "NA",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
