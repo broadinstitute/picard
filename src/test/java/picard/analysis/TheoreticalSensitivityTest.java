@@ -236,8 +236,8 @@ public class TheoreticalSensitivityTest {
         // These magic numbers come from a separate implementation of the code in R.
         return new Object[][]{
                 // Expected sensitivity, metrics file, allele fraction, constant depth, sample size.
-//                {1.00, wgsMetricsFile, .5, 30, 10000, 0.01},
-//                {0.78, targetedMetricsFile, .1, 30, 10000, 0.02},
+                {1.00, wgsMetricsFile, .5, 30, 10000, 0.01},
+                {0.78, targetedMetricsFile, .1, 30, 10000, 0.02},
                 {0.26, targetedMetricsFile, 0.1, 10, 10000, 0.01}
         };
     }
