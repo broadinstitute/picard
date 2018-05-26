@@ -29,8 +29,8 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
     private File outfile;
     private File tsOutfile; // Theoretical sensitivity file
     private File perTargetOutfile;
-    private final static int LENGTH = 99;
-    private final static int RANDOM_SEED = 51;
+    private static final int LENGTH = 99;
+    private static final int RANDOM_SEED = 51;
 
     final String referenceFile = TEST_DATA_DIR + "chrM.reference.fasta";
     final String emptyIntervals = TEST_DATA_DIR + "chrM.empty.interval_list";
@@ -165,7 +165,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
                 // This test is primarily used as an integration test since theoretical sensitivity doesn't converge
                 // well with a sample size of 1000 rather than 10,000.  The sample size is set so low as to prevent
                 // the tests from taking too long to run.
-                {tempSamFile, outfile, tsOutfile, perTargetOutfile, referenceFile, singleIntervals, 1000,
+                {tempSamFile, outfile, tsOutfile, perTargetOutfile, referenceFile, singleIntervals, 2000,
                         Arrays.asList(0.01, 0.05, 0.10,  0.30,  0.50), // Allele fraction
                         Arrays.asList(0.01, 0.52, 0.93,  0.99,  0.99)  // Expected sensitivity
                 }
