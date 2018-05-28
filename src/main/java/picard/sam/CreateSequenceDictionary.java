@@ -48,7 +48,6 @@ import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.*;
 import java.math.BigInteger;
-import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -59,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Create a SAM/BAM file from a fasta containing reference sequence. The output SAM file contains a header but no
@@ -113,8 +111,9 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     public int NUM_SEQUENCES = Integer.MAX_VALUE;
 
     @Argument(shortName = "AN", doc = "Optional file containing the alternative names for the contigs. "
+    		+ "Tools may use this information to consider different contig notations as identical (e.g: 'chr1' and '1'). "
             + "First column is the original name, the second column is an alternative name. "
-            + "One contig may have more than one alternative name. " ,
+            + "One contig may have more than one alternative name." ,
             optional=true)
     public File ALT_NAMES = null;
 
@@ -331,15 +330,15 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         // the map returned by the function
         final Map<String, Set<String>> aliasesByContig = new HashMap<>();
         try {
-            for (final String line :IOUtil.slurpLines(this.ALT_NAMES)) {
-            if (StringUtil.isBlank(line)) {
-                    continue;
-                }
+            for (final String line : IOUtil.slurpLines(this.ALT_NAMES)) {
+                if (StringUtil.isBlank(line)) {
+                        continue;
+                    }
                 final int tab = line.indexOf('\t');
-                if (tab == -1 ) {
+                if (tab == -1) {
                     throw new IOException("tabulation missing in " + line);
                 }
-                final String contigName = line.substring(0,tab);
+                final String contigName = line.substring(0, tab);
                 final String altName = line.substring(tab + 1);
                 // check for empty values
                 if (StringUtil.isBlank(contigName)) {
@@ -359,15 +358,15 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                 // check alias not previously defined as contig
                 if (aliasesByContig.containsKey(altName)) {
                     throw new IOException("alternate name  " + altName +
-                            "previously defined as a contig in " + line);
+                            " previously defined as a contig in " + line);
                 }
                 // check contig not previously defined as alias
                 if (aliasesByContig.keySet().stream().
                         // not an error if defined twice for same contig
-                        filter(K->!K.equals(contigName)). 
-                        anyMatch(K->aliasesByContig.get(K).contains(contigName))) {
-                        throw new IOException("contig  " + contigName +
-                            "previously defined as an alternate name in " + line);
+                        filter(K -> !K.equals(contigName)). 
+                        anyMatch(K -> aliasesByContig.get(K).contains(contigName))) {
+                            throw new IOException("contig  " + contigName +
+                                " previously defined as an alternate name in " + line);
                 }
                 // add alias
                 if (!aliasesByContig.containsKey(contigName)) {
