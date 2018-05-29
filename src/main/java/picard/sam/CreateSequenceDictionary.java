@@ -112,7 +112,9 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     @Argument(shortName = "AN", doc = "Optional file containing the alternative names for the contigs. "
     		+ "Tools may use this information to consider different contig notations as identical (e.g: 'chr1' and '1'). "
-            + "First column is the original name, the second column is an alternative name. "
+    		+ "The alternative names will be put into the appropriate @AN annotation for each contig. "
+    		+ "No header. "
+    		+ "First column is the original name, the second column is an alternative name. "
             + "One contig may have more than one alternative name." ,
             optional=true)
     public File ALT_NAMES = null;
