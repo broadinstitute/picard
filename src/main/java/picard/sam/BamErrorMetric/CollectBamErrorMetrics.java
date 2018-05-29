@@ -429,6 +429,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
 
         // make a linkedList due to removal and addition operations below
         final List<ReadBaseStratification.RecordAndOffsetStratifier<?>> stratifiers = new LinkedList<>(Arrays.stream(directiveUnits)
+                .limit(numberOfDirectives)
                 .skip(1)
                 .map(String::trim)
                 .map(ReadBaseStratification.Stratifiers::valueOf)

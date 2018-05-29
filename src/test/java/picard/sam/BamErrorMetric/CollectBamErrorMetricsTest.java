@@ -4,6 +4,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.QualityUtil;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -17,6 +18,10 @@ public class CollectBamErrorMetricsTest {
     private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("CollectBamErrorMetricsTest", null);
     private static final String TEST_DIR = "testdata/picard/sam/BamErrorMetrics";
 
+    @BeforeClass
+    public void setup(){
+        ReadBaseStratification.setLongHomopolymer(6);
+    }
 
     @DataProvider
     public Object[][] parseDirectiveData() {
@@ -25,7 +30,6 @@ public class CollectBamErrorMetricsTest {
                 {"ERROR,ALL", "error_by_all"},
                 {"ERROR,GC_CONTENT", "error_by_gc"},
                 {"ERROR,READ_ORDINALITY", "error_by_read_ordinality"},
-                {"ERROR,CONFUSION_MATRIX", "error_by_ref_read_base"},
                 {"ERROR,READ_BASE", "error_by_read_base"},
                 {"ERROR,REFERENCE_BASE", "error_by_ref_base"},
                 {"ERROR,PRE_DINUC", "error_by_pre_dinuc"},
@@ -51,22 +55,21 @@ public class CollectBamErrorMetricsTest {
                 {"ERROR,POST_DINUC,BASE_QUALITY,GC_CONTENT", "error_by_post_dinuc_and_base_quality_and_gc"},
                 {" ERROR , POST_DINUC , BASE_QUALITY , GC_CONTENT ", "error_by_post_dinuc_and_base_quality_and_gc"},
 
-                {"OVERLAPPING_ERROR", "overlapping_bases_error_by_all"},
-                {"OVERLAPPING_ERROR,ALL", "overlapping_bases_error_by_all"},
-                {"OVERLAPPING_ERROR,GC_CONTENT", "overlapping_bases_error_by_gc"},
-                {"OVERLAPPING_ERROR,READ_ORDINALITY", "overlapping_bases_error_by_read_ordinality"},
-                {"OVERLAPPING_ERROR,CONFUSION_MATRIX", "overlapping_bases_error_by_ref_read_base"},
-                {"OVERLAPPING_ERROR,READ_BASE", "overlapping_bases_error_by_read_base"},
-                {"OVERLAPPING_ERROR,REFERENCE_BASE", "overlapping_bases_error_by_ref_base"},
-                {"OVERLAPPING_ERROR,PRE_DINUC", "overlapping_bases_error_by_pre_dinuc"},
-                {"OVERLAPPING_ERROR,POST_DINUC", "overlapping_bases_error_by_post_dinuc"},
-                {"OVERLAPPING_ERROR,HOMOPOLYMER_LENGTH", "overlapping_bases_error_by_homopolymer_length"},
-                {"OVERLAPPING_ERROR,HOMOPOLYMER", "overlapping_bases_error_by_homopolymer_and_following_ref_base"},
-                {"OVERLAPPING_ERROR,FLOWCELL_TILE", "overlapping_bases_error_by_tile"},
-                {"OVERLAPPING_ERROR,READ_DIRECTION", "overlapping_bases_error_by_read_direction"},
-                {"OVERLAPPING_ERROR,CYCLE", "overlapping_bases_error_by_cycle"},
-                {"OVERLAPPING_ERROR,INSERT_LENGTH", "overlapping_bases_error_by_insert_length"},
-                {"OVERLAPPING_ERROR,BASE_QUALITY", "overlapping_bases_error_by_base_quality"},
+                {"OVERLAPPING_ERROR", "overlapping_error_by_all"},
+                {"OVERLAPPING_ERROR,ALL", "overlapping_error_by_all"},
+                {"OVERLAPPING_ERROR,GC_CONTENT", "overlapping_error_by_gc"},
+                {"OVERLAPPING_ERROR,READ_ORDINALITY", "overlapping_error_by_read_ordinality"},
+                {"OVERLAPPING_ERROR,READ_BASE", "overlapping_error_by_read_base"},
+                {"OVERLAPPING_ERROR,REFERENCE_BASE", "overlapping_error_by_ref_base"},
+                {"OVERLAPPING_ERROR,PRE_DINUC", "overlapping_error_by_pre_dinuc"},
+                {"OVERLAPPING_ERROR,POST_DINUC", "overlapping_error_by_post_dinuc"},
+                {"OVERLAPPING_ERROR,HOMOPOLYMER_LENGTH", "overlapping_error_by_homopolymer_length"},
+                {"OVERLAPPING_ERROR,HOMOPOLYMER", "overlapping_error_by_homopolymer_and_following_ref_base"},
+                {"OVERLAPPING_ERROR,FLOWCELL_TILE", "overlapping_error_by_tile"},
+                {"OVERLAPPING_ERROR,READ_DIRECTION", "overlapping_error_by_read_direction"},
+                {"OVERLAPPING_ERROR,CYCLE", "overlapping_error_by_cycle"},
+                {"OVERLAPPING_ERROR,INSERT_LENGTH", "overlapping_error_by_insert_length"},
+                {"OVERLAPPING_ERROR,BASE_QUALITY", "overlapping_error_by_base_quality"},
         };
     }
 
@@ -102,7 +105,6 @@ public class CollectBamErrorMetricsTest {
         return new Object[][]{
                 {"ERROR,", ""},
                 {"ERRORS,READ_ORDINALITY", ""},
-                {"ERROR,CONFUSION_MATRIX,", ""},
                 {"ERROR;REFERENCE_BASE", ""},
                 {"ERROR,what", ""},
         };
@@ -143,8 +145,10 @@ public class CollectBamErrorMetricsTest {
                         new ErrorMetrics.SimpleErrorMetric("T,T,10", 1L, 1L)},
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors1, priorQ,
                         new ErrorMetrics.SimpleErrorMetric("G,T,3", 2L, 1L)},
+
                 {".error_by_binned_length_homopolymer_and_following_ref_base", simpleSamWithBaseErrors1, priorQ,
                         new ErrorMetrics.SimpleErrorMetric("G,T,SHORT_HOMOPOLYMER", 6L, 1L)},
+
                 {".error_by_read_ordinality_and_pre_dinuc", chrMReadsWithClips, priorQ,
                         new ErrorMetrics.SimpleErrorMetric("FIRST,A,A", 3L, 3L)},
                 // Using a sam file with a single error it is easy to validate demonstrate these tests should pass
@@ -233,26 +237,26 @@ public class CollectBamErrorMetricsTest {
                 // There should be one errors in the read with one N.
                 {".error_by_ns_in_read", simpleDuplexConsensusSamWithBaseErrors, priorQ,
                         new ErrorMetrics.SimpleErrorMetric("1", 35L, 1L)},
-                // There are two errors, one should show up in CYCLE_QUINTILE_1 and the other in CYCLE_QUINTILE_3
-                // CYCLE_QUINTILE_5 has 16 total (2 more than the other bins) bases due to rounding.
+                // There are two errors, one should show up in QUINTILE_1 and the other in QUINTILE_3
+                // QUINTILE_5 has 16 total (2 more than the other bins) bases due to rounding.
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("CYCLE_QUINTILE_1", 14L, 1L)},
+                        new ErrorMetrics.SimpleErrorMetric("QUINTILE_1", 14L, 1L)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("CYCLE_QUINTILE_2", 14L, 0L)},
+                        new ErrorMetrics.SimpleErrorMetric("QUINTILE_2", 14L, 0L)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("CYCLE_QUINTILE_3", 14L, 1L)},
+                        new ErrorMetrics.SimpleErrorMetric("QUINTILE_3", 14L, 1L)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("CYCLE_QUINTILE_4", 14L, 0L)},
+                        new ErrorMetrics.SimpleErrorMetric("QUINTILE_4", 14L, 0L)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("CYCLE_QUINTILE_5", 16L, 0L)}
+                        new ErrorMetrics.SimpleErrorMetric("QUINTILE_5", 16L, 0L)}
         };
     }
 
     @Test(dataProvider = "OneCovariateErrorMetricsDataProvider")
     public void testOneCovariateErrorMetrics(final String errorSubscript, final File samFile, final int priorQ, ErrorMetrics.SimpleErrorMetric expectedMetric) {
         final String input = samFile.toString();
-        final String referenceFile = TEST_DIR + "chrM.reference.fasta";
-        final String vcf = TEST_DIR + "NIST.selected.vcf";
+        final File referenceFile = new File(TEST_DIR,"chrM.reference.fasta");
+        final File vcf = new File(TEST_DIR, "NIST.selected.vcf");
 
         final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "test");
         final File errorByAll = new File(outputBaseFileName.getAbsolutePath() + errorSubscript);
@@ -262,12 +266,12 @@ public class CollectBamErrorMetricsTest {
         final String[] args = {
                 "INPUT=" + input,
                 "OUTPUT=" + outputBaseFileName,
-                "REFERENCE_SEQUENCE=" + referenceFile,
+                "REFERENCE_SEQUENCE=" + referenceFile.getAbsolutePath(),
                 "ERROR_METRICS=" + "ERROR,TWO_BASE_PADDED_CONTEXT", // Not all covariates are included by default, but we still want to test them.
                 "ERROR_METRICS=" + "ERROR,CONSENSUS",
                 "ERROR_METRICS=" + "ERROR,NS_IN_READ",
                 "ERROR_METRICS=" + "ERROR,BINNED_CYCLE",
-                "VCF=" + vcf
+                "VCF=" + vcf.getAbsolutePath()
         };
 
         Assert.assertEquals(new CollectBamErrorMetrics().instanceMain(args), 0);
