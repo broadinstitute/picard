@@ -159,8 +159,8 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
                     tiles = TileMetricsUtil.parseClusterRecordsFromTileMetricsV3(
                             tileMetricsOutFiles,
                             TileMetricsUtil.renderPhasingMetricsFilesFromBasecallingDirectory(illuminaRunDirectory),
-                            readStructure,
-                            validationStringency);
+                            readStructure
+                    );
                 } else {
                     tiles = TileMetricsUtil.parseTileMetrics(tileMetricsOutFiles.get(0),
                             readStructure,
