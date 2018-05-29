@@ -159,7 +159,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                 optional = true)
         public File INTERVALS;
 
-        public File getIntervalFile() { return INTERVALS; };
+        public File getIntervalFile() { return INTERVALS; }
     };
 
     /** Metrics for evaluating the performance of whole genome sequencing experiments. */
@@ -438,10 +438,6 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         }
     }
 
-    public static void main(final String[] args) {
-        new CollectWgsMetrics().instanceMainWithExit(args);
-    }
-
     /** Gets the SamReader from which records will be examined.  This will also set the header so that it is available in
      *  */
     protected SamReader getSamReader() {
@@ -490,7 +486,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         iterator.setMappingQualityScoreCutoff(0); // Handled separately because we want to count bases
         iterator.setIncludeNonPfReads(false);
 
-        final AbstractWgsMetricsCollector collector = getCollector(COVERAGE_CAP, getIntervalsToExamine());
+        final AbstractWgsMetricsCollector<?> collector = getCollector(COVERAGE_CAP, getIntervalsToExamine());
         final WgsMetricsProcessor processor = getWgsMetricsProcessor(progress, refWalker, iterator, collector);
         processor.processFile();
 
@@ -501,6 +497,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         if (THEORETICAL_SENSITIVITY_OUTPUT != null) {
             // Write out theoretical sensitivity results.
             final MetricsFile<TheoreticalSensitivityMetrics, ?> theoreticalSensitivityMetrics = getMetricsFile();
+            log.info("Calculating theoretical sentitivity at " + ALLELE_FRACTION.size() + " allele fractions.");
             List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE, collector.getUnfilteredDepthHistogram(), collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION);
             theoreticalSensitivityMetrics.addAllMetrics(tsm);
             theoreticalSensitivityMetrics.write(THEORETICAL_SENSITIVITY_OUTPUT);

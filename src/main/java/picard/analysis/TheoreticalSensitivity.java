@@ -27,6 +27,8 @@ package picard.analysis;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.QualityUtil;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.Well19937c;
 import picard.PicardException;
 import picard.util.MathUtil;
 
@@ -244,7 +246,8 @@ public class TheoreticalSensitivity {
     public static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram, final double logOddsThreshold, final int sampleSize, final double alleleFraction, final long randomSeed) {
         final RouletteWheel qualityRW = new RouletteWheel(trimDistribution(normalizeHistogram(qualityHistogram)));
         final Random randomNumberGenerator = new Random(randomSeed);
-        final BinomialDistribution bd = new BinomialDistribution(depth, alleleFraction);
+        final RandomGenerator rg = new Well19937c(randomSeed);
+        final BinomialDistribution bd = new BinomialDistribution(rg, depth, alleleFraction);
 
         // Calculate mean and deviation of quality score distribution to enable Gaussian sampling below
         final double averageQuality = qualityHistogram.getMean();
