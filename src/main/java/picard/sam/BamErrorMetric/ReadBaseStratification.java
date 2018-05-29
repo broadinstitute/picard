@@ -232,9 +232,9 @@ public class ReadBaseStratification {
         }
     }
 
-    /** Stratify bases according to the type of Homopolymer that they belong to (repeating element, final reference base and
+    /**
+     * Stratify bases according to the type of Homopolymer that they belong to (repeating element, final reference base and
      * whether the length is "long" or not). Read direction and only the preceding bases are taken into account.
-     *
      */
 
     public static class LongShortHomopolymerStratifier implements RecordAndOffsetStratifier<LongShortHomopolymer> {
@@ -244,7 +244,7 @@ public class ReadBaseStratification {
         public LongShortHomopolymer stratify(final SamLocusIterator.RecordAndOffset recordAndOffset,
                                              final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
 
-            return stratifyHomopolymerLength(recordAndOffset) < longHomopolymer ?
+            return stratifyHomopolymerLength(recordAndOffset, locusInfo) < longHomopolymer ?
                     LongShortHomopolymer.SHORT_HOMOPOLYMER : LongShortHomopolymer.LONG_HOMOPOLYMER;
 
         }
@@ -472,10 +472,10 @@ public class ReadBaseStratification {
 
     /**
      * Stratifies a base onto the length of the homopolymer from whence it came.
-     *  Read direction and only the preceding bases are taken into account.
+     * Read direction and only the preceding bases are taken into account.
      */
     public static final RecordAndOffsetStratifier<Integer> homoPolymerLengthStratifier =
-            StratifierFactory(ReadBaseStratification::stratifyHomopolymerLength, "homopolymer_length");
+            FullStratifierFactory(ReadBaseStratification::stratifyHomopolymerLength, "homopolymer_length");
 
     /**
      * Stratifies a base onto the make up (repeating base and following reference base) and length of the homopolymer from whence it came.
@@ -487,7 +487,7 @@ public class ReadBaseStratification {
     /**
      * Stratifies a base onto the make up (repeating base and following reference base) and length-scale of the homopolymer from whence it came.
      * Read direction and only the preceding bases are taken into account.
-     *
+     * <p>
      * This is done with a Lazy wrapper since it requires access to {@link #LONG_HOMOPOLYMER} which can be set with {@link #setLongHomopolymer(int)}.
      */
     public static final Lazy<PairStratifier<Pair<Character, Character>, LongShortHomopolymer>> binnedHomopolymerStratifier = new Lazy<>(() -> PairStratifierFactory(preDiNucleotideStratifier, new LongShortHomopolymerStratifier(LONG_HOMOPOLYMER),
@@ -710,6 +710,7 @@ public class ReadBaseStratification {
             return sam.getReadNegativeStrandFlag() ? ReadDirection.NEGATIVE : ReadDirection.POSITIVE;
         }
     }
+
     /**
      * An enum for holding a reads read-pair's Orientation (i.e. F1R2, F2R1, F1F2 or R1R2)
      */
@@ -826,19 +827,25 @@ public class ReadBaseStratification {
         return retval;
     }
 
-    private static Integer stratifyHomopolymerLength(final SamLocusIterator.RecordAndOffset recordAndOffset) {
+    private static Integer stratifyHomopolymerLength(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
 
         final ReadDirection direction = ReadDirection.of(recordAndOffset.getRecord());
         final byte readBases[] = recordAndOffset.getRecord().getReadBases();
-
+        if (SequenceUtil.isNoCall(locusInfo.referenceBase)) {
+            return null;
+        }
         int runLengthOffset = recordAndOffset.getOffset();
 
+//        if (runLengthOffset < 0 || runLengthOffset >= recordAndOffset.getRecord().getReadLength()) {
+//            return null;
+//        }
+
         if (direction == ReadDirection.POSITIVE) {
-            while (--runLengthOffset > 0 && readBases[runLengthOffset] == readBases[recordAndOffset.getOffset() - 1]) {
+            while (--runLengthOffset > 0 && readBases[runLengthOffset] == locusInfo.referenceBase) {
             }
             return recordAndOffset.getOffset() - runLengthOffset;
         } else {
-            while (++runLengthOffset < recordAndOffset.getRecord().getReadLength() - 1 && readBases[runLengthOffset] == readBases[recordAndOffset.getOffset() + 1]) {
+            while (++runLengthOffset < recordAndOffset.getRecord().getReadLength() && readBases[runLengthOffset] == locusInfo.referenceBase) {
             }
             return runLengthOffset - recordAndOffset.getOffset();
         }
@@ -849,15 +856,20 @@ public class ReadBaseStratification {
 
         final int requestedOffset = recordAndOffset.getOffset() + offset * (direction == ReadDirection.POSITIVE ? 1 : -1);
 
-        if (requestedOffset <= 0 || requestedOffset >= recordAndOffset.getRecord().getReadLength())
+        if (requestedOffset < 0 || requestedOffset >= recordAndOffset.getRecord().getReadLength()) {
             return null;
-        else
+        } else {
             return stratifySequenceBase(recordAndOffset.getRecord().getReadBases()[requestedOffset], direction == ReadDirection.NEGATIVE);
+        }
     }
 
     private static Character stratifyReferenceBase(final SamLocusIterator.RecordAndOffset recordAndOffset,
-                                           final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+                                                   final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
         final ReadDirection direction = ReadDirection.of(recordAndOffset.getRecord());
+
+        if (SequenceUtil.isNoCall(locusInfo.referenceBase)) {
+            return null;
+        }
 
         return stratifySequenceBase(locusInfo.referenceBase, direction == ReadDirection.NEGATIVE);
     }
