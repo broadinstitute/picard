@@ -48,9 +48,9 @@ import java.util.stream.Stream;
  */
 public class ReadBaseStratification {
     // This variable has to be set using setLongHomopolymer _before_ the first call to binnedHomopolymerStratifier.get()
-    // if you need different binned Homopolimers with different LONG_HOMOPOLYMER values, you'll need to make your own
+    // if you need different binned Homopolymers with different LONG_HOMOPOLYMER values, you'll need to make your own
     // instances.
-    private static int LONG_HOMOPOLYMER;
+    private static int LONG_HOMOPOLYMER = 6;
     private static int GC_CACHE_SIZE = 1000;
 
 
@@ -60,6 +60,9 @@ public class ReadBaseStratification {
         GC_CACHE_SIZE = gcCacheSize;
     }
 
+    /**
+     * defaults to 6
+     **/
     public static void setLongHomopolymer(int longHomopolymer) {
         LONG_HOMOPOLYMER = longHomopolymer;
     }
@@ -101,7 +104,7 @@ public class ReadBaseStratification {
      * @param <T>            the type into which the stratification happens
      * @return an instance of a stratification class that will stratify accordingly
      */
-    public static <T extends Comparable<T>> RecordAndOffsetStratifier<T> FullStratifierFactory(BiFunction<SamLocusIterator.RecordAndOffset, SAMLocusAndReferenceIterator.SAMLocusAndReference, T> staticStratify, String suffix) {
+    private static <T extends Comparable<T>> RecordAndOffsetStratifier<T> wrapStaticFunction(BiFunction<SamLocusIterator.RecordAndOffset, SAMLocusAndReferenceIterator.SAMLocusAndReference, T> staticStratify, String suffix) {
         return new RecordAndOffsetStratifier<T>() {
             @Override
             public T stratify(SamLocusIterator.RecordAndOffset recordAndOffset, SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
@@ -123,8 +126,8 @@ public class ReadBaseStratification {
      * @param <T>            the type into which the stratification happens
      * @return an instance of a stratification class that will stratify accordingly
      */
-    public static <T extends Comparable<T>> RecordAndOffsetStratifier<T> StratifierFactory(Function<SamLocusIterator.RecordAndOffset, T> staticStratify, String suffix) {
-        return FullStratifierFactory((rao, ignored) -> staticStratify.apply(rao), suffix);
+    private static <T extends Comparable<T>> RecordAndOffsetStratifier<T> wrapStaticFunction(Function<SamLocusIterator.RecordAndOffset, T> staticStratify, String suffix) {
+        return wrapStaticFunction((rao, ignored) -> staticStratify.apply(rao), suffix);
     }
 
     /**
@@ -135,7 +138,7 @@ public class ReadBaseStratification {
      * @param <T>            the type into which the stratification happens
      * @return an instance of a stratification class that will stratify accordingly
      */
-    public static <T extends Comparable<T>> RecordStratifier<T> ReadStratifierFactory(Function<SAMRecord, T> staticStratify, String suffix) {
+    private static <T extends Comparable<T>> RecordStratifier<T> wrapStaticReadFunction(Function<SAMRecord, T> staticStratify, String suffix) {
         return new RecordStratifier<T>() {
             @Override
             public T stratify(final SAMRecord sam) {
@@ -244,8 +247,10 @@ public class ReadBaseStratification {
         public LongShortHomopolymer stratify(final SamLocusIterator.RecordAndOffset recordAndOffset,
                                              final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
 
-            return stratifyHomopolymerLength(recordAndOffset, locusInfo) < longHomopolymer ?
-                    LongShortHomopolymer.SHORT_HOMOPOLYMER : LongShortHomopolymer.LONG_HOMOPOLYMER;
+            final Integer hpLength = homoPolymerLengthStratifier.stratify(recordAndOffset, locusInfo);
+            if (hpLength == null) return null;
+
+            return hpLength < longHomopolymer ? LongShortHomopolymer.SHORT_HOMOPOLYMER : LongShortHomopolymer.LONG_HOMOPOLYMER;
 
         }
 
@@ -438,23 +443,23 @@ public class ReadBaseStratification {
     /**
      * Stratifies bases into the current (uppercase) base as it was read from the sequencer (i.e. complemented if needed)
      */
-    public static final RecordAndOffsetStratifier<Character> currentReadBaseStratifier = StratifierFactory(rao -> stratifyReadBase(rao, 0), "read_base");
+    public static final RecordAndOffsetStratifier<Character> currentReadBaseStratifier = wrapStaticFunction(rao -> stratifyReadBase(rao, 0), "read_base");
 
     /**
      * Stratifies bases into the previous (uppercase) base as it was read from the sequencer (i.e. complemented if needed)
      */
-    public static final RecordAndOffsetStratifier<Character> previousReadBaseStratifier = StratifierFactory(rao -> stratifyReadBase(rao, -1), "prev_base");
+    public static final RecordAndOffsetStratifier<Character> previousReadBaseStratifier = wrapStaticFunction(rao -> stratifyReadBase(rao, -1), "prev_base");
     /**
      * Stratifies bases into the following (uppercase) base as it was read from the sequencer (i.e. complemented if needed)
      */
-    public static final RecordAndOffsetStratifier<Character> nextReadBaseStratifier = StratifierFactory(rao -> stratifyReadBase(rao, 1), "next_base");
+    public static final RecordAndOffsetStratifier<Character> nextReadBaseStratifier = wrapStaticFunction(rao -> stratifyReadBase(rao, 1), "next_base");
 
     /**
      * Stratifies a base onto the reference base that it covers, possibly reverse complemented if the read
      * has been reversed by the aligner.
      */
     public static final RecordAndOffsetStratifier<Character> referenceBaseStratifier =
-            FullStratifierFactory(ReadBaseStratification::stratifyReferenceBase, "ref_base");
+            wrapStaticFunction(ReadBaseStratification::stratifyReferenceBase, "ref_base");
 
     /**
      * Stratifies a base onto the reference base that it covers and the following base, possibly reverse complemented if the read
@@ -471,18 +476,18 @@ public class ReadBaseStratification {
             PairStratifierFactory(previousReadBaseStratifier, referenceBaseStratifier, "pre_dinuc");
 
     /**
-     * Stratifies a base onto the length of the homopolymer from whence it came.
-     * Read direction and only the preceding bases are taken into account.
+     * Stratifies a base onto the length of the homopolymer preceding it (in the read direction).
+     * Read direction and only the preceding bases are taken into account (i.e. ignoring reference and current base).
      */
     public static final RecordAndOffsetStratifier<Integer> homoPolymerLengthStratifier =
-            FullStratifierFactory(ReadBaseStratification::stratifyHomopolymerLength, "homopolymer_length");
+            wrapStaticFunction(ReadBaseStratification::stratifyHomopolymerLength, "homopolymer_length");
 
     /**
      * Stratifies a base onto the make up (repeating base and following reference base) and length of the homopolymer from whence it came.
      * Read direction and only the preceding bases are taken into account.
      */
-    public static final PairStratifier<Pair<Character, Character>, Integer> homopolymerStratifier =
-            PairStratifierFactory(preDiNucleotideStratifier, homoPolymerLengthStratifier, "homopolymer_and_following_ref_base");
+    public static final PairStratifier<Integer, Pair<Character, Character>> homopolymerStratifier =
+            PairStratifierFactory(homoPolymerLengthStratifier, preDiNucleotideStratifier, "homopolymer_and_following_ref_base");
 
     /**
      * Stratifies a base onto the make up (repeating base and following reference base) and length-scale of the homopolymer from whence it came.
@@ -490,7 +495,7 @@ public class ReadBaseStratification {
      * <p>
      * This is done with a Lazy wrapper since it requires access to {@link #LONG_HOMOPOLYMER} which can be set with {@link #setLongHomopolymer(int)}.
      */
-    public static final Lazy<PairStratifier<Pair<Character, Character>, LongShortHomopolymer>> binnedHomopolymerStratifier = new Lazy<>(() -> PairStratifierFactory(preDiNucleotideStratifier, new LongShortHomopolymerStratifier(LONG_HOMOPOLYMER),
+    public static final Lazy<PairStratifier<LongShortHomopolymer, Pair<Character, Character>>> binnedHomopolymerStratifier = new Lazy<>(() -> PairStratifierFactory( new LongShortHomopolymerStratifier(LONG_HOMOPOLYMER), preDiNucleotideStratifier,
             "binned_length_homopolymer_and_following_ref_base"));
 
     /**
@@ -498,18 +503,18 @@ public class ReadBaseStratification {
      * the bases will be reverse-complemented so that the bases are in the original order they were read from the sequencer
      */
     public static final RecordAndOffsetStratifier<String> oneBasePaddedContextStratifier =
-            FullStratifierFactory((rao, lar) -> stratifySurroundingContext(rao, lar, 1, 1), "one_base_padded_context");
+            wrapStaticFunction((rao, lar) -> stratifySurroundingContext(rao, lar, 1, 1), "one_base_padded_context");
     /**
      * Stratifies into the two base context of the base, which includes two read-bases on each side and the reference base from where the current base is
      * the bases will be reverse-complemented so that the bases are in the original order they were read from the sequencer
      */
     public static final RecordAndOffsetStratifier<String> twoBasePaddedContextStratifier =
-            FullStratifierFactory((rao, lar) -> stratifySurroundingContext(rao, lar, 2, 2), "two_base_padded_context");
+            wrapStaticFunction((rao, lar) -> stratifySurroundingContext(rao, lar, 2, 2), "two_base_padded_context");
 
     /**
      * A constant stratifier which places all the reads into a single stratum.
      */
-    public static final RecordStratifier<String> nonStratifier = ReadStratifierFactory(sam -> "all", "all");
+    public static final RecordStratifier<String> nonStratifier = wrapStaticReadFunction(sam -> "all", "all");
 
     /**
      * A stratifier that uses GC (of the read) to stratify.
@@ -527,22 +532,22 @@ public class ReadBaseStratification {
     /**
      * Stratifies to the readgroup id of the read.
      */
-    public static final RecordStratifier<String> readgroupStratifier = ReadStratifierFactory(ReadBaseStratification::stratifyReadGroup, "read_group");
+    public static final RecordStratifier<String> readgroupStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifyReadGroup, "read_group");
 
     /**
      * Stratifies bases into their read's Ordinality (i.e. First or Second)
      */
-    public static final RecordAndOffsetStratifier<ReadOrdinality> readOrdinalityStratifier = ReadStratifierFactory(ReadOrdinality::of, "read_ordinality");
+    public static final RecordAndOffsetStratifier<ReadOrdinality> readOrdinalityStratifier = wrapStaticReadFunction(ReadOrdinality::of, "read_ordinality");
 
     /**
      * Stratifies bases into their read's Direction (i.e. forward or reverse)
      */
-    public static final RecordAndOffsetStratifier<ReadDirection> readDirectionStratifier = ReadStratifierFactory(ReadDirection::of, "read_direction");
+    public static final RecordAndOffsetStratifier<ReadDirection> readDirectionStratifier = wrapStaticReadFunction(ReadDirection::of, "read_direction");
 
     /**
      * Stratifies bases into their read-pair's Orientation (i.e. F1R2, F2R1, F1F2 or R1R2)
      */
-    public static final RecordAndOffsetStratifier<PairOrientation> readOrientationStratifier = ReadStratifierFactory(PairOrientation::of, "pair_orientation");
+    public static final RecordAndOffsetStratifier<PairOrientation> readOrientationStratifier = wrapStaticReadFunction(PairOrientation::of, "pair_orientation");
 
     /**
      * Stratifies into quintiles of read cycle.
@@ -552,22 +557,22 @@ public class ReadBaseStratification {
     /**
      * Get the cycle number of the base, taking the direction of the read into account
      */
-    public static final RecordAndOffsetStratifier<Integer> baseCycleStratifier = StratifierFactory(ReadBaseStratification::stratifyCycle, "cycle");
+    public static final RecordAndOffsetStratifier<Integer> baseCycleStratifier = wrapStaticFunction(ReadBaseStratification::stratifyCycle, "cycle");
 
     /**
      * Stratifies into the read-pairs estimated insert-length, as long as it isn't larger than 10x the length of the read
      */
-    public static final RecordAndOffsetStratifier<Integer> insertLengthStratifier = ReadStratifierFactory(ReadBaseStratification::stratifyInsertLength, "insert_length");
+    public static final RecordAndOffsetStratifier<Integer> insertLengthStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifyInsertLength, "insert_length");
 
     /**
      * Stratifies into the base-quality of the base under consideration
      */
-    public static final RecordAndOffsetStratifier<Byte> baseQualityStratifier = StratifierFactory(ReadBaseStratification::stratifyBaseQuality, "base_quality");
+    public static final RecordAndOffsetStratifier<Byte> baseQualityStratifier = wrapStaticFunction(ReadBaseStratification::stratifyBaseQuality, "base_quality");
 
     /**
      * Stratifies into the mapping-quality of the read under consideration
      */
-    public static final RecordAndOffsetStratifier<Integer> mappingQualityStratifier = ReadStratifierFactory(ReadBaseStratification::stratifyMappingQuality, "mapping_quality");
+    public static final RecordAndOffsetStratifier<Integer> mappingQualityStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifyMappingQuality, "mapping_quality");
 
     /**
      * Stratifies according to the overall mismatches (from NM) that the read has against the reference, NOT
@@ -836,18 +841,24 @@ public class ReadBaseStratification {
         }
         int runLengthOffset = recordAndOffset.getOffset();
 
-//        if (runLengthOffset < 0 || runLengthOffset >= recordAndOffset.getRecord().getReadLength()) {
-//            return null;
-//        }
+        if (runLengthOffset < 0 || runLengthOffset >= recordAndOffset.getRecord().getReadLength()) {
+            return null;
+        }
 
         if (direction == ReadDirection.POSITIVE) {
-            while (--runLengthOffset > 0 && readBases[runLengthOffset] == locusInfo.referenceBase) {
+            while (--runLengthOffset >= 0) {
+                if (readBases[runLengthOffset] != readBases[recordAndOffset.getOffset() - 1]) {
+                    break;
+                }
             }
-            return recordAndOffset.getOffset() - runLengthOffset;
+            return recordAndOffset.getOffset() - runLengthOffset - 1;
         } else {
-            while (++runLengthOffset < recordAndOffset.getRecord().getReadLength() && readBases[runLengthOffset] == locusInfo.referenceBase) {
+            while (++runLengthOffset < recordAndOffset.getRecord().getReadLength()) {
+                if (readBases[runLengthOffset] != readBases[recordAndOffset.getOffset() + 1]) {
+                    break;
+                }
             }
-            return runLengthOffset - recordAndOffset.getOffset();
+            return runLengthOffset - recordAndOffset.getOffset() - 1;
         }
     }
 

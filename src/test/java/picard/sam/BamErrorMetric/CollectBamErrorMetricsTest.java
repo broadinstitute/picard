@@ -139,15 +139,15 @@ public class CollectBamErrorMetricsTest {
                         new ErrorMetrics.SimpleErrorMetric("32", 52L, 41L)},
                 {".error_by_base_quality", chrMReadsWithClips, priorQ,
                         new ErrorMetrics.SimpleErrorMetric("33", 10L, 8L)},
-                // Note that the homopolymer is counted as the number of bases in the read that match each other before a new base.
-                // This catches mismatches (and matches) of the ends of homopolymers.
+//                 Note that the homopolymer is counted as the number of bases in the read that match each other before a new base.
+//                 This catches mismatches (and matches) of the ends of homopolymers.
                 {".error_by_homopolymer_and_following_ref_base", chrMReadsWithClips, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("T,T,10", 1L, 1L)},
+                        new ErrorMetrics.SimpleErrorMetric("9,T,T", 1L, 1L)},
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("G,T,3", 2L, 1L)},
+                        new ErrorMetrics.SimpleErrorMetric("2,G,T", 2L, 1L)},
 
                 {".error_by_binned_length_homopolymer_and_following_ref_base", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("G,T,SHORT_HOMOPOLYMER", 6L, 1L)},
+                        new ErrorMetrics.SimpleErrorMetric("SHORT_HOMOPOLYMER,G,T", 6L, 1L)},
 
                 {".error_by_read_ordinality_and_pre_dinuc", chrMReadsWithClips, priorQ,
                         new ErrorMetrics.SimpleErrorMetric("FIRST,A,A", 3L, 3L)},
@@ -160,17 +160,13 @@ public class CollectBamErrorMetricsTest {
                 // There are two base qualities in the bam, the error occurs in quality "32", make sure we detect no errors in quality "33"
                 {".error_by_base_quality", simpleSamWithBaseErrors1, priorQ,
                         new ErrorMetrics.SimpleErrorMetric("33", 21L, 0L)},
-                // After a homopolymer run of 2 Gs, ending with a T there is a single error (curious if this 3 really should be 2, do we have an off by one?)
-                {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("G,T,3", 2L, 1L)},
-
                 // simpleSamWithBaseErrors2 contains 2 differences from the reference
                 // after 2 different homopolymers.
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("T,A,3", 2L, 1L)},
+                        new ErrorMetrics.SimpleErrorMetric("2,T,A", 2L, 1L)},
                 // Make sure that we can correctly identify an error after a homopolymer
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("C,G,4", 1L, 1L)},
+                        new ErrorMetrics.SimpleErrorMetric("3,C,G", 1L, 1L)},
                 {".error_by_read_ordinality_and_pre_dinuc", simpleSamWithBaseErrors1, priorQ,
                         new ErrorMetrics.SimpleErrorMetric("FIRST,G,T", 1L, 1L)},
                 // The covariate "0.5" was chosen to avoid those that have repeating decimals and could have alternative representations as

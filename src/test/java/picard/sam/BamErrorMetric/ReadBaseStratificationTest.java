@@ -152,7 +152,7 @@ public class ReadBaseStratificationTest {
                 {7, false, null, ReadBaseStratification.preDiNucleotideStratifier},
 
                 {-1, true, null, ReadBaseStratification.homoPolymerLengthStratifier},
-                {0, true, 1, ReadBaseStratification.homoPolymerLengthStratifier},
+                {0, true, 0, ReadBaseStratification.homoPolymerLengthStratifier},
                 {1, true, 1, ReadBaseStratification.homoPolymerLengthStratifier},
                 {2, true, 1, ReadBaseStratification.homoPolymerLengthStratifier},
                 {3, true, 1, ReadBaseStratification.homoPolymerLengthStratifier},
@@ -165,32 +165,32 @@ public class ReadBaseStratificationTest {
                 {-1, false, null, ReadBaseStratification.homoPolymerLengthStratifier},
                 {0, false, 1, ReadBaseStratification.homoPolymerLengthStratifier},
                 {1, false, 1, ReadBaseStratification.homoPolymerLengthStratifier},
-                {2, false, 1, ReadBaseStratification.homoPolymerLengthStratifier},
-                {3, false, 4, ReadBaseStratification.homoPolymerLengthStratifier},
-                {4, false, 3, ReadBaseStratification.homoPolymerLengthStratifier},
-                {5, false, 2, ReadBaseStratification.homoPolymerLengthStratifier},
+                {2, false, 4, ReadBaseStratification.homoPolymerLengthStratifier},
+                {3, false, 3, ReadBaseStratification.homoPolymerLengthStratifier},
+                {4, false, 2, ReadBaseStratification.homoPolymerLengthStratifier},
+                {5, false, 1, ReadBaseStratification.homoPolymerLengthStratifier},
                 {6, false, 1, ReadBaseStratification.homoPolymerLengthStratifier},
-                {7, false, 1, ReadBaseStratification.homoPolymerLengthStratifier},
+                {7, false, 0, ReadBaseStratification.homoPolymerLengthStratifier},
                 {8, false, null, ReadBaseStratification.homoPolymerLengthStratifier},
 
                 {0, true, null, ReadBaseStratification.homopolymerStratifier},
-                {1, true, new Pair<>(new Pair<>('C', 'A'), 1), ReadBaseStratification.homopolymerStratifier},
-                {2, true, new Pair<>(new Pair<>('A', 'T'), 1), ReadBaseStratification.homopolymerStratifier},
-                {3, true, new Pair<>(new Pair<>('T', 'G'), 1), ReadBaseStratification.homopolymerStratifier},
-                {4, true, new Pair<>(new Pair<>('G', 'G'), 2), ReadBaseStratification.homopolymerStratifier},
-                {5, true, new Pair<>(new Pair<>('G', 'G'), 3), ReadBaseStratification.homopolymerStratifier},
-                {6, true, new Pair<>(new Pair<>('G', 'G'), 4), ReadBaseStratification.homopolymerStratifier},
-                {7, true, new Pair<>(new Pair<>('G', 'A'), 1), ReadBaseStratification.homopolymerStratifier},
+                {1, true, new Pair<>( 1, new Pair<>('C', 'A')), ReadBaseStratification.homopolymerStratifier},
+                {2, true, new Pair<>( 1, new Pair<>('A', 'T')), ReadBaseStratification.homopolymerStratifier},
+                {3, true, new Pair<>( 1, new Pair<>('T', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {4, true, new Pair<>( 2, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {5, true, new Pair<>( 3, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {6, true, new Pair<>( 4, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {7, true, new Pair<>( 1, new Pair<>('G', 'A')), ReadBaseStratification.homopolymerStratifier},
                 {8, true, null, ReadBaseStratification.homopolymerStratifier},
 
                 {-1, false, null, ReadBaseStratification.homopolymerStratifier},
-                {0, false, new Pair<>(new Pair<>('T', 'G'), 1), ReadBaseStratification.homopolymerStratifier},
-                {1, false, new Pair<>(new Pair<>('A', 'T'), 1), ReadBaseStratification.homopolymerStratifier},
-                {2, false, new Pair<>(new Pair<>('C', 'A'), 1), ReadBaseStratification.homopolymerStratifier},
-                {3, false, new Pair<>(new Pair<>('C', 'C'), 4), ReadBaseStratification.homopolymerStratifier},
-                {4, false, new Pair<>(new Pair<>('C', 'C'), 3), ReadBaseStratification.homopolymerStratifier},
-                {5, false, new Pair<>(new Pair<>('C', 'C'), 2), ReadBaseStratification.homopolymerStratifier},
-                {6, false, new Pair<>(new Pair<>('T', 'C'), 1), ReadBaseStratification.homopolymerStratifier},
+                {0, false, new Pair<>(1, new Pair<>('T', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {1, false, new Pair<>(1, new Pair<>('A', 'T')), ReadBaseStratification.homopolymerStratifier},
+                {2, false, new Pair<>(1, new Pair<>('C', 'A')), ReadBaseStratification.homopolymerStratifier},
+                {3, false, new Pair<>(4, new Pair<>('C', 'C')), ReadBaseStratification.homopolymerStratifier},
+                {4, false, new Pair<>(3, new Pair<>('C', 'C')), ReadBaseStratification.homopolymerStratifier},
+                {5, false, new Pair<>(2, new Pair<>('C', 'C')), ReadBaseStratification.homopolymerStratifier},
+                {6, false, new Pair<>(1, new Pair<>('T', 'C')), ReadBaseStratification.homopolymerStratifier},
                 {7, false, null, ReadBaseStratification.homopolymerStratifier},
 
                 {0, true, null, ReadBaseStratification.oneBasePaddedContextStratifier},
@@ -258,7 +258,7 @@ public class ReadBaseStratificationTest {
         final SAMFileHeader samFileHeader = new SAMFileHeader();
         final SAMRecord samRecord = new SAMRecord(samFileHeader);
 
-        samRecord.setReadBases(new byte[]{'C', 'A', 'T', 'G', 'G', 'G', 'G', 'A'});
+        samRecord.setReadBases("CATGGGGA".getBytes());
         samRecord.setReadUnmappedFlag(false);
         samRecord.setReadNegativeStrandFlag(!readStrandPositive);
         samRecord.setAlignmentStart(1);
@@ -274,48 +274,56 @@ public class ReadBaseStratificationTest {
     @DataProvider
     public Object[][] homopolymerStratifierData() {
         return new Object[][]{
-                {-1, true, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
-                {0, true, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
+                {-1, true, (byte) 'G', null, ReadBaseStratification.homoPolymerLengthStratifier},
+                {0, true, (byte) 'G', 0, ReadBaseStratification.homoPolymerLengthStratifier},
                 {1, true, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
                 {2, true, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
                 {3, true, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
-                {4, true, (byte) 'G', 2, ReadBaseStratification.homoPolymerLengthStratifier},
-                {5, true, (byte) 'G', 3, ReadBaseStratification.homoPolymerLengthStratifier},
-                {6, true, (byte) 'G', 4, ReadBaseStratification.homoPolymerLengthStratifier},
-                {7, true, (byte) 'G', 5, ReadBaseStratification.homoPolymerLengthStratifier},
+                {4, true, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
+                {5, true, (byte) 'G', 2, ReadBaseStratification.homoPolymerLengthStratifier},
+                {6, true, (byte) 'G', 3, ReadBaseStratification.homoPolymerLengthStratifier},
+                {7, true, (byte) 'G', 4, ReadBaseStratification.homoPolymerLengthStratifier},
                 {8, true, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
 
-                {-1, false, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
+                {-1, false, (byte) 'G', null, ReadBaseStratification.homoPolymerLengthStratifier},
                 {0, false, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
                 {1, false, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
-                {2, false, (byte) 'G', 5, ReadBaseStratification.homoPolymerLengthStratifier},
-                {3, false, (byte) 'G', 4, ReadBaseStratification.homoPolymerLengthStratifier},
-                {4, false, (byte) 'G', 3, ReadBaseStratification.homoPolymerLengthStratifier},
-                {5, false, (byte) 'G', 2, ReadBaseStratification.homoPolymerLengthStratifier},
-                {6, false, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
-                {7, false, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
-                {8, false, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
+                {2, false, (byte) 'G', 4, ReadBaseStratification.homoPolymerLengthStratifier},
+                {3, false, (byte) 'G', 3, ReadBaseStratification.homoPolymerLengthStratifier},
+                {4, false, (byte) 'G', 2, ReadBaseStratification.homoPolymerLengthStratifier},
+                {5, false, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
+                {6, false, (byte) 'G', 9, ReadBaseStratification.homoPolymerLengthStratifier},
+                {7, false, (byte) 'G', 8, ReadBaseStratification.homoPolymerLengthStratifier},
+                {8, false, (byte) 'G', 7, ReadBaseStratification.homoPolymerLengthStratifier},
+                {9, false, (byte) 'G', 6, ReadBaseStratification.homoPolymerLengthStratifier},
+                {10, false, (byte) 'G', 5, ReadBaseStratification.homoPolymerLengthStratifier},
+                {11, false, (byte) 'G', 4, ReadBaseStratification.homoPolymerLengthStratifier},
+                {12, false, (byte) 'G', 3, ReadBaseStratification.homoPolymerLengthStratifier},
+                {13, false, (byte) 'G', 2, ReadBaseStratification.homoPolymerLengthStratifier},
+                {14, false, (byte) 'G', 1, ReadBaseStratification.homoPolymerLengthStratifier},
+                {15, false, (byte) 'G', 0, ReadBaseStratification.homoPolymerLengthStratifier},
+                {16, false, (byte) 'G', null, ReadBaseStratification.homoPolymerLengthStratifier},
 
-                {7, true, (byte) 'A', new Pair<>(new Pair<>('G', 'A'), ReadBaseStratification.LongShortHomopolymer.SHORT_HOMOPOLYMER), ReadBaseStratification.binnedHomopolymerStratifier.get()},
-                {8, true, (byte) 'A', new Pair<>(new Pair<>('A', 'A'), ReadBaseStratification.LongShortHomopolymer.SHORT_HOMOPOLYMER), ReadBaseStratification.binnedHomopolymerStratifier.get()},
-                {9, true, (byte) 'A', new Pair<>(new Pair<>('A', 'A'), ReadBaseStratification.LongShortHomopolymer.SHORT_HOMOPOLYMER), ReadBaseStratification.binnedHomopolymerStratifier.get()},
-                {10, true, (byte) 'A', new Pair<>(new Pair<>('A', 'A'), ReadBaseStratification.LongShortHomopolymer.SHORT_HOMOPOLYMER), ReadBaseStratification.binnedHomopolymerStratifier.get()},
-                {11, true, (byte) 'A', new Pair<>(new Pair<>('A', 'A'), ReadBaseStratification.LongShortHomopolymer.SHORT_HOMOPOLYMER), ReadBaseStratification.binnedHomopolymerStratifier.get()},
-                {12, true, (byte) 'A', new Pair<>(new Pair<>('A', 'A'), ReadBaseStratification.LongShortHomopolymer.LONG_HOMOPOLYMER), ReadBaseStratification.binnedHomopolymerStratifier.get()},
-                {13, true, (byte) 'A', new Pair<>(new Pair<>('A', 'A'), ReadBaseStratification.LongShortHomopolymer.LONG_HOMOPOLYMER), ReadBaseStratification.binnedHomopolymerStratifier.get()},
-                {14, true, (byte) 'A', new Pair<>(new Pair<>('A', 'A'), ReadBaseStratification.LongShortHomopolymer.LONG_HOMOPOLYMER), ReadBaseStratification.binnedHomopolymerStratifier.get()},
-                {15, true, (byte) 'A', new Pair<>(new Pair<>('A', 'A'), ReadBaseStratification.LongShortHomopolymer.LONG_HOMOPOLYMER), ReadBaseStratification.binnedHomopolymerStratifier.get()},
-                {16, true, (byte) 'A', new Pair<>(new Pair<>('A', 'A'), ReadBaseStratification.LongShortHomopolymer.LONG_HOMOPOLYMER), ReadBaseStratification.binnedHomopolymerStratifier.get()},
+                {7, true, (byte) 'A', new Pair<>(ReadBaseStratification.LongShortHomopolymer.SHORT_HOMOPOLYMER, new Pair<>('G', 'A')), ReadBaseStratification.binnedHomopolymerStratifier.get()},
+                {8, true, (byte) 'A', new Pair<>(ReadBaseStratification.LongShortHomopolymer.SHORT_HOMOPOLYMER, new Pair<>('A', 'A')), ReadBaseStratification.binnedHomopolymerStratifier.get()},
+                {9, true, (byte) 'A', new Pair<>(ReadBaseStratification.LongShortHomopolymer.SHORT_HOMOPOLYMER, new Pair<>('A', 'A')), ReadBaseStratification.binnedHomopolymerStratifier.get()},
+                {10, true, (byte) 'A', new Pair<>(ReadBaseStratification.LongShortHomopolymer.SHORT_HOMOPOLYMER, new Pair<>('A', 'A')), ReadBaseStratification.binnedHomopolymerStratifier.get()},
+                {11, true, (byte) 'A', new Pair<>(ReadBaseStratification.LongShortHomopolymer.SHORT_HOMOPOLYMER, new Pair<>('A', 'A')), ReadBaseStratification.binnedHomopolymerStratifier.get()},
+                {12, true, (byte) 'A', new Pair<>(ReadBaseStratification.LongShortHomopolymer.SHORT_HOMOPOLYMER, new Pair<>('A', 'A')), ReadBaseStratification.binnedHomopolymerStratifier.get()},
+                {13, true, (byte) 'A', new Pair<>(ReadBaseStratification.LongShortHomopolymer.LONG_HOMOPOLYMER, new Pair<>('A', 'A')), ReadBaseStratification.binnedHomopolymerStratifier.get()},
+                {14, true, (byte) 'A', new Pair<>(ReadBaseStratification.LongShortHomopolymer.LONG_HOMOPOLYMER, new Pair<>('A', 'A')), ReadBaseStratification.binnedHomopolymerStratifier.get()},
+                {15, true, (byte) 'A', new Pair<>(ReadBaseStratification.LongShortHomopolymer.LONG_HOMOPOLYMER, new Pair<>('A', 'A')), ReadBaseStratification.binnedHomopolymerStratifier.get()},
+                {16, true, (byte) 'A', null, ReadBaseStratification.binnedHomopolymerStratifier.get()},
         };
     }
 
     @Test(dataProvider = "homopolymerStratifierData")
-    public void testHomopolimerLength(final int offset, final boolean readStrandPositive, final byte referenceBase, final Object expectedStratum, final ReadBaseStratification.RecordAndOffsetStratifier<?> recordAndOffsetStratifier) {
-        final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 2_000_000);
+    public void testHomopolymerLength(final int offset, final boolean readStrandPositive, final byte referenceBase, final Object expectedStratum, final ReadBaseStratification.RecordAndOffsetStratifier<?> recordAndOffsetStratifier) {
+        final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 200);
         final SAMFileHeader samFileHeader = new SAMFileHeader();
         final SAMRecord samRecord = new SAMRecord(samFileHeader);
 
-        samRecord.setReadBases(new byte[]{'C', 'A', 'T', 'G', 'G', 'G', 'G', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A'});
+        samRecord.setReadBases("CATGGGGAAAAAAAAA".getBytes());
         samRecord.setReadUnmappedFlag(false);
         samRecord.setReadNegativeStrandFlag(!readStrandPositive);
         samRecord.setAlignmentStart(1);
@@ -325,5 +333,26 @@ public class ReadBaseStratificationTest {
         final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference = new SAMLocusAndReferenceIterator.SAMLocusAndReference(locusInfo, referenceBase);
 
         Assert.assertEquals(recordAndOffsetStratifier.stratify(recordAndOffset, locusAndReference), expectedStratum);
+    }
+
+
+    @Test()
+    public void testHomopolymerLength2() {
+        final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 2_000_000);
+        final SAMFileHeader samFileHeader = new SAMFileHeader();
+        final SAMRecord samRecord = new SAMRecord(samFileHeader);
+
+        final String refString="GGT";
+        final String recString="GGa";
+        samRecord.setReadBases(recString.getBytes());
+        samRecord.setReadUnmappedFlag(false);
+        samRecord.setReadNegativeStrandFlag(false);
+        samRecord.setAlignmentStart(1);
+        SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(samRecord, 2);
+        SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, 1);
+
+        final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference = new SAMLocusAndReferenceIterator.SAMLocusAndReference(locusInfo, refString.getBytes()[2]);
+
+        Assert.assertEquals(ReadBaseStratification.homoPolymerLengthStratifier.stratify(recordAndOffset, locusAndReference), (Integer) 2);
     }
 }
