@@ -141,8 +141,6 @@ public class TileMetricsUtil {
             final Map<Integer, File> phasingMetricsFiles,
             final ReadStructure readStructure
     ) throws FileNotFoundException {
-        // Snag and cache the phasing data for each read in the read structure for each tile.
-        // For both types of phasing values, this is the median of all of the individual values seen
         Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
         for (File tileMetricsOutFile : tileMetricsOutFiles) {
             TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
@@ -228,6 +226,10 @@ public class TileMetricsUtil {
         return Collections.unmodifiableCollection(tiles);
     }
 
+    /**
+     * Parse phasing metrics files for phasing data for each read in the read structure for each tile.
+     * For both types of phasing values, this is the median of all of the individual values seen
+     */
     private static Map<Integer, Map<Integer, Collection<TilePhasingValue>>> getTilePhasingValues(
                                                                      Map<Integer, File> phasingMetricFiles,
                                                                      final ReadStructure readStructure) {
@@ -256,18 +258,15 @@ public class TileMetricsUtil {
 
                             TileMetricsOutReader.IlluminaLaneTileCode laneTileCode = phasingMetrics.laneTileCode;
                             int tileNumber = laneTileCode.getTileNumber();
-
-                            if (!phasing.containsKey(tileNumber)) {
-                                phasing.put(tileNumber, new HashMap<>());
-                                prePhasing.put(tileNumber, new HashMap<>());
-                            }
                             int laneNumber = laneTileCode.getLaneNumber();
-                            if (!phasing.get(tileNumber).containsKey(laneNumber)) {
-                                phasing.get(tileNumber).put(laneNumber, new ArrayList<>());
-                                prePhasing.get(tileNumber).put(laneNumber, new ArrayList<>());
-                            }
-                            phasing.get(tileNumber).get(laneNumber).add(phasingMetrics.phasingWeight);
-                            prePhasing.get(tileNumber).get(laneNumber).add(phasingMetrics.prephasingWeight);
+                            phasing
+                                .computeIfAbsent(tileNumber, k -> new HashMap<>())
+                                .computeIfAbsent(laneNumber, k -> new ArrayList<>())
+                                .add(phasingMetrics.phasingWeight);
+                            prePhasing
+                                .computeIfAbsent(tileNumber, k -> new HashMap<>())
+                                .computeIfAbsent(laneNumber, k -> new ArrayList<>())
+                                .add(phasingMetrics.prephasingWeight);
                         }
                     }
 
@@ -281,21 +280,10 @@ public class TileMetricsUtil {
                         float[] phasingSlopeAndOffset = computeLinearFit(cycleNumWithData.toArray(new Float[0]), phasingMetrics.toArray(new Float[0]), phasingMetrics.size());
                         float[] prePhasingSlopeAndOffset = computeLinearFit(cycleNumWithData.toArray(new Float[0]), prephasingMetrics.toArray(new Float[0]), phasingMetrics.size());
                         TilePhasingValue value = new TilePhasingValue(tileTemplateRead, phasingSlopeAndOffset[0], prePhasingSlopeAndOffset[0]);
-                        if (phasingValues.containsKey(laneNum)) {
-                            if (phasingValues.get(laneNum).containsKey(tileNum)) {
-                                phasingValues.get(laneNum).get(tileNum).add(value);
-                            } else {
-                                Collection<TilePhasingValue> tilePhasingValues = new ArrayList<>();
-                                tilePhasingValues.add(value);
-                                phasingValues.get(laneNum).put(tileNum, tilePhasingValues);
-                            }
-                        } else {
-                            Map<Integer, Collection<TilePhasingValue>> lanePhasingValues = new HashMap<>();
-                            Collection<TilePhasingValue> tilePhasingValues = new ArrayList<>();
-                            tilePhasingValues.add(value);
-                            lanePhasingValues.put(tileNum, tilePhasingValues);
-                            phasingValues.put(laneNum, lanePhasingValues);
-                        }
+                        phasingValues
+                            .computeIfAbsent(laneNum, k -> new HashMap<>())
+                            .computeIfAbsent(tileNum, k -> new ArrayList<>())
+                            .add(value);
                     });
                 });
 
