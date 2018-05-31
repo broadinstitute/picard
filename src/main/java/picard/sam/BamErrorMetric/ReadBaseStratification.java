@@ -555,7 +555,7 @@ public class ReadBaseStratification {
     public static final BinnedReadCycleStratifier binnedReadCycleStratifier = new BinnedReadCycleStratifier();
 
     /**
-     * Get the cycle number of the base, taking the direction of the read into account
+     * Get the one-based cycle number of the base, taking the direction of the read into account
      */
     public static final RecordAndOffsetStratifier<Integer> baseCycleStratifier = wrapStaticFunction(ReadBaseStratification::stratifyCycle, "cycle");
 
@@ -818,15 +818,15 @@ public class ReadBaseStratification {
     }
 
     /**
-     * Get the cycle number of the base, taking the direction of the read into account
+     * Get the one-based cycle number of the base, taking the direction of the read into account
      */
     private static int stratifyCycle(final SamLocusIterator.RecordAndOffset recordAndOffset) {
         final SAMRecord rec = recordAndOffset.getRecord();
         final int offset = recordAndOffset.getOffset();
-        // get either the offset into the array or the distance from the end depending on whether the read is
+        // Get either the offset into the array or the distance from the end depending on whether the read is
         // on the negative strand.
         int retval = rec.getReadNegativeStrandFlag() ? (rec.getReadLength() - offset - 1) : offset;
-        // add 1 to move to a 1-based system
+        // add 1 to move to a one-based system
         retval += 1;
 
         return retval;

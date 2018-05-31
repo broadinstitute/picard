@@ -1,8 +1,6 @@
 package picard.sam.BamErrorMetric;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.*;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -10,7 +8,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
- * Created by farjoun on 5/29/18.
+ * A slew of unit tests for the various stratifiers
  */
 public class ReadBaseStratificationTest {
 
@@ -156,10 +154,10 @@ public class ReadBaseStratificationTest {
                 {1, true, 1, ReadBaseStratification.homoPolymerLengthStratifier},
                 {2, true, 1, ReadBaseStratification.homoPolymerLengthStratifier},
                 {3, true, 1, ReadBaseStratification.homoPolymerLengthStratifier},
-                {4, true, 2, ReadBaseStratification.homoPolymerLengthStratifier},
-                {5, true, 3, ReadBaseStratification.homoPolymerLengthStratifier},
-                {6, true, 4, ReadBaseStratification.homoPolymerLengthStratifier},
-                {7, true, 1, ReadBaseStratification.homoPolymerLengthStratifier},
+                {4, true, 1, ReadBaseStratification.homoPolymerLengthStratifier},
+                {5, true, 2, ReadBaseStratification.homoPolymerLengthStratifier},
+                {6, true, 3, ReadBaseStratification.homoPolymerLengthStratifier},
+                {7, true, 4, ReadBaseStratification.homoPolymerLengthStratifier},
                 {8, true, null, ReadBaseStratification.homoPolymerLengthStratifier},
 
                 {-1, false, null, ReadBaseStratification.homoPolymerLengthStratifier},
@@ -177,19 +175,19 @@ public class ReadBaseStratificationTest {
                 {1, true, new Pair<>( 1, new Pair<>('C', 'A')), ReadBaseStratification.homopolymerStratifier},
                 {2, true, new Pair<>( 1, new Pair<>('A', 'T')), ReadBaseStratification.homopolymerStratifier},
                 {3, true, new Pair<>( 1, new Pair<>('T', 'G')), ReadBaseStratification.homopolymerStratifier},
-                {4, true, new Pair<>( 2, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
-                {5, true, new Pair<>( 3, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
-                {6, true, new Pair<>( 4, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
-                {7, true, new Pair<>( 1, new Pair<>('G', 'A')), ReadBaseStratification.homopolymerStratifier},
+                {4, true, new Pair<>( 1, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {5, true, new Pair<>( 2, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {6, true, new Pair<>( 3, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {7, true, new Pair<>( 4, new Pair<>('G', 'A')), ReadBaseStratification.homopolymerStratifier},
                 {8, true, null, ReadBaseStratification.homopolymerStratifier},
 
                 {-1, false, null, ReadBaseStratification.homopolymerStratifier},
                 {0, false, new Pair<>(1, new Pair<>('T', 'G')), ReadBaseStratification.homopolymerStratifier},
                 {1, false, new Pair<>(1, new Pair<>('A', 'T')), ReadBaseStratification.homopolymerStratifier},
-                {2, false, new Pair<>(1, new Pair<>('C', 'A')), ReadBaseStratification.homopolymerStratifier},
-                {3, false, new Pair<>(4, new Pair<>('C', 'C')), ReadBaseStratification.homopolymerStratifier},
-                {4, false, new Pair<>(3, new Pair<>('C', 'C')), ReadBaseStratification.homopolymerStratifier},
-                {5, false, new Pair<>(2, new Pair<>('C', 'C')), ReadBaseStratification.homopolymerStratifier},
+                {2, false, new Pair<>(4, new Pair<>('C', 'A')), ReadBaseStratification.homopolymerStratifier},
+                {3, false, new Pair<>(3, new Pair<>('C', 'C')), ReadBaseStratification.homopolymerStratifier},
+                {4, false, new Pair<>(2, new Pair<>('C', 'C')), ReadBaseStratification.homopolymerStratifier},
+                {5, false, new Pair<>(1, new Pair<>('C', 'C')), ReadBaseStratification.homopolymerStratifier},
                 {6, false, new Pair<>(1, new Pair<>('T', 'C')), ReadBaseStratification.homopolymerStratifier},
                 {7, false, null, ReadBaseStratification.homopolymerStratifier},
 
@@ -249,6 +247,70 @@ public class ReadBaseStratificationTest {
                 {7, false, ReadBaseStratification.ReadDirection.NEGATIVE, ReadBaseStratification.readDirectionStratifier},
                 {7, true, ReadBaseStratification.ReadDirection.POSITIVE, ReadBaseStratification.readDirectionStratifier},
 
+                {1, false, (Math.round(100.0 * 5 / 8)) / 100.0, ReadBaseStratification.gcContentStratifier},
+
+                {1, false, 93, ReadBaseStratification.flowCellTileStratifier},
+
+                {1, false, "rgID", ReadBaseStratification.readgroupStratifier},
+
+                {1, false, ReadBaseStratification.ReadOrdinality.FIRST, ReadBaseStratification.readOrdinalityStratifier},
+
+                {1, true, ReadBaseStratification.ReadDirection.POSITIVE, ReadBaseStratification.readDirectionStratifier},
+                {1, false, ReadBaseStratification.ReadDirection.NEGATIVE, ReadBaseStratification.readDirectionStratifier},
+
+                {1, true, ReadBaseStratification.PairOrientation.F1R2, ReadBaseStratification.readOrientationStratifier},
+                {1, false, ReadBaseStratification.PairOrientation.F2R1, ReadBaseStratification.readOrientationStratifier},
+
+                {0, true, ReadBaseStratification.CycleBin.QUINTILE_1, ReadBaseStratification.binnedReadCycleStratifier},
+                {1, true, ReadBaseStratification.CycleBin.QUINTILE_2, ReadBaseStratification.binnedReadCycleStratifier},
+                {2, true, ReadBaseStratification.CycleBin.QUINTILE_2, ReadBaseStratification.binnedReadCycleStratifier},
+                {3, true, ReadBaseStratification.CycleBin.QUINTILE_3, ReadBaseStratification.binnedReadCycleStratifier},
+                {4, true, ReadBaseStratification.CycleBin.QUINTILE_4, ReadBaseStratification.binnedReadCycleStratifier},
+                {5, true, ReadBaseStratification.CycleBin.QUINTILE_4, ReadBaseStratification.binnedReadCycleStratifier},
+                {6, true, ReadBaseStratification.CycleBin.QUINTILE_5, ReadBaseStratification.binnedReadCycleStratifier},
+                {7, true, ReadBaseStratification.CycleBin.QUINTILE_5, ReadBaseStratification.binnedReadCycleStratifier},
+
+                {7, false, ReadBaseStratification.CycleBin.QUINTILE_1, ReadBaseStratification.binnedReadCycleStratifier},
+                {6, false, ReadBaseStratification.CycleBin.QUINTILE_2, ReadBaseStratification.binnedReadCycleStratifier},
+                {5, false, ReadBaseStratification.CycleBin.QUINTILE_2, ReadBaseStratification.binnedReadCycleStratifier},
+                {4, false, ReadBaseStratification.CycleBin.QUINTILE_3, ReadBaseStratification.binnedReadCycleStratifier},
+                {3, false, ReadBaseStratification.CycleBin.QUINTILE_4, ReadBaseStratification.binnedReadCycleStratifier},
+                {2, false, ReadBaseStratification.CycleBin.QUINTILE_4, ReadBaseStratification.binnedReadCycleStratifier},
+                {1, false, ReadBaseStratification.CycleBin.QUINTILE_5, ReadBaseStratification.binnedReadCycleStratifier},
+                {0, false, ReadBaseStratification.CycleBin.QUINTILE_5, ReadBaseStratification.binnedReadCycleStratifier},
+
+                {0, true, 1, ReadBaseStratification.baseCycleStratifier},
+                {1, true, 2, ReadBaseStratification.baseCycleStratifier},
+                {2, true, 3, ReadBaseStratification.baseCycleStratifier},
+                {3, true, 4, ReadBaseStratification.baseCycleStratifier},
+                {4, true, 5, ReadBaseStratification.baseCycleStratifier},
+                {5, true, 6, ReadBaseStratification.baseCycleStratifier},
+                {6, true, 7, ReadBaseStratification.baseCycleStratifier},
+                {7, true, 8, ReadBaseStratification.baseCycleStratifier},
+
+                {7, false, 1, ReadBaseStratification.baseCycleStratifier},
+                {6, false, 2, ReadBaseStratification.baseCycleStratifier},
+                {5, false, 3, ReadBaseStratification.baseCycleStratifier},
+                {4, false, 4, ReadBaseStratification.baseCycleStratifier},
+                {3, false, 5, ReadBaseStratification.baseCycleStratifier},
+                {2, false, 6, ReadBaseStratification.baseCycleStratifier},
+                {1, false, 7, ReadBaseStratification.baseCycleStratifier},
+                {0, false, 8, ReadBaseStratification.baseCycleStratifier},
+
+                //in order to curb huge insert lengths that arise from chimeric reads,
+                //the insert-length stratifier caps the insert length by 10 * read-length
+                {0, true, Math.min(100,10*8), ReadBaseStratification.insertLengthStratifier},
+
+                {0, true, (byte)'A' , ReadBaseStratification.baseQualityStratifier},
+                {1, true, (byte)'B' , ReadBaseStratification.baseQualityStratifier},
+                {2, true, (byte)'C' , ReadBaseStratification.baseQualityStratifier},
+                {3, true, (byte)'D' , ReadBaseStratification.baseQualityStratifier},
+                {4, true, (byte)'E' , ReadBaseStratification.baseQualityStratifier},
+                {5, true, (byte)'F' , ReadBaseStratification.baseQualityStratifier},
+                {6, true, (byte)'G' , ReadBaseStratification.baseQualityStratifier},
+                {7, true, (byte)'H' , ReadBaseStratification.baseQualityStratifier},
+
+                {0, true, 40 , ReadBaseStratification.mappingQualityStratifier},
         };
     }
 
@@ -256,11 +318,27 @@ public class ReadBaseStratificationTest {
     public void testReadBaseStratifier(final int offset, final boolean readStrandPositive, final Object expectedStratum, final ReadBaseStratification.RecordAndOffsetStratifier<?> recordAndOffsetStratifier) {
         final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 2_000_000);
         final SAMFileHeader samFileHeader = new SAMFileHeader();
+        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("rgID");
+        samFileHeader.addReadGroup(readGroupRecord);
+
         final SAMRecord samRecord = new SAMRecord(samFileHeader);
 
+        samRecord.setReadName("62A40AAXX101028:2:93:3981:7576");
+        samRecord.setAttribute(SAMTag.RG.name(), readGroupRecord.getId());
+        samRecord.setAttribute(SAMTag.NM.name(), 1);
+
         samRecord.setReadBases("CATGGGGA".getBytes());
+        samRecord.setBaseQualities("ABCDEFGH".getBytes());
+        samRecord.setInferredInsertSize(100);
+        samRecord.setFirstOfPairFlag(true);
+        samRecord.setSecondOfPairFlag(false);
         samRecord.setReadUnmappedFlag(false);
+        samRecord.setMateUnmappedFlag(false);
+        samRecord.setReadPairedFlag(true);
+        samRecord.setMateNegativeStrandFlag(readStrandPositive);
         samRecord.setReadNegativeStrandFlag(!readStrandPositive);
+        samRecord.setMappingQuality(40);
+
         samRecord.setAlignmentStart(1);
         SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(samRecord, offset);
         SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, 1);
@@ -334,7 +412,6 @@ public class ReadBaseStratificationTest {
 
         Assert.assertEquals(recordAndOffsetStratifier.stratify(recordAndOffset, locusAndReference), expectedStratum);
     }
-
 
     @Test()
     public void testHomopolymerLength2() {
