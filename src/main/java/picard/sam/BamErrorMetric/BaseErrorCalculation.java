@@ -68,11 +68,11 @@ public class BaseErrorCalculation {
      * This is used in {@link CollectBamErrorMetrics} to convert an input argument to a {@link BaseErrorAggregation}.
      */
     enum Errors implements CommandLineParser.ClpEnum {
-        ERROR(BaseErrorCalculator::new, "Collects the average error at the bases provided."),
+        ERROR(SimpleErrorCalculator::new, "Collects the average error at the bases provided."),
         OVERLAPPING_ERROR(OverlappingReadsErrorCalculator::new, "Only considers bases from the overlapping parts of reads from the same template. " +
                 "For those bases, it calculates the error that can be attributable to pre-sequencing, versus during-sequencing.");
 
-        final private Supplier<? extends BaseCalculator> errorSupplier;
+        private final Supplier<? extends BaseCalculator> errorSupplier;
 
         Errors(Supplier<? extends BaseCalculator> errorSupplier, final String docString) {
             this.errorSupplier = errorSupplier;
@@ -91,22 +91,31 @@ public class BaseErrorCalculation {
         }
     }
 
-    /**
-     * A calculator that estimates the error rate of the bases it observes, assuming that the reference is truth.
-     */
-    public static class BaseErrorCalculator implements BaseCalculator {
-
-        long nMismatchingBases = 0;
+    public abstract static class BaseErrorCalculator implements BaseCalculator {
         long totalBases = 0;
 
         @Override
-        public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+        public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
             final byte readBase = recordAndOffset.getReadBase();
             if (!SequenceUtil.isNoCall(readBase)) {
                 totalBases++;
-                if (readBase != locusInfo.referenceBase) {
-                    nMismatchingBases++;
-                }
+            }
+        }
+    }
+
+    /**
+     * A calculator that estimates the error rate of the bases it observes, assuming that the reference is truth.
+     */
+    public static class SimpleErrorCalculator extends BaseErrorCalculator {
+
+        long nMismatchingBases = 0;
+
+        @Override
+        public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
+            super.addBase(recordAndOffset, locusAndRef);
+            final byte readBase = recordAndOffset.getReadBase();
+            if (!SequenceUtil.isNoCall(readBase) && (readBase != locusAndRef.referenceBase)) {
+                nMismatchingBases++;
             }
         }
 
@@ -116,7 +125,7 @@ public class BaseErrorCalculation {
         }
 
         @Override
-        public ErrorMetrics.ComputableMetricBase getMetric() {
+        public ErrorMetrics.SimpleErrorMetric getMetric() {
             return new ErrorMetrics.SimpleErrorMetric("", totalBases, nMismatchingBases);
         }
     }
@@ -133,15 +142,14 @@ public class BaseErrorCalculation {
         long nBothDisagreeWithReference = 0;
         long nDisagreeWithRefAndMate = 0;
         long nThreeWaysDisagreement = 0;
-
-        public OverlappingReadsErrorCalculator() {
-        }
+        long nTotalBasesWithOverlappingReads = 0;
 
         @Override
-        public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+        public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
+            super.addBase(recordAndOffset, locusAndRef);
             final byte readBase = recordAndOffset.getReadBase();
             final SAMRecord record = recordAndOffset.getRecord();
-            final SamLocusIterator.RecordAndOffset mate = locusInfo.getRecordAndOffsets()
+            final SamLocusIterator.RecordAndOffset mate = locusAndRef.getRecordAndOffsets()
                     .stream()
                     .filter(putative -> areReadsMates(record, putative.getRecord()))
                     .findFirst()
@@ -155,13 +163,13 @@ public class BaseErrorCalculation {
             if (SequenceUtil.isNoCall(readBase)) return;
             if (SequenceUtil.isNoCall(mateBase)) return;
 
-            totalBases++;
+            nTotalBasesWithOverlappingReads++;
 
             // Only bases that disagree with the reference are counted as errors.
-            if (!SequenceUtil.basesEqual(readBase, locusInfo.referenceBase)) return;
+            if (SequenceUtil.basesEqual(readBase, locusAndRef.referenceBase)) return;
 
             final boolean agreesWithMate = SequenceUtil.basesEqual(readBase, mateBase);
-            final boolean mateAgreesWithRef = SequenceUtil.basesEqual(mateBase, locusInfo.referenceBase);
+            final boolean mateAgreesWithRef = SequenceUtil.basesEqual(mateBase, locusAndRef.referenceBase);
 
             if (agreesWithMate) {
                 nBothDisagreeWithReference++;
@@ -178,8 +186,8 @@ public class BaseErrorCalculation {
         }
 
         @Override
-        public ErrorMetrics.ComputableMetricBase getMetric() {
-            return new ErrorMetrics.OverlappingErrorMetric("", totalBases, nDisagreeWithRefAndMate,
+        public ErrorMetrics.OverlappingErrorMetric getMetric() {
+            return new ErrorMetrics.OverlappingErrorMetric("", totalBases, nTotalBasesWithOverlappingReads, nDisagreeWithRefAndMate,
                     nBothDisagreeWithReference, nThreeWaysDisagreement);
         }
 

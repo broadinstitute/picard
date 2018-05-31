@@ -54,68 +54,89 @@ public class ErrorMetrics {
             this.COVARIATE = covariate;
         }
 
+        // required to enable reading metric from a file.
         public ComputableMetricBase() {}
 
         /** compute a qscore given the number of errors and the total number of bases.
          * Uses a false count of 1 int the numerator and 1/PRIOR_ERROR in the denominator.*/
         protected int computeQScore(final long numberOfErrors) {
+            return computeQScore(numberOfErrors, TOTAL_BASES);
+        }
+
+
+        /** compute a qscore given the number of errors and the total number of bases.
+         * Uses a false count of 1 int the denominator and 1 in the numerator.*/
+        protected int computeQScore(final long numberOfErrors, final long nTotalBases) {
             return QualityUtil.getPhredScoreFromErrorProbability(
-                    (numberOfErrors + 1.0) / (TOTAL_BASES + 1.0D / PRIOR_ERROR));
+                    (numberOfErrors + PRIOR_ERROR) / (nTotalBases + 1.0D));
         }
     }
 
     /** An error metric for the errors invovling bases in the overlapping region of a read-pair.
      * The resulting metric includes error rate information which can be assigned to the reading
-     * of the molecular insert {@link #DISAGREES_WITH_REF_AND_MATE_Q}, error rate which can be
+     * of the molecular insert {@link #DISAGREES_WITH_REF_AND_MATE_ONLY_Q}, error rate which can be
      * assigned to events that occured to to the molecular insert before it was loaded onto the
-     * flowcell/sequencer {@link #DISAGREES_WITH_REFERENCE_Q}, and an error rate which
-     * cannot be explained nicely {@link #THREE_WAYS_DISAGREEMENT_Q}.
+     * flowcell/sequencer {@link #DISAGREES_WITH_REFERENCE_ONLY_Q}, and an error rate which
+     * cannot be explained nicely {@link #THREE_WAYS_DISAGREEMENT_ONLY_Q}.
      *
      */
     public static class OverlappingErrorMetric extends ComputableMetricBase {
 
+        /** The number of bases for which an overlapping base from the mate read was found*/
+        @MergeByAdding
+        public long NUM_BASES_WITH_OVERLAPPING_READS = 0;
+
         /** The number of bases that disagree with the reference, but agree with their mate */
         @MergeByAdding
-        public long DISAGREES_WITH_REFERENCE_COUNT = 0L;
+        public long NUM_DISAGREES_WITH_REFERENCE_ONLY = 0L;
 
         /** The (phred) rate of bases that disagree with the reference, but agree with their mate */
         @NoMergingIsDerived
-        public int DISAGREES_WITH_REFERENCE_Q = 0;
+        public int DISAGREES_WITH_REFERENCE_ONLY_Q = 0;
 
         /** The number of bases that disagree with both the reference and their mate (which agree with each other) */
         @MergeByAdding
-        public long DISAGREES_WITH_REF_AND_MATE_COUNT = 0L;
+        public long NUM_DISAGREES_WITH_REF_AND_MATE = 0L;
 
         /** The (phred) rate of bases that disagree with both the reference and their mate (which agree with each other)*/
         @NoMergingIsDerived
-        public int DISAGREES_WITH_REF_AND_MATE_Q = 0;
+        public int DISAGREES_WITH_REF_AND_MATE_ONLY_Q = 0;
 
         /** The number of bases that disagree with both the reference and their mate (which also disagree) */
         @MergeByAdding
-        public long THREE_WAYS_DISAGREEMENT_COUNT = 0L;
+        public long NUM_THREE_WAYS_DISAGREEMENT = 0L;
 
         /** The (phred) rate of bases that disagree with both the reference and their mate (which also disagree) */
         @NoMergingIsDerived
-        public int THREE_WAYS_DISAGREEMENT_Q = 0;
+        public int THREE_WAYS_DISAGREEMENT_ONLY_Q = 0;
 
         @Override
         public void calculateDerivedFields() {
-            this.DISAGREES_WITH_REFERENCE_Q    = computeQScore(DISAGREES_WITH_REFERENCE_COUNT);
-            this.DISAGREES_WITH_REF_AND_MATE_Q = computeQScore(DISAGREES_WITH_REF_AND_MATE_COUNT);
-            this.THREE_WAYS_DISAGREEMENT_Q     = computeQScore(THREE_WAYS_DISAGREEMENT_COUNT);
+            this.DISAGREES_WITH_REFERENCE_ONLY_Q = computeQScore(NUM_DISAGREES_WITH_REFERENCE_ONLY, NUM_BASES_WITH_OVERLAPPING_READS);
+            this.DISAGREES_WITH_REF_AND_MATE_ONLY_Q = computeQScore(NUM_DISAGREES_WITH_REF_AND_MATE, NUM_BASES_WITH_OVERLAPPING_READS);
+            this.THREE_WAYS_DISAGREEMENT_ONLY_Q = computeQScore(NUM_THREE_WAYS_DISAGREEMENT, NUM_BASES_WITH_OVERLAPPING_READS);
 
         }
 
         public OverlappingErrorMetric(final String covariate,
-                                      final long totalBases,
+                                      final long nTotalBases,
+                                      final long nTotalBasesWithOverlappingReads,
                                       final long nDisagreeWithRefAndMate,
                                       final long nDisagreeWithReferenceOnly,
                                       final long nThreeWaysDisagreement) {
-            super(covariate, totalBases);
-            this.DISAGREES_WITH_REFERENCE_COUNT    = nDisagreeWithReferenceOnly;
-            this.DISAGREES_WITH_REF_AND_MATE_COUNT = nDisagreeWithRefAndMate;
-            this.THREE_WAYS_DISAGREEMENT_COUNT     = nThreeWaysDisagreement;
+            super(covariate, nTotalBases);
+
+            this.NUM_BASES_WITH_OVERLAPPING_READS = nTotalBasesWithOverlappingReads;
+            this.NUM_DISAGREES_WITH_REFERENCE_ONLY = nDisagreeWithReferenceOnly;
+            this.NUM_DISAGREES_WITH_REF_AND_MATE = nDisagreeWithRefAndMate;
+            this.NUM_THREE_WAYS_DISAGREEMENT = nThreeWaysDisagreement;
         }
+
+        // needed for reading in a metric from a file
+        public OverlappingErrorMetric() {
+            super();
+        }
+
     }
 
     /**
@@ -124,7 +145,7 @@ public class ErrorMetrics {
     public static class SimpleErrorMetric extends ComputableMetricBase {
         /** The number of bases that disagree with the reference */
         @MergeByAdding
-        public Long ERROR_BASES;
+        public long ERROR_BASES;
 
         /** The (phred) rate of bases that disagree with the reference */
         @NoMergingIsDerived
@@ -140,6 +161,7 @@ public class ErrorMetrics {
             this.ERROR_BASES = errorBases;
         }
 
+        // needed for reading in a metric from a file
         public SimpleErrorMetric() {
             super();
         }

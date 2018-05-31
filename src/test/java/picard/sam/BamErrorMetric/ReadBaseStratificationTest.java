@@ -318,6 +318,7 @@ public class ReadBaseStratificationTest {
     public void testReadBaseStratifier(final int offset, final boolean readStrandPositive, final Object expectedStratum, final ReadBaseStratification.RecordAndOffsetStratifier<?> recordAndOffsetStratifier) {
         final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 2_000_000);
         final SAMFileHeader samFileHeader = new SAMFileHeader();
+        samFileHeader.addSequence(samSequenceRecord);
         final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("rgID");
         samFileHeader.addReadGroup(readGroupRecord);
 
@@ -340,6 +341,7 @@ public class ReadBaseStratificationTest {
         samRecord.setMappingQuality(40);
 
         samRecord.setAlignmentStart(1);
+        samRecord.setReferenceIndex(0);
         SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(samRecord, offset);
         SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, 1);
 
@@ -417,6 +419,7 @@ public class ReadBaseStratificationTest {
     public void testHomopolymerLength2() {
         final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 2_000_000);
         final SAMFileHeader samFileHeader = new SAMFileHeader();
+        samFileHeader.addSequence(samSequenceRecord);
         final SAMRecord samRecord = new SAMRecord(samFileHeader);
 
         final String refString="GGT";
@@ -425,6 +428,7 @@ public class ReadBaseStratificationTest {
         samRecord.setReadUnmappedFlag(false);
         samRecord.setReadNegativeStrandFlag(false);
         samRecord.setAlignmentStart(1);
+        samRecord.setReferenceIndex(0);
         SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(samRecord, 2);
         SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, 1);
 
