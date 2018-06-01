@@ -134,7 +134,7 @@ public class BaseErrorCalculation {
      * A calculator that estimates the error rate of the bases it observes, assuming that the reference is truth.
      * This calculator only includes bases that have been read twice in the same template (once from each read) and
      * thus only includes bases that arise from the overlapping part of the reads. Over those bases the Calculator
-     * distinguishes between weather the two reads agree with each other but differ from the reference (indicative
+     * distinguishes between whether the two reads agree with each other but differ from the reference (indicative
      * of a difference between the template and the reference, and when one of the reads agrees with the reference
      * but the other does not which indicates that there might have been a sequencing error in that read.
      */
@@ -200,10 +200,14 @@ public class BaseErrorCalculation {
             if (!read1.getFirstOfPairFlag() ^ read2.getFirstOfPairFlag()) return false;
             // one must be second while the other is not
             if (!read1.getSecondOfPairFlag() ^ read2.getSecondOfPairFlag()) return false;
-            // read must be mapped
+            // read1 must be mapped
             if (read1.getReadUnmappedFlag()) return false;
-            // mate must be mapped
-            if (read1.getMateUnmappedFlag()) return false;
+            // read2 must be mapped
+            if (read2.getReadUnmappedFlag()) return false;
+            // read1 must be non-secondary
+            if (read1.isSecondaryAlignment()) return false;
+            // read2 must be non-secondary
+            if (read2.isSecondaryAlignment()) return false;
 
             return read1.getMateAlignmentStart() == read2.getAlignmentStart();
         }

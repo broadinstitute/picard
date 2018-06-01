@@ -347,7 +347,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
     }
 
     /**
-     * Reads Interprets intervals from the input INTERVALS, if there's a file with that name, it opens the file, otherwise it tries to parse it , checks that their dictionaries all agree with the input SequenceDictionary
+     * Reads Interprets intervals from the input INTERVALS, if there's a file with that name, it opens the file, otherwise it tries to parse it, checks that their dictionaries all agree with the input SequenceDictionary
      * and returns the intersection of all the lists.
      *
      * @param sequenceDictionary
