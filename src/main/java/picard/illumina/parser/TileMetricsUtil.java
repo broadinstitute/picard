@@ -130,27 +130,12 @@ public class TileMetricsUtil {
         return Collections.unmodifiableCollection(tiles);
     }
 
-    private static boolean v3TileMetricsHasClusterRecordsFirstPass(Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap) {
-        final Map.Entry<String, ? extends Collection<IlluminaTileMetrics>> entry = locationToMetricsMap.entrySet().iterator().next();
-        final IlluminaTileMetrics record = CollectionUtil.getSoleElement(entry.getValue());
-        return record.isClusterRecord();
-    }
-
     public static Collection<Tile> parseClusterRecordsFromTileMetricsV3(
             final Collection<File> tileMetricsOutFiles,
             final Map<Integer, File> phasingMetricsFiles,
             final ReadStructure readStructure
     ) throws FileNotFoundException {
         Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
-        for (File tileMetricsOutFile : tileMetricsOutFiles) {
-            TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
-            final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
-            final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
-            if (v3TileMetricsHasClusterRecordsFirstPass(locationToMetricsMap)) {
-                final float density = tileMetricsIterator.getDensity();
-                return getTileClusterRecordsV3(locationToMetricsMap, phasingValues, density);
-            }
-        }
         for (File tileMetricsOutFile : tileMetricsOutFiles) {
             TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
             final float density = tileMetricsIterator.getDensity();
