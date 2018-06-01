@@ -41,7 +41,7 @@ public class ErrorMetrics {
 
     static double PRIOR_ERROR = 0.001;
 
-    public static class ComputableMetricBase extends MergeableMetricBase {
+    public static class ErrorMetricBase extends MergeableMetricBase {
         /** The value of the covariate define the bases included in this metric */
         @MergingIsManual
         public String COVARIATE;
@@ -49,13 +49,13 @@ public class ErrorMetrics {
         @MergeByAdding
         public long TOTAL_BASES;
 
-        public ComputableMetricBase(final String covariate, final long totalBases) {
+        public ErrorMetricBase(final String covariate, final long totalBases) {
             this.TOTAL_BASES = totalBases;
             this.COVARIATE = covariate;
         }
 
         // required to enable reading metric from a file.
-        public ComputableMetricBase() {}
+        public ErrorMetricBase() {}
 
         /** compute a qscore given the number of errors and the total number of bases.
          * Uses a false count of 1 int the numerator and 1/PRIOR_ERROR in the denominator.*/
@@ -80,7 +80,7 @@ public class ErrorMetrics {
      * cannot be explained nicely {@link #THREE_WAYS_DISAGREEMENT_ONLY_Q}.
      *
      */
-    public static class OverlappingErrorMetric extends ComputableMetricBase {
+    public static class OverlappingErrorMetric extends ErrorMetricBase {
 
         /** The number of bases for which an overlapping base from the mate read was found*/
         @MergeByAdding
@@ -142,7 +142,7 @@ public class ErrorMetrics {
     /**
      * An error metric for the errors in bases.
      */
-    public static class SimpleErrorMetric extends ComputableMetricBase {
+    public static class SimpleErrorMetric extends ErrorMetricBase {
         /** The number of bases that disagree with the reference */
         @MergeByAdding
         public long ERROR_BASES;

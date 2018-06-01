@@ -94,7 +94,7 @@ public class BaseErrorCalculationTest {
         Assert.assertEquals(metric1.NUM_THREE_WAYS_DISAGREEMENT, 1L);
 
         final ErrorMetrics.OverlappingErrorMetric metric2 = overlappingErrorCalculator1.getMetric();
-        metric1.calculateDerivedFields();
+        metric2.calculateDerivedFields();
         Assert.assertEquals(metric2.TOTAL_BASES, length);
         Assert.assertEquals(metric2.NUM_BASES_WITH_OVERLAPPING_READS,  length);
         Assert.assertEquals(metric2.NUM_DISAGREES_WITH_REFERENCE_ONLY, 2L);
