@@ -61,8 +61,9 @@ public class BaseErrorAggregation<CALCULATOR extends BaseErrorCalculation.BaseCa
 
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
         final Object stratus = stratifier.stratify(recordAndOffset, locusInfo);
-        //this assumes we do not want to aggregate null.
+        // this assumes we do not want to aggregate null.
         if (stratus != null) strataAggregatorMap.get(stratus).addBase(recordAndOffset, locusInfo);
+
     }
 
     public String getSuffix() {
@@ -72,7 +73,7 @@ public class BaseErrorAggregation<CALCULATOR extends BaseErrorCalculation.BaseCa
     public ErrorMetrics.ErrorMetricBase[] getMetrics() {
         final List<ErrorMetrics.ErrorMetricBase> metrics = new ArrayList<>();
 
-        //we do this to sort
+        // we do this to sort
         final TreeSet<Object> strata = new TreeSet<>(strataAggregatorMap.keySet());
 
         for (final Object stratum : strata) {

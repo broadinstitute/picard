@@ -54,38 +54,36 @@ import java.util.stream.Collectors;
  */
 
  @CommandLineProgramProperties(
-        summary = "Program to collect error metrics on bases stratified in various ways." +
-                "\n" +
-                "Sequencing errors come in different 'flavors', for example some occur during sequencing while " +
-                "others happen during 'library construction'. They can be correlated with various aspect of " +
-                "the sequencing experiment: position in the read, base context, length of insert and so on. " +
-                "" +
-                "This program enables the user to collect two different kinds of error metrics (one which attempts to " +
-                "distinguish between pre- and post- sequencer errors, and on which doesn't) and a collation of 'stratifiers' " +
-                "each of which assigns bases into various bins. To complicate things further, the stratifiers can be used together " +
-                "to generate a composite stratification. " +
-                "" +
-                "For example:\n" +
+        summary = "Program to collect error metrics on bases stratified in various ways.\n" +
+                "<p>" +
+                "Sequencing errors come in different 'flavors'. For example, some occur during sequencing while " +
+                "others happen during library construction, prior to the sequencing. They may be correlated with " +
+                "various aspect of the sequencing experiment: position in the read, base context, length of insert and so on.\n " +
+                "<p>" +
+                "This program collects two different kinds of error metrics (one which attempts to distinguish between pre- and " +
+                "post- sequencer errors, and on which doesn't) and a collation of 'stratifiers' " +
+                "each of which assigns bases into various bins. The stratifiers can be used together to generate a composite " +
+                "stratification. " +
+                "<p>" +
+                "For example:" +
+                "<p>" +
                 "The BASE_QUALITY stratifier will place bases in bins according to their declared base quality. " +
                 "The READ_ORDINALITY stratifier will place bases in one of two bins depending on whether their read " +
-                "is 'first' or 'second'. One could generate a composite stratifier BASE_QUALITY,READ_ORDINALITY which will " +
-                "do both as the same time. " +
-                "" +
+                "is 'first' or 'second'. One could generate a composite stratifier BASE_QUALITY:READ_ORDINALITY which will " +
+                "do both stratifications as the same time. \n" +
+                "<p>" +
                 "The resulting metric file will be named according to a provided prefix and a suffix which is generated " +
                 " automatically according to the error metric. " +
-                "To save on run-time, the tool collects many metrics in a single pass and there should be hardly any " +
-                "performance loss when collecting many metrics at the same time, which is why the default already includes a " +
-                "lengthy collection of metrics. " +
-                "" +
-                "The tool takes in a VCF for the sample " +
-                "to skip actually polymorphic bases. As a result it assumes that any disagreement from the reference is an error." +
-                "" +
-                "This assumption can, of-course be wrong, but the rates at which it is wrong is likely to be lower than" +
-                "the error rates that are exposed. " +
-                "" +
-                "The program also takes a region over which to run. This region should be used to define a 'confidence region' " +
-                "where lack of a call in the VCF translates to a high probability of a monomorphic site.",
-
+                "The tool cal collect multiple metrics in a single pass and there should be hardly any " +
+                "performance loss when specifying multiple metrics at the same time; the default includes a " +
+                "large collection of metrics. \n" +
+                "<p>" +
+                "To estimate the error rate the tool assumes that all differences from the reference are errors. For this to be " +
+                "a reasonable assumption the tool needs to know the sites at which the sample is actually polymorphic and a " +
+                "confidence interval where the user is relatively certain that the polymorphic sites are known and accurate. " +
+                "These two inputs are provided as a VCF and INTERVALS. The program will only process sites that are in the " +
+                "intersection of the interval lists in the INTERVALS argument as long as they are not polymorphic in the " +
+                "VCF.\n\n",
         oneLineSummary = "Program to collect error metrics on bases stratified in various ways.",
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
@@ -93,38 +91,42 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for output files.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Base name for output files. Actual file names will be " +
+            "generated from the basename and suffixes from the ERROR and STRATIFIER by adding a '.' and then " +
+            "error_by_stratifier[_and_stratifier]* where 'error' is ERROR's extension, and 'stratifier' is STRATIFIER's suffix. " +
+            "For example, an ERROR_METRIC of ERROR:BASE_QUALITY:GC_CONTENT will produce an extension '.error_by_base_quality_and_gc'. " +
+            "The suffixes can be found in the documentation for ERROR_VALUE and SUFFIX_VALUE." )
     public File OUTPUT;
 
-    @Argument(doc = "Errors to collect in the form of \"ERROR(,STRATIFIER)*\". " +
+    @Argument(doc = "Errors to collect in the form of \"ERROR(:STRATIFIER)*\". " +
             "To see the values available for ERROR and STRATIFIER look at the documentation for the arguments " +
             "ERROR_VALUE and STRATIFIER_VALUE.")
     public List<String> ERROR_METRICS = new ArrayList<>(CollectionUtil.makeList(
             "ERROR",
-            "ERROR,BASE_QUALITY",
-            "ERROR,INSERT_LENGTH",
-            "ERROR,GC_CONTENT",
-            "ERROR,READ_DIRECTION",
-            "ERROR,PAIR_ORIENTATION",
-            "ERROR,HOMOPOLYMER",
-            "ERROR,BINNED_HOMOPOLYMER",
-            "ERROR,CYCLE",
-            "ERROR,READ_ORDINALITY",
-            "ERROR,READ_ORDINALITY,CYCLE",
-            "ERROR,READ_ORDINALITY,HOMOPOLYMER",
-            "ERROR,READ_ORDINALITY,GC_CONTENT",
-            "ERROR,READ_ORDINALITY,PRE_DINUC",
-            "ERROR,MAPPING_QUALITY",
-            "ERROR,READ_GROUP",
-            "ERROR,MISMATCHES_IN_READ",
-            "ERROR,ONE_BASE_PADDED_CONTEXT",
+            "ERROR:BASE_QUALITY",
+            "ERROR:INSERT_LENGTH",
+            "ERROR:GC_CONTENT",
+            "ERROR:READ_DIRECTION",
+            "ERROR:PAIR_ORIENTATION",
+            "ERROR:HOMOPOLYMER",
+            "ERROR:BINNED_HOMOPOLYMER",
+            "ERROR:CYCLE",
+            "ERROR:READ_ORDINALITY",
+            "ERROR:READ_ORDINALITY:CYCLE",
+            "ERROR:READ_ORDINALITY:HOMOPOLYMER",
+            "ERROR:READ_ORDINALITY:GC_CONTENT",
+            "ERROR:READ_ORDINALITY:PRE_DINUC",
+            "ERROR:MAPPING_QUALITY",
+            "ERROR:READ_GROUP",
+            "ERROR:MISMATCHES_IN_READ",
+            "ERROR:ONE_BASE_PADDED_CONTEXT",
             "OVERLAPPING_ERROR",
-            "OVERLAPPING_ERROR,BASE_QUALITY",
-            "OVERLAPPING_ERROR,INSERT_LENGTH",
-            "OVERLAPPING_ERROR,READ_ORDINALITY",
-            "OVERLAPPING_ERROR,READ_ORDINALITY,CYCLE",
-            "OVERLAPPING_ERROR,READ_ORDINALITY,HOMOPOLYMER",
-            "OVERLAPPING_ERROR,READ_ORDINALITY,GC_CONTENT"));
+            "OVERLAPPING_ERROR:BASE_QUALITY",
+            "OVERLAPPING_ERROR:INSERT_LENGTH",
+            "OVERLAPPING_ERROR:READ_ORDINALITY",
+            "OVERLAPPING_ERROR:READ_ORDINALITY:CYCLE",
+            "OVERLAPPING_ERROR:READ_ORDINALITY:HOMOPOLYMER",
+            "OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT"));
 
     @Argument(doc = "A fake argument used to show what the options of ERROR (in ERROR_METRICS) are.", optional = true)
     public BaseErrorCalculation.Errors ERRORS_VALUE = null;
@@ -132,19 +134,20 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
     @Argument(doc = "A fake argument used to show what the options of STRATIFIER (in ERROR_METRICS) are.", optional = true)
     public ReadBaseStratification.Stratifiers STRATIFIER_VALUE = null;
 
-    @Argument(shortName = "V", doc = "VCF of loci to avoid collecting data (should include any known variation!)")
-    public File VCF=null;
+    @Argument(shortName = "V", doc = "VCF of known variation for sample. program will skip over polymorphic sites in this VCF and " +
+            "avoid collecting data on these loci.")
+    public File VCF = null;
 
-    @Argument(shortName = "L", doc = "Region(s) to limit analysis to. Can be given as a interval_list file. (will intersect if multiple values are given.) ", optional = true)
+    @Argument(shortName = "L", doc = "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will intersect inputs if multiple are given. ", optional = true)
     public List<File> INTERVALS = null;
 
-    @Argument(shortName = StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum Mapping quality to include read.", minValue = 0)
+    @Argument(shortName = StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality to include read.", minValue = 0)
     public int MIN_MAPPING_Q = 20;
 
-    @Argument(shortName = "BQ", doc = "Minimum Base quality to include base.",minValue = 0)
+    @Argument(shortName = "BQ", doc = "Minimum base quality to include base.", minValue = 0)
     public int MIN_BASE_Q = 20;
 
-    @Argument(shortName = "PE", doc = "The prior error, in phred-scale (used for calculating ratios and filtering out HET sites)",
+    @Argument(shortName = "PE", doc = "The prior error, in phred-scale (used for calculating empirical error rates)",
             optional = true, minValue = 2)
     public int PRIOR_Q = 30;
 
@@ -416,7 +419,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
      * @param stratifierDirective The string directive describing the error type and collection of stratifiers to use
      * @return The appropriate {@link BaseErrorAggregation} object.
      */
-    static protected BaseErrorAggregation parseDirective(final String stratifierDirective) {
+    protected static BaseErrorAggregation parseDirective(final String stratifierDirective) {
         final String[] directiveUnits = new String[256];
         final int numberOfDirectives = ParsingUtils.split(stratifierDirective, directiveUnits, ',', false);
 

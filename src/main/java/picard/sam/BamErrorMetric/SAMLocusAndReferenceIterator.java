@@ -35,7 +35,6 @@ import static htsjdk.samtools.util.SamLocusIterator.*;
 /**
  * Iterator that traverses a SAM File and a ReferenceFile, accumulating information on a per-locus basis.
  * Only, whatever loci are covered by the input reads are returned.
- * Duplicate reads and non-primary alignments are filtered out.
  * Iterator element holds both pileup (in the form of a LocusInfo object) and the reference base
  *
  * @author Yossi Farjoun
@@ -61,7 +60,7 @@ public class SAMLocusAndReferenceIterator extends IterableOnceIterator<SAMLocusA
         final ReferenceSequence referenceSequence = referenceSequenceFileWalker.get(locus.getSequenceIndex(), locus.getSequenceName(),
                 locus.getSequenceLength());
 
-        //position is 1-based...arrays are 0-based!
+        // position is 1-based...arrays are 0-based!
         return new SAMLocusAndReference(locus, referenceSequence.getBases()[locus.getPosition() - 1]);
     }
 

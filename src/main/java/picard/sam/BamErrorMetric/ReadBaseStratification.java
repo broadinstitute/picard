@@ -633,7 +633,7 @@ public class ReadBaseStratification {
 
         @Override
         public String getHelpDoc() {
-            return docString + " Suffix is " + stratifier.get().getSuffix();
+            return docString + " Suffix is '" + stratifier.get().getSuffix() + "'.";
         }
 
         private final Supplier<RecordAndOffsetStratifier<?>> stratifier;
@@ -664,8 +664,7 @@ public class ReadBaseStratification {
     }
 
     /**
-     * An enum designed to hold a binned version of
-     * any probability-like number (between 0 and 1)
+     * An enum designed to hold a binned version of any probability-like number (between 0 and 1)
      * in quintiles
      */
     public enum CycleBin {
@@ -717,7 +716,11 @@ public class ReadBaseStratification {
     }
 
     /**
-     * An enum for holding a reads read-pair's Orientation (i.e. F1R2, F2R1, F1F2 or R1R2)
+     * An enum for holding a reads read-pair's Orientation (i.e. F1R2, F2R1, or TANDEM) indicating
+     * the strand (positive or negative) that each of the two mated reads are aligned to. In connection with
+     * READ_BASE and similar stratifiers this can be used to observe oxoG-type sequencing artifacts.
+     *
+     * Note that this is not related to FR/RF/TANDEM classification as per {@link htsjdk.samtools.SamPairUtil.PairOrientation PairOrientation}.
      */
     public enum PairOrientation {
         F1R2,
@@ -795,7 +798,6 @@ public class ReadBaseStratification {
      * same order as was originally read) and the base under consideration is replaced with the reference base at that location
      * All other bases are taken from the read, not the reference.
      */
-
     private static String stratifySurroundingContext(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo, final int basesBefore, final int basesAfter) {
         final StringBuilder stringBuilder = new StringBuilder(basesAfter + basesBefore + 1);
 

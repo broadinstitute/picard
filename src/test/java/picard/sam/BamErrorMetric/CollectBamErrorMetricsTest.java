@@ -27,49 +27,49 @@ public class CollectBamErrorMetricsTest {
     public Object[][] parseDirectiveData() {
         return new Object[][]{
                 {"ERROR", "error_by_all"},
-                {"ERROR,ALL", "error_by_all"},
-                {"ERROR,GC_CONTENT", "error_by_gc"},
-                {"ERROR,READ_ORDINALITY", "error_by_read_ordinality"},
-                {"ERROR,READ_BASE", "error_by_read_base"},
-                {"ERROR,REFERENCE_BASE", "error_by_ref_base"},
-                {"ERROR,PRE_DINUC", "error_by_pre_dinuc"},
-                {"ERROR,POST_DINUC", "error_by_post_dinuc"},
-                {"ERROR,HOMOPOLYMER_LENGTH", "error_by_homopolymer_length"},
-                {"ERROR,HOMOPOLYMER", "error_by_homopolymer_and_following_ref_base"},
-                {"ERROR,BINNED_HOMOPOLYMER", "error_by_binned_length_homopolymer_and_following_ref_base"},
-                {"ERROR,FLOWCELL_TILE", "error_by_tile"},
-                {"ERROR,READ_DIRECTION", "error_by_read_direction"},
-                {"ERROR,CYCLE", "error_by_cycle"},
-                {"ERROR,BINNED_CYCLE", "error_by_binned_cycle"},
-                {"ERROR,INSERT_LENGTH", "error_by_insert_length"},
-                {"ERROR,BASE_QUALITY", "error_by_base_quality"},
-                {"ERROR,MAPPING_QUALITY", "error_by_mapping_quality"},
-                {"ERROR,READ_GROUP", "error_by_read_group"},
-                {"ERROR,MISMATCHES_IN_READ", "error_by_mismatches_in_read"},
-                {"ERROR,ONE_BASE_PADDED_CONTEXT", "error_by_one_base_padded_context"},
-                {"ERROR,TWO_BASE_PADDED_CONTEXT", "error_by_two_base_padded_context"},
-                {"ERROR,CONSENSUS", "error_by_consensus"},
-                {"ERROR,NS_IN_READ", "error_by_ns_in_read"},
+                {"ERROR:ALL", "error_by_all"},
+                {"ERROR:GC_CONTENT", "error_by_gc"},
+                {"ERROR:READ_ORDINALITY", "error_by_read_ordinality"},
+                {"ERROR:READ_BASE", "error_by_read_base"},
+                {"ERROR:REFERENCE_BASE", "error_by_ref_base"},
+                {"ERROR:PRE_DINUC", "error_by_pre_dinuc"},
+                {"ERROR:POST_DINUC", "error_by_post_dinuc"},
+                {"ERROR:HOMOPOLYMER_LENGTH", "error_by_homopolymer_length"},
+                {"ERROR:HOMOPOLYMER", "error_by_homopolymer_and_following_ref_base"},
+                {"ERROR:BINNED_HOMOPOLYMER", "error_by_binned_length_homopolymer_and_following_ref_base"},
+                {"ERROR:FLOWCELL_TILE", "error_by_tile"},
+                {"ERROR:READ_DIRECTION", "error_by_read_direction"},
+                {"ERROR:CYCLE", "error_by_cycle"},
+                {"ERROR:BINNED_CYCLE", "error_by_binned_cycle"},
+                {"ERROR:INSERT_LENGTH", "error_by_insert_length"},
+                {"ERROR:BASE_QUALITY", "error_by_base_quality"},
+                {"ERROR:MAPPING_QUALITY", "error_by_mapping_quality"},
+                {"ERROR:READ_GROUP", "error_by_read_group"},
+                {"ERROR:MISMATCHES_IN_READ", "error_by_mismatches_in_read"},
+                {"ERROR:ONE_BASE_PADDED_CONTEXT", "error_by_one_base_padded_context"},
+                {"ERROR:TWO_BASE_PADDED_CONTEXT", "error_by_two_base_padded_context"},
+                {"ERROR:CONSENSUS", "error_by_consensus"},
+                {"ERROR:NS_IN_READ", "error_by_ns_in_read"},
 
-                {"ERROR,POST_DINUC,BASE_QUALITY", "error_by_post_dinuc_and_base_quality"},
-                {"ERROR,POST_DINUC,BASE_QUALITY,GC_CONTENT", "error_by_post_dinuc_and_base_quality_and_gc"},
-                {" ERROR , POST_DINUC , BASE_QUALITY , GC_CONTENT ", "error_by_post_dinuc_and_base_quality_and_gc"},
+                {"ERROR,POST_DINUC:BASE_QUALITY", "error_by_post_dinuc_and_base_quality"},
+                {"ERROR,POST_DINUC:BASE_QUALITY,GC_CONTENT", "error_by_post_dinuc_and_base_quality_and_gc"},
+                {" ERROR ; POST_DINUC : BASE_QUALITY : GC_CONTENT ", "error_by_post_dinuc_and_base_quality_and_gc"},
 
                 {"OVERLAPPING_ERROR", "overlapping_error_by_all"},
-                {"OVERLAPPING_ERROR,ALL", "overlapping_error_by_all"},
-                {"OVERLAPPING_ERROR,GC_CONTENT", "overlapping_error_by_gc"},
-                {"OVERLAPPING_ERROR,READ_ORDINALITY", "overlapping_error_by_read_ordinality"},
-                {"OVERLAPPING_ERROR,READ_BASE", "overlapping_error_by_read_base"},
-                {"OVERLAPPING_ERROR,REFERENCE_BASE", "overlapping_error_by_ref_base"},
-                {"OVERLAPPING_ERROR,PRE_DINUC", "overlapping_error_by_pre_dinuc"},
-                {"OVERLAPPING_ERROR,POST_DINUC", "overlapping_error_by_post_dinuc"},
-                {"OVERLAPPING_ERROR,HOMOPOLYMER_LENGTH", "overlapping_error_by_homopolymer_length"},
-                {"OVERLAPPING_ERROR,HOMOPOLYMER", "overlapping_error_by_homopolymer_and_following_ref_base"},
-                {"OVERLAPPING_ERROR,FLOWCELL_TILE", "overlapping_error_by_tile"},
-                {"OVERLAPPING_ERROR,READ_DIRECTION", "overlapping_error_by_read_direction"},
-                {"OVERLAPPING_ERROR,CYCLE", "overlapping_error_by_cycle"},
-                {"OVERLAPPING_ERROR,INSERT_LENGTH", "overlapping_error_by_insert_length"},
-                {"OVERLAPPING_ERROR,BASE_QUALITY", "overlapping_error_by_base_quality"},
+                {"OVERLAPPING_ERROR:ALL", "overlapping_error_by_all"},
+                {"OVERLAPPING_ERROR:GC_CONTENT", "overlapping_error_by_gc"},
+                {"OVERLAPPING_ERROR:READ_ORDINALITY", "overlapping_error_by_read_ordinality"},
+                {"OVERLAPPING_ERROR:READ_BASE", "overlapping_error_by_read_base"},
+                {"OVERLAPPING_ERROR:REFERENCE_BASE", "overlapping_error_by_ref_base"},
+                {"OVERLAPPING_ERROR:PRE_DINUC", "overlapping_error_by_pre_dinuc"},
+                {"OVERLAPPING_ERROR:POST_DINUC", "overlapping_error_by_post_dinuc"},
+                {"OVERLAPPING_ERROR:HOMOPOLYMER_LENGTH", "overlapping_error_by_homopolymer_length"},
+                {"OVERLAPPING_ERROR:HOMOPOLYMER", "overlapping_error_by_homopolymer_and_following_ref_base"},
+                {"OVERLAPPING_ERROR:FLOWCELL_TILE", "overlapping_error_by_tile"},
+                {"OVERLAPPING_ERROR:READ_DIRECTION", "overlapping_error_by_read_direction"},
+                {"OVERLAPPING_ERROR:CYCLE", "overlapping_error_by_cycle"},
+                {"OVERLAPPING_ERROR:INSERT_LENGTH", "overlapping_error_by_insert_length"},
+                {"OVERLAPPING_ERROR:BASE_QUALITY", "overlapping_error_by_base_quality"},
         };
     }
 
@@ -93,7 +93,6 @@ public class CollectBamErrorMetricsTest {
     void testAggregatorsHaveDistinctSuffixes() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         Set<String> suffixes = new HashSet<>();
 
-        final ReadBaseStratification.Stratifiers stratifier = ReadBaseStratification.Stratifiers.ALL;
         for (final BaseErrorCalculation.Errors error : BaseErrorCalculation.Errors.values()) {
             final String suffix = error.getErrorSupplier().get().getSuffix();
             Assert.assertTrue(suffixes.add(suffix), "found duplicate suffix: " + suffix);
@@ -103,10 +102,10 @@ public class CollectBamErrorMetricsTest {
     @DataProvider
     public Object[][] parseDirectiveBadData() {
         return new Object[][]{
-                {"ERROR,", ""},
-                {"ERRORS,READ_ORDINALITY", ""},
+                {"ERROR:", ""},
+                {"ERRORS:READ_ORDINALITY", ""},
                 {"ERROR;REFERENCE_BASE", ""},
-                {"ERROR,what", ""},
+                {"ERROR:what", ""},
         };
     }
 
@@ -263,10 +262,10 @@ public class CollectBamErrorMetricsTest {
                 "INPUT=" + input,
                 "OUTPUT=" + outputBaseFileName,
                 "REFERENCE_SEQUENCE=" + referenceFile.getAbsolutePath(),
-                "ERROR_METRICS=" + "ERROR,TWO_BASE_PADDED_CONTEXT", // Not all covariates are included by default, but we still want to test them.
-                "ERROR_METRICS=" + "ERROR,CONSENSUS",
-                "ERROR_METRICS=" + "ERROR,NS_IN_READ",
-                "ERROR_METRICS=" + "ERROR,BINNED_CYCLE",
+                "ERROR_METRICS=" + "ERROR:TWO_BASE_PADDED_CONTEXT", // Not all covariates are included by default, but we still want to test them.
+                "ERROR_METRICS=" + "ERROR:CONSENSUS",
+                "ERROR_METRICS=" + "ERROR:NS_IN_READ",
+                "ERROR_METRICS=" + "ERROR:BINNED_CYCLE",
                 "VCF=" + vcf.getAbsolutePath()
         };
 
