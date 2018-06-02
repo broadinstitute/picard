@@ -51,9 +51,9 @@ public class CollectBamErrorMetricsTest {
                 {"ERROR:CONSENSUS", "error_by_consensus"},
                 {"ERROR:NS_IN_READ", "error_by_ns_in_read"},
 
-                {"ERROR,POST_DINUC:BASE_QUALITY", "error_by_post_dinuc_and_base_quality"},
-                {"ERROR,POST_DINUC:BASE_QUALITY,GC_CONTENT", "error_by_post_dinuc_and_base_quality_and_gc"},
-                {" ERROR ; POST_DINUC : BASE_QUALITY : GC_CONTENT ", "error_by_post_dinuc_and_base_quality_and_gc"},
+                {"ERROR:POST_DINUC:BASE_QUALITY", "error_by_post_dinuc_and_base_quality"},
+                {"ERROR:POST_DINUC:BASE_QUALITY:GC_CONTENT", "error_by_post_dinuc_and_base_quality_and_gc"},
+                {" ERROR : POST_DINUC : BASE_QUALITY : GC_CONTENT ", "error_by_post_dinuc_and_base_quality_and_gc"},
 
                 {"OVERLAPPING_ERROR", "overlapping_error_by_all"},
                 {"OVERLAPPING_ERROR:ALL", "overlapping_error_by_all"},
@@ -102,21 +102,23 @@ public class CollectBamErrorMetricsTest {
     @DataProvider
     public Object[][] parseDirectiveBadData() {
         return new Object[][]{
-                {"ERROR:", ""},
-                {"ERRORS:READ_ORDINALITY", ""},
-                {"ERROR;REFERENCE_BASE", ""},
-                {"ERROR:what", ""},
+                {"ERROR:"},
+                {"ERRORS:READ_ORDINALITY"},
+                {"ERROR;REFERENCE_BASE"},
+                {"ERROR:what"},
         };
     }
 
     @Test(dataProvider = "parseDirectiveBadData", expectedExceptions = IllegalArgumentException.class)
-    public void parseDirectiveBad(final String directive, final String extension) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        parseDirective0(directive, extension);
+    public void parseDirectiveBad(final String directive) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        parseDirective0(directive, null);
     }
 
     public void parseDirective0(final String directive, final String extension) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
         final BaseErrorAggregation agg = CollectBamErrorMetrics.parseDirective(directive);
-        Assert.assertEquals(agg.getSuffix(), extension);
+        if (extension!=null) {
+            Assert.assertEquals(agg.getSuffix(), extension);
+        }
     }
 
     @DataProvider(name = "OneCovariateErrorMetricsDataProvider")

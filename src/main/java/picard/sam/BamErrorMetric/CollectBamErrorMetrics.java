@@ -411,28 +411,29 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
 
     /**
      * Parses a "Directive" of the form "ERROR,STRATIFIER,STRATIFIER...etc." into a {@link BaseErrorAggregation} consisting of the appropriate
-     * {@link BaseErrorCalculation.BaseCalculator} and the successively "paired" {@link ReadBaseStratification.RecordAndOffsetStratifier} as listed.
+     * {@link BaseErrorCalculation.BaseCalculator BaseCalculator} and the successively "paired" {@link ReadBaseStratification.RecordAndOffsetStratifier RecordAndOffsetStratifier} as listed.
      * The conversion from string to object is performed by the enums
-     * {@link BaseErrorCalculation.Errors} and {@link ReadBaseStratification.Stratifiers}, and the "pairing" is performed using
-     * {@link ReadBaseStratification.PairStratifier}
+     * {@link BaseErrorCalculation.Errors Errors} and {@link ReadBaseStratification.Stratifiers Stratifiers}, and the "pairing" is performed by
+     * repeatedly wrapping two stratifiers in a {@link ReadBaseStratification.PairStratifier PairStratifier}
      *
      * @param stratifierDirective The string directive describing the error type and collection of stratifiers to use
      * @return The appropriate {@link BaseErrorAggregation} object.
      */
     protected static BaseErrorAggregation parseDirective(final String stratifierDirective) {
         final String[] directiveUnits = new String[256];
-        final int numberOfDirectives = ParsingUtils.split(stratifierDirective, directiveUnits, ',', false);
+        final char directiveSeparator = ':';
+        final int numberOfTerms = ParsingUtils.split(stratifierDirective, directiveUnits, directiveSeparator, false);
 
-        if (numberOfDirectives == 256) {
-            throw new RuntimeException("Cannot parse more than 255 'directives'. Sorry. (What are you doing?)");
+        if (numberOfTerms == 256) {
+            throw new RuntimeException("Cannot parse more than 255 terms in a single directive. Sorry. (What are you doing?)");
         }
-        if (numberOfDirectives == 0) {
+        if (numberOfTerms == 0) {
             throw new RuntimeException("Found no directives at all. Cannot process.");
         }
 
         // make a linkedList due to removal and addition operations below
         final List<ReadBaseStratification.RecordAndOffsetStratifier<?>> stratifiers = new LinkedList<>(Arrays.stream(directiveUnits)
-                .limit(numberOfDirectives)
+                .limit(numberOfTerms)
                 .skip(1)
                 .map(String::trim)
                 .map(ReadBaseStratification.Stratifiers::valueOf)
@@ -444,19 +445,19 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
         if (stratifiers.isEmpty()) {
             jointStratifier = ReadBaseStratification.nonStratifier;
         } else {
-            // Remove the first two stratifiers in the list, wrap them in a Pair and put it back in the list
-            // (in the front). Repeat for as long as there are more than 1 element in the list.
+            // Repeatedly, remove the first two stratifiers in the list, wrap them in a PairStratifier
+            // and put it back in the list (in the front). Stop when there is exactly 1 element in the list.
             while (stratifiers.size() > 1) {
-                ReadBaseStratification.RecordAndOffsetStratifier<?> a = stratifiers.remove(0);
-                ReadBaseStratification.RecordAndOffsetStratifier<?> b = stratifiers.remove(0);
-                ReadBaseStratification.PairStratifier<? extends Comparable, ? extends Comparable> newPair = new ReadBaseStratification.PairStratifier<>(a, b);
+                ReadBaseStratification.RecordAndOffsetStratifier<?> first = stratifiers.remove(0);
+                ReadBaseStratification.RecordAndOffsetStratifier<?> second = stratifiers.remove(0);
+                ReadBaseStratification.PairStratifier<? extends Comparable, ? extends Comparable> newPair = new ReadBaseStratification.PairStratifier<>(first, second);
                 stratifiers.add(0, newPair);
             }
             // since there should be exactly one Stratifier in the list, get it
             jointStratifier = stratifiers.get(0);
         }
 
-        // build an error supplier from the first directive
+        // build an error supplier from the first term
         final Supplier<? extends BaseErrorCalculation.BaseCalculator> supplier =
                 BaseErrorCalculation.Errors.valueOf(directiveUnits[0].trim()).getErrorSupplier();
 
