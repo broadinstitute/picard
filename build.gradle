@@ -64,7 +64,7 @@ def ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage) {
 }
 ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage)
 
-final htsjdkVersion = System.getProperty('htsjdk.version', '2.15.0')
+final htsjdkVersion = System.getProperty('htsjdk.version', '2.15.1')
 
 // We use a custom shaded build of the NIO library to avoid a regression in the authentication layer.
 // GATK does the same, see https://github.com/broadinstitute/gatk/issues/3591
@@ -85,10 +85,11 @@ configurations {
 }
 
 dependencies {
-    compile('com.intel.gkl:gkl:0.8.2') {
+    compile('com.intel.gkl:gkl:0.8.5') {
         exclude module: 'htsjdk'
     }
     compile 'com.google.guava:guava:15.0'
+    compile 'org.apache.commons:commons-math3:3.5'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     compile 'org.broadinstitute:barclay:2.0.0'
     compileOnly googleNio

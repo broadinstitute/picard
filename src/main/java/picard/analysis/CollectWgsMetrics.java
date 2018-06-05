@@ -49,9 +49,7 @@ import picard.filter.CountingPairedFilter;
 import picard.util.MathUtil;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
@@ -122,6 +120,12 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     @ArgumentCollection
     protected IntervalArgumentCollection intervalArugmentCollection = makeIntervalArgumentCollection();
 
+    @Argument(doc="Output for Theoretical Sensitivity metrics.", optional = true)
+    public File THEORETICAL_SENSITIVITY_OUTPUT;
+
+    @Argument(doc="Allele fraction for which to calculate theoretical sensitivity.", optional = true)
+    public List<Double> ALLELE_FRACTION = new ArrayList<>(Arrays.asList(0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5));
+
     @Argument(doc = "If true, fast algorithm is used.")
     public boolean USE_FAST_ALGORITHM = false;
 
@@ -155,7 +159,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                 optional = true)
         public File INTERVALS;
 
-        public File getIntervalFile() { return INTERVALS; };
+        public File getIntervalFile() { return INTERVALS; }
     };
 
     /** Metrics for evaluating the performance of whole genome sequencing experiments. */
@@ -434,10 +438,6 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         }
     }
 
-    public static void main(final String[] args) {
-        new CollectWgsMetrics().instanceMainWithExit(args);
-    }
-
     /** Gets the SamReader from which records will be examined.  This will also set the header so that it is available in
      *  */
     protected SamReader getSamReader() {
@@ -454,6 +454,9 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         INTERVALS = intervalArugmentCollection.getIntervalFile();
         if (INTERVALS != null) {
             IOUtil.assertFileIsReadable(INTERVALS);
+        }
+        if (THEORETICAL_SENSITIVITY_OUTPUT != null) {
+            IOUtil.assertFileIsWritable(THEORETICAL_SENSITIVITY_OUTPUT);
         }
 
         // it doesn't make sense for the locus accumulation cap to be lower than the coverage cap
@@ -483,13 +486,22 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         iterator.setMappingQualityScoreCutoff(0); // Handled separately because we want to count bases
         iterator.setIncludeNonPfReads(false);
 
-        final AbstractWgsMetricsCollector collector = getCollector(COVERAGE_CAP, getIntervalsToExamine());
+        final AbstractWgsMetricsCollector<?> collector = getCollector(COVERAGE_CAP, getIntervalsToExamine());
         final WgsMetricsProcessor processor = getWgsMetricsProcessor(progress, refWalker, iterator, collector);
         processor.processFile();
 
         final MetricsFile<WgsMetrics, Integer> out = getMetricsFile();
         processor.addToMetricsFile(out, INCLUDE_BQ_HISTOGRAM, dupeFilter, mapqFilter, pairFilter);
         out.write(OUTPUT);
+
+        if (THEORETICAL_SENSITIVITY_OUTPUT != null) {
+            // Write out theoretical sensitivity results.
+            final MetricsFile<TheoreticalSensitivityMetrics, ?> theoreticalSensitivityMetrics = getMetricsFile();
+            log.info("Calculating theoretical sentitivity at " + ALLELE_FRACTION.size() + " allele fractions.");
+            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE, collector.getUnfilteredDepthHistogram(), collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION);
+            theoreticalSensitivityMetrics.addAllMetrics(tsm);
+            theoreticalSensitivityMetrics.write(THEORETICAL_SENSITIVITY_OUTPUT);
+        }
 
         return 0;
     }
