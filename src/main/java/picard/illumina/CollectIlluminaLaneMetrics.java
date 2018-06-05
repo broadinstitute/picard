@@ -154,7 +154,7 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
                                                                              final boolean isNovaSeq) {
             final Collection<Tile> tiles;
             try {
-                List<File> tileMetricsOutFiles = TileMetricsUtil.findTileMetricsFiles(illuminaRunDirectory, readStructure.totalCycles, isNovaSeq);
+                final List<File> tileMetricsOutFiles = TileMetricsUtil.findTileMetricsFiles(illuminaRunDirectory, readStructure.totalCycles, isNovaSeq);
                 if (isNovaSeq) {
                     tiles = TileMetricsUtil.parseClusterRecordsFromTileMetricsV3(
                             tileMetricsOutFiles,
@@ -162,7 +162,8 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
                             readStructure
                     );
                 } else {
-                    tiles = TileMetricsUtil.parseTileMetrics(tileMetricsOutFiles.get(0),
+                    tiles = TileMetricsUtil.parseTileMetrics(
+                            tileMetricsOutFiles.get(0),
                             readStructure,
                             validationStringency
                     );

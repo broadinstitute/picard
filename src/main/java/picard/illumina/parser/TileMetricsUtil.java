@@ -110,7 +110,7 @@ public class TileMetricsUtil {
     }
 
     private static Collection<Tile> getTileClusterRecordsV3(
-            Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap,
+            final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap,
             final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues,
             final float density) {
 
@@ -137,7 +137,7 @@ public class TileMetricsUtil {
     ) throws FileNotFoundException {
         Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
         for (File tileMetricsOutFile : tileMetricsOutFiles) {
-            TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
+            final TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
             final float density = tileMetricsIterator.getDensity();
             final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
             final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
@@ -162,8 +162,8 @@ public class TileMetricsUtil {
                                                     final ReadStructure readStructure,
                                                     final ValidationStringency validationStringency)
             throws FileNotFoundException {
-        Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
-        TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
+        final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
+        final TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
         final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
         final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
         return getTileClusterRecordsV3(locationToMetricsMap, phasingValues, tileMetricsIterator.getDensity());
