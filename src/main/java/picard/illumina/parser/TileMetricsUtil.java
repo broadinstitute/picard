@@ -135,7 +135,7 @@ public class TileMetricsUtil {
             final Map<Integer, File> phasingMetricsFiles,
             final ReadStructure readStructure
     ) throws FileNotFoundException {
-        Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
+        final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
         for (File tileMetricsOutFile : tileMetricsOutFiles) {
             final TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
             final float density = tileMetricsIterator.getDensity();
@@ -150,7 +150,7 @@ public class TileMetricsUtil {
                 .stream()
                 .map(File::getAbsolutePath)
                 .collect(Collectors.joining(", "));
-        throw new RuntimeException("None of the following input files contained cluster records:" + pathsString);
+        throw new RuntimeException("None of the following input files contained cluster records: " + pathsString);
     }
 
     /**
