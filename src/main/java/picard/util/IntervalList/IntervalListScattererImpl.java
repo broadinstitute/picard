@@ -1,4 +1,4 @@
-package picard.util;
+package picard.util.IntervalList;
 
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
@@ -10,8 +10,12 @@ import java.util.List;
 
 /**
  * @author mccowan
+ *
+ *
  */
-public class IntervalListScatterer {
+
+public class IntervalListScattererImpl {
+
 
     public enum Mode {
         /**
@@ -45,9 +49,9 @@ public class IntervalListScatterer {
 
     private final Mode mode;
 
-    public IntervalListScatterer(final Mode mode) {this.mode = mode;}
+    public IntervalListScattererImpl(final Mode mode) {this.mode = mode;}
 
-    private int deduceIdealSplitLength(final IntervalList uniquedList, final int scatterCount) {
+    private int deduceIdealSplitWeight(final IntervalList uniquedList, final int scatterCount) {
         final int splitWidth = Math.max((int) Math.floor(uniquedList.getBaseCount() / (1.0 * scatterCount)), 1);
         switch (mode) {
             case INTERVAL_SUBDIVISION:
@@ -82,7 +86,7 @@ public class IntervalListScatterer {
         if (scatterCount < 1) throw new IllegalArgumentException("scatterCount < 1");
 
         final IntervalList uniquedList = isUniqued ? sourceIntervalList : sourceIntervalList.uniqued();
-        final long idealSplitLength = deduceIdealSplitLength(uniquedList, scatterCount);
+        final long idealSplitLength = deduceIdealSplitWeight(uniquedList, scatterCount);
         System.err.println("idealSplitLength=" + idealSplitLength);
 
         final List<IntervalList> accumulatedIntervalLists = new ArrayList<>();
@@ -162,12 +166,7 @@ public class IntervalListScatterer {
             accumulatedIntervalLists.add(runningIntervalList.uniqued());
         }
         
-        long maximumIntervalSize = -1, minimumIntervalSize = Integer.MAX_VALUE;
-        for (final IntervalList intervalList : accumulatedIntervalLists) {
-            final long baseCount = intervalList.getBaseCount();
-            if (baseCount < minimumIntervalSize) minimumIntervalSize = baseCount;
-            if (maximumIntervalSize < baseCount) maximumIntervalSize = baseCount;
-        }
+
 
         return accumulatedIntervalLists;
     }

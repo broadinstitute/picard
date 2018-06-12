@@ -7,6 +7,8 @@ import org.testng.Assert;
 import org.testng.annotations.*;
 import picard.cmdline.CommandLineProgramTest;
 import picard.cmdline.PicardCommandLineTest;
+import picard.util.IntervalList.IntervalListScatterMode;
+import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
 import java.io.IOException;
@@ -139,12 +141,8 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     // test scatter with different kinds of balancing.
     @DataProvider
-    public static Object[][] testScatterTestcases() {
-        final Object[][] objects = new Object[IntervalListScattererTest.testcases.size()][];
-        for (int i = 0; i < objects.length; i++) {
-            objects[i] = new Object[]{IntervalListScattererTest.testcases.get(i)};
-        }
-        return objects;
+    public static Iterator<Object[]> testScatterTestcases() {
+        return IntervalListScattererTest.testScatterTestcases();
     }
 
     private final List<File> dirsToDelete = new ArrayList<>();
@@ -157,12 +155,12 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     @Test(dataProvider = "testScatterTestcases")
     public void testScatter(final IntervalListScattererTest.Testcase tc) throws IOException {
 
-        final File ilOutDir = IOUtil.createTempDir("IntervalListTools", "lists");
-        dirsToDelete.add(ilOutDir);
-
-        final IntervalListScatterer scatterer = new IntervalListScatterer(tc.mode);
+        final IntervalListScatterer scatterer = tc.mode.make();
         final List<IntervalList> scatter = scatterer.scatter(tc.source, tc.scatterWidth);
-        Assert.assertEquals(scatter, tc.expectedScatter);
+        Assert.assertEquals(scatter.size(), tc.expectedScatter.size());
+        for (int i = 0; i < scatter.size(); i++) {
+            Assert.assertEquals(scatter.get(i).uniqued().getIntervals(), tc.expectedScatter.get(i).getIntervals(), "Problem with the " + i + " scatter");
+        }
 
         final List<String> args = new ArrayList<>();
 
@@ -170,6 +168,9 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         args.add("INPUT=" + tc.file.getAbsolutePath());
 
         args.add("SUBDIVISION_MODE=" + tc.mode);
+
+        final File ilOutDir = IOUtil.createTempDir("IntervalListTools", "lists");
+        dirsToDelete.add(ilOutDir);
 
         if (tc.scatterWidth == 1) {
             final File subDir = new File(ilOutDir, "temp_1_of_1");

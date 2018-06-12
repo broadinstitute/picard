@@ -13,6 +13,8 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.util.IntervalList.IntervalListScatterMode;
+import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -236,12 +238,22 @@ public class IntervalListTools extends CommandLineProgram {
             " broken up at integer multiples of this value. Set to 0 to NOT break up intervals.", optional = true)
     public int BREAK_BANDS_AT_MULTIPLES_OF = 0;
 
+    //TODO: fix argument here
     @Argument(shortName = "M", doc = "Selects between various ways in which scattering of the interval-list can happen.")
-    public IntervalListScatterer.Mode SUBDIVISION_MODE = IntervalListScatterer.Mode.INTERVAL_SUBDIVISION;
+    public IntervalListScatterMode SUBDIVISION_MODE = IntervalListScatterMode.INTERVAL_SUBDIVISION;
 
     @Argument(doc = "Produce the inverse list of intervals, that is, the regions in the genome that are <br>not</br> covered " +
             "by any of the input intervals. Will merge abutting intervals first. Output will be sorted.", optional = true)
     public boolean INVERT = false;
+
+    @Argument(doc = "What value (if anything) to output to std.out")
+    public Output OUTPUT_VALUE=Output.NONE;
+
+    enum Output {
+        NONE,
+        BASES,
+        INTERVALS
+    }
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
 
@@ -381,7 +393,7 @@ public class IntervalListTools extends CommandLineProgram {
         if (OUTPUT != null) {
             if (SCATTER_COUNT == 1) {
                 output.write(OUTPUT);
-                resultIntervals = Arrays.asList(output);
+                resultIntervals = Collections.singletonList(output);
             } else {
                 final List<IntervalList> scattered = writeScatterIntervals(output);
                 LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size(), OUTPUT));
@@ -396,18 +408,29 @@ public class IntervalListTools extends CommandLineProgram {
                 resultIntervals = scattered;
             }
         } else {
-            resultIntervals = Arrays.asList(output);
+            resultIntervals = Collections.singletonList(output);
         }
 
-        long totalUniqueBaseCount = 0;
+        long totalBaseCount = 0;
         long intervalCount = 0;
         for (final IntervalList finalInterval : resultIntervals) {
-            totalUniqueBaseCount += finalInterval.getUniqueBaseCount();
+            totalBaseCount += finalInterval.getBaseCount();
             intervalCount += finalInterval.size();    
         }
 
-        LOG.info("Produced " + intervalCount + " intervals totalling " + totalUniqueBaseCount + " unique bases.");
-        
+        LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
+        switch (OUTPUT_VALUE){
+            case BASES:
+                System.out.println(totalBaseCount);
+                break;
+            case INTERVALS:
+                System.out.println(intervalCount);
+                break;
+            case NONE:
+                break;
+            default:
+                throw new IllegalArgumentException("That's not a known value: " + OUTPUT_VALUE);
+        }
         return 0;
     }
 
@@ -451,8 +474,8 @@ public class IntervalListTools extends CommandLineProgram {
      * @return The scattered intervals, represented as a {@link List} of {@link IntervalList}
      */
     private List<IntervalList> writeScatterIntervals(final IntervalList list) {
-        final IntervalListScatterer scatterer = new IntervalListScatterer(SUBDIVISION_MODE);
-        final List<IntervalList> scattered = scatterer.scatter(list, SCATTER_COUNT, UNIQUE);
+        final IntervalListScatterer scatterer = SUBDIVISION_MODE.make();
+        final List<IntervalList> scattered = scatterer.scatter(list, SCATTER_COUNT);
 
         final DecimalFormat fileNameFormatter = new DecimalFormat("0000");
         int fileIndex = 1;
@@ -463,7 +486,7 @@ public class IntervalListTools extends CommandLineProgram {
         return scattered;
     }
 
-    public static File getScatteredFileName(final File scatterDirectory, final long scatterTotal, final String formattedIndex) {
+    private static File getScatteredFileName(final File scatterDirectory, final long scatterTotal, final String formattedIndex) {
         return new File(scatterDirectory.getAbsolutePath() + "/temp_" + formattedIndex + "_of_" +
                 scatterTotal + "/scattered" + IntervalList.INTERVAL_LIST_FILE_EXTENSION);
     }
