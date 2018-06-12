@@ -1,13 +1,15 @@
 package picard.sam.BamErrorMetric;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordSetBuilder;
-import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.*;
+import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -96,9 +98,55 @@ public class BaseErrorCalculationTest {
         final ErrorMetrics.OverlappingErrorMetric metric2 = overlappingErrorCalculator1.getMetric();
         metric2.calculateDerivedFields();
         Assert.assertEquals(metric2.TOTAL_BASES, length);
-        Assert.assertEquals(metric2.NUM_BASES_WITH_OVERLAPPING_READS,  length);
+        Assert.assertEquals(metric2.NUM_BASES_WITH_OVERLAPPING_READS, length);
         Assert.assertEquals(metric2.NUM_DISAGREES_WITH_REFERENCE_ONLY, 2L);
         Assert.assertEquals(metric2.NUM_DISAGREES_WITH_REF_AND_MATE, 1L);
         Assert.assertEquals(metric2.NUM_THREE_WAYS_DISAGREEMENT, 1L);
+    }
+
+    @DataProvider( )
+    public Object[][] testOverlappingErrorCalculatorWithManyReadsData() throws IOException {
+        final File temp = File.createTempFile("Overlapping", ".bam");
+        temp.deleteOnExit();
+
+        try (
+                final ReferenceSequenceFileWalker referenceSequenceFileWalker =
+                        new ReferenceSequenceFileWalker(new File("testdata/picard/sam/BamErrorMetrics/chrM.reference.fasta"))) {
+
+            final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+            builder.getHeader().setSequenceDictionary(referenceSequenceFileWalker.getSequenceDictionary());
+
+            for (int i = 0; i < 4000; i++) {
+                builder.addPair("Read" + String.valueOf(i), 0, 1, 1,
+                        false, false, "36M", "36M", true, false, 20);
+            }
+
+            try (final SAMFileWriter writer = new SAMFileWriterFactory()
+                    .makeBAMWriter(builder.getHeader(), false, temp)) {
+                builder.forEach(writer::addAlignment);
+            }
+        }
+        return new Object[][]{{temp}};
+    }
+
+
+    @Test(dataProvider = "testOverlappingErrorCalculatorWithManyReadsData", timeOut = 5000)
+    public void testOverlappingErrorCalculatorWithManyReads(final File temp) throws IOException {
+
+        try (final ReferenceSequenceFileWalker referenceSequenceFileWalker =
+                     new ReferenceSequenceFileWalker(new File("testdata/picard/sam/BamErrorMetrics/chrM.reference.fasta"));
+             final SamLocusIterator samLocusIterator = new SamLocusIterator(SamReaderFactory.make().open(temp));
+             final SAMLocusAndReferenceIterator samLocusAndReferences = new SAMLocusAndReferenceIterator(
+                     referenceSequenceFileWalker, samLocusIterator)) {
+
+            BaseErrorAggregation<BaseErrorCalculation.OverlappingReadsErrorCalculator> aggregation =
+                    new BaseErrorAggregation<>(BaseErrorCalculation.OverlappingReadsErrorCalculator::new, ReadBaseStratification.baseCycleStratifier);
+
+            for (final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference : samLocusAndReferences) {
+                for (SamLocusIterator.RecordAndOffset recordAndOffset : locusAndReference.getRecordAndOffsets())
+
+                    aggregation.addBase(recordAndOffset, locusAndReference);
+            }
+        }
     }
 }
