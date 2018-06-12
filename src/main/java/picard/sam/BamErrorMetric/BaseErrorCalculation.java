@@ -24,7 +24,6 @@
 
 package picard.sam.BamErrorMetric;
 
-import com.google.common.cache.Cache;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SamLocusIterator;
@@ -32,7 +31,6 @@ import htsjdk.samtools.util.SamLocusIterator.RecordAndOffset;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
