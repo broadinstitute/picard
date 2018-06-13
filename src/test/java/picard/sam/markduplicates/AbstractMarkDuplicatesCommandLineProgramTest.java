@@ -30,6 +30,8 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.sam.util.PhysicalLocationInt;
+import picard.sam.util.ReadNameParser;
 
 import java.io.File;
 
@@ -160,18 +162,40 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
-    @Test
-    public void testOpticalDuplicateClusterSamePositionNoOpticalDuplicates() {
+    @DataProvider
+    Object[][] readNameData(){
+        return new Object[][]{
+                {"RUNID:7:1203:2886:82292","RUNID:7:1203:2884:16834"},
+                {"RUNID:7:1204:2886:82292","RUNID:7:1204:2884:16834"},
+                {"RUNID:7:1205:2886:82292","RUNID:7:1205:2884:16834"},
+                {"RUNID:7:1206:2886:82292","RUNID:7:1206:2884:16834"},
+                {"RUNID:7:1207:2886:82292","RUNID:7:1207:2884:16834"},
+        };
+    }
+    @Test(dataProvider = "readNameData")
+    public void testOpticalDuplicateClusterSamePositionNoOpticalDuplicates(final String readName1, final String readName2) {
+        final ReadNameParser parser = new ReadNameParser();
+
+        final PhysicalLocationInt position1 = new PhysicalLocationInt();
+        final PhysicalLocationInt position2 = new PhysicalLocationInt();
+
+        parser.addLocationInformation(readName1, position1);
+        parser.addLocationInformation(readName2, position2);
+
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(101);
         tester.setExpectedOpticalDuplicate(0);
-        tester.addMatePair("RUNID:7:1203:2886:82292", 1, 485253, 485253, false, false, true, true, "42M59S", "59S42M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMatePair("RUNID:7:1203:2884:16834", 1, 485253, 485253, false, false, false, false, "59S42M", "42M59S", true, false, false, false, false, DEFAULT_BASE_QUALITY);
+        final boolean isDuplicate = position1.hashCode() < position2.hashCode();
+
+        tester.addMatePair(readName1, 1,485253, 485253, false, false,  isDuplicate,  isDuplicate, "42M59S", "59S42M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readName2, 1,485253, 485253, false, false, !isDuplicate, !isDuplicate, "59S42M", "42M59S", true, false, false, false, false, DEFAULT_BASE_QUALITY);
+
         tester.runTest();
     }
     
     @Test
     public void testOpticalDuplicateClusterSamePositionNoOpticalDuplicatesWithinPixelDistance() {
+
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(101);
         tester.setExpectedOpticalDuplicate(0);

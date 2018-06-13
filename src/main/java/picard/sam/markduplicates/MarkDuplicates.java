@@ -925,6 +925,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             if (compareDifference == 0) {
                 compareDifference = lhs.read2Coordinate - rhs.read2Coordinate;
             }
+
+            if( compareDifference == 0)
+                compareDifference = lhs.hashCode() - rhs.hashCode();
+
             if (compareDifference == 0) {
                 compareDifference = (int) (lhs.read1IndexInFile - rhs.read1IndexInFile);
             }

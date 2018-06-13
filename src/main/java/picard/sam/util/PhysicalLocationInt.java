@@ -34,4 +34,11 @@ public class PhysicalLocationInt implements PhysicalLocation {
 
     public void setLibraryId(final short libraryId) { throw new PicardException("Not Implemented"); }
 
+    @Override
+    public int hashCode() {
+        int result = (int) tile;
+        result = 31 * result + x;
+        result = 31 * result + y;
+        return result;
+    }
 }
