@@ -13,6 +13,7 @@ import org.testng.Assert;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -343,19 +344,23 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                 isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2, firstOnly, record1NonPrimary, record2NonPrimary, defaultQuality);
     }
 
-    protected abstract void test();
+    protected abstract void test() throws IOException;
 
     /**
      * Sets up the basic command line arguments for input and output and runs instanceMain.
      */
     public void runTest() {
-        final File input = createInputFile();
+        try {
+            final File input = createInputFile();
 
-        output = new File(outputDir, "output.sam");
-        args.add("INPUT=" + input.getAbsoluteFile());
-        args.add("OUTPUT=" + output.getAbsoluteFile());
-        Assert.assertEquals(runPicardCommandLine(args), 0);
-        test();
+            output = new File(outputDir, "output.sam");
+            args.add("INPUT=" + input.getAbsoluteFile());
+            args.add("OUTPUT=" + output.getAbsoluteFile());
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+            test();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     private File createInputFile() {

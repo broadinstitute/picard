@@ -161,6 +161,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     protected void finalizeAndWriteMetrics(final LibraryIdGenerator libraryIdGenerator) {
         final Map<String, DuplicationMetrics> metricsByLibrary = libraryIdGenerator.getMetricsByLibraryMap();
         final Histogram<Short> opticalDuplicatesByLibraryId = libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap();
+
         final Map<String, Short> libraryIds = libraryIdGenerator.getLibraryIdsMap();
 
         // Write out the metrics
@@ -187,6 +188,11 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         if (metricsByLibrary.size() == 1) {
             file.setHistogram(metricsByLibrary.values().iterator().next().calculateRoiHistogram());
         }
+
+        // Add set size histograms - the set size counts are printed on adjacent columns to the ROI metric.
+        file.addHistogram(libraryIdGenerator.getDuplicateCountHist());
+        file.addHistogram(libraryIdGenerator.getOpticalDuplicateCountHist());
+        file.addHistogram(libraryIdGenerator.getNonOpticalDuplicateCountHist());
 
         file.write(METRICS_FILE);
     }
@@ -277,11 +283,32 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             }
 
             // track the duplicates
-            trackOpticalDuplicates(trackOpticalDuplicatesF, keeper, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
-            trackOpticalDuplicates(trackOpticalDuplicatesR, keeper, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
+            final int nOpticalDupF = trackOpticalDuplicates(trackOpticalDuplicatesF,
+                                                    keeper,
+                                                    opticalDuplicateFinder,
+                                                    libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
+            final int nOpticalDupR = trackOpticalDuplicates(trackOpticalDuplicatesR,
+                                                    keeper,
+                                                    opticalDuplicateFinder,
+                                                    libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
+            trackDuplicateCounts(ends.size(),
+                    nOpticalDupF + nOpticalDupR,
+                    libraryIdGenerator.getDuplicateCountHist(),
+                    libraryIdGenerator.getNonOpticalDuplicateCountHist(),
+                    libraryIdGenerator.getOpticalDuplicateCountHist());
         } else { // No need to partition
-            AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(ends, keeper, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
+            final int nOpticalDup = trackOpticalDuplicates(ends, keeper, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
+            trackDuplicateCounts(ends.size(),
+                    nOpticalDup,
+                    libraryIdGenerator.getDuplicateCountHist(),
+                    libraryIdGenerator.getNonOpticalDuplicateCountHist(),
+                    libraryIdGenerator.getOpticalDuplicateCountHist());
         }
+    }
+
+    public static void addSingletonToCount(final LibraryIdGenerator libraryIdGenerator) {
+        addSingletonToCount(libraryIdGenerator.getDuplicateCountHist(),
+                libraryIdGenerator.getNonOpticalDuplicateCountHist());
     }
 
     /**
@@ -294,10 +321,10 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
      * optical duplicate detection, we do not consider them duplicates if one read as FR and the other RF when we order orientation by the
      * first mate sequenced (read #1 of the pair).
      */
-    private static void trackOpticalDuplicates(final List<? extends ReadEnds> list,
-                                               final ReadEnds keeper,
-                                               final OpticalDuplicateFinder opticalDuplicateFinder,
-                                               final Histogram<Short> opticalDuplicatesByLibraryId) {
+    private static int trackOpticalDuplicates(final List<? extends ReadEnds> list,
+                                              final ReadEnds keeper,
+                                              final OpticalDuplicateFinder opticalDuplicateFinder,
+                                              final Histogram<Short> opticalDuplicatesByLibraryId) {
         final boolean[] opticalDuplicateFlags = opticalDuplicateFinder.findOpticalDuplicates(list, keeper);
 
         int opticalDuplicates = 0;
@@ -311,5 +338,27 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         if (opticalDuplicates > 0) {
             opticalDuplicatesByLibraryId.increment(list.get(0).getLibraryId(), opticalDuplicates);
         }
+        return opticalDuplicates;
     }
+
+    private static void trackDuplicateCounts(final int listSize,
+                                             final int optDupCnt,
+                                             final Histogram<Double> duplicatesCountHist,
+                                             final Histogram<Double> nonOpticalDuplicatesCountHist,
+                                             final Histogram<Double> opticalDuplicatesCountHist) {
+        duplicatesCountHist.increment((double)(listSize));
+        if ((listSize - optDupCnt) > 0) {
+            nonOpticalDuplicatesCountHist.increment((double) (listSize - optDupCnt));
+        }
+        if (optDupCnt > 0) {
+            opticalDuplicatesCountHist.increment((double) (optDupCnt + 1.0));
+        }
+    }
+
+    private static void addSingletonToCount(final Histogram<Double> duplicatesCountHist,
+                                            final Histogram<Double> nonOpticalDuplicatesCountHist) {
+        duplicatesCountHist.increment(1.0);
+        nonOpticalDuplicatesCountHist.increment(1.0);
+    }
+
 }

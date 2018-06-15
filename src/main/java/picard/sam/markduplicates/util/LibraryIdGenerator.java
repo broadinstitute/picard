@@ -49,7 +49,9 @@ public class LibraryIdGenerator {
     private short nextLibraryId = 1;
     private final Map<String, DuplicationMetrics> metricsByLibrary = new HashMap<String, DuplicationMetrics>();
     private final Histogram<Short> opticalDuplicatesByLibraryId = new Histogram<Short>();
-
+    public final Histogram<Double> duplicateCountHist = new Histogram<Double>("set_size", "all_sets");
+    public final Histogram<Double> nonOpticalDuplicateCountHist = new Histogram<Double>("set_size", "non_optical_sets");
+    public final Histogram<Double> opticalDuplicateCountHist = new Histogram<Double>("set_size", "optical_sets");
 
     public LibraryIdGenerator(final SAMFileHeader header) {
         this.header = header;
@@ -65,13 +67,31 @@ public class LibraryIdGenerator {
         }
     }
 
-    public Map<String, Short> getLibraryIdsMap() { return this.libraryIds; }
+    public Map<String, Short> getLibraryIdsMap() {
+        return this.libraryIds;
+    }
 
-    public Map<String, DuplicationMetrics> getMetricsByLibraryMap() { return this.metricsByLibrary; }
+    public Map<String, DuplicationMetrics> getMetricsByLibraryMap() {
+        return this.metricsByLibrary;
+    }
 
-    public Histogram<Short> getOpticalDuplicatesByLibraryIdMap() { return this.opticalDuplicatesByLibraryId; }
+    public Histogram<Short> getOpticalDuplicatesByLibraryIdMap() {
+        return this.opticalDuplicatesByLibraryId;
+    }
 
-	public static String getReadGroupLibraryName(SAMReadGroupRecord readGroup) {
+    public Histogram<Double> getDuplicateCountHist() {
+        return this.duplicateCountHist;
+    }
+
+    public Histogram<Double> getNonOpticalDuplicateCountHist() {
+        return this.nonOpticalDuplicateCountHist;
+    }
+
+    public Histogram<Double> getOpticalDuplicateCountHist() {
+        return this.opticalDuplicateCountHist;
+    }
+
+    public static String getReadGroupLibraryName(final SAMReadGroupRecord readGroup) {
 		return Optional.ofNullable(readGroup.getLibrary())
 				.orElse(UNKNOWN_LIBRARY);
 	}

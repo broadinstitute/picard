@@ -43,6 +43,7 @@ import picard.sam.testers.SamFileTester;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -143,33 +144,33 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     }
 
     @Override
-    public void test() {
+    public void test() throws IOException {
         try {
             updateExpectedDuplicationMetrics();
 
             // Read the output and check the duplicate flag
             int outputRecords = 0;
             final Set<String> sequencingDTErrorsSeen = new HashSet<>();
-            final SamReader reader = SamReaderFactory.makeDefault().open(getOutput());
-            for (final SAMRecord record : reader) {
-                outputRecords++;
-                final String key = samRecordToDuplicatesFlagsKey(record);
-                if (!this.duplicateFlags.containsKey(key)) {
-                    System.err.println("DOES NOT CONTAIN KEY: " + key);
-                }
-                Assert.assertTrue(this.duplicateFlags.containsKey(key));
-                final boolean value = this.duplicateFlags.get(key);
-                this.duplicateFlags.remove(key);
-                if (value != record.getDuplicateReadFlag()) {
-                    System.err.println("Mismatching read:");
-                    System.err.print(record.getSAMString());
-                }
-                Assert.assertEquals(record.getDuplicateReadFlag(), value);
-                if (testOpticalDuplicateDTTag && MarkDuplicates.DUPLICATE_TYPE_SEQUENCING.equals(record.getAttribute("DT"))) {
-                    sequencingDTErrorsSeen.add(record.getReadName());
+            try(final SamReader reader = SamReaderFactory.makeDefault().open(getOutput())) {
+                for (final SAMRecord record : reader) {
+                    outputRecords++;
+                    final String key = samRecordToDuplicatesFlagsKey(record);
+                    if (!this.duplicateFlags.containsKey(key)) {
+                        System.err.println("DOES NOT CONTAIN KEY: " + key);
+                    }
+                    Assert.assertTrue(this.duplicateFlags.containsKey(key));
+                    final boolean value = this.duplicateFlags.get(key);
+                    this.duplicateFlags.remove(key);
+                    if (value != record.getDuplicateReadFlag()) {
+                        System.err.println("Mismatching read:");
+                        System.err.print(record.getSAMString());
+                    }
+                    Assert.assertEquals(record.getDuplicateReadFlag(), value);
+                    if (testOpticalDuplicateDTTag && MarkDuplicates.DUPLICATE_TYPE_SEQUENCING.equals(record.getAttribute("DT"))) {
+                        sequencingDTErrorsSeen.add(record.getReadName());
+                    }
                 }
             }
-            CloserUtil.close(reader);
 
             // Ensure the program output the same number of records as were read in
             Assert.assertEquals(outputRecords, this.getNumberOfRecords(), ("saw " + outputRecords + " output records, vs. " + this.getNumberOfRecords() + " input records"));
