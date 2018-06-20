@@ -27,8 +27,9 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.Lazy;
-import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.samtools.util.SamLocusIterator.*;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import picard.sam.markduplicates.util.OpticalDuplicateFinder;
@@ -78,7 +79,7 @@ public class ReadBaseStratification {
      */
     public interface RecordAndOffsetStratifier<T extends Comparable<T>> {
         // The method that stratifies a base in a read (provided by RecordAndOffset) into a type T.
-        T stratify(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo);
+        T stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo);
 
         // The string suffix that will be used to generate the extension of the metric file.
         String getSuffix();
@@ -89,7 +90,7 @@ public class ReadBaseStratification {
      */
     abstract static class RecordStratifier<T extends Comparable<T>> implements RecordAndOffsetStratifier<T> {
         @Override
-        public T stratify(SamLocusIterator.RecordAndOffset recordAndOffset, SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+        public T stratify(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo) {
             return stratify(recordAndOffset.getRecord());
         }
 
@@ -104,10 +105,10 @@ public class ReadBaseStratification {
      * @param <T>            the type into which the stratification happens
      * @return an instance of a stratification class that will stratify accordingly
      */
-    private static <T extends Comparable<T>> RecordAndOffsetStratifier<T> wrapStaticFunction(BiFunction<SamLocusIterator.RecordAndOffset, SAMLocusAndReferenceIterator.SAMLocusAndReference, T> staticStratify, String suffix) {
+    private static <T extends Comparable<T>> RecordAndOffsetStratifier<T> wrapStaticFunction(BiFunction<RecordAndOffset, SAMLocusAndReference, T> staticStratify, String suffix) {
         return new RecordAndOffsetStratifier<T>() {
             @Override
-            public T stratify(SamLocusIterator.RecordAndOffset recordAndOffset, SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+            public T stratify(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo) {
                 return staticStratify.apply(recordAndOffset, locusInfo);
             }
 
@@ -126,7 +127,7 @@ public class ReadBaseStratification {
      * @param <T>            the type into which the stratification happens
      * @return an instance of a stratification class that will stratify accordingly
      */
-    private static <T extends Comparable<T>> RecordAndOffsetStratifier<T> wrapStaticFunction(Function<SamLocusIterator.RecordAndOffset, T> staticStratify, String suffix) {
+    private static <T extends Comparable<T>> RecordAndOffsetStratifier<T> wrapStaticFunction(Function<RecordAndOffset, T> staticStratify, String suffix) {
         return wrapStaticFunction((rao, ignored) -> staticStratify.apply(rao), suffix);
     }
 
@@ -168,7 +169,7 @@ public class ReadBaseStratification {
         final RecordAndOffsetStratifier<R> b;
 
         @Override
-        public Pair<T, R> stratify(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+        public Pair<T, R> stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
 
             final T a = this.a.stratify(recordAndOffset, locusInfo);
             final R b = this.b.stratify(recordAndOffset, locusInfo);
@@ -244,8 +245,8 @@ public class ReadBaseStratification {
         final int longHomopolymer;
 
         @Override
-        public LongShortHomopolymer stratify(final SamLocusIterator.RecordAndOffset recordAndOffset,
-                                             final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+        public LongShortHomopolymer stratify(final RecordAndOffset recordAndOffset,
+                                             final SAMLocusAndReference locusInfo) {
 
             final Integer hpLength = homoPolymerLengthStratifier.stratify(recordAndOffset, locusInfo);
             if (hpLength == null) return null;
@@ -368,8 +369,8 @@ public class ReadBaseStratification {
      */
     public static class BinnedReadCycleStratifier implements RecordAndOffsetStratifier<CycleBin> {
         @Override
-        public CycleBin stratify(final SamLocusIterator.RecordAndOffset recordAndOffset,
-                                 final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+        public CycleBin stratify(final RecordAndOffset recordAndOffset,
+                                 final SAMLocusAndReference locusInfo) {
 
             final int readCycle = stratifyCycle(recordAndOffset);
             final double relativePosition = (double) readCycle / recordAndOffset.getRecord().getReadLength();
@@ -388,8 +389,8 @@ public class ReadBaseStratification {
      */
     public static class MismatchesInReadStratifier implements RecordAndOffsetStratifier<Integer> {
         @Override
-        public Integer stratify(final SamLocusIterator.RecordAndOffset recordAndOffset,
-                                final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+        public Integer stratify(final RecordAndOffset recordAndOffset,
+                                final SAMLocusAndReference locusInfo) {
             Integer numberMismatches = recordAndOffset.getRecord().getIntegerAttribute(SAMTag.NM.name());
 
             // Record may not contain an NM tag in which case we cannot stratify over it.
@@ -399,7 +400,7 @@ public class ReadBaseStratification {
 
             // We are only interested in the number of errors on the read
             // not including the current base.
-            if (recordAndOffset.getReadBase() != locusInfo.referenceBase) {
+            if (recordAndOffset.getReadBase() != locusInfo.getReferenceBase()) {
                 return numberMismatches - 1;
             } else {
                 return numberMismatches;
@@ -798,7 +799,7 @@ public class ReadBaseStratification {
      * same order as was originally read) and the base under consideration is replaced with the reference base at that location
      * All other bases are taken from the read, not the reference.
      */
-    private static String stratifySurroundingContext(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo, final int basesBefore, final int basesAfter) {
+    private static String stratifySurroundingContext(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final int basesBefore, final int basesAfter) {
         final StringBuilder stringBuilder = new StringBuilder(basesAfter + basesBefore + 1);
 
         for (int offset = -basesBefore; offset <= basesAfter; offset++) {
@@ -822,7 +823,7 @@ public class ReadBaseStratification {
     /**
      * Get the one-based cycle number of the base, taking the direction of the read into account
      */
-    private static int stratifyCycle(final SamLocusIterator.RecordAndOffset recordAndOffset) {
+    private static int stratifyCycle(final RecordAndOffset recordAndOffset) {
         final SAMRecord rec = recordAndOffset.getRecord();
         final int offset = recordAndOffset.getOffset();
         // Get either the offset into the array or the distance from the end depending on whether the read is
@@ -834,11 +835,11 @@ public class ReadBaseStratification {
         return retval;
     }
 
-    private static Integer stratifyHomopolymerLength(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+    private static Integer stratifyHomopolymerLength(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
 
         final ReadDirection direction = ReadDirection.of(recordAndOffset.getRecord());
         final byte readBases[] = recordAndOffset.getRecord().getReadBases();
-        if (SequenceUtil.isNoCall(locusInfo.referenceBase)) {
+        if (SequenceUtil.isNoCall(locusInfo.getReferenceBase())) {
             return null;
         }
         int runLengthOffset = recordAndOffset.getOffset();
@@ -864,7 +865,7 @@ public class ReadBaseStratification {
         }
     }
 
-    private static Character stratifyReadBase(final SamLocusIterator.RecordAndOffset recordAndOffset, int offset) {
+    private static Character stratifyReadBase(final RecordAndOffset recordAndOffset, int offset) {
         final ReadDirection direction = ReadDirection.of(recordAndOffset.getRecord());
 
         final int requestedOffset = recordAndOffset.getOffset() + offset * (direction == ReadDirection.POSITIVE ? 1 : -1);
@@ -876,15 +877,15 @@ public class ReadBaseStratification {
         }
     }
 
-    private static Character stratifyReferenceBase(final SamLocusIterator.RecordAndOffset recordAndOffset,
-                                                   final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+    private static Character stratifyReferenceBase(final RecordAndOffset recordAndOffset,
+                                                   final SAMLocusAndReference locusInfo) {
         final ReadDirection direction = ReadDirection.of(recordAndOffset.getRecord());
 
-        if (SequenceUtil.isNoCall(locusInfo.referenceBase)) {
+        if (SequenceUtil.isNoCall(locusInfo.getReferenceBase())) {
             return null;
         }
 
-        return stratifySequenceBase(locusInfo.referenceBase, direction == ReadDirection.NEGATIVE);
+        return stratifySequenceBase(locusInfo.getReferenceBase(), direction == ReadDirection.NEGATIVE);
     }
 
     private static char stratifySequenceBase(final byte input, final Boolean getComplement) {
@@ -897,7 +898,7 @@ public class ReadBaseStratification {
                 Math.abs(sam.getInferredInsertSize()));
     }
 
-    private static Byte stratifyBaseQuality(final SamLocusIterator.RecordAndOffset recordAndOffset) {
+    private static Byte stratifyBaseQuality(final RecordAndOffset recordAndOffset) {
         return recordAndOffset.getBaseQuality();
     }
 

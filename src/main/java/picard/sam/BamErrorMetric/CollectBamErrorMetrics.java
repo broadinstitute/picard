@@ -30,6 +30,8 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
+import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.*;
 import htsjdk.tribble.util.ParsingUtils;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -235,21 +237,21 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
             // iterate over loci
             log.info("Starting iteration over loci");
 
-            final SAMLocusAndReferenceIterator iterator = new SAMLocusAndReferenceIterator(referenceSequenceFileWalker, samLocusIterator);
+            final SamLocusAndReferenceIterator iterator = new SamLocusAndReferenceIterator(referenceSequenceFileWalker, samLocusIterator);
 
             // This hasNext() call has side-effects. It loads up the index and makes sure that the iterator is really ready for
             // action. Calling this allows for the logging to be more accurate.
             iterator.hasNext();
             log.info("Really starting iteration now.");
 
-            for (final SAMLocusAndReferenceIterator.SAMLocusAndReference info : iterator) {
+            for (final SAMLocusAndReference info : iterator) {
                 if (random.nextDouble() > PROBABILITY)
                     continue;
 
                 nTotalLoci++;
 
                 // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
-                if (advanceIteratorAndCheckLocus(vcfIterator, info.locus, sequenceDictionary)) {
+                if (advanceIteratorAndCheckLocus(vcfIterator, info.getLocus(), sequenceDictionary)) {
                     log.debug(String.format("Skipping locus from VCF: %s", vcfIterator.peek().toStringWithoutGenotypes()));
                     nSkippedLoci++;
                     continue;
@@ -258,7 +260,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
                 addLocusBases(aggregatorList, info);
 
                 nProcessedLoci++;
-                progressLogger.record(info.locus.getSequenceName(), info.locus.getPosition());
+                progressLogger.record(info.getLocus().getSequenceName(), info.getLocus().getPosition());
 
                 if (MAX_LOCI != 0 && nProcessedLoci >= MAX_LOCI) {
                     log.warn("Early stopping due to having processed MAX_LOCI loci.");
@@ -319,7 +321,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
     /**
      * Iterate over the different records in the locus and add bases to aggregators
      */
-    private void addLocusBases(final Collection<BaseErrorAggregation> aggregatorList, final SAMLocusAndReferenceIterator.SAMLocusAndReference info) {
+    private void addLocusBases(final Collection<BaseErrorAggregation> aggregatorList, final SAMLocusAndReference info) {
         info.getRecordAndOffsets()
                 .forEach(rao -> aggregatorList
                         .forEach(l -> l.addBase(rao, info)));

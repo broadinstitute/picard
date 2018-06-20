@@ -24,6 +24,7 @@
 
 package picard.sam.BamErrorMetric;
 
+import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SamLocusIterator;
 
@@ -59,7 +60,7 @@ public class BaseErrorAggregation<CALCULATOR extends BaseErrorCalculation.BaseCa
         this.simpleAggregatorGenerator = simpleAggregatorGenerator;
     }
 
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo) {
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
         final Object stratus = stratifier.stratify(recordAndOffset, locusInfo);
         // this assumes we do not want to aggregate null.
         if (stratus != null) strataAggregatorMap.get(stratus).addBase(recordAndOffset, locusInfo);

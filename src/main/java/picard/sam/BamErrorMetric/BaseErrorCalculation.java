@@ -25,8 +25,10 @@
 package picard.sam.BamErrorMetric;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
+import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.samtools.util.SamLocusIterator.LocusInfo;
 import htsjdk.samtools.util.SamLocusIterator.RecordAndOffset;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
@@ -45,8 +47,8 @@ import java.util.function.Supplier;
 public class BaseErrorCalculation {
 
     /**
-     * An interface that can take a collection of bases (provided as {@link RecordAndOffset RecordAndOffset}
-     * and {@link SAMLocusAndReferenceIterator.SAMLocusAndReference SAMLocusAndReference}) and generates a
+     * An interface that can take a collection of bases (provided as {@link htsjdk.samtools.util.SamLocusIterator.RecordAndOffset RecordAndOffset}
+     * and {@link SamLocusAndReferenceIterator.SAMLocusAndReference SAMLocusAndReference}) and generates a
      * {@link ErrorMetrics.ErrorMetricBase} from them.
      * <p>
      * The Calculator has a suffix which will be used to generate the metric file suffixes.
@@ -67,7 +69,7 @@ public class BaseErrorCalculation {
          * the function by which new loci are "shown" to the calculator
          **/
         void addBase(final RecordAndOffset recordAndOffset,
-                     final SAMLocusAndReferenceIterator.SAMLocusAndReference locusInfo);
+                     final SamLocusAndReferenceIterator.SAMLocusAndReference locusInfo);
     }
 
     /**
@@ -109,7 +111,7 @@ public class BaseErrorCalculation {
          * the function by which new loci are "shown" to the calculator
          **/
         @Override
-        public void addBase(final RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
+        public void addBase(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusAndRef) {
             final byte readBase = recordAndOffset.getReadBase();
             if (!SequenceUtil.isNoCall(readBase)) {
                 totalBases++;
@@ -128,10 +130,10 @@ public class BaseErrorCalculation {
          * The function by which new loci are "shown" to the calculator
          **/
         @Override
-        public void addBase(final RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
+        public void addBase(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusAndRef) {
             super.addBase(recordAndOffset, locusAndRef);
             final byte readBase = recordAndOffset.getReadBase();
-            if (!SequenceUtil.isNoCall(readBase) && (readBase != locusAndRef.referenceBase)) {
+            if (!SequenceUtil.isNoCall(readBase) && (readBase != locusAndRef.getReferenceBase())) {
                 nMismatchingBases++;
             }
         }
@@ -170,7 +172,7 @@ public class BaseErrorCalculation {
         static int currentPosition = 0;
         static final Map<String, Set<RecordAndOffset>> readNameSets = new CollectionUtil.DefaultingMap<>(s -> new HashSet<>(), true);
 
-        private static void updateReadNameSet(final SamLocusIterator.LocusInfo locusInfo) {
+        private static void updateReadNameSet(final LocusInfo locusInfo) {
             if (locusInfo.getPosition() == currentPosition) {
                 return;
             }
@@ -183,14 +185,14 @@ public class BaseErrorCalculation {
          * The function by which new loci are "shown" to the calculator
          **/
         @Override
-        public void addBase(final RecordAndOffset recordAndOffset, final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
+        public void addBase(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusAndRef) {
             super.addBase(recordAndOffset, locusAndRef);
             final byte readBase = recordAndOffset.getReadBase();
             final SAMRecord record = recordAndOffset.getRecord();
 
             // by traversing the reads and splitting into sets with the same name we convert a O(N^2) iteration
             // into a O(N) iteration
-            updateReadNameSet(locusAndRef.locus);
+            updateReadNameSet(locusAndRef.getLocus());
 
             final RecordAndOffset mate = readNameSets.get(record.getReadName())
                     .stream()
@@ -209,10 +211,10 @@ public class BaseErrorCalculation {
             nTotalBasesWithOverlappingReads++;
 
             // Only bases that disagree with the reference are counted as errors.
-            if (SequenceUtil.basesEqual(readBase, locusAndRef.referenceBase)) return;
+            if (SequenceUtil.basesEqual(readBase, locusAndRef.getReferenceBase())) return;
 
             final boolean agreesWithMate = SequenceUtil.basesEqual(readBase, mateBase);
-            final boolean mateAgreesWithRef = SequenceUtil.basesEqual(mateBase, locusAndRef.referenceBase);
+            final boolean mateAgreesWithRef = SequenceUtil.basesEqual(mateBase, locusAndRef.getReferenceBase());
 
             if (agreesWithMate) {
                 nBothDisagreeWithReference++;
