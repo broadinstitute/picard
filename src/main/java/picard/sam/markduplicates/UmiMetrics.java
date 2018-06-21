@@ -41,6 +41,9 @@ public class UmiMetrics extends MetricBase {
     private long observedUmiWithNs = 0;
     private long totalObservedUmisWithoutNs = 0;
 
+    /** Library that was used to generate UMI data. */
+    public String LIBRARY = null;
+
     /** Number of bases in each UMI */
     public double MEAN_UMI_LENGTH = 0.0;
 
@@ -82,12 +85,13 @@ public class UmiMetrics extends MetricBase {
 
     public UmiMetrics() {}
 
-    public UmiMetrics(final double length, final int observedUniqueUmis, final int inferredUniqueUmis,
+    public UmiMetrics(final String library, final double length, final int observedUniqueUmis, final int inferredUniqueUmis,
                       final int observedBaseErrors, final int duplicateSetsWithoutUmi,
                       final int duplicateSetsWithUmi, final double effectiveLengthOfInferredUmis,
                       final double effectiveLengthOfObservedUmis, final double estimatedBaseQualityOfUmis,
                       final double percentUmiWithN) {
 
+        LIBRARY = library;
         MEAN_UMI_LENGTH = length;
         OBSERVED_UNIQUE_UMIS = observedUniqueUmis;
         INFERRED_UNIQUE_UMIS = inferredUniqueUmis;

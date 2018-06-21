@@ -68,7 +68,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
         }
     }
 
-    public void addMatePairWithUmi(final String umi, final String assignedUMI, final boolean isDuplicate1, final boolean isDuplicate2) {
+    public void addMatePairWithUmi(final String library, final String umi, final String assignedUMI, final boolean isDuplicate1, final boolean isDuplicate2) {
 
         final String readName = "READ" + readNameCounter++;
         final String cigar1 = null;
@@ -90,37 +90,40 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
 
         final int defaultQuality = 10;
 
-        addMatePairWithUmi(readName, referenceSequenceIndex1, referenceSequenceIndex2, alignmentStart1, alignmentStart2, record1Unmapped,
+        addMatePairWithUmi(library, readName, referenceSequenceIndex1, referenceSequenceIndex2, alignmentStart1, alignmentStart2, record1Unmapped,
                 record2Unmapped, isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2, firstOnly, record1NonPrimary, record2NonPrimary,
                 defaultQuality, umi, assignedUMI);
 
     }
 
-    public void addMatePairWithUmi(final String readName,
-                            final int referenceSequenceIndex1,
-                            final int referenceSequenceIndex2,
-                            final int alignmentStart1,
-                            final int alignmentStart2,
-                            final boolean record1Unmapped,
-                            final boolean record2Unmapped,
-                            final boolean isDuplicate1,
-                            final boolean isDuplicate2,
-                            final String cigar1,
-                            final String cigar2,
-                            final boolean strand1,
-                            final boolean strand2,
-                            final boolean firstOnly,
-                            final boolean record1NonPrimary,
-                            final boolean record2NonPrimary,
-                            final int defaultQuality,
-                            final String umi,
-                            final String assignedUMI) {
+    public void addMatePairWithUmi(final String library,
+                                   final String readName,
+                                   final int referenceSequenceIndex1,
+                                   final int referenceSequenceIndex2,
+                                   final int alignmentStart1,
+                                   final int alignmentStart2,
+                                   final boolean record1Unmapped,
+                                   final boolean record2Unmapped,
+                                   final boolean isDuplicate1,
+                                   final boolean isDuplicate2,
+                                   final String cigar1,
+                                   final String cigar2,
+                                   final boolean strand1,
+                                   final boolean strand2,
+                                   final boolean firstOnly,
+                                   final boolean record1NonPrimary,
+                                   final boolean record2NonPrimary,
+                                   final int defaultQuality,
+                                   final String umi,
+                                   final String assignedUMI) {
         final List<SAMRecord> samRecordList = samRecordSetBuilder.addPair(readName, referenceSequenceIndex1, referenceSequenceIndex2, alignmentStart1, alignmentStart2,
                 record1Unmapped, record2Unmapped, cigar1, cigar2, strand1, strand2, record1NonPrimary, record2NonPrimary, defaultQuality);
 
         final SAMRecord record1 = samRecordList.get(0);
         final SAMRecord record2 = samRecordList.get(1);
 
+        record1.getReadGroup().setLibrary(library);
+        record2.getReadGroup().setLibrary(library);
         if (this.noMateCigars) {
             record1.setAttribute("MC", null);
             record2.setAttribute("MC", null);
@@ -182,6 +185,8 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
             double tolerance = 1e-6;
             Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
             final UmiMetrics observedMetrics = metricsOutput.getMetrics().get(0);
+
+            Assert.assertEquals(observedMetrics.LIBRARY, expectedMetrics.LIBRARY, "LIBRARY does not match expected");
             Assert.assertEquals(observedMetrics.MEAN_UMI_LENGTH, expectedMetrics.MEAN_UMI_LENGTH, "UMI_LENGTH does not match expected");
             Assert.assertEquals(observedMetrics.OBSERVED_UNIQUE_UMIS, expectedMetrics.OBSERVED_UNIQUE_UMIS, "OBSERVED_UNIQUE_UMIS does not match expected");
             Assert.assertEquals(observedMetrics.INFERRED_UNIQUE_UMIS, expectedMetrics.INFERRED_UNIQUE_UMIS, "INFERRED_UNIQUE_UMIS does not match expected");
