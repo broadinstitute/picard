@@ -9,10 +9,12 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.samtools.SAMException;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.vcf.LiftoverVcf;
 import picard.vcf.VcfTestUtils;
@@ -21,7 +23,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-
+import java.nio.file.Path;
+import java.nio.file.Files;
 /**
  * Test class for LiftoverVcf.
  * <p>
@@ -1167,6 +1170,53 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             List<String> resultAlleles = new ArrayList<>();
             source.getAlleles().forEach(a -> resultAlleles.add(a.getDisplayString()));
             Assert.assertEquals(resultAlleles, result.getAttributeAsStringList(LiftoverVcf.ORIGINAL_ALLELES, null));
+        }
+    }
+
+    @Test()
+    public void testNoDictionary() throws IOException {
+        final Path liftOutput = Files.createTempFile("tmpouput", ".vcf");
+        liftOutput.toFile().deleteOnExit();
+        final Path rejectOutput = Files.createTempFile("tmpreject", ".vcf");
+        rejectOutput.toFile().deleteOnExit();
+        final Path input = TEST_DATA_PATH.toPath().resolve("testLiftoverBiallelicIndels.vcf");
+        final String[] args = new String[]{
+                "INPUT=" + input.toString(),
+                "OUTPUT=" + liftOutput.toString(),
+                "REJECT=" + rejectOutput.toString(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+        };
+        Path dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replace("fasta", "dict"));
+        dictionary.toFile().renameTo(new File(dictionary.toString().replace("dict", "dict.tmp")));
+        dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replace("fasta", "dict.tmp"));
+        try {
+            Assert.assertEquals(runPicardCommandLine(args), 1);
+        } finally {//return dictionary name to previous
+            dictionary.toFile().renameTo(new File(dictionary.toString().replace("dict.tmp", "dict")));
+        }
+    }
+
+    @Test(expectedExceptions = SAMException.class)
+    public void testUnreadableDictionary() throws IOException {
+        final Path liftOutput = Files.createTempFile("tmpouput", ".vcf");
+        liftOutput.toFile().deleteOnExit();
+        final Path rejectOutput = Files.createTempFile("tmpreject", ".vcf");
+        rejectOutput.toFile().deleteOnExit();
+        final Path input = TEST_DATA_PATH.toPath().resolve("testLiftoverBiallelicIndels.vcf");
+        final String[] args = new String[]{
+                "INPUT=" + input.toString(),
+                "OUTPUT=" + liftOutput.toString(),
+                "REJECT=" + rejectOutput.toString(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+        };
+        final Path dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replace("fasta", "dict"));
+        dictionary.toFile().setReadable(false);
+        try {
+            runPicardCommandLine(args);
+        } finally {//return dictionary to readable
+            dictionary.toFile().setReadable(true);
         }
     }
 }
