@@ -4,6 +4,7 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -44,7 +45,7 @@ public class BaseErrorAggregationTest {
             locusInfo.add(recordAndOffset1);
             locusInfo.add(recordAndOffset2);
 
-            final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference = new SAMLocusAndReferenceIterator.SAMLocusAndReference(locusInfo, refBases[i]);
+            final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
 
             baseErrorAggregation.addBase(recordAndOffset1, locusAndReference);
             baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);
@@ -98,7 +99,7 @@ public class BaseErrorAggregationTest {
             locusInfo.add(recordAndOffset1);
             locusInfo.add(recordAndOffset2);
 
-            final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference = new SAMLocusAndReferenceIterator.SAMLocusAndReference(locusInfo, refBases[i]);
+            final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
 
             baseErrorAggregation.addBase(recordAndOffset1, locusAndReference);
             baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);
@@ -152,7 +153,7 @@ public class BaseErrorAggregationTest {
             locusInfo.add(recordAndOffset1);
             locusInfo.add(recordAndOffset2);
 
-            final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference = new SAMLocusAndReferenceIterator.SAMLocusAndReference(locusInfo, refBases[i]);
+            final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
 
             baseErrorAggregation.addBase(recordAndOffset1, locusAndReference);
             baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);

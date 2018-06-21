@@ -2,6 +2,8 @@ package picard.sam.BamErrorMetric;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
+import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -39,7 +41,7 @@ public class BaseErrorCalculationTest {
         for (int i = 0; i < n; i++) {
 
             SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, i + 1);
-            final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference = new SAMLocusAndReferenceIterator.SAMLocusAndReference(locusInfo, refBases[i]);
+            final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
 
             SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(samRecord, i);
             baseErrorCalculator.addBase(recordAndOffset, locusAndReference);
@@ -80,7 +82,7 @@ public class BaseErrorCalculationTest {
             locusInfo.add(recordAndOffset1);
             locusInfo.add(recordAndOffset2);
 
-            final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference = new SAMLocusAndReferenceIterator.SAMLocusAndReference(locusInfo, refBases[i]);
+            final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
 
             overlappingErrorCalculator1.addBase(recordAndOffset1, locusAndReference);
             overlappingErrorCalculator2.addBase(recordAndOffset2, locusAndReference);
@@ -135,13 +137,13 @@ public class BaseErrorCalculationTest {
         try (final ReferenceSequenceFileWalker referenceSequenceFileWalker =
                      new ReferenceSequenceFileWalker(new File("testdata/picard/sam/BamErrorMetrics/chrM.reference.fasta"));
              final SamLocusIterator samLocusIterator = new SamLocusIterator(SamReaderFactory.make().open(temp));
-             final SAMLocusAndReferenceIterator samLocusAndReferences = new SAMLocusAndReferenceIterator(
+             final SamLocusAndReferenceIterator samLocusAndReferences = new SamLocusAndReferenceIterator(
                      referenceSequenceFileWalker, samLocusIterator)) {
 
             BaseErrorAggregation<BaseErrorCalculation.OverlappingReadsErrorCalculator> aggregation =
                     new BaseErrorAggregation<>(BaseErrorCalculation.OverlappingReadsErrorCalculator::new, ReadBaseStratification.baseCycleStratifier);
 
-            for (final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference : samLocusAndReferences) {
+            for (final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndReference : samLocusAndReferences) {
                 for (SamLocusIterator.RecordAndOffset recordAndOffset : locusAndReference.getRecordAndOffsets())
 
                     aggregation.addBase(recordAndOffset, locusAndReference);

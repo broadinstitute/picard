@@ -1,6 +1,7 @@
 package picard.sam.BamErrorMetric;
 
 import htsjdk.samtools.*;
+import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -346,7 +347,7 @@ public class ReadBaseStratificationTest {
         SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, 1);
 
         final boolean offSetOOB = offset < 0 || offset >= samRecord.getReadBases().length;
-        final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference = new SAMLocusAndReferenceIterator.SAMLocusAndReference(locusInfo, offSetOOB ? (byte) 'N' : samRecord.getReadBases()[offset]);
+        final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, offSetOOB ? (byte) 'N' : samRecord.getReadBases()[offset]);
 
         Assert.assertEquals(recordAndOffsetStratifier.stratify(recordAndOffset, locusAndReference), expectedStratum, recordAndOffsetStratifier.getSuffix());
     }
@@ -410,7 +411,7 @@ public class ReadBaseStratificationTest {
         SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(samRecord, offset);
         SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, 1);
 
-        final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference = new SAMLocusAndReferenceIterator.SAMLocusAndReference(locusInfo, referenceBase);
+        final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, referenceBase);
 
         Assert.assertEquals(recordAndOffsetStratifier.stratify(recordAndOffset, locusAndReference), expectedStratum);
     }
@@ -432,7 +433,7 @@ public class ReadBaseStratificationTest {
         SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(samRecord, 2);
         SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, 1);
 
-        final SAMLocusAndReferenceIterator.SAMLocusAndReference locusAndReference = new SAMLocusAndReferenceIterator.SAMLocusAndReference(locusInfo, refString.getBytes()[2]);
+        final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refString.getBytes()[2]);
 
         Assert.assertEquals(ReadBaseStratification.homoPolymerLengthStratifier.stratify(recordAndOffset, locusAndReference), (Integer) 2);
     }
