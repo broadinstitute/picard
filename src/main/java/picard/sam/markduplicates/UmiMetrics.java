@@ -41,6 +41,9 @@ public class UmiMetrics extends MetricBase {
     private long observedUmiWithNs = 0;
     private long totalObservedUmisWithoutNs = 0;
 
+    /** Library that was used to generate UMI data. */
+    public String LIBRARY = "";
+
     /** Number of bases in each UMI */
     public double MEAN_UMI_LENGTH = 0.0;
 

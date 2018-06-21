@@ -182,6 +182,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
             double tolerance = 1e-6;
             Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
             final UmiMetrics observedMetrics = metricsOutput.getMetrics().get(0);
+            Assert.assertEquals(observedMetrics.LIBRARY, null, "LIBRARY does not match expected");
             Assert.assertEquals(observedMetrics.MEAN_UMI_LENGTH, expectedMetrics.MEAN_UMI_LENGTH, "UMI_LENGTH does not match expected");
             Assert.assertEquals(observedMetrics.OBSERVED_UNIQUE_UMIS, expectedMetrics.OBSERVED_UNIQUE_UMIS, "OBSERVED_UNIQUE_UMIS does not match expected");
             Assert.assertEquals(observedMetrics.INFERRED_UNIQUE_UMIS, expectedMetrics.INFERRED_UNIQUE_UMIS, "INFERRED_UNIQUE_UMIS does not match expected");
