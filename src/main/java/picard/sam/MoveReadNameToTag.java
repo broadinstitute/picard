@@ -22,6 +22,9 @@ public class MoveReadNameToTag extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM file")
     public File INPUT;
 
+    @Argument(shortName = "IN_READ_NAME", doc = "Alter read name, not tags")
+    public Boolean IN_RN = false;
+
     @Argument(shortName = "TILE", doc = "Output TILE as tag")
     public Boolean TILE_TAG = false;
 
@@ -31,7 +34,7 @@ public class MoveReadNameToTag extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output BAM file")
     public File OUTPUT;
 
-    private final Log log = Log.getInstance(SplitSamByNumberOfReads.class);
+    private final Log log = Log.getInstance(MoveReadNameToTag.class);
     int warnings = 0;
 
     protected int doWork() {
@@ -54,6 +57,10 @@ public class MoveReadNameToTag extends CommandLineProgram {
                     return 1;
                 }
                 continue;
+            }
+            if(IN_RN) {
+                String newReadName = splitReadName[2] + ":" + splitReadName[3] + ":" + splitReadName[4];
+                rec.setReadName(newReadName);
             }
             if(TILE_TAG) {
                 rec.setAttribute("XT", Integer.parseInt(splitReadName[2]));
