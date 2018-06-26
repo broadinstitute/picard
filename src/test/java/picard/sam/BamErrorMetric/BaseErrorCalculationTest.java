@@ -36,7 +36,7 @@ public class BaseErrorCalculationTest {
         samRecord.setAlignmentStart(1);
         samRecord.setReferenceIndex(0);
 
-        final BaseErrorCalculation.SimpleErrorCalculator baseErrorCalculator = new BaseErrorCalculation.SimpleErrorCalculator();
+        final SimpleErrorCalculator baseErrorCalculator = new SimpleErrorCalculator();
 
         for (int i = 0; i < n; i++) {
 
@@ -70,8 +70,8 @@ public class BaseErrorCalculationTest {
         samRecord2.setReadBases("CcTGGtGAcAAAgAAA".getBytes());
         final byte[] refBases = "CATGGGGAAAAAAAAA".getBytes();
 
-        final BaseErrorCalculation.OverlappingReadsErrorCalculator overlappingErrorCalculator1 = new BaseErrorCalculation.OverlappingReadsErrorCalculator();
-        final BaseErrorCalculation.OverlappingReadsErrorCalculator overlappingErrorCalculator2 = new BaseErrorCalculation.OverlappingReadsErrorCalculator();
+        final OverlappingReadsErrorCalculator overlappingErrorCalculator1 = new OverlappingReadsErrorCalculator();
+        final OverlappingReadsErrorCalculator overlappingErrorCalculator2 = new OverlappingReadsErrorCalculator();
         final int length = refBases.length;
 
         for (int i = 0; i < length; i++) {
@@ -140,8 +140,8 @@ public class BaseErrorCalculationTest {
              final SamLocusAndReferenceIterator samLocusAndReferences = new SamLocusAndReferenceIterator(
                      referenceSequenceFileWalker, samLocusIterator)) {
 
-            BaseErrorAggregation<BaseErrorCalculation.OverlappingReadsErrorCalculator> aggregation =
-                    new BaseErrorAggregation<>(BaseErrorCalculation.OverlappingReadsErrorCalculator::new, ReadBaseStratification.baseCycleStratifier);
+            BaseErrorAggregation<OverlappingReadsErrorCalculator> aggregation =
+                    new BaseErrorAggregation<>(OverlappingReadsErrorCalculator::new, ReadBaseStratification.baseCycleStratifier);
 
             for (final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndReference : samLocusAndReferences) {
                 for (SamLocusIterator.RecordAndOffset recordAndOffset : locusAndReference.getRecordAndOffsets())

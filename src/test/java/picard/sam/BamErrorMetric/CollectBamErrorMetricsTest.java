@@ -93,7 +93,7 @@ public class CollectBamErrorMetricsTest {
     void testAggregatorsHaveDistinctSuffixes() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         Set<String> suffixes = new HashSet<>();
 
-        for (final BaseErrorCalculation.Errors error : BaseErrorCalculation.Errors.values()) {
+        for (final ErrorType error : ErrorType.values()) {
             final String suffix = error.getErrorSupplier().get().getSuffix();
             Assert.assertTrue(suffixes.add(suffix), "found duplicate suffix: " + suffix);
         }

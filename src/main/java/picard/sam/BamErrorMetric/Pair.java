@@ -23,27 +23,29 @@
  */
 package picard.sam.BamErrorMetric;
 
+import java.util.Objects;
+
 /**
  * Simple Pair class.
  *
- * @author Yossi Farjoun
+ * reimplemented since the commons one is final, and I wanted a different toString function...
  */
 
 public class Pair<X extends Comparable<X>, Y extends Comparable<Y>> implements Comparable<Pair<X, Y>> {
-    private X first;
-    private Y second;
+    private X left;
+    private Y right;
 
-    public Pair(final X x, final Y y) {
-        first = x;
-        second = y;
+    public Pair(final X left, final Y right) {
+        this.left = left;
+        this.right = right;
     }
 
-    public X getFirst() {
-        return first;
+    public X getLeft() {
+        return left;
     }
 
-    public Y getSecond() {
-        return second;
+    public Y getRight() {
+        return right;
     }
 
     /**
@@ -63,50 +65,36 @@ public class Pair<X extends Comparable<X>, Y extends Comparable<Y>> implements C
 
         final Pair other = (Pair) o;
 
-        // Check to see whether one is null but not the other.
-        if (this.first == null && other.first != null) return false;
-        if (this.second == null && other.second != null) return false;
-
-        // Check to see whether the values are equal.
-        //  If the param of equals is null, it should by contract return false.
-        if (this.first != null && !this.first.equals(other.first)) return false;
-        if (this.second != null && !this.second.equals(other.second)) return false;
-
-        return true;
+        return Objects.equals(left,other.left) &&
+               Objects.equals(right,other.right);
     }
 
     /**
-     * Basic hashcode function.  Assume hashcodes of first and second are
+     * Basic hashcode function.  Assume hashcodes of left and right are
      * randomly distributed and return the XOR of the two.
      *
      * @return hashcode of the pair.
      */
     @Override
     public int hashCode() {
-        if (second == null && first == null)
-            return 0;
-        if (second == null)
-            return first.hashCode();
-        if (first == null)
-            return second.hashCode();
-        return first.hashCode() ^ second.hashCode();
+        return Objects.hash(left, right);
     }
 
     public String toString() {
-        return first.toString() + "," + second.toString();
+        return left + "," + right;
     }
 
     @Override
     public int compareTo(final Pair<X, Y> o) {
-        if (this.first == null || o.first == null)
+        if (this.left == null || o.left == null)
             throw new NullPointerException("Found null objects in comparing " + toString() + " and " + o.toString());
 
-        final int firstCompare = this.first.compareTo(o.first);
-        if (firstCompare != 0) return firstCompare;
+        final int leftCompare = this.left.compareTo(o.left);
+        if (leftCompare != 0) return leftCompare;
 
-        if (this.second == null || o.second == null)
+        if (this.right == null || o.right == null)
             throw new NullPointerException("Found null objects in comparing " + toString() + " and " + o.toString());
 
-        return this.second.compareTo(o.second);
+        return this.right.compareTo(o.right);
     }
 }

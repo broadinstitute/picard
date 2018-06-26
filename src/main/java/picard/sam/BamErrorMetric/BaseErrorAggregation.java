@@ -28,43 +28,34 @@ import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReferen
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SamLocusIterator;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
  * An interface and implementations for classes that apply a {@link picard.sam.BamErrorMetric.ReadBaseStratification.RecordAndOffsetStratifier RecordAndOffsetStratifier}
  * to put bases into various "bins" and then compute an {@link ErrorMetrics} on these bases using a {@link BaseErrorCalculation}.
  *
- * @author Yossi Farjoun
  */
 
-public class BaseErrorAggregation<CALCULATOR extends BaseErrorCalculation.BaseCalculator> {
+public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
     private final Supplier<CALCULATOR> simpleAggregatorGenerator;
     private final ReadBaseStratification.RecordAndOffsetStratifier stratifier;
-
-    // Updated as a defaulting map.
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
-    private final CollectionUtil.DefaultingMap<Object, CALCULATOR> strataAggregatorMap = new CollectionUtil.DefaultingMap<>
-            (new CollectionUtil.DefaultingMap.Factory<CALCULATOR, Object>() {
-                @Override
-                public CALCULATOR make(final Object ignored) {
-                    return simpleAggregatorGenerator.get();
-                }
-            }, true);
+    private final Map<Object, CALCULATOR> strataAggregatorMap;
 
     public BaseErrorAggregation(final Supplier<CALCULATOR> simpleAggregatorGenerator,
                                 final ReadBaseStratification.RecordAndOffsetStratifier stratifier) {
         this.stratifier = stratifier;
         this.simpleAggregatorGenerator = simpleAggregatorGenerator;
+        this.strataAggregatorMap =  new CollectionUtil.DefaultingMap<>
+                (ignored -> simpleAggregatorGenerator.get(),true);
     }
 
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
         final Object stratus = stratifier.stratify(recordAndOffset, locusInfo);
         // this assumes we do not want to aggregate null.
-        if (stratus != null) strataAggregatorMap.get(stratus).addBase(recordAndOffset, locusInfo);
-
+        if (stratus != null) {
+            strataAggregatorMap.get(stratus).addBase(recordAndOffset, locusInfo);
+        }
     }
 
     public String getSuffix() {

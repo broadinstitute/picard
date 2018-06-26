@@ -31,8 +31,6 @@ import picard.analysis.MergeableMetricBase;
  * Base class and implementations for the metrics files required to emit the results of the calculations
  * in the classes dervied from {@link BaseErrorCalculation} and {@link BaseErrorAggregation}
  *
- * @author Yossi Farjoun
- *
  */
 public class ErrorMetrics {
     public static void setPriorError(double priorError) {
@@ -163,7 +161,6 @@ public class ErrorMetrics {
 
         // needed for reading in a metric from a file
         public SimpleErrorMetric() {
-            super();
         }
     }
 }

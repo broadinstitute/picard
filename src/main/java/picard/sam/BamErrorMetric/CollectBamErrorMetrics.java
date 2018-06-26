@@ -51,11 +51,9 @@ import java.util.stream.Collectors;
 
 /**
  * Program to collect error metrics on bases stratified in various ways.
- *
- * @author  Yossi Farjoun
  */
 
- @CommandLineProgramProperties(
+@CommandLineProgramProperties(
         summary = "Program to collect error metrics on bases stratified in various ways.\n" +
                 "<p>" +
                 "Sequencing errors come in different 'flavors'. For example, some occur during sequencing while " +
@@ -97,7 +95,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
             "generated from the basename and suffixes from the ERROR and STRATIFIER by adding a '.' and then " +
             "error_by_stratifier[_and_stratifier]* where 'error' is ERROR's extension, and 'stratifier' is STRATIFIER's suffix. " +
             "For example, an ERROR_METRIC of ERROR:BASE_QUALITY:GC_CONTENT will produce an extension '.error_by_base_quality_and_gc'. " +
-            "The suffixes can be found in the documentation for ERROR_VALUE and SUFFIX_VALUE." )
+            "The suffixes can be found in the documentation for ERROR_VALUE and SUFFIX_VALUE.")
     public File OUTPUT;
 
     @Argument(doc = "Errors to collect in the form of \"ERROR(:STRATIFIER)*\". " +
@@ -131,36 +129,36 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
             "OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT"));
 
     @Argument(doc = "A fake argument used to show what the options of ERROR (in ERROR_METRICS) are.", optional = true)
-    public BaseErrorCalculation.Errors ERRORS_VALUE = null;
+    public ErrorType ERRORS_VALUE;
 
     @Argument(doc = "A fake argument used to show what the options of STRATIFIER (in ERROR_METRICS) are.", optional = true)
-    public ReadBaseStratification.Stratifiers STRATIFIER_VALUE = null;
+    public ReadBaseStratification.Stratifiers STRATIFIER_VALUE;
 
     @Argument(shortName = "V", doc = "VCF of known variation for sample. program will skip over polymorphic sites in this VCF and " +
             "avoid collecting data on these loci.")
-    public File VCF = null;
+    public File VCF;
 
     @Argument(shortName = "L", doc = "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will intersect inputs if multiple are given. ", optional = true)
-    public List<File> INTERVALS = null;
+    public List<File> INTERVALS;
 
-    @Argument(shortName = StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality to include read.", minValue = 0)
+    @Argument(shortName = StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality to include read.")
     public int MIN_MAPPING_Q = 20;
 
-    @Argument(shortName = "BQ", doc = "Minimum base quality to include base.", minValue = 0)
+    @Argument(shortName = "BQ", doc = "Minimum base quality to include base.")
     public int MIN_BASE_Q = 20;
 
     @Argument(shortName = "PE", doc = "The prior error, in phred-scale (used for calculating empirical error rates)",
-            optional = true, minValue = 2)
+            optional = true)
     public int PRIOR_Q = 30;
 
-    @Argument(shortName = "MAX", doc = "Maximum number of loci to process (or unlimited if 0)", optional = true, minValue = 0)
-    public long MAX_LOCI = 0;
+    @Argument(shortName = "MAX", doc = "Maximum number of loci to process (or unlimited if 0)", optional = true)
+    public long MAX_LOCI;
 
     @Argument(shortName = "LH", doc = "Shortest homopolymer which is considered long.  Used by the BINNED_HOMOPOLYMER stratifier.", optional = true)
     public int LONG_HOMOPOLYMER = 6;
 
-    @Argument(shortName = "P", doc = "The probability of selecting a locus for analysis (for downsampling)", optional = true, maxValue = 1, minValue = 0)
-    public double PROBABILITY = 1.0d;
+    @Argument(shortName = "P", doc = "The probability of selecting a locus for analysis (for downsampling)", optional = true)
+    public double PROBABILITY = 1;
 
     @Override
     protected boolean requiresReference() {
@@ -179,16 +177,42 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
             errors.add("STRATIFIER_VALUE is a fake argument that is only there to show what are the different Stratification options. Please use it within the STRATIFIER_VALUE argument.");
         }
 
+        if (MIN_MAPPING_Q < 0) {
+            errors.add("MIN_MAPPING_Q must be non-negative. found value: " + MIN_MAPPING_Q);
+        }
+
+        if (MIN_BASE_Q < 0) {
+            errors.add("MIN_BASE_Q must be non-negative. found value: " + MIN_BASE_Q);
+        }
+        if (PRIOR_Q < 0) {
+            errors.add("PRIOR_Q must be 2 or more. found value: " + PRIOR_Q);
+        }
+
+        if (MAX_LOCI < 0) {
+            errors.add("MAX_LOCI must be non-negative. found value: " + MAX_LOCI);
+        }
+
+        if (LONG_HOMOPOLYMER < 0) {
+            errors.add("LONG_HOMOPOLYMER must be non-negative. found value: " + LONG_HOMOPOLYMER);
+        }
+
+        if (PROBABILITY < 0 || PROBABILITY > 1) {
+            errors.add("PROBABILITY must be between 0 and 1. found value: " + PROBABILITY);
+        }
+
         final String[] superValidation = super.customCommandLineValidation();
-        if (superValidation != null) errors.addAll(Arrays.asList(superValidation));
+        if (superValidation != null) {
+            errors.addAll(Arrays.asList(superValidation));
+        }
         if (!errors.isEmpty()) {
-            return errors.toArray(new String[errors.size()]);
+            return errors.toArray(new String[0]);
         } else {
             return null;
         }
     }
 
-    private final Log log = Log.getInstance(CollectBamErrorMetrics.class);
+    private static final short MAX_DIRECTIVES = 256;
+    private static final Log log = Log.getInstance(CollectBamErrorMetrics.class);
 
     @Override
     protected int doWork() {
@@ -209,12 +233,13 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
                 final SamReader sam = SamReaderFactory.makeDefault().open(INPUT);
                 final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
                 final PeekableIterator<VariantContext> vcfIterator = new PeekableIterator<>(
-                    VCF == null ? Collections.emptyIterator() : new VCFFileReader(VCF, true).iterator())
+                        VCF == null ? Collections.emptyIterator() : new VCFFileReader(VCF, true).iterator())
         ) {
 
             final SAMSequenceDictionary sequenceDictionary = referenceSequenceFileWalker.getSequenceDictionary();
-            if (sam.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate)
+            if (sam.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
                 throw new PicardException("Input BAM must be sorted by coordinate");
+            }
 
             sequenceDictionary.assertSameDictionary(sam.getFileHeader().getSequenceDictionary());
 
@@ -245,9 +270,9 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
             log.info("Really starting iteration now.");
 
             for (final SAMLocusAndReference info : iterator) {
-                if (random.nextDouble() > PROBABILITY)
+                if (random.nextDouble() > PROBABILITY) {
                     continue;
-
+                }
                 nTotalLoci++;
 
                 // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
@@ -269,7 +294,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
             }
 
         } catch (IOException e) {
-            log.error("A problem occurred:", e.getMessage());
+            log.error(e, "A problem occurred:");
             return 1;
         }
         log.info("Iteration complete, generating metric files");
@@ -345,7 +370,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
             aggregatorList.add(aggregator);
             if (!suffixes.add(aggregator.getSuffix())) {
                 throw new IllegalArgumentException(String.format("Duplicated suffix (%s) found in aggregator %s.",
-                        aggregator.getSuffix(), aggregator.getClass().toString()));
+                        aggregator.getSuffix(), aggregator.getClass()));
             }
         }
         return aggregatorList;
@@ -364,21 +389,20 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
 
         for (final File intervalListFile : INTERVALS) {
 
-            final IntervalList temp;
-            if (intervalListFile.exists()) {
-                log.info("Reading IntervalList ", intervalListFile, ".");
-                temp = IntervalList.fromFile(intervalListFile);
-                sequenceDictionary.assertSameDictionary(temp.getHeader().getSequenceDictionary());
-            } else {
+            if (!intervalListFile.exists()) {
                 throw new IllegalArgumentException("Input file " + intervalListFile + " doesn't seem to exist. ");
             }
+
+            log.info("Reading IntervalList ", intervalListFile, ".");
+            final IntervalList temp = IntervalList.fromFile(intervalListFile);
+            sequenceDictionary.assertSameDictionary(temp.getHeader().getSequenceDictionary());
 
             if (regionOfInterest == null) {
                 regionOfInterest = temp;
             } else {
                 log.info("Intersecting interval_list: ", intervalListFile, ".");
+                regionOfInterest = IntervalList.intersection(regionOfInterest, temp);
             }
-            regionOfInterest = IntervalList.intersection(regionOfInterest, temp);
         }
         return regionOfInterest;
     }
@@ -386,48 +410,48 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
     /**
      * Compares a VariantContext to a Locus providing information regarding possible overlap, or relative location
      *
-     * @param dictionary
-     * @param vc
-     * @param l
-     * @return negative if vc comes before l (with no overlap)
-     * zero if vc and l overlap
-     * positive if vc comes after l (with no overlap)
+     * @param dictionary     The {@link SAMSequenceDictionary} to use for ordering the sequences
+     * @param variantContext the {@link VariantContext} to compare
+     * @param locus          the {@link Locus} to compare
+     * @return negative if variantContext comes before locus (with no overlap)
+     * zero if variantContext and locus overlap
+     * positive if variantContext comes after locus (with no overlap)
      * <p/>
-     * if vc and l are in the same contig the return value will be the number of bases apart they are,
+     * if variantContext and locus are in the same contig the return value will be the number of bases apart they are,
      * otherwise it will be MIN_INT/MAX_INT
      */
-    public static int CompareVariantContextToLocus(final SAMSequenceDictionary dictionary, final VariantContext vc, final Locus l) {
+    public static int CompareVariantContextToLocus(final SAMSequenceDictionary dictionary, final VariantContext variantContext, final Locus locus) {
 
-        final int indexDiff = dictionary.getSequenceIndex(vc.getContig()) - l.getSequenceIndex();
+        final int indexDiff = dictionary.getSequenceIndex(variantContext.getContig()) - locus.getSequenceIndex();
         if (indexDiff != 0) {
             return indexDiff < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
 
         //same SequenceIndex, can compare by genomic position
-        if (l.getPosition() < vc.getStart())
-            return vc.getStart() - l.getPosition();
-        if (l.getPosition() > vc.getEnd())
-            return vc.getEnd() - l.getPosition();
+        if (locus.getPosition() < variantContext.getStart())
+            return variantContext.getStart() - locus.getPosition();
+        if (locus.getPosition() > variantContext.getEnd())
+            return variantContext.getEnd() - locus.getPosition();
         return 0;
     }
 
     /**
      * Parses a "Directive" of the form "ERROR,STRATIFIER,STRATIFIER...etc." into a {@link BaseErrorAggregation} consisting of the appropriate
-     * {@link BaseErrorCalculation.BaseCalculator BaseCalculator} and the successively "paired" {@link ReadBaseStratification.RecordAndOffsetStratifier RecordAndOffsetStratifier} as listed.
+     * {@link BaseCalculator} and the successively "paired" {@link ReadBaseStratification.RecordAndOffsetStratifier RecordAndOffsetStratifier} as listed.
      * The conversion from string to object is performed by the enums
-     * {@link BaseErrorCalculation.Errors Errors} and {@link ReadBaseStratification.Stratifiers Stratifiers}, and the "pairing" is performed by
+     * {@link ErrorType Errors} and {@link ReadBaseStratification.Stratifiers Stratifiers}, and the "pairing" is performed by
      * repeatedly wrapping two stratifiers in a {@link ReadBaseStratification.PairStratifier PairStratifier}
      *
      * @param stratifierDirective The string directive describing the error type and collection of stratifiers to use
      * @return The appropriate {@link BaseErrorAggregation} object.
      */
     protected static BaseErrorAggregation parseDirective(final String stratifierDirective) {
-        final String[] directiveUnits = new String[256];
+        final String[] directiveUnits = new String[MAX_DIRECTIVES];
         final char directiveSeparator = ':';
         final int numberOfTerms = ParsingUtils.split(stratifierDirective, directiveUnits, directiveSeparator, false);
 
-        if (numberOfTerms == 256) {
-            throw new RuntimeException("Cannot parse more than 255 terms in a single directive. Sorry. (What are you doing?)");
+        if (numberOfTerms == MAX_DIRECTIVES) {
+            throw new RuntimeException(String.format("Cannot parse more than %d terms in a single directive. Sorry. (What are you doing?)", MAX_DIRECTIVES - 1));
         }
         if (numberOfTerms == 0) {
             throw new RuntimeException("Found no directives at all. Cannot process.");
@@ -460,8 +484,8 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
         }
 
         // build an error supplier from the first term
-        final Supplier<? extends BaseErrorCalculation.BaseCalculator> supplier =
-                BaseErrorCalculation.Errors.valueOf(directiveUnits[0].trim()).getErrorSupplier();
+        final Supplier<? extends BaseCalculator> supplier =
+                ErrorType.valueOf(directiveUnits[0].trim()).getErrorSupplier();
 
         // return the aggregator made from the stratifier and the error supplier
         return new BaseErrorAggregation<>(supplier, jointStratifier);

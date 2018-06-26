@@ -45,7 +45,6 @@ import java.util.stream.Stream;
 /**
  * Classes, methods, and enums that deal with the stratification of read bases and reference information.
  *
- * @author Yossi Farjoun
  */
 public class ReadBaseStratification {
     // This variable has to be set using setLongHomopolymer _before_ the first call to binnedHomopolymerStratifier.get()

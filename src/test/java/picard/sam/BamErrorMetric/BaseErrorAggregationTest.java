@@ -34,7 +34,7 @@ public class BaseErrorAggregationTest {
         samRecord2.setReadBases("CcTGGtGAcAAAgAAA".getBytes());
         final byte[] refBases = "CATGGGGAAAAAAAAA".getBytes();
 
-        BaseErrorAggregation<?> baseErrorAggregation = new BaseErrorAggregation<>(BaseErrorCalculation.OverlappingReadsErrorCalculator::new, ReadBaseStratification.readOrdinalityStratifier);
+        BaseErrorAggregation<?> baseErrorAggregation = new BaseErrorAggregation<>(OverlappingReadsErrorCalculator::new, ReadBaseStratification.readOrdinalityStratifier);
         final int length = refBases.length;
 
         for (int i = 0; i < length; i++) {
@@ -88,7 +88,7 @@ public class BaseErrorAggregationTest {
         samRecord2.setReadBases("CcTGGtGAcAAAgAAA".getBytes());
         final byte[] refBases = "CATGGGGAAAAAAAAA".getBytes();
 
-        BaseErrorAggregation<?> baseErrorAggregation = new BaseErrorAggregation<>(BaseErrorCalculation.OverlappingReadsErrorCalculator::new, ReadBaseStratification.readDirectionStratifier);
+        BaseErrorAggregation<?> baseErrorAggregation = new BaseErrorAggregation<>(OverlappingReadsErrorCalculator::new, ReadBaseStratification.readDirectionStratifier);
         final int length = refBases.length;
 
         for (int i = 0; i < length; i++) {
@@ -142,7 +142,7 @@ public class BaseErrorAggregationTest {
         samRecord2.setReadBases("CcTGGtGAcAAAgAAA".getBytes());
         final byte[] refBases = "CATGGGGAAAAAAAAA".getBytes();
 
-        BaseErrorAggregation<?> baseErrorAggregation = new BaseErrorAggregation<>(BaseErrorCalculation.SimpleErrorCalculator::new, ReadBaseStratification.referenceBaseStratifier);
+        BaseErrorAggregation<?> baseErrorAggregation = new BaseErrorAggregation<>(SimpleErrorCalculator::new, ReadBaseStratification.referenceBaseStratifier);
         final int length = refBases.length;
 
         for (int i = 0; i < length; i++) {
