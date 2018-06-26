@@ -188,15 +188,20 @@ public class ReadBaseStratification {
     /**
      * A factory for generating "pair" stratifier instances from two stratifiers and a string
      *
-     * @param suffix the suffix to use
-     * @param <T>    the type into which the stratification happens
-     * @return an instance of a stratification class that will stratify accordingly
+     * @param <T>    the type of the left Stratifier
+     * @param <S>    the type of the right Stratifier
+     * @param leftStratifier a {@link RecordAndOffsetStratifier<T>} to use
+     * @param rightStratifier a {@link RecordAndOffsetStratifier<S>} to use
+     * @param suffix the suffix to use for the new stratifier
+     *
+     * @return an instance of {@link  PairStratifier>} that will stratify according to both <code>leftStratifier</code>
+     * and <code>rightStratifier</code>
      */
     public static <T extends Comparable<T>, S extends Comparable<S>> PairStratifier<T, S> PairStratifierFactory(
-            final RecordAndOffsetStratifier<T> stratifier1,
-            final RecordAndOffsetStratifier<S> stratifier2,
+            final RecordAndOffsetStratifier<T> leftStratifier,
+            final RecordAndOffsetStratifier<S> rightStratifier,
             final String suffix) {
-        return new PairStratifier<T, S>(stratifier1, stratifier2) {
+        return new PairStratifier<T, S>(leftStratifier, rightStratifier) {
             @Override
             public String getSuffix() {
                 return suffix;

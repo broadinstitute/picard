@@ -101,7 +101,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
     @Argument(doc = "Errors to collect in the form of \"ERROR(:STRATIFIER)*\". " +
             "To see the values available for ERROR and STRATIFIER look at the documentation for the arguments " +
             "ERROR_VALUE and STRATIFIER_VALUE.")
-    public List<String> ERROR_METRICS = new ArrayList<>(CollectionUtil.makeList(
+    public List<String> ERROR_METRICS = CollectionUtil.makeList(
             "ERROR",
             "ERROR:BASE_QUALITY",
             "ERROR:INSERT_LENGTH",
@@ -126,7 +126,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
             "OVERLAPPING_ERROR:READ_ORDINALITY",
             "OVERLAPPING_ERROR:READ_ORDINALITY:CYCLE",
             "OVERLAPPING_ERROR:READ_ORDINALITY:HOMOPOLYMER",
-            "OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT"));
+            "OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT");
 
     @Argument(doc = "A fake argument used to show what the options of ERROR (in ERROR_METRICS) are.", optional = true)
     public ErrorType ERRORS_VALUE;
@@ -315,7 +315,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
     private void writeMetricsFileForAggregator(final BaseErrorAggregation locusAggregator) {
         final MetricsFile<ErrorMetric, Integer> file = getMetricsFile();
 
-        ErrorMetrics.setPriorError(QualityUtil.getErrorProbabilityFromPhredScore(PRIOR_Q));
+        ErrorMetric.setPriorError(QualityUtil.getErrorProbabilityFromPhredScore(PRIOR_Q));
 
         for (final ErrorMetric metric : locusAggregator.getMetrics()) {
             metric.calculateDerivedFields();
@@ -458,9 +458,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
         }
 
         // make a linkedList due to removal and addition operations below
-        final List<ReadBaseStratification.RecordAndOffsetStratifier<?>> stratifiers = new LinkedList<>(Arrays.stream(directiveUnits)
-                .limit(numberOfTerms)
-                .skip(1)
+        final List<ReadBaseStratification.RecordAndOffsetStratifier<?>> stratifiers = new LinkedList<>(Arrays.stream(directiveUnits,1, numberOfTerms)
                 .map(String::trim)
                 .map(ReadBaseStratification.Stratifiers::valueOf)
                 .map(ReadBaseStratification.Stratifiers::makeStratifier)

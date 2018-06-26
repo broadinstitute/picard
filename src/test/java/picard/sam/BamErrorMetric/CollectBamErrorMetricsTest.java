@@ -273,7 +273,7 @@ public class CollectBamErrorMetricsTest {
 
         Assert.assertEquals(new CollectBamErrorMetrics().instanceMain(args), 0);
 
-        ErrorMetrics.setPriorError(QualityUtil.getErrorProbabilityFromPhredScore(priorQ));
+        ErrorMetric.setPriorError(QualityUtil.getErrorProbabilityFromPhredScore(priorQ));
         expectedMetric.calculateDerivedFields();
 
         // Note that soft clipped bases are not counted

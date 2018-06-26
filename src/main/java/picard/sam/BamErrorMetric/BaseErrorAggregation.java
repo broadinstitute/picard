@@ -32,8 +32,8 @@ import java.util.*;
 import java.util.function.Supplier;
 
 /**
- * An interface and implementations for classes that apply a {@link picard.sam.BamErrorMetric.ReadBaseStratification.RecordAndOffsetStratifier RecordAndOffsetStratifier}
- * to put bases into various "bins" and then compute an {@link ErrorMetrics} on these bases using a {@link BaseErrorCalculation}.
+ * An interface and implementations for classes that apply a {@link ReadBaseStratification.RecordAndOffsetStratifier RecordAndOffsetStratifier}
+ * to put bases into various "bins" and then compute an {@link ErrorMetric} on these bases using a {@link BaseErrorCalculator}.
  *
  */
 
