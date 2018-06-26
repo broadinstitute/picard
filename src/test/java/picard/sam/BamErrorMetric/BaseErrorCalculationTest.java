@@ -46,7 +46,7 @@ public class BaseErrorCalculationTest {
             SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(samRecord, i);
             baseErrorCalculator.addBase(recordAndOffset, locusAndReference);
         }
-        final ErrorMetrics.SimpleErrorMetric metric = baseErrorCalculator.getMetric();
+        final BaseErrorMetric metric = baseErrorCalculator.getMetric();
         metric.calculateDerivedFields();
         Assert.assertEquals(metric.TOTAL_BASES, n);
         Assert.assertEquals(metric.ERROR_BASES, 4L);
@@ -88,7 +88,7 @@ public class BaseErrorCalculationTest {
             overlappingErrorCalculator2.addBase(recordAndOffset2, locusAndReference);
         }
 
-        final ErrorMetrics.OverlappingErrorMetric metric1 = overlappingErrorCalculator1.getMetric();
+        final OverlappingErrorMetric metric1 = overlappingErrorCalculator1.getMetric();
         metric1.calculateDerivedFields();
         Assert.assertEquals(metric1.TOTAL_BASES, length);
         Assert.assertEquals(metric1.NUM_BASES_WITH_OVERLAPPING_READS, length);
@@ -96,7 +96,7 @@ public class BaseErrorCalculationTest {
         Assert.assertEquals(metric1.NUM_DISAGREES_WITH_REF_AND_MATE, 1L);
         Assert.assertEquals(metric1.NUM_THREE_WAYS_DISAGREEMENT, 1L);
 
-        final ErrorMetrics.OverlappingErrorMetric metric2 = overlappingErrorCalculator1.getMetric();
+        final OverlappingErrorMetric metric2 = overlappingErrorCalculator1.getMetric();
         metric2.calculateDerivedFields();
         Assert.assertEquals(metric2.TOTAL_BASES, length);
         Assert.assertEquals(metric2.NUM_BASES_WITH_OVERLAPPING_READS, length);

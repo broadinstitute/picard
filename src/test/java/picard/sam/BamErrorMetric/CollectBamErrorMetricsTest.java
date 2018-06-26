@@ -135,122 +135,122 @@ public class CollectBamErrorMetricsTest {
 
                 // Note that soft clipped bases are not counted.
                 {".error_by_all", chrMReadsWithClips, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("all", 62L, 49L)},
+                        new BaseErrorMetric("all", 62L, 49L)},
                 {".error_by_base_quality", chrMReadsWithClips, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("32", 52L, 41L)},
+                        new BaseErrorMetric("32", 52L, 41L)},
                 {".error_by_base_quality", chrMReadsWithClips, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("33", 10L, 8L)},
+                        new BaseErrorMetric("33", 10L, 8L)},
 //                 Note that the homopolymer is counted as the number of bases in the read that match each other before a new base.
 //                 This catches mismatches (and matches) of the ends of homopolymers.
                 {".error_by_homopolymer_and_following_ref_base", chrMReadsWithClips, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("9,T,T", 1L, 1L)},
+                        new BaseErrorMetric("9,T,T", 1L, 1L)},
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("2,G,T", 2L, 1L)},
+                        new BaseErrorMetric("2,G,T", 2L, 1L)},
 
                 {".error_by_binned_length_homopolymer_and_following_ref_base", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("SHORT_HOMOPOLYMER,G,T", 6L, 1L)},
+                        new BaseErrorMetric("SHORT_HOMOPOLYMER,G,T", 6L, 1L)},
 
                 {".error_by_read_ordinality_and_pre_dinuc", chrMReadsWithClips, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("FIRST,A,A", 3L, 3L)},
+                        new BaseErrorMetric("FIRST,A,A", 3L, 3L)},
                 // Using a sam file with a single error it is easy to validate demonstrate these tests should pass
                 {".error_by_all", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("all", 72L, 1L)},
+                        new BaseErrorMetric("all", 72L, 1L)},
                 // There are two base qualities in the bam, the error occurs in quality "32"
                 {".error_by_base_quality", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("32", 51L, 1L)},
+                        new BaseErrorMetric("32", 51L, 1L)},
                 // There are two base qualities in the bam, the error occurs in quality "32", make sure we detect no errors in quality "33"
                 {".error_by_base_quality", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("33", 21L, 0L)},
+                        new BaseErrorMetric("33", 21L, 0L)},
                 // simpleSamWithBaseErrors2 contains 2 differences from the reference
                 // after 2 different homopolymers.
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("2,T,A", 2L, 1L)},
+                        new BaseErrorMetric("2,T,A", 2L, 1L)},
                 // Make sure that we can correctly identify an error after a homopolymer
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("3,C,G", 1L, 1L)},
+                        new BaseErrorMetric("3,C,G", 1L, 1L)},
                 {".error_by_read_ordinality_and_pre_dinuc", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("FIRST,G,T", 1L, 1L)},
+                        new BaseErrorMetric("FIRST,G,T", 1L, 1L)},
                 // The covariate "0.5" was chosen to avoid those that have repeating decimals and could have alternative representations as
                 // a string.  GC is calculated over the entire read including clipped bases, while errors are calculated only over unclipped bases.
                 {".error_by_gc", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("0.5", 36L, 1L)},
+                        new BaseErrorMetric("0.5", 36L, 1L)},
                 // Make sure that we can detect errors at a particular cycle
                 {".error_by_cycle", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("10", 2L, 1L)},
+                        new BaseErrorMetric("10", 2L, 1L)},
                 // There should be one error in the read with mapping quality 60.
                 {".error_by_mapping_quality", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("60", 36L, 1L)},
+                        new BaseErrorMetric("60", 36L, 1L)},
                 // There should be no errors in the read with mapping quality 0.
                 {".error_by_mapping_quality", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("50", 36L, 0L)},
+                        new BaseErrorMetric("50", 36L, 0L)},
                 // One base has an error in the read group 62A40.2
                 {".error_by_read_group", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("62A40.2", 72L, 1L)},
+                        new BaseErrorMetric("62A40.2", 72L, 1L)},
                 // No additional mismatches are found on the read with 1 mismatch.
                 {".error_by_mismatches_in_read", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("1", 35L, 0L)},
+                        new BaseErrorMetric("1", 35L, 0L)},
                 // No additional mismatches are found on the read with 1 mismatch. (Just another way to check)
                 {".error_by_mismatches_in_read", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("0", 37L, 1L)},
+                        new BaseErrorMetric("0", 37L, 1L)},
                 // There should be no errors in the CAG context because it matches reference
                 {".error_by_one_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("CAG", 1L, 0L)},
+                        new BaseErrorMetric("CAG", 1L, 0L)},
                 // There should be one error in the GTC context
                 {".error_by_one_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("GTC", 1L, 1L)},
+                        new BaseErrorMetric("GTC", 1L, 1L)},
                 // There should be one error in the CTT context
                 {".error_by_one_base_padded_context", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("CCT", 3L, 0L)},
+                        new BaseErrorMetric("CCT", 3L, 0L)},
                 // There should be no errors in the ACGGG context
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("ACGGG", 1L, 0L)},
+                        new BaseErrorMetric("ACGGG", 1L, 0L)},
                 // There should be one error in the GGTCT context
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("GGTCT", 1L, 1L)},
+                        new BaseErrorMetric("GGTCT", 1L, 1L)},
                 // There should be no errors in the CTTGA context (appears in sam file as TCAaG in second read)
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("CTTGA", 1L, 0L)},
+                        new BaseErrorMetric("CTTGA", 1L, 0L)},
                 // There should be one error in the CCGTG context
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("CCGTG", 1L, 1L)},
+                        new BaseErrorMetric("CCGTG", 1L, 1L)},
                 // Reads that don't have consensus tags should be stratified as UNKNOWN
                 {".error_by_consensus", simpleSamWithBaseErrors1, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("UNKNOWN", 72L, 1L)},
+                        new BaseErrorMetric("UNKNOWN", 72L, 1L)},
                 // There should be 2 errors in the one simplex singleton reads.
                 {".error_by_consensus", simpleSingleStrandConsensusSamWithBaseErrors, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("SIMPLEX_SINGLETON", 36L, 2L)},
+                        new BaseErrorMetric("SIMPLEX_SINGLETON", 36L, 2L)},
                 // There should be no errors in the simplex consensus read.
                 {".error_by_consensus", simpleSingleStrandConsensusSamWithBaseErrors, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("SIMPLEX_CONSENSUS", 36L, 0L)},
+                        new BaseErrorMetric("SIMPLEX_CONSENSUS", 36L, 0L)},
                 // There should be one error in duplex singleton read.  Also the N in this read reduces total bases from 36 to 35.
                 {".error_by_consensus", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("DUPLEX_SINGLETON", 35L, 1L)},
+                        new BaseErrorMetric("DUPLEX_SINGLETON", 35L, 1L)},
                 // There should be two errors in the duplex consensus read.
                 {".error_by_consensus", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("DUPLEX_CONSENSUS", 36L, 2L)},
+                        new BaseErrorMetric("DUPLEX_CONSENSUS", 36L, 2L)},
                 // There should be two errors in the read with no Ns.
                 {".error_by_ns_in_read", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("0", 36L, 2L)},
+                        new BaseErrorMetric("0", 36L, 2L)},
                 // There should be one errors in the read with one N.
                 {".error_by_ns_in_read", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("1", 35L, 1L)},
+                        new BaseErrorMetric("1", 35L, 1L)},
                 // There are two errors, one should show up in QUINTILE_1 and the other in QUINTILE_3
                 // QUINTILE_5 has 16 total (2 more than the other bins) bases due to rounding.
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("QUINTILE_1", 14L, 1L)},
+                        new BaseErrorMetric("QUINTILE_1", 14L, 1L)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("QUINTILE_2", 14L, 0L)},
+                        new BaseErrorMetric("QUINTILE_2", 14L, 0L)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("QUINTILE_3", 14L, 1L)},
+                        new BaseErrorMetric("QUINTILE_3", 14L, 1L)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("QUINTILE_4", 14L, 0L)},
+                        new BaseErrorMetric("QUINTILE_4", 14L, 0L)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new ErrorMetrics.SimpleErrorMetric("QUINTILE_5", 16L, 0L)}
+                        new BaseErrorMetric("QUINTILE_5", 16L, 0L)}
         };
     }
 
     @Test(dataProvider = "OneCovariateErrorMetricsDataProvider")
-    public void testOneCovariateErrorMetrics(final String errorSubscript, final File samFile, final int priorQ, ErrorMetrics.SimpleErrorMetric expectedMetric) {
+    public void testOneCovariateErrorMetrics(final String errorSubscript, final File samFile, final int priorQ, BaseErrorMetric expectedMetric) {
         final String input = samFile.toString();
         final File referenceFile = new File(TEST_DIR,"chrM.reference.fasta");
         final File vcf = new File(TEST_DIR, "NIST.selected.vcf");
@@ -277,9 +277,9 @@ public class CollectBamErrorMetricsTest {
         expectedMetric.calculateDerivedFields();
 
         // Note that soft clipped bases are not counted
-        List<ErrorMetrics.SimpleErrorMetric> metrics = MetricsFile.readBeans(errorByAll);
+        List<BaseErrorMetric> metrics = MetricsFile.readBeans(errorByAll);
 
-        ErrorMetrics.SimpleErrorMetric metric = metrics
+        BaseErrorMetric metric = metrics
                 .stream()
                 .filter(m -> m.COVARIATE.equals(expectedMetric.COVARIATE))
                 .findAny()

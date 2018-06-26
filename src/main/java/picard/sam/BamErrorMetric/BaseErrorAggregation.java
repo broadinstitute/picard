@@ -62,18 +62,18 @@ public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
         return simpleAggregatorGenerator.get().getSuffix() + "_by_" + stratifier.getSuffix();
     }
 
-    public ErrorMetrics.ErrorMetricBase[] getMetrics() {
-        final List<ErrorMetrics.ErrorMetricBase> metrics = new ArrayList<>();
+    public ErrorMetric[] getMetrics() {
+        final List<ErrorMetric> metrics = new ArrayList<>();
 
         // we do this to sort
         final TreeSet<Object> strata = new TreeSet<>(strataAggregatorMap.keySet());
 
         for (final Object stratum : strata) {
-            final ErrorMetrics.ErrorMetricBase metric = strataAggregatorMap.get(stratum).getMetric();
+            final ErrorMetric metric = strataAggregatorMap.get(stratum).getMetric();
             metric.COVARIATE = stratum.toString();
             metrics.add(metric);
         }
-        return metrics.toArray(new ErrorMetrics.ErrorMetricBase[0]);
+        return metrics.toArray(new ErrorMetric[0]);
     }
 }
 

@@ -51,8 +51,8 @@ public class BaseErrorAggregationTest {
             baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);
         }
 
-        final ErrorMetrics.ErrorMetricBase[] metrics = baseErrorAggregation.getMetrics();
-        final ErrorMetrics.OverlappingErrorMetric metric1 = (ErrorMetrics.OverlappingErrorMetric) metrics[0];
+        final ErrorMetric[] metrics = baseErrorAggregation.getMetrics();
+        final OverlappingErrorMetric metric1 = (OverlappingErrorMetric) metrics[0];
         metric1.calculateDerivedFields();
         Assert.assertEquals(metric1.COVARIATE, ReadBaseStratification.ReadOrdinality.FIRST.name());
         Assert.assertEquals(metric1.TOTAL_BASES, length);
@@ -61,7 +61,7 @@ public class BaseErrorAggregationTest {
         Assert.assertEquals(metric1.NUM_DISAGREES_WITH_REF_AND_MATE, 1L);
         Assert.assertEquals(metric1.NUM_THREE_WAYS_DISAGREEMENT, 1L);
 
-        final ErrorMetrics.OverlappingErrorMetric metric2 = (ErrorMetrics.OverlappingErrorMetric) metrics[1];
+        final OverlappingErrorMetric metric2 = (OverlappingErrorMetric) metrics[1];
         metric2.calculateDerivedFields();
         Assert.assertEquals(metric2.COVARIATE, ReadBaseStratification.ReadOrdinality.SECOND.name());
         Assert.assertEquals(metric2.TOTAL_BASES, length);
@@ -105,8 +105,8 @@ public class BaseErrorAggregationTest {
             baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);
         }
 
-        final ErrorMetrics.ErrorMetricBase[] metrics = baseErrorAggregation.getMetrics();
-        final ErrorMetrics.OverlappingErrorMetric metric1 = (ErrorMetrics.OverlappingErrorMetric) metrics[0];
+        final ErrorMetric[] metrics = baseErrorAggregation.getMetrics();
+        final OverlappingErrorMetric metric1 = (OverlappingErrorMetric) metrics[0];
         metric1.calculateDerivedFields();
         Assert.assertEquals(metric1.COVARIATE, ReadBaseStratification.ReadDirection.POSITIVE.toString());
         Assert.assertEquals(metric1.TOTAL_BASES, length);
@@ -115,7 +115,7 @@ public class BaseErrorAggregationTest {
         Assert.assertEquals(metric1.NUM_DISAGREES_WITH_REF_AND_MATE, 1L);
         Assert.assertEquals(metric1.NUM_THREE_WAYS_DISAGREEMENT, 1L);
 
-        final ErrorMetrics.OverlappingErrorMetric metric2 = (ErrorMetrics.OverlappingErrorMetric) metrics[1];
+        final OverlappingErrorMetric metric2 = (OverlappingErrorMetric) metrics[1];
         metric2.calculateDerivedFields();
         Assert.assertEquals(metric2.COVARIATE, ReadBaseStratification.ReadDirection.NEGATIVE.toString());
         Assert.assertEquals(metric2.TOTAL_BASES, length);
@@ -159,29 +159,29 @@ public class BaseErrorAggregationTest {
             baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);
         }
 
-        final ErrorMetrics.ErrorMetricBase[] metrics = baseErrorAggregation.getMetrics();
-        final ErrorMetrics.SimpleErrorMetric metricA = Arrays.stream(metrics).map(a -> (ErrorMetrics.SimpleErrorMetric) a)
+        final ErrorMetric[] metrics = baseErrorAggregation.getMetrics();
+        final BaseErrorMetric metricA = Arrays.stream(metrics).map(a -> (BaseErrorMetric) a)
                 .filter(a -> a.COVARIATE.equals("A")).findFirst().orElse(null);
         metricA.calculateDerivedFields();
         Assert.assertEquals(metricA.COVARIATE, "A");
         Assert.assertEquals(metricA.TOTAL_BASES, 11);
         Assert.assertEquals(metricA.ERROR_BASES, 3);
 
-        final ErrorMetrics.SimpleErrorMetric metricC = Arrays.stream(metrics).map(a -> (ErrorMetrics.SimpleErrorMetric) a)
+        final BaseErrorMetric metricC = Arrays.stream(metrics).map(a -> (BaseErrorMetric) a)
                 .filter(a -> a.COVARIATE.equals("C")).findFirst().orElse(null);
         metricA.calculateDerivedFields();
         Assert.assertEquals(metricC.COVARIATE, "C");
         Assert.assertEquals(metricC.TOTAL_BASES, 5);
         Assert.assertEquals(metricC.ERROR_BASES, 1);
 
-        final ErrorMetrics.SimpleErrorMetric metricG = Arrays.stream(metrics).map(a -> (ErrorMetrics.SimpleErrorMetric) a)
+        final BaseErrorMetric metricG = Arrays.stream(metrics).map(a -> (BaseErrorMetric) a)
                 .filter(a -> a.COVARIATE.equals("G")).findFirst().orElse(null);
         metricA.calculateDerivedFields();
         Assert.assertEquals(metricG.COVARIATE, "G");
         Assert.assertEquals(metricG.TOTAL_BASES, 5);
         Assert.assertEquals(metricG.ERROR_BASES, 1);
 
-        final ErrorMetrics.SimpleErrorMetric metricT = Arrays.stream(metrics).map(a -> (ErrorMetrics.SimpleErrorMetric) a)
+        final BaseErrorMetric metricT = Arrays.stream(metrics).map(a -> (BaseErrorMetric) a)
                 .filter(a -> a.COVARIATE.equals("T")).findFirst().orElse(null);
         metricA.calculateDerivedFields();
         Assert.assertEquals(metricT.COVARIATE, "T");

@@ -313,11 +313,11 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
      * @param locusAggregator a BaseCalculator that has been "loaded up" with bases.
      */
     private void writeMetricsFileForAggregator(final BaseErrorAggregation locusAggregator) {
-        final MetricsFile<ErrorMetrics.ErrorMetricBase, Integer> file = getMetricsFile();
+        final MetricsFile<ErrorMetric, Integer> file = getMetricsFile();
 
         ErrorMetrics.setPriorError(QualityUtil.getErrorProbabilityFromPhredScore(PRIOR_Q));
 
-        for (final ErrorMetrics.ErrorMetricBase metric : locusAggregator.getMetrics()) {
+        for (final ErrorMetric metric : locusAggregator.getMetrics()) {
             metric.calculateDerivedFields();
             file.addMetric(metric);
         }
