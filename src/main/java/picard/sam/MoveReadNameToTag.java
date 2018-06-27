@@ -23,7 +23,7 @@ public class MoveReadNameToTag extends CommandLineProgram {
     public File INPUT;
 
     @Argument(shortName = "TILE_IN_READ_NAME", doc = "Put only the tile in the readname")
-    public Boolean TILE_IN_RN;
+    public Boolean TILE_IN_RN = false;
 
     @Argument(shortName = "IN_READ_NAME", doc = "Alter read name, not tags")
     public Boolean IN_RN = false;
