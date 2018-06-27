@@ -25,8 +25,9 @@ public class MoveReadNameToTagTest extends CommandLineProgramTest {
         final String[] args = new String[]{
                 "INPUT=" + INPUT_FILE.getAbsolutePath(),
                 //"IN_RN=true",
-                "TILE_TAG=true",
-                "XY_FULL=true",
+                "TILE_IN_RN=true",
+                //"TILE_TAG=true",
+                //"XY_FULL=true",
                 "OUTPUT=" + tmpDir + "/out.sam"
         };
 

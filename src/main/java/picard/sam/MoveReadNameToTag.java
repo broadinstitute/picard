@@ -22,6 +22,9 @@ public class MoveReadNameToTag extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM file")
     public File INPUT;
 
+    @Argument(shortName = "TILE_IN_READ_NAME", doc = "Put only the tile in the readname")
+    public Boolean TILE_IN_RN;
+
     @Argument(shortName = "IN_READ_NAME", doc = "Alter read name, not tags")
     public Boolean IN_RN = false;
 
@@ -35,7 +38,8 @@ public class MoveReadNameToTag extends CommandLineProgram {
     public File OUTPUT;
 
     private final Log log = Log.getInstance(MoveReadNameToTag.class);
-    int warnings = 0;
+    private int warnings = 0;
+    private int uniqueReadNumber = 0;
 
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
@@ -60,6 +64,13 @@ public class MoveReadNameToTag extends CommandLineProgram {
             }
             if(IN_RN) {
                 String newReadName = splitReadName[2] + ":" + splitReadName[3] + ":" + splitReadName[4];
+                rec.setReadName(newReadName);
+            }
+            if(TILE_IN_RN) {
+                if(progress.getCount() % 2 == 0) {
+                    uniqueReadNumber++;
+                }
+                String newReadName = String.valueOf(uniqueReadNumber) + ":" + splitReadName[2];
                 rec.setReadName(newReadName);
             }
             if(TILE_TAG) {
