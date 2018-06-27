@@ -36,6 +36,8 @@ import picard.sam.markduplicates.util.OpticalDuplicateFinder;
 import picard.sam.util.PhysicalLocation;
 import picard.sam.util.PhysicalLocationInt;
 
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -155,8 +157,7 @@ public class ReadBaseStratification {
     /**
      * A PairStratifier is a stratifier that uses two other stratifiers to inform the stratification.
      * For a given input, the result is the {@link Pair} of outputs that the two stratifiers return.
-     * The suffix for this stratifiers is automatically generated from the suffixes of the two provided
-     * stratifiers.
+     * The suffix for this stratifier is generated from the suffixes of the two provided stratifiers.
      */
     public static class PairStratifier<T extends Comparable<T>, R extends Comparable<R>> implements RecordAndOffsetStratifier<Pair<T, R>> {
         public PairStratifier(final RecordAndOffsetStratifier<T> a, final RecordAndOffsetStratifier<R> b) {
@@ -184,6 +185,44 @@ public class ReadBaseStratification {
             return a.getSuffix() + "_and_" + b.getSuffix();
         }
     }
+
+    /**
+     * A CollectionStratifier is a stratifier that uses a collection of stratifiers to inform the stratification.
+     * For a given input, the result is the "Tuple" (actually repeated pairs) of outputs that the stratifiers return.
+     * The suffix for this stratifier is generated from the suffixes of the provided stratifiers.
+     */
+    public static class CollectionStratifier implements RecordAndOffsetStratifier {
+        public CollectionStratifier(final Collection<RecordAndOffsetStratifier<?>> stratifiers) {
+
+            if (stratifiers.isEmpty()){
+                throw new IllegalArgumentException("Must construct with a non-empty collection of stratifiers.");
+            }
+
+            final LinkedList<RecordAndOffsetStratifier<?>> linkedListStratifiers = new LinkedList<>(stratifiers);
+
+            while (linkedListStratifiers.size() > 1) {
+                ReadBaseStratification.RecordAndOffsetStratifier<?> first = linkedListStratifiers.remove(0);
+                ReadBaseStratification.RecordAndOffsetStratifier<?> second = linkedListStratifiers.remove(0);
+                ReadBaseStratification.PairStratifier<? extends Comparable, ? extends Comparable> newPair = new ReadBaseStratification.PairStratifier<>(first, second);
+                linkedListStratifiers.add(0, newPair);
+            }
+
+            stratifier = linkedListStratifiers.remove();
+        }
+        final RecordAndOffsetStratifier stratifier;
+
+        @Override
+        public Comparable stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
+
+            return stratifier.stratify(recordAndOffset,locusInfo);
+        }
+
+        @Override
+        public String getSuffix() {
+            return stratifier.getSuffix();
+        }
+    }
+
 
     /**
      * A factory for generating "pair" stratifier instances from two stratifiers and a string

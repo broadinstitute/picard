@@ -211,7 +211,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
         }
     }
 
-    private static final short MAX_DIRECTIVES = 256;
+    private static final int MAX_DIRECTIVES = ReadBaseStratification.Stratifiers.values().length + 1;
     private static final Log log = Log.getInstance(CollectBamErrorMetrics.class);
 
     @Override
@@ -335,7 +335,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
      * @param sequenceDictionary a dictionary with which to compare the Locatable to the Locus...
      * @return true if there's a variant over the locus, false otherwise.
      */
-    static private boolean advanceIteratorAndCheckLocus(final PeekableIterator<VariantContext> vcfIterator, final Locus locus, final SAMSequenceDictionary sequenceDictionary) {
+    private static boolean advanceIteratorAndCheckLocus(final PeekableIterator<VariantContext> vcfIterator, final Locus locus, final SAMSequenceDictionary sequenceDictionary) {
         while (vcfIterator.hasNext() && (vcfIterator.peek().isFiltered() ||
                 CompareVariantContextToLocus(sequenceDictionary, vcfIterator.peek(), locus) < 0)) {
             vcfIterator.next();
@@ -377,10 +377,11 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
     }
 
     /**
-     * Reads Interprets intervals from the input INTERVALS, if there's a file with that name, it opens the file, otherwise it tries to parse it, checks that their dictionaries all agree with the input SequenceDictionary
-     * and returns the intersection of all the lists.
+     * Reads Interprets intervals from the input INTERVALS, if there's a file with that name, it opens the file, otherwise
+     * it tries to parse it, checks that their dictionaries all agree with the input SequenceDictionary and returns the
+     * intersection of all the lists.
      *
-     * @param sequenceDictionary
+     * @param sequenceDictionary a {@link SAMSequenceDictionary} to parse the intervals against.
      * @return the intersection of the interval lists pointed to by the input parameter INTERVALS
      */
     private IntervalList getIntervals(final SAMSequenceDictionary sequenceDictionary) {
@@ -437,48 +438,39 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
 
     /**
      * Parses a "Directive" of the form "ERROR,STRATIFIER,STRATIFIER...etc." into a {@link BaseErrorAggregation} consisting of the appropriate
-     * {@link BaseCalculator} and the successively "paired" {@link ReadBaseStratification.RecordAndOffsetStratifier RecordAndOffsetStratifier} as listed.
+     * {@link BaseCalculator} and the {@link ReadBaseStratification.CollectionStratifier CollectionStratifier} constructed from the various
+     * individual stratifiers.
      * The conversion from string to object is performed by the enums
-     * {@link ErrorType Errors} and {@link ReadBaseStratification.Stratifiers Stratifiers}, and the "pairing" is performed by
-     * repeatedly wrapping two stratifiers in a {@link ReadBaseStratification.PairStratifier PairStratifier}
+     * {@link ErrorType Errors} and {@link ReadBaseStratification.Stratifiers Stratifiers}.
      *
      * @param stratifierDirective The string directive describing the error type and collection of stratifiers to use
-     * @return The appropriate {@link BaseErrorAggregation} object.
+     * @return The appropriate {@link BaseErrorAggregation}.
      */
     protected static BaseErrorAggregation parseDirective(final String stratifierDirective) {
-        final String[] directiveUnits = new String[MAX_DIRECTIVES];
+        final String[] directiveUnits = new String[MAX_DIRECTIVES + 1];
         final char directiveSeparator = ':';
         final int numberOfTerms = ParsingUtils.split(stratifierDirective, directiveUnits, directiveSeparator, false);
 
-        if (numberOfTerms == MAX_DIRECTIVES) {
-            throw new RuntimeException(String.format("Cannot parse more than %d terms in a single directive. Sorry. (What are you doing?)", MAX_DIRECTIVES - 1));
+        if (numberOfTerms > MAX_DIRECTIVES) {
+            throw new IllegalArgumentException(String.format("Cannot parse more than the number of different stratifiers plus one (%d) terms in a single directive. (What are you trying to do?)", MAX_DIRECTIVES));
         }
         if (numberOfTerms == 0) {
-            throw new RuntimeException("Found no directives at all. Cannot process.");
+            throw new IllegalArgumentException("Found no directives at all. Cannot process.");
         }
 
         // make a linkedList due to removal and addition operations below
-        final List<ReadBaseStratification.RecordAndOffsetStratifier<?>> stratifiers = new LinkedList<>(Arrays.stream(directiveUnits,1, numberOfTerms)
+        final List<ReadBaseStratification.RecordAndOffsetStratifier<?>> stratifiers = Arrays.stream(directiveUnits, 1, numberOfTerms)
                 .map(String::trim)
                 .map(ReadBaseStratification.Stratifiers::valueOf)
                 .map(ReadBaseStratification.Stratifiers::makeStratifier)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
 
-        final ReadBaseStratification.RecordAndOffsetStratifier<? extends Comparable> jointStratifier;
+        final ReadBaseStratification.RecordAndOffsetStratifier jointStratifier;
 
         if (stratifiers.isEmpty()) {
             jointStratifier = ReadBaseStratification.nonStratifier;
         } else {
-            // Repeatedly, remove the first two stratifiers in the list, wrap them in a PairStratifier
-            // and put it back in the list (in the front). Stop when there is exactly 1 element in the list.
-            while (stratifiers.size() > 1) {
-                ReadBaseStratification.RecordAndOffsetStratifier<?> first = stratifiers.remove(0);
-                ReadBaseStratification.RecordAndOffsetStratifier<?> second = stratifiers.remove(0);
-                ReadBaseStratification.PairStratifier<? extends Comparable, ? extends Comparable> newPair = new ReadBaseStratification.PairStratifier<>(first, second);
-                stratifiers.add(0, newPair);
-            }
-            // since there should be exactly one Stratifier in the list, get it
-            jointStratifier = stratifiers.get(0);
+            jointStratifier = new ReadBaseStratification.CollectionStratifier(stratifiers);
         }
 
         // build an error supplier from the first term

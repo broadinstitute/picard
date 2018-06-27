@@ -1,5 +1,6 @@
 package picard.sam.BamErrorMetric;
 
+import htsjdk.samtools.SAMException;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.QualityUtil;
@@ -9,6 +10,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.List;
@@ -323,6 +325,34 @@ public class CollectBamErrorMetricsTest {
     @Test(dataProvider = "readCycleBinDataError", expectedExceptions = IllegalArgumentException.class)
     public void testReadCycleBinError(final double relativePosition) {
         ReadBaseStratification.CycleBin.valueOf(relativePosition);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testTooManyDirectives() {
+        final File input = new File(TEST_DIR, "simpleSamWithBaseErrors1.sam");
+
+        final File referenceFile = new File(TEST_DIR,"chrM.reference.fasta");
+        final File vcf = new File(TEST_DIR, "NIST.selected.vcf");
+
+        final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "test");
+        outputBaseFileName.deleteOnExit();
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("ERROR");
+        for(ReadBaseStratification.Stratifiers stratifier : ReadBaseStratification.Stratifiers.values()) {
+            stringBuilder.append(":");
+            stringBuilder.append(stratifier.toString());
+        }
+        // one more should break it:
+        stringBuilder.append(":ALL");
+        final String[] args = {
+                "INPUT=" + input,
+                "OUTPUT=" + outputBaseFileName,
+                "REFERENCE_SEQUENCE=" + referenceFile.getAbsolutePath(),
+                "ERROR_METRICS=" + stringBuilder.toString(),
+                "VCF=" + vcf.getAbsolutePath()
+        };
+        new CollectBamErrorMetrics().instanceMain(args);
     }
 }
 
