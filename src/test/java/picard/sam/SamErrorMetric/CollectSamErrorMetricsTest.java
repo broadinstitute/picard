@@ -1,6 +1,5 @@
-package picard.sam.BamErrorMetric;
+package picard.sam.SamErrorMetric;
 
-import htsjdk.samtools.SAMException;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.QualityUtil;
@@ -10,14 +9,13 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class CollectBamErrorMetricsTest {
-    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("CollectBamErrorMetricsTest", null);
+public class CollectSamErrorMetricsTest {
+    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("CollectSamErrorMetricsTest", null);
     private static final String TEST_DIR = "testdata/picard/sam/BamErrorMetrics";
 
     @BeforeClass
@@ -117,7 +115,7 @@ public class CollectBamErrorMetricsTest {
     }
 
     public void parseDirective0(final String directive, final String extension) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        final BaseErrorAggregation agg = CollectBamErrorMetrics.parseDirective(directive);
+        final BaseErrorAggregation agg = CollectSamErrorMetrics.parseDirective(directive);
         if (extension!=null) {
             Assert.assertEquals(agg.getSuffix(), extension);
         }
@@ -273,7 +271,7 @@ public class CollectBamErrorMetricsTest {
                 "VCF=" + vcf.getAbsolutePath()
         };
 
-        Assert.assertEquals(new CollectBamErrorMetrics().instanceMain(args), 0);
+        Assert.assertEquals(new CollectSamErrorMetrics().instanceMain(args), 0);
 
         ErrorMetric.setPriorError(QualityUtil.getErrorProbabilityFromPhredScore(priorQ));
         expectedMetric.calculateDerivedFields();
@@ -352,7 +350,7 @@ public class CollectBamErrorMetricsTest {
                 "ERROR_METRICS=" + stringBuilder.toString(),
                 "VCF=" + vcf.getAbsolutePath()
         };
-        new CollectBamErrorMetrics().instanceMain(args);
+        new CollectSamErrorMetrics().instanceMain(args);
     }
 }
 

@@ -1,4 +1,4 @@
-package picard.sam.BamErrorMetric;
+package picard.sam.SamErrorMetric;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;

@@ -1,4 +1,4 @@
-package picard.sam.BamErrorMetric;
+package picard.sam.SamErrorMetric;
 
 /** An error metric for the errors invovling bases in the overlapping region of a read-pair.
  * The resulting metric includes error rate information which can be assigned to the reading

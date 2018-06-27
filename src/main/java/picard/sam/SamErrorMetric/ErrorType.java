@@ -1,4 +1,4 @@
-package picard.sam.BamErrorMetric;
+package picard.sam.SamErrorMetric;
 
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 
@@ -10,7 +10,7 @@ import java.util.function.Supplier;
  * <p>
  * Errors.valueOf(str).getErrorSupplier()
  * <p>
- * This is used in {@link CollectBamErrorMetrics} to convert an input argument to a {@link BaseErrorAggregation}.
+ * This is used in {@link CollectSamErrorMetrics} to convert an input argument to a {@link BaseErrorAggregation}.
  */
 enum ErrorType implements CommandLineParser.ClpEnum {
     ERROR(SimpleErrorCalculator::new, "Collects the average error at the bases provided."),

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package picard.sam.BamErrorMetric;
+package picard.sam.SamErrorMetric;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -644,7 +644,7 @@ public class ReadBaseStratification {
      * <p>
      * Stratifiers.valueOf(str).makeStratifier()
      * <p>
-     * This is used in {@link CollectBamErrorMetrics} to convert an input argument to a fully functional {@link BaseErrorAggregation} object.
+     * This is used in {@link CollectSamErrorMetrics} to convert an input argument to a fully functional {@link BaseErrorAggregation} object.
      */
     enum Stratifiers implements CommandLineParser.ClpEnum {
         ALL(() -> nonStratifier, "Puts all bases in the same stratum."),

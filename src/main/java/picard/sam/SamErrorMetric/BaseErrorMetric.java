@@ -1,4 +1,4 @@
-package picard.sam.BamErrorMetric;
+package picard.sam.SamErrorMetric;
 
 /**
  * An error metric for the errors in bases.

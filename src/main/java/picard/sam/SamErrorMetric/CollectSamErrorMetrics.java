@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package picard.sam.BamErrorMetric;
+package picard.sam.SamErrorMetric;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -87,7 +87,7 @@ import java.util.stream.Collectors;
         oneLineSummary = "Program to collect error metrics on bases stratified in various ways.",
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
-public class CollectBamErrorMetrics extends CommandLineProgram {
+public class CollectSamErrorMetrics extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
 
@@ -212,7 +212,7 @@ public class CollectBamErrorMetrics extends CommandLineProgram {
     }
 
     private static final int MAX_DIRECTIVES = ReadBaseStratification.Stratifiers.values().length + 1;
-    private static final Log log = Log.getInstance(CollectBamErrorMetrics.class);
+    private static final Log log = Log.getInstance(CollectSamErrorMetrics.class);
 
     @Override
     protected int doWork() {

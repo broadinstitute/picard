@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package picard.sam.BamErrorMetric;
+package picard.sam.SamErrorMetric;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;

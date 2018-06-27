@@ -1,4 +1,4 @@
-package picard.sam.BamErrorMetric;
+package picard.sam.SamErrorMetric;
 
 import htsjdk.samtools.util.QualityUtil;
 import picard.analysis.MergeableMetricBase;
