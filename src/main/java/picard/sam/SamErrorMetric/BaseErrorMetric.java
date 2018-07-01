@@ -10,7 +10,7 @@ public class BaseErrorMetric extends ErrorMetric {
 
     /** The (phred) rate of bases that disagree with the reference */
     @NoMergingIsDerived
-    public Integer Q_SCORE;
+    public int Q_SCORE;
 
     @Override
     public void calculateDerivedFields() {

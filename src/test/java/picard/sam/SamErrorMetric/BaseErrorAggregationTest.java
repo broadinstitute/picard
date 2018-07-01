@@ -12,9 +12,6 @@ import org.testng.annotations.Test;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by farjoun on 5/31/18.
- */
 public class BaseErrorAggregationTest {
 
     @Test
@@ -35,21 +32,8 @@ public class BaseErrorAggregationTest {
         final byte[] refBases = "CATGGGGAAAAAAAAA".getBytes();
 
         BaseErrorAggregation<?> baseErrorAggregation = new BaseErrorAggregation<>(OverlappingReadsErrorCalculator::new, ReadBaseStratification.readOrdinalityStratifier);
-        final int length = refBases.length;
 
-        for (int i = 0; i < length; i++) {
-
-            SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, i + 1);
-            SamLocusIterator.RecordAndOffset recordAndOffset1 = new SamLocusIterator.RecordAndOffset(samRecord1, i);
-            SamLocusIterator.RecordAndOffset recordAndOffset2 = new SamLocusIterator.RecordAndOffset(samRecord2, i);
-            locusInfo.add(recordAndOffset1);
-            locusInfo.add(recordAndOffset2);
-
-            final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
-
-            baseErrorAggregation.addBase(recordAndOffset1, locusAndReference);
-            baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);
-        }
+        final int length = getLengthAndAddBases(samSequenceRecord, samRecord1, samRecord2, refBases, baseErrorAggregation);
 
         final ErrorMetric[] metrics = baseErrorAggregation.getMetrics();
         final OverlappingErrorMetric metric1 = (OverlappingErrorMetric) metrics[0];
@@ -71,6 +55,25 @@ public class BaseErrorAggregationTest {
         Assert.assertEquals(metric2.NUM_THREE_WAYS_DISAGREEMENT, 1L);
     }
 
+    private int getLengthAndAddBases(SAMSequenceRecord samSequenceRecord, SAMRecord samRecord1, SAMRecord samRecord2, byte[] refBases, BaseErrorAggregation<?> baseErrorAggregation) {
+        final int length = refBases.length;
+
+        for (int i = 0; i < length; i++) {
+
+            SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, i + 1);
+            SamLocusIterator.RecordAndOffset recordAndOffset1 = new SamLocusIterator.RecordAndOffset(samRecord1, i);
+            SamLocusIterator.RecordAndOffset recordAndOffset2 = new SamLocusIterator.RecordAndOffset(samRecord2, i);
+            locusInfo.add(recordAndOffset1);
+            locusInfo.add(recordAndOffset2);
+
+            final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
+
+            baseErrorAggregation.addBase(recordAndOffset1, locusAndReference);
+            baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);
+        }
+        return length;
+    }
+
     @Test
     public void testBaseErrorAggregation2() {
         final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 200);
@@ -89,21 +92,8 @@ public class BaseErrorAggregationTest {
         final byte[] refBases = "CATGGGGAAAAAAAAA".getBytes();
 
         BaseErrorAggregation<?> baseErrorAggregation = new BaseErrorAggregation<>(OverlappingReadsErrorCalculator::new, ReadBaseStratification.readDirectionStratifier);
-        final int length = refBases.length;
 
-        for (int i = 0; i < length; i++) {
-
-            SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, i + 1);
-            SamLocusIterator.RecordAndOffset recordAndOffset1 = new SamLocusIterator.RecordAndOffset(samRecord1, i);
-            SamLocusIterator.RecordAndOffset recordAndOffset2 = new SamLocusIterator.RecordAndOffset(samRecord2, i);
-            locusInfo.add(recordAndOffset1);
-            locusInfo.add(recordAndOffset2);
-
-            final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
-
-            baseErrorAggregation.addBase(recordAndOffset1, locusAndReference);
-            baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);
-        }
+        final int length = getLengthAndAddBases(samSequenceRecord, samRecord1, samRecord2, refBases, baseErrorAggregation);
 
         final ErrorMetric[] metrics = baseErrorAggregation.getMetrics();
         final OverlappingErrorMetric metric1 = (OverlappingErrorMetric) metrics[0];
@@ -143,46 +133,33 @@ public class BaseErrorAggregationTest {
         final byte[] refBases = "CATGGGGAAAAAAAAA".getBytes();
 
         BaseErrorAggregation<?> baseErrorAggregation = new BaseErrorAggregation<>(SimpleErrorCalculator::new, ReadBaseStratification.referenceBaseStratifier);
-        final int length = refBases.length;
 
-        for (int i = 0; i < length; i++) {
-
-            SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, i + 1);
-            SamLocusIterator.RecordAndOffset recordAndOffset1 = new SamLocusIterator.RecordAndOffset(samRecord1, i);
-            SamLocusIterator.RecordAndOffset recordAndOffset2 = new SamLocusIterator.RecordAndOffset(samRecord2, i);
-            locusInfo.add(recordAndOffset1);
-            locusInfo.add(recordAndOffset2);
-
-            final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
-
-            baseErrorAggregation.addBase(recordAndOffset1, locusAndReference);
-            baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);
-        }
+        final int length = getLengthAndAddBases(samSequenceRecord, samRecord1, samRecord2, refBases, baseErrorAggregation);
 
         final ErrorMetric[] metrics = baseErrorAggregation.getMetrics();
         final BaseErrorMetric metricA = Arrays.stream(metrics).map(a -> (BaseErrorMetric) a)
-                .filter(a -> a.COVARIATE.equals("A")).findFirst().orElse(null);
+                .filter(a -> a.COVARIATE.equals("A")).findFirst().get();
         metricA.calculateDerivedFields();
         Assert.assertEquals(metricA.COVARIATE, "A");
         Assert.assertEquals(metricA.TOTAL_BASES, 11);
         Assert.assertEquals(metricA.ERROR_BASES, 3);
 
         final BaseErrorMetric metricC = Arrays.stream(metrics).map(a -> (BaseErrorMetric) a)
-                .filter(a -> a.COVARIATE.equals("C")).findFirst().orElse(null);
+                .filter(a -> a.COVARIATE.equals("C")).findFirst().get();
         metricA.calculateDerivedFields();
         Assert.assertEquals(metricC.COVARIATE, "C");
         Assert.assertEquals(metricC.TOTAL_BASES, 5);
         Assert.assertEquals(metricC.ERROR_BASES, 1);
 
         final BaseErrorMetric metricG = Arrays.stream(metrics).map(a -> (BaseErrorMetric) a)
-                .filter(a -> a.COVARIATE.equals("G")).findFirst().orElse(null);
+                .filter(a -> a.COVARIATE.equals("G")).findFirst().get();
         metricA.calculateDerivedFields();
         Assert.assertEquals(metricG.COVARIATE, "G");
         Assert.assertEquals(metricG.TOTAL_BASES, 5);
         Assert.assertEquals(metricG.ERROR_BASES, 1);
 
         final BaseErrorMetric metricT = Arrays.stream(metrics).map(a -> (BaseErrorMetric) a)
-                .filter(a -> a.COVARIATE.equals("T")).findFirst().orElse(null);
+                .filter(a -> a.COVARIATE.equals("T")).findFirst().get();
         metricA.calculateDerivedFields();
         Assert.assertEquals(metricT.COVARIATE, "T");
         Assert.assertEquals(metricT.TOTAL_BASES, 11);

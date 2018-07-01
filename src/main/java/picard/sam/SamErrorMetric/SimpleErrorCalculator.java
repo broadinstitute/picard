@@ -33,7 +33,7 @@ import htsjdk.samtools.util.SequenceUtil;
  */
 public class SimpleErrorCalculator extends BaseErrorCalculator {
 
-    protected long nMismatchingBases = 0;
+    protected long nMismatchingBases;
 
     /**
      * The function by which new loci are "shown" to the calculator
@@ -60,6 +60,6 @@ public class SimpleErrorCalculator extends BaseErrorCalculator {
      **/
     @Override
     public BaseErrorMetric getMetric() {
-        return new BaseErrorMetric("", totalBases, nMismatchingBases);
+        return new BaseErrorMetric("", nBases, nMismatchingBases);
     }
 }

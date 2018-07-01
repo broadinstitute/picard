@@ -8,9 +8,6 @@ import picard.analysis.MergeableMetricBase;
  */
 public class ErrorMetric extends MergeableMetricBase {
 
-    public static void setPriorError(double priorError) {
-        PRIOR_ERROR = priorError;
-    }
 
     protected static double PRIOR_ERROR = 0.001;
     /**
@@ -33,6 +30,9 @@ public class ErrorMetric extends MergeableMetricBase {
     public ErrorMetric() {
     }
 
+    public static void setPriorError(double priorError) {
+        PRIOR_ERROR = priorError;
+    }
     /**
      * compute a qscore given the number of errors and the total number of bases.
      * Uses a false count of 1 int the numerator and 1/PRIOR_ERROR in the denominator.

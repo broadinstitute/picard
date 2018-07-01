@@ -105,7 +105,8 @@ public class BaseErrorCalculationTest {
         Assert.assertEquals(metric2.NUM_THREE_WAYS_DISAGREEMENT, 1L);
     }
 
-    @DataProvider( )
+    // DataProvider used in order to avoid timing the generation of the input file.
+    @DataProvider
     public Object[][] testOverlappingErrorCalculatorWithManyReadsData() throws IOException {
         final File temp = File.createTempFile("Overlapping", ".bam");
         temp.deleteOnExit();
@@ -118,18 +119,18 @@ public class BaseErrorCalculationTest {
             builder.getHeader().setSequenceDictionary(referenceSequenceFileWalker.getSequenceDictionary());
 
             for (int i = 0; i < 4000; i++) {
-                builder.addPair("Read" + String.valueOf(i), 0, 1, 1,
+                builder.addPair("Read" + i, 0, 1, 1,
                         false, false, "36M", "36M", true, false, 20);
             }
 
             try (final SAMFileWriter writer = new SAMFileWriterFactory()
+                    .setCompressionLevel(2)
                     .makeBAMWriter(builder.getHeader(), false, temp)) {
                 builder.forEach(writer::addAlignment);
             }
         }
         return new Object[][]{{temp}};
     }
-
 
     @Test(dataProvider = "testOverlappingErrorCalculatorWithManyReadsData", timeOut = 5000)
     public void testOverlappingErrorCalculatorWithManyReads(final File temp) throws IOException {

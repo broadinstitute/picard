@@ -29,16 +29,15 @@ import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
 
 public abstract class BaseErrorCalculator implements BaseCalculator {
-    long totalBases = 0;
+    long nBases;
 
     /**
      * the function by which new loci are "shown" to the calculator
      **/
     @Override
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
-        final byte readBase = recordAndOffset.getReadBase();
-        if (!SequenceUtil.isNoCall(readBase)) {
-            totalBases++;
+        if (!SequenceUtil.isNoCall(recordAndOffset.getReadBase())) {
+            nBases++;
         }
     }
 }

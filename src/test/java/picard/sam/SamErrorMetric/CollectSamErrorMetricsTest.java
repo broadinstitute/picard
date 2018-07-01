@@ -4,12 +4,12 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.QualityUtil;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,7 +19,7 @@ public class CollectSamErrorMetricsTest {
     private static final String TEST_DIR = "testdata/picard/sam/BamErrorMetrics";
 
     @BeforeClass
-    public void setup(){
+    public void setup() {
         ReadBaseStratification.setLongHomopolymer(6);
     }
 
@@ -74,7 +74,7 @@ public class CollectSamErrorMetricsTest {
     }
 
     @Test(dataProvider = "parseDirectiveData")
-    public void parseDirectiveGood(final String directive, final String extension) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    public void parseDirectiveGood(final String directive, final String extension) {
         parseDirective0(directive, extension);
 
     }
@@ -83,14 +83,14 @@ public class CollectSamErrorMetricsTest {
     void testStratifiersHaveDistinctSuffixes() {
         Set<String> suffixes = new HashSet<>();
 
-        for (final ReadBaseStratification.Stratifiers stratifier : ReadBaseStratification.Stratifiers.values()) {
+        for (final ReadBaseStratification.Stratifier stratifier : ReadBaseStratification.Stratifier.values()) {
             Assert.assertTrue(suffixes.add(stratifier.makeStratifier().getSuffix()), "found duplicate suffix: " +
                     stratifier.makeStratifier().getSuffix() + " for: " + stratifier.makeStratifier());
         }
     }
 
     @Test
-    void testAggregatorsHaveDistinctSuffixes() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    void testAggregatorsHaveDistinctSuffixes() {
         Set<String> suffixes = new HashSet<>();
 
         for (final ErrorType error : ErrorType.values()) {
@@ -110,13 +110,13 @@ public class CollectSamErrorMetricsTest {
     }
 
     @Test(dataProvider = "parseDirectiveBadData", expectedExceptions = IllegalArgumentException.class)
-    public void parseDirectiveBad(final String directive) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    public void parseDirectiveBad(final String directive) {
         parseDirective0(directive, null);
     }
 
-    public void parseDirective0(final String directive, final String extension) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    private static void parseDirective0(final String directive, final String extension) {
         final BaseErrorAggregation agg = CollectSamErrorMetrics.parseDirective(directive);
-        if (extension!=null) {
+        if (extension != null) {
             Assert.assertEquals(agg.getSuffix(), extension);
         }
     }
@@ -131,7 +131,7 @@ public class CollectSamErrorMetricsTest {
         final int priorQ = 30;
 
         //These magic numbers come from a separate implementation of the code in R.
-        return new Object[][] {
+        return new Object[][]{
 
                 // Note that soft clipped bases are not counted.
                 {".error_by_all", chrMReadsWithClips, priorQ,
@@ -251,8 +251,7 @@ public class CollectSamErrorMetricsTest {
 
     @Test(dataProvider = "OneCovariateErrorMetricsDataProvider")
     public void testOneCovariateErrorMetrics(final String errorSubscript, final File samFile, final int priorQ, BaseErrorMetric expectedMetric) {
-        final String input = samFile.toString();
-        final File referenceFile = new File(TEST_DIR,"chrM.reference.fasta");
+        final File referenceFile = new File(TEST_DIR, "chrM.reference.fasta");
         final File vcf = new File(TEST_DIR, "NIST.selected.vcf");
 
         final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "test");
@@ -261,7 +260,7 @@ public class CollectSamErrorMetricsTest {
         outputBaseFileName.deleteOnExit();
 
         final String[] args = {
-                "INPUT=" + input,
+                "INPUT=" + samFile,
                 "OUTPUT=" + outputBaseFileName,
                 "REFERENCE_SEQUENCE=" + referenceFile.getAbsolutePath(),
                 "ERROR_METRICS=" + "ERROR:TWO_BASE_PADDED_CONTEXT", // Not all covariates are included by default, but we still want to test them.
@@ -288,6 +287,10 @@ public class CollectSamErrorMetricsTest {
         Assert.assertEquals(metric, expectedMetric);
     }
 
+    @AfterClass()
+    public void cleanup() {
+        IOUtil.deleteDirectoryTree(OUTPUT_DATA_PATH);
+    }
 
     @DataProvider
     public Object[][] readCycleBinData() {
@@ -329,7 +332,7 @@ public class CollectSamErrorMetricsTest {
     public void testTooManyDirectives() {
         final File input = new File(TEST_DIR, "simpleSamWithBaseErrors1.sam");
 
-        final File referenceFile = new File(TEST_DIR,"chrM.reference.fasta");
+        final File referenceFile = new File(TEST_DIR, "chrM.reference.fasta");
         final File vcf = new File(TEST_DIR, "NIST.selected.vcf");
 
         final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "test");
@@ -337,7 +340,7 @@ public class CollectSamErrorMetricsTest {
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("ERROR");
-        for(ReadBaseStratification.Stratifiers stratifier : ReadBaseStratification.Stratifiers.values()) {
+        for (ReadBaseStratification.Stratifier stratifier : ReadBaseStratification.Stratifier.values()) {
             stringBuilder.append(":");
             stringBuilder.append(stratifier.toString());
         }

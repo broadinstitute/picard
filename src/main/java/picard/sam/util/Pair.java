@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package picard.sam.SamErrorMetric;
+package picard.sam.util;
 
 import java.util.Objects;
 
@@ -59,8 +59,6 @@ public class Pair<X extends Comparable<X>, Y extends Comparable<Y>> implements C
         // fast return in trivial case
         if (this == o) return true;
 
-        if (o == null) return false;
-
         if (!(o instanceof Pair)) return false;
 
         final Pair other = (Pair) o;
@@ -86,14 +84,18 @@ public class Pair<X extends Comparable<X>, Y extends Comparable<Y>> implements C
 
     @Override
     public int compareTo(final Pair<X, Y> o) {
-        if (this.left == null || o.left == null)
-            throw new NullPointerException("Found null objects in comparing " + toString() + " and " + o.toString());
+        final int leftCompare;
+        if (this.left == null && o.left == null) {
+            leftCompare = 0;
+        } else {
+            leftCompare = this.left.compareTo(o.left);
+        }
 
-        final int leftCompare = this.left.compareTo(o.left);
         if (leftCompare != 0) return leftCompare;
 
-        if (this.right == null || o.right == null)
-            throw new NullPointerException("Found null objects in comparing " + toString() + " and " + o.toString());
+        if (this.right == null && o.right == null) {
+            return 0;
+        }
 
         return this.right.compareTo(o.right);
     }

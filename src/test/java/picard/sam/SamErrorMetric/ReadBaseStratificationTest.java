@@ -7,6 +7,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.sam.util.Pair;
 
 /**
  * A slew of unit tests for the various stratifiers
@@ -173,13 +174,13 @@ public class ReadBaseStratificationTest {
                 {8, false, null, ReadBaseStratification.homoPolymerLengthStratifier},
 
                 {0, true, null, ReadBaseStratification.homopolymerStratifier},
-                {1, true, new Pair<>( 1, new Pair<>('C', 'A')), ReadBaseStratification.homopolymerStratifier},
-                {2, true, new Pair<>( 1, new Pair<>('A', 'T')), ReadBaseStratification.homopolymerStratifier},
-                {3, true, new Pair<>( 1, new Pair<>('T', 'G')), ReadBaseStratification.homopolymerStratifier},
-                {4, true, new Pair<>( 1, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
-                {5, true, new Pair<>( 2, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
-                {6, true, new Pair<>( 3, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
-                {7, true, new Pair<>( 4, new Pair<>('G', 'A')), ReadBaseStratification.homopolymerStratifier},
+                {1, true, new Pair<>(1, new Pair<>('C', 'A')), ReadBaseStratification.homopolymerStratifier},
+                {2, true, new Pair<>(1, new Pair<>('A', 'T')), ReadBaseStratification.homopolymerStratifier},
+                {3, true, new Pair<>(1, new Pair<>('T', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {4, true, new Pair<>(1, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {5, true, new Pair<>(2, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {6, true, new Pair<>(3, new Pair<>('G', 'G')), ReadBaseStratification.homopolymerStratifier},
+                {7, true, new Pair<>(4, new Pair<>('G', 'A')), ReadBaseStratification.homopolymerStratifier},
                 {8, true, null, ReadBaseStratification.homopolymerStratifier},
 
                 {-1, false, null, ReadBaseStratification.homopolymerStratifier},
@@ -300,18 +301,18 @@ public class ReadBaseStratificationTest {
 
                 //in order to curb huge insert lengths that arise from chimeric reads,
                 //the insert-length stratifier caps the insert length by 10 * read-length
-                {0, true, Math.min(100,10*8), ReadBaseStratification.insertLengthStratifier},
+                {0, true, Math.min(100, 10 * 8), ReadBaseStratification.insertLengthStratifier},
 
-                {0, true, (byte)'A' , ReadBaseStratification.baseQualityStratifier},
-                {1, true, (byte)'B' , ReadBaseStratification.baseQualityStratifier},
-                {2, true, (byte)'C' , ReadBaseStratification.baseQualityStratifier},
-                {3, true, (byte)'D' , ReadBaseStratification.baseQualityStratifier},
-                {4, true, (byte)'E' , ReadBaseStratification.baseQualityStratifier},
-                {5, true, (byte)'F' , ReadBaseStratification.baseQualityStratifier},
-                {6, true, (byte)'G' , ReadBaseStratification.baseQualityStratifier},
-                {7, true, (byte)'H' , ReadBaseStratification.baseQualityStratifier},
+                {0, true, (byte) 'A', ReadBaseStratification.baseQualityStratifier},
+                {1, true, (byte) 'B', ReadBaseStratification.baseQualityStratifier},
+                {2, true, (byte) 'C', ReadBaseStratification.baseQualityStratifier},
+                {3, true, (byte) 'D', ReadBaseStratification.baseQualityStratifier},
+                {4, true, (byte) 'E', ReadBaseStratification.baseQualityStratifier},
+                {5, true, (byte) 'F', ReadBaseStratification.baseQualityStratifier},
+                {6, true, (byte) 'G', ReadBaseStratification.baseQualityStratifier},
+                {7, true, (byte) 'H', ReadBaseStratification.baseQualityStratifier},
 
-                {0, true, 40 , ReadBaseStratification.mappingQualityStratifier},
+                {0, true, 40, ReadBaseStratification.mappingQualityStratifier},
         };
     }
 
@@ -423,8 +424,8 @@ public class ReadBaseStratificationTest {
         samFileHeader.addSequence(samSequenceRecord);
         final SAMRecord samRecord = new SAMRecord(samFileHeader);
 
-        final String refString="GGT";
-        final String recString="GGa";
+        final String refString = "GGT";
+        final String recString = "GGa";
         samRecord.setReadBases(recString.getBytes());
         samRecord.setReadUnmappedFlag(false);
         samRecord.setReadNegativeStrandFlag(false);

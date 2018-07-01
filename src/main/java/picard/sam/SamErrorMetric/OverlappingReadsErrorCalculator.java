@@ -43,12 +43,12 @@ import java.util.Set;
  * but the other does not which indicates that there might have been a sequencing error in that read.
  */
 public class OverlappingReadsErrorCalculator extends BaseErrorCalculator {
-    private long nBothDisagreeWithReference = 0;
-    private long nDisagreeWithRefAndMate = 0;
-    private long nThreeWaysDisagreement = 0;
-    private long nTotalBasesWithOverlappingReads = 0;
+    private long nBothDisagreeWithReference;
+    private long nDisagreeWithRefAndMate;
+    private long nThreeWaysDisagreement;
+    private long nTotalBasesWithOverlappingReads;
 
-    private static int currentPosition = 0;
+    private static int currentPosition;
     private static final Map<String, Set<SamLocusIterator.RecordAndOffset>> readNameSets = new CollectionUtil.DefaultingMap<>(s -> new HashSet<>(), true);
 
     private static void updateReadNameSet(final SamLocusIterator.LocusInfo locusInfo) {
@@ -117,7 +117,7 @@ public class OverlappingReadsErrorCalculator extends BaseErrorCalculator {
      **/
     @Override
     public OverlappingErrorMetric getMetric() {
-        return new OverlappingErrorMetric("", totalBases, nTotalBasesWithOverlappingReads, nDisagreeWithRefAndMate,
+        return new OverlappingErrorMetric("", nBases, nTotalBasesWithOverlappingReads, nDisagreeWithRefAndMate,
                 nBothDisagreeWithReference, nThreeWaysDisagreement);
     }
 
@@ -141,6 +141,7 @@ public class OverlappingReadsErrorCalculator extends BaseErrorCalculator {
                 // read1 mate position must agree with read2's position
                 read1.getMateAlignmentStart() == read2.getAlignmentStart() &&
                 // read1 mate reference must agree with read2's reference
-                read1.getMateReferenceIndex() == read2.getReferenceIndex());
+                read1.getMateReferenceIndex().equals(read2.getReferenceIndex())
+        );
     }
 }

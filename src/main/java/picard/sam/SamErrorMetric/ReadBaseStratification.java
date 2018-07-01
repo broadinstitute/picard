@@ -33,6 +33,7 @@ import htsjdk.samtools.util.SamLocusIterator.*;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import picard.sam.markduplicates.util.OpticalDuplicateFinder;
+import picard.sam.util.Pair;
 import picard.sam.util.PhysicalLocation;
 import picard.sam.util.PhysicalLocationInt;
 
@@ -445,9 +446,8 @@ public class ReadBaseStratification {
             // not including the current base.
             if (recordAndOffset.getReadBase() != locusInfo.getReferenceBase()) {
                 return numberMismatches - 1;
-            } else {
-                return numberMismatches;
             }
+            return numberMismatches;
         }
 
         @Override
@@ -464,12 +464,10 @@ public class ReadBaseStratification {
 
         @Override
         public Integer stratify(final SAMRecord sam) {
-            final int tile;
             try {
-                PhysicalLocation location = new PhysicalLocationInt();
+                final PhysicalLocation location = new PhysicalLocationInt();
                 opticalDuplicateFinder.addLocationInformation(sam.getReadName(), location);
-                tile = location.getTile();
-                return tile;
+                return (int) location.getTile();
             } catch (final IllegalArgumentException ignored) {
                 return null;
             }
@@ -642,11 +640,11 @@ public class ReadBaseStratification {
      * <p>
      * To use this given a String 'str':
      * <p>
-     * Stratifiers.valueOf(str).makeStratifier()
+     * Stratifier.valueOf(str).makeStratifier()
      * <p>
      * This is used in {@link CollectSamErrorMetrics} to convert an input argument to a fully functional {@link BaseErrorAggregation} object.
      */
-    enum Stratifiers implements CommandLineParser.ClpEnum {
+    enum Stratifier implements CommandLineParser.ClpEnum {
         ALL(() -> nonStratifier, "Puts all bases in the same stratum."),
         GC_CONTENT(() -> gcContentStratifier, "Stratifies bases according to the gc content of their read."),
         READ_ORDINALITY(() -> readOrdinalityStratifier, "Stratifies bases according to their read ordinality (i.e. first or second)."),
@@ -682,7 +680,7 @@ public class ReadBaseStratification {
 
         private final Supplier<RecordAndOffsetStratifier<?>> stratifier;
 
-        Stratifiers(final Supplier<RecordAndOffsetStratifier<?>> stratifier, final String docString) {
+        Stratifier(final Supplier<RecordAndOffsetStratifier<?>> stratifier, final String docString) {
             this.stratifier = stratifier;
             this.docString = docString;
         }

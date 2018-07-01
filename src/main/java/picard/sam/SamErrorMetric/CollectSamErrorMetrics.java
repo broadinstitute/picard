@@ -128,11 +128,11 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             "OVERLAPPING_ERROR:READ_ORDINALITY:HOMOPOLYMER",
             "OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT");
 
-    @Argument(doc = "A fake argument used to show what the options of ERROR (in ERROR_METRICS) are.", optional = true)
-    public ErrorType ERRORS_VALUE;
+    @Argument(doc = "A fake argument used to show the options of ERROR (in ERROR_METRICS).", optional = true)
+    public ErrorType ERROR_VALUE;
 
-    @Argument(doc = "A fake argument used to show what the options of STRATIFIER (in ERROR_METRICS) are.", optional = true)
-    public ReadBaseStratification.Stratifiers STRATIFIER_VALUE;
+    @Argument(doc = "A fake argument used to show the options of STRATIFIER (in ERROR_METRICS).", optional = true)
+    public ReadBaseStratification.Stratifier STRATIFIER_VALUE;
 
     @Argument(shortName = "V", doc = "VCF of known variation for sample. program will skip over polymorphic sites in this VCF and " +
             "avoid collecting data on these loci.")
@@ -147,17 +147,17 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     @Argument(shortName = "BQ", doc = "Minimum base quality to include base.")
     public int MIN_BASE_Q = 20;
 
-    @Argument(shortName = "PE", doc = "The prior error, in phred-scale (used for calculating empirical error rates)",
+    @Argument(shortName = "PE", doc = "The prior error, in phred-scale (used for calculating empirical error rates).",
             optional = true)
     public int PRIOR_Q = 30;
 
-    @Argument(shortName = "MAX", doc = "Maximum number of loci to process (or unlimited if 0)", optional = true)
+    @Argument(shortName = "MAX", doc = "Maximum number of loci to process (or unlimited if 0).", optional = true)
     public long MAX_LOCI;
 
     @Argument(shortName = "LH", doc = "Shortest homopolymer which is considered long.  Used by the BINNED_HOMOPOLYMER stratifier.", optional = true)
     public int LONG_HOMOPOLYMER = 6;
 
-    @Argument(shortName = "P", doc = "The probability of selecting a locus for analysis (for downsampling)", optional = true)
+    @Argument(shortName = "P", doc = "The probability of selecting a locus for analysis (for downsampling).", optional = true)
     public double PROBABILITY = 1;
 
     @Override
@@ -169,8 +169,8 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         List<String> errors = new ArrayList<>();
 
-        if (ERRORS_VALUE != null) {
-            errors.add("ERRORS_VALUE is a fake argument that is only there to show what are the different Error aggregation options. Please use it within the ERROR_METRICS argument.");
+        if (ERROR_VALUE != null) {
+            errors.add("ERROR_VALUE is a fake argument that is only there to show what are the different Error aggregation options. Please use it within the ERROR_METRICS argument.");
         }
 
         if (STRATIFIER_VALUE != null) {
@@ -211,7 +211,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         }
     }
 
-    private static final int MAX_DIRECTIVES = ReadBaseStratification.Stratifiers.values().length + 1;
+    private static final int MAX_DIRECTIVES = ReadBaseStratification.Stratifier.values().length + 1;
     private static final Log log = Log.getInstance(CollectSamErrorMetrics.class);
 
     @Override
@@ -441,7 +441,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * {@link BaseCalculator} and the {@link ReadBaseStratification.CollectionStratifier CollectionStratifier} constructed from the various
      * individual stratifiers.
      * The conversion from string to object is performed by the enums
-     * {@link ErrorType Errors} and {@link ReadBaseStratification.Stratifiers Stratifiers}.
+     * {@link ErrorType Errors} and {@link ReadBaseStratification.Stratifier Stratifier}.
      *
      * @param stratifierDirective The string directive describing the error type and collection of stratifiers to use
      * @return The appropriate {@link BaseErrorAggregation}.
@@ -461,8 +461,8 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         // make a linkedList due to removal and addition operations below
         final List<ReadBaseStratification.RecordAndOffsetStratifier<?>> stratifiers = Arrays.stream(directiveUnits, 1, numberOfTerms)
                 .map(String::trim)
-                .map(ReadBaseStratification.Stratifiers::valueOf)
-                .map(ReadBaseStratification.Stratifiers::makeStratifier)
+                .map(ReadBaseStratification.Stratifier::valueOf)
+                .map(ReadBaseStratification.Stratifier::makeStratifier)
                 .collect(Collectors.toList());
 
         final ReadBaseStratification.RecordAndOffsetStratifier jointStratifier;
