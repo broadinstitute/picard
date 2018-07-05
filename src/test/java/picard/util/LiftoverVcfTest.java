@@ -1181,15 +1181,17 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Path rejectOutput = Files.createTempFile("tmpreject", ".vcf");
         rejectOutput.toFile().deleteOnExit();
         final Path input = TEST_DATA_PATH.toPath().resolve("testLiftoverBiallelicIndels.vcf");
-        final Path referenceCopy = Files.createTempFile("ref", ".fasta");
+        final Path tmpCopyDir = Files.createTempDirectory("copy");
+        tmpCopyDir.toFile().deleteOnExit();
+        final Path referenceCopy = tmpCopyDir.resolve("refCopy.fasta");
         referenceCopy.toFile().deleteOnExit();
-        Files.copy(REFERENCE_FILE.toPath(), referenceCopy, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(REFERENCE_FILE.toPath(), referenceCopy);
         final String[] args = new String[]{
-                "INPUT=" + input.toString(),
-                "OUTPUT=" + liftOutput.toString(),
-                "REJECT=" + rejectOutput.toString(),
+                "INPUT=" + input,
+                "OUTPUT=" + liftOutput,
+                "REJECT=" + rejectOutput,
                 "CHAIN=" + CHAIN_FILE,
-                "REFERENCE_SEQUENCE=" + referenceCopy.toString(),
+                "REFERENCE_SEQUENCE=" + referenceCopy,
         };
         Assert.assertEquals(runPicardCommandLine(args), 1);
     }
@@ -1201,20 +1203,22 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Path rejectOutput = Files.createTempFile("tmpreject", ".vcf");
         rejectOutput.toFile().deleteOnExit();
         final Path input = TEST_DATA_PATH.toPath().resolve("testLiftoverBiallelicIndels.vcf");
-        final Path referenceCopy = Files.createTempFile("ref", ".fasta");
+        final Path tmpCopyDir = Files.createTempDirectory("copy");
+        tmpCopyDir.toFile().deleteOnExit();
+        final Path referenceCopy = tmpCopyDir.resolve("refCopy.fasta");
         referenceCopy.toFile().deleteOnExit();
-        Files.copy(REFERENCE_FILE.toPath(), referenceCopy, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(REFERENCE_FILE.toPath(), referenceCopy);
         final Path dictCopy = referenceCopy.resolveSibling(referenceCopy.toFile().getName().replaceAll("fasta$", "dict"));
+        dictCopy.toFile().deleteOnExit();
         final Path dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replaceAll("fasta$", "dict"));
         Files.copy(dictionary, dictCopy);
-        dictCopy.toFile().deleteOnExit();
         dictCopy.toFile().setReadable(false);
         final String[] args = new String[]{
-                "INPUT=" + input.toString(),
-                "OUTPUT=" + liftOutput.toString(),
-                "REJECT=" + rejectOutput.toString(),
+                "INPUT=" + input,
+                "OUTPUT=" + liftOutput,
+                "REJECT=" + rejectOutput,
                 "CHAIN=" + CHAIN_FILE,
-                "REFERENCE_SEQUENCE=" + referenceCopy.toString(),
+                "REFERENCE_SEQUENCE=" + referenceCopy,
         };
         runPicardCommandLine(args);
     }

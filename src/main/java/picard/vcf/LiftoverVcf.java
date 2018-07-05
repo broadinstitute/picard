@@ -286,7 +286,7 @@ public class LiftoverVcf extends CommandLineProgram {
         final Map<String, ReferenceSequence> refSeqs = new HashMap<>();
         // check if sequence dictionary exists
         if (walker.getSequenceDictionary() == null) {
-            log.error("Reference " + REFERENCE_SEQUENCE.getAbsolutePath() + " must have associated Dictionary .dict file in same directory");
+            log.error("Reference " + REFERENCE_SEQUENCE.getAbsolutePath() + " must have an associated Dictionary .dict file in the same directory.");
             return 1;
         }
         for (final SAMSequenceRecord rec : walker.getSequenceDictionary().getSequences()) {
