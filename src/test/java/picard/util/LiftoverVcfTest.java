@@ -1194,7 +1194,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 1);
     }
 
-    @Test(expectedExceptions = SAMException.class)
+    @Test(expectedExceptions = SAMException.class, expectedExceptionsMessageRegExp = "File exists but is not readable:.*")
     public void testUnreadableDictionary() throws IOException {
         final Path liftOutput = Files.createTempFile("tmpouput", ".vcf");
         liftOutput.toFile().deleteOnExit();
@@ -1206,7 +1206,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         Files.copy(REFERENCE_FILE.toPath(), referenceCopy, StandardCopyOption.REPLACE_EXISTING);
         final Path dictCopy = referenceCopy.resolveSibling(referenceCopy.toFile().getName().replaceAll("fasta$", "dict"));
         final Path dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replaceAll("fasta$", "dict"));
-        Files.copy(dictionary, dictCopy, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(dictionary, dictCopy);
         dictCopy.toFile().deleteOnExit();
         dictCopy.toFile().setReadable(false);
         final String[] args = new String[]{
