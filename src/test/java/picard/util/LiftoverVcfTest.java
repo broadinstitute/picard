@@ -1201,19 +1201,21 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Path rejectOutput = Files.createTempFile("tmpreject", ".vcf");
         rejectOutput.toFile().deleteOnExit();
         final Path input = TEST_DATA_PATH.toPath().resolve("testLiftoverBiallelicIndels.vcf");
+        final Path referenceCopy = Files.createTempFile("ref", ".fasta");
+        referenceCopy.toFile().deleteOnExit();
+        Files.copy(REFERENCE_FILE.toPath(), referenceCopy, StandardCopyOption.REPLACE_EXISTING);
+        final Path dictCopy = referenceCopy.resolveSibling(referenceCopy.toFile().getName().replaceAll("fasta$", "dict"));
+        final Path dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replaceAll("fasta$", "dict"));
+        Files.copy(dictionary, dictCopy, StandardCopyOption.REPLACE_EXISTING);
+        dictCopy.toFile().deleteOnExit();
+        dictCopy.toFile().setReadable(false);
         final String[] args = new String[]{
                 "INPUT=" + input.toString(),
                 "OUTPUT=" + liftOutput.toString(),
                 "REJECT=" + rejectOutput.toString(),
                 "CHAIN=" + CHAIN_FILE,
-                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "REFERENCE_SEQUENCE=" + referenceCopy.toString(),
         };
-        final Path dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replaceAll("fasta$", "dict"));
-        dictionary.toFile().setReadable(false);
-        try {
-            runPicardCommandLine(args);
-        } finally {// return dictionary to readable
-            dictionary.toFile().setReadable(true);
-        }
+        runPicardCommandLine(args);
     }
 }
