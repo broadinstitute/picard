@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.*;
 import java.nio.file.Path;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 /**
  * Test class for LiftoverVcf.
  * <p>
@@ -1180,21 +1181,17 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Path rejectOutput = Files.createTempFile("tmpreject", ".vcf");
         rejectOutput.toFile().deleteOnExit();
         final Path input = TEST_DATA_PATH.toPath().resolve("testLiftoverBiallelicIndels.vcf");
+        final Path referenceCopy = Files.createTempFile("ref", ".fasta");
+        referenceCopy.toFile().deleteOnExit();
+        Files.copy(REFERENCE_FILE.toPath(), referenceCopy, StandardCopyOption.REPLACE_EXISTING);
         final String[] args = new String[]{
                 "INPUT=" + input.toString(),
                 "OUTPUT=" + liftOutput.toString(),
                 "REJECT=" + rejectOutput.toString(),
                 "CHAIN=" + CHAIN_FILE,
-                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "REFERENCE_SEQUENCE=" + referenceCopy.toString(),
         };
-        Path dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replace("fasta", "dict"));
-        dictionary.toFile().renameTo(new File(dictionary.toString().replace("dict", "dict.tmp")));
-        dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replace("fasta", "dict.tmp"));
-        try {
-            Assert.assertEquals(runPicardCommandLine(args), 1);
-        } finally {//return dictionary name to previous
-            dictionary.toFile().renameTo(new File(dictionary.toString().replace("dict.tmp", "dict")));
-        }
+        Assert.assertEquals(runPicardCommandLine(args), 1);
     }
 
     @Test(expectedExceptions = SAMException.class)
@@ -1211,11 +1208,11 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 "CHAIN=" + CHAIN_FILE,
                 "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
         };
-        final Path dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replace("fasta", "dict"));
+        final Path dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replaceAll("fasta$", "dict"));
         dictionary.toFile().setReadable(false);
         try {
             runPicardCommandLine(args);
-        } finally {//return dictionary to readable
+        } finally {// return dictionary to readable
             dictionary.toFile().setReadable(true);
         }
     }
