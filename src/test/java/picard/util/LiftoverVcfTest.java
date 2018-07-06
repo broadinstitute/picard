@@ -9,10 +9,12 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.samtools.SAMException;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.vcf.LiftoverVcf;
 import picard.vcf.VcfTestUtils;
@@ -21,7 +23,9 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-
+import java.nio.file.Path;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 /**
  * Test class for LiftoverVcf.
  * <p>
@@ -1168,5 +1172,54 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             source.getAlleles().forEach(a -> resultAlleles.add(a.getDisplayString()));
             Assert.assertEquals(resultAlleles, result.getAttributeAsStringList(LiftoverVcf.ORIGINAL_ALLELES, null));
         }
+    }
+
+    @Test()
+    public void testNoDictionary() throws IOException {
+        final Path liftOutput = Files.createTempFile("tmpouput", ".vcf");
+        liftOutput.toFile().deleteOnExit();
+        final Path rejectOutput = Files.createTempFile("tmpreject", ".vcf");
+        rejectOutput.toFile().deleteOnExit();
+        final Path input = TEST_DATA_PATH.toPath().resolve("testLiftoverBiallelicIndels.vcf");
+        final Path tmpCopyDir = Files.createTempDirectory("copy");
+        tmpCopyDir.toFile().deleteOnExit();
+        final Path referenceCopy = tmpCopyDir.resolve("refCopy.fasta");
+        referenceCopy.toFile().deleteOnExit();
+        Files.copy(REFERENCE_FILE.toPath(), referenceCopy);
+        final String[] args = new String[]{
+                "INPUT=" + input,
+                "OUTPUT=" + liftOutput,
+                "REJECT=" + rejectOutput,
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + referenceCopy,
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 1);
+    }
+
+    @Test(expectedExceptions = SAMException.class, expectedExceptionsMessageRegExp = "File exists but is not readable:.*")
+    public void testUnreadableDictionary() throws IOException {
+        final Path liftOutput = Files.createTempFile("tmpouput", ".vcf");
+        liftOutput.toFile().deleteOnExit();
+        final Path rejectOutput = Files.createTempFile("tmpreject", ".vcf");
+        rejectOutput.toFile().deleteOnExit();
+        final Path input = TEST_DATA_PATH.toPath().resolve("testLiftoverBiallelicIndels.vcf");
+        final Path tmpCopyDir = Files.createTempDirectory("copy");
+        tmpCopyDir.toFile().deleteOnExit();
+        final Path referenceCopy = tmpCopyDir.resolve("refCopy.fasta");
+        referenceCopy.toFile().deleteOnExit();
+        Files.copy(REFERENCE_FILE.toPath(), referenceCopy);
+        final Path dictCopy = referenceCopy.resolveSibling(referenceCopy.toFile().getName().replaceAll("fasta$", "dict"));
+        dictCopy.toFile().deleteOnExit();
+        final Path dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replaceAll("fasta$", "dict"));
+        Files.copy(dictionary, dictCopy);
+        dictCopy.toFile().setReadable(false);
+        final String[] args = new String[]{
+                "INPUT=" + input,
+                "OUTPUT=" + liftOutput,
+                "REJECT=" + rejectOutput,
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + referenceCopy,
+        };
+        runPicardCommandLine(args);
     }
 }
