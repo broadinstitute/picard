@@ -92,8 +92,8 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
         wrappedIterator.close();
 
         // Calculate derived fields for UMI metrics over each library
-        for (final Map.Entry<String, UmiMetrics> metric : umiMetricsMap.entrySet()) {
-           metric.getValue().calculateDerivedFields();
+        for (final UmiMetrics metrics : umiMetricsMap.values()) {
+            metrics.calculateDerivedFields();
         }
     }
 
@@ -136,21 +136,16 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
 
         // Get the UMI metrics for the library of this duplicate set, creating a new one if necessary.
         final String library = set.getRepresentative().getReadGroup().getLibrary();
-        UmiMetrics metrics = umiMetricsMap.get(library);
-        if (metrics == null) {
-            metrics = new UmiMetrics();
-            metrics.LIBRARY = library;
-            umiMetricsMap.put(library, metrics);
-        }
+        UmiMetrics metrics = umiMetricsMap.computeIfAbsent(library, UmiMetrics::new);
 
         final List<DuplicateSet> duplicateSets = umiGraph.joinUmisIntoDuplicateSets(maxEditDistanceToJoin);
 
         // Collect statistics on numbers of observed and inferred UMIs
         // and total numbers of observed and inferred UMIs
         for (final DuplicateSet ds : duplicateSets) {
-             final List<SAMRecord> records = ds.getRecords();
-             final SAMRecord representativeRead = ds.getRepresentative();
-             final String inferredUmi = representativeRead.getStringAttribute(inferredUmiTag);
+            final List<SAMRecord> records = ds.getRecords();
+            final SAMRecord representativeRead = ds.getRepresentative();
+            final String inferredUmi = representativeRead.getStringAttribute(inferredUmiTag);
 
             for (final SAMRecord rec : records) {
                 final String currentUmi = UmiUtil.getSanitizedUMI(rec, umiTag);

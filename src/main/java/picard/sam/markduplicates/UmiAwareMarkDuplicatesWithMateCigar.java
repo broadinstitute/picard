@@ -142,8 +142,8 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
 
         // Add results in metrics to the metricsFile
         final MetricsFile<UmiMetrics, Double> metricsFile = getMetricsFile();
-        for (final Map.Entry<String, UmiMetrics> metric : metrics.entrySet()) {
-            metricsFile.addMetric(metric.getValue());
+        for (final UmiMetrics metric : metrics.values()) {
+            metricsFile.addMetric(metric);
         }
 
         metricsFile.write(UMI_METRICS_FILE);

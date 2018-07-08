@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.QualityUtil;
+import picard.PicardException;
 import picard.util.MathUtil;
 
 /**
@@ -42,7 +43,7 @@ public class UmiMetrics extends MetricBase {
     private long totalObservedUmisWithoutNs = 0;
 
     /** Library that was used to generate UMI data. */
-    public String LIBRARY = null;
+    public String LIBRARY;
 
     /** Number of bases in each UMI */
     public double MEAN_UMI_LENGTH = 0.0;
@@ -83,7 +84,11 @@ public class UmiMetrics extends MetricBase {
     /** The percentage of reads that contain an UMI that contains at least one N */
     public double PCT_UMI_WITH_N = 0.0;
 
-    public UmiMetrics() {}
+    public UmiMetrics() { }
+
+    public UmiMetrics(final String library) {
+        LIBRARY = library;
+    }
 
     public UmiMetrics(final String library, final double length, final int observedUniqueUmis, final int inferredUniqueUmis,
                       final int observedBaseErrors, final int duplicateSetsWithoutUmi,
