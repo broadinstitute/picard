@@ -175,13 +175,6 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
     @Test(dataProvider = "readNameData")
     public void testOpticalDuplicateClusterSamePositionNoOpticalDuplicates(final String readName1, final String readName2) {
 
-        // Currently UmiAwareMarkDuplicatesWithMateCigarTest fails this test due to
-        // a small difference in the selection of representative read. To fix this
-        // a change is required in htsjdk.samtools.DuplicateScoringStrategy.compare
-     //   if (this instanceof UmiAwareMarkDuplicatesWithMateCigarTest) return;
-     //   if (this instanceof MarkDuplicatesWithMateCigarTest) return;
-    //    if (this instanceof SimpleMarkDuplicatesWithMateCigarTest) return;
-
         final ReadNameParser parser = new ReadNameParser();
 
         final PhysicalLocationInt position1 = new PhysicalLocationInt();
