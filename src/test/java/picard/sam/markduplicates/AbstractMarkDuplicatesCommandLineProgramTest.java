@@ -165,11 +165,22 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
     @DataProvider
     Object[][] readNameData(){
         return new Object[][]{
-                {"RUNID:7:1203:2886:16756", "RUNID:7:1203:2884:16834"},
-                {"RUNID:7:1204:2886:16756", "RUNID:7:1204:2884:16834"},
-                {"RUNID:7:1205:2886:16756", "RUNID:7:1205:2884:16834"},
-                {"RUNID:7:1206:2886:16756", "RUNID:7:1206:2884:16834"},
-                {"RUNID:7:1207:2886:16756", "RUNID:7:1207:2884:16834"},
+                {"RUNID:7:1203:2886:16756", "RUNID:7:1205:3886:16756"},
+                {"RUNID:7:1204:2886:16756", "RUNID:7:1205:3886:16756"},
+                {"RUNID:7:1205:2886:16756", "RUNID:7:1205:3886:16756"},
+                {"RUNID:7:1206:2886:16756", "RUNID:7:1205:3886:16756"},
+                {"RUNID:7:1207:2886:16756", "RUNID:7:1205:3886:16756"},
+
+                {"RUNID:7:1203:2886:16756", "RUNID:7:1203:4886:26756"},
+                {"RUNID:7:1203:3886:16756", "RUNID:7:1203:4886:26756"},
+                {"RUNID:7:1203:4886:16756", "RUNID:7:1203:4886:26756"},
+                {"RUNID:7:1203:5886:16756", "RUNID:7:1203:4886:26756"},
+                {"RUNID:7:1203:6886:16756", "RUNID:7:1203:4886:26756"},
+
+                {"RUNID:7:1203:2886:34756", "RUNID:7:1203:2886:36756"},
+                {"RUNID:7:1203:2886:35756", "RUNID:7:1203:2886:36756"},
+                {"RUNID:7:1203:2886:37756", "RUNID:7:1203:2886:36756"},
+                {"RUNID:7:1203:2886:38756", "RUNID:7:1203:2886:36756"},
         };
     }
     @Test(dataProvider = "readNameData")
@@ -186,7 +197,17 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(101);
         tester.setExpectedOpticalDuplicate(0);
-        final boolean isDuplicate = position1.hashCode() < position2.hashCode();
+
+        int compare = position1.tile - position2.tile;
+        if (compare == 0) {
+            compare = position1.x - position2.x;
+        }
+
+        if (compare == 0) {
+            compare = position1.y - position2.y;
+        }
+
+        final boolean isDuplicate = compare < 0;
 
         tester.addMatePair(readName1, 1,485253, 485253, false, false, !isDuplicate, !isDuplicate, "42M59S", "59S42M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
         tester.addMatePair(readName2, 1,485253, 485253, false, false, isDuplicate, isDuplicate, "59S42M", "42M59S", true, false, false, false, false, DEFAULT_BASE_QUALITY);

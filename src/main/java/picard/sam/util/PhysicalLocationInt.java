@@ -2,6 +2,8 @@ package picard.sam.util;
 
 import picard.PicardException;
 
+import java.util.Objects;
+
 /**
  * Small class that provides access to the physical location information about a cluster.
  * All values should be defaulted to -1 if unavailable.  Tile should only allow
@@ -35,10 +37,19 @@ public class PhysicalLocationInt implements PhysicalLocation {
     public void setLibraryId(final short libraryId) { throw new PicardException("Not Implemented"); }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PhysicalLocationInt that = (PhysicalLocationInt) o;
+
+        if (tile != that.tile) return false;
+        if (x != that.x) return false;
+        return y == that.y;
+    }
+
+    @Override
     public int hashCode() {
-        int result = (int) tile;
-        result = 31 * result + x;
-        result = 31 * result + y;
-        return result;
+        return Objects.hash( tile, x, y);
     }
 }

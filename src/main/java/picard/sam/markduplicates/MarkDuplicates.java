@@ -934,8 +934,17 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 compareDifference = lhs.read2Coordinate - rhs.read2Coordinate;
             }
 
-            if (compareDifference == 0)
-                compareDifference = lhs.hashCode() - rhs.hashCode();
+            if (compareDifference == 0) {
+                compareDifference = lhs.getTile() - rhs.getTile();
+            }
+
+            if (compareDifference == 0) {
+                compareDifference = lhs.getX() - rhs.getX();
+            }
+
+            if (compareDifference == 0) {
+                compareDifference = lhs.getY() - rhs.getY();
+            }
 
             // The following is arbitrary (especially given the dependence above on the hash) and is only
             // there for completeness. Other implementations may chose to forgo this tiebreak if they do have
