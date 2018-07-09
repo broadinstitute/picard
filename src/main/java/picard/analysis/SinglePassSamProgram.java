@@ -56,7 +56,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
 
-    @Argument(shortName = "O", doc = "File to write the output to.")
+    @Argument(shortName = "O", doc = "File to write the output to.", optional = true)
     public File OUTPUT;
 
     @Argument(doc = "If true (default), then the sort order in the header file will be ignored.",

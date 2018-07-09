@@ -13,6 +13,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.metrics.MultilevelMetrics;
 import picard.sam.SortSam;
 import static picard.analysis.GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector.*;
 
@@ -33,11 +34,62 @@ import java.util.Random;
 public class CollectMultipleMetricsTest extends CommandLineProgramTest {
 
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam");
+    private static final File TEST_DATA_DIR_RRBS = new File("testdata/picard/metrics");
 
     public String getCommandLineProgramName() {
         return CollectMultipleMetrics.class.getSimpleName();
     }
 
+    @Test
+    public void testCollectRrbsMetrics() throws IOException {
+        final File input = new File(TEST_DATA_DIR_RRBS, "chrMReads.sam");
+        final File reference = new File(TEST_DATA_DIR_RRBS, "chrM.reference.fasta");
+        final File outfile = File.createTempFile("crmt.", ".rrbs_summary_metrics");
+        outfile.deleteOnExit();
+
+        final File summary = new File(outfile + ".rrbc.summary_metrics");
+        final File detail = new File(outfile + ".rrbc.detail_metrics");
+        final File pdf = new File(outfile + ".rrbc.pdf");
+        summary.deleteOnExit();
+        detail.deleteOnExit();
+        pdf.deleteOnExit();
+
+        final String[] args = new String[] {
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+                "PROGRAM=" + null,
+                "PROGRAM=" + CollectMultipleMetrics.Program.CollectRrbsMetrics.name()};
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final RrbsSummaryMetrics metrics = getMultilevelMetrics(summary);
+        Assert.assertEquals(metrics.READS_ALIGNED.intValue(), 5);
+        Assert.assertEquals(metrics.NON_CPG_BASES.intValue(), 15);
+        Assert.assertEquals(metrics.NON_CPG_CONVERTED_BASES.intValue(), 11);
+        Assert.assertEquals(metrics.PCT_NON_CPG_BASES_CONVERTED, 0.733333);
+        Assert.assertEquals(metrics.CPG_BASES_SEEN.intValue(), 5);
+        Assert.assertEquals(metrics.CPG_BASES_CONVERTED.intValue(), 1);
+        Assert.assertEquals(metrics.PCT_CPG_BASES_CONVERTED, 0.2);
+        Assert.assertEquals(metrics.MEAN_CPG_COVERAGE, 1.666667);
+        Assert.assertEquals(metrics.MEDIAN_CPG_COVERAGE.intValue(), 2);
+        Assert.assertEquals(metrics.READS_WITH_NO_CPG.intValue(), 1);
+        Assert.assertEquals(metrics.READS_IGNORED_SHORT.intValue(), 1);
+        Assert.assertEquals(metrics.READS_IGNORED_MISMATCHES.intValue(), 1);
+
+        final RrbsCpgDetailMetrics metricsCpg = getMultilevelMetrics(detail);
+        Assert.assertEquals(metricsCpg.SEQUENCE_NAME, "chrM");
+        Assert.assertEquals(metricsCpg.POSITION.intValue(), 60);
+        Assert.assertEquals(metricsCpg.TOTAL_SITES.intValue(), 1);
+        Assert.assertEquals(metricsCpg.CONVERTED_SITES.intValue(), 1);
+        Assert.assertEquals(metricsCpg.PCT_CONVERTED.intValue(), 1);
+    }
+
+    private <T extends MultilevelMetrics> T getMultilevelMetrics(final File file) throws FileNotFoundException {
+        final MetricsFile<T, ?> retVal = new MetricsFile<T, Integer>();
+        retVal.read(new FileReader(file));
+        return retVal.getMetrics().get(0);
+    }
 
     @Test
     public void testAlignmentSummaryViaMultipleMetrics() throws IOException {
