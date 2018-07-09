@@ -247,12 +247,20 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         final SAMFileHeader outputHeader = header.clone();
 
-
         log.info("Reads are assumed to be ordered by: " + sortOrder);
 
-        if (sortOrder != SAMFileHeader.SortOrder.coordinate && sortOrder != SAMFileHeader.SortOrder.queryname) {
-            throw new PicardException("This program requires input that are either coordinate or query sorted. " +
-                    "Found "+ sortOrder);
+        // Setting the ASSUME_SORT_ORDER to equal queryname is understood to mean that the input is
+        // queryname **grouped**. So that's what we set the output order to be, so that the validation will pass
+        if (ASSUME_SORT_ORDER == SAMFileHeader.SortOrder.queryname ) {
+            outputHeader.setGroupOrder(SAMFileHeader.GroupOrder.query);
+            outputHeader.setSortOrder(SAMFileHeader.SortOrder.unknown);
+            log.info("Output will not be re-sorted. Output header will state SO:unknown GO:query");
+        }
+
+        if (ASSUME_SORT_ORDER == null && sortOrder != SAMFileHeader.SortOrder.coordinate && sortOrder != SAMFileHeader.SortOrder.queryname ||
+                ASSUME_SORT_ORDER != null && (ASSUME_SORT_ORDER != SAMFileHeader.SortOrder.coordinate || ASSUME_SORT_ORDER != SAMFileHeader.SortOrder.queryname)) {
+            throw new PicardException("This program requires input that are either coordinate or query sorted (according to the header, or at least ASSUME_SORT_ORDER and the content.) " +
+                    "Found ASSUME_SORT_ORDER=" + ASSUME_SORT_ORDER + " and header sortorder=" + sortOrder);
         }
 
         COMMENT.forEach(outputHeader::addComment);
@@ -506,7 +514,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             }
 
             // If working in query-sorted, need to keep index of first record with any given query-name.
-            if(assumedSortOrder == SAMFileHeader.SortOrder.queryname && !rec.getReadName().equals(duplicateQueryName)) {
+            if (assumedSortOrder == SAMFileHeader.SortOrder.queryname && !rec.getReadName().equals(duplicateQueryName)) {
                 duplicateQueryName  = rec.getReadName();
                 duplicateIndex      = index;
             }
@@ -926,8 +934,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 compareDifference = lhs.read2Coordinate - rhs.read2Coordinate;
             }
 
-            if( compareDifference == 0)
+            if (compareDifference == 0)
                 compareDifference = lhs.hashCode() - rhs.hashCode();
+
+            // The following is arbitrary (especially given the dependence above on the hash) and is only
+            // there for completeness. Other implementations may chose to forgo this tiebreak if they do have
+            // access to the index-in-file of the records (e.g. SPARK implmentations)
 
             if (compareDifference == 0) {
                 compareDifference = (int) (lhs.read1IndexInFile - rhs.read1IndexInFile);
@@ -939,5 +951,4 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             return compareDifference;
         }
     }
-
 }

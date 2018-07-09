@@ -86,7 +86,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
 
         final FormatUtil formatter = new FormatUtil();
 
-        try(final CloseableIterator<SAMRecord> inputRecordIterator = this.getRecordIterator()) {
+        try (final CloseableIterator<SAMRecord> inputRecordIterator = this.getRecordIterator()) {
             while (inputRecordIterator.hasNext()) {
                 final SAMRecord record = inputRecordIterator.next();
                 if (record.isSecondaryOrSupplementary()) {
@@ -103,11 +103,14 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                         ++expectedMetrics.UNMAPPED_READS;
                     } else if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
                         ++expectedMetrics.UNPAIRED_READS_EXAMINED;
-                        if (isDuplicate) ++expectedMetrics.UNPAIRED_READ_DUPLICATES;
+                        if (isDuplicate) {
+                            ++expectedMetrics.UNPAIRED_READ_DUPLICATES;
+                        }
                     } else {
                         ++expectedMetrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
-                        if (isDuplicate)
+                        if (isDuplicate) {
                             ++expectedMetrics.READ_PAIR_DUPLICATES; // will need to be divided by 2 at the end
+                        }
                     }
                 }
             }

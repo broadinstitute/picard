@@ -162,18 +162,27 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
+    // static because need to access this directly from other class
     @DataProvider
-    Object[][] readNameData(){
+    static Object[][] readNameData(){
         return new Object[][]{
-                {"RUNID:7:1203:2886:82292","RUNID:7:1203:2884:16834"},
-                {"RUNID:7:1204:2886:82292","RUNID:7:1204:2884:16834"},
-                {"RUNID:7:1205:2886:82292","RUNID:7:1205:2884:16834"},
-                {"RUNID:7:1206:2886:82292","RUNID:7:1206:2884:16834"},
-                {"RUNID:7:1207:2886:82292","RUNID:7:1207:2884:16834"},
+                {"RUNID:7:1203:2886:16756", "RUNID:7:1203:2884:16834"},
+                {"RUNID:7:1204:2886:16756", "RUNID:7:1204:2884:16834"},
+                {"RUNID:7:1205:2886:16756", "RUNID:7:1205:2884:16834"},
+                {"RUNID:7:1206:2886:16756", "RUNID:7:1206:2884:16834"},
+                {"RUNID:7:1207:2886:16756", "RUNID:7:1207:2884:16834"},
         };
     }
     @Test(dataProvider = "readNameData")
     public void testOpticalDuplicateClusterSamePositionNoOpticalDuplicates(final String readName1, final String readName2) {
+
+        // Currently UmiAwareMarkDuplicatesWithMateCigarTest fails this test due to
+        // a small difference in the selection of representative read. To fix this
+        // a change is required in htsjdk.samtools.DuplicateScoringStrategy.compare
+     //   if (this instanceof UmiAwareMarkDuplicatesWithMateCigarTest) return;
+     //   if (this instanceof MarkDuplicatesWithMateCigarTest) return;
+    //    if (this instanceof SimpleMarkDuplicatesWithMateCigarTest) return;
+
         final ReadNameParser parser = new ReadNameParser();
 
         final PhysicalLocationInt position1 = new PhysicalLocationInt();
@@ -187,8 +196,8 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.setExpectedOpticalDuplicate(0);
         final boolean isDuplicate = position1.hashCode() < position2.hashCode();
 
-        tester.addMatePair(readName1, 1,485253, 485253, false, false,  isDuplicate,  isDuplicate, "42M59S", "59S42M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMatePair(readName2, 1,485253, 485253, false, false, !isDuplicate, !isDuplicate, "59S42M", "42M59S", true, false, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readName1, 1,485253, 485253, false, false, !isDuplicate, !isDuplicate, "42M59S", "59S42M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readName2, 1,485253, 485253, false, false, isDuplicate, isDuplicate, "59S42M", "42M59S", true, false, false, false, false, DEFAULT_BASE_QUALITY);
 
         tester.runTest();
     }

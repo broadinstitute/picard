@@ -26,7 +26,14 @@ package picard.sam.markduplicates;
 
 import htsjdk.samtools.DuplicateScoringStrategy;
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgram;
+
+import java.io.File;
 
 /**
  * This class is an extension of AbstractMarkDuplicatesCommandLineProgramTester used to test MarkDuplicates with SAM files generated on the fly.
@@ -36,6 +43,7 @@ public class QuerySortedMarkDuplicatesTester extends AbstractMarkDuplicatesComma
 
     public QuerySortedMarkDuplicatesTester() {
         super(DuplicateScoringStrategy.ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH, SAMFileHeader.SortOrder.queryname);
+        addArg("ASSUME_SORT_ORDER=queryname");
     }
 
     @Override

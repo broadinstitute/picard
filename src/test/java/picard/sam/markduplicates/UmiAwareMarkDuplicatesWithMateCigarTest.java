@@ -54,47 +54,47 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
     private Object[][] testUmiSetsDataProvider() {
         return new Object[][] {{
                 // Test basic error correction using edit distance of 1
-                Arrays.asList(new String[] {"AAAA", "AAAA", "ATTA", "AAAA", "AAAT"}), // Observed UMI
-                Arrays.asList(new String[] {"AAAA", "AAAA", "ATTA", "AAAA", "AAAA"}), // Expected inferred UMI
-                Arrays.asList(new Boolean[] {false, true, false, true, true}), // Should it be marked as duplicate?
+                Arrays.asList("AAAA", "AAAA", "ATTA", "AAAA", "AAAT"), // Observed UMI
+                Arrays.asList("AAAA", "AAAA", "ATTA", "AAAA", "AAAA"), // Expected inferred UMI
+                Arrays.asList(false, true, false, true, true), // Should it be marked as duplicate?
                 1 // Edit Distance to Join
         }, {
                 // Test basic error correction using edit distance of 1 including dashes
-                Arrays.asList(new String[] {"AA-AA", "--AAAA", "A-T-TA", "-AAAA----", "A-AA-T"}), // Observed UMI
-                Arrays.asList(new String[] {"AAAA", "AAAA", "ATTA", "AAAA", "AAAA"}), // Expected inferred UMI
-                Arrays.asList(new Boolean[] {false, true, false, true, true}), // Should it be marked as duplicate?
+                Arrays.asList("AA-AA", "--AAAA", "A-T-TA", "-AAAA----", "A-AA-T"), // Observed UMI
+                Arrays.asList("AAAA", "AAAA", "ATTA", "AAAA", "AAAA"), // Expected inferred UMI
+                Arrays.asList(false, true, false, true, true), // Should it be marked as duplicate?
                 1 // Edit Distance to Join
         }, {
                 // Test basic error correction using edit distance of 2
-                Arrays.asList(new String[] {"AAAA", "AAAA", "ATTA", "AAAA", "AAAT"}),
-                Arrays.asList(new String[] {"AAAA", "AAAA", "AAAA", "AAAA", "AAAA"}),
-                Arrays.asList(new Boolean[] {false, true, true, true, true}),
+                Arrays.asList("AAAA", "AAAA", "ATTA", "AAAA", "AAAT"),
+                Arrays.asList("AAAA", "AAAA", "AAAA", "AAAA", "AAAA"),
+                Arrays.asList(false, true, true, true, true),
                 2
         }, {
                 // Test basic error correction using edit distance of 2 including dashes
-                Arrays.asList(new String[] {"AAA-A", "A--AAA", "A---TT-A", "----AAAA", "A-AAT"}),
-                Arrays.asList(new String[] {"AAAA", "AAAA", "AAAA", "AAAA", "AAAA"}),
-                Arrays.asList(new Boolean[] {false, true, true, true, true}),
+                Arrays.asList("AAA-A", "A--AAA", "A---TT-A", "----AAAA", "A-AAT"),
+                Arrays.asList("AAAA", "AAAA", "AAAA", "AAAA", "AAAA"),
+                Arrays.asList(false, true, true, true, true),
                 2
         }, {
                 // Test basic error correction using edit distance of 1 where UMIs
                 // form a chain in edit distance space so that a UMI with large
                 // edit distance will get error corrected to a distant but linked (in edit space) UMI
-                Arrays.asList(new String[] {"AAAA", "AAAA", "AAAT", "AAGT", "ACGT", "TCGT", "CCCC"}),
-                Arrays.asList(new String[] {"AAAA", "AAAA", "AAAA", "AAAA", "AAAA", "AAAA", "CCCC"}),
-                Arrays.asList(new Boolean[] {false, true, true, true, true, true, false}),
+                Arrays.asList("AAAA", "AAAA", "AAAT", "AAGT", "ACGT", "TCGT", "CCCC"),
+                Arrays.asList("AAAA", "AAAA", "AAAA", "AAAA", "AAAA", "AAAA", "CCCC"),
+                Arrays.asList(false, true, true, true, true, true, false),
                 1
         }, {
                 // Test short UMIs
-                Arrays.asList(new String[] {"A", "A", "T", "G", "G", "C", "C", "A"}),
-                Arrays.asList(new String[] {"A", "A", "A", "A", "A", "A", "A", "A"}), // All UMIs should get corrected to A
-                Arrays.asList(new Boolean[] {false, true, true, true, true, true, true, true}), // All mate pairs should be duplicates except the first
+                Arrays.asList("A", "A", "T", "G", "G", "C", "C", "A"),
+                Arrays.asList("A", "A", "A", "A", "A", "A", "A", "A"), // All UMIs should get corrected to A
+                Arrays.asList(false, true, true, true, true, true, true, true), // All mate pairs should be duplicates except the first
                 1
         }, {
                 // Test short UMIs with no allowance for errors
-                Arrays.asList(new String[] {"A", "A", "T", "G", "G", "C", "C", "A"}),
-                Arrays.asList(new String[] {"A", "A", "T", "G", "G", "C", "C", "A"}), // No UMIs should get corrected
-                Arrays.asList(new Boolean[] {false, true, false, false, true, false, true, true}), // Only exactly duplicated UMIs will give rise to a new duplicate set
+                Arrays.asList("A", "A", "T", "G", "G", "C", "C", "A"),
+                Arrays.asList("A", "A", "T", "G", "G", "C", "C", "A"), // No UMIs should get corrected
+                Arrays.asList(false, true, false, false, true, false, true, true), // Only exactly duplicated UMIs will give rise to a new duplicate set
                 0
         }, {
                 // Test longish UMIs with relatively large allowance for error
@@ -102,27 +102,27 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                 // they are within edit distance of 4 of each other.  TTGACATCCA should be chosen as the inferred
                 // UMI even though it only occurs once.  Since all UMIs only occur once, we choose the UMI that
                 // is not marked as duplicate to be the inferred UMI.
-                Arrays.asList(new String[] {"TTGACATCCA", "ATGCCATCGA", "AAGTCACCGT"}),
-                Arrays.asList(new String[] {"TTGACATCCA", "TTGACATCCA", "TTGACATCCA"}), // All UMIs should get corrected to TTGACATCCA
-                Arrays.asList(new Boolean[] {false, true, true}), // All mate pairs should be duplicates except the first
+                Arrays.asList("TTGACATCCA", "ATGCCATCGA", "AAGTCACCGT"),
+                Arrays.asList("TTGACATCCA", "TTGACATCCA", "TTGACATCCA"), // All UMIs should get corrected to TTGACATCCA
+                Arrays.asList(false, true, true), // All mate pairs should be duplicates except the first
                 4
         }, {
                 // Test that the inferred UMI is correct with N
-                Arrays.asList(new String[] {"AAAN", "AANN"}),
-                Arrays.asList(new String[] {"AAAN", "AAAN"}), // Only N containing UMI
-                Arrays.asList(new Boolean[] {false, true}), // All mate pairs should be duplicates except the first
+                Arrays.asList("AAAN", "AANN"),
+                Arrays.asList("AAAN", "AAAN"), // Only N containing UMI
+                Arrays.asList(false, true), // All mate pairs should be duplicates except the first
                 1
         }, {
                 // Test that the majority with no Ns wins
-                Arrays.asList(new String[] {"AAAN", "AAAN", "AAAA", "AAAA", "AAAN" }),
-                Arrays.asList(new String[] {"AAAA", "AAAA", "AAAA", "AAAA", "AAAA"}), // Even though AAAN is majority, AAAA is represented
-                Arrays.asList(new Boolean[] {false, true, true, true, true}), // All mate pairs should be duplicates except the first
+                Arrays.asList("AAAN", "AAAN", "AAAA", "AAAA", "AAAN"),
+                Arrays.asList("AAAA", "AAAA", "AAAA", "AAAA", "AAAA"), // Even though AAAN is majority, AAAA is represented
+                Arrays.asList(false, true, true, true, true), // All mate pairs should be duplicates except the first
                 1
         }, {
                 // Test that the majority with the fewest N wins when both have Ns
-                Arrays.asList(new String[] {"AAAN", "AAAN", "AANN", "AANN", "AANN" }),
-                Arrays.asList(new String[] {"AAAN", "AAAN", "AAAN", "AAAN", "AAAN"}), // Even though AANN is majority, AAAN is represented
-                Arrays.asList(new Boolean[] {false, true, true, true, true, true}), // All mate pairs should be duplicates except the first
+                Arrays.asList("AAAN", "AAAN", "AANN", "AANN", "AANN"),
+                Arrays.asList("AAAN", "AAAN", "AAAN", "AAAN", "AAAN"), // Even though AANN is majority, AAAN is represented
+                Arrays.asList(false, true, true, true, true, true), // All mate pairs should be duplicates except the first
                 1
         } };
     }
@@ -132,24 +132,24 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
         return new Object[][] {{
                 // The code should not support variable length UMIs, if we observe variable length UMIs
                 // ensure that an exception is thrown.
-                Arrays.asList(new String[] {"AAAA", "A"}),
-                Arrays.asList(new String[] {"AAAA", "A"}),
-                Arrays.asList(new Boolean[] {false, false}),
+                Arrays.asList("AAAA", "A"),
+                Arrays.asList("AAAA", "A"),
+                Arrays.asList(false, false),
                 4
         }, {
                 // The code should not support variable length UMIs, if we observe variable length UMIs
                 // ensure that an exception is thrown.
                 // Arrays.asList(new String[] {"T", "GG"}),
-                Arrays.asList(new String[] {"T", "GG"}),
-                Arrays.asList(new String[] {"T", "GG"}),
-                Arrays.asList(new Boolean[] {false, false}),
+                Arrays.asList("T", "GG"),
+                Arrays.asList("T", "GG"),
+                Arrays.asList(false, false),
                 1
         }, {
                 // Test to make sure that we throw an exception with missing UMIs when allowMissingUmis is false
                 // This throws an exception because the UMIs have differing lengths.
-                Arrays.asList(new String[] {"TTGA", "TTAT", null}),
-                Arrays.asList(new String[] {"TTGA", "TTAT", null}),
-                Arrays.asList(new Boolean[] {false, false, false}),
+                Arrays.asList("TTGA", "TTAT", null),
+                Arrays.asList("TTGA", "TTAT", null),
+                Arrays.asList(false, false, false),
                 4
         }};
     }
@@ -158,9 +158,9 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
     private Object[][] testEmptyUmiDataProvider() {
         return new Object[][] {{
                 // Test to make sure we treat empty UMIs correctly when they are allowed
-                Arrays.asList(new String[] {null, null, null}),
-                Arrays.asList(new String[] {null, null, null}),
-                Arrays.asList(new Boolean[] {false, true, true}),
+                Arrays.asList(null, null, null),
+                Arrays.asList(null, null, null),
+                Arrays.asList(false, true, true),
                 4
         }};
     }
@@ -219,9 +219,9 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
 
         return new Object[][]{{
                 // Test basic error correction using edit distance of 1
-                Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAT"}), // Observed UMI
-                Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAA"}), // Expected inferred UMI
-                Arrays.asList(new Boolean[]{false, true, false, true, true}), // Should it be marked as duplicate?
+                Arrays.asList("AAAA", "AAAA", "ATTA", "AAAA", "AAAT"), // Observed UMI
+                Arrays.asList("AAAA", "AAAA", "ATTA", "AAAA", "AAAA"), // Expected inferred UMI
+                Arrays.asList(false, true, false, true, true), // Should it be marked as duplicate?
                 1, // Edit Distance to Join
                 new UmiMetrics(4.0,                         // MEAN_UMI_LENGTH
                                3,                           // OBSERVED_UNIQUE_UMIS
@@ -235,9 +235,9 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                                0)                           // UMI_WITH_N
         }, {
                 // Test basic error correction using edit distance of 2
-                Arrays.asList(new String[]{"AAAA", "AAAA", "ATTA", "AAAA", "AAAT"}),
-                Arrays.asList(new String[]{"AAAA", "AAAA", "AAAA", "AAAA", "AAAA"}),
-                Arrays.asList(new Boolean[]{false, true, true, true, true}),
+                Arrays.asList("AAAA", "AAAA", "ATTA", "AAAA", "AAAT"),
+                Arrays.asList("AAAA", "AAAA", "AAAA", "AAAA", "AAAA"),
+                Arrays.asList(false, true, true, true, true),
                 2,
                 new UmiMetrics(4.0,                         // MEAN_UMI_LENGTH
                                3,                           // OBSERVED_UNIQUE_UMIS
@@ -251,9 +251,9 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                                0)                           // UMI_WITH_N
         }, {
                 // Test basic error correction using edit distance of 2 including dashes
-                Arrays.asList(new String[]{"AAAA", "AAA-A", "A-TTA", "--AAA-A", "AAA-T"}),
-                Arrays.asList(new String[]{"AAAA", "AAAA", "AAAA", "AAAA", "AAAA"}),
-                Arrays.asList(new Boolean[]{false, true, true, true, true}),
+                Arrays.asList("AAAA", "AAA-A", "A-TTA", "--AAA-A", "AAA-T"),
+                Arrays.asList("AAAA", "AAAA", "AAAA", "AAAA", "AAAA"),
+                Arrays.asList(false, true, true, true, true),
                 2,
                 new UmiMetrics(4.0,                     // MEAN_UMI_LENGTH
                         3,                              // OBSERVED_UNIQUE_UMIS
@@ -267,9 +267,9 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                         0)                              // UMI_WITH_N
         },{
                 // Test basic error correction using edit distance of 2 - Ns metrics should not include the umis with Ns
-                Arrays.asList(new String[]{"AAAA", "AAAA","AANA","ANNA", "ATTA", "AAAA", "ANAT"}),
-                Arrays.asList(new String[]{"AAAA", "AAAA","AAAA","AAAA","AAAA", "AAAA", "AAAA"}),
-                Arrays.asList(new Boolean[]{false, true, true, true, true, true, true}),
+                Arrays.asList("AAAA", "AAAA","AANA","ANNA", "ATTA", "AAAA", "ANAT"),
+                Arrays.asList("AAAA", "AAAA","AAAA","AAAA","AAAA", "AAAA", "AAAA"),
+                Arrays.asList(false, true, true, true, true, true, true),
                 2,
                 new UmiMetrics(4.0,                 // MEAN_UMI_LENGTH
                         2,                          // OBSERVED_UNIQUE_UMIS
@@ -283,9 +283,9 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                         estimatedPercentWithN3_7)   // UMI_WITH_N
         }, {
                 // Test basic error correction using edit distance of 2 including Ns and dashes
-                Arrays.asList(new String[]{"AAAA-", "AA-AA","AAN-A","ANNA", "AT-TA", "AAA-A-", "A--NAT-"}),
-                Arrays.asList(new String[]{"AAAA", "AAAA","AAAA","AAAA","AAAA", "AAAA", "AAAA"}),
-                Arrays.asList(new Boolean[]{false, true, true, true, true, true, true}),
+                Arrays.asList("AAAA-", "AA-AA","AAN-A","ANNA", "AT-TA", "AAA-A-", "A--NAT-"),
+                Arrays.asList("AAAA", "AAAA","AAAA","AAAA","AAAA", "AAAA", "AAAA"),
+                Arrays.asList(false, true, true, true, true, true, true),
                 2,
                 new UmiMetrics(4.0,                 // MEAN_UMI_LENGTH
                         2,                          // OBSERVED_UNIQUE_UMIS
@@ -299,9 +299,9 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                         estimatedPercentWithN3_7)   // UMI_WITH_N
         }, {
                 // Test maximum entropy (EFFECTIVE_LENGTH_OF_INFERRED_UMIS)
-                Arrays.asList(new String[]{"AA", "AT", "AC", "AG", "TA", "TT", "TC", "TG", "CA", "CT", "CC", "CG", "GA", "GT", "GC", "GG"}),
-                Arrays.asList(new String[]{"AA", "AT", "AC", "AG", "TA", "TT", "TC", "TG", "CA", "CT", "CC", "CG", "GA", "GT", "GC", "GG"}),
-                Arrays.asList(new Boolean[]{false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false}),
+                Arrays.asList("AA", "AT", "AC", "AG", "TA", "TT", "TC", "TG", "CA", "CT", "CC", "CG", "GA", "GT", "GC", "GG"),
+                Arrays.asList("AA", "AT", "AC", "AG", "TA", "TT", "TC", "TG", "CA", "CT", "CC", "CG", "GA", "GT", "GC", "GG"),
+                Arrays.asList(false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false),
                 0,
                 new UmiMetrics(2.0,    // MEAN_UMI_LENGTH
                                16,     // OBSERVED_UNIQUE_UMIS
@@ -333,8 +333,8 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
     @DataProvider(name = "testUmiUtilDataProvider")
     private Object[][] testUmiUtilDataProvider() {
         return new Object[][]{{
-                Arrays.asList(new String[]{"AAAA", "AA-AA", "-A-T-A", "AAAAA--", "---A", "---", ""}), // Observed UMI
-                Arrays.asList(new String[]{"AAAA", "AAAA", "ATA", "AAAAA", "A", "", ""}) // Sanitized UMI
+                Arrays.asList("AAAA", "AA-AA", "-A-T-A", "AAAAA--", "---A", "---", ""), // Observed UMI
+                Arrays.asList("AAAA", "AAAA", "ATA", "AAAAA", "A", "", "") // Sanitized UMI
         }};
     }
 

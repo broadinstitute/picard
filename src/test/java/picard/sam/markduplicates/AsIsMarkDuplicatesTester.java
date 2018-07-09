@@ -63,6 +63,31 @@ public class AsIsMarkDuplicatesTester {
         tester.setExpectedOpticalDuplicate(0);
         tester.runTest();
     }
+
+    @DataProvider
+    public Object[][] queryGroupedInput() {
+        final File TEST_DIR = new File("testdata/picard/sam/MarkDuplicates");
+        return new Object[][]{
+                new Object[]{new File(TEST_DIR, "sameUnclipped5primeEndQueryNameGroupedv1.sam")},
+ //               new Object[]{new File(TEST_DIR, "sameUnclipped5primeEndQueryNameGroupedv2.sam")},
+        };
+    }
+
+    @Test(dataProvider = "queryGroupedInput")
+    public void testQueryGroupedInput(final File input) {
+
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = new BySumOfBaseQAndInOriginalOrderMDTester();
+
+        final SamReader reader = SamReaderFactory.makeDefault().open(input);
+
+        tester.setHeader(reader.getFileHeader());
+        reader.iterator().stream().forEach(tester::addRecord);
+
+        CloserUtil.close(reader);
+        tester.setExpectedOpticalDuplicate(0);
+        tester.addArg("ASSUME_SORT_ORDER=queryname");
+        tester.runTest();
+    }
 }
 
 
