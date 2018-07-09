@@ -69,7 +69,7 @@ public class AsIsMarkDuplicatesTester {
         final File TEST_DIR = new File("testdata/picard/sam/MarkDuplicates");
         return new Object[][]{
                 new Object[]{new File(TEST_DIR, "sameUnclipped5primeEndQueryNameGroupedv1.sam")},
- //               new Object[]{new File(TEST_DIR, "sameUnclipped5primeEndQueryNameGroupedv2.sam")},
+                new Object[]{new File(TEST_DIR, "sameUnclipped5primeEndQueryNameGroupedv2.sam")},
         };
     }
 

@@ -258,7 +258,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
 
         if (ASSUME_SORT_ORDER == null && sortOrder != SAMFileHeader.SortOrder.coordinate && sortOrder != SAMFileHeader.SortOrder.queryname ||
-                ASSUME_SORT_ORDER != null && (ASSUME_SORT_ORDER != SAMFileHeader.SortOrder.coordinate || ASSUME_SORT_ORDER != SAMFileHeader.SortOrder.queryname)) {
+                ASSUME_SORT_ORDER != null && ASSUME_SORT_ORDER != SAMFileHeader.SortOrder.coordinate && ASSUME_SORT_ORDER != SAMFileHeader.SortOrder.queryname) {
             throw new PicardException("This program requires input that are either coordinate or query sorted (according to the header, or at least ASSUME_SORT_ORDER and the content.) " +
                     "Found ASSUME_SORT_ORDER=" + ASSUME_SORT_ORDER + " and header sortorder=" + sortOrder);
         }
