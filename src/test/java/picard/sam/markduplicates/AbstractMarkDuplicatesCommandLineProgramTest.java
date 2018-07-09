@@ -162,9 +162,8 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
-    // static because need to access this directly from other class
     @DataProvider
-    static Object[][] readNameData(){
+    Object[][] readNameData(){
         return new Object[][]{
                 {"RUNID:7:1203:2886:16756", "RUNID:7:1203:2884:16834"},
                 {"RUNID:7:1204:2886:16756", "RUNID:7:1204:2884:16834"},
