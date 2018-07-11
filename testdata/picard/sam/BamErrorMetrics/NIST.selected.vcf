@@ -1,0 +1,195 @@
+##fileformat=VCFv4.1
+##FILTER=<ID=Uncertain,Description="Uncertain genotype due to reason in filter INFO field">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Total read depth summed across all datasets, excluding MQ0 reads">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Net Genotype quality across all datasets, defined as difference between most likely and next most likely genotype likelihoods">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Net Genotype across all datasets">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods summed across all unfiltered datasets for genotypes as defined in the VCF specification">
+##GATKCommandLine.SelectVariants=<ID=SelectVariants,Version=3.4-33-g9cd2cd4,Date="Wed Jun 24 13:34:15 EDT 2015",Epoch=1435167255521,CommandLineOptions="analysis_type=SelectVariants input_file=[] showFullBamList=false read_buffer_size=null phone_home=AWS gatk_key=null tag=NA read_filter=[] disable_read_filter=[] intervals=[/seq/tng/kbergin/genotype_concordance_tests/NIST_test.interval_list] excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/seq/references/Homo_sapiens_assembly19/v1/Homo_sapiens_assembly19.fasta nonDeterministicRandomSeed=false disableDithering=false maxRuntime=-1 maxRuntimeUnits=MINUTES downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=1000 baq=OFF baqGapOpenPenalty=40.0 refactor_NDN_cigar_string=false fix_misencoded_quality_scores=false allow_potentially_misencoded_quality_scores=false useOriginalQualities=false defaultBaseQualities=-1 performanceLog=null BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 globalQScorePrior=-1.0 validation_strictness=SILENT remove_program_records=false keep_program_records=false sample_rename_mapping_file=null unsafe=null disable_auto_index_creation_and_locking_when_reading_rods=false no_cmdline_in_header=false sites_only=false never_trim_vcf_format_field=false bcf=false bam_compression=null simplifyBAM=false disable_bam_indexing=false generate_md5=false num_threads=1 num_cpu_threads_per_data_thread=1 num_io_threads=0 monitorThreadEfficiency=false num_bam_file_handles=null read_group_black_list=null pedigree=[] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false variant_index_type=DYNAMIC_SEEK variant_index_parameter=-1 logging_level=INFO log_to_file=null help=false version=false variant=(RodBinding name=variant source=small.vcf) discordance=(RodBinding name= source=UNBOUND) concordance=(RodBinding name= source=UNBOUND) out=/seq/tng/kbergin/genotype_concordance_tests/NIST.selected.vcf sample_name=[] sample_expressions=null sample_file=null exclude_sample_name=[] exclude_sample_file=[] exclude_sample_expressions=[] selectexpressions=[QUAL > 10000] invertselect=false excludeNonVariants=false excludeFiltered=false preserveAlleles=false removeUnusedAlternates=false restrictAllelesTo=ALL keepOriginalAC=false keepOriginalDP=false mendelianViolation=false invertMendelianViolation=false mendelianViolationQualThreshold=0.0 select_random_fraction=0.0 remove_fraction_genotypes=0.0 selectTypeToInclude=[] selectTypeToExclude=[] keepIDs=null excludeIDs=null fullyDecode=false justRead=false maxIndelSize=2147483647 minIndelSize=0 maxFilteredGenotypes=2147483647 minFilteredGenotypes=0 maxFractionFilteredGenotypes=1.0 minFractionFilteredGenotypes=0.0 setFilteredGtToNocall=false ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES=false filter_reads_with_N_cigar=false filter_mismatching_base_and_quals=false filter_bases_not_stored=false">
+##GATKCommandLine=<ID=CombineVariants,Version=3.3-112-g49c8efd,Date="Thu Jan 22 15:25:05 EST 2015",Epoch=1421958305028,CommandLineOptions="analysis_type=CombineVariants input_file=[] showFullBamList=false read_buffer_size=null phone_home=AWS gatk_key=null tag=NA read_filter=[] intervals=null excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/humgen/1kg/reference/human_g1k_v37.fasta nonDeterministicRandomSeed=false disableDithering=false maxRuntime=-1 maxRuntimeUnits=MINUTES downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=1000 baq=OFF baqGapOpenPenalty=40.0 refactor_NDN_cigar_string=false fix_misencoded_quality_scores=false allow_potentially_misencoded_quality_scores=false useOriginalQualities=false defaultBaseQualities=-1 performanceLog=null BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 globalQScorePrior=-1.0 validation_strictness=SILENT remove_program_records=false keep_program_records=false sample_rename_mapping_file=null unsafe=null disable_auto_index_creation_and_locking_when_reading_rods=false no_cmdline_in_header=false sites_only=false never_trim_vcf_format_field=false bcf=false bam_compression=null simplifyBAM=false disable_bam_indexing=false generate_md5=false num_threads=1 num_cpu_threads_per_data_thread=1 num_io_threads=0 monitorThreadEfficiency=false num_bam_file_handles=null read_group_black_list=null pedigree=[] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false variant_index_type=DYNAMIC_SEEK variant_index_parameter=-1 logging_level=INFO log_to_file=null help=false version=false variant=[(RodBindingCollection [(RodBinding name=variant source=NISTIntegratedCalls_14datasets_131103_allcall_UGHapMerge_HetHomVarPASS_VQSRv2.18_all_nouncert_excludesimplerep_excludesegdups_excludedecoy_excludeRepSeqSTRs_noCNVs.vcf)])] out=org.broadinstitute.gatk.engine.io.stubs.VariantContextWriterStub genotypemergeoption=UNSORTED filteredrecordsmergetype=KEEP_IF_ANY_UNFILTERED multipleallelesmergetype=BY_TYPE rod_priority_list=null printComplexMerges=false filteredAreUncalled=false minimalVCF=true excludeNonVariants=false setKey=set assumeIdenticalSamples=false minimumN=1 suppressCommandLineHeader=false mergeInfoWithMaxAC=false filter_reads_with_N_cigar=false filter_mismatching_base_and_quals=false filter_bases_not_stored=false">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=BasesToClosestVariant,Number=1,Type=Integer,Description="Number of bases to the closest variant in the file.">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth; some reads may have been filtered">
+##INFO=<ID=DPSum,Number=1,Type=Integer,Description="Total read depth summed across all datasets, excluding MQ0 reads">
+##INFO=<ID=Entropy,Number=1,Type=Float,Description="Shannon entropy of variant flanking regions, 12bp on both sides">
+##INFO=<ID=HRun,Number=1,Type=Integer,Description="Largest Contiguous Homopolymer Run of Variant Allele In Either Direction">
+##INFO=<ID=HapNoVar,Number=1,Type=Integer,Description="Number of datasets for which HaplotypeCaller called a variant within 35bp and did not call a variant at this location">
+##INFO=<ID=LEN,Number=A,Type=Integer,Description="allele length">
+##INFO=<ID=NoCG,Number=0,Type=Flag,Description="Present if no consensus reached, so looked at all datasets except Complete Genomics since it may have a different representation of complex variants">
+##INFO=<ID=NoPLTot,Number=1,Type=Integer,Description="Number of datasets with likelihood ratio > 20 for a genotype different from the called genotype">
+##INFO=<ID=PL454WG,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~16x 454 whole genome sequencing from 1000 Genomes Project, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLCG,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~73x Complete Genomics whole genome sequencing, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLHSWEx,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~66x 2x100bp Illumina exome sequencing from Broad Institute, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLHSWG,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~68x 2x100bp Illumina whole genome sequencing from Broad Institute, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLILL250,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~50x 2x250bp Illumina PCR-free whole genome sequencing from Broad Institute, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLILLCLIA,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~80x 2x100bp Illumina whole genome sequencing from Illumina CLIA lab, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLILLWEx,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~30x 2x54bp Illumina exome sequencing from Broad Institute, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLILLWG,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~39x 2x44bp Illumina whole genome sequencing from Broad Institute, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLIllPCRFree,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~56x 2x100bp Illumina PCR-free whole genome sequencing from Illumina Platinum Genomes Project, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLIonEx,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~80x mean 237bp Ion Torrent exome sequencing from Life Technologies, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLPlatGen,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~190x 2x100bp Illumina PCR-free whole genome sequencing from Illumina Platinum Genomes Project, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLXIll,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~37x 2x100bp Illumina whole genome sequencing from X Prize, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLXPSolWGLS,Number=.,Type=String,Description="Genotype likelihoods (PL) for ~24x 50bpx35bp SOLiD whole genome sequencing from X Prize, preceded by filtering info if this dataset was not used due to evidence of bias">
+##INFO=<ID=PLminsum,Number=1,Type=Integer,Description="Net Genotype quality across all datasets, defined as difference between most likely and next most likely genotype likelihoods">
+##INFO=<ID=PLminsumOverDP,Number=1,Type=Float,Description="Net Genotype quality across all datasets, defined as difference between most likely and next most likely genotype likelihoods, divided by the depth of coverage">
+##INFO=<ID=RPA,Number=.,Type=Integer,Description="Number of times tandem repeat unit is repeated, for each allele (including reference)">
+##INFO=<ID=RU,Number=1,Type=String,Description="Tandem repeat unit (bases)">
+##INFO=<ID=TYPE,Number=A,Type=String,Description="The type of allele, either snp, mnp, ins, del, or complex.">
+##INFO=<ID=TrancheABQDmin2,Number=1,Type=Float,Description="2nd lowest VQSR tranche for the called genotype for annotations associated with abnormal allele balance (AB and QD)">
+##INFO=<ID=TrancheAlignmin2,Number=1,Type=Float,Description="2nd lowest VQSR tranche for the called genotype for annotations associated with local alignment errors (distance from the end of the read and clipping)">
+##INFO=<ID=TrancheMapmin2,Number=1,Type=Float,Description="2nd lowest VQSR tranche for the called genotype for annotations associated with mapping errors (mapping quality and depth of coverage)">
+##INFO=<ID=TrancheSSEmin2,Number=1,Type=Float,Description="2nd lowest VQSR tranche for the called genotype for annotations associated with systematic sequencing errors (strand bias and neighboring base quality)">
+##INFO=<ID=YesPLtot,Number=1,Type=Integer,Description="Number of datasets with likelihood ratio > 20 for the called genotype">
+##INFO=<ID=allalts,Number=1,Type=Integer,Description="All ALT alleles originally considered at this position">
+##INFO=<ID=datasetcalls,Number=1,Type=Integer,Description="Number of datasets with any genotype call at this position">
+##INFO=<ID=filter,Number=1,Type=String,Description="Reason for filtering this genotype as uncertain">
+##INFO=<ID=geno,Number=1,Type=Integer,Description="Most probable genotype, corresponding to the minimum entry in the PL field (e.g., 1=0/0,2=0/1,3=1/1,4=0/2,etc)">
+##INFO=<ID=genoMapGood,Number=1,Type=Integer,Description="Number of datasets calling this genotype with VQSR mapping tranche <= 95">
+##INFO=<ID=platformbias,Number=.,Type=String,Description="Names of platforms that have at more than twice as many incorrect than correct genotypes at this location, indicating platform-specific bias (ill=Illumina,sol=SOLiD,454=454,ion=Ion Torrent,cg=Complete Genomics)">
+##INFO=<ID=platformnames,Number=.,Type=String,Description="Names of platforms that called this genotype (ill=Illumina,sol=SOLiD,454=454,ion=Ion Torrent,cg=Complete Genomics)">
+##INFO=<ID=platforms,Number=1,Type=Integer,Description="Number of different platforms that called this genotype">
+##INFO=<ID=set,Number=1,Type=String,Description="Source VCF for the merged record in CombineVariants">
+##INFO=<ID=varType,Number=1,Type=String,Description="Type of variant">
+##SelectVariants="analysis_type=SelectVariants input_file=[] read_buffer_size=null phone_home=STANDARD gatk_key=null tag=NA read_filter=[] intervals=[/projects/scratch-data-backup/justin.zook/NA12878/bed/union13callableMQonlymerged_addcert_nouncert_excludesimplerep_excludesegdups_excludedecoy_excludeRepSeqSTRs_noCNVs_v2.18_2mindatasets_5minYesNoRatio.bed] excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/projects/scratch-data-backup/justin.zook/references/human_g1k_v37.fasta nonDeterministicRandomSeed=false disableDithering=false maxRuntime=-1 maxRuntimeUnits=MINUTES downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=1000 baq=OFF baqGapOpenPenalty=40.0 fix_misencoded_quality_scores=false allow_potentially_misencoded_quality_scores=false performanceLog=null useOriginalQualities=false BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 globalQScorePrior=-1.0 allow_bqsr_on_reduced_bams_despite_repeated_warnings=false defaultBaseQualities=-1 validation_strictness=SILENT remove_program_records=false keep_program_records=false unsafe=LENIENT_VCF_PROCESSING disable_auto_index_creation_and_locking_when_reading_rods=false num_threads=1 num_cpu_threads_per_data_thread=1 num_io_threads=0 monitorThreadEfficiency=false num_bam_file_handles=null read_group_black_list=null pedigree=[] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false logging_level=INFO log_to_file=null help=false version=false variant=(RodBinding name=variant source=/projects/scratch-data-backup/justin.zook/NA12878/Integration131103/AllFDAdatasets_131103_allcall_UGHapMerge_HetHomVarPASS_VQSRv2.18_2mindatasets_5minYesNoRatio_all.primitives_nodup.vcf) discordance=(RodBinding name= source=UNBOUND) concordance=(RodBinding name= source=UNBOUND) out=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub no_cmdline_in_header=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub sites_only=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub bcf=org.broadinstitute.sting.gatk.io.stubs.VariantContextWriterStub sample_name=[] sample_expressions=null sample_file=null exclude_sample_name=[] exclude_sample_file=[] select_expressions=[] excludeNonVariants=false excludeFiltered=false restrictAllelesTo=ALL keepOriginalAC=false mendelianViolation=false mendelianViolationQualThreshold=0.0 select_random_fraction=0.0 remove_fraction_genotypes=0.0 selectTypeToInclude=[] keepIDs=null fullyDecode=false forceGenotypesDecode=false justRead=false maxIndelSize=2147483647 ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES=false filter_mismatching_base_and_quals=false filter_bases_not_stored=false"
+##contig=<ID=1,length=249250621>
+##contig=<ID=2,length=243199373>
+##contig=<ID=3,length=198022430>
+##contig=<ID=4,length=191154276>
+##contig=<ID=5,length=180915260>
+##contig=<ID=6,length=171115067>
+##contig=<ID=7,length=159138663>
+##contig=<ID=8,length=146364022>
+##contig=<ID=9,length=141213431>
+##contig=<ID=10,length=135534747>
+##contig=<ID=11,length=135006516>
+##contig=<ID=12,length=133851895>
+##contig=<ID=13,length=115169878>
+##contig=<ID=14,length=107349540>
+##contig=<ID=15,length=102531392>
+##contig=<ID=16,length=90354753>
+##contig=<ID=17,length=81195210>
+##contig=<ID=18,length=78077248>
+##contig=<ID=19,length=59128983>
+##contig=<ID=20,length=63025520>
+##contig=<ID=21,length=48129895>
+##contig=<ID=22,length=51304566>
+##contig=<ID=X,length=155270560>
+##contig=<ID=Y,length=59373566>
+##contig=<ID=MT,length=16569>
+##contig=<ID=GL000207.1,length=4262>
+##contig=<ID=GL000226.1,length=15008>
+##contig=<ID=GL000229.1,length=19913>
+##contig=<ID=GL000231.1,length=27386>
+##contig=<ID=GL000210.1,length=27682>
+##contig=<ID=GL000239.1,length=33824>
+##contig=<ID=GL000235.1,length=34474>
+##contig=<ID=GL000201.1,length=36148>
+##contig=<ID=GL000247.1,length=36422>
+##contig=<ID=GL000245.1,length=36651>
+##contig=<ID=GL000197.1,length=37175>
+##contig=<ID=GL000203.1,length=37498>
+##contig=<ID=GL000246.1,length=38154>
+##contig=<ID=GL000249.1,length=38502>
+##contig=<ID=GL000196.1,length=38914>
+##contig=<ID=GL000248.1,length=39786>
+##contig=<ID=GL000244.1,length=39929>
+##contig=<ID=GL000238.1,length=39939>
+##contig=<ID=GL000202.1,length=40103>
+##contig=<ID=GL000234.1,length=40531>
+##contig=<ID=GL000232.1,length=40652>
+##contig=<ID=GL000206.1,length=41001>
+##contig=<ID=GL000240.1,length=41933>
+##contig=<ID=GL000236.1,length=41934>
+##contig=<ID=GL000241.1,length=42152>
+##contig=<ID=GL000243.1,length=43341>
+##contig=<ID=GL000242.1,length=43523>
+##contig=<ID=GL000230.1,length=43691>
+##contig=<ID=GL000237.1,length=45867>
+##contig=<ID=GL000233.1,length=45941>
+##contig=<ID=GL000204.1,length=81310>
+##contig=<ID=GL000198.1,length=90085>
+##contig=<ID=GL000208.1,length=92689>
+##contig=<ID=GL000191.1,length=106433>
+##contig=<ID=GL000227.1,length=128374>
+##contig=<ID=GL000228.1,length=129120>
+##contig=<ID=GL000214.1,length=137718>
+##contig=<ID=GL000221.1,length=155397>
+##contig=<ID=GL000209.1,length=159169>
+##contig=<ID=GL000218.1,length=161147>
+##contig=<ID=GL000220.1,length=161802>
+##contig=<ID=GL000213.1,length=164239>
+##contig=<ID=GL000211.1,length=166566>
+##contig=<ID=GL000199.1,length=169874>
+##contig=<ID=GL000217.1,length=172149>
+##contig=<ID=GL000216.1,length=172294>
+##contig=<ID=GL000215.1,length=172545>
+##contig=<ID=GL000205.1,length=174588>
+##contig=<ID=GL000219.1,length=179198>
+##contig=<ID=GL000224.1,length=179693>
+##contig=<ID=GL000223.1,length=180455>
+##contig=<ID=GL000195.1,length=182896>
+##contig=<ID=GL000212.1,length=186858>
+##contig=<ID=GL000222.1,length=186861>
+##contig=<ID=GL000200.1,length=187035>
+##contig=<ID=GL000193.1,length=189789>
+##contig=<ID=GL000194.1,length=191469>
+##contig=<ID=GL000225.1,length=211173>
+##contig=<ID=GL000192.1,length=547496>
+##fileDate=20130719
+##phasing=none
+##reference=file:///seq/references/Homo_sapiens_assembly19/v1/Homo_sapiens_assembly19.fasta
+##source=SelectVariants
+##variants_justified=left
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA12878
+1	90146546	.	C	T	22132	PASS	set=Intersection	GT:GQ	1/1:99
+1	165431906	.	G	T	10461	PASS	set=Intersection	GT:GQ	0/1:99
+1	175207612	.	C	T	10310	PASS	set=Intersection	GT:GQ	0/1:99
+1	204945934	.	A	G	10817	PASS	set=Intersection	GT:GQ	0/1:99
+1	216407409	.	A	G	27263	PASS	set=Intersection	GT:GQ	1/1:99
+2	18016237	.	A	T	10777	PASS	set=Intersection	GT:GQ	0/1:99
+2	36994439	.	A	C	11382	PASS	set=Intersection	GT:GQ	0/1:99
+2	117966808	.	C	T	19486	PASS	set=Intersection	GT:GQ	1/1:99
+2	198567638	.	C	G	10926	PASS	set=Intersection	GT:GQ	0/1:99
+3	1609737	.	A	G	22117	PASS	set=Intersection	GT:GQ	1/1:99
+3	8399330	.	G	A	26241	PASS	set=Intersection	GT:GQ	1/1:99
+3	86234718	.	T	C	26189	PASS	set=Intersection	GT:GQ	1/1:99
+3	158557110	.	G	A	11082	PASS	set=Intersection	GT:GQ	0/1:99
+4	141514835	.	C	T	10121	PASS	set=Intersection	GT:GQ	0/1:99
+5	36740339	.	T	G	26764	PASS	set=Intersection	GT:GQ	1/1:99
+5	58243302	.	A	C	25714	PASS	set=Intersection	GT:GQ	1/1:99
+5	58243332	.	A	G	25595	PASS	set=Intersection	GT:GQ	1/1:99
+5	80900719	.	G	T	10479	PASS	set=Intersection	GT:GQ	0/1:99
+6	1620147	.	T	C	11746	PASS	set=Intersection	GT:GQ	1/1:99
+6	45421630	.	C	T	10594	PASS	set=Intersection	GT:GQ	0/1:99
+6	89947113	.	T	C	20994	PASS	set=Intersection	GT:GQ	1/1:99
+6	89947117	.	A	G	21732	PASS	set=Intersection	GT:GQ	1/1:99
+6	89947132	.	T	C	20282	PASS	set=Intersection	GT:GQ	1/1:99
+7	29544610	.	A	T	11708	PASS	set=Intersection	GT:GQ	0/1:99
+8	78181000	.	A	G	21324	PASS	set=Intersection	GT:GQ	1/1:99
+8	132727531	.	G	A	10322	PASS	set=Intersection	GT:GQ	0/1:99
+10	4588547	.	C	T	10251	PASS	set=Intersection	GT:GQ	0/1:99
+10	11560326	.	C	T	10908	PASS	set=Intersection	GT:GQ	0/1:99
+10	56495833	.	G	A	20583	PASS	set=Intersection	GT:GQ	1/1:99
+10	125452232	.	A	G	23683	PASS	set=Intersection	GT:GQ	1/1:99
+11	113825164	.	A	G	19625	PASS	set=Intersection	GT:GQ	1/1:99
+11	123470819	.	T	C	28494	PASS	set=Intersection	GT:GQ	1/1:99
+11	132781000	.	A	G	22301	PASS	set=Intersection	GT:GQ	1/1:99
+12	21328424	.	G	C	10421	PASS	set=Intersection	GT:GQ	0/1:99
+12	79238948	.	C	T	10286	PASS	set=Intersection	GT:GQ	0/1:99
+13	21520045	.	A	C	21480	PASS	set=Intersection	GT:GQ	1/1:99
+13	28463938	.	C	T	10331	PASS	set=Intersection	GT:GQ	0/1:99
+13	28463951	.	T	C	10701	PASS	set=Intersection	GT:GQ	0/1:99
+13	101976707	.	A	T	25942	PASS	set=Intersection	GT:GQ	1/1:99
+13	109990322	.	T	C	23492	PASS	set=Intersection	GT:GQ	1/1:99
+14	56951735	.	G	A	25351	PASS	set=Intersection	GT:GQ	1/1:99
+14	87263523	.	A	C	22724	PASS	set=Intersection	GT:GQ	1/1:99
+15	42065422	.	A	C	25928	PASS	set=Intersection	GT:GQ	1/1:99
+15	92857342	.	A	G	11592	PASS	set=Intersection	GT:GQ	0/1:99
+17	33513649	.	A	G	12636	PASS	set=Intersection	GT:GQ	0/1:99
+17	55158811	.	G	A	10653	PASS	set=Intersection	GT:GQ	0/1:99
+18	10010426	.	T	C	21171	PASS	set=Intersection	GT:GQ	1/1:99
+18	67950442	.	T	G	11593	PASS	set=Intersection	GT:GQ	0/1:99
+19	3739001	.	C	T	11767	PASS	set=Intersection	GT:GQ	0/1:99
+20	21523349	.	A	G	10349	PASS	set=Intersection	GT:GQ	0/1:99
+20	51353834	.	G	A	10496	PASS	set=Intersection	GT:GQ	0/1:99

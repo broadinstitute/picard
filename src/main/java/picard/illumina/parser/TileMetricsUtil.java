@@ -73,12 +73,15 @@ public class TileMetricsUtil {
 
     /**
      * Returns the path to the TileMetrics file given the basecalling directory.
+     *
+     * @deprecated use {@link #findTileMetricsFiles(File, int, boolean)} instead
      */
-    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
-        return fileTileMetricsFile(illuminaRunDirectory, numCycles, isNovaSeq);
+    @Deprecated
+    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, int numCycles, boolean isNovaSeq) {
+        return findTileMetricsFiles(illuminaRunDirectory, numCycles, isNovaSeq).get(0);
     }
 
-    private static File fileTileMetricsFile(File illuminaRunDirectory, Integer numCycles, boolean isNovaSeq) {
+    public static List<File> findTileMetricsFiles(File illuminaRunDirectory, int numCycles, boolean isNovaSeq) {
         Path interOpDir = illuminaRunDirectory.toPath().resolve(INTEROP_SUBDIRECTORY_NAME);
         final List<Path> pathsToTest = new ArrayList<>();
 
@@ -91,24 +94,26 @@ public class TileMetricsUtil {
             }
         }
 
-        return pathsToTest.stream().filter(Files::exists).findFirst().orElseThrow(() -> {
+        final List<File> files = pathsToTest.stream()
+                .filter(Files::exists)
+                .map(Path::toFile)
+                .collect(Collectors.toList());
+        if (files.isEmpty()) {
             StringBuilder message = new StringBuilder(
                     String.format("No %s file found in %s", INTEROP_SUBDIRECTORY_NAME, interOpDir));
             if (isNovaSeq) {
                 message.append(" or any of its cycle directories.");
             }
-            return new IllegalStateException(message.toString());
-        }).toFile();
+            throw new IllegalStateException(message.toString());
+        }
+        return files;
     }
 
-    public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile,
-                                                    final Map<Integer, File> phasingMetricsFiles,
-                                                    final ReadStructure readStructure,
-                                                    final ValidationStringency validationStringency)
-            throws FileNotFoundException {
-        TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
-        final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
-        final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
+    private static Collection<Tile> getTileClusterRecordsV3(
+            final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap,
+            final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues,
+            final float density) {
+
         final Collection<Tile> tiles = new LinkedList<>();
         for (final Map.Entry<String, ? extends Collection<IlluminaTileMetrics>> entry : locationToMetricsMap.entrySet()) {
             final Collection<IlluminaTileMetrics> tileRecords = entry.getValue();
@@ -117,16 +122,51 @@ public class TileMetricsUtil {
 
             //only create for cluster records
             if (record.isClusterRecord()) {
-                // Snag the phasing data for each read in the read structure. For both types of phasing values, this is the median of all of the individual values seen
-                final Collection<TilePhasingValue> tilePhasingValues = getTilePhasingValues(record.getLaneTileCode(),
-                        phasingMetricsFiles, readStructure, validationStringency);
-
-                tiles.add(new Tile(record.getLaneNumber(), record.getTileNumber(), tileMetricsIterator.getDensity(), record.getMetricValue(),
+                final Collection<TilePhasingValue> tilePhasingValues = phasingValues.get(record.getLaneNumber()).get(record.getTileNumber());
+                tiles.add(new Tile(record.getLaneNumber(), record.getTileNumber(), density, record.getMetricValue(),
                         tilePhasingValues.toArray(new TilePhasingValue[tilePhasingValues.size()])));
             }
         }
-
         return Collections.unmodifiableCollection(tiles);
+    }
+
+    public static Collection<Tile> parseClusterRecordsFromTileMetricsV3(
+            final Collection<File> tileMetricsOutFiles,
+            final Map<Integer, File> phasingMetricsFiles,
+            final ReadStructure readStructure
+    ) throws FileNotFoundException {
+        final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
+        for (File tileMetricsOutFile : tileMetricsOutFiles) {
+            final TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
+            final float density = tileMetricsIterator.getDensity();
+            final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
+            final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
+            final Collection<Tile> tiles = getTileClusterRecordsV3(locationToMetricsMap, phasingValues, density);
+            if (!tiles.isEmpty()) {
+                return tiles;
+            }
+        }
+        final String pathsString = tileMetricsOutFiles
+                .stream()
+                .map(File::getAbsolutePath)
+                .collect(Collectors.joining(", "));
+        throw new RuntimeException("None of the following input files contained cluster records: " + pathsString);
+    }
+
+    /**
+     * @deprecated use {@link #parseClusterRecordsFromTileMetricsV3(Collection, Map, ReadStructure)} instead
+     */
+    @Deprecated
+    public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile,
+                                                    final Map<Integer, File> phasingMetricsFiles,
+                                                    final ReadStructure readStructure,
+                                                    final ValidationStringency validationStringency)
+            throws FileNotFoundException {
+        final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
+        final TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
+        final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
+        final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
+        return getTileClusterRecordsV3(locationToMetricsMap, phasingValues, tileMetricsIterator.getDensity());
     }
 
     /**
@@ -171,11 +211,14 @@ public class TileMetricsUtil {
         return Collections.unmodifiableCollection(tiles);
     }
 
-    private static Collection<TilePhasingValue> getTilePhasingValues(TileMetricsOutReader.IlluminaLaneTileCode tileCode,
+    /**
+     * Parse phasing metrics files for phasing data for each read in the read structure for each tile.
+     * For both types of phasing values, this is the median of all of the individual values seen
+     */
+    private static Map<Integer, Map<Integer, Collection<TilePhasingValue>>> getTilePhasingValues(
                                                                      Map<Integer, File> phasingMetricFiles,
-                                                                     final ReadStructure readStructure,
-                                                                     final ValidationStringency validationStringency) {
-        final Collection<TilePhasingValue> tilePhasingValues = new ArrayList<>();
+                                                                     final ReadStructure readStructure) {
+        final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = new HashMap<>();
         int totalCycleCount = 0;
 
         boolean isFirstRead = true;
@@ -200,22 +243,15 @@ public class TileMetricsUtil {
 
                             TileMetricsOutReader.IlluminaLaneTileCode laneTileCode = phasingMetrics.laneTileCode;
                             int tileNumber = laneTileCode.getTileNumber();
-                            if (laneTileCode.getLaneNumber() != tileCode.getLaneNumber()
-                                    || tileNumber != tileCode.getTileNumber()) {
-                                continue;
-                            }
-
-                            if (!phasing.containsKey(tileNumber)) {
-                                phasing.put(tileNumber, new HashMap<>());
-                                prePhasing.put(tileNumber, new HashMap<>());
-                            }
                             int laneNumber = laneTileCode.getLaneNumber();
-                            if (!phasing.get(tileNumber).containsKey(laneNumber)) {
-                                phasing.get(tileNumber).put(laneNumber, new ArrayList<>());
-                                prePhasing.get(tileNumber).put(laneNumber, new ArrayList<>());
-                            }
-                            phasing.get(tileNumber).get(laneNumber).add(phasingMetrics.phasingWeight);
-                            prePhasing.get(tileNumber).get(laneNumber).add(phasingMetrics.prephasingWeight);
+                            phasing
+                                .computeIfAbsent(tileNumber, k -> new HashMap<>())
+                                .computeIfAbsent(laneNumber, k -> new ArrayList<>())
+                                .add(phasingMetrics.phasingWeight);
+                            prePhasing
+                                .computeIfAbsent(tileNumber, k -> new HashMap<>())
+                                .computeIfAbsent(laneNumber, k -> new ArrayList<>())
+                                .add(phasingMetrics.prephasingWeight);
                         }
                     }
 
@@ -229,7 +265,10 @@ public class TileMetricsUtil {
                         float[] phasingSlopeAndOffset = computeLinearFit(cycleNumWithData.toArray(new Float[0]), phasingMetrics.toArray(new Float[0]), phasingMetrics.size());
                         float[] prePhasingSlopeAndOffset = computeLinearFit(cycleNumWithData.toArray(new Float[0]), prephasingMetrics.toArray(new Float[0]), phasingMetrics.size());
                         TilePhasingValue value = new TilePhasingValue(tileTemplateRead, phasingSlopeAndOffset[0], prePhasingSlopeAndOffset[0]);
-                        tilePhasingValues.add(value);
+                        phasingValues
+                            .computeIfAbsent(laneNum, k -> new HashMap<>())
+                            .computeIfAbsent(tileNum, k -> new ArrayList<>())
+                            .add(value);
                     });
                 });
 
@@ -239,7 +278,7 @@ public class TileMetricsUtil {
             }
         }
 
-        return tilePhasingValues;
+        return phasingValues;
     }
 
     /**

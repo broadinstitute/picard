@@ -207,7 +207,7 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Argument(doc = "The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed " +
             "and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the " +
-            "interval lists (both INPUT and SECOND_INPUT, if proivided) <b> before </b> the ACTION is performed.", optional = true)
+            "interval lists (both INPUT and SECOND_INPUT, if provided) <b> before </b> the ACTION is performed.", optional = true)
     public int PADDING = 0;
 
     @Argument(doc = "If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true.")

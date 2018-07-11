@@ -284,6 +284,11 @@ public class LiftoverVcf extends CommandLineProgram {
         log.info("Loading up the target reference genome.");
         final ReferenceSequenceFileWalker walker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
         final Map<String, ReferenceSequence> refSeqs = new HashMap<>();
+        // check if sequence dictionary exists
+        if (walker.getSequenceDictionary() == null) {
+            log.error("Reference " + REFERENCE_SEQUENCE.getAbsolutePath() + " must have an associated Dictionary .dict file in the same directory.");
+            return 1;
+        }
         for (final SAMSequenceRecord rec : walker.getSequenceDictionary().getSequences()) {
             refSeqs.put(rec.getSequenceName(), walker.get(rec.getSequenceIndex()));
         }

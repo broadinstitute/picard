@@ -127,7 +127,7 @@ public class RevertSamTest extends CommandLineProgramTest {
             verifyPositiveResults(output, reverter, removeDuplicates, removeAlignmentInfo, restoreOriginalQualities, outputByReadGroup, null, 8, sample, library);
         }
     }
-    
+
     @Test
     public void testOutputByReadGroupWithOutputMap() throws Exception {
         final File outputDir = Files.createTempDirectory("tmpPicardTest").toFile();
@@ -138,13 +138,16 @@ public class RevertSamTest extends CommandLineProgramTest {
         final String outputPath0 = outputDir + "/my_rg0.sam";
         final String outputPath1 = outputDir + "/rg1.cram";
         final String outputPath2 = outputDir + "/my_rg2.bam";
+        final String outputPath3 = outputDir + "/my_rg3.sam";
         mapWriter.println("READ_GROUP_ID\tOUTPUT");
         mapWriter.println("0\t" + outputPath0);
         mapWriter.println("2\t" + outputPath2);
         mapWriter.println("1\t" + outputPath1);
+        mapWriter.println("3\t" + outputPath3);
         System.out.println("outputFile: " + outputPath0);
         System.out.println("outputFile: " + outputPath1);
         System.out.println("outputFile: " + outputPath2);
+        System.out.println("outputFile: " + outputPath3);
         mapWriter.close();
         outputMapFile.deleteOnExit();
 
@@ -471,7 +474,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         Assert.assertEquals(outputMap.get("rg1"), new File("/path/to/my_rg_1.ubam"));
         Assert.assertEquals(outputMap.get("rg2"), new File("/path/to/my_rg_2.ubam"));
     }
-    
+
     @Test
     public void testGetDefaultExtension() {
         Assert.assertEquals(RevertSam.getDefaultExtension("this.is.a.sam"), ".sam");
