@@ -82,7 +82,6 @@ public class AsIsMarkDuplicatesTester {
         try(final SamReader reader = SamReaderFactory.makeDefault().open(input)) {
             tester.setHeader(reader.getFileHeader());
             reader.iterator().stream().forEach(tester::addRecord);
-
         }
         tester.setExpectedOpticalDuplicate(0);
         tester.addArg("ASSUME_SORT_ORDER=queryname");

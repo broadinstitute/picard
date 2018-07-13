@@ -2,8 +2,6 @@ package picard.sam.util;
 
 import picard.PicardException;
 
-import java.util.Objects;
-
 /**
  * Small class that provides access to the physical location information about a cluster.
  * All values should be defaulted to -1 if unavailable.  Tile should only allow
