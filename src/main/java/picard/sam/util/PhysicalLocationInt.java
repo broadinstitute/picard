@@ -36,20 +36,4 @@ public class PhysicalLocationInt implements PhysicalLocation {
 
     public void setLibraryId(final short libraryId) { throw new PicardException("Not Implemented"); }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        PhysicalLocationInt that = (PhysicalLocationInt) o;
-
-        if (tile != that.tile) return false;
-        if (x != that.x) return false;
-        return y == that.y;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash( tile, x, y);
-    }
 }
