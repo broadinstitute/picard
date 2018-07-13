@@ -75,9 +75,11 @@ public class PhysicalLocationForMateCigar extends PhysicalLocationShort {
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + getLibraryId();
+        int result = getLibraryId();
         result = 31 * result + getReadGroup();
+        result = 31 * result + getTile();
+        result = 31 * result + getY();
+        result = 31 * result + getX();
         return result;
     }
 }
