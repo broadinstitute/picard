@@ -82,7 +82,6 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
     public static class IlluminaTileMetrics {
         private final IlluminaLaneTileCode laneTileCode;
         private final float metricValue;
-        private float metricValue2;
         private byte type;
 
         public IlluminaTileMetrics(final ByteBuffer bb, TileMetricsVersion version) {
@@ -91,7 +90,6 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
                 //need to dump 9 bytes
                 this.type = bb.get();
                 this.metricValue = bb.getFloat();
-                this.metricValue2 = bb.getFloat();
             } else {
                 this.laneTileCode = new IlluminaLaneTileCode(UnsignedTypeUtil.uShortToInt(bb.getShort()), UnsignedTypeUtil.uShortToInt(bb.getShort()),
                         UnsignedTypeUtil.uShortToInt(bb.getShort()));
@@ -133,7 +131,7 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
                 return false;
             }
         }
-        
+
         @Override
         public int hashCode() {
             return String.format("%s:%s:%s:%s", laneTileCode.getLaneNumber(), laneTileCode.getTileNumber(), laneTileCode.getMetricCode(), metricValue).hashCode(); // Slow but adequate.
