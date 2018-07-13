@@ -86,27 +86,32 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
 
         final FormatUtil formatter = new FormatUtil();
 
-        final CloseableIterator<SAMRecord> inputRecordIterator = this.getRecordIterator();
-        while (inputRecordIterator.hasNext()) {
-            final SAMRecord record = inputRecordIterator.next();
-            if (record.isSecondaryOrSupplementary()) {
-                ++expectedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
-            } else {
-                final String key = samRecordToDuplicatesFlagsKey(record);
-                if (!this.duplicateFlags.containsKey(key)) {
-                    System.err.println("DOES NOT CONTAIN KEY: " + key);
-                }
-                final boolean isDuplicate = this.duplicateFlags.get(key);
-
-                // First bring the simple metricsFile up to date
-                if (record.getReadUnmappedFlag()) {
-                    ++expectedMetrics.UNMAPPED_READS;
-                } else if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
-                    ++expectedMetrics.UNPAIRED_READS_EXAMINED;
-                    if (isDuplicate) ++expectedMetrics.UNPAIRED_READ_DUPLICATES;
+        try (final CloseableIterator<SAMRecord> inputRecordIterator = this.getRecordIterator()) {
+            while (inputRecordIterator.hasNext()) {
+                final SAMRecord record = inputRecordIterator.next();
+                if (record.isSecondaryOrSupplementary()) {
+                    ++expectedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
                 } else {
-                    ++expectedMetrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
-                    if (isDuplicate) ++expectedMetrics.READ_PAIR_DUPLICATES; // will need to be divided by 2 at the end
+                    final String key = samRecordToDuplicatesFlagsKey(record);
+                    if (!this.duplicateFlags.containsKey(key)) {
+                        System.err.println("DOES NOT CONTAIN KEY: " + key);
+                    }
+                    final boolean isDuplicate = this.duplicateFlags.get(key);
+
+                    // First bring the simple metricsFile up to date
+                    if (record.getReadUnmappedFlag()) {
+                        ++expectedMetrics.UNMAPPED_READS;
+                    } else if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
+                        ++expectedMetrics.UNPAIRED_READS_EXAMINED;
+                        if (isDuplicate) {
+                            ++expectedMetrics.UNPAIRED_READ_DUPLICATES;
+                        }
+                    } else {
+                        ++expectedMetrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
+                        if (isDuplicate) {
+                            ++expectedMetrics.READ_PAIR_DUPLICATES; // will need to be divided by 2 at the end
+                        }
+                    }
                 }
             }
         }
