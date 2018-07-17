@@ -14,7 +14,7 @@ import java.util.NoSuchElementException;
  * is essentially a struct.
  *
  * File Format:
- * byte 0 (unsigned byte) = The version number which MUST be 2 or an exception will be thrown
+ * byte 0 (unsigned byte) = The version number which MUST agree with the constructor parameter or an exception will be thrown
  * byte 1 (unsigned byte) = The record size which must be 10 or an exception will be thrown
  * bytes 3 + (current_record * 10) to (current_record * 10 + 10) (TileMetrics Record) = The actual records each of size 10 that
  *          get converted into IlluminaPhasingMetrics objects
