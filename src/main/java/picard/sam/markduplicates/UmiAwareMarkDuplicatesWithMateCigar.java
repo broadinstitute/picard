@@ -120,8 +120,8 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
     @Argument(shortName = "UMI_TAG_NAME", doc = "Tag name to use for UMI", optional = true)
     public String UMI_TAG_NAME = "RX";
 
-    @Argument(shortName = "ASSIGNED_UMI_TAG", doc = "Tag name to use for assigned UMI", optional = true)
-    public String ASSIGNED_UMI_TAG = "MI";
+    @Argument(shortName = "MOLECULAR_IDENTIFIER_TAG", doc = "Tag name to use for molecular identifier", optional = true)
+    public String MOLECULAR_IDENTIFIER_TAG = "MI";
 
     // Since we inherit from SimpleMarkDuplicatesWithMateCigar, it is useful for us to also inherit the tests
     // which do not contain UMIs.  By default, we don't allow for missing UMIs, but for the inherited tests
@@ -156,6 +156,6 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
                     new DuplicateSetIterator(headerAndIterator.iterator,
                     headerAndIterator.header,
                     false,
-                    comparator), MAX_EDIT_DISTANCE_TO_JOIN, UMI_TAG_NAME, ASSIGNED_UMI_TAG, ALLOW_MISSING_UMIS, metrics);
+                    comparator), MAX_EDIT_DISTANCE_TO_JOIN, UMI_TAG_NAME, MOLECULAR_IDENTIFIER_TAG, ALLOW_MISSING_UMIS, DUPLEX_UMI, metrics);
     }
 }

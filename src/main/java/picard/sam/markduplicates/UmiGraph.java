@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.counting;
+import static picard.sam.markduplicates.UmiUtil.isTopStrand;
+
 /**
  * UmiGraph is used to identify UMIs that come from the same original source molecule.  The assumption
  * is that UMIs with small edit distances are likely to be read errors on the sequencer rather than
@@ -57,18 +59,24 @@ public class UmiGraph {
     private final String[] umi;                 // Sequence of actual UMI, the index is the UMI ID
     private final int numUmis;                  // Number of observed UMIs
     private final String umiTag;                // UMI tag used in the SAM/BAM/CRAM file ie. RX
-    private final String assignedUmiTag;        // Assigned UMI tag used in the SAM/BAM/CRAM file ie. MI
+    private final String molecularIdentifierTag; // Assigned UMI tag used in the SAM/BAM/CRAM file ie. MI
     private final boolean allowMissingUmis;     // Allow for missing UMIs
+    private final boolean duplexUmis;
 
-    public UmiGraph(DuplicateSet set, String umiTag, String assignedUmiTag, boolean allowMissingUmis) {
+    private String TOP_STRAND_DUPLEX = "/A";
+    private String BOTTOM_STRAND_DUPLEX = "/B";
+
+    UmiGraph(final DuplicateSet set, final String umiTag, final String molecularIdentifierTag,
+                    final boolean allowMissingUmis, final boolean duplexUmis) {
         this.umiTag = umiTag;
-        this.assignedUmiTag = assignedUmiTag;
+        this.molecularIdentifierTag = molecularIdentifierTag;
         this.allowMissingUmis = allowMissingUmis;
+        this.duplexUmis = duplexUmis;
         records = set.getRecords();
 
         // First ensure that all the reads have a UMI, if any reads are missing a UMI throw an exception unless allowMissingUmis is true
-        for (SAMRecord rec : records) {
-            if (UmiUtil.getSanitizedUMI(rec, umiTag) == null) {
+        for (final SAMRecord rec : records) {
+            if (rec.getStringAttribute(umiTag) == null) {
                 if (allowMissingUmis) {
                     rec.setAttribute(umiTag, "");
                 } else {
@@ -78,7 +86,7 @@ public class UmiGraph {
         }
 
         // Count the number of times each UMI occurs
-        umiCounts = records.stream().collect(Collectors.groupingBy(p -> UmiUtil.getSanitizedUMI(p, umiTag), counting()));
+        umiCounts = records.stream().collect(Collectors.groupingBy(p -> duplexUmis ? UmiUtil.getTopStrandNormalizedDuplexUMI(p, umiTag) : p.getStringAttribute(umiTag), counting()));
 
         // At first we consider every UMI as if it were its own duplicate set
         numUmis = umiCounts.size();
@@ -86,7 +94,7 @@ public class UmiGraph {
         duplicateSetID = IntStream.rangeClosed(0, numUmis-1).toArray();
 
         int i = 0;
-        for (String key : umiCounts.keySet()) {
+        for (final String key : umiCounts.keySet()) {
             umi[i] = key;
             i++;
         }
@@ -119,8 +127,14 @@ public class UmiGraph {
 
         // Assign UMIs to duplicateSets
         final Map<String, Integer> duplicateSetsFromUmis = getDuplicateSetsFromUmis();
-        for (SAMRecord rec : records) {
-            final String umi = UmiUtil.getSanitizedUMI(rec, umiTag);
+        for (final SAMRecord rec : records) {
+            final String umi;
+
+            if (duplexUmis) {
+                umi = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, umiTag);
+            } else {
+                umi = rec.getStringAttribute(umiTag);
+            }
             final Integer duplicateSetIndex = duplicateSetsFromUmis.get(umi);
 
             if (duplicateSets.containsKey(duplicateSetIndex)) {
@@ -147,8 +161,14 @@ public class UmiGraph {
             String fewestNUmi = null;
             long nCount = 0;
 
-            for (SAMRecord rec : recordList) {
-                final String umi = UmiUtil.getSanitizedUMI(rec, umiTag);
+            for (final SAMRecord rec : recordList) {
+                final String umi;
+
+                if (duplexUmis) {
+                    umi = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, umiTag);
+                } else {
+                    umi = rec.getStringAttribute(umiTag);
+                }
 
                 // If there is another choice, we don't want to choose the UMI with a N
                 // as the assignedUmi
@@ -173,13 +193,31 @@ public class UmiGraph {
             // then choose the one with the fewest Ns
             if (assignedUmi == null) { assignedUmi = fewestNUmi; }
 
-            // Set the records to contain the assigned UMI
+            // Set the records to contain the inferred UMI and the Unique Molecular Identifier
             for (final SAMRecord rec : recordList) {
                 if (allowMissingUmis && rec.getStringAttribute(umiTag).isEmpty()) {
                     // The SAM spec doesn't support empty tags, so we set it to null if it is empty.
                     rec.setAttribute(umiTag, null);
+
                 } else {
-                    rec.setAttribute(assignedUmiTag, assignedUmi);
+                    final String fragmentStartPosition;
+                    if (ds.getRepresentative().getReadNegativeStrandFlag()) {
+                        fragmentStartPosition = ds.getRepresentative().getContig() + ":" + ds.getRepresentative().getAlignmentStart();
+                    } else {
+                        fragmentStartPosition = ds.getRepresentative().getContig() + ":" + ds.getRepresentative().getMateAlignmentStart();
+                    }
+
+                    final String strandPosition;
+                    if (duplexUmis) {
+                        if (isTopStrand(rec)) {
+                            strandPosition = TOP_STRAND_DUPLEX;
+                        } else {
+                            strandPosition = BOTTOM_STRAND_DUPLEX;
+                        }
+                        rec.setAttribute(molecularIdentifierTag, fragmentStartPosition + "/" + assignedUmi + strandPosition);
+                    } else {
+                        rec.setAttribute(molecularIdentifierTag, fragmentStartPosition + "/" + assignedUmi);
+                    }
                 }
             }
 

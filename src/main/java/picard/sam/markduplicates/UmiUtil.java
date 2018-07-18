@@ -24,6 +24,8 @@
 
 package picard.sam.markduplicates;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMUtils;
+import picard.PicardException;
 
 /**
  *
@@ -34,10 +36,64 @@ import htsjdk.samtools.SAMRecord;
 
 public class UmiUtil {
 
-    /** Returns an instance of the UMI without dashes */
-    public static String getSanitizedUMI(final SAMRecord record, final String umiTag) {
-        String umi = record.getStringAttribute(umiTag);
+    /**
+     * Creates a top-strand normalized duplex UMI.
+     * Duplex UMIs that come from a top strand read are by definition, top-strand normalized.
+     * The UMI from a bottom strand can be normalized to be identical to the UMI
+     * read from its corresponding top strand by swapping the content of the
+     * UMI around the "-" found in duplex UMIs.  For example, a bottom strand
+     * UMI reading ATC-CGG when top-strand normalized will read CGG-ATC.
+     *
+     * @param record SAM record to retrieve UMI from.
+     * @param umiTag The tag used in the bam file that designates the UMI.
+     * @return Normalized Duplex UMI.  If the UMI isn't duplex, it returns the UMI unaltered.
+     */
+    static String getTopStrandNormalizedDuplexUMI(final SAMRecord record, final String umiTag) {
+        final String umi = record.getStringAttribute(umiTag);
+
         if (umi == null) return null;
-        return umi.replace("-", "");
+
+        final String[] split = umi.split("-");
+        if (split.length != 2) {
+            throw new PicardException("Duplex UMIs must be of the form X-Y where X and Y are equal length UMIs, for example AT-GA.  Found UMI, " + umi);
+        }
+
+        if (isTopStrand(record)) {
+            return split[0] + "-" + split[1];
+        } else {
+            return split[1] + "-" + split[0];
+        }
     }
+
+    /**
+     * Determines if the read represented by a SAM record belongs to the top or bottom strand.
+     * Top strand is defined as having a Read 1 unclipped 5' coordinate
+     * less than the Read 2 unclipped 5' coordinate.  If a read is unmapped
+     * it is considered to have an unclipped 5' coordinate of 0.
+     * @param rec Record to determine top or bottom strand
+     * @return Top or bottom strand, true (top), false (bottom).
+     */
+    static boolean isTopStrand(final SAMRecord rec) {
+        final int read1FivePrimeCoordinate;
+        final int read2FivePrimeCoordinate;
+
+        if (rec.getFirstOfPairFlag()) {
+            read1FivePrimeCoordinate = (rec.getReadNegativeStrandFlag()) ? rec.getAlignmentEnd() : rec.getAlignmentStart();
+            read2FivePrimeCoordinate = (rec.getMateNegativeStrandFlag()) ? SAMUtils.getMateUnclippedEnd(rec) : SAMUtils.getMateUnclippedStart(rec);
+        } else {
+            read1FivePrimeCoordinate = (rec.getMateNegativeStrandFlag()) ? SAMUtils.getMateUnclippedEnd(rec) : SAMUtils.getMateUnclippedStart(rec);
+            read2FivePrimeCoordinate = (rec.getReadNegativeStrandFlag()) ? rec.getAlignmentEnd() : rec.getAlignmentStart();
+        }
+
+        return read1FivePrimeCoordinate < read2FivePrimeCoordinate;
+    }
+
+    static String getAssignedUmi(final String molecularIndex) {
+        if (molecularIndex == null) {
+            return null;
+        }
+        return molecularIndex.replaceAll(".*/", "");
+    }
+
+
 }

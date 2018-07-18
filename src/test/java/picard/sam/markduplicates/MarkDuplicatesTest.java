@@ -308,4 +308,71 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
 
         tester.runTest();
     }
+
+    @DataProvider(name = "testDuplexUmiDataProvider")
+    private Object[][] testDuplexUmiDataProvider() {
+        return new Object[][]{
+                {
+                        // Test case where UMIs are not duplex, but are the same.
+                        false,                                // Use duplex UMI (true), or single stranded UMI (false)
+                        Arrays.asList("ATC", "ATC"),          // UMIs
+                        Arrays.asList(4, 4),                  // First of pair alignment start
+                        Arrays.asList(10, 10),                // Second of pair alignment start
+                        Arrays.asList(false, true),           // Is duplicate
+                        Arrays.asList(false, false),          // Negative Strand Flag of first in pair
+                        Arrays.asList(true, true),            // Negative Strand Flag of second in pair
+                },{
+                        // Test case where UMIs are not duplex, but are different.  None of the reads should be duplicates.
+                        false,                                // Use duplex UMI (true), or single stranded UMI (false)
+                        Arrays.asList("ATC", "GCG"),          // UMIs
+                        Arrays.asList(4, 4),                  // First of pair alignment start
+                        Arrays.asList(10, 10),                // Second of pair alignment start
+                        Arrays.asList(false, false),          // Is duplicate
+                        Arrays.asList(false, false),          // Negative Strand Flag of first in pair
+                        Arrays.asList(true, true),            // Negative Strand Flag of second in pair
+                },
+                {
+                        // Two fragments, one top and bottom strand that are duplicates of each other.
+                        true,                                // Use duplex UMI (true), or single stranded UMI (false)
+                        Arrays.asList("AAA-GGG", "GGG-AAA"), // UMIs
+                        Arrays.asList(4, 10),                // First of pair alignment start
+                        Arrays.asList(10, 4),                // Second of pair alignment start
+                        Arrays.asList(false, true),          // Is duplicate
+                        Arrays.asList(false, true),          // Negative Strand Flag of first in pair
+                        Arrays.asList(true, false),          // Negative Strand Flag of second in pair
+                },
+                {
+                        // Two fragments, one top and bottom strand that are not duplicates of each other but may
+                        // naively appear to be duplicates because they have the same UMI (but not the same
+                        // top strand normalized UMI).
+                        true,                                // Use duplex UMI (true), or single stranded UMI (false)
+                        Arrays.asList("AAA-GGG", "AAA-GGG"), // UMIs
+                        Arrays.asList(4, 10),                // First of pair alignment start
+                        Arrays.asList(10, 4),                // Second of pair alignment start
+                        Arrays.asList(false, false),         // Is duplicate
+                        Arrays.asList(false, true),          // Negative Strand Flag of first in pair
+                        Arrays.asList(true, false),          // Negative Strand Flag of second in pair
+                },
+
+        };
+    }
+
+    @Test(dataProvider = "testDuplexUmiDataProvider")
+    public void testWithUMIs(final boolean duplexUmi, final List<String> UMIs, final List<Integer> alignmentStart1,
+                             final List<Integer> alignmentStart2, final List<Boolean> isDuplicate,
+                             final List<Boolean> isFirstNegativeStrand, final List<Boolean> isSecondNegativeStrand) {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(10);
+
+        for (int k = 0; k < UMIs.size();k++) {
+            tester.addMatePair("RUNID" + k, 2, 2, alignmentStart1.get(k), alignmentStart2.get(k), false, false, isDuplicate.get(k), isDuplicate.get(k),
+                    "10M", "10M", isFirstNegativeStrand.get(k), isSecondNegativeStrand.get(k),
+                    false, false, false, DEFAULT_BASE_QUALITY, UMIs.get(k));
+        }
+        final String barcodeTag = "RX";
+
+        tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.addArg("DUPLEX_UMI=" + duplexUmi);
+        tester.runTest();
+    }
 }
