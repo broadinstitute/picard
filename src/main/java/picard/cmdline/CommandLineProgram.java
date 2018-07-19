@@ -51,7 +51,7 @@ import org.broadinstitute.barclay.argparser.SpecialArgumentsCollection;
 import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
-import picard.nio.PathHelper;
+import picard.nio.PathProvider;
 import picard.util.PropertyUtils;
 
 import java.io.File;
@@ -64,6 +64,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * Abstract class to facilitate writing command-line programs.
@@ -244,21 +245,15 @@ public abstract class CommandLineProgram {
             BlockGunzipper.setDefaultInflaterFactory(new IntelInflaterFactory());
         }
 
-        PathHelper.initilizeAll();
-
         if (!QUIET) {
             System.err.println("[" + new Date() + "] " + commandLine);
 
             // Output a one liner about who/where and what software/os we're running on
             try {
-                final StringBuilder pathProvidersBuilder = new StringBuilder();
-
-                for (PathHelper.PathProviders providers : PathHelper.PathProviders.values()) {
-                    pathProvidersBuilder.append(String.format("Provider %s is%s available; ",
-                            providers.name(), providers.isAvailable() ? "" : " not"));
-                }
-                final int lastSpacePos = pathProvidersBuilder.lastIndexOf(" ");
-                pathProvidersBuilder.delete(lastSpacePos, lastSpacePos + 1);
+                String pathProvidersMessage =
+                        Arrays.stream(PathProvider.values())
+                                .map(provider -> String.format("Provider %s is%s available;", provider.name(), provider.isAvailable ? "" : " not"))
+                                .collect(Collectors.joining(" "));
 
                 final boolean usingIntelDeflater = (BlockCompressedOutputStream.getDefaultDeflaterFactory() instanceof IntelDeflaterFactory &&
                         ((IntelDeflaterFactory)BlockCompressedOutputStream.getDefaultDeflaterFactory()).usingIntelDeflater());
@@ -270,7 +265,7 @@ public abstract class CommandLineProgram {
                     System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"),
                     System.getProperty("java.vm.name"), System.getProperty("java.runtime.version"),
                     usingIntelDeflater ? "Intel" : "Jdk", usingIntelInflater ? "Intel" : "Jdk",
-                    pathProvidersBuilder.toString(),
+                        pathProvidersMessage,
                     getCommandLineParser().getVersion());
                 System.err.println(msg);
             }
