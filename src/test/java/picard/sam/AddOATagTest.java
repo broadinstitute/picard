@@ -47,12 +47,13 @@ public class AddOATagTest {
     public void testOverWrite(final File input, final File interval_list, Boolean overWriteTag) throws IOException {
         final File firstPassOutput = File.createTempFile("FirstPassAddOATag", ".bam");
         firstPassOutput.deleteOnExit();
-
         final File secondPassOutput = File.createTempFile("SecondPassAddOATag", ".bam");
         secondPassOutput.deleteOnExit();
 
+        // make first pass bam that only has one value per OA tag
         runAddOATag(input, firstPassOutput, interval_list, true);
 
+        // make bam we want to test the overwrite option with
         runAddOATag(firstPassOutput, secondPassOutput, interval_list, overWriteTag);
 
         validateBamForOA(secondPassOutput, interval_list, overWriteTag);
@@ -65,14 +66,12 @@ public class AddOATagTest {
                 add("OUTPUT=" + output);
             }
         };
-
         if (intervalList != null) {
             args.add("INTERVAL_LIST=" + intervalList);
         }
         if (overwriteTag != null) {
             args.add("OVERWRITE_TAG=" + overwriteTag);
         }
-
         AddOATag addOATag = new AddOATag();
         Assert.assertEquals(addOATag.instanceMain(args.toArray(new String[args.size()])), 0, "Running addOATag did not succeed");
     }
