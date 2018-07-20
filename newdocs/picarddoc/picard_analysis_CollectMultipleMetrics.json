@@ -107,6 +107,21 @@
       "options": []
     },
     {
+      "summary": "If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.",
+      "name": "--IGNORE_SEQUENCE",
+      "synonyms": "NA",
+      "type": "Set[String]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Include unpaired reads in CollectSequencingArtifactMetrics. If set to true then all paired reads will be included as well - MINIMUM_INSERT_SIZE and MAXIMUM_INSERT_SIZE will be ignored in CollectSequencingArtifactMetrics.",
       "name": "--INCLUDE_UNPAIRED",
       "synonyms": "-UNPAIRED",
@@ -224,6 +239,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat",
+      "name": "--REF_FLAT",
+      "synonyms": "NA",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {

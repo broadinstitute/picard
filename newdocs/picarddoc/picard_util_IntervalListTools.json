@@ -207,7 +207,7 @@
       "options": []
     },
     {
-      "summary": "The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals \u003c 0 bases long will be removed. Padding is applied to the interval lists (both INPUT and SECOND_INPUT, if proivided) \u003cb\u003e before \u003c/b\u003e the ACTION is performed.",
+      "summary": "The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals \u003c 0 bases long will be removed. Padding is applied to the interval lists (both INPUT and SECOND_INPUT, if provided) \u003cb\u003e before \u003c/b\u003e the ACTION is performed.",
       "name": "--PADDING",
       "synonyms": "NA",
       "type": "int",

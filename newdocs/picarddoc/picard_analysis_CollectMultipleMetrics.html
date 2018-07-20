@@ -461,6 +461,13 @@
 					<td>Append the given file extension to all metric file names (ex. OUTPUT.insert_size_metrics.EXT). None if null</td>
 				</tr>
 				<tr>
+					<td><a href="#--IGNORE_SEQUENCE">--IGNORE_SEQUENCE</a><br />
+					</td>
+					<!--<td>Set[String]</td> -->
+					<td>[]</td>
+					<td>If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.</td>
+				</tr>
+				<tr>
 					<td><a href="#--INCLUDE_UNPAIRED">--INCLUDE_UNPAIRED</a><br />
 								&nbsp;<em>-UNPAIRED</em>
 					</td>
@@ -489,6 +496,13 @@
 					<!--<td>Set[Program]</td> -->
 					<td>[CollectAlignmentSummaryMetrics, CollectBaseDistributionByCycle, CollectInsertSizeMetrics, MeanQualityByCycle, QualityScoreDistribution]</td>
 					<td>Set of metrics programs to apply during the pass through the SAM file.</td>
+				</tr>
+				<tr>
+					<td><a href="#--REF_FLAT">--REF_FLAT</a><br />
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat</td>
 				</tr>
 				<tr>
 					<td><a href="#--STOP_AFTER">--STOP_AFTER</a><br />
@@ -679,6 +693,18 @@
 			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--IGNORE_SEQUENCE">--IGNORE_SEQUENCE </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Set[String]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INCLUDE_UNPAIRED">--INCLUDE_UNPAIRED </a>
 			 / <small>-UNPAIRED</small>
 		</h3>
@@ -777,6 +803,18 @@
 		<p>
 		<span class="label label-info ">Boolean</span>
 			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--REF_FLAT">--REF_FLAT </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE </a>
@@ -898,7 +936,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.18.9-SNAPSHOT built at 02-33-2018 03:33:38.
+        <p class="version">Picard version 2.18.10-SNAPSHOT built at 20-52-2018 03:52:03.
         </p>
 
 	</div>
