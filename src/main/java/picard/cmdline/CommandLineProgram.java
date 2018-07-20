@@ -250,7 +250,7 @@ public abstract class CommandLineProgram {
 
             // Output a one liner about who/where and what software/os we're running on
             try {
-                String pathProvidersMessage =
+                final String pathProvidersMessage =
                         Arrays.stream(PathProvider.values())
                                 .map(provider -> String.format("Provider %s is%s available;", provider.name(), provider.isAvailable ? "" : " not"))
                                 .collect(Collectors.joining(" "));
