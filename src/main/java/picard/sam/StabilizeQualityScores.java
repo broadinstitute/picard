@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @CommandLineProgramProperties(
         summary = StabilizeQualityScores.USAGE_SUMMARY + StabilizeQualityScores.USAGE_DETAILS,
@@ -72,11 +71,11 @@ public class StabilizeQualityScores extends CommandLineProgram {
     @Argument(shortName = "M", doc = "Merge runs of <= N quals to the qual immediately previous to the run.", mutex = {"AVERAGE", "DROP"})
     public Integer MERGE = null;
 
-    abstract class Binner {
+    abstract static class Binner {
         public abstract int[] bin(int[] quals);
     }
 
-    class ThresholdBinner extends Binner {
+    static class ThresholdBinner extends Binner {
         protected Integer threshold;
         ThresholdBinner(Integer threshold) { this.threshold = threshold; }
 
@@ -89,7 +88,7 @@ public class StabilizeQualityScores extends CommandLineProgram {
         }
     }
 
-    class NearestBinner extends Binner {
+    static class NearestBinner extends Binner {
         protected List<Integer> bins;
         NearestBinner(List<Integer> bins) { Collections.sort(bins); this.bins = bins; }
 
@@ -117,6 +116,15 @@ public class StabilizeQualityScores extends CommandLineProgram {
         int qual; int count;
         RLEElem(int q, int c) {
             qual = q; count = c;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if(obj.getClass() == this.getClass()) {
+                RLEElem thatRLE = (RLEElem) obj;
+                return thatRLE.qual == this.qual && thatRLE.count == this.count;
+            }
+            return false;
         }
     }
 
@@ -151,7 +159,7 @@ public class StabilizeQualityScores extends CommandLineProgram {
         return bytes;
     }
 
-    abstract class Stabilizer {
+    abstract static class Stabilizer {
         public Integer minRunLength;
         Stabilizer(Integer rl) { this.minRunLength = rl; }
 
@@ -161,7 +169,7 @@ public class StabilizeQualityScores extends CommandLineProgram {
     }
 
     /* merges RLEs with the previous qual in the list */
-    class MergeStabilizer extends Stabilizer {
+    static class MergeStabilizer extends Stabilizer {
         MergeStabilizer(Integer rl) { super(rl); }
 
         public List<RLEElem> stabilize(List<Integer> oquals, RLEElem prevRle, List<RLEElem> deoscillate) {
@@ -177,7 +185,7 @@ public class StabilizeQualityScores extends CommandLineProgram {
     }
 
     /* sets the qual for the RLE to the minimum value seen */
-    class DropStabilizer extends Stabilizer {
+    static class DropStabilizer extends Stabilizer {
         DropStabilizer(Integer rl) { super(rl); }
 
         //Return a list of prevRle + the deoscillation's minimum qual.
@@ -195,7 +203,7 @@ public class StabilizeQualityScores extends CommandLineProgram {
     }
 
     /* sets the qual for the RLE to the binned average value */
-    class AverageStabilizer extends Stabilizer {
+    static class AverageStabilizer extends Stabilizer {
         protected Binner binner;
         AverageStabilizer(Integer rl, Binner binner) { super(rl); this.binner = binner; }
 
