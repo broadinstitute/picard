@@ -174,12 +174,17 @@ public class StabilizeQualityScores extends CommandLineProgram {
 
         public List<RLEElem> stabilize(List<Integer> oquals, RLEElem prevRle, List<RLEElem> deoscillate) {
             int thisCount = deoscillate.stream().mapToInt(e -> e.count).sum();
-            List<RLEElem> outList = new ArrayList<>();
+
+            RLEElem newRLE = new RLEElem(0, 0);
             if(prevRle == null) {
-                prevRle = new RLEElem(deoscillate.get(0).qual, 0);
+                newRLE.qual = deoscillate.get(0).qual;
+            } else {
+                newRLE.qual = prevRle.qual;
+                newRLE.count = prevRle.count;
             }
-            prevRle.count += thisCount;
-            outList.add(prevRle);
+            newRLE.count += thisCount;
+
+            List<RLEElem> outList = Arrays.asList(newRLE);
             return outList;
         }
     }

@@ -1,6 +1,7 @@
 package picard.sam;
 
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
@@ -11,6 +12,21 @@ import java.util.stream.Collectors;
 import picard.sam.StabilizeQualityScores.*;
 
 public class StabilizeQualityScoresTest extends CommandLineProgramTest {
+
+    @DataProvider(name = "StabilizerTestProvider")
+    public Object[][] StabilizerTestProvider() {
+        final List<Integer> testOQuals = Arrays.asList(0, 2, 3, 19, 20, 5, 201, 2); //silly outlier drags up the average
+        final List<RLEElem> testRLE = Arrays.asList(
+                new RLEElem(2, 3),
+                new RLEElem(20, 2),
+                new RLEElem(2, 1),
+                new RLEElem(20, 1),
+                new RLEElem(2, 1));
+        final RLEElem testPrevRLE = new RLEElem(20, 2);
+
+        return new Object[][] {{testOQuals, testPrevRLE, testRLE}};
+    }
+
     @Override
     public String getCommandLineProgramName() { return StabilizeQualityScores.class.getSimpleName(); }
 
@@ -58,8 +74,46 @@ public class StabilizeQualityScoresTest extends CommandLineProgramTest {
         Assert.assertEquals(box(StabilizeQualityScores.toQuals(inRLE)), box(expectedQuals));
     }
 
-    @Test
-    public void testMergeStabilizer() {
+    @Test(dataProvider = "StabilizerTestProvider")
+    public void testMergeStabilizer(final List<Integer> testOQuals, final RLEElem testPrevRLE, final List<RLEElem> testRLE) {
+        Stabilizer merge = new MergeStabilizer(4);
 
+        //should merge correctly with previous RLE
+        List<RLEElem> mergePrevious = merge.stabilize(testOQuals, testPrevRLE, testRLE);
+        Assert.assertEquals(mergePrevious, Arrays.asList(new RLEElem(testPrevRLE.qual, testPrevRLE.count + testOQuals.size())));
+
+        //should merge correctly with no RLE
+        List<RLEElem> mergeBeginning = merge.stabilize(testOQuals, null, testRLE);
+        Assert.assertEquals(mergeBeginning, Arrays.asList(new RLEElem(testRLE.get(0).qual, testOQuals.size())));
+    }
+
+    @Test(dataProvider = "StabilizerTestProvider")
+    public void testDropStabilizer(final List<Integer> testOQuals, final RLEElem testPrevRLE, final List<RLEElem> testRLE) {
+        Stabilizer drop = new DropStabilizer(4);
+
+        //should drop correctly with previous RLE
+        List<RLEElem> dropPrevious = drop.stabilize(testOQuals, testPrevRLE, testRLE);
+        Assert.assertEquals(dropPrevious, Arrays.asList(testPrevRLE, new RLEElem(2, testOQuals.size())));
+
+        //should drop correctly with no RLE
+        List<RLEElem> dropBeginning = drop.stabilize(testOQuals, null, testRLE);
+        Assert.assertEquals(dropBeginning, Arrays.asList(new RLEElem(2, testOQuals.size())));
+    }
+
+    @Test(dataProvider = "StabilizerTestProvider")
+    public void testAverageStabilizer(final List<Integer> testOQuals, final RLEElem testPrevRLE, final List<RLEElem> testRLE) {
+        ThresholdBinner tbin = new ThresholdBinner(20);
+        Stabilizer average = new AverageStabilizer(4, tbin);
+
+        //Note that the original quals are set up in such a way that the average of the binned quals is 0,
+        //but the binned average of the original quals is 20. This is deliberate :)
+
+        //should average correctly with previous RLE
+        List<RLEElem> averagePrevious = average.stabilize(testOQuals, testPrevRLE, testRLE);
+        Assert.assertEquals(averagePrevious, Arrays.asList(testPrevRLE, new RLEElem(20, testOQuals.size())));
+
+        //should average correctly with no RLE
+        List<RLEElem> averageBeginning = average.stabilize(testOQuals, null, testRLE);
+        Assert.assertEquals(averageBeginning, Arrays.asList(new RLEElem(20, testOQuals.size())));
     }
 }
