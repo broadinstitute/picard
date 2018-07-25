@@ -46,10 +46,18 @@ public class StabilizeQualityScoresTest extends CommandLineProgramTest {
 
     @Test
     public void testThresholdBinner() {
-        ThresholdBinner tbin = new ThresholdBinner(20);
+        ThresholdBinner tbin = new ThresholdBinner(20, null);
 
         int[] inquals = {0,1,2,15,19,20,21,50};
         Assert.assertEquals(box(tbin.bin(inquals)), Arrays.asList(2,2,2,2,2,20,20,20));
+    }
+
+    @Test
+    public void testThresholdUpBinner() {
+        ThresholdBinner tbin = new ThresholdBinner(20, 30);
+
+        int[] inquals = {0,1,2,15,19,20,21,50};
+        Assert.assertEquals(box(tbin.bin(inquals)), Arrays.asList(2,2,2,2,2,30,30,30));
     }
 
     @Test
@@ -103,7 +111,7 @@ public class StabilizeQualityScoresTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "StabilizerTestProvider")
     public void testAverageStabilizer(final List<Integer> testOQuals, final RLEElem testPrevRLE, final List<RLEElem> testRLE) {
-        ThresholdBinner tbin = new ThresholdBinner(20);
+        ThresholdBinner tbin = new ThresholdBinner(20, null);
         Stabilizer average = new AverageStabilizer(4, tbin);
 
         //Note that the original quals are set up in such a way that the average of the binned quals is 0,

@@ -56,10 +56,13 @@ public class StabilizeQualityScores extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The stabilized SAM or BAM file to write.")
     public File OUTPUT;
 
-    @Argument(shortName = "T", doc = "Any qual >=T becomes QT; anything below becomes Q2.", mutex = {"BINS"})
+    @Argument(shortName = "BANKS", doc = "For use with THRESHOLD. Sets the above-threshold value.", mutex = {"BINS"})
+    public Integer THRESHOLD_UP = null;
+
+    @Argument(shortName = "T", doc = "Any qual <T becomes Q2. Any qual >=T becomes T, or the value of THRESHOLD_UP if specified.", mutex = {"BINS"})
     public Integer THRESHOLD = 20;
 
-    @Argument(shortName = "B", doc = "All qualities round to nearest bin in this list.", mutex = {"THRESHOLD"})
+    @Argument(shortName = "B", doc = "All qualities round to nearest bin in this list.", mutex = {"THRESHOLD", "THRESHOLD_UP"})
     public List<Integer> BINS = null;
 
     @Argument(shortName = "D", doc = "Drop runs of <= N quals to the lowest qual in the run.", mutex = {"AVERAGE", "MERGE"})
@@ -77,12 +80,16 @@ public class StabilizeQualityScores extends CommandLineProgram {
 
     static class ThresholdBinner extends Binner {
         protected Integer threshold;
-        ThresholdBinner(Integer threshold) { this.threshold = threshold; }
+        protected Integer thresholdUp;
+        ThresholdBinner(Integer threshold, Integer thresholdUp) {
+            this.threshold = threshold;
+            this.thresholdUp = thresholdUp != null ? thresholdUp : threshold;
+        }
 
         public int[] bin(int[] quals) {
             int[] iquals = new int[quals.length];
             for (int i = 0; i < quals.length; ++i) {
-                iquals[i] = quals[i] >= this.threshold ? this.threshold : 2;
+                iquals[i] = quals[i] >= this.threshold ? this.thresholdUp : 2;
             }
             return iquals;
         }
@@ -104,9 +111,9 @@ public class StabilizeQualityScores extends CommandLineProgram {
         }
     }
 
-    protected Binner makeBinner(Integer threshold, List<Integer> bins) {
+    protected Binner makeBinner(Integer threshold, Integer thresholdUp, List<Integer> bins) {
         if(threshold != null) {
-            return new ThresholdBinner(threshold);
+            return new ThresholdBinner(threshold, thresholdUp);
         } else {
             return new NearestBinner(bins);
         }
@@ -270,7 +277,7 @@ public class StabilizeQualityScores extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final Binner binner = makeBinner(THRESHOLD, BINS);
+        final Binner binner = makeBinner(THRESHOLD, THRESHOLD_UP, BINS);
         final Stabilizer stabilizer = makeStabilizer(binner, DROP, AVERAGE, MERGE);
 
         try (final SamReader samReader = SamReaderFactory.makeDefault().open(SamInputResource.of(INPUT)) ) {
