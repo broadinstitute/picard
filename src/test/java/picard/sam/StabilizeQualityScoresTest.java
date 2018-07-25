@@ -150,5 +150,44 @@ public class StabilizeQualityScoresTest extends CommandLineProgramTest {
                         ));
     }
 
-    //TODO: test actual file writing
+    @Test
+    public void testGetIndexAboveCutoff() {
+        Assert.assertEquals(
+                StabilizeQualityScores.getIndexAboveCutoff(Arrays.asList(1,5,6), 5),
+                2);
+
+        Assert.assertEquals(
+                StabilizeQualityScores.getIndexAboveCutoff(Arrays.asList(6,6,6), 5),
+                0);
+
+        Assert.assertEquals(
+                StabilizeQualityScores.getIndexAboveCutoff(Arrays.asList(2,5,5), 5),
+                3);
+    }
+
+    @Test
+    public void testCutoff() {
+
+        int[] iquals = {0,1,2,1,5,3,19,20,21,22,50,5,2};
+
+        Assert.assertEquals(
+                StabilizeQualityScores.cutoff(iquals, 5, false),
+                Arrays.asList( new RLEElem(13, 11), new RLEElem(2, 2) )
+        );
+
+        Assert.assertEquals(
+                StabilizeQualityScores.cutoff(iquals, 5, true),
+                Arrays.asList( new RLEElem(2, 6), new RLEElem(20, 7) )
+        );
+
+        Assert.assertEquals(
+                StabilizeQualityScores.cutoff(new int[] {6,6,6,6}, 5, true),
+                Arrays.asList(new RLEElem(6, 4))
+        );
+
+        Assert.assertEquals(
+                StabilizeQualityScores.cutoff(new int[] {5,5,5,5}, 5, true),
+                Arrays.asList(new RLEElem(2, 4))
+        );
+    }
 }

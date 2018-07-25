@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static htsjdk.samtools.SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS;
 
@@ -61,19 +63,22 @@ public class StabilizeQualityScores extends CommandLineProgram {
     @Argument(shortName = "BANKS", optional = true, doc = "For use with THRESHOLD. Sets the above-threshold value.")
     public Integer THRESHOLD_UP = null;
 
-    @Argument(shortName = "T", doc = "Any qual <T becomes Q2. Any qual >=T becomes T, or the value of THRESHOLD_UP if specified.", mutex = {"BINS"})
+    @Argument(shortName = "T", doc = "Any qual <T becomes Q2. Any qual >=T becomes T, or the value of THRESHOLD_UP if specified.", mutex = {"BINS", "CUTOFF"})
     public Integer THRESHOLD = 20;
 
-    @Argument(shortName = "B", doc = "All qualities round to nearest bin in this list.", mutex = {"THRESHOLD"})
+    @Argument(shortName = "B", doc = "All qualities round to nearest bin in this list.", mutex = {"THRESHOLD", "CUTOFF"})
     public List<Integer> BINS = null;
 
-    @Argument(shortName = "D", doc = "Drop runs of <= N quals to the lowest qual in the run.", mutex = {"AVERAGE", "MERGE"})
+    @Argument(shortName = "C", doc = "Find the cutoff where the end of the read drops consistently at or below this qual. Set the end of the read to Q2 and the rest to Q-average.", mutex = {"THRESHOLD", "BINS", "DROP", "AVERAGE", "MERGE"})
+    public Integer CUTOFF = null;
+
+    @Argument(shortName = "D", doc = "Drop runs of <= N quals to the lowest qual in the run.", mutex = {"AVERAGE", "MERGE", "CUTOFF"})
     public Integer DROP = null;
 
-    @Argument(shortName = "A", doc = "Average runs of <= N quals to the binned average quality of the run.", mutex = {"DROP", "MERGE"})
+    @Argument(shortName = "A", doc = "Average runs of <= N quals to the binned average quality of the run.", mutex = {"DROP", "MERGE", "CUTOFF"})
     public Integer AVERAGE = 4;
 
-    @Argument(shortName = "M", doc = "Merge runs of <= N quals to the qual immediately previous to the run.", mutex = {"AVERAGE", "DROP"})
+    @Argument(shortName = "M", doc = "Merge runs of <= N quals to the qual immediately previous to the run.", mutex = {"AVERAGE", "DROP", "CUTOFF"})
     public Integer MERGE = null;
 
     abstract static class Binner {
@@ -113,8 +118,11 @@ public class StabilizeQualityScores extends CommandLineProgram {
         }
     }
 
-    protected Binner makeBinner(Integer threshold, Integer thresholdUp, List<Integer> bins) {
-        if(threshold != null) {
+    protected Binner makeBinner(Integer threshold, Integer thresholdUp, List<Integer> bins, Integer cutoff) {
+        if(cutoff != null) {
+            return null;
+        }
+        else if(threshold != null) {
             return new ThresholdBinner(threshold, thresholdUp);
         } else {
             return new NearestBinner(bins);
@@ -237,8 +245,10 @@ public class StabilizeQualityScores extends CommandLineProgram {
         }
     }
 
-    protected Stabilizer makeStabilizer(Binner binner, Integer drop, Integer average, Integer merge) {
-        if(merge != null) {
+    protected Stabilizer makeStabilizer(Binner binner, Integer drop, Integer average, Integer merge, Integer cutoff) {
+        if(cutoff != null) {
+            return null;
+        } else if(merge != null) {
             return new MergeStabilizer(merge);
         } else if(average != null) {
             return new AverageStabilizer(average, binner);
@@ -274,13 +284,73 @@ public class StabilizeQualityScores extends CommandLineProgram {
         return groups;
     }
 
+    protected LinkedList<RLEElem> binAndStabilize(Binner binner, Stabilizer stabilizer, int[] iquals) {
+        LinkedList<RLEElem> outputRle = new LinkedList<>();
+        //bin
+        int[] binnedQuals = binner.bin(iquals);
+
+        //rle
+        ArrayList<RLEElem> rle = toRLE(binnedQuals);
+
+        List<Integer> sliceableOQuals = Arrays.stream(iquals).boxed().collect(Collectors.toList());
+        int numStabilized = 0;
+        //groupify returns pairs of "should we stabilize this run" and "the run"
+        for (Pair<Boolean, List<RLEElem>> pair : groupify(rle, stabilizer.minRunLength)) {
+            int rleLen = pair.getSecond().stream().mapToInt(e -> e.count).sum();
+
+            if (pair.getFirst()) {
+                RLEElem lastRle = outputRle.size() >= 1 ? outputRle.removeLast() : null;
+                List<Integer> oquals = sliceableOQuals.subList(numStabilized, numStabilized + rleLen);
+
+                List<RLEElem> addMe = stabilizer.stabilize(oquals, lastRle, pair.getSecond());
+                outputRle.addAll(addMe);
+            } else {
+                outputRle.addAll(pair.getSecond());
+            }
+            numStabilized += rleLen;
+        }
+        return outputRle;
+    }
+
+    //return the index of the first item in the list that is above the cutoff
+    protected static int getIndexAboveCutoff(List<Integer> ls, Integer cutoff) {
+        for(int i = 0; i < ls.size(); ++i) {
+            if( ls.get(i) > cutoff ) {
+                return i;
+            }
+        }
+        return ls.size();
+    }
+
+    protected static List<RLEElem> cutoff(int[] iquals, Integer cutoff, boolean readIsReversed) {
+        List<Integer> is = Arrays.stream(iquals).boxed().collect(Collectors.toList());
+        if(!readIsReversed) {
+            Collections.reverse(is);
+        }
+
+        int idx = getIndexAboveCutoff(is, cutoff);
+        int avg = (int) Math.round(is.subList(idx, iquals.length).stream().mapToInt(i->i).average().orElse(0.0));
+
+        if(idx == 0) {
+            return Arrays.asList(new RLEElem(avg, iquals.length));
+        }
+        else if(idx == iquals.length) {
+            return Arrays.asList(new RLEElem(2, iquals.length));
+        }
+        else if(!readIsReversed) {
+            return Arrays.asList(new RLEElem(avg, iquals.length - idx), new RLEElem(2, idx));
+        } else {
+            return Arrays.asList(new RLEElem(2, idx), new RLEElem(avg, iquals.length - idx));
+        }
+    }
+
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final Binner binner = makeBinner(THRESHOLD, THRESHOLD_UP, BINS);
-        final Stabilizer stabilizer = makeStabilizer(binner, DROP, AVERAGE, MERGE);
+        final Binner binner = makeBinner(THRESHOLD, THRESHOLD_UP, BINS, CUTOFF);
+        final Stabilizer stabilizer = makeStabilizer(binner, DROP, AVERAGE, MERGE, CUTOFF);
 
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault().setOption(INCLUDE_SOURCE_IN_RECORDS, true).validationStringency(ValidationStringency.SILENT);
         SAMFileWriterFactory writerFactory = new SAMFileWriterFactory().setCreateIndex(true);
@@ -290,30 +360,13 @@ public class StabilizeQualityScores extends CommandLineProgram {
                 for (SAMRecord record : samReader) {
 
                     int[] iquals = byte2intQuals(record.getBaseQualities());
+                    List<RLEElem> outputRle;
 
-                    //bin
-                    int[] binnedQuals = binner.bin(iquals);
-
-                    //rle
-                    ArrayList<RLEElem> rle = toRLE(binnedQuals);
-
-                    LinkedList<RLEElem> outputRle = new LinkedList<>();
-                    List<Integer> sliceableOQuals = Arrays.stream(iquals).boxed().collect(Collectors.toList());
-                    int numStabilized = 0;
-                    //groupify returns pairs of "should we stabilize this run" and "the run"
-                    for (Pair<Boolean, List<RLEElem>> pair : groupify(rle, stabilizer.minRunLength)) {
-                        int rleLen = pair.getSecond().stream().mapToInt(e -> e.count).sum();
-
-                        if (pair.getFirst()) {
-                            RLEElem lastRle = outputRle.size() >= 1 ? outputRle.removeLast() : null;
-                            List<Integer> oquals = sliceableOQuals.subList(numStabilized, numStabilized + rleLen);
-
-                            List<RLEElem> addMe = stabilizer.stabilize(oquals, lastRle, pair.getSecond());
-                            outputRle.addAll(addMe);
-                        } else {
-                            outputRle.addAll(pair.getSecond());
-                        }
-                        numStabilized += rleLen;
+                    if(CUTOFF != null) {
+                        boolean readIsReversed = record.getReadNegativeStrandFlag();
+                        outputRle = cutoff(iquals, CUTOFF, readIsReversed);
+                    } else {
+                        outputRle = binAndStabilize(binner, stabilizer, iquals);
                     }
 
                     record.setBaseQualities(toQuals(outputRle));
