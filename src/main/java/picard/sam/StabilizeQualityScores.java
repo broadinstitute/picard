@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static htsjdk.samtools.SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS;
+
 @CommandLineProgramProperties(
         summary = StabilizeQualityScores.USAGE_SUMMARY + StabilizeQualityScores.USAGE_DETAILS,
         oneLineSummary = StabilizeQualityScores.USAGE_SUMMARY,
@@ -56,13 +58,13 @@ public class StabilizeQualityScores extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The stabilized SAM or BAM file to write.")
     public File OUTPUT;
 
-    @Argument(shortName = "BANKS", doc = "For use with THRESHOLD. Sets the above-threshold value.", mutex = {"BINS"})
+    @Argument(shortName = "BANKS", optional = true, doc = "For use with THRESHOLD. Sets the above-threshold value.")
     public Integer THRESHOLD_UP = null;
 
     @Argument(shortName = "T", doc = "Any qual <T becomes Q2. Any qual >=T becomes T, or the value of THRESHOLD_UP if specified.", mutex = {"BINS"})
     public Integer THRESHOLD = 20;
 
-    @Argument(shortName = "B", doc = "All qualities round to nearest bin in this list.", mutex = {"THRESHOLD", "THRESHOLD_UP"})
+    @Argument(shortName = "B", doc = "All qualities round to nearest bin in this list.", mutex = {"THRESHOLD"})
     public List<Integer> BINS = null;
 
     @Argument(shortName = "D", doc = "Drop runs of <= N quals to the lowest qual in the run.", mutex = {"AVERAGE", "MERGE"})
@@ -280,8 +282,11 @@ public class StabilizeQualityScores extends CommandLineProgram {
         final Binner binner = makeBinner(THRESHOLD, THRESHOLD_UP, BINS);
         final Stabilizer stabilizer = makeStabilizer(binner, DROP, AVERAGE, MERGE);
 
-        try (final SamReader samReader = SamReaderFactory.makeDefault().open(SamInputResource.of(INPUT)) ) {
-            try(final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReader.getFileHeader(), true, OUTPUT)) {
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault().setOption(INCLUDE_SOURCE_IN_RECORDS, true).validationStringency(ValidationStringency.SILENT);
+        SAMFileWriterFactory writerFactory = new SAMFileWriterFactory().setCreateIndex(true);
+
+        try (final SamReader samReader = readerFactory.open(SamInputResource.of(INPUT)) ) {
+            try(final SAMFileWriter writer = writerFactory.makeSAMOrBAMWriter(samReader.getFileHeader(), true, OUTPUT)) {
                 for (SAMRecord record : samReader) {
 
                     int[] iquals = byte2intQuals(record.getBaseQualities());
