@@ -1,5 +1,6 @@
 package picard.sam;
 
+import org.apache.commons.math3.util.Pair;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -116,4 +117,30 @@ public class StabilizeQualityScoresTest extends CommandLineProgramTest {
         List<RLEElem> averageBeginning = average.stabilize(testOQuals, null, testRLE);
         Assert.assertEquals(averageBeginning, Arrays.asList(new RLEElem(20, testOQuals.size())));
     }
+
+    @Test
+    public void testGroupify() {
+        final List<RLEElem> testRLE = Arrays.asList(
+                new RLEElem(2, 3),
+                new RLEElem(20, 4), //group of 2
+                new RLEElem(2, 10), //group of 1
+                new RLEElem(20, 1),
+                new RLEElem(2, 1)); //group of 2
+
+        List<Pair<Boolean, List<RLEElem>>> groups = StabilizeQualityScores.groupify(testRLE, 4);
+
+        Assert.assertEquals(groups,
+                Arrays.asList(
+                        new Pair<>(true, Arrays.asList(
+                                new RLEElem(2, 3),
+                                new RLEElem(20, 4))),
+                        new Pair<>(false, Arrays.asList(
+                                new RLEElem(2, 10))),
+                        new Pair<>(true, Arrays.asList(
+                                new RLEElem(20, 1),
+                                new RLEElem(2, 1)))
+                        ));
+    }
+
+    //TODO: test actual file writing
 }

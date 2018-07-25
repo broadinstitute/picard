@@ -246,7 +246,7 @@ public class StabilizeQualityScores extends CommandLineProgram {
         return iquals;
     }
 
-    private List<Pair<Boolean, List<RLEElem>>> groupify(List<RLEElem> rles, int minRunLength) {
+    public static List<Pair<Boolean, List<RLEElem>>> groupify(List<RLEElem> rles, int minRunLength) {
         ArrayList<Pair<Boolean, List<RLEElem>>> groups = new ArrayList<>();
 
         Pair<Boolean, List<RLEElem>> last = null;
