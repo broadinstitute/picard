@@ -17,7 +17,6 @@ public class CommandLineSyntaxTranslater {
 
     // Scan the command line arguments to see if they appear to be using legacy parser syntax
     public static boolean scanForLegacyCommandLine(final String argv[]) {
-        Arrays.stream(argv).forEach(a -> {System.out.println();});
         return Arrays.stream(argv).anyMatch(
                 putativeLegacyArg ->
                         !putativeLegacyArg.startsWith(BARCLAY_SHORT_OPTION_PREFIX) &&

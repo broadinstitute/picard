@@ -203,8 +203,9 @@ public abstract class CommandLineProgram {
             Log.getInstance(this.getClass()).info(
                     String.format("\n\n********** NOTE: In a future release, the command line syntax used by Picard will change, and the existing syntax \n" +
                             "********** will no longer be accepted. In the future release, the syntax for the command line arguments would be specified as:\n" +
-                            "**********\n**********\t %s\n**********\n" +
+                            "**********\n**********\t%s %s\n**********\n" +
                             "********** See https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition) for more information.\n\n",
+                           this.getClass().getSimpleName(),
                            Arrays.stream(CommandLineSyntaxTranslater.translatePicardStyleToPosixStyle(argv)).collect(Collectors.joining(" ")))
             );
         }
