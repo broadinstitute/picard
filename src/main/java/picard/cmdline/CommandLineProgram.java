@@ -195,6 +195,18 @@ public abstract class CommandLineProgram {
 
         if (System.getProperty(PROPERTY_CONVERT_LEGACY_COMMAND_LINE, "false").equals("true")) {
             actualArgs = CommandLineSyntaxTranslater.translatePicardStyleToPosixStyle(argv);
+        } else if (CommandLineSyntaxTranslater.scanForLegacyCommandLine(argv)) {
+            // Issue an informational message telling the user that legacy syntax will soon be removed, and include
+            // a link to a Picard wiki page with more detail. For now this is only an informational message letting
+            // users know a change is coming. In a future release of Picard, when the default parser is Barclay, we'll
+            // update this message to link to a different page describing the options for that release.
+            Log.getInstance(this.getClass()).info(
+                    String.format("\n\n********** NOTE: In a future release, the command line syntax used by Picard will change, and the existing syntax \n" +
+                            "********** will no longer be accepted. In the future release, the syntax for the command line arguments would be specified as:\n" +
+                            "**********\n**********\t %s\n**********\n" +
+                            "********** See https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition) for more information.\n\n",
+                           Arrays.stream(CommandLineSyntaxTranslater.translatePicardStyleToPosixStyle(argv)).collect(Collectors.joining(" ")))
+            );
         }
         if (!parseArgs(actualArgs)) {
             return 1;
