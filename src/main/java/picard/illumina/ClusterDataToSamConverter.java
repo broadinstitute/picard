@@ -29,6 +29,7 @@ import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SolexaNoiseFilter;
+import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import picard.PicardException;
 import picard.fastq.IlluminaReadNameEncoder;
@@ -40,12 +41,7 @@ import picard.util.AdapterMarker;
 import picard.util.AdapterPair;
 import picard.util.IlluminaUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.StringJoiner;
-
-import static picard.util.IlluminaUtil.BARCODE_DELIMITER;
+import java.util.*;
 
 /**
  * Takes ClusterData provided by an IlluminaDataProvider into one or two SAMRecords,
@@ -75,9 +71,14 @@ public class ClusterDataToSamConverter implements
     // TODO: - https://github.com/broadinstitute/picard/issues/287
     // TODO: - HTS-spec issue: https://github.com/samtools/hts-specs/issues/109
     // TODO: - https://github.com/samtools/hts-specs/pull/119
+    // TODO: also add ~ and - to some htsjdk file and reference here.
     private String molecularIndexTag = "RX";
     private String molecularIndexQualityTag = "QX";
-    private final String molecularIndexDelimiter = "-";
+    private static final String molecularIndexDelimiter = "-";
+    private static final String molecularIndexQualityDelimiter = "~";
+    private static final Character missingBarCode = '.';
+    private static final Character missingBarCodeBase = 'N';
+
     private List<String> tagPerMolecularIndex = Collections.emptyList();
 
     private PopulateBarcode barcodePopulationStrategy;
@@ -108,7 +109,7 @@ public class ClusterDataToSamConverter implements
      * @param readStructure             The expected structure (number of reads and indexes,
      *                                  and their length) in the read.
      * @param adapters                  The list of adapters to check for in the read
-     * @param barcodePopulationStrategy
+     * @param barcodePopulationStrategy When to populate BC tag?
      */
     public ClusterDataToSamConverter(final String runBarcode,
                                      final String readGroupId,
@@ -259,7 +260,7 @@ public class ClusterDataToSamConverter implements
         final List<String> molecularIndexQualities = new ArrayList<>();
         if (hasMolecularBarcode) {
             for (int molecularBarcodeIndice : molecularBarcodeIndices) {
-                molecularIndexes.add(new String(cluster.getRead(molecularBarcodeIndice).getBases()).replace('.', 'N'));
+                molecularIndexes.add(convertMissingToNoCall(new String(cluster.getRead(molecularBarcodeIndice).getBases())));
                 molecularIndexQualities.add(SAMUtils.phredToFastq(cluster.getRead(molecularBarcodeIndice).getQualities()));
             }
         }
@@ -303,7 +304,7 @@ public class ClusterDataToSamConverter implements
     }
 
     private String getBarcodeQuality(ClusterData cluster) {
-        final StringJoiner barcodeQ = new StringJoiner("~");
+        final StringJoiner barcodeQ = new StringJoiner(molecularIndexQualityDelimiter);
 
         for (int sampleBarcodeIndex : sampleBarcodeIndices) {
             barcodeQ.add(SAMUtils.phredToFastq(cluster.getRead(sampleBarcodeIndex).getQualities()));
@@ -318,9 +319,13 @@ public class ClusterDataToSamConverter implements
         }
         if (withSeparator) {
             //TODO: This has a separator, where as in other places we do not use a separator
-            return IlluminaUtil.barcodeSeqsToString(barcode).replace('.', 'N');
+            return convertMissingToNoCall(IlluminaUtil.barcodeSeqsToString(barcode));
         } else {
-            return IlluminaUtil.byteArrayToString(barcode, "").replace('.', 'N');
+            return convertMissingToNoCall(IlluminaUtil.byteArrayToString(barcode, ""));
         }
+    }
+
+    private static String convertMissingToNoCall(final String barcode){
+        return barcode.replace(missingBarCode,missingBarCodeBase);
     }
 }

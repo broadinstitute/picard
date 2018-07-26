@@ -24,13 +24,7 @@
 
 package picard.illumina;
 
-import htsjdk.samtools.BAMRecordCodec;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordQueryNameComparator;
+import htsjdk.samtools.*;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Iso8601Date;
@@ -171,7 +165,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public String LIBRARY_NAME;
 
     @Argument(doc = "The name of the sequencing center that produced the reads.  Used to set the @RG->CN header tag.")
-    public String SEQUENCING_CENTER = null;
+    public String SEQUENCING_CENTER;
 
     @Argument(doc = "The start date of the run.", optional = true)
     public Date RUN_START_DATE;
@@ -270,7 +264,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     @Argument(doc = "Should the barcode quality be included when the sample barcode is included?")
     public boolean INCLUDE_BARCODE_QUALITY = false;
-
 
     private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<>();
     private ReadStructure readStructure;
@@ -467,9 +460,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         String platformUnit = RUN_BARCODE + "." + LANE;
         if (barcodes != null) {
             final String barcodeString = IlluminaUtil.barcodeSeqsToString(barcodes);
-            platformUnit += ("." + barcodeString);
-            // TODO: replace with htsjdk constant after rev
-            if (INCLUDE_BC_IN_RG_TAG) params.put("BC", barcodeString);
+            platformUnit += "." + barcodeString;
+            if (INCLUDE_BC_IN_RG_TAG) {
+                params.put("BC", barcodeString);
+            }
         }
 
         if (PLATFORM != null) {
@@ -477,7 +471,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         params.put(SAMReadGroupRecord.PLATFORM_UNIT_TAG, platformUnit);
-        if (SEQUENCING_CENTER != null) params.put(SAMReadGroupRecord.SEQUENCING_CENTER_TAG, SEQUENCING_CENTER);
+        if (SEQUENCING_CENTER != null) {
+            params.put(SAMReadGroupRecord.SEQUENCING_CENTER_TAG, SEQUENCING_CENTER);
+        }
         params.put(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG, RUN_START_DATE == null ? null : new Iso8601Date(RUN_START_DATE).toString());
 
         return params;
