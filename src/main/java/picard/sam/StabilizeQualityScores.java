@@ -54,7 +54,7 @@ public class StabilizeQualityScores extends CommandLineProgram {
             "      THRESHOLD=30\n"+
             "      DROP=4\n";
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to stabilize.")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The stabilized SAM or BAM file to write.")
