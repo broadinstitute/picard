@@ -24,13 +24,7 @@
 
 package picard.illumina;
 
-import htsjdk.samtools.BAMRecordCodec;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordQueryNameComparator;
+import htsjdk.samtools.*;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Iso8601Date;
@@ -170,14 +164,17 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public String LIBRARY_NAME;
 
-    @Argument(doc = "The name of the sequencing center that produced the reads.  Used to set the RG.CN tag.", optional = true)
-    public String SEQUENCING_CENTER = "BI";
+    @Argument(doc = "The name of the sequencing center that produced the reads.  Used to set the @RG->CN header tag.")
+    public String SEQUENCING_CENTER;
 
     @Argument(doc = "The start date of the run.", optional = true)
     public Date RUN_START_DATE;
 
     @Argument(doc = "The name of the sequencing technology that produced the read.", optional = true)
     public String PLATFORM = "illumina";
+
+    @Argument(doc = "Whether to include the barcode information in the @RG->BC header tag. Defaults to false until included in the SAM spec.")
+    public boolean INCLUDE_BC_IN_RG_TAG = false;
 
     @Argument(doc = ReadStructure.PARAMETER_DOC, shortName = "RS")
     public String READ_STRUCTURE;
@@ -262,6 +259,12 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Argument(doc = "The list of tags to store each molecular index.  The number of tags should match the number of molecular indexes.", optional = true)
     public List<String> TAG_PER_MOLECULAR_INDEX;
 
+    @Argument(doc = "When should the sample barcode (as read by the sequencer) be placed on the reads in the BC tag?")
+    public ClusterDataToSamConverter.PopulateBarcode BARCODE_POPULATION_STRATEGY = ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY;
+
+    @Argument(doc = "Should the barcode quality be included when the sample barcode is included?")
+    public boolean INCLUDE_BARCODE_QUALITY = false;
+
     private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<>();
     private ReadStructure readStructure;
     private BasecallsConverter<SAMRecordsForCluster> basecallsConverter;
@@ -321,7 +324,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
          * data which may be different from the input read structure (specifically if there are skips).
          */
         final ClusterDataToSamConverter converter = new ClusterDataToSamConverter(RUN_BARCODE, READ_GROUP_ID,
-                basecallsConverter.getFactory().getOutputReadStructure(), adapters)
+                basecallsConverter.getFactory().getOutputReadStructure(), adapters, BARCODE_POPULATION_STRATEGY, INCLUDE_BARCODE_QUALITY )
                 .withMolecularIndexTag(MOLECULAR_INDEX_TAG)
                 .withMolecularIndexQualityTag(MOLECULAR_INDEX_BASE_QUALITY_TAG)
                 .withTagPerMolecularIndex(TAG_PER_MOLECULAR_INDEX);
@@ -455,12 +458,23 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final Map<String, String> params = new LinkedHashMap<>();
 
         String platformUnit = RUN_BARCODE + "." + LANE;
-        if (barcodes != null) platformUnit += ("." + IlluminaUtil.barcodeSeqsToString(barcodes));
+        if (barcodes != null) {
+            final String barcodeString = IlluminaUtil.barcodeSeqsToString(barcodes);
+            platformUnit += "." + barcodeString;
+            if (INCLUDE_BC_IN_RG_TAG) {
+                params.put("BC", barcodeString);
+            }
+        }
 
-        params.put("PL", PLATFORM);
-        params.put("PU", platformUnit);
-        params.put("CN", SEQUENCING_CENTER);
-        params.put("DT", RUN_START_DATE == null ? null : new Iso8601Date(RUN_START_DATE).toString());
+        if (PLATFORM != null) {
+            params.put(SAMReadGroupRecord.PLATFORM_TAG, PLATFORM);
+        }
+
+        params.put(SAMReadGroupRecord.PLATFORM_UNIT_TAG, platformUnit);
+        if (SEQUENCING_CENTER != null) {
+            params.put(SAMReadGroupRecord.SEQUENCING_CENTER_TAG, SEQUENCING_CENTER);
+        }
+        params.put(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG, RUN_START_DATE == null ? null : new Iso8601Date(RUN_START_DATE).toString());
 
         return params;
     }
