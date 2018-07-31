@@ -29,7 +29,6 @@ import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SolexaNoiseFilter;
-import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import picard.PicardException;
 import picard.fastq.IlluminaReadNameEncoder;
@@ -72,12 +71,12 @@ public class ClusterDataToSamConverter implements
     // TODO: - HTS-spec issue: https://github.com/samtools/hts-specs/issues/109
     // TODO: - https://github.com/samtools/hts-specs/pull/119
     // TODO: also add ~ and - to some htsjdk file and reference here.
-    private String molecularIndexTag = "RX";
-    private String molecularIndexQualityTag = "QX";
-    private static final String molecularIndexDelimiter = "-";
-    private static final String molecularIndexQualityDelimiter = "~";
-    private static final Character missingBarCode = '.';
-    private static final Character missingBarCodeBase = 'N';
+    private String MOLECULAR_INDEX_TAG = "RX";
+    private String MOLECULAR_INDEX_QUALITY_TAG = "QX";
+    private static final String MOLECULAR_INDEX_ = "-";
+    private static final String MOLECULAR_INDEX_QUALITY_DELIMITER = "~";
+    private static final Character MISSING_BARCODE = '.';
+    private static final Character MISSING_BARCODE_BASE = 'N';
 
     private List<String> tagPerMolecularIndex = Collections.emptyList();
 
@@ -146,7 +145,7 @@ public class ClusterDataToSamConverter implements
      */
     public ClusterDataToSamConverter withMolecularIndexTag(final String molecularIndexTag) {
         if (molecularIndexTag == null) throw new IllegalArgumentException("Molecular index tag was null");
-        this.molecularIndexTag = molecularIndexTag;
+        this.MOLECULAR_INDEX_TAG = molecularIndexTag;
         return this;
     }
 
@@ -158,7 +157,7 @@ public class ClusterDataToSamConverter implements
         if (molecularIndexQualityTag == null) {
             throw new IllegalArgumentException("Molecular index quality tag was null");
         }
-        this.molecularIndexQualityTag = molecularIndexQualityTag;
+        this.MOLECULAR_INDEX_QUALITY_TAG = molecularIndexQualityTag;
         return this;
     }
 
@@ -213,11 +212,11 @@ public class ClusterDataToSamConverter implements
         }
 
         if (!molecularIndexes.isEmpty()) {
-            if (!this.molecularIndexTag.isEmpty()) {
-                sam.setAttribute(this.molecularIndexTag, String.join(molecularIndexDelimiter, molecularIndexes));
+            if (!this.MOLECULAR_INDEX_TAG.isEmpty()) {
+                sam.setAttribute(this.MOLECULAR_INDEX_TAG, String.join(MOLECULAR_INDEX_, molecularIndexes));
             }
-            if (!this.molecularIndexQualityTag.isEmpty()) {
-                sam.setAttribute(this.molecularIndexQualityTag, String.join(molecularIndexDelimiter, molecularIndexQualities));
+            if (!this.MOLECULAR_INDEX_QUALITY_TAG.isEmpty()) {
+                sam.setAttribute(this.MOLECULAR_INDEX_QUALITY_TAG, String.join(MOLECULAR_INDEX_, molecularIndexQualities));
             }
             if (!this.tagPerMolecularIndex.isEmpty()) {
                 if (tagPerMolecularIndex.size() != molecularIndexes.size()) {
@@ -246,8 +245,8 @@ public class ClusterDataToSamConverter implements
                 this.barcodePopulationStrategy == PopulateBarcode.ORPHANS_ONLY &&
                         cluster.getMatchedBarcode() == null ||
                 this.barcodePopulationStrategy == PopulateBarcode.INEXACT_MATCH &&
-                        !getUnmatchedBarcode(cluster, false).equals(cluster.getMatchedBarcode()))) {
-            unmatchedBarcode = getUnmatchedBarcode(cluster, true);
+                        !IlluminaUtil.byteArrayToString(getBarcodeSeqs(cluster),"").equals(cluster.getMatchedBarcode()))) {
+            unmatchedBarcode = getUnmatchedBarcode(cluster);
         }
 
         String barcodeQuality = null;
@@ -304,7 +303,7 @@ public class ClusterDataToSamConverter implements
     }
 
     private String getBarcodeQuality(ClusterData cluster) {
-        final StringJoiner barcodeQ = new StringJoiner(molecularIndexQualityDelimiter);
+        final StringJoiner barcodeQ = new StringJoiner(MOLECULAR_INDEX_QUALITY_DELIMITER);
 
         for (int sampleBarcodeIndex : sampleBarcodeIndices) {
             barcodeQ.add(SAMUtils.phredToFastq(cluster.getRead(sampleBarcodeIndex).getQualities()));
@@ -312,20 +311,19 @@ public class ClusterDataToSamConverter implements
         return barcodeQ.toString();
     }
 
-    private String getUnmatchedBarcode(ClusterData cluster, boolean withSeparator) {
+    private String getUnmatchedBarcode(ClusterData cluster) {
+        return convertMissingToNoCall(IlluminaUtil.barcodeSeqsToString(getBarcodeSeqs(cluster)));
+    }
+
+    private byte[][] getBarcodeSeqs(ClusterData cluster) {
         final byte[][] barcode = new byte[sampleBarcodeIndices.length][];
         for (int i = 0; i < sampleBarcodeIndices.length; i++) {
             barcode[i] = cluster.getRead(sampleBarcodeIndices[i]).getBases();
         }
-        if (withSeparator) {
-            //TODO: This has a separator, where as in other places we do not use a separator
-            return convertMissingToNoCall(IlluminaUtil.barcodeSeqsToString(barcode));
-        } else {
-            return convertMissingToNoCall(IlluminaUtil.byteArrayToString(barcode, ""));
-        }
+        return barcode;
     }
 
     private static String convertMissingToNoCall(final String barcode){
-        return barcode.replace(missingBarCode,missingBarCodeBase);
+        return barcode.replace(MISSING_BARCODE, MISSING_BARCODE_BASE);
     }
 }
