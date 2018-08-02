@@ -10,6 +10,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,22 +54,23 @@ public class AddOATag extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT)) {
+            try (final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT)) {
+                writer.setProgressLogger(
+                        new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
 
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
-        writer.setProgressLogger(
-                new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
-
-        OverlapDetector overlapDetector = getOverlapDetectorFromIntervalListFile(INTERVAL_LIST, 0, 0);
-        for (SAMRecord rec : reader) {
-            if (!rec.getReadUnmappedFlag() && (overlapDetector == null || overlapDetector.overlapsAny(rec))) {
-                setOATag(rec, OVERWRITE_TAG);
+                OverlapDetector overlapDetector = getOverlapDetectorFromIntervalListFile(INTERVAL_LIST, 0, 0);
+                for (SAMRecord rec : reader) {
+                    if (!rec.getReadUnmappedFlag() && (overlapDetector == null || overlapDetector.overlapsAny(rec))) {
+                        setOATag(rec, OVERWRITE_TAG);
+                    }
+                    writer.addAlignment(rec);
+                }
             }
-            writer.addAlignment(rec);
+        } catch (IOException e) {
+            log.error("Exception running AddOATag tool: " + e.getMessage());
+            return 1;
         }
-
-        CloserUtil.close(reader);
-        writer.close();
 
         return 0;
     }
