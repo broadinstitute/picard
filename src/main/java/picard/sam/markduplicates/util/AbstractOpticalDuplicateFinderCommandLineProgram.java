@@ -41,8 +41,7 @@ public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends C
             "in addition to the dominant source of duplication, PCR, to provide a more accurate estimation of library size. " +
             "By default (with no READ_NAME_REGEX specified), MarkDuplicates will attempt to extract coordinates " +
             "using a split on ':' (see Note below).  " +
-            "Set READ_NAME_REGEX to 'null' to disable optical duplicate detection, e.g. for RNA-seq " +
-            "or other data where duplicate sets are extremely large and estimating library complexity is not an aim. " +
+            "Set READ_NAME_REGEX to 'null' to disable optical duplicate detection. " +
             "Note that without optical duplicate counts, library size estimation will be less accurate. " +
             "If the read name does not follow a standard Illumina colon-separation convention, but does contain tile and x,y coordinates, " + 
             "a regular expression can be specified to extract three variables: tile/region, x coordinate and y coordinate from a read name. " +
