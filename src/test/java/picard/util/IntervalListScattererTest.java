@@ -158,6 +158,19 @@ public class IntervalListScattererTest {
         ));
 
         testcases.add(new Testcase(
+                LIST_TO_SCATTER, 2, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
+                Arrays.asList(
+                        composeIntervalList(LIST_TO_SCATTER, "1",
+                                30000, 30098,
+                                30100, 30150
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER, "1",
+                                30200, 30249
+                        )
+                )
+        ));
+
+        testcases.add(new Testcase(
                 LIST_TO_SCATTER, 1, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER, "1",
@@ -167,6 +180,7 @@ public class IntervalListScattererTest {
                         )
                 )
         ));
+
         testcases.add(new Testcase(
                 LIST_TO_SCATTER, 6, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
                 Arrays.asList(
@@ -211,27 +225,27 @@ public class IntervalListScattererTest {
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
                                 30000, 30000,
-                                30100, 30109
-                        ),
-                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
-                                30200, 30209,
-                                30300, 30309
-                        ),
-                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30100, 30109,
+                                30200, 30209
 
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30300, 30309
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
                                 30400, 30409
-                        ),
-                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
                                 30500, 30509
 
                         ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
                                 30600, 30609
 
                         ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
-
                                 30700, 30709
+
                         ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
                                 30800, 30808
+
                         )
                 )));
 
