@@ -145,7 +145,9 @@ public class IntervalListScatterer {
                 }
             }
 
-            if (runningIntervalList.getBaseCount() >= idealSplitLength) {
+            if (runningIntervalList.getBaseCount() >= idealSplitLength &&
+                    (mode != Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW ||
+                            idealSplitLength >= projectedSizeOfRemainingDivisions)) {
                 numBasesLeft -= runningIntervalList.getBaseCount(); // keep track of the number of *unique* bases left
                 accumulatedIntervalLists.add(runningIntervalList.uniqued());
                 runningIntervalList = new IntervalList(uniquedList.getHeader());
