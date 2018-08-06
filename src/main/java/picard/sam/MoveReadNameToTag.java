@@ -63,7 +63,8 @@ public class MoveReadNameToTag extends CommandLineProgram {
                 continue;
             }
             if(IN_RN) {
-                String newReadName = splitReadName[2] + ":" + splitReadName[3] + ":" + splitReadName[4];
+                //String newReadName = splitReadName[2] + ":" + splitReadName[3] + ":" + splitReadName[4];
+                String newReadName = splitReadName[0] + ":" + splitReadName[1] + ":" + splitReadName[3] + ":" + splitReadName[4] + ":" + splitReadName[2] + ":0:0";
                 rec.setReadName(newReadName);
             }
             if(TILE_IN_RN) {
