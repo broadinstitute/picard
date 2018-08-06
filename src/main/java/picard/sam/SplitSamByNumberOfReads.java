@@ -124,14 +124,14 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
         final long totalReads = TOTAL_READS_IN_INPUT == 0 ? firstPassProgress.getCount() : TOTAL_READS_IN_INPUT;
 
         final SAMFileWriterFactory writerFactory = new SAMFileWriterFactory();
-        final DecimalFormat fileNameFormatter = new DecimalFormat(OUT_PREFIX + "_" + String.format("0000") + BamFileIoUtils.BAM_FILE_EXTENSION);
+        final DecimalFormat fileNameFormatter = new DecimalFormat(String.format("0000"));
 
         final int splitToNFiles = SPLIT_TO_N_FILES != 0 ? SPLIT_TO_N_FILES : (int) Math.ceil(totalReads / (double) SPLIT_TO_N_READS);
         final int readsPerFile = (int) Math.ceil(totalReads / (double) splitToNFiles);
 
         int readsWritten = 0;
         int fileIndex = 1;
-        SAMFileWriter currentWriter = writerFactory.makeSAMOrBAMWriter(header, true, new File(OUTPUT, fileNameFormatter.format(fileIndex++)));
+        SAMFileWriter currentWriter = writerFactory.makeSAMOrBAMWriter(header, true, new File(OUTPUT, OUT_PREFIX + "_" + fileNameFormatter.format(fileIndex++) + BamFileIoUtils.BAM_FILE_EXTENSION));
         String lastReadName = "";
         final ProgressLogger progress = new ProgressLogger(log);
         for (SAMRecord currentRecord : reader) {
