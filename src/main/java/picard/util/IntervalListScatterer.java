@@ -23,7 +23,7 @@ public class IntervalListScatterer {
          * A scatter approach that differs from {@link Mode#INTERVAL_SUBDIVISION} in a few ways:
          * <ol>
          * <li>No interval will be subdivided, and consequently, the requested {@link IntervalListTools#SCATTER_COUNT} is
-         * an upper bound of scatter count, not a guarante of the number of {@link IntervalList}s that will be produced
+         * an upper bound of scatter count, not a guarantee of the number of {@link IntervalList}s that will be produced
          * (e.g., if scatterCount = 10 but there is only one interval in the input, only 1 interval list will be emitted).</li>
          * <li>When an interval would otherwise be split, it is instead deferred to the next scatter list.</li>
          * <li>The "target width" of each scatter list may be wider than what is computed for {@link Mode#INTERVAL_SUBDIVISION}.
@@ -145,7 +145,9 @@ public class IntervalListScatterer {
                 }
             }
 
-            if (runningIntervalList.getBaseCount() >= idealSplitLength) {
+            if (runningIntervalList.getBaseCount() >= idealSplitLength &&
+                    (mode != Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW ||
+                            idealSplitLength >= projectedSizeOfRemainingDivisions)) {
                 numBasesLeft -= runningIntervalList.getBaseCount(); // keep track of the number of *unique* bases left
                 accumulatedIntervalLists.add(runningIntervalList.uniqued());
                 runningIntervalList = new IntervalList(uniquedList.getHeader());
