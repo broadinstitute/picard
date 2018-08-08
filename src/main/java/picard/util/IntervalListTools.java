@@ -365,12 +365,6 @@ public class IntervalListTools extends CommandLineProgram {
 
         final IntervalList result = ACTION.act(lists, secondLists);
 
-        if (SCATTER_COUNT > 1) {
-            // Scattering requires a uniqued, sorted interval list.  We want to do this up front (before BREAKING AT BANDS)
-            SORT = true;
-            UNIQUE = true;
-        }
-
         if (INVERT) {
             SORT = false; // no need to sort, since return will be sorted by definition.
             UNIQUE = true;

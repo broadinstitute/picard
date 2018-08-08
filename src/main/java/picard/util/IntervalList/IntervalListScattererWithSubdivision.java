@@ -26,13 +26,22 @@ package picard.util.IntervalList;
 
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
 
 import java.util.List;
 
 /**
- * Created by farjoun on 6/14/18.
+ * An IntervalListScatterer that attempts to place the same number of (uniquified) bases in each output interval list.
+ * To avoid concern about overlapping intervals, interval lists are sorted and uniqued prior to splitting which will
+ * cause abbuting intervals to be combined. This scatterer
+ * will not refrain from breaking an interval into smaller pieces in order to hit the requested number of bases.
  */
 public class IntervalListScattererWithSubdivision extends IntervalListScattererByBaseCount {
+
+    @Override
+    public IntervalList preprocessIntervalList(IntervalList inputList) {
+        return inputList.uniqued();
+    }
 
     @Override
     public List<Interval> takeSome(final Interval interval, final long idealSplitWeight, final long currentSize, final double projectSizeOfRemaining) {

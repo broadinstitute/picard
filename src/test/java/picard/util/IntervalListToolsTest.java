@@ -182,7 +182,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         final List<IntervalList> scatter = scatterer.scatter(tc.source, tc.scatterWidth);
         Assert.assertEquals(scatter.size(), tc.expectedScatter.size());
         for (int i = 0; i < scatter.size(); i++) {
-            Assert.assertEquals(scatter.get(i).uniqued().getIntervals(), tc.expectedScatter.get(i).getIntervals(), "Problem with the " + i + " scatter");
+            Assert.assertEquals(scatter.get(i).getIntervals(), tc.expectedScatter.get(i).getIntervals(), "Problem with the " + i + " scatter");
         }
 
         final List<String> args = new ArrayList<>();

@@ -29,10 +29,13 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
- * Created by farjoun on 6/14/18.
+ * A BaseCount Scatterer that avoid breaking-up intervals. This is done by by only adding intervals to the current list if
+ * the resulting size no larger than the "ideal" size. In addition, the ideal length will not be small than the largest sub-interval
+ * in the input list.
  */
 public class IntervalListScattererWithoutSubdivision extends IntervalListScattererByBaseCount {
 
@@ -53,9 +56,12 @@ public class IntervalListScattererWithoutSubdivision extends IntervalListScatter
     @Override
     public int deduceIdealSplitWeight(final IntervalList intervalList, final int nCount) {
         final int splitWidth = super.deduceIdealSplitWeight(intervalList, nCount);
-        final int widestIntervalLength = Collections.max(intervalList.uniqued().getIntervals(), (o1, o2) -> Integer.valueOf(o1.length()).compareTo(o2.length())).length();
+        final int widestIntervalLength = intervalList.getIntervals().stream()
+                .map(Interval::length)
+                .max(Comparator.comparing(Integer::valueOf))
+                .orElse(1);
 
-        // There is no purpose to splitting with more granularity than the widest interval, so do not.
+        // There is no purpose to splitting with more granularity than the widest interval
         return Math.max(widestIntervalLength, splitWidth);
     }
 }

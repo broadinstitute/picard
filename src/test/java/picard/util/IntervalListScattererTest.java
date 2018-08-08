@@ -296,6 +296,74 @@ public class IntervalListScattererTest {
                         )
                 )));
 
+        testCases.add(new Testcase(
+                INTERVAL_WITH_OVERFLOW_FILE, 8, IntervalListScatterMode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
+                Arrays.asList(
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30000, 30000
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30100, 30109),
+
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30200, 30209
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30300, 30309
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30400, 30409
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30500, 30509
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30600, 30609
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30700, 30709,
+                                30800, 30808
+                        )
+                )));
+
+
+
+        testCases.add(new Testcase(
+                INTERVAL_WITH_OVERFLOW_FILE, 9, IntervalListScatterMode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
+                Arrays.asList(
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30000, 30000
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30100, 30109),
+
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30200, 30209
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30300, 30309
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30400, 30409
+
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30500, 30509
+
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30600, 30609
+
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30700, 30709
+
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30800, 30808
+                        )
+                )));
+
         final IntervalList full = new IntervalList(LIST_TO_SCATTER_MANY.getHeader());
         full.add(new Interval("1", 30000, 30000 + 32 * 2 - 1));
 

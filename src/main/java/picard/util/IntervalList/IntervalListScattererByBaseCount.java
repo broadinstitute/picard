@@ -30,7 +30,7 @@ import htsjdk.samtools.util.IntervalList;
 import java.util.List;
 
 /**
- * a Baseclass for scatterers that scatter by uniqued base count
+ * a Baseclass for scatterers that scatter by uniqued base count.
  */
 abstract public class IntervalListScattererByBaseCount implements IntervalListScatterer {
 
@@ -49,3 +49,5 @@ abstract public class IntervalListScattererByBaseCount implements IntervalListSc
         return Math.max(1, (int) Math.floorDiv(intervalList.getUniqueBaseCount(), nCount));
     }
 }
+
+

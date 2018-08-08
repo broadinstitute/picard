@@ -26,7 +26,6 @@ package picard.util.IntervalList;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
-import picard.util.IntervalListTools;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -48,20 +47,22 @@ public interface IntervalListScatterer {
     default List<IntervalList> scatter(final IntervalList inputList, final int scatterCount) {
         if (scatterCount < 1) throw new IllegalArgumentException("scatterCount < 1");
 
+        final IntervalList processedIntervalList = preprocessIntervalList(inputList);
+
         // How much "weight" should go into each sublist
-        final long idealSplitWeight = deduceIdealSplitWeight(inputList, scatterCount);
+        final long idealSplitWeight = deduceIdealSplitWeight(processedIntervalList, scatterCount);
 
         Log.getInstance(IntervalListScatterer.class).info("idealSplitWeight=" + idealSplitWeight);
 
         final List<IntervalList> accumulatedIntervalLists = new ArrayList<>();
 
         // The IntervalList to which interval are currently being added to.
-        IntervalList runningIntervalList = new IntervalList(inputList.getHeader());
+        IntervalList runningIntervalList = new IntervalList(processedIntervalList.getHeader());
 
         // Use a DeQueue since algo will be adding and removing elements from head.
-        final ArrayDeque<Interval> intervalQueue = new ArrayDeque<>(inputList.getIntervals());
+        final ArrayDeque<Interval> intervalQueue = new ArrayDeque<>(processedIntervalList.getIntervals());
 
-        long weightRemaining = listWeight(inputList);
+        long weightRemaining = listWeight(processedIntervalList);
 
         // Continue processing as long as the queue is not empty, and still haven't generated all scattered lists
         while (!intervalQueue.isEmpty() && accumulatedIntervalLists.size() < scatterCount - 1) {
@@ -78,7 +79,9 @@ public interface IntervalListScatterer {
             // split current interval into part that will go into current list (first) and
             // other part that will get put back into queue for next list.
             final List<Interval> split = takeSome(interval, idealSplitWeight, currentSize, projectedSizeOfRemainingDivisions);
-            assert split.size() == 2;
+            if (split.size() != 2) {
+                throw new IllegalStateException("takeSome should always return exactly 2 (possibly null) intervals.");
+            }
 
             // push second element back to queue (if exists).
             if (split.get(1) != null) {
@@ -90,7 +93,7 @@ public interface IntervalListScatterer {
                 weightRemaining -= listWeight(runningIntervalList);
                 //add running list to return value, and create new running list
                 accumulatedIntervalLists.add(runningIntervalList);
-                runningIntervalList = new IntervalList(inputList.getHeader());
+                runningIntervalList = new IntervalList(processedIntervalList.getHeader());
             } else {
                 runningIntervalList.add(split.get(0));
             }
@@ -105,6 +108,10 @@ public interface IntervalListScatterer {
         }
 
         return accumulatedIntervalLists;
+    }
+
+    default IntervalList preprocessIntervalList(final IntervalList inputList) {
+        return inputList.sorted();
     }
 
     long intervalWeight(final Interval interval);
