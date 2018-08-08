@@ -35,4 +35,5 @@
 ##source=SelectVariants
 ##source=htsbox-pileup-r315
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	/dev/stdin
+chr1	18359383	.	A	G,*	30	.	.	GT:AD	2|1:0,1,1
 chrX	27587985	.	AATATATAT	A	20	.	.	GT:AD	1/1:0,20
