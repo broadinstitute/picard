@@ -269,8 +269,8 @@ public class IntervalListTools extends CommandLineProgram {
             "by any of the input intervals. Will merge abutting intervals first. Output will be sorted.", optional = true)
     public boolean INVERT = false;
 
-    @Argument(doc = "What value (if anything) to output to std.out")
-    public Output OUTPUT_VALUE=Output.NONE;
+    @Argument(doc = "What value (if anything) to output to stdout (for scripting)")
+    public Output OUTPUT_VALUE = Output.NONE;
 
     enum Output {
         NONE,
