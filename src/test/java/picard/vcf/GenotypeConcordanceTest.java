@@ -641,7 +641,7 @@ public class GenotypeConcordanceTest {
 
         for (final GenotypeConcordanceContingencyMetrics metrics : output.getMetrics()) {
             if (metrics.VARIANT_TYPE == VariantContext.Type.SNP) {
-                Assert.assertEquals(metrics.TP_COUNT, 0);
+                Assert.assertEquals(metrics.TP_COUNT, 1);
                 Assert.assertEquals(metrics.TN_COUNT,0);
                 Assert.assertEquals(metrics.FP_COUNT, 0);
                 Assert.assertEquals(metrics.FN_COUNT, 0);
