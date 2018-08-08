@@ -39,18 +39,15 @@ import java.util.*;
  */
 public class IntervalListScattererTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/util");
+
     private static final File INTERVAL_FILE = new File(TEST_DATA_DIR, "scatterable.interval_list");
     private static final IntervalList LIST_TO_SCATTER = IntervalList.fromFile(INTERVAL_FILE);
 
     private static final File INTERVAL_WITH_OVERFLOW_FILE = new File(TEST_DATA_DIR, "scatterable_with_overflow.interval_list");
     private static final IntervalList LIST_TO_SCATTER_WITH_OVERFLOW = IntervalList.fromFile(INTERVAL_WITH_OVERFLOW_FILE);
 
-    private static final File SCATTER_INTERVAL_FILE = new File(TEST_DATA_DIR, "scatterable_many_intervals.interval_list");
-    private static final IntervalList LIST_TO_SCATTER_MANY = IntervalList.fromFile(SCATTER_INTERVAL_FILE);
-
-    static {
-        Assert.assertEquals(LIST_TO_SCATTER.getUniqueBaseCount(), 200, "Wrong unique base count");
-    }
+    private static final File SCATTER_MANY_INTERVAL_FILE = new File(TEST_DATA_DIR, "scatterable_many_intervals.interval_list");
+    private static final IntervalList LIST_TO_SCATTER_MANY = IntervalList.fromFile(SCATTER_MANY_INTERVAL_FILE);
 
     static class Testcase {
         final File file;
@@ -80,7 +77,6 @@ public class IntervalListScattererTest {
     public static Iterator<Object[]> testScatterTestcases() {
         final List<Testcase> testCases = new ArrayList<>();
         Assert.assertEquals(LIST_TO_SCATTER.getUniqueBaseCount(), 200, "Wrong unique base count");
-
         Assert.assertEquals(LIST_TO_SCATTER_MANY.getUniqueBaseCount(), 32 * 2, "Wrong unique base count");
         Assert.assertEquals(LIST_TO_SCATTER_MANY.getIntervals().size(), 32, "Wrong unique interval count");
 
@@ -203,7 +199,8 @@ public class IntervalListScattererTest {
                                 30200, 30249
                         )
                 )
-        ));  testCases.add(new Testcase(
+        ));
+        testCases.add(new Testcase(
                 INTERVAL_FILE, 6, IntervalListScatterMode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER, "1",
@@ -299,30 +296,34 @@ public class IntervalListScattererTest {
                         )
                 )));
 
-
         final IntervalList full = new IntervalList(LIST_TO_SCATTER_MANY.getHeader());
         full.add(new Interval("1", 30000, 30000 + 32 * 2 - 1));
 
         testCases.add(new Testcase(
-                SCATTER_INTERVAL_FILE, 1, IntervalListScatterMode.SCATTER_BY_INTERVAL_COUNT,
-                Collections.singletonList(IntervalList.intersection(full, LIST_TO_SCATTER_MANY))));
+                SCATTER_MANY_INTERVAL_FILE, 1, IntervalListScatterMode.SCATTER_BY_INTERVAL_COUNT,
+                Collections.singletonList(IntervalList.overlaps(LIST_TO_SCATTER_MANY, full))));
 
         final IntervalList half = new IntervalList(LIST_TO_SCATTER_MANY.getHeader());
         half.add(new Interval("1", 30000, 30000 + 16 * 2 - 1));
         testCases.add(new Testcase(
-                SCATTER_INTERVAL_FILE, 2, IntervalListScatterMode.SCATTER_BY_INTERVAL_COUNT,
-                Arrays.asList(IntervalList.intersection(LIST_TO_SCATTER_MANY, half),
-                        IntervalList.subtract(LIST_TO_SCATTER_MANY, half))));
+                SCATTER_MANY_INTERVAL_FILE, 2, IntervalListScatterMode.SCATTER_BY_INTERVAL_COUNT,
+                Arrays.asList(IntervalList.overlaps(LIST_TO_SCATTER_MANY, half),
+                        IntervalList.overlaps(LIST_TO_SCATTER_MANY, IntervalList.invert(half)))));
 
         final IntervalList third = new IntervalList(LIST_TO_SCATTER_MANY.getHeader());
         third.add(new Interval("1", 30000, 30000 + 10 * 2 - 1));
         final IntervalList secondThird = new IntervalList(LIST_TO_SCATTER_MANY.getHeader());
         secondThird.add(new Interval("1", 30000 + 10 * 2, 30000 + 20 * 2 - 1));
         testCases.add(new Testcase(
-                SCATTER_INTERVAL_FILE, 3, IntervalListScatterMode.SCATTER_BY_INTERVAL_COUNT,
-                Arrays.asList(IntervalList.intersection(LIST_TO_SCATTER_MANY, third),
-                        IntervalList.intersection(LIST_TO_SCATTER_MANY, secondThird),
-                        IntervalList.subtract(Collections.singletonList(LIST_TO_SCATTER_MANY), Arrays.asList(third, secondThird)))));
+                SCATTER_MANY_INTERVAL_FILE, 3, IntervalListScatterMode.SCATTER_BY_INTERVAL_COUNT,
+                Arrays.asList(IntervalList.overlaps(LIST_TO_SCATTER_MANY, third),
+
+                        IntervalList.overlaps(LIST_TO_SCATTER_MANY, secondThird),
+
+                        IntervalList.overlaps(LIST_TO_SCATTER_MANY, IntervalList.invert(IntervalList.concatenate(Arrays.asList(
+                                IntervalList.overlaps(LIST_TO_SCATTER_MANY, third),
+                                IntervalList.overlaps(LIST_TO_SCATTER_MANY, secondThird))
+                        ))))));
 
         return testCases.stream().map(tc -> new Object[]{tc}).iterator();
     }
@@ -334,7 +335,7 @@ public class IntervalListScattererTest {
         Assert.assertEquals(scatter.size(), tc.expectedScatter.size());
 
         for (int i = 0; i < scatter.size(); i++) {
-            Assert.assertEquals(scatter.get(i).uniqued().getIntervals(), tc.expectedScatter.get(i).getIntervals(), "Problem with the " + i + " scatter");
+            Assert.assertEquals(scatter.get(i).getIntervals(), tc.expectedScatter.get(i).getIntervals(), "Problem with the " + i + " scatter");
         }
     }
 

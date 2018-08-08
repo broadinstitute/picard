@@ -1,18 +1,45 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2018 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package picard.util.IntervalList;
 
 import java.util.function.Supplier;
 
 import htsjdk.samtools.util.IntervalList;
+import org.broadinstitute.barclay.argparser.CommandLineParser;
 
 /**
- * Created by farjoun on 6/20/18.
+ * An enum to control the creation of the various IntervalListScatter objects
  */
-public enum IntervalListScatterMode {
+public enum IntervalListScatterMode implements CommandLineParser.ClpEnum{
     /**
      * A simple scatter approach in which all output intervals have size equal to the total base count of the source list divide by the
      * scatter count (except for possible variance in the final interval list).
      */
-    INTERVAL_SUBDIVISION(IntervalListScattererWithSubdivision::new),
+    INTERVAL_SUBDIVISION(IntervalListScattererWithSubdivision::new, "Scatter the interval list into similarly sized interval lists. ") {
+
+    },
     /**
      * A scatter approach that differs from {@link IntervalListScatterMode#INTERVAL_SUBDIVISION} in a few ways.
      * <ol>
@@ -26,7 +53,8 @@ public enum IntervalListScatterMode {
      * which is one of the objectives of scattering.</li>
      * </ol>
      */
-    BALANCING_WITHOUT_INTERVAL_SUBDIVISION(IntervalListScattererWithoutSubdivision::new),
+    BALANCING_WITHOUT_INTERVAL_SUBDIVISION(IntervalListScattererWithoutSubdivision::new, "Scatter the interval list into similarly sized interval lists " +
+            "(by base count) but without breaking up intervals. "),
     /**
      * A scatter approach that differs from {@link IntervalListScatterMode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.
      * <ol>
@@ -35,21 +63,33 @@ public enum IntervalListScatterMode {
      * number of unique bases is at most the ideal split length larger than the smallest interval list (unique # of bases).</li>
      * </ol>
      */
-    BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW(IntervalListScattererWithoutSubdivisionWithOverflow::new),
+    BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW(IntervalListScattererWithoutSubdivisionWithOverflow::new, "Scatter the interval list into similarly sized interval lists " +
+            "(by base count) but without breaking up intervals. Will overflow current interval list so that the remaining lists will not " +
+            "have too many bases to deal with."),
 
     /**
-     * fill this!!!
+     * A scatter by Interval **Count** which attempt to fill each resulting interval list with the same number
+     * of intervals, disregarding the base-count. This approach can be useful for tools that operate on the interval-level
+     * rather than the base-level, for example CNV calling.
      */
-    SCATTER_BY_INTERVAL_COUNT(IntervalListScattererByInterval::new);
+    SCATTER_BY_INTERVAL_COUNT(IntervalListScattererByInterval::new, "Scatter by Interval Count. Resulting interval lists will contain similar number of intervals.");
 
-    final private Supplier<IntervalListScatterer> scattererSupplier;
-
-    IntervalListScatterMode(final Supplier<IntervalListScatterer> supplier) {
+    private final Supplier<IntervalListScatterer> scattererSupplier;
+    private final String docString;
+    @Override
+    public String getHelpDoc() {
+        return this.docString;
+    }
+    IntervalListScatterMode(final Supplier<IntervalListScatterer> supplier,final String docString) {
         scattererSupplier = supplier;
+        this.docString=docString;
     }
 
+    /**
+     * Create the scatterer
+     * @return a newly minted Scatterer
+     */
     public IntervalListScatterer make() {
-        IntervalList intervalList;
         return scattererSupplier.get();
     }
 }
