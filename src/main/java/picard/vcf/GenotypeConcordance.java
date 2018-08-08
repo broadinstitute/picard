@@ -745,7 +745,7 @@ public class GenotypeConcordance extends CommandLineProgram {
     /** Inserts the given string into the destination string at the given index.  If the index is past the end of the
      * destination string, the given string is appended to the destination.
      */
-    final protected static String spliceOrAppendString(final String destination, final String toInsert, final int insertIdx) {
+    static String spliceOrAppendString(final String destination, final String toInsert, final int insertIdx) {
         if (destination.equals(Allele.SPAN_DEL_STRING)) {
             return destination;
         }
