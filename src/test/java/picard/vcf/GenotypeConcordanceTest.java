@@ -126,7 +126,7 @@ public class GenotypeConcordanceTest {
                 {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12891", 40, null, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_GQ},
                 {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12891", null, 40, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_DP},
                 {NIST_MISSING_SITES_TRUTH_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12878", null, null, false, true, NIST_TRUTH_SNPS_VS_CEU_TRIOS_SNPS_GC},
-                {SPANNING_DELETION_TRUTH.toFile(),"/dev/stdin",SPANNING_DELETION_CALLSET.toFile(),"CHMI_CHMI3_WGS2",null,null,false,false,SPANNING_DELETION_CALLSET_VS_SPANNING_DELETION_TRUTH}
+                {SPANNING_DELETION_TRUTH.toFile(), "/dev/stdin", SPANNING_DELETION_CALLSET.toFile(), "CHMI_CHMI3_WGS2", null, null, false, false, SPANNING_DELETION_CALLSET_VS_SPANNING_DELETION_TRUTH}
         };
     }
 
