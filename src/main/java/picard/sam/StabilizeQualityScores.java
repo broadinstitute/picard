@@ -79,7 +79,7 @@ public class StabilizeQualityScores extends CommandLineProgram {
     public Integer DROP = null;
 
     @Argument(shortName = "A", doc = "Average runs of <= N quals to the binned average quality of the run.", mutex = {"DROP", "MERGE", "CUTOFF", "RAISE"})
-    public Integer AVERAGE = 4;
+    public Integer AVERAGE = null;
 
     @Argument(shortName = "M", doc = "Merge runs of <= N quals to the qual immediately previous to the run.", mutex = {"AVERAGE", "DROP", "CUTOFF", "RAISE"})
     public Integer MERGE = null;
