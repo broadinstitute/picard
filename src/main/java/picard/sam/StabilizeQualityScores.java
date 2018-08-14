@@ -69,16 +69,19 @@ public class StabilizeQualityScores extends CommandLineProgram {
     @Argument(shortName = "B", doc = "All qualities round to nearest bin in this list.", mutex = {"THRESHOLD", "CUTOFF"})
     public List<Integer> BINS = null;
 
-    @Argument(shortName = "C", doc = "Find the cutoff where the end of the read drops consistently at or below this qual. Set the end of the read to Q2 and the rest to Q-average.", mutex = {"THRESHOLD", "BINS", "DROP", "AVERAGE", "MERGE"})
+    @Argument(shortName = "C", doc = "Find the cutoff where the end of the read drops consistently at or below this qual. Set the end of the read to Q2 and the rest to Q-average.", mutex = {"THRESHOLD", "BINS", "DROP", "AVERAGE", "MERGE", "RAISE"})
     public Integer CUTOFF = null;
 
-    @Argument(shortName = "D", doc = "Drop runs of <= N quals to the lowest qual in the run.", mutex = {"AVERAGE", "MERGE", "CUTOFF"})
+    @Argument(shortName = "U", doc = "Raise runs of <= N quals to the highest qual in the run.", mutex = {"AVERAGE", "MERGE", "CUTOFF", "DROP"})
+    public Integer RAISE = null;
+
+    @Argument(shortName = "D", doc = "Drop runs of <= N quals to the lowest qual in the run.", mutex = {"AVERAGE", "MERGE", "CUTOFF", "RAISE"})
     public Integer DROP = null;
 
-    @Argument(shortName = "A", doc = "Average runs of <= N quals to the binned average quality of the run.", mutex = {"DROP", "MERGE", "CUTOFF"})
+    @Argument(shortName = "A", doc = "Average runs of <= N quals to the binned average quality of the run.", mutex = {"DROP", "MERGE", "CUTOFF", "RAISE"})
     public Integer AVERAGE = 4;
 
-    @Argument(shortName = "M", doc = "Merge runs of <= N quals to the qual immediately previous to the run.", mutex = {"AVERAGE", "DROP", "CUTOFF"})
+    @Argument(shortName = "M", doc = "Merge runs of <= N quals to the qual immediately previous to the run.", mutex = {"AVERAGE", "DROP", "CUTOFF", "RAISE"})
     public Integer MERGE = null;
 
     abstract static class Binner {
@@ -206,6 +209,24 @@ public class StabilizeQualityScores extends CommandLineProgram {
         }
     }
 
+    /* sets the qual for the RLE to the max value seen */
+    static class RaiseStabilizer extends Stabilizer {
+        RaiseStabilizer(Integer rl) { super(rl); }
+
+        //Return a list of prevRle + the deoscillation's maximum qual.
+        //prevRle may be null.
+        public List<RLEElem> stabilize(List<Integer> oquals, RLEElem prevRle, List<RLEElem> deoscillate) {
+            int thisCount = deoscillate.stream().mapToInt(e -> e.count).sum();
+            int maxQual = deoscillate.stream().mapToInt(e -> e.qual).max().getAsInt();
+            List<RLEElem> outList = new ArrayList<>();
+            if(prevRle != null) {
+                outList.add(prevRle);
+            }
+            outList.add(new RLEElem(maxQual, thisCount));
+            return outList;
+        }
+    }
+
     /* sets the qual for the RLE to the minimum value seen */
     static class DropStabilizer extends Stabilizer {
         DropStabilizer(Integer rl) { super(rl); }
@@ -245,15 +266,19 @@ public class StabilizeQualityScores extends CommandLineProgram {
         }
     }
 
-    protected Stabilizer makeStabilizer(Binner binner, Integer drop, Integer average, Integer merge, Integer cutoff) {
+    protected Stabilizer makeStabilizer(Binner binner, Integer raise, Integer drop, Integer average, Integer merge, Integer cutoff) {
         if(cutoff != null) {
             return null;
         } else if(merge != null) {
             return new MergeStabilizer(merge);
-        } else if(average != null) {
-            return new AverageStabilizer(average, binner);
-        } else {
+        } else if(raise != null) {
+            return new RaiseStabilizer(raise);
+        } else if(drop != null){
             return new DropStabilizer(drop);
+        } else {
+            //IMPORTANT NOTE: Keep this last, as average has a default and the picard CLP doesn't null out defaults
+            //if you pick a different one from the mutex group
+            return new AverageStabilizer(average, binner);
         }
     }
 
@@ -350,7 +375,7 @@ public class StabilizeQualityScores extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
 
         final Binner binner = makeBinner(THRESHOLD, THRESHOLD_UP, BINS, CUTOFF);
-        final Stabilizer stabilizer = makeStabilizer(binner, DROP, AVERAGE, MERGE, CUTOFF);
+        final Stabilizer stabilizer = makeStabilizer(binner, RAISE, DROP, AVERAGE, MERGE, CUTOFF);
 
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault().setOption(INCLUDE_SOURCE_IN_RECORDS, true).validationStringency(ValidationStringency.SILENT);
         SAMFileWriterFactory writerFactory = new SAMFileWriterFactory().setCreateIndex(true);

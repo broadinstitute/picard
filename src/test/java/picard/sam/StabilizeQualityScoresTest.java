@@ -110,6 +110,19 @@ public class StabilizeQualityScoresTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "StabilizerTestProvider")
+    public void testRaiseStabilizer(final List<Integer> testOQuals, final RLEElem testPrevRLE, final List<RLEElem> testRLE) {
+        Stabilizer raise = new RaiseStabilizer(4);
+
+        //should raise correctly with previous RLE
+        List<RLEElem> raisePrevious = raise.stabilize(testOQuals, testPrevRLE, testRLE);
+        Assert.assertEquals(raisePrevious, Arrays.asList(testPrevRLE, new RLEElem(20, testOQuals.size())));
+
+        //should raise correctly with no RLE
+        List<RLEElem> raiseBeginning = raise.stabilize(testOQuals, null, testRLE);
+        Assert.assertEquals(raiseBeginning, Arrays.asList(new RLEElem(20, testOQuals.size())));
+    }
+
+    @Test(dataProvider = "StabilizerTestProvider")
     public void testAverageStabilizer(final List<Integer> testOQuals, final RLEElem testPrevRLE, final List<RLEElem> testRLE) {
         ThresholdBinner tbin = new ThresholdBinner(20, null);
         Stabilizer average = new AverageStabilizer(4, tbin);
