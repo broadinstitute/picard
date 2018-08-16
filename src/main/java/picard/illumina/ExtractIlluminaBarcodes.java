@@ -506,14 +506,14 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             for (final ReadDescriptor rd : readStructure.descriptors) {
                 if (rd.type != ReadType.Barcode) continue;
                 final String header = barcodeNum == 0 ? sequenceColumn : "barcode_sequence_" + String.valueOf(1 + barcodeNum);
-                System.out.println(String.format("%d: header == '%s'", barcodeNum, header));
                 final String field = row.getField(header);
                 if (field == null) {
-                    messages.add(String.format("Null barcode in column %s of row %d in file %s", header, rowNum, BARCODE_FILE));
+                    messages.add(String.format("Null barcode in column %s of row %d.", header, rowNum));
+                    bcStrings[barcodeNum] = "";
                 } else {
                     bcStrings[barcodeNum] = field;
-                    ++barcodeNum;
                 }
+                ++barcodeNum;
             }
             if (numBarcodes == barcodeNum) {
                 final String bcStr = IlluminaUtil.barcodeSeqsToString(bcStrings);
@@ -526,7 +526,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 final BarcodeMetric metric = new BarcodeMetric(barcodeName, libraryName, bcStr, bcStrings);
                 barcodeToMetrics.put(StringUtil.join("", bcStrings), metric);
             } else {
-                messages.add(String.format("Read structure %s specifies %d sample barcodes but found %d in %s", READ_STRUCTURE, numBarcodes, barcodeNum, BARCODE_FILE));
+                messages.add(String.format("Read structure %s specifies %d sample barcodes but found %d in row %d.", READ_STRUCTURE, numBarcodes, barcodeNum, rowNum));
             }
         }
         barcodesParser.close();
