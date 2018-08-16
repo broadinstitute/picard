@@ -486,8 +486,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     private void parseBarcodeFile(final ArrayList<String> messages) {
         final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE);
         final String sequenceColumn = barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)
-            ? BARCODE_SEQUENCE_COLUMN : barcodesParser.hasColumn(BARCODE_SEQUENCE_1_COLUMN)
-            ? BARCODE_SEQUENCE_1_COLUMN : null;
+                ? BARCODE_SEQUENCE_COLUMN : barcodesParser.hasColumn(BARCODE_SEQUENCE_1_COLUMN)
+                ? BARCODE_SEQUENCE_1_COLUMN : null;
         if (sequenceColumn == null) {
             messages.add(BARCODE_FILE + " does not have " + BARCODE_SEQUENCE_COLUMN + " or " +
                     BARCODE_SEQUENCE_1_COLUMN + " column header");
