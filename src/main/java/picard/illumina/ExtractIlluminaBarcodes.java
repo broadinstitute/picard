@@ -515,19 +515,15 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 }
                 ++barcodeNum;
             }
-            if (numBarcodes == barcodeNum) {
-                final String bcStr = IlluminaUtil.barcodeSeqsToString(bcStrings);
-                if (barcodes.contains(bcStr)) {
-                    messages.add("Barcode " + bcStr + " specified more than once in " + BARCODE_FILE);
-                }
-                barcodes.add(bcStr);
-                final String barcodeName = (hasBarcodeName ? row.getField(BARCODE_NAME_COLUMN) : "");
-                final String libraryName = (hasLibraryName ? row.getField(LIBRARY_NAME_COLUMN) : "");
-                final BarcodeMetric metric = new BarcodeMetric(barcodeName, libraryName, bcStr, bcStrings);
-                barcodeToMetrics.put(StringUtil.join("", bcStrings), metric);
-            } else {
-                messages.add(String.format("Read structure %s specifies %d sample barcodes but found %d in row %d.", READ_STRUCTURE, numBarcodes, barcodeNum, rowNum));
+            final String bcStr = IlluminaUtil.barcodeSeqsToString(bcStrings);
+            if (barcodes.contains(bcStr)) {
+                messages.add("Barcode " + bcStr + " specified more than once in " + BARCODE_FILE);
             }
+            barcodes.add(bcStr);
+            final String barcodeName = (hasBarcodeName ? row.getField(BARCODE_NAME_COLUMN) : "");
+            final String libraryName = (hasLibraryName ? row.getField(LIBRARY_NAME_COLUMN) : "");
+            final BarcodeMetric metric = new BarcodeMetric(barcodeName, libraryName, bcStr, bcStrings);
+            barcodeToMetrics.put(StringUtil.join("", bcStrings), metric);
         }
         barcodesParser.close();
     }
