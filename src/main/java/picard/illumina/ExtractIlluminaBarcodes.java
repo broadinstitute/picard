@@ -484,48 +484,45 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     }
 
     private void parseBarcodeFile(final ArrayList<String> messages) {
-        final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE);
-        final String sequenceColumn = barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)
+        try (final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE)) {
+            final String sequenceColumn = barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)
                 ? BARCODE_SEQUENCE_COLUMN : barcodesParser.hasColumn(BARCODE_SEQUENCE_1_COLUMN)
                 ? BARCODE_SEQUENCE_1_COLUMN : null;
-        if (sequenceColumn == null) {
-            messages.add(BARCODE_FILE + " does not have " + BARCODE_SEQUENCE_COLUMN + " or " +
-                    BARCODE_SEQUENCE_1_COLUMN + " column header");
-            barcodesParser.close();
-            return;
-        }
-        final boolean hasBarcodeName = barcodesParser.hasColumn(BARCODE_NAME_COLUMN);
-        final boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
-        final int numBarcodes = readStructure.sampleBarcodes.length();
-        final Set<String> barcodes = new HashSet<>();
-        int rowNum = 0;
-        for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
-            ++rowNum;
-            final String[] bcStrings = new String[numBarcodes];
-            int barcodeNum = 0;
-            for (final ReadDescriptor rd : readStructure.descriptors) {
-                if (rd.type != ReadType.Barcode) continue;
-                final String header = barcodeNum == 0 ? sequenceColumn : "barcode_sequence_" + String.valueOf(1 + barcodeNum);
-                final String field = row.getField(header);
-                if (field == null) {
-                    messages.add(String.format("Null barcode in column %s of row %d.", header, rowNum));
-                    bcStrings[barcodeNum] = "";
-                } else {
-                    bcStrings[barcodeNum] = field;
+            if (sequenceColumn == null) {
+                messages.add(BARCODE_FILE + " does not have " + BARCODE_SEQUENCE_COLUMN + " or " +
+                        BARCODE_SEQUENCE_1_COLUMN + " column header");
+                return;
+            }
+            final boolean hasBarcodeName = barcodesParser.hasColumn(BARCODE_NAME_COLUMN);
+            final boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
+            final int numBarcodes = readStructure.sampleBarcodes.length();
+            final Set<String> barcodes = new HashSet<>();
+            for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
+                final String[] bcStrings = new String[numBarcodes];
+                int barcodeNum = 0;
+                for (final ReadDescriptor rd : readStructure.descriptors) {
+                    if (rd.type != ReadType.Barcode) continue;
+                    final String header = barcodeNum == 0 ? sequenceColumn : "barcode_sequence_" + (1 + barcodeNum);
+                    final String field = row.getField(header);
+                    if (field == null) {
+                        messages.add(String.format("Null barcode in column %s of row: %s", header, row.getCurrentLine()));
+                        bcStrings[barcodeNum] = "";
+                    } else {
+                        bcStrings[barcodeNum] = field;
+                    }
+                    ++barcodeNum;
                 }
-                ++barcodeNum;
+                final String bcStr = IlluminaUtil.barcodeSeqsToString(bcStrings);
+                if (barcodes.contains(bcStr)) {
+                    messages.add("Barcode " + bcStr + " specified more than once in " + BARCODE_FILE);
+                }
+                barcodes.add(bcStr);
+                final String barcodeName = (hasBarcodeName ? row.getField(BARCODE_NAME_COLUMN) : "");
+                final String libraryName = (hasLibraryName ? row.getField(LIBRARY_NAME_COLUMN) : "");
+                final BarcodeMetric metric = new BarcodeMetric(barcodeName, libraryName, bcStr, bcStrings);
+                barcodeToMetrics.put(StringUtil.join("", bcStrings), metric);
             }
-            final String bcStr = IlluminaUtil.barcodeSeqsToString(bcStrings);
-            if (barcodes.contains(bcStr)) {
-                messages.add("Barcode " + bcStr + " specified more than once in " + BARCODE_FILE);
-            }
-            barcodes.add(bcStr);
-            final String barcodeName = (hasBarcodeName ? row.getField(BARCODE_NAME_COLUMN) : "");
-            final String libraryName = (hasLibraryName ? row.getField(LIBRARY_NAME_COLUMN) : "");
-            final BarcodeMetric metric = new BarcodeMetric(barcodeName, libraryName, bcStr, bcStrings);
-            barcodeToMetrics.put(StringUtil.join("", bcStrings), metric);
         }
-        barcodesParser.close();
     }
 
     /**
