@@ -8,7 +8,7 @@ ARG jar_name=picard.jar
 RUN apt-get update && \
     apt-get --no-install-recommends install -y --force-yes \
         git \
-	r-base \
+        r-base \
         ant && \
     apt-get clean autoclean && \
     apt-get autoremove -y
