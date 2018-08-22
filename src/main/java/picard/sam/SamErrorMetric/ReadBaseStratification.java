@@ -281,6 +281,60 @@ public class ReadBaseStratification {
     }
 
     /**
+     * Define the base to be a blip if the difference between it and the preceding and following
+     * base are both greater than some threshold
+     */
+    public static class BaseQualitySpikeStratifier implements RecordAndOffsetStratifier<BaseQualitySpike> {
+        final int normalBaseQuality = 20;
+        final int spikeGap = 10;
+        final int endOfReadStart = 120;
+
+        @Override
+        public BaseQualitySpike stratify(final RecordAndOffset recordAndOffset,
+                                         final SAMLocusAndReference locusInfo){
+            // First check that the base quality is lower
+            final byte baseQuality = recordAndOffset.getBaseQuality();
+            final int offset = recordAndOffset.getOffset();
+
+            if (offset == 0){
+                return BaseQualitySpike.NORMAL;
+            }
+
+            if (offset > endOfReadStart){
+                return BaseQualitySpike.NEAR_END_OF_READ;
+            }
+
+            if (baseQuality > normalBaseQuality){
+                return BaseQualitySpike.NORMAL;
+            }
+
+            final byte[] baseQualities = recordAndOffset.getBaseQualities();
+            if (offset == baseQualities.length - 1){
+                return BaseQualitySpike.NEAR_END_OF_READ;
+            }
+            // Now check the neighboring bases for a spike
+
+            final int dropInQualityFromBefore = baseQualities[offset - 1] - baseQuality;
+            final int boostInQualityToTheNext = baseQualities[offset + 1] - baseQuality;
+
+            if (dropInQualityFromBefore > spikeGap && boostInQualityToTheNext > spikeGap){
+                return BaseQualitySpike.SPIKEY_LOW_BQ;
+            }
+
+            return BaseQualitySpike.NORMAL;
+        }
+
+        @Override
+        public String getSuffix() {
+            return "base_quality_spike";
+        }
+    }
+
+    public enum BaseQualitySpike {
+        SPIKEY_LOW_BQ, LOW_BUT_NOT_SPIKEY, NORMAL, NEAR_END_OF_READ
+    }
+
+    /**
      * Stratify bases according to the type of Homopolymer that they belong to (repeating element, final reference base and
      * whether the length is "long" or not). Read direction and only the preceding bases are taken into account.
      */
@@ -628,6 +682,11 @@ public class ReadBaseStratification {
     public static final ConsensusStratifier consensusStratifier = new ConsensusStratifier();
 
     /**
+     * Documentation goes here
+     */
+    public static final BaseQualitySpikeStratifier baseQualitySpikeStratifier = new BaseQualitySpikeStratifier();
+
+    /**
      * Stratify by the number of Ns found in the read.
      * This is particularly useful for data that has been consensus-called (a process that can add 'N' bases when there is no consensus)
      */
@@ -669,7 +728,8 @@ public class ReadBaseStratification {
         ONE_BASE_PADDED_CONTEXT(() -> oneBasePaddedContextStratifier, "Stratifies bases according the current reference base and a one base padded region from the read resulting in a 3-base context."),
         TWO_BASE_PADDED_CONTEXT(() -> twoBasePaddedContextStratifier, "Stratifies bases according the current reference base and a two base padded region from the read resulting in a 5-base context."),
         CONSENSUS(() -> consensusStratifier, "Stratifies bases according to whether or not duplicate reads were used to form a consensus read.  This stratifier makes use of the aD, bD, and cD tags for duplex consensus reads.  If the reads are single index consensus, only the cD tags are used."),
-        NS_IN_READ(() -> nsInReadStratifier, "Stratifies bases according to the number of Ns in the read.");
+        NS_IN_READ(() -> nsInReadStratifier, "Stratifies bases according to the number of Ns in the read."),
+        BASE_QUALITY_SPIKES(() -> baseQualitySpikeStratifier, "Blah blah blah");
 
         private final String docString;
 

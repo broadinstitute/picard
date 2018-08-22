@@ -61,7 +61,7 @@ import java.util.stream.Collectors;
                 "various aspect of the sequencing experiment: position in the read, base context, length of insert and so on.\n " +
                 "<p>" +
                 "This program collects two different kinds of error metrics (one which attempts to distinguish between pre- and " +
-                "post- sequencer errors, and on which doesn't) and a collation of 'stratifiers' " +
+                "post- sequencer errors, and one that doesn't) and a collation of 'stratifiers' " +
                 "each of which assigns bases into various bins. The stratifiers can be used together to generate a composite " +
                 "stratification. " +
                 "<p>" +
@@ -120,6 +120,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             "ERROR:READ_GROUP",
             "ERROR:MISMATCHES_IN_READ",
             "ERROR:ONE_BASE_PADDED_CONTEXT",
+            "ERROR:BASE_QUALITY_SPIKES",
             "OVERLAPPING_ERROR",
             "OVERLAPPING_ERROR:BASE_QUALITY",
             "OVERLAPPING_ERROR:INSERT_LENGTH",
