@@ -3,8 +3,11 @@ package picard.illumina;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
-import picard.cmdline.PicardCommandLine;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.cmdline.CommandLineProgram;
 import org.apache.commons.lang3.StringUtils;
+import picard.cmdline.programgroups.OtherProgramGroup;
 
 import java.io.*;
 import java.util.*;
@@ -12,7 +15,13 @@ import java.util.*;
 /**
  * Created by farjoun on 8/21/18.
  */
-public class SelectBarcodes extends PicardCommandLine {
+@CommandLineProgramProperties(
+        summary = "blah",
+        oneLineSummary = "blah",
+        programGroup = OtherProgramGroup.class
+)
+@DocumentedFeature
+public class SelectBarcodes extends CommandLineProgram {
 
     @Argument
     public List<File> BARCODES_MUST_HAVE;
@@ -31,14 +40,16 @@ public class SelectBarcodes extends PicardCommandLine {
 
     private int mustHaves = 0;
 
-    public void doWork() {
+    @Override
+    public int doWork() {
 
         //open files make lists of barcodes
         openBarcodes();
         // calculate distance matrix and ajacency matrix
         calculateAjacencyMatrix();
         // call BronKerbosch2 saving best selections to disk.
-
+        find_cliques();
+        return 0;
     }
 
     private void calculateAjacencyMatrix() {
@@ -96,20 +107,23 @@ public class SelectBarcodes extends PicardCommandLine {
 
     private void find_cliques() {
 
+        final BitSet r = new BitSet(barcodes.size());
+        r.set(0, mustHaves, true);
+
         final BitSet p = new BitSet(barcodes.size());
         p.set(0, barcodes.size(), true);
+        p.andNot(r);
 
-        final BitSet r = new BitSet(barcodes.size());
         final BitSet x = new BitSet(barcodes.size());
 
         final BitSet best_clique = new BitSet();
+
         for (final Integer v : getDegeneracyOrder()) {
             final BitSet neighs = ajacencyMatrix.get(v);
             find_cliques_pivot(union(r, v), intersection(p, neighs), intersection(x, neighs), best_clique);
             p.clear(v);
             x.set(v);
         }
-
     }
 
     private BitSet union(final BitSet set, final int node) {
@@ -148,7 +162,7 @@ public class SelectBarcodes extends PicardCommandLine {
         Map<Integer, Integer> degrees = new CollectionUtil.DefaultingMap<>(0);
 
         // a map form a given degeneracy to the list of verticies with that degeneracy
-        Map<Integer, List<Integer>> degen = new CollectionUtil.DefaultingMap<>(i -> new ArrayList<>(), true);
+        Map<Integer, Set<Integer>> degen = new CollectionUtil.DefaultingMap<>(i -> new HashSet<>(), true);
         int max_deg = -1;
         for (int v = 0; v < barcodes.size(); v++) {
             int deg = ajacencyMatrix.get(v).cardinality();
@@ -173,20 +187,22 @@ public class SelectBarcodes extends PicardCommandLine {
                 }
             }
 
-            final List<Integer> v = degen.remove(i);
-            ordering.addAll(v);
-            ordering_set.addAll(v);
-            for (int w = 0; w < barcodes.size(); w++) {
+            final Integer v = degen.get(i).iterator().next();
+            degen.get(i).remove(v);
+
+            ordering.add(v);
+            ordering_set.add(v);
+            ajacencyMatrix.get(v).stream().forEach(w -> {
 
                 if (!ordering_set.contains(w)) {
-                    int deg = degrees.get(w);
+                    final int deg = degrees.get(w);
                     degen.get(deg).remove(w);
                     if (deg > 0) {
                         degrees.put(w, degrees.get(w) - 1);
                         degen.get(deg - 1).add(w);
                     }
                 }
-            }
+            });
         }
         Collections.reverse(ordering);
         return ordering.toArray(new Integer[0]);
@@ -213,8 +229,8 @@ public class SelectBarcodes extends PicardCommandLine {
             bestClique.or(r);
             System.out.println("best.cardinality()=" + bestClique.cardinality());
 
-            try(PrintWriter writer = new PrintWriter(OUTPUT)) {
-                bestClique.stream().forEach(i->writer.println(barcodes.get(i)));
+            try (PrintWriter writer = new PrintWriter(OUTPUT)) {
+                bestClique.stream().forEach(i -> writer.println(barcodes.get(i)));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
