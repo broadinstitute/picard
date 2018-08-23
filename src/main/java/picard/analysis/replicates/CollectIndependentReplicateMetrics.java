@@ -65,6 +65,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.filter.CountingPairedFilter;
+import picard.util.SequenceUtil;
 
 import java.io.File;
 import java.util.HashMap;
@@ -363,7 +364,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                         .distinct().count() != 1;
                 log.debug("reads have multiple orientation?" + hasMultipleOrientations);
 
-                final byte editDistance = calculateEditDistance(barcodes.get(0), barcodes.get(1));
+                final byte editDistance = SequenceUtil.calculateEditDistance(barcodes.get(0), barcodes.get(1));
 
                 log.debug("Edit distance between umi: " + editDistance);
 
@@ -488,16 +489,6 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
     private static QueryInterval queryIntervalFromSamRecord(final SAMRecord samRecord) {
         return new QueryInterval(samRecord.getReferenceIndex(), samRecord.getStart(), samRecord.getEnd());
-    }
-
-    /** Gives the edit distance between this barcode and another of the same length. */
-    private static byte calculateEditDistance(final String lhs, final String rhs) {
-        assert(lhs.length()==rhs.length());
-        byte tmp = 0;
-        for (int i = 0; i < rhs.length(); ++i) {
-            if (rhs.charAt(i) != lhs.charAt(i)) ++tmp;
-        }
-        return tmp;
     }
 
     private SortedMap<QueryInterval, List<Allele>> getQueryIntervalsMap(final File vcf) {
