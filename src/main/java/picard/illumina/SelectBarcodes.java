@@ -14,6 +14,8 @@ import picard.cmdline.programgroups.OtherProgramGroup;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Created by farjoun on 8/21/18.
@@ -46,6 +48,11 @@ public class SelectBarcodes extends CommandLineProgram {
     static File output = null;
     static Log LOG = Log.getInstance(SelectBarcodes.class);
 
+    static Map<Integer, BitSet> Ps = new CollectionUtil.DefaultingMap((i) -> new BitSet(), true);
+    static Map<Integer, BitSet> Xs = new CollectionUtil.DefaultingMap((i) -> new BitSet(), true);
+    static Map<Integer, BitSet> Rs = new CollectionUtil.DefaultingMap((i) -> new BitSet(), true);
+    static Map<Integer, BitSet> Diffs = new HashMap<>();
+    static int recursionLevel;
 
     @Override
     public int doWork() {
@@ -137,33 +144,131 @@ public class SelectBarcodes extends CommandLineProgram {
 
     static void find_cliques(List<BitSet> graph, int mustHaves) {
 
-        final BitSet r = new BitSet(barcodes.size());
+        final Integer[] degeneracyOrder = getDegeneracyOrder(graph);
+        recursionLevel = 0;
+
+        BitSet r = Rs.get(recursionLevel);
         r.set(0, mustHaves, true);
 
-        final BitSet p = new BitSet(barcodes.size());
+        BitSet p = Ps.get(recursionLevel);
         p.set(0, barcodes.size(), true);
         p.andNot(r);
 
-        final BitSet x = new BitSet(barcodes.size());
-
+        BitSet x = Xs.get(recursionLevel);
+        x.clear();
         final BitSet best_clique = new BitSet();
 
-        for (final Integer v : getDegeneracyOrder(graph)) {
+        for (final Integer v : degeneracyOrder) {
+            recursionLevel = 0;
+
+            p = Ps.get(recursionLevel);
+            r = Rs.get(recursionLevel);
+            x = Xs.get(recursionLevel);
 
             if (r.get(v)) continue;
+
+            r.clear();
+            r.set(v);
             LOG.info("examining node " + v);
             final BitSet neighs = graph.get(v);
-            find_cliques_pivot(graph, union(r, v), intersection(p, neighs), intersection(x, neighs), best_clique);
+
+            p.clear();
+            p.or(neighs);
+
+            x.clear();
+
+            while (recursionLevel >= 0) {
+
+                p = Ps.get(recursionLevel);
+                r = Rs.get(recursionLevel);
+                x = Xs.get(recursionLevel);
+
+              //  LOG.info(String.format("in while (%d) %s %s %s (%s)", recursionLevel, r, p, x, best_clique));
+                if (p.isEmpty() && x.isEmpty()) {
+
+                    registerClique(r, best_clique);
+                    recursionLevel--;
+
+                    continue;
+                }
+                final int u = IntStream.concat(p.stream(), x.stream()).findFirst().orElse(-1); //should never happen
+                if (!Diffs.containsKey(recursionLevel)) {
+                    Diffs.put(recursionLevel, difference(p, graph.get(u)));
+                }
+                final int vv = Diffs.get(recursionLevel).nextSetBit(0);
+                if (vv == -1) {
+                    Diffs.remove(recursionLevel);
+                    p.clear();
+                    x.clear();
+                    r.clear();
+
+                    recursionLevel--;
+                    continue;
+                }
+                Diffs.get(recursionLevel).clear(vv);
+
+                final BitSet recNeighs = graph.get(vv);
+
+                Rs.get(recursionLevel + 1).clear();
+                Rs.get(recursionLevel + 1).or(r);
+                Rs.get(recursionLevel + 1).set(vv);
+
+                Xs.get(recursionLevel + 1).clear();
+                Xs.get(recursionLevel + 1).or(x);
+                Xs.get(recursionLevel + 1).and(recNeighs);
+
+                Ps.get(recursionLevel + 1).clear();
+                Ps.get(recursionLevel + 1).or(p);
+                Ps.get(recursionLevel + 1).and(recNeighs);
+
+                p.clear(vv);
+                x.set(vv);
+
+                recursionLevel++;
+
+            }
+
             p.clear(v);
             x.set(v);
         }
     }
 
-    static BitSet union(final BitSet set, final int node) {
-        BitSet ret = BitSet.valueOf(set.toLongArray());
-        ret.set(node);
-        return ret;
+//    static void find_cliques_pivot(final List<BitSet> graph, final BitSet r, final BitSet p, final BitSet x, final BitSet bestClique) {
+//
+//        if (p.isEmpty() && x.isEmpty()) {
+//
+//            registerClique(r, bestClique);
+//            return;
+//        }
+//        final int u = union(p, x).stream().findFirst().orElse(-1); //should never happen
+//        for (int v : difference(p, graph.get(u)).stream().toArray()) {
+//            final BitSet neighs = graph.get(v);
+//            find_cliques_pivot(graph, union(r, v), intersection(p, neighs), intersection(x, neighs), bestClique);
+//            p.clear(v);
+//            x.set(v);
+//        }
+//    }
+
+    private static void registerClique(final BitSet r, final BitSet bestClique) {
+        if (r.cardinality() > bestClique.cardinality()) {
+            bestClique.clear();
+            bestClique.or(r);
+            System.out.println("best.cardinality()=" + bestClique.cardinality());
+
+            output.delete();
+            try (PrintWriter writer = new PrintWriter(output)) {
+                bestClique.stream().forEach(i -> writer.println(Integer.toString(i) + "\t" + barcodes.get(i)));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
     }
+
+//    static BitSet union(final BitSet set, final int node) {
+//        BitSet ret = BitSet.valueOf(set.toLongArray());
+//        ret.set(node);
+//        return ret;
+//    }
 
     static BitSet union(final BitSet lhs, final BitSet rhs) {
         BitSet ret = BitSet.valueOf(lhs.toLongArray());
@@ -234,36 +339,5 @@ public class SelectBarcodes extends CommandLineProgram {
             });
         }
         return ordering.toArray(new Integer[0]);
-
-    }
-
-    static void find_cliques_pivot(final List<BitSet> graph, final BitSet r, final BitSet p, final BitSet x, final BitSet bestClique) {
-
-        if (p.isEmpty() && x.isEmpty()) {
-
-            registerClique(r, bestClique);
-            return;
-        }
-        final int u = union(p, x).stream().findFirst().orElse(-1); //should never happen
-        for (int v : difference(p, graph.get(u)).stream().toArray()) {
-            final BitSet neighs = graph.get(v);
-            find_cliques_pivot(graph, union(r, v), intersection(p, neighs), intersection(x, neighs), bestClique);
-            p.clear(v);
-            x.set(v);
-        }
-    }
-
-    static private void registerClique(final BitSet r, final BitSet bestClique) {
-        if (r.cardinality() > bestClique.cardinality()) {
-            bestClique.clear();
-            bestClique.or(r);
-            System.out.println("best.cardinality()=" + bestClique.cardinality());
-
-            try (PrintWriter writer = new PrintWriter(output)) {
-                bestClique.stream().forEach(i -> writer.println(i + '\t' + barcodes.get(i)));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }
