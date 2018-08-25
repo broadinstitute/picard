@@ -140,7 +140,7 @@ public class SelectBarcodesTest {
         {
             e.printStackTrace();
         }
-        Assert.assertEquals(result,CollectionUtil.makeList("one","two","five"));
+        Assert.assertEquals(result,CollectionUtil.makeList("1\tone","2\ttwo","5\tfive"));
     }
 
     @Test
