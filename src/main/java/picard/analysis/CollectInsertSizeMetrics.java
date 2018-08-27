@@ -85,7 +85,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
     protected static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";
 
-    @Argument(shortName="H", doc="File to write insert size Histogram chart to.", optional=true)
+    @Argument(shortName = "H", doc = "File to write insert size Histogram chart to.", optional = true)
     public File Histogram_FILE = null;
 
     @Argument(doc="Generate mean, sd and plots by trimming the data down to MEDIAN + DEVIATIONS*MEDIAN_ABSOLUTE_DEVIATION. " +
@@ -136,7 +136,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 
     @Override protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
-        if(Histogram_FILE != null) {
+        if (Histogram_FILE != null) {
             IOUtil.assertFileIsWritable(Histogram_FILE);
         }
 
@@ -155,16 +155,15 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
         final MetricsFile<InsertSizeMetrics, Integer> file = getMetricsFile();
         multiCollector.addAllLevelsToFile(file);
 
-        if(file.getNumHistograms() == 0) {
+        if (file.getNumHistograms() == 0) {
             //can happen if user sets MINIMUM_PCT = 0.5, etc.
             log.warn("All data categories were discarded because they contained < " + MINIMUM_PCT +
-                     " of the total aligned paired data.");
+                    " of the total aligned paired data.");
             final InsertSizeMetricsCollector.PerUnitInsertSizeMetricsCollector allReadsCollector = (InsertSizeMetricsCollector.PerUnitInsertSizeMetricsCollector) multiCollector.getAllReadsCollector();
             log.warn("Total mapped pairs in all categories: " + (allReadsCollector == null ? allReadsCollector : allReadsCollector.getTotalInserts()));
-        }
-        else  {
+        } else {
             file.write(OUTPUT);
-            if(Histogram_FILE != null) {
+            if (Histogram_FILE != null) {
                 final int rResult;
                 if (HISTOGRAM_WIDTH == null) {
                     rResult = RExecutor.executeFromClasspath(
@@ -178,8 +177,9 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
                             OUTPUT.getAbsolutePath(),
                             Histogram_FILE.getAbsolutePath(),
                             INPUT.getName(),
-                            String.valueOf(HISTOGRAM_WIDTH)); //Histogram_WIDTH is passed because R automatically sets Histogram width to the last
-                    //bin that has data, which may be less than Histogram_WIDTH and confuse the user.
+                            // Histogram_WIDTH is passed because R automatically sets Histogram width to the last
+                            // bin that has data, which may be less than Histogram_WIDTH and confuse the user.
+                            String.valueOf(HISTOGRAM_WIDTH));
                 }
 
                 if (rResult != 0) {
