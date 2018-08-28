@@ -205,6 +205,8 @@ public class ValidateSamFile extends CommandLineProgram {
                 IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
                 reference = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
 
+            } else {
+                log.warn("NM validation cannot be performed without the reference.");
             }
             final PrintWriter out;
             if (OUTPUT != null) {
