@@ -191,8 +191,8 @@ public class SelectBarcodes extends CommandLineProgram {
 
                     continue;
                 }
-                final int u = IntStream.concat(p.stream(), x.stream()).findFirst().orElse(-1); //should never happen
                 if (!Diffs.containsKey(recursionLevel)) {
+                    final int u = IntStream.concat(p.stream(), x.stream()).findFirst().orElse(-1); //should never happen
                     Diffs.put(recursionLevel, difference(p, graph.get(u)));
                 }
                 final int vv = Diffs.get(recursionLevel).nextSetBit(0);
