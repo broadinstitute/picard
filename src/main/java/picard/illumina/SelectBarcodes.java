@@ -2,13 +2,13 @@ package picard.illumina;
 
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
-import org.apache.commons.lang3.StringUtils;
+import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.OtherProgramGroup;
 
 import java.io.*;
@@ -34,23 +34,24 @@ public class SelectBarcodes extends CommandLineProgram {
     @Argument
     public List<File> BARCODES_CHOOSE_FROM;
 
-    @Argument
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
     private static final int FAR_ENOUGH = 3;
 
+    static final List<String> mustHaveBarcodes = new ArrayList<>();
     static final List<String> barcodes = new ArrayList<>();
 
-    private final List<BitSet> ajacencyMatrix = new ArrayList<>();
+    private final List<BitSet> adjacencyMatrix = new ArrayList<>();
 
     private int mustHaves = 0;
 
     static File output = null;
-    static Log LOG = Log.getInstance(SelectBarcodes.class);
+    private static Log LOG = Log.getInstance(SelectBarcodes.class);
 
-    static Map<Integer, BitSet> Ps = new CollectionUtil.DefaultingMap((i) -> new BitSet(), true);
-    static Map<Integer, BitSet> Xs = new CollectionUtil.DefaultingMap((i) -> new BitSet(), true);
-    static Map<Integer, BitSet> Rs = new CollectionUtil.DefaultingMap((i) -> new BitSet(), true);
+    static Map<Integer, BitSet> Ps = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
+    static Map<Integer, BitSet> Xs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
+    static Map<Integer, BitSet> Rs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
     static Map<Integer, BitSet> Diffs = new HashMap<>();
     static int recursionLevel;
 
@@ -64,23 +65,50 @@ public class SelectBarcodes extends CommandLineProgram {
         // calculate distance matrix and ajacency matrix
         calculateAjacencyMatrix();
         LOG.info("Calculated distances");
+
+        LOG.info("there are " + mustHaveBarcodes.size() + " MUST_HAVE barcodes.");
+        LOG.info("there are " + barcodes.size() + " other barcodes to choose from (after possibly rejecting some).");
+
+        try (final PrintWriter writer = new PrintWriter("all.barcodes.txt")) {
+            mustHaveBarcodes.forEach(writer::println);
+            barcodes.forEach(writer::println);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
         // call BronKerbosch2 saving best selections to disk.
-        find_cliques(ajacencyMatrix, mustHaves);
+        find_cliques(adjacencyMatrix);
 
         return 0;
     }
 
     private void calculateAjacencyMatrix() {
+
+        final List<String> filteredBarcodes = barcodes.stream().filter(b -> {
+                    if (mustHaveBarcodes.stream().anyMatch(m -> !areFarEnoughHamming(b, m))) {
+                        LOG.info(String.format("rejecting barcode: %s, it's too close to a MUST_HAVE barcode.",
+                                b));
+                        return false;
+                    }
+                    return true;
+                }
+        ).collect(Collectors.toList());
+
+        barcodes.clear();
+        barcodes.addAll(filteredBarcodes);
+
         try (final PrintWriter writer = new PrintWriter("distances.txt")) {
 
             for (int ii = 0; ii < barcodes.size(); ii++) {
-                BitSet ajacency = new BitSet(barcodes.size());
+                final BitSet ajacency = new BitSet(barcodes.size());
+
                 for (int jj = 0; jj < barcodes.size(); jj++) {
-                    ajacency.set(jj, areFarEnough(ii, jj));
+                    ajacency.set(jj, areFarEnoughLevenshtein(barcodes.get(ii), barcodes.get(jj)));
                     writer.append(ajacency.get(jj) ? "1" : "0").append(String.valueOf('\t'));
                 }
                 writer.append('\n');
-                ajacencyMatrix.add(ii, ajacency);
+                adjacencyMatrix.add(ii, ajacency);
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -99,42 +127,33 @@ public class SelectBarcodes extends CommandLineProgram {
 
     }
 
-    private boolean areFarEnough(final int lhs, final int rhs) {
+    private boolean areFarEnoughHamming(final String lhs, final String rhs) {
 
-        if (lhs <= mustHaves && rhs <= mustHaves) {
-            return lhs != rhs;
-        }
-        if (lhs > mustHaves && rhs > mustHaves) {
-            return levenshtein(barcodes.get(lhs), barcodes.get(rhs)) >= FAR_ENOUGH;
-        } else {
-            return hamming(barcodes.get(lhs), barcodes.get(rhs)) >= FAR_ENOUGH;
-        }
+        return hamming(lhs, rhs) >= FAR_ENOUGH;
+    }
+
+    private boolean areFarEnoughLevenshtein(final String lhs, final String rhs) {
+
+        return levenshtein(lhs, rhs) >= FAR_ENOUGH;
     }
 
     private void openBarcodes() {
         barcodes.clear();
 
-        BARCODES_MUST_HAVE.forEach(this::readBarcodesFile);
+        BARCODES_MUST_HAVE.forEach(b->readBarcodesFile(b,mustHaveBarcodes));
 
-        mustHaves = barcodes.size();
+        mustHaves = mustHaveBarcodes.size();
 
-        BARCODES_CHOOSE_FROM.forEach(this::readBarcodesFile);
-
-        try (final PrintWriter writer = new PrintWriter("all.barcodes.txt")) {
-            barcodes.forEach(writer::println);
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        BARCODES_CHOOSE_FROM.forEach(b->readBarcodesFile(b,barcodes));
     }
 
-    private void readBarcodesFile(File f) {
+    private void readBarcodesFile(final File f, final List<String> addTo) {
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.trim().equals("")) continue;
-                if (!barcodes.contains(line) && !barcodes.contains(SequenceUtil.reverseComplement(line))) {
-                    barcodes.add(line);
+                if (!addTo.contains(line) && !addTo.contains(SequenceUtil.reverseComplement(line))) {
+                    addTo.add(line);
                 }
             }
         } catch (IOException e) {
@@ -142,13 +161,12 @@ public class SelectBarcodes extends CommandLineProgram {
         }
     }
 
-    static void find_cliques(List<BitSet> graph, int mustHaves) {
+    static void find_cliques(List<BitSet> graph) {
 
         final Integer[] degeneracyOrder = getDegeneracyOrder(graph);
         recursionLevel = 0;
 
         BitSet r = Rs.get(recursionLevel);
-        r.set(0, mustHaves, true);
 
         BitSet p = Ps.get(recursionLevel);
         p.set(0, barcodes.size(), true);
@@ -183,7 +201,7 @@ public class SelectBarcodes extends CommandLineProgram {
                 r = Rs.get(recursionLevel);
                 x = Xs.get(recursionLevel);
 
-              //  LOG.info(String.format("in while (%d) %s %s %s (%s)", recursionLevel, r, p, x, best_clique));
+                //  LOG.info(String.format("in while (%d) %s %s %s (%s)", recursionLevel, r, p, x, best_clique));
                 if (p.isEmpty() && x.isEmpty()) {
 
                     registerClique(r, best_clique);
@@ -192,7 +210,14 @@ public class SelectBarcodes extends CommandLineProgram {
                     continue;
                 }
                 if (!Diffs.containsKey(recursionLevel)) {
-                    final int u = IntStream.concat(p.stream(), x.stream()).findFirst().orElse(-1); //should never happen
+                    final BitSet finalP = p;
+
+                    final int u = Stream.concat(p.stream().boxed(), x.stream().boxed())
+                            .max(Comparator.comparingInt(o -> intersection(finalP, graph.get(o)).cardinality()))
+                            .orElse(-1); //should never happen
+
+//                    final int u = IntStream.concat(p.stream(), x.stream()).findFirst().orElse(-1); //should never happen
+//                    LOG.info("examining pivot " + u);
                     Diffs.put(recursionLevel, difference(p, graph.get(u)));
                 }
                 final int vv = Diffs.get(recursionLevel).nextSetBit(0);
@@ -233,30 +258,16 @@ public class SelectBarcodes extends CommandLineProgram {
         }
     }
 
-//    static void find_cliques_pivot(final List<BitSet> graph, final BitSet r, final BitSet p, final BitSet x, final BitSet bestClique) {
-//
-//        if (p.isEmpty() && x.isEmpty()) {
-//
-//            registerClique(r, bestClique);
-//            return;
-//        }
-//        final int u = union(p, x).stream().findFirst().orElse(-1); //should never happen
-//        for (int v : difference(p, graph.get(u)).stream().toArray()) {
-//            final BitSet neighs = graph.get(v);
-//            find_cliques_pivot(graph, union(r, v), intersection(p, neighs), intersection(x, neighs), bestClique);
-//            p.clear(v);
-//            x.set(v);
-//        }
-//    }
-
     private static void registerClique(final BitSet r, final BitSet bestClique) {
         if (r.cardinality() > bestClique.cardinality()) {
             bestClique.clear();
             bestClique.or(r);
-            System.out.println("best.cardinality()=" + bestClique.cardinality());
+            System.out.println("best.cardinality()=" + (bestClique.cardinality() + mustHaveBarcodes.size()));
 
             output.delete();
             try (PrintWriter writer = new PrintWriter(output)) {
+
+                mustHaveBarcodes.stream().forEach(b -> writer.println(-1 + "\t" + b));
                 bestClique.stream().forEach(i -> writer.println(Integer.toString(i) + "\t" + barcodes.get(i)));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -338,6 +349,7 @@ public class SelectBarcodes extends CommandLineProgram {
                 }
             });
         }
+        Collections.reverse(ordering);
         return ordering.toArray(new Integer[0]);
     }
 }
