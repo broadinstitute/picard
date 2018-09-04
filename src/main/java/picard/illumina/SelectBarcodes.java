@@ -14,7 +14,6 @@ import picard.cmdline.programgroups.OtherProgramGroup;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -37,23 +36,25 @@ public class SelectBarcodes extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    private static final int FAR_ENOUGH = 3;
+    @Argument
+    public int FAR_ENOUGH = 3;
+
+    @Argument
+    public boolean ALSO_COMPARE_REVCOMP = false;
 
     static final List<String> mustHaveBarcodes = new ArrayList<>();
     static final List<String> barcodes = new ArrayList<>();
 
     private final List<BitSet> adjacencyMatrix = new ArrayList<>();
 
-    private int mustHaves = 0;
-
     static File output = null;
     private static Log LOG = Log.getInstance(SelectBarcodes.class);
 
-    static Map<Integer, BitSet> Ps = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
-    static Map<Integer, BitSet> Xs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
-    static Map<Integer, BitSet> Rs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
-    static Map<Integer, BitSet> Diffs = new HashMap<>();
-    static int recursionLevel;
+    private static Map<Integer, BitSet> Ps = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
+    private static Map<Integer, BitSet> Xs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
+    private static Map<Integer, BitSet> Rs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
+    private static Map<Integer, BitSet> Diffs = new HashMap<>();
+    private static int recursionLevel;
 
     @Override
     public int doWork() {
@@ -63,6 +64,7 @@ public class SelectBarcodes extends CommandLineProgram {
         openBarcodes();
         LOG.info("Opened Barcode files.");
         // calculate distance matrix and ajacency matrix
+
         calculateAjacencyMatrix();
         LOG.info("Calculated distances");
 
@@ -115,36 +117,36 @@ public class SelectBarcodes extends CommandLineProgram {
         }
     }
 
-    static int hamming(final String lhs, final String rhs) {
-        return Math.min(picard.util.SequenceUtil.calculateEditDistance(lhs, rhs),
-                picard.util.SequenceUtil.calculateEditDistance(lhs, SequenceUtil.reverseComplement(rhs)));
+    static int hamming(final String lhs, final String rhs, final boolean ALSO_COMPARE_REVCOMP) {
+        return ALSO_COMPARE_REVCOMP ? Math.min(picard.util.SequenceUtil.calculateEditDistance(lhs, rhs),
+                picard.util.SequenceUtil.calculateEditDistance(lhs, SequenceUtil.reverseComplement(rhs))) :
+                picard.util.SequenceUtil.calculateEditDistance(lhs, rhs);
 
     }
 
-    static int levenshtein(final String lhs, final String rhs) {
-        return Math.min(StringUtils.getLevenshteinDistance(lhs, rhs),
-                StringUtils.getLevenshteinDistance(lhs, SequenceUtil.reverseComplement(rhs)));
+    static int levenshtein(final String lhs, final String rhs, final boolean ALSO_COMPARE_REVCOMP) {
+        return ALSO_COMPARE_REVCOMP ? Math.min(StringUtils.getLevenshteinDistance(lhs, rhs),
+                StringUtils.getLevenshteinDistance(lhs, SequenceUtil.reverseComplement(rhs))) :
+                StringUtils.getLevenshteinDistance(lhs, rhs);
 
     }
 
     private boolean areFarEnoughHamming(final String lhs, final String rhs) {
 
-        return hamming(lhs, rhs) >= FAR_ENOUGH;
+        return hamming(lhs, rhs, ALSO_COMPARE_REVCOMP) >= FAR_ENOUGH;
     }
 
     private boolean areFarEnoughLevenshtein(final String lhs, final String rhs) {
 
-        return levenshtein(lhs, rhs) >= FAR_ENOUGH;
+        return levenshtein(lhs, rhs, ALSO_COMPARE_REVCOMP) >= FAR_ENOUGH;
     }
 
     private void openBarcodes() {
         barcodes.clear();
+        mustHaveBarcodes.clear();
 
-        BARCODES_MUST_HAVE.forEach(b->readBarcodesFile(b,mustHaveBarcodes));
-
-        mustHaves = mustHaveBarcodes.size();
-
-        BARCODES_CHOOSE_FROM.forEach(b->readBarcodesFile(b,barcodes));
+        BARCODES_MUST_HAVE.forEach(b -> readBarcodesFile(b, mustHaveBarcodes));
+        BARCODES_CHOOSE_FROM.forEach(b -> readBarcodesFile(b, barcodes));
     }
 
     private void readBarcodesFile(final File f, final List<String> addTo) {
@@ -175,6 +177,7 @@ public class SelectBarcodes extends CommandLineProgram {
         BitSet x = Xs.get(recursionLevel);
         x.clear();
         final BitSet best_clique = new BitSet();
+        int bestCliqueSize = 0;
 
         for (final Integer v : degeneracyOrder) {
             recursionLevel = 0;
@@ -202,13 +205,18 @@ public class SelectBarcodes extends CommandLineProgram {
                 x = Xs.get(recursionLevel);
 
                 //  LOG.info(String.format("in while (%d) %s %s %s (%s)", recursionLevel, r, p, x, best_clique));
-                if (p.isEmpty() && x.isEmpty()) {
+
+                // if there are no more pivots to chose from, we have reached a (locally) maximal clique.
+                // or if there is no way we could find a larger clique, stop trying
+                if (p.isEmpty() || p.cardinality() + r.cardinality() <= bestCliqueSize) {
 
                     registerClique(r, best_clique);
+                    bestCliqueSize = best_clique.cardinality();
                     recursionLevel--;
 
                     continue;
                 }
+
                 if (!Diffs.containsKey(recursionLevel)) {
                     final BitSet finalP = p;
 
@@ -216,7 +224,6 @@ public class SelectBarcodes extends CommandLineProgram {
                             .max(Comparator.comparingInt(o -> intersection(finalP, graph.get(o)).cardinality()))
                             .orElse(-1); //should never happen
 
-//                    final int u = IntStream.concat(p.stream(), x.stream()).findFirst().orElse(-1); //should never happen
 //                    LOG.info("examining pivot " + u);
                     Diffs.put(recursionLevel, difference(p, graph.get(u)));
                 }
@@ -267,7 +274,7 @@ public class SelectBarcodes extends CommandLineProgram {
             output.delete();
             try (PrintWriter writer = new PrintWriter(output)) {
 
-                mustHaveBarcodes.stream().forEach(b -> writer.println(-1 + "\t" + b));
+                mustHaveBarcodes.forEach(b -> writer.println(-1 + "\t" + b));
                 bestClique.stream().forEach(i -> writer.println(Integer.toString(i) + "\t" + barcodes.get(i)));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
