@@ -127,7 +127,7 @@ public class SelectBarcodesTest {
 
         SelectBarcodes.output = File.createTempFile("testing", "txt");
         SelectBarcodes.output.deleteOnExit();
-        SelectBarcodes.find_cliques(ajacencyMatrix, 0);
+        SelectBarcodes.find_cliques(ajacencyMatrix);
 
         List<String> result = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(SelectBarcodes.output))) {
@@ -136,23 +136,21 @@ public class SelectBarcodesTest {
                 result.add(line);
             }
         } catch (
-                IOException e)
-        {
+                IOException e) {
             e.printStackTrace();
         }
-        Assert.assertEquals(result,CollectionUtil.makeList("1\tone","2\ttwo","5\tfive"));
+        Assert.assertEquals(result, CollectionUtil.makeList("1\tone", "2\ttwo", "5\tfive"));
     }
 
     @Test
-    public void testDistance(){
-        Assert.assertEquals(SelectBarcodes.hamming("AATACCAT","ATGAATTA"),4);
-        Assert.assertEquals(SelectBarcodes.levenshtein("AATACCAT","ATGAATTA"),3);
+    public void testDistance() {
+        Assert.assertEquals(SelectBarcodes.hamming("AATACCAT", "ATGAATTA", true), 4);
+        Assert.assertEquals(SelectBarcodes.levenshtein("AATACCAT", "ATGAATTA", true), 3);
     }
-
 
     @Test
     public void testDistance2() {
-        Assert.assertEquals(SelectBarcodes.hamming("CACTTCAT","ATGAATTA"),2);
-        Assert.assertEquals(SelectBarcodes.levenshtein("CACTTCAT","ATGAATTA"),2);
+        Assert.assertEquals(SelectBarcodes.hamming("CACTTCAT", "ATGAATTA", true), 2);
+        Assert.assertEquals(SelectBarcodes.levenshtein("CACTTCAT", "ATGAATTA", true), 2);
     }
 }
