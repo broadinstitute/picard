@@ -37,7 +37,8 @@ public enum IntervalListScatterMode implements CommandLineParser.ClpEnum{
      * A simple scatter approach in which all output intervals have size equal to the total base count of the source list divide by the
      * scatter count (except for possible variance in the final interval list).
      */
-    INTERVAL_SUBDIVISION(IntervalListScattererWithSubdivision::new, "Scatter the interval list into similarly sized interval lists. ") {
+    INTERVAL_SUBDIVISION(IntervalListScattererWithSubdivision::new, "Scatter the interval list into similarly sized interval lists " +
+            "(by base count), breaking up intervals as needed.") {
 
     },
     /**
@@ -72,7 +73,7 @@ public enum IntervalListScatterMode implements CommandLineParser.ClpEnum{
      * of intervals, disregarding the base-count. This approach can be useful for tools that operate on the interval-level
      * rather than the base-level, for example CNV calling.
      */
-    SCATTER_BY_INTERVAL_COUNT(IntervalListScattererByInterval::new, "Scatter by Interval Count. Resulting interval lists will contain similar number of intervals.");
+    SCATTER_BY_INTERVAL_COUNT(IntervalListScattererByInterval::new, "Scatter the interval list into similarly sized interval lists (by interval count, not by base). Resulting interval lists will contain similar number of intervals.");
 
     private final Supplier<IntervalListScatterer> scattererSupplier;
     private final String docString;
