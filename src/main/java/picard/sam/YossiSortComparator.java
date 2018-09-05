@@ -23,14 +23,13 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordComparator;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import htsjdk.samtools.*;
 
-import java.io.IOException;
+import java.io.File;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Comparator for sorting SAMRecords by chr + location + queryname.
@@ -48,12 +47,15 @@ public class YossiSortComparator implements SAMRecordComparator, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    protected HashMap<String, Coordinate> primaryCache = new HashMap<>();
 
-    protected SamReader queryReader;
+    protected Cache<String, Coordinate> primaryCache = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .build();
 
-    public YossiSortComparator(SamReader qReader) {
-        queryReader = qReader;
+    protected ThreadLocal<SamReader> queryReader;
+
+    public YossiSortComparator(SamReaderFactory readerFactory, File refSeq, File bam) {
+         queryReader = ThreadLocal.withInitial(() -> readerFactory.referenceSequence(refSeq).open(bam));
     }
 
     protected String getRefFromSATag(String saTag) {
@@ -98,17 +100,17 @@ public class YossiSortComparator implements SAMRecordComparator, Serializable {
     }
 
     protected Coordinate getPrimary1(SAMRecord rec) {
-        if(primaryCache.containsKey(rec.getReadName())) {
-            return primaryCache.get(rec.getReadName());
-        } else {
-            Coordinate cacheMe = getPrimary1Internal(rec);
-            primaryCache.put(rec.getReadName(), cacheMe);
-            return cacheMe;
+        try {
+            return primaryCache.get(rec.getReadName(), () -> getPrimary1Internal(rec));
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            System.exit(1);
         }
+        assert(false); //shouldn't get here
+        return null;
     }
 
-    //SortingCollection is multithreaded, this must be synchronized
-    protected synchronized Coordinate getPrimary1Internal(SAMRecord rec) {
+    protected Coordinate getPrimary1Internal(SAMRecord rec) {
         /*
          * I found mysterious pair2 records with mate unmapped.
          * Its RNEXT and PNEXT pointed to itself, though it did have an SA tag.
@@ -120,7 +122,7 @@ public class YossiSortComparator implements SAMRecordComparator, Serializable {
             String primaryRef = getRefFromSATag(rec.getStringAttribute("SA"));
             long primaryPos = getPosFromSATag(rec.getStringAttribute("SA"));
             try (
-                    SAMRecordIterator iter = queryReader.queryAlignmentStart(primaryRef, (int) primaryPos)
+                    SAMRecordIterator iter = queryReader.get().queryAlignmentStart(primaryRef, (int) primaryPos)
             ) {
                 while(iter.hasNext()) {
                     SAMRecord pRec = iter.next();
@@ -137,17 +139,15 @@ public class YossiSortComparator implements SAMRecordComparator, Serializable {
 
     @Override
     public int compare(final SAMRecord samRecord1, final SAMRecord samRecord2) {
-        synchronized(this) {
-            Coordinate s1Coord = getPrimary1(samRecord1);
-            Coordinate s2Coord = getPrimary1(samRecord2);
+        Coordinate s1Coord = getPrimary1(samRecord1);
+        Coordinate s2Coord = getPrimary1(samRecord2);
 
-            if (!s1Coord.chr.equals(s2Coord.chr)) {
-                return s1Coord.chr.compareTo(s2Coord.chr);
-            } else if (s1Coord.pos != s2Coord.pos) {
-                return s1Coord.pos - s2Coord.pos;
-            } else {
-                return samRecord1.getReadName().compareTo(samRecord2.getReadName());
-            }
+        if (!s1Coord.chr.equals(s2Coord.chr)) {
+            return s1Coord.chr.compareTo(s2Coord.chr);
+        } else if (s1Coord.pos != s2Coord.pos) {
+            return s1Coord.pos - s2Coord.pos;
+        } else {
+            return samRecord1.getReadName().compareTo(samRecord2.getReadName());
         }
     }
 

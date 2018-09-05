@@ -63,7 +63,7 @@ public class YossiSort extends CommandLineProgram {
         header.setAttribute("SO", "yossiSort");
 
         SortingCollection<SAMRecord> alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
-                new BAMRecordCodec(header), new YossiSortComparator(yossiQueryReader), maxRecordsInRam);
+                new BAMRecordCodec(header), new YossiSortComparator(srfactory, REFERENCE_SEQUENCE, INPUT), maxRecordsInRam);
 
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
         writer.setProgressLogger(
