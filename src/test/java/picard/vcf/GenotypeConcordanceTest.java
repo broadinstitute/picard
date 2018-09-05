@@ -70,6 +70,10 @@ public class GenotypeConcordanceTest {
     // Test that we notice a deleted line
     private static final File CEU_TRIOS_SNPS_DEL_LINE_VCF = new File(TEST_DATA_PATH, "CEUTrio-snps_del_line.vcf");
 
+    //Test vcf output with spanning deletion
+    private static final Path SPANNING_DELETION_TRUTH = TEST_DATA_PATH.toPath().resolve("spanningDeletionTruth.vcf");
+    private static final Path SPANNING_DELETION_CALLSET = TEST_DATA_PATH.toPath().resolve("spanningDeletionCallset.vcf");
+
     // Existing/expected base metrics file names
     private static final String CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC = "CEUTrio-snps_vs_CEUTrio-snps_GtConcordanceDiff";
     private static final String CEU_TRIOS_INDELS_VS_CEU_TRIOS_INDELS_GC = "CEUTrio-indels_vs_CEUTrio-indels_GtConcordanceDiff";
@@ -80,6 +84,7 @@ public class GenotypeConcordanceTest {
     private static final String CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_GQ = "CEUTrio-snps_vs_CEUTrio-snps_GtConcordanceDiff_MinGq";
     private static final String CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_DP = "CEUTrio-snps_vs_CEUTrio-snps_GtConcordanceDiff_MinDp";
     private static final String NIST_TRUTH_SNPS_VS_CEU_TRIOS_SNPS_GC = "NIST-truth-snps_vs_CEUTrio-snps_GtConcordanceDiff";
+    private static final String SPANNING_DELETION_CALLSET_VS_SPANNING_DELETION_TRUTH = "spanningDeletionCallset_vs_spanningDeletionTruth";
 
     private static final String TRUTH_SAMPLE_NAME = "Foo";
     private static final String CALL_SAMPLE_NAME = "Foo";
@@ -120,7 +125,8 @@ public class GenotypeConcordanceTest {
                 {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12878", null, null, true, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_ALL_ROWS},
                 {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12891", 40, null, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_GQ},
                 {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12891", null, 40, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_DP},
-                {NIST_MISSING_SITES_TRUTH_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12878", null, null, false, true, NIST_TRUTH_SNPS_VS_CEU_TRIOS_SNPS_GC}
+                {NIST_MISSING_SITES_TRUTH_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12878", null, null, false, true, NIST_TRUTH_SNPS_VS_CEU_TRIOS_SNPS_GC},
+                {SPANNING_DELETION_TRUTH.toFile(), "/dev/stdin", SPANNING_DELETION_CALLSET.toFile(), "CHMI_CHMI3_WGS2", null, null, false, false, SPANNING_DELETION_CALLSET_VS_SPANNING_DELETION_TRUTH}
         };
     }
 
@@ -635,7 +641,7 @@ public class GenotypeConcordanceTest {
 
         for (final GenotypeConcordanceContingencyMetrics metrics : output.getMetrics()) {
             if (metrics.VARIANT_TYPE == VariantContext.Type.SNP) {
-                Assert.assertEquals(metrics.TP_COUNT, 0);
+                Assert.assertEquals(metrics.TP_COUNT, 1);
                 Assert.assertEquals(metrics.TN_COUNT,0);
                 Assert.assertEquals(metrics.FP_COUNT, 0);
                 Assert.assertEquals(metrics.FN_COUNT, 0);

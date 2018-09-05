@@ -743,20 +743,17 @@ public class GenotypeConcordance extends CommandLineProgram {
     }
 
     /** Inserts the given string into the destination string at the given index.  If the index is past the end of the
-     * destination string, the given string is appended to the destination.
+     * destination string, the given string is appended to the destination.  If the destination string is the
+     * spanning deletion allele it will be returned unchanged.
      */
     static String spliceOrAppendString(final String destination, final String toInsert, final int insertIdx) {
+        if (destination.equals(Allele.SPAN_DEL_STRING)) {
+            return destination;
+        }
         if (insertIdx <= destination.length()) {
             return destination.substring(0, insertIdx) + toInsert + destination.substring(insertIdx);
         }
-        else {
-            // Just return the destination string if it ends on a spanning deletion, do not append to a spanning deletion
-            if (destination.length() > 0 && destination.substring(destination.length()-1).equals(Allele.SPAN_DEL_STRING)) {
-                return destination;
-            } else {
-                return destination + toInsert;
-            }
-        }
+        return destination + toInsert;
     }
 
     /** Gets the alleles for the truth and call genotypes.  In particular, this handles the case where indels can have different
