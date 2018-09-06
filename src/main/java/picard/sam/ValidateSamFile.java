@@ -206,7 +206,7 @@ public class ValidateSamFile extends CommandLineProgram {
                 reference = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
 
             } else {
-                log.warn("NM validation cannot be performed without the reference");
+                log.warn("NM validation cannot be performed without the reference. All other validations will still occur.");
             }
             final PrintWriter out;
             if (OUTPUT != null) {
