@@ -27,8 +27,6 @@ package picard.util.IntervalList;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 
-import java.util.List;
-
 /**
  * a Baseclass for scatterers that scatter by uniqued base count.
  */

@@ -368,13 +368,13 @@ public class IntervalListScattererTest {
         full.add(new Interval("1", 30000, 30000 + 32 * 2 - 1));
 
         testCases.add(new Testcase(
-                SCATTER_MANY_INTERVAL_FILE, 1, IntervalListScatterMode.SCATTER_BY_INTERVAL_COUNT,
+                SCATTER_MANY_INTERVAL_FILE, 1, IntervalListScatterMode.INTERVAL_COUNT,
                 Collections.singletonList(IntervalList.overlaps(LIST_TO_SCATTER_MANY, full))));
 
         final IntervalList half = new IntervalList(LIST_TO_SCATTER_MANY.getHeader());
         half.add(new Interval("1", 30000, 30000 + 16 * 2 - 1));
         testCases.add(new Testcase(
-                SCATTER_MANY_INTERVAL_FILE, 2, IntervalListScatterMode.SCATTER_BY_INTERVAL_COUNT,
+                SCATTER_MANY_INTERVAL_FILE, 2, IntervalListScatterMode.INTERVAL_COUNT,
                 Arrays.asList(IntervalList.overlaps(LIST_TO_SCATTER_MANY, half),
                         IntervalList.overlaps(LIST_TO_SCATTER_MANY, IntervalList.invert(half)))));
 
@@ -383,7 +383,7 @@ public class IntervalListScattererTest {
         final IntervalList secondThird = new IntervalList(LIST_TO_SCATTER_MANY.getHeader());
         secondThird.add(new Interval("1", 30000 + 10 * 2, 30000 + 20 * 2 - 1));
         testCases.add(new Testcase(
-                SCATTER_MANY_INTERVAL_FILE, 3, IntervalListScatterMode.SCATTER_BY_INTERVAL_COUNT,
+                SCATTER_MANY_INTERVAL_FILE, 3, IntervalListScatterMode.INTERVAL_COUNT,
                 Arrays.asList(IntervalList.overlaps(LIST_TO_SCATTER_MANY, third),
 
                         IntervalList.overlaps(LIST_TO_SCATTER_MANY, secondThird),

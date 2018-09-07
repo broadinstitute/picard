@@ -27,14 +27,14 @@ import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
- * Scatters intervalLists by Interval so that resulting interval lists have same number of intervals in them.
- * Final interval can have up to the scatter number extra intervals.
+ * Scatters {@link IntervalList} by interval count so that resulting {@link IntervalList}'s have the same number of intervals in them.
+ * An exception is made for the final interval list, which will always contain at least this number of intervals,
+ * but may also contain the remainder.
  */
-public class IntervalListScattererByInterval implements IntervalListScatterer {
+public class IntervalListScattererByIntervalCount implements IntervalListScatterer {
 
     @Override
     public long intervalWeight(final Interval interval) {

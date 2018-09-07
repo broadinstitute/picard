@@ -46,7 +46,7 @@ import java.util.*;
 
 /**
  * Performs various {@link IntervalList} manipulations.
- *
+ * <p>
  * <h3>Summary</h3>
  * This tool offers multiple interval list file manipulation capabilities, including: sorting,
  * merging, subtracting, padding, and other set-theoretic operations. The default action
@@ -57,14 +57,14 @@ import java.util.*;
  * {@value htsjdk.samtools.util.IOUtil#INTERVAL_LIST_FILE_EXTENSION}, while a VCF must have one of {@value htsjdk.samtools.util.IOUtil#VCF_FILE_EXTENSION}, {@value htsjdk.samtools.util.IOUtil#COMPRESSED_VCF_FILE_EXTENSION},
  * {@value htsjdk.samtools.util.IOUtil#BCF_FILE_EXTENSION}. When VCF file is used as input, each variant is translated into an using its reference allele or the END
  * INFO annotation (if present) to determine the extent of the interval.
- *
+ * <p>
  * {@link IntervalListTools} can also "scatter" the resulting interval-list into many interval-files. This can be useful
  * for creating multiple interval lists for scattering an analysis over.
- *
+ * <p>
  * <h3>Details</h3>
- *  The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and
- *  other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,
- *  the file then contains records, one per line in text format with the following
+ * The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and
+ * other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,
+ * the file then contains records, one per line in text format with the following
  * values tab-separated:
  * <pre>
  * <ul>
@@ -77,7 +77,7 @@ import java.util.*;
  * </pre>
  * The coordinate system is 1-based, closed-ended, so that the first base in a sequence is at position 1, and both the start
  * and the end positions are included in an interval.
- *
+ * <p>
  * For Example:
  * <pre>
  * \@HD	VN:1.0
@@ -86,7 +86,7 @@ import java.util.*;
  * chr1	1	100	+	starts at the first base of the contig and covers 100 bases
  * chr2	100	100	+	interval with exactly one base
  * </pre>
- *
+ * <p>
  * <h3>Usage examples</h3>
  * <h4>1. Combine the intervals from two interval lists:</h4>
  * <pre>
@@ -96,7 +96,7 @@ import java.util.*;
  *       I=input_2.interval_list \\
  *       O=new.interval_list
  * </pre>
- *
+ * <p>
  * <h4>2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting
  * intervals:</h4>
  * <pre>
@@ -108,7 +108,7 @@ import java.util.*;
  *       I=input_2.interval_list \\
  *       O=new.interval_list
  * </pre>
- *
+ * <p>
  * <h4>3. Subtract the intervals in SECOND_INPUT from those in INPUT:</h4>
  * <pre>
  * java -jar picard.jar IntervalListTools \\
@@ -117,7 +117,7 @@ import java.util.*;
  *       SI=input_2.interval_list \\
  *       O=new.interval_list
  * </pre>
- *
+ * <p>
  * <h4>4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:</h4>
  * <pre>
  * java -jar picard.jar IntervalListTools \\
@@ -128,7 +128,6 @@ import java.util.*;
  *       O=new.interval_list
  * </pre>
  *
- *
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
@@ -138,9 +137,9 @@ import java.util.*;
 )
 @DocumentedFeature
 public class IntervalListTools extends CommandLineProgram {
-    static final String USAGE_SUMMARY ="A tool for performing various IntervalList manipulations";
+    static final String USAGE_SUMMARY = "A tool for performing various IntervalList manipulations";
     static final String USAGE_DETAILS =
-                    " <h3>Summary</h3>" +
+            " <h3>Summary</h3>" +
                     "This tool offers multiple interval list file manipulation capabilities, including: sorting, " +
                     "merging, subtracting, padding, and other set-theoretic operations. The default action " +
                     "is to merge and sort the intervals provided in the INPUTs. Other options, e.g. interval subtraction, are " +
@@ -159,13 +158,13 @@ public class IntervalListTools extends CommandLineProgram {
                     "other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header, " +
                     "the file then contains records, one per line in text format with the following" +
                     "values tab-separated: \n" +
-                    "\n"+
+                    "\n" +
                     " - Sequence name (SN) \n" +
                     " - Start position (1-based)\n" +
                     " - End position (1-based, inclusive)\n" +
                     " - Strand (either + or -)\n" +
                     " - Interval name (ideally unique names for intervals)\n" +
-                    "\n"+
+                    "\n" +
                     "The coordinate system is 1-based, closed-ended so that the first base in a sequence has position 1, and both the start " +
                     "and the end positions are included in an interval.\n" +
                     "\n" +
@@ -432,11 +431,11 @@ public class IntervalListTools extends CommandLineProgram {
         long intervalCount = 0;
         for (final IntervalList finalInterval : resultIntervals) {
             totalBaseCount += finalInterval.getBaseCount();
-            intervalCount += finalInterval.size();    
+            intervalCount += finalInterval.size();
         }
 
         LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
-        switch (OUTPUT_VALUE){
+        switch (OUTPUT_VALUE) {
             case BASES:
                 System.out.println(totalBaseCount);
                 break;
@@ -451,13 +450,12 @@ public class IntervalListTools extends CommandLineProgram {
         return 0;
     }
 
-
-    private List<IntervalList> openIntervalLists(final List<File> files){
+    private List<IntervalList> openIntervalLists(final List<File> files) {
         final List<IntervalList> lists = new ArrayList<>();
         for (final File f : files) {
             try {
                 lists.add(IntervalListInputType.getIntervalList(f, INCLUDE_FILTERED).padded(PADDING));
-            } catch (final Exception e){
+            } catch (final Exception e) {
                 LOG.error("There was a problem opening IntervalList file " + f.getAbsolutePath());
                 throw e;
             }
@@ -558,7 +556,7 @@ public class IntervalListTools extends CommandLineProgram {
             throw new SAMException("Cannot figure out type of file " + intervalListExtractable.getAbsolutePath() + " from extension. Current implementation understands the following types: " + Arrays.toString(IntervalListInputType.values()));
         }
 
-        public static IntervalList getIntervalList(final  File file, final boolean includeFiltered){
+        public static IntervalList getIntervalList(final File file, final boolean includeFiltered) {
             return forFile(file).getIntervalListInternal(file, includeFiltered);
         }
 

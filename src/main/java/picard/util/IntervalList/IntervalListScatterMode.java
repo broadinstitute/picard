@@ -24,15 +24,15 @@
 
 package picard.util.IntervalList;
 
-import java.util.function.Supplier;
-
 import htsjdk.samtools.util.IntervalList;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
+
+import java.util.function.Supplier;
 
 /**
  * An enum to control the creation of the various IntervalListScatter objects
  */
-public enum IntervalListScatterMode implements CommandLineParser.ClpEnum{
+public enum IntervalListScatterMode implements CommandLineParser.ClpEnum {
     /**
      * A simple scatter approach in which all output intervals have size equal to the total base count of the source list divide by the
      * scatter count (except for possible variance in the final interval list).
@@ -55,7 +55,7 @@ public enum IntervalListScatterMode implements CommandLineParser.ClpEnum{
      * </ol>
      */
     BALANCING_WITHOUT_INTERVAL_SUBDIVISION(IntervalListScattererWithoutSubdivision::new, "Scatter the interval list into similarly sized interval lists " +
-            "(by base count) but without breaking up intervals. "),
+            "(by base count), but without breaking up intervals."),
     /**
      * A scatter approach that differs from {@link IntervalListScatterMode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.
      * <ol>
@@ -65,29 +65,37 @@ public enum IntervalListScatterMode implements CommandLineParser.ClpEnum{
      * </ol>
      */
     BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW(IntervalListScattererWithoutSubdivisionWithOverflow::new, "Scatter the interval list into similarly sized interval lists " +
-            "(by base count) but without breaking up intervals. Will overflow current interval list so that the remaining lists will not " +
+            "(by base count), but without breaking up intervals. " +
+            "Will overflow current interval list so that the remaining lists will not " +
             "have too many bases to deal with."),
 
     /**
-     * A scatter by Interval **Count** which attempt to fill each resulting interval list with the same number
-     * of intervals, disregarding the base-count. This approach can be useful for tools that operate on the interval-level
-     * rather than the base-level, for example CNV calling.
+     * A scatter by interval **count** which attempts to fill each resulting interval list with the same number
+     * of intervals, disregarding the base count. This approach can be useful for tools that operate on the interval level
+     * rather than the base level, for example CNV calling.
      */
-    SCATTER_BY_INTERVAL_COUNT(IntervalListScattererByInterval::new, "Scatter the interval list into similarly sized interval lists (by interval count, not by base). Resulting interval lists will contain similar number of intervals.");
+    INTERVAL_COUNT(IntervalListScattererByIntervalCount::new, "Scatter the interval list into similarly sized interval lists " +
+            "(by interval count, not by base count). " +
+            "Resulting interval lists will contain similar number of intervals.");
 
     private final Supplier<IntervalListScatterer> scattererSupplier;
+
     private final String docString;
+
+    IntervalListScatterMode(final Supplier<IntervalListScatterer> supplier, final String docString) {
+
+        scattererSupplier = supplier;
+        this.docString = docString;
+    }
+
     @Override
     public String getHelpDoc() {
         return this.docString;
     }
-    IntervalListScatterMode(final Supplier<IntervalListScatterer> supplier,final String docString) {
-        scattererSupplier = supplier;
-        this.docString=docString;
-    }
 
     /**
      * Create the scatterer
+     *
      * @return a newly minted Scatterer
      */
     public IntervalListScatterer make() {

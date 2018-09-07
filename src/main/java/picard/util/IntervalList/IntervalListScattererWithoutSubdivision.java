@@ -28,7 +28,6 @@ import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 

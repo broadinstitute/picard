@@ -40,16 +40,20 @@ public interface IntervalListScatterer {
      * makes use of the other interfaced methods, and aims to provide a universal way to
      * scatter an {@link IntervalList}.
      *
-     * @param inputList IntervalList to be scattered
+     * @param inputList    IntervalList to be scattered
      * @param scatterCount ideal number of scatters generated.
      * @return Scattered {@link List} of {@link IntervalList}s,
      */
     default List<IntervalList> scatter(final IntervalList inputList, final int scatterCount) {
-        if (scatterCount < 1) throw new IllegalArgumentException("scatterCount < 1");
+        if (scatterCount < 1) {
+            throw new IllegalArgumentException("scatterCount < 1");
+        }
 
         final IntervalList processedIntervalList = preprocessIntervalList(inputList);
 
-        // How much "weight" should go into each sublist
+        // How much "weight" should go into each sublist. The weight of an interval is determined by
+        // listWeight() and intervalWeight(). The definition should be be a "norm", thus only the empty set has
+        // weight zero, and the weight of anything should be positive.
         final long idealSplitWeight = deduceIdealSplitWeight(processedIntervalList, scatterCount);
 
         Log.getInstance(IntervalListScatterer.class).info("idealSplitWeight=" + idealSplitWeight);
@@ -110,16 +114,33 @@ public interface IntervalListScatterer {
         return accumulatedIntervalLists;
     }
 
+    /**
+     * A function that will be called on an IntervalList prior to splitting it into sub-lists, and is a point where
+     * implementations can chose to impose some conditions on the lists, for example, merging overlapping/abutting intervals,
+     * removing duplicates, etc.
+     * @param inputList the original {@link IntervalList}
+     * @return the  {@link IntervalList} that will be split up by the scatterer.
+     */
     default IntervalList preprocessIntervalList(final IntervalList inputList) {
         return inputList.sorted();
     }
 
+    /**
+     * A method that defines the "weight" of an interval list for the purpose of scattering. The class will attempt to create
+     * sublists that all have similar weights.
+     */
     long intervalWeight(final Interval interval);
 
+    /**
+     *
+     * A method that defines the "weight" of an interval for the purpose of scattering. The class will attempt to create
+     * sublists that all have similar weights. This method need to estimate the change in any sublists weight due to the possible
+     * of the provided interval.
+     */
     long listWeight(final IntervalList intervalList);
 
     /**
-     * figure out how much of input interval to put into current list and how how to leave for the next interval list
+     * Figure out how much of the input interval to put into current list and how much to leave for the next interval list.
      *
      * @param interval
      * @return a list of two (possibly null) elements. The first element should be added to the current interval list, the second
@@ -127,6 +148,12 @@ public interface IntervalListScatterer {
      */
     List<Interval> takeSome(final Interval interval, final long idealSplitWeight, final long currentSize, final double projectSizeOfRemaining);
 
+    /**
+     * A method that determines the ideal target "weight" of the output IntervalList.
+     * @param intervalList the {@link IntervalList} that is about to get split
+     * @param nCount the scatter count into which to split intervalList
+     * @return The ideal "weight" of the output {@link IntervalList}'s
+     */
     int deduceIdealSplitWeight(final IntervalList intervalList, final int nCount);
 }
 
