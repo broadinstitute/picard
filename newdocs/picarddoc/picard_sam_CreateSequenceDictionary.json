@@ -2,6 +2,21 @@
   "summary": "Creates a sequence dictionary for a reference sequence.  ",
   "arguments": [
     {
+      "summary": "Optional file containing the alternative names for the contigs. Tools may use this information to consider different contig notations as identical (e.g: \u0027chr1\u0027 and \u00271\u0027). The alternative names will be put into the appropriate @AN annotation for each contig. No header. First column is the original name, the second column is an alternative name. One contig may have more than one alternative name.",
+      "name": "--ALT_NAMES",
+      "synonyms": "-AN",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
       "synonyms": "NA",

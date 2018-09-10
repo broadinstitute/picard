@@ -506,6 +506,13 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<td>null</td>
 					<td>Deprecated (use LIBRARY_PARAMS).  The name of the sequenced sample</td>
 				</tr>
+				<tr>
+					<td><a href="#--SEQUENCING_CENTER">--SEQUENCING_CENTER</a><br />
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>The name of the sequencing center that produced the reads.  Used to set the @RG->CN header tag.</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
@@ -522,6 +529,13 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<!--<td>boolean</td> -->
 					<td>true</td>
 					<td>Apply EAMSS filtering to identify inappropriately quality scored bases towards the ends of reads and convert their quality scores to Q2.</td>
+				</tr>
+				<tr>
+					<td><a href="#--BARCODE_POPULATION_STRATEGY">--BARCODE_POPULATION_STRATEGY</a><br />
+					</td>
+					<!--<td>PopulateBarcode</td> -->
+					<td>ORPHANS_ONLY</td>
+					<td>When should the sample barcode (as read by the sequencer) be placed on the reads in the BC tag?</td>
 				</tr>
 				<tr>
 					<td><a href="#--BARCODES_DIR">--BARCODES_DIR</a><br />
@@ -559,6 +573,20 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether to ignore reads whose barcodes are not found in LIBRARY_PARAMS.  Useful when outputting BAMs for only a subset of the barcodes in a lane.</td>
+				</tr>
+				<tr>
+					<td><a href="#--INCLUDE_BARCODE_QUALITY">--INCLUDE_BARCODE_QUALITY</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Should the barcode quality be included when the sample barcode is included?</td>
+				</tr>
+				<tr>
+					<td><a href="#--INCLUDE_BC_IN_RG_TAG">--INCLUDE_BC_IN_RG_TAG</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Whether to include the barcode information in the @RG->BC header tag. Defaults to false until included in the SAM spec.</td>
 				</tr>
 				<tr>
 					<td><a href="#--INCLUDE_NON_PF_READS">--INCLUDE_NON_PF_READS</a><br />
@@ -639,13 +667,6 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<!--<td>Date</td> -->
 					<td>null</td>
 					<td>The start date of the run.</td>
-				</tr>
-				<tr>
-					<td><a href="#--SEQUENCING_CENTER">--SEQUENCING_CENTER</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>BI</td>
-					<td>The name of the sequencing center that produced the reads.  Used to set the RG.CN tag.</td>
 				</tr>
 				<tr>
 					<td><a href="#--TAG_PER_MOLECULAR_INDEX">--TAG_PER_MOLECULAR_INDEX</a><br />
@@ -802,6 +823,29 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--BARCODE_POPULATION_STRATEGY">--BARCODE_POPULATION_STRATEGY </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>When should the sample barcode (as read by the sequencer) be placed on the reads in the BC tag?</b><br />
+			
+		</p>
+			<p>
+				The --BARCODE_POPULATION_STRATEGY argument is an enumerated type (PopulateBarcode), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">ORPHANS_ONLY</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INEXACT_MATCH</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">ALWAYS</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">PopulateBarcode</span>
+			&nbsp;<span class="label">ORPHANS_ONLY</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--BARCODES_DIR">--BARCODES_DIR </a>
 			 / <small>-BCD</small>
 		</h3>
@@ -919,6 +963,30 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 		</h3>
 		<p class="args">
 			<b>Whether to ignore reads whose barcodes are not found in LIBRARY_PARAMS.  Useful when outputting BAMs for only a subset of the barcodes in a lane.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--INCLUDE_BARCODE_QUALITY">--INCLUDE_BARCODE_QUALITY </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Should the barcode quality be included when the sample barcode is included?</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--INCLUDE_BC_IN_RG_TAG">--INCLUDE_BC_IN_RG_TAG </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Whether to include the barcode information in the @RG->BC header tag. Defaults to false until included in the SAM spec.</b><br />
 			
 		</p>
 		<p>
@@ -1195,12 +1263,13 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>The name of the sequencing center that produced the reads.  Used to set the RG.CN tag.</b><br />
+			<b>The name of the sequencing center that produced the reads.  Used to set the @RG->CN header tag.</b><br />
 			
 		</p>
 		<p>
+				<span class="badge badge-important">R</span>
 		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">BI</span>
+			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TAG_PER_MOLECULAR_INDEX">--TAG_PER_MOLECULAR_INDEX </a>
@@ -1332,7 +1401,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.18.11-SNAPSHOT built at 24-45-2018 04:45:49.
+        <p class="version">Picard version 2.18.13-SNAPSHOT built at 10-11-2018 01:11:02.
         </p>
 
 	</div>
