@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -267,7 +268,7 @@ public class GatherVcfs extends CommandLineProgram {
                         // If we found the end of the header then write the remainder of this block out as a
                         // new gzip block and then break out of the while loop
                         if (firstNonHeaderByteIndex >= 0) {
-                            final BlockCompressedOutputStream blockOut = new BlockCompressedOutputStream(out, null);
+                            final BlockCompressedOutputStream blockOut = new BlockCompressedOutputStream(out, (Path)null);
                             blockOut.write(blockContents, firstNonHeaderByteIndex, blockContents.length - firstNonHeaderByteIndex);
                             blockOut.flush();
                             // Don't close blockOut because closing underlying stream would break everything
