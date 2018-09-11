@@ -142,7 +142,7 @@ public abstract class CommandLineProgram {
     private static final String[] PACKAGES_WITH_WEB_DOCUMENTATION = {"picard"};
 
     static {
-      // Register custom reader factory for reading data from Google Genomics 
+      // Register custom reader factory for reading data from Google Genomics
       // implementation of GA4GH API.
       // With this it will be possible to pass these urls as INPUT params.
       // E.g. java -jar dist/picard.jar ViewSam \
@@ -150,11 +150,11 @@ public abstract class CommandLineProgram {
       //    GA4GH_CLIENT_SECRETS=../client_secrets.json
       if (System.getProperty("samjdk.custom_reader") == null) {
         System.setProperty("samjdk.custom_reader",
-            "https://www.googleapis.com/genomics," + 
+            "https://www.googleapis.com/genomics," +
             "com.google.cloud.genomics.gatk.htsjdk.GA4GHReaderFactory");
       }
     }
-    
+
     /**
     * Initialized in parseArgs.  Subclasses may want to access this to do their
     * own validation, and then print usage using commandLineParser.
@@ -194,8 +194,8 @@ public abstract class CommandLineProgram {
         String actualArgs[] = argv;
 
         if (System.getProperty(PROPERTY_CONVERT_LEGACY_COMMAND_LINE, "false").equals("true")) {
-            actualArgs = CommandLineSyntaxTranslater.translatePicardStyleToPosixStyle(argv);
-        } else if (CommandLineSyntaxTranslater.scanForLegacyCommandLine(argv)) {
+            actualArgs = CommandLineSyntaxTranslater.convertPicardStyleToPosixStyle(argv);
+        } else if (CommandLineSyntaxTranslater.isLegacyPicardStyle(argv)) {
             // Issue an informational message telling the user that legacy syntax will soon be removed, and include
             // a link to a Picard wiki page with more detail. For now this is only an informational message letting
             // users know a change is coming. In a future release of Picard, when the default parser is Barclay, we'll
@@ -206,7 +206,7 @@ public abstract class CommandLineProgram {
                             "**********\n**********\t%s %s\n**********\n" +
                             "********** See https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition) for more information.\n\n",
                            this.getClass().getSimpleName(),
-                           Arrays.stream(CommandLineSyntaxTranslater.translatePicardStyleToPosixStyle(argv)).collect(Collectors.joining(" ")))
+                           Arrays.stream(CommandLineSyntaxTranslater.convertPicardStyleToPosixStyle(argv)).collect(Collectors.joining(" ")))
             );
         }
         if (!parseArgs(actualArgs)) {
