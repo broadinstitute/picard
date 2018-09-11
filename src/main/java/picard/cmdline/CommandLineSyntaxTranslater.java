@@ -42,7 +42,5 @@ public class CommandLineSyntaxTranslater {
             }
         ).collect(Collectors.toList());
         return convertedArgs.toArray(new String[convertedArgs.size()]);
-
     }
-
 }
