@@ -142,7 +142,7 @@ public abstract class CommandLineProgram {
     private static final String[] PACKAGES_WITH_WEB_DOCUMENTATION = {"picard"};
 
     static {
-      // Register custom reader factory for reading data from Google Genomics 
+      // Register custom reader factory for reading data from Google Genomics
       // implementation of GA4GH API.
       // With this it will be possible to pass these urls as INPUT params.
       // E.g. java -jar dist/picard.jar ViewSam \
@@ -150,11 +150,11 @@ public abstract class CommandLineProgram {
       //    GA4GH_CLIENT_SECRETS=../client_secrets.json
       if (System.getProperty("samjdk.custom_reader") == null) {
         System.setProperty("samjdk.custom_reader",
-            "https://www.googleapis.com/genomics," + 
+            "https://www.googleapis.com/genomics," +
             "com.google.cloud.genomics.gatk.htsjdk.GA4GHReaderFactory");
       }
     }
-    
+
     /**
     * Initialized in parseArgs.  Subclasses may want to access this to do their
     * own validation, and then print usage using commandLineParser.
@@ -194,20 +194,25 @@ public abstract class CommandLineProgram {
         String actualArgs[] = argv;
 
         if (System.getProperty(PROPERTY_CONVERT_LEGACY_COMMAND_LINE, "false").equals("true")) {
-            actualArgs = CommandLineSyntaxTranslater.translatePicardStyleToPosixStyle(argv);
-        } else if (CommandLineSyntaxTranslater.scanForLegacyCommandLine(argv)) {
-            // Issue an informational message telling the user that legacy syntax will soon be removed, and include
-            // a link to a Picard wiki page with more detail. For now this is only an informational message letting
-            // users know a change is coming. In a future release of Picard, when the default parser is Barclay, we'll
-            // update this message to link to a different page describing the options for that release.
-            Log.getInstance(this.getClass()).info(
-                    String.format("\n\n********** NOTE: In a future release, the command line syntax used by Picard will change, and the existing syntax \n" +
-                            "********** will no longer be accepted. In the future release, the syntax for the command line arguments would be specified as:\n" +
-                            "**********\n**********\t%s %s\n**********\n" +
-                            "********** See https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition) for more information.\n\n",
-                           this.getClass().getSimpleName(),
-                           Arrays.stream(CommandLineSyntaxTranslater.translatePicardStyleToPosixStyle(argv)).collect(Collectors.joining(" ")))
-            );
+            actualArgs = CommandLineSyntaxTranslater.convertPicardStyleToPosixStyle(argv);
+        } else if (CommandLineSyntaxTranslater.isLegacyPicardStyle(argv)) {
+            final String[] messageLines = new String[] {
+                "", "",
+                "********** NOTE: Picard's command line syntax is changing.",
+                "**********",
+                "********** For more information, please see:",
+                "********** https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)",
+                "**********",
+                "********** The command line looks like this in the new syntax:",
+                "**********",
+                "**********    %s %s",
+                "**********",
+                "", ""
+            };
+            final String message = String.join("\n", messageLines);
+            final String syntax  = String.join(" ", CommandLineSyntaxTranslater.convertPicardStyleToPosixStyle(argv));
+            final String info    = String.format(message, this.getClass().getSimpleName(), syntax);
+            Log.getInstance(this.getClass()).info(info);
         }
         if (!parseArgs(actualArgs)) {
             return 1;

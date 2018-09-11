@@ -15,8 +15,8 @@ public class CommandLineSyntaxTranslater {
     // Separator used by the legacy parser for name/value arguments
     private static final String LEGACY_VALUE_SEPARATOR = "=";
 
-    // Scan the command line arguments to see if they appear to be using legacy parser syntax
-    public static boolean scanForLegacyCommandLine(final String argv[]) {
+    // Return true when the command line arguments appear to use Picard's legacy syntax.
+    public static boolean isLegacyPicardStyle(final String argv[]) {
         return Arrays.stream(argv).anyMatch(
                 putativeLegacyArg ->
                         !putativeLegacyArg.startsWith(BARCLAY_SHORT_OPTION_PREFIX) &&
@@ -25,10 +25,10 @@ public class CommandLineSyntaxTranslater {
         );
     }
 
-    public static String[] translatePicardStyleToPosixStyle(final String argv[]) {
+    public static String[] convertPicardStyleToPosixStyle(final String argv[]) {
         final List<String> convertedArgs = Arrays.stream(argv).flatMap(
             originalArgPair -> {
-                final String[] splitArgPair = originalArgPair.split(LEGACY_VALUE_SEPARATOR, -1);
+                final String[] splitArgPair = originalArgPair.split(LEGACY_VALUE_SEPARATOR, 2);
                 if (splitArgPair.length == 1) {   // assume positional arg
                     return Arrays.stream(new String[]{ originalArgPair });
                 } else if (splitArgPair.length == 2) {
@@ -37,13 +37,10 @@ public class CommandLineSyntaxTranslater {
                     return Arrays.stream(new String[]{BARCLAY_SHORT_OPTION_PREFIX + splitArgPair[0], splitArgPair[1]});
                 }
                 else {
-                    throw new RuntimeException(
-                            "Argument syntax conversion failed. Too many \"=\" separated tokens to translate: " + originalArgPair);
+                    throw new RuntimeException("Cannot convert this argument: " + originalArgPair);
                 }
             }
         ).collect(Collectors.toList());
         return convertedArgs.toArray(new String[convertedArgs.size()]);
-
     }
-
 }
