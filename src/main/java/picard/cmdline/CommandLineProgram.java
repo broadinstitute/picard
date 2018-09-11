@@ -196,18 +196,23 @@ public abstract class CommandLineProgram {
         if (System.getProperty(PROPERTY_CONVERT_LEGACY_COMMAND_LINE, "false").equals("true")) {
             actualArgs = CommandLineSyntaxTranslater.convertPicardStyleToPosixStyle(argv);
         } else if (CommandLineSyntaxTranslater.isLegacyPicardStyle(argv)) {
-            // Issue an informational message telling the user that legacy syntax will soon be removed, and include
-            // a link to a Picard wiki page with more detail. For now this is only an informational message letting
-            // users know a change is coming. In a future release of Picard, when the default parser is Barclay, we'll
-            // update this message to link to a different page describing the options for that release.
-            Log.getInstance(this.getClass()).info(
-                    String.format("\n\n********** NOTE: In a future release, the command line syntax used by Picard will change, and the existing syntax \n" +
-                            "********** will no longer be accepted. In the future release, the syntax for the command line arguments would be specified as:\n" +
-                            "**********\n**********\t%s %s\n**********\n" +
-                            "********** See https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition) for more information.\n\n",
-                           this.getClass().getSimpleName(),
-                           Arrays.stream(CommandLineSyntaxTranslater.convertPicardStyleToPosixStyle(argv)).collect(Collectors.joining(" ")))
-            );
+            final String[] messageLines = new String[] {
+                "", "",
+                "********** NOTE: Picard's command line syntax is changing.",
+                "**********",
+                "********** For more information, please see:",
+                "********** https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)",
+                "**********",
+                "********** The command line looks like this in the new syntax:",
+                "**********",
+                "**********    %s %s",
+                "**********",
+                "", ""
+            };
+            final String message = String.join("\n", messageLines);
+            final String syntax  = String.join(" ", CommandLineSyntaxTranslater.convertPicardStyleToPosixStyle(argv));
+            final String info    = String.format(message, this.getClass().getSimpleName(), syntax);
+            Log.getInstance(this.getClass()).info(info);
         }
         if (!parseArgs(actualArgs)) {
             return 1;
