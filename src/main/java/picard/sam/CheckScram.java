@@ -1,8 +1,5 @@
 package picard.sam;
 
-<<<<<<< a3bc53923feb16dd6ee322836a85292d1532f7a7
-public class CheckScram {
-=======
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -58,7 +55,7 @@ public class CheckScram extends CommandLineProgram {
             throw new ScramMismatchException(scramRec, bamRec, "alignment end mismatch", scramRec.getAlignmentEnd(), bamRec.getAlignmentEnd() );
         } else if ( !scramRec.getReadString().equals(bamRec.getReadString()) ) {
             throw new ScramMismatchException(scramRec, bamRec, "bases mismatch", scramRec.getReadString(), bamRec.getReadString() );
-        //NOTE: no quals, because they're deoscillated.
+            //NOTE: no quals, because they're deoscillated.
         } else if ( scramRec.getFlags() != bamRec.getFlags()) {
             //FIXME: delta supplementary shenanigans
             throw new ScramMismatchException(scramRec, bamRec, "flags mismatch", scramRec.getFlags(), bamRec.getFlags() );
@@ -105,5 +102,4 @@ public class CheckScram extends CommandLineProgram {
         }
         return 0;
     }
->>>>>>> checkscram
 }
