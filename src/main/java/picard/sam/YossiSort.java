@@ -25,13 +25,15 @@ package picard.sam;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
-import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.sam.util.YossiBAMRecordSet;
+import picard.sam.util.YossiBAMRecordSetCodec;
+import picard.util.QueryNameBatchIterator;
 
 import java.io.File;
 
@@ -59,29 +61,39 @@ public class YossiSort extends CommandLineProgram {
         final SamReader yossiQueryReader = srfactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
 
         SAMFileHeader header = reader.getFileHeader();
+        if( header.getSortOrder() != SAMFileHeader.SortOrder.queryname ) {
+            throw new RuntimeException("input file must be queryname sorted");
+        }
+
+
         header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
         header.setAttribute("SO", "yossiSort");
 
-        SortingCollection<SAMRecord> alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
-                new BAMRecordCodec(header), new YossiSortComparator(srfactory, REFERENCE_SEQUENCE, INPUT), maxRecordsInRam);
+        SortingCollection<YossiBAMRecordSet> readsSorter = SortingCollection.newInstance(YossiBAMRecordSet.class,
+                new YossiBAMRecordSetCodec(header), new YossiSortComparator(), maxRecordsInRam);
 
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
         writer.setProgressLogger(
                 new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Read");
-        for (SAMRecord rec : reader) {
-            alignmentSorter.add(rec);
+
+        QueryNameBatchIterator qnbs = new QueryNameBatchIterator(reader.iterator());
+
+        while(qnbs.hasNext()) {
+            readsSorter.add(qnbs.next());
         }
 
-        alignmentSorter.doneAdding();
+        readsSorter.doneAdding();
 
-        for (final SAMRecord alignment : alignmentSorter) {
-            writer.addAlignment(alignment);
-            progress.record(alignment);
+        for (final YossiBAMRecordSet recSet : readsSorter) {
+            for(final SAMRecord rec: recSet) {
+                writer.addAlignment(rec);
+                progress.record(rec);
+            }
         }
 
-        alignmentSorter.cleanup();
+        readsSorter.cleanup();
         writer.close();
         CloserUtil.close(reader);
 
