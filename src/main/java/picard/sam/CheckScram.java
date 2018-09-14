@@ -1,5 +1,6 @@
 package picard.sam;
 
+import com.sun.tools.javac.util.List;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -12,7 +13,12 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static htsjdk.samtools.SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS;
 
@@ -46,25 +52,70 @@ public class CheckScram extends CommandLineProgram {
         }
     }
 
+    protected CigarOperator unscramCigarOp(CigarOperator op) {
+        switch(op) {
+            case EQ:
+            case X:
+                return CigarOperator.M;
+            default:
+                return op;
+        }
+    }
+
+    //Turns EQ and X back into M.
+    protected Cigar unscramCigar(Cigar c) {
+        return Cigar.fromCigarOperators(
+                c.getCigarElements().stream()
+                    .flatMap( elem -> Stream.generate(() -> unscramCigarOp(elem.getOperator())).limit(elem.getLength()) )
+                    .collect(Collectors.toList()));
+    }
+
+    protected boolean properCigarCompare(SAMRecord scramRec, SAMRecord bamRec) {
+        return unscramCigar(scramRec.getCigar()).equals(unscramCigar(bamRec.getCigar()));
+    }
+
+    protected int set(int value, int flag) {
+        return value | flag;
+    }
+
+    protected int unset(int value, int flag) {
+        return value & (~flag);
+    }
+
+    protected boolean properFlagCompare(SAMRecord scramRec, SAMRecord bamRec) {
+        //if mapQ = 0, it's okay to say that the scram is a secondary if the bam says supplementary.
+        //we'll edit the flags on the bam to reflect this.
+        int bamFlags = bamRec.getFlags();
+        if( bamRec.getMappingQuality() == 0 && bamRec.getSupplementaryAlignmentFlag() ) {
+            bamFlags = unset(bamFlags, SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue());
+            bamFlags = set(bamFlags, SAMFlag.SECONDARY_ALIGNMENT.intValue());
+        }
+
+        return scramRec.getFlags() == bamFlags;
+    }
+
     protected void compare(SAMRecord scramRec, SAMRecord bamRec) {
-        if( !scramRec.getContig().equals(bamRec.getContig()) ) {
+        if( !Objects.equals(scramRec.getContig(), bamRec.getContig()) ) {
             throw new ScramMismatchException(scramRec, bamRec, "contigs mismatch", scramRec.getContig(), bamRec.getContig() );
         } else if ( scramRec.getAlignmentStart() != bamRec.getAlignmentStart() ) {
             throw new ScramMismatchException(scramRec, bamRec, "alignment start mismatch", scramRec.getAlignmentStart(), bamRec.getAlignmentStart() );
         } else if ( scramRec.getAlignmentEnd() != bamRec.getAlignmentEnd() ) {
             throw new ScramMismatchException(scramRec, bamRec, "alignment end mismatch", scramRec.getAlignmentEnd(), bamRec.getAlignmentEnd() );
-        } else if ( !scramRec.getReadString().equals(bamRec.getReadString()) ) {
+        } else if ( !Objects.equals(scramRec.getReadString(), bamRec.getReadString()) ) {
             throw new ScramMismatchException(scramRec, bamRec, "bases mismatch", scramRec.getReadString(), bamRec.getReadString() );
             //NOTE: no quals, because they're deoscillated.
-        } else if ( scramRec.getFlags() != bamRec.getFlags()) {
-            //FIXME: delta supplementary shenanigans
-            throw new ScramMismatchException(scramRec, bamRec, "flags mismatch", scramRec.getFlags(), bamRec.getFlags() );
         } else if ( scramRec.getMappingQuality() != bamRec.getMappingQuality() ) {
             throw new ScramMismatchException(scramRec, bamRec, "MAPQ mismatch", scramRec.getMappingQuality(), bamRec.getMappingQuality());
-        } else if ( !scramRec.getCigarString().equals(bamRec.getCigarString()) ) {
-            //TODO: M-ify both cigars
+        } else if ( scramRec.getFlags() != bamRec.getFlags()
+                && !properFlagCompare(scramRec, bamRec)) {
+            //FIXME: delta supplementary shenanigans
+            throw new ScramMismatchException(scramRec, bamRec, "flags mismatch", scramRec.getFlags(), bamRec.getFlags() );
+        } else if ( !Objects.equals(scramRec.getCigarString(), bamRec.getCigarString())
+                    && !properCigarCompare(scramRec, bamRec) ) {
             throw new ScramMismatchException(scramRec, bamRec, "cigar mismatch", scramRec.getCigarString(), bamRec.getCigarString());
         }
+
+        //TODO: mate information
     }
 
     @Override
