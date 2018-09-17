@@ -254,7 +254,7 @@ public class IntervalListTools extends CommandLineProgram {
     public int SCATTER_COUNT = 1;
 
     @Argument(doc = "When scattering with this argument, each of the resultant files will (ideally) have this amount of 'content', which " +
-            "can mean either base-counts or interval counts depending on the scatter type. When provided, overrides SCATTER_COUNT", optional = true)
+            " means either base-counts or interval-counts depending on SUBDIVISION_MODE. When provided, overrides SCATTER_COUNT", optional = true)
     public Integer SCATTER_CONTENT = null;
 
     @Argument(doc = "Whether to include filtered variants in the vcf when generating an interval list from vcf.", optional = true)
