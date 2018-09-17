@@ -36,13 +36,13 @@ import java.util.List;
  */
 public interface IntervalListScatterer {
     /**
-     * Scatter an {@link IntervalList} into several {@link IntervalList}s. The default implementation
+     * Scatter an {@link IntervalList} into several IntervalLists. The default implementation
      * makes use of the other interfaced methods, and aims to provide a universal way to
-     * scatter an {@link IntervalList}.
+     * scatter an IntervalList.
      *
      * @param inputList    IntervalList to be scattered
      * @param scatterCount ideal number of scatters generated.
-     * @return Scattered {@link List} of {@link IntervalList}s,
+     * @return Scattered {@link List} of IntervalLists,
      */
     default List<IntervalList> scatter(final IntervalList inputList, final int scatterCount) {
         if (scatterCount < 1) {
@@ -119,7 +119,7 @@ public interface IntervalListScatterer {
      * implementations can chose to impose some conditions on the lists, for example, merging overlapping/abutting intervals,
      * removing duplicates, etc.
      * @param inputList the original {@link IntervalList}
-     * @return the  {@link IntervalList} that will be split up by the scatterer.
+     * @return the  IntervalList that will be split up by the scatterer.
      */
     default IntervalList preprocessIntervalList(final IntervalList inputList) {
         return inputList.sorted();

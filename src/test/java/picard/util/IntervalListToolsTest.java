@@ -222,4 +222,46 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             Assert.assertEquals(intervalList.getIntervals(), expected);
         }
     }
+
+
+    @Test(dataProvider = "testScatterTestcases")
+    public void testScatterByContent(final IntervalListScattererTest.Testcase tc) throws IOException {
+
+        final List<String> args = new ArrayList<>();
+
+        args.add("ACTION=CONCAT");
+        args.add("INPUT=" + tc.file.getAbsolutePath());
+
+        args.add("SUBDIVISION_MODE=" + tc.mode);
+
+        final File ilOutDir = IOUtil.createTempDir("IntervalListTools", "lists");
+        dirsToDelete.add(ilOutDir);
+
+        if (tc.scatterWidth == 1) {
+            final File subDir = new File(ilOutDir, "temp_1_of_1");
+            Assert.assertTrue(subDir.mkdir(), "was unable to create directory");
+            args.add("OUTPUT=" + new File(subDir, "scattered.interval_list"));
+        } else {
+            args.add("OUTPUT=" + ilOutDir);
+        }
+
+        args.add("SCATTER_CONTENT=" + tc.mode.make().listWeight(tc.source)/tc.expectedScatter.size());
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final String[] files = ilOutDir.list();
+        Assert.assertNotNull(files);
+        Arrays.sort(files);
+
+        Assert.assertEquals(files.length, tc.expectedScatter.size());
+
+        final Iterator<IntervalList> intervals = tc.expectedScatter.iterator();
+
+        for (final String fileName : files) {
+            final IntervalList intervalList = IntervalList.fromFile(new File(new File(ilOutDir, fileName), "scattered.interval_list"));
+            final IntervalList expected = intervals.next();
+
+            Assert.assertEquals(intervalList.getIntervals(), expected);
+        }
+    }
 }

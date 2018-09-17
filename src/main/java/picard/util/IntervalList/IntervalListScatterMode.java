@@ -42,13 +42,13 @@ public enum IntervalListScatterMode implements CommandLineParser.ClpEnum {
 
     },
     /**
-     * A scatter approach that differs from {@link IntervalListScatterMode#INTERVAL_SUBDIVISION} in a few ways.
+     * A scatter approach that differs from {@link #INTERVAL_SUBDIVISION} in a few ways.
      * <ol>
      * <li>No interval will be subdivided, and consequently, the requested scatter count is an upper bound of scatter count, not a
      * guarantee as to how many {@link IntervalList}s will be produced (e.g., if scatterCount = 10 but there is only one input interval,
      * only 1 interval list will be emitted).</li>
      * <li>When an interval would otherwise be split, it is instead deferred to the next scatter list.</li>
-     * <li>The "target width" of each scatter list may be wider than what is computed for {@link IntervalListScatterMode#INTERVAL_SUBDIVISION}.
+     * <li>The "target width" of each scatter list may be wider than what is computed for INTERVAL_SUBDIVISION.
      * Specifically, if the widest interval in the source interval list is larger than what would otherwise be the target width, that
      * interval's width is used.<br/><br/>The reasoning for this is that this approach produces more consistently-sized interval lists,
      * which is one of the objectives of scattering.</li>

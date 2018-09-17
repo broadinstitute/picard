@@ -27,6 +27,7 @@ import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -50,9 +51,9 @@ public class IntervalListScattererByIntervalCount implements IntervalListScatter
     public List<Interval> takeSome(final Interval interval, final long idealSplitWeight, final long currentSize, final double projectSizeOfRemaining) {
         final long amount = idealSplitWeight - currentSize;
         if (amount > 0) {
-            return CollectionUtil.makeList(interval, null);
+            return Arrays.asList(interval, null);
         } else {
-            return CollectionUtil.makeList(null, interval);
+            return Arrays.asList(null, interval);
         }
     }
 

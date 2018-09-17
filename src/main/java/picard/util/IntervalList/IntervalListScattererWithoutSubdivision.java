@@ -56,8 +56,8 @@ public class IntervalListScattererWithoutSubdivision extends IntervalListScatter
     public int deduceIdealSplitWeight(final IntervalList intervalList, final int nCount) {
         final int splitWidth = super.deduceIdealSplitWeight(intervalList, nCount);
         final int widestIntervalLength = intervalList.getIntervals().stream()
-                .map(Interval::length)
-                .max(Comparator.comparing(Integer::valueOf))
+                .mapToInt(Interval::length)
+                .max()
                 .orElse(1);
 
         // There is no purpose to splitting with more granularity than the widest interval

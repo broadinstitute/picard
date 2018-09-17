@@ -35,8 +35,8 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
@@ -250,9 +250,12 @@ public class IntervalListTools extends CommandLineProgram {
     @Argument(doc = "One or more lines of comment to add to the header of the output file (as @CO lines in the SAM header).", optional = true)
     public List<String> COMMENT = null;
 
-    @Argument(doc = "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  " +
-            "Note - if > 1, the resultant scattered intervals will be sorted and uniqued.  The sort will be inverted if the INVERT flag is set.")
+    @Argument(doc = "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  ")
     public int SCATTER_COUNT = 1;
+
+    @Argument(doc = "When scattering with this argument, each of the resultant files will (ideally) have this amount of 'content', which " +
+            "can mean either base-counts or interval counts depending on the scatter type. When provided, overrides SCATTER_COUNT", optional = true)
+    public Integer SCATTER_CONTENT = null;
 
     @Argument(doc = "Whether to include filtered variants in the vcf when generating an interval list from vcf.", optional = true)
     public boolean INCLUDE_FILTERED = false;
@@ -261,7 +264,7 @@ public class IntervalListTools extends CommandLineProgram {
             " broken up at integer multiples of this value. Set to 0 to NOT break up intervals.", optional = true)
     public int BREAK_BANDS_AT_MULTIPLES_OF = 0;
 
-    @Argument(shortName = "M", doc = "Selects the way in which scattering of the interval-list will happen.")
+    @Argument(shortName = "M", doc = "The mode used to scatter the interval list.")
     public IntervalListScatterMode SUBDIVISION_MODE = IntervalListScatterMode.INTERVAL_SUBDIVISION;
 
     @Argument(doc = "Produce the inverse list of intervals, that is, the regions in the genome that are <br>not</br> covered " +
@@ -272,9 +275,22 @@ public class IntervalListTools extends CommandLineProgram {
     public Output OUTPUT_VALUE = Output.NONE;
 
     enum Output {
-        NONE,
-        BASES,
-        INTERVALS
+        NONE() {
+            void output(long totalBaseCount, long intervalCount) {
+            }
+        },
+        BASES {
+            void output(long totalBaseCount, long intervalCount) {
+                System.out.println(totalBaseCount);
+            }
+        },
+        INTERVALS {
+            void output(long totalBaseCount, long intervalCount) {
+                System.out.println(intervalCount);
+            }
+        };
+
+        abstract void output(long totalBaseCount, long intervalCount);
     }
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
@@ -344,14 +360,6 @@ public class IntervalListTools extends CommandLineProgram {
         IOUtil.assertFilesAreReadable(INPUT);
         IOUtil.assertFilesAreReadable(SECOND_INPUT);
 
-        if (OUTPUT != null) {
-            if (SCATTER_COUNT == 1) {
-                IOUtil.assertFileIsWritable(OUTPUT);
-            } else {
-                IOUtil.assertDirectoryIsWritable(OUTPUT);
-            }
-        }
-
         // Read in the interval lists and apply any padding
         final List<IntervalList> lists = openIntervalLists(INPUT);
 
@@ -407,6 +415,21 @@ public class IntervalListTools extends CommandLineProgram {
 
         final List<IntervalList> resultIntervals;
         if (OUTPUT != null) {
+
+            if (SCATTER_CONTENT != null) {
+                final long listSize = SUBDIVISION_MODE.make().listWeight(output);
+                SCATTER_COUNT = (int) listSize / SCATTER_CONTENT;
+                LOG.info(String.format("Using SCATTER_CONTENT = %d and an interval of size %d, attempting to scatter into %s intervals.", SCATTER_CONTENT, listSize, SCATTER_COUNT));
+            }
+
+            if (OUTPUT != null) {
+                if (SCATTER_COUNT == 1) {
+                    IOUtil.assertFileIsWritable(OUTPUT);
+                } else {
+                    IOUtil.assertDirectoryIsWritable(OUTPUT);
+                }
+            }
+
             if (SCATTER_COUNT == 1) {
                 output.write(OUTPUT);
                 resultIntervals = Collections.singletonList(output);
@@ -435,18 +458,7 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
-        switch (OUTPUT_VALUE) {
-            case BASES:
-                System.out.println(totalBaseCount);
-                break;
-            case INTERVALS:
-                System.out.println(intervalCount);
-                break;
-            case NONE:
-                break;
-            default:
-                throw new IllegalArgumentException("That's not a known value: " + OUTPUT_VALUE);
-        }
+        OUTPUT_VALUE.output(totalBaseCount, intervalCount);
         return 0;
     }
 

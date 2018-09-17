@@ -30,7 +30,7 @@ import htsjdk.samtools.util.IntervalList;
 /**
  * a Baseclass for scatterers that scatter by uniqued base count.
  */
-abstract public class IntervalListScattererByBaseCount implements IntervalListScatterer {
+public abstract class IntervalListScattererByBaseCount implements IntervalListScatterer {
 
     @Override
     public long intervalWeight(final Interval interval) {
