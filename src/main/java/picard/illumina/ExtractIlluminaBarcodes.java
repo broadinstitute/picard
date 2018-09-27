@@ -198,6 +198,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             "the number available on the machine less NUM_PROCESSORS.")
     public int NUM_PROCESSORS = 1;
 
+    @Argument()
+    public DistanceMetric DISTANCE_MODE = DistanceMetric.HAMMING;
+
     private static final Log LOG = Log.getInstance(ExtractIlluminaBarcodes.class);
 
     /**
