@@ -39,14 +39,19 @@ import java.util.NoSuchElementException;
  * Very basic test for scatter functionality in IntervalListTools
  */
 public class IntervalListScattererTest {
-    private static final IntervalList LIST_TO_SCATTER;
+    private static final File TEST_DATA_DIR = new File("testdata/picard/util");
+    private static final File INTERVAL_FILE = new File(TEST_DATA_DIR, "scatterable.interval_list");
+    private static final IntervalList LIST_TO_SCATTER = IntervalList.fromFile(INTERVAL_FILE);
+
+    private static final File INTERVAL_WITH_OVERFLOW_FILE = new File(TEST_DATA_DIR, "scatterable_with_overflow.interval_list");
+    private static final IntervalList LIST_TO_SCATTER_WITH_OVERFLOW = IntervalList.fromFile(INTERVAL_WITH_OVERFLOW_FILE);
 
     static {
-        LIST_TO_SCATTER = IntervalList.fromFile(new File("testdata/picard/util/scatterable.interval_list"));
         Assert.assertEquals(LIST_TO_SCATTER.getUniqueBaseCount(), 200, "Wrong unique base count");
     }
 
     static class Testcase {
+        final File file;
         final IntervalList source;
         final List<IntervalList> expectedScatter;
         final int scatterWidth;
@@ -60,8 +65,9 @@ public class IntervalListScattererTest {
                     '}';
         }
 
-        private Testcase(final IntervalList source, final int scatterWidth, final IntervalListScatterer.Mode mode, final List<IntervalList> expectedScatter) {
-            this.source = source;
+        private Testcase(final File file, final int scatterWidth, final IntervalListScatterer.Mode mode, final List<IntervalList> expectedScatter) {
+            this.source = IntervalList.fromFile(file);
+            this.file = file;
             this.expectedScatter = expectedScatter;
             this.scatterWidth = scatterWidth;
             this.mode = mode;
@@ -72,7 +78,7 @@ public class IntervalListScattererTest {
 
     static {
         testcases.add(new Testcase(
-                LIST_TO_SCATTER, 2, IntervalListScatterer.Mode.INTERVAL_SUBDIVISION,
+                INTERVAL_FILE, 2, IntervalListScatterer.Mode.INTERVAL_SUBDIVISION,
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER, "1",
                                 30000, 30098,
@@ -84,9 +90,9 @@ public class IntervalListScattererTest {
                         )
                 )
         ));
-        
+
         testcases.add(new Testcase(
-                LIST_TO_SCATTER, 4, IntervalListScatterer.Mode.INTERVAL_SUBDIVISION,
+                INTERVAL_FILE, 4, IntervalListScatterer.Mode.INTERVAL_SUBDIVISION,
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER, "1",
                                 30000, 30049
@@ -105,7 +111,7 @@ public class IntervalListScattererTest {
         ));
 
         testcases.add(new Testcase(
-                LIST_TO_SCATTER, 5, IntervalListScatterer.Mode.INTERVAL_SUBDIVISION,
+                INTERVAL_FILE, 5, IntervalListScatterer.Mode.INTERVAL_SUBDIVISION,
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER, "1",
                                 30000, 30039
@@ -128,7 +134,7 @@ public class IntervalListScattererTest {
         ));
 
         testcases.add(new Testcase(
-                LIST_TO_SCATTER, 6, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
+                INTERVAL_FILE, 6, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER, "1",
                                 30000, 30098
@@ -143,7 +149,7 @@ public class IntervalListScattererTest {
         ));
 
         testcases.add(new Testcase(
-                LIST_TO_SCATTER, 2, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
+                INTERVAL_FILE, 2, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER, "1",
                                 30000, 30098
@@ -156,7 +162,20 @@ public class IntervalListScattererTest {
         ));
 
         testcases.add(new Testcase(
-                LIST_TO_SCATTER, 1, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
+                INTERVAL_FILE, 2, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
+                Arrays.asList(
+                        composeIntervalList(LIST_TO_SCATTER, "1",
+                                30000, 30098,
+                                30100, 30150
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER, "1",
+                                30200, 30249
+                        )
+                )
+        ));
+
+        testcases.add(new Testcase(
+                INTERVAL_FILE, 1, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER, "1",
                                 30000, 30098,
@@ -164,8 +183,10 @@ public class IntervalListScattererTest {
                                 30200, 30249
                         )
                 )
-        ));  testcases.add(new Testcase(
-                LIST_TO_SCATTER, 6, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
+        ));
+
+        testcases.add(new Testcase(
+                INTERVAL_FILE, 6, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER, "1",
                                 30000, 30098
@@ -180,7 +201,7 @@ public class IntervalListScattererTest {
         ));
 
         testcases.add(new Testcase(
-                LIST_TO_SCATTER, 2, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
+                INTERVAL_FILE, 2, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER, "1",
                                 30000, 30098,
@@ -193,7 +214,7 @@ public class IntervalListScattererTest {
         ));
 
         testcases.add(new Testcase(
-                LIST_TO_SCATTER, 1, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
+                INTERVAL_FILE, 1, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
                 Arrays.asList(
                         composeIntervalList(LIST_TO_SCATTER, "1",
                                 30000, 30098,
@@ -202,6 +223,63 @@ public class IntervalListScattererTest {
                         )
                 )
         ));
+
+        testcases.add(new Testcase(
+                INTERVAL_WITH_OVERFLOW_FILE, 7, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW,
+                Arrays.asList(
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30000, 30000,
+                                30100, 30109,
+                                30200, 30209
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30300, 30309
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30400, 30409
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30500, 30509
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30600, 30609
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30700, 30709
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30800, 30808
+
+                        )
+                )));
+
+        testcases.add(new Testcase(
+                INTERVAL_WITH_OVERFLOW_FILE, 7, IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
+                Arrays.asList(
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30000, 30000,
+                                30100, 30109
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30200, 30209
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30300, 30309
+                        ),
+                        composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30400, 30409
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30500, 30509
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30600, 30609
+
+                        ), composeIntervalList(LIST_TO_SCATTER_WITH_OVERFLOW, "1",
+                                30700, 30709,
+                                30800, 30808
+                        )
+                )));
     }
 
     @DataProvider
@@ -221,7 +299,7 @@ public class IntervalListScattererTest {
         Assert.assertEquals(scatter.size(), tc.expectedScatter.size());
         Assert.assertEquals(scatter, tc.expectedScatter);
     }
-    
+
     private static IntervalList composeIntervalList(final IntervalList source, final String chromosome, final int... segmentsByPair) {
         final IntervalList intervals = new IntervalList(source.getHeader());
         for (int i = 0; i < segmentsByPair.length; i += 2) {
@@ -230,7 +308,7 @@ public class IntervalListScattererTest {
         }
         return intervals;
     }
-    
+
     private static Interval lookupIntervalContainingLocus(final IntervalList source, final String chromosome, final int startIndex) {
         for (final Interval interval : source) {
             if (interval.getContig().equals(chromosome) && startIndex >= interval.getStart() && startIndex <= interval.getEnd()) {

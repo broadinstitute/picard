@@ -25,13 +25,21 @@ package picard.sam;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -114,4 +122,53 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(argv), 0);
         Assert.fail("Exception should have been thrown.");
     }
+    
+    
+    @Test
+    public void testAltNames() throws Exception {
+        final File altFile = File.createTempFile("CreateSequenceDictionaryTest", ".alt");
+        final PrintWriter pw = new PrintWriter(altFile);
+        pw.println("chr1\t1");
+        pw.println("chr1\t01");
+        pw.println("chr1\tk1");
+        pw.println("chrMT\tM");
+        pw.flush();
+        pw.close();
+        altFile.deleteOnExit();
+        
+        final File outputDict = File.createTempFile("CreateSequenceDictionaryTest.", ".dict");
+        outputDict.delete();
+        outputDict.deleteOnExit();
+        final String[] argv = {
+                "REFERENCE=" + BASIC_FASTA,
+                "AN=" + altFile,
+                "OUTPUT=" + outputDict,
+                "TRUNCATE_NAMES_AT_WHITESPACE=true"
+        };
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
+        final SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(outputDict);
+        Assert.assertNotNull(dict, "dictionary is null");
+       
+        // check chr1
+        SAMSequenceRecord ssr = dict.getSequence("chr1");
+        Assert.assertNotNull(ssr, "chr1 missing in dictionary");
+        String an = ssr.getAttribute("AN");
+        Assert.assertNotNull(ssr, "AN Missing");
+        Set<String> anSet = new HashSet<>(Arrays.asList(an.split("[,]")));
+        Assert.assertTrue(anSet.contains("1"));
+        Assert.assertTrue(anSet.contains("01"));
+        Assert.assertTrue(anSet.contains("k1"));
+        Assert.assertFalse(anSet.contains("M"));
+        
+        // check chr2
+        ssr = dict.getSequence("chr2");
+        Assert.assertNotNull(ssr, "chr2 missing in dictionary");
+        an = ssr.getAttribute("AN");
+        Assert.assertNull(an, "AN Present");
+        
+        // check chrM
+        ssr = dict.getSequence("chrM");
+        Assert.assertNull(ssr, "chrM present in dictionary");
+    }
+
 }

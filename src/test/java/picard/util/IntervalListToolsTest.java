@@ -167,7 +167,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         final List<String> args = new ArrayList<>();
 
         args.add("ACTION=UNION");
-        args.add("INPUT=" + scatterable);
+        args.add("INPUT=" + tc.file.getAbsolutePath());
 
         args.add("SUBDIVISION_MODE=" + tc.mode);
 
