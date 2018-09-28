@@ -38,6 +38,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
     private final Map<String, ThreadPoolExecutorWithExceptions> barcodeWriterThreads = new HashMap<>();
     private final Map<Integer, List<RecordWriter>> completedWork = Collections.synchronizedMap(new HashMap<>());
     private final Map<Integer, File> barcodesFiles = new HashMap<>();
+    private final boolean includeNonPfReads;
 
     /**
      * @param basecallsDir             Where to read basecalls from.
@@ -56,6 +57,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
      * @param outputRecordComparator   For sorting output records within a single tile.
      * @param codecPrototype           For spilling output records to disk.
      * @param outputRecordClass        Inconveniently needed to create SortingCollections.
+     * @param includeNonPfReads        If true, will include ALL reads (including those which do not have PF set)
      * @param ignoreUnexpectedBarcodes If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
      */
     public NewIlluminaBasecallsConverter(final File basecallsDir, final File barcodesDir, final int lane,
@@ -70,12 +72,14 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
                                          final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
                                          final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
                                          final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
+                                         final boolean includeNonPfReads,
                                          final boolean ignoreUnexpectedBarcodes) {
 
         super(barcodeRecordWriterMap, maxReadsInRamPerTile, tmpDirs, codecPrototype, ignoreUnexpectedBarcodes,
                 demultiplex, outputRecordComparator, bclQualityEvaluationStrategy,
                 outputRecordClass, numProcessors, new IlluminaDataProviderFactory(basecallsDir,
                         barcodesDir, lane, readStructure, bclQualityEvaluationStrategy));
+        this.includeNonPfReads = includeNonPfReads;
         this.tiles = new ArrayList<>();
 
         barcodeRecordWriterMap.keySet().forEach(barcode -> barcodeWriterThreads.put(barcode, new ThreadPoolExecutorWithExceptions(1)));
@@ -234,8 +238,12 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
             while (dataProvider.hasNext()) {
                 final ClusterData cluster = dataProvider.next();
                 readProgressLogger.record(null, 0);
-                final String barcode = (demultiplex ? cluster.getMatchedBarcode() : null);
-                addRecord(barcode, converter.convertClusterToOutputRecord(cluster));
+                // If this cluster is passing, or we do NOT want to ONLY emit passing reads, then add it to
+                // the next
+                if (cluster.isPf() || includeNonPfReads) {
+                  final String barcode = (demultiplex ? cluster.getMatchedBarcode() : null);
+                  addRecord(barcode, converter.convertClusterToOutputRecord(cluster));
+                }
             }
 
             dataProvider.close();

@@ -334,35 +334,9 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
 
         // Read uncompressed data from the buffer and expand each nibble into a full byte for ease of use
         byte[] unNibbledByteArray = promoteNibblesToBytes(decompressedByteArray);
-        cachedTile[totalCycleCount] = filterNonPfReads(tileData, currentCycleData, unNibbledByteArray);
+        cachedTile[totalCycleCount] = unNibbledByteArray;
 
         cachedTilePosition[totalCycleCount] = 0;
-    }
-
-    private byte[] filterNonPfReads(TileData tileData, CycleData currentCycleData, byte[] unNibbledByteArray) {
-        // Write buffer contents to cached tile array
-        // if nonPF reads are included we need to strip them out
-        if (!currentCycleData.pfExcluded) {
-            final List<Boolean> filterDatas = cachedFilter.get(tileData.tileNum);
-            int sum = 0;
-            for (final boolean b : filterDatas) {
-                sum += b ? 1 : 0;
-            }
-            final byte[] filteredByteArray = new byte[sum];
-            int filterIndex = 0;
-            int basecallIndex = 0;
-            for (final boolean filterData : filterDatas) {
-                final byte readByte = unNibbledByteArray[filterIndex];
-                if (filterData) {
-                    filteredByteArray[basecallIndex] = readByte;
-                    basecallIndex++;
-                }
-                filterIndex++;
-            }
-            return filteredByteArray;
-        } else {
-            return unNibbledByteArray;
-        }
     }
 
     private byte[] promoteNibblesToBytes(byte[] decompressedByteArray) {
