@@ -333,8 +333,7 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
         byte[] decompressedByteArray = decompressTile(totalCycleCount, tileData, byteInputStream);
 
         // Read uncompressed data from the buffer and expand each nibble into a full byte for ease of use
-        byte[] unNibbledByteArray = promoteNibblesToBytes(decompressedByteArray);
-        cachedTile[totalCycleCount] = unNibbledByteArray;
+        cachedTile[totalCycleCount] = promoteNibblesToBytes(decompressedByteArray);
 
         cachedTilePosition[totalCycleCount] = 0;
     }
