@@ -2,6 +2,7 @@ package picard.sam.util;
 
 import htsjdk.samtools.util.Log;
 
+import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,7 +11,7 @@ import java.util.regex.Pattern;
  * All values should be defaulted to -1 if unavailable.  ReadGroup and Tile should only allow
  * non-zero positive integers, x and y coordinates may be negative.
  */
-public class ReadNameParser {
+public class ReadNameParser implements Serializable {
 
     /**
      * The read name regular expression (regex) is used to extract three pieces of information from the read name: tile, x location,
