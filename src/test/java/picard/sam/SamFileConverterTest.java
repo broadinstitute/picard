@@ -25,11 +25,11 @@
 package picard.sam;
 
 import org.testng.annotations.Test;
+import picard.sam.CompareSams.CompareSAMs;
+import picard.sam.CompareSams.SamComparator;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -74,7 +74,6 @@ public class SamFileConverterTest {
 
     private void convertFile(final File inputFile, final File fileToCompare, final String extension) {
         final SamFormatConverter samFormatConverter = new SamFormatConverter();
-        final List<File> samFiles = new ArrayList<File>();
         final ValidateSamFile validateSamFile = new ValidateSamFile();
         final CompareSAMs compareSAMs = new CompareSAMs();
 
@@ -90,12 +89,8 @@ public class SamFileConverterTest {
         validateSamFile.INPUT = samFormatConverter.OUTPUT;
         assertEquals(validateSamFile.doWork(), 0);
 
-        samFiles.add(samFormatConverter.OUTPUT);
-        samFiles.add(fileToCompare);
+        final SamComparator samComparator = SamComparator.compareSams(samFormatConverter.OUTPUT.toPath(), fileToCompare.toPath());
 
-        compareSAMs.samFiles = samFiles;
-        compareSAMs.doWork();
-
-        assertTrue(compareSAMs.areEqual());
+        assertTrue(samComparator.areEqual());
     }
 }

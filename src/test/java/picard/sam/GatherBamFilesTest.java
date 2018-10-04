@@ -4,6 +4,7 @@ import htsjdk.samtools.BamFileIoUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.sam.CompareSams.SamComparator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,11 +41,8 @@ public class GatherBamFilesTest extends CommandLineProgramTest {
         args.add("OUTPUT=" + outputFile);
         runPicardCommandLine(args);
 
-        // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
-        final CompareSAMs compareSAMs = new CompareSAMs();
-        compareSAMs.samFiles = Arrays.asList(ORIG_BAM, outputFile);
-        compareSAMs.doWork();
-        Assert.assertTrue(compareSAMs.areEqual());
+        final SamComparator samComparator = SamComparator.compareSams(ORIG_BAM.toPath(), outputFile.toPath());
+        Assert.assertTrue(samComparator.areEqual());
     }
 
     @Test
@@ -58,10 +56,7 @@ public class GatherBamFilesTest extends CommandLineProgramTest {
         args.add("OUTPUT=" + outputFile);
         runPicardCommandLine(args);
 
-        // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
-        final CompareSAMs compareSAMs = new CompareSAMs();
-        compareSAMs.samFiles = Arrays.asList(ORIG_BAM, SPLIT_BAMS.get(0));
-        compareSAMs.doWork();
-        Assert.assertFalse(compareSAMs.areEqual());
+        final SamComparator samComparator = SamComparator.compareSams(ORIG_BAM.toPath(), SPLIT_BAMS.get(0).toPath());
+        Assert.assertFalse(samComparator.areEqual());
     }
 }
