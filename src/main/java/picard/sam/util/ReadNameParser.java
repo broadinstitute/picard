@@ -2,9 +2,6 @@ package picard.sam.util;
 
 import htsjdk.samtools.util.Log;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,13 +27,15 @@ public class ReadNameParser implements Serializable {
      */
     public static final String DEFAULT_READ_NAME_REGEX = "<optimized capture of last three ':' separated fields as numeric values>".intern();
 
-    private transient final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
+    private final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
 
-    private String readNameRegex = null;
+    private final boolean useOptimizedDefaultParsing; // was the regex default?
 
-    private transient Pattern readNamePattern;
+    private final String readNameRegex;
 
-    private transient boolean warnedAboutRegexNotMatching = false;
+    private Pattern readNamePattern;
+
+    private boolean warnedAboutRegexNotMatching = false;
 
     private transient final Log log;
 
@@ -64,6 +63,7 @@ public class ReadNameParser implements Serializable {
      * @param log the log to which to write messages.
      */
     public ReadNameParser(final String readNameRegex, final Log log) {
+        this.useOptimizedDefaultParsing = readNameRegex.equals(DEFAULT_READ_NAME_REGEX);
         this.readNameRegex = readNameRegex;
         this.log = log;
     }
@@ -79,7 +79,7 @@ public class ReadNameParser implements Serializable {
     public boolean addLocationInformation(final String readName, final PhysicalLocation loc) {
         try {
             // Optimized version if using the default read name regex (== used on purpose):
-            if (this.readNameRegex == ReadNameParser.DEFAULT_READ_NAME_REGEX) {
+            if (this.useOptimizedDefaultParsing) {
                 final int fields = getLastThreeFields(readName, ':', tmpLocationFields);
                 if (!(fields == 5 || fields == 7)) {
                     if (null != log && !this.warnedAboutRegexNotMatching) {
@@ -195,18 +195,4 @@ public class ReadNameParser implements Serializable {
         return val;
     }
 
-
-    private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
-        // perform the default de-serialization first
-        aInputStream.defaultReadObject();
-
-        // Ensure that if the regex is the default
-        if (this.readNamePattern.equals(DEFAULT_READ_NAME_REGEX)) {
-            readNamePattern.equals(DEFAULT_READ_NAME_REGEX);
-        }
-    }
-    private void writeObject(ObjectOutputStream aOutputStream) throws IOException {
-        // perform the default serialization for all non-transient, non-static fields
-        aOutputStream.defaultWriteObject();
-    }
 }

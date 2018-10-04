@@ -5,6 +5,7 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.io.*;
 import java.util.List;
 
 /**
@@ -137,6 +138,48 @@ public class ReadNameParserTests {
             Assert.assertEquals(tokens[1], x);
             Assert.assertEquals(tokens[2], y);
         }
+    }
+
+    @Test
+    // Testing that the parser behavior stays constant after being java serialized
+    public void testSerializedReadNameParser () throws IOException, ClassNotFoundException {
+        // A non standard parser
+        final String lastThreeFieldsRegex = "(?:.*:)?([0-9]+)[^:]*:([0-9]+)[^:]*:([0-9]+)[^:]*$";
+        final ReadNameParser parser = new ReadNameParser(lastThreeFieldsRegex);
+        final ReadNameParser defaultParser = new ReadNameParser();
+        PhysicalLocationInt loc = new PhysicalLocationInt();
+        String readName = "1109ABC:22981DEF:17995GHI";
+
+        Assert.assertTrue(parser.addLocationInformation(readName, loc));
+        Assert.assertEquals(loc.getTile(), 1109);
+        Assert.assertEquals(loc.getX(), 22981);
+        Assert.assertEquals(loc.getY(), 17995);
+
+        loc = new PhysicalLocationInt();
+        Assert.assertFalse(defaultParser.addLocationInformation(readName, loc));
+
+        final byte[] serializedBytes;
+        try(final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final ObjectOutputStream out = new ObjectOutputStream(baos)){
+            out.writeObject(parser);
+            out.writeObject(defaultParser);
+            serializedBytes = baos.toByteArray();
+        }
+        try (final ByteArrayInputStream bais = new ByteArrayInputStream(serializedBytes);
+             final ObjectInputStream in = new ObjectInputStream(bais)){
+            ReadNameParser parserSerialized = (ReadNameParser) in.readObject();
+            ReadNameParser defaultParserSerialized = (ReadNameParser) in.readObject();
+
+            loc = new PhysicalLocationInt();
+            Assert.assertTrue(parserSerialized.addLocationInformation(readName, loc));
+            Assert.assertEquals(loc.getTile(), 1109);
+            Assert.assertEquals(loc.getX(), 22981);
+            Assert.assertEquals(loc.getY(), 17995);
+
+            loc = new PhysicalLocationInt();
+            Assert.assertFalse(defaultParserSerialized.addLocationInformation(readName, loc));
+        }
+
     }
 
 }
