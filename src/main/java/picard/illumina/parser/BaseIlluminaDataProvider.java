@@ -73,8 +73,8 @@ public abstract class BaseIlluminaDataProvider implements Iterator<ClusterData>,
             clusterData.getRead(i).setQualities(qualities[i]);
         }
         clusterData.setPf(cbclData.isPf());
-        clusterData.setX(cbclData.getPositionInfo().xQseqCoord);
-        clusterData.setY(cbclData.getPositionInfo().yQseqCoord);
+        clusterData.setX(cbclData.getXCoordinate());
+        clusterData.setY(cbclData.getYCoordinate());
     }
 
     abstract void seekToTile(int seekAfterFirstRead);
