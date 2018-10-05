@@ -124,9 +124,6 @@ public abstract class CommandLineProgram {
     // after argument parsing using the value established by the user in the referenceSequence argument collection.
     protected File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
-    @Argument(doc="Google Genomics API client_secrets.json file path.", common = true)
-    public String GA4GH_CLIENT_SECRETS="client_secrets.json";
-
     @ArgumentCollection(doc="Special Arguments that have meaning to the argument parsing system.  " +
                 "It is unlikely these will ever need to be accessed by the command line program")
     public Object specialArgumentsCollection = useLegacyParser(getClass()) ?
@@ -228,9 +225,6 @@ public abstract class CommandLineProgram {
         this.defaultHeaders.add(new StringHeader("Started on: " + startDate));
 
         Log.setGlobalLogLevel(VERBOSITY);
-        if (System.getProperty("ga4gh.client_secrets") == null) {
-          System.setProperty("ga4gh.client_secrets", GA4GH_CLIENT_SECRETS);
-        }
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
 
