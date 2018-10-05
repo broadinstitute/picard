@@ -41,7 +41,7 @@ public class CbclData extends BclData implements PfData, PositionalData {
     }
 
     @Override
-    public boolean isPfRead() {
+    public boolean isPf() {
         return pfRead;
     }
 }

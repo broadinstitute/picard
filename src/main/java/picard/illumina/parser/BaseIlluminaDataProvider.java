@@ -72,7 +72,7 @@ public abstract class BaseIlluminaDataProvider implements Iterator<ClusterData>,
         for (int i = 0; i < numReads; i++) {
             clusterData.getRead(i).setQualities(qualities[i]);
         }
-        clusterData.setPf(cbclData.isPfRead());
+        clusterData.setPf(cbclData.isPf());
         clusterData.setX(cbclData.getXCoordinate());
         clusterData.setY(cbclData.getYCoordinate());
     }

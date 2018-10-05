@@ -206,7 +206,7 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
                             if (!cachedFilter.containsKey(currentCycleTileInfo.tileNum)) {
                                 cacheFilterAndLocs(currentCycleTileInfo, locs);
                             }
-                            cacheTile(totalCycleCount, currentCycleTileInfo);
+                            cacheTile(totalCycleCount, cycleData[totalCycleCount].tileInfo);
                         }
                     } catch (final IOException e) {
                         // when logging the error, increment cycle by 1, since totalCycleCount is zero-indexed but Illumina directories are 1-indexed.
