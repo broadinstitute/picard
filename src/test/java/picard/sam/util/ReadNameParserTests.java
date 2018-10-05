@@ -148,38 +148,39 @@ public class ReadNameParserTests {
         final ReadNameParser parser = new ReadNameParser(lastThreeFieldsRegex);
         final ReadNameParser defaultParser = new ReadNameParser();
         PhysicalLocationInt loc = new PhysicalLocationInt();
-        String readName = "1109ABC:22981DEF:17995GHI";
+        final String readName = "1109ABC:22981DEF:17995GHI";
+        final int expectedTile = 1109;
+        final int expectedX = 22981;
+        final int expectedY = 17995;
 
         Assert.assertTrue(parser.addLocationInformation(readName, loc));
-        Assert.assertEquals(loc.getTile(), 1109);
-        Assert.assertEquals(loc.getX(), 22981);
-        Assert.assertEquals(loc.getY(), 17995);
+        Assert.assertEquals(loc.getTile(), expectedTile);
+        Assert.assertEquals(loc.getX(), expectedX);
+        Assert.assertEquals(loc.getY(), expectedY);
 
         loc = new PhysicalLocationInt();
         Assert.assertFalse(defaultParser.addLocationInformation(readName, loc));
 
         final byte[] serializedBytes;
         try(final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            final ObjectOutputStream out = new ObjectOutputStream(baos)){
+            final ObjectOutputStream out = new ObjectOutputStream(baos)) {
             out.writeObject(parser);
             out.writeObject(defaultParser);
             serializedBytes = baos.toByteArray();
         }
-        try (final ByteArrayInputStream bais = new ByteArrayInputStream(serializedBytes);
-             final ObjectInputStream in = new ObjectInputStream(bais)){
-            ReadNameParser parserSerialized = (ReadNameParser) in.readObject();
-            ReadNameParser defaultParserSerialized = (ReadNameParser) in.readObject();
+        try(final ByteArrayInputStream bais = new ByteArrayInputStream(serializedBytes);
+            final ObjectInputStream in = new ObjectInputStream(bais)) {
+            final ReadNameParser parserSerialized = (ReadNameParser) in.readObject();
+            final ReadNameParser defaultParserSerialized = (ReadNameParser) in.readObject();
 
             loc = new PhysicalLocationInt();
             Assert.assertTrue(parserSerialized.addLocationInformation(readName, loc));
-            Assert.assertEquals(loc.getTile(), 1109);
-            Assert.assertEquals(loc.getX(), 22981);
-            Assert.assertEquals(loc.getY(), 17995);
+            Assert.assertEquals(loc.getTile(), expectedTile);
+            Assert.assertEquals(loc.getX(), expectedX);
+            Assert.assertEquals(loc.getY(), expectedY);
 
             loc = new PhysicalLocationInt();
             Assert.assertFalse(defaultParserSerialized.addLocationInformation(readName, loc));
         }
-
     }
-
 }
