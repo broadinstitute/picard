@@ -2,6 +2,7 @@ package picard.sam.util;
 
 import htsjdk.samtools.util.Log;
 
+import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,7 +11,7 @@ import java.util.regex.Pattern;
  * All values should be defaulted to -1 if unavailable.  ReadGroup and Tile should only allow
  * non-zero positive integers, x and y coordinates may be negative.
  */
-public class ReadNameParser {
+public class ReadNameParser implements Serializable {
 
     /**
      * The read name regular expression (regex) is used to extract three pieces of information from the read name: tile, x location,
@@ -28,13 +29,15 @@ public class ReadNameParser {
 
     private final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
 
-    private String readNameRegex = null;
+    private final boolean useOptimizedDefaultParsing; // was the regex default?
+
+    private final String readNameRegex;
 
     private Pattern readNamePattern;
 
     private boolean warnedAboutRegexNotMatching = false;
 
-    private final Log log;
+    private transient final Log log;
 
     /**
      * Creates are read name parser using the default read name regex and optical duplicate distance.   See {@link #DEFAULT_READ_NAME_REGEX}
@@ -60,6 +63,7 @@ public class ReadNameParser {
      * @param log the log to which to write messages.
      */
     public ReadNameParser(final String readNameRegex, final Log log) {
+        this.useOptimizedDefaultParsing = readNameRegex.equals(DEFAULT_READ_NAME_REGEX);
         this.readNameRegex = readNameRegex;
         this.log = log;
     }
@@ -75,7 +79,7 @@ public class ReadNameParser {
     public boolean addLocationInformation(final String readName, final PhysicalLocation loc) {
         try {
             // Optimized version if using the default read name regex (== used on purpose):
-            if (this.readNameRegex == ReadNameParser.DEFAULT_READ_NAME_REGEX) {
+            if (this.useOptimizedDefaultParsing) {
                 final int fields = getLastThreeFields(readName, ':', tmpLocationFields);
                 if (!(fields == 5 || fields == 7)) {
                     if (null != log && !this.warnedAboutRegexNotMatching) {
@@ -190,4 +194,5 @@ public class ReadNameParser {
         if (isNegative) val = -val;
         return val;
     }
+
 }

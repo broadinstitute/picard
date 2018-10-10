@@ -29,6 +29,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import picard.sam.util.PhysicalLocation;
 import picard.sam.util.ReadNameParser;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -37,7 +38,7 @@ import java.util.List;
  * @author Tim Fennell
  * @author Nils Homer
  */
-public class OpticalDuplicateFinder extends ReadNameParser {
+public class OpticalDuplicateFinder extends ReadNameParser implements Serializable  {
 
     public int opticalDuplicatePixelDistance;
 
