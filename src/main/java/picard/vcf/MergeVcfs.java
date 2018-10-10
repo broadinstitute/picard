@@ -147,6 +147,8 @@ public class MergeVcfs extends CommandLineProgram {
     @Argument(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionary in the input files", optional = true)
     public File SEQUENCE_DICTIONARY;
 
+    private final static String SEQ_DICT_REQUIRED = "A sequence dictionary must be available (either through the input file or by setting it explicitly).";
+
     private final Log log = Log.getInstance(MergeVcfs.class);
 
     public static void main(final String[] argv) {
@@ -175,6 +177,13 @@ public class MergeVcfs extends CommandLineProgram {
             IOUtil.assertFileIsReadable(file);
             final VCFFileReader fileReader = new VCFFileReader(file, false);
             final VCFHeader fileHeader = fileReader.getFileHeader();
+            if (fileHeader.getContigLines().isEmpty()) {
+                if (sequenceDictionary == null) {
+                    throw new IllegalArgumentException(SEQ_DICT_REQUIRED);
+                } else {
+                    fileHeader.setSequenceDictionary(sequenceDictionary);
+                }
+            }
 
             if (variantContextComparator == null) {
                 variantContextComparator = fileHeader.getVCFRecordComparator();
@@ -200,7 +209,7 @@ public class MergeVcfs extends CommandLineProgram {
         }
 
         if (CREATE_INDEX && sequenceDictionary == null) {
-            throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
+            throw new PicardException(String.format("Index creation failed. %s", SEQ_DICT_REQUIRED));
         }
 
         final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
