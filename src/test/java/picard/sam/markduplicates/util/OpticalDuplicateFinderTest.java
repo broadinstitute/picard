@@ -67,7 +67,7 @@ public class OpticalDuplicateFinderTest {
     public void testKeeper() {
         final Log log = Log.getInstance(OpticalDuplicateFinderTest.class);
         final OpticalDuplicateFinder finder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 100, log);
-        List<PhysicalLocation> locs = Arrays.asList(
+        final List<PhysicalLocation> locs = Arrays.asList(
                 loc(7, 1500, 1500),
                 loc(7, 1501, 1501),
                 loc(5, 1500, 1500),
@@ -76,7 +76,7 @@ public class OpticalDuplicateFinderTest {
                 loc(7,   10,   10)
         );
 
-        assertEquals(finder.findOpticalDuplicates(locs, null       ), new boolean[] {false, true,  false, true, false, false});
+        assertEquals(finder.findOpticalDuplicates(locs, null       ), new boolean[] {true, true,  false, false, false, false});
         assertEquals(finder.findOpticalDuplicates(locs, locs.get(0)), new boolean[] {false, true,  false, true, false, false});
         assertEquals(finder.findOpticalDuplicates(locs, locs.get(1)), new boolean[] {true,  false, false, true, false, false});
         assertEquals(finder.findOpticalDuplicates(locs, locs.get(3)), new boolean[] {true,  true,  false, false, false, false});
@@ -102,7 +102,7 @@ public class OpticalDuplicateFinderTest {
     public void testKeeperNotInList() {
         final Log log = Log.getInstance(OpticalDuplicateFinderTest.class);
         final OpticalDuplicateFinder finder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 100, log);
-        List<PhysicalLocation> locs = Arrays.asList(
+        final List<PhysicalLocation> locs = Arrays.asList(
                 loc(1, 100, 100),
                 loc(1, 101, 101),
                 loc(1,  99, 99),
@@ -116,7 +116,7 @@ public class OpticalDuplicateFinderTest {
     public void testKeeperAtEndWithinCliqueOfAllOpticalDuplicates() {
         final Log log = Log.getInstance(OpticalDuplicateFinderTest.class);
         final OpticalDuplicateFinder finder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 15, log);
-        List<PhysicalLocation> locs = Arrays.asList(
+        final List<PhysicalLocation> locs = Arrays.asList(
                 loc(1, 10, 0),
                 loc(1, 20, 0),
                 loc(1, 30, 0)
@@ -126,19 +126,94 @@ public class OpticalDuplicateFinderTest {
     }
 
     @Test
-    public void testMaxSetSize() {
+    public void testKeeperOrderDependence() {
         final Log log = Log.getInstance(OpticalDuplicateFinderTest.class);
-        List<PhysicalLocation> locs = Arrays.asList(
+        final OpticalDuplicateFinder finder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 100, log);
+        final List<PhysicalLocation> locs = Arrays.asList(
+                loc(1, 100, 190),
+                loc(1, 100, 280),
+                loc(1,  100, 370),
+                loc(1,  100, 460)
+        );
+        final List<PhysicalLocation> locsReordered = Arrays.asList(
+                loc(1, 100, 190),
+                loc(1, 100, 460),
+                loc(1,  100, 370),
+                loc(1,  100, 280)
+        );
+
+        Assert.assertEquals(countTrue(finder.findOpticalDuplicates(locs, locs.get(0))), 3);
+        Assert.assertEquals(countTrue(finder.findOpticalDuplicates(locsReordered, locsReordered.get(0))), 3);
+    }
+
+    @Test
+    public void testKeeperOrderDependenceTwoDistinctClusters() {
+        final OpticalDuplicateFinder finder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 100, null);
+        final List<PhysicalLocation> locs = Arrays.asList(
+                loc(1, 100, 190),
+                loc(1, 100, 280),
+                // A second cluster of reads that should result in 3 extra optical duplicates
+                loc(1, 300, 500),
+                loc(1, 300, 590),
+                loc(1, 300, 670),
+                loc(1, 300, 760)
+        );
+        // Reordered the second cluster from the keeper cluster so they will not be grouped together
+        final List<PhysicalLocation> locsReordered = Arrays.asList(
+                loc(1, 100, 190),
+                loc(1, 100, 280),
+                loc(1, 300, 500),
+                loc(1, 300, 760),
+                loc(1, 300, 670),
+                loc(1, 300, 590)
+        );
+
+        Assert.assertEquals(countTrue(finder.findOpticalDuplicates(locs, locs.get(0))), 4);
+        Assert.assertEquals(countTrue(finder.findOpticalDuplicates(locsReordered, locsReordered.get(0))), 4);
+    }
+
+    @Test
+    public void testKeeperOrderIndependenceTwoDistinctClusters() {
+        final OpticalDuplicateFinder finder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 100, null);
+        final List<PhysicalLocation> locs = Arrays.asList(
+                loc(1, 100, 190),
+                loc(1, 100, 280),
+                // A second cluster of reads that should result in 3 extra optical duplicates
+                loc(1, 300, 500),
+                loc(1, 300, 590),
+                loc(1, 300, 670),
+                loc(1, 300, 760)
+        );
+        // Reordered the second cluster from the keeper cluster so they will not be grouped together
+        final List<PhysicalLocation> locsReordered = Arrays.asList(
+                loc(1, 100, 190),
+                loc(1, 100, 280),
+                loc(1, 300, 590),
+                loc(1, 300, 760),
+                loc(1, 300, 670),
+                loc(1, 300, 500)
+        );
+
+        // In both cases we expect "loc(1, 300, 500)" to be the non-optical-duplicate
+        Assert.assertEquals(countTrue(finder.findOpticalDuplicates(locs, locs.get(0))), 4);
+        Assert.assertFalse(finder.findOpticalDuplicates(locs, locs.get(0))[2]);
+        Assert.assertEquals(countTrue(finder.findOpticalDuplicates(locsReordered, locsReordered.get(0))), 4);
+        Assert.assertFalse(finder.findOpticalDuplicates(locsReordered, locs.get(0))[5]);
+    }
+
+    @Test
+    public void testMaxSetSize() {
+        final List<PhysicalLocation> locs = Arrays.asList(
                 loc(7, 1500, 1500),
                 loc(7, 1501, 1501),
                 loc(7, 1490, 1502));
 
         // there should be at least 1 optical duplicate
-        final OpticalDuplicateFinder normalFinder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 100, log);
+        final OpticalDuplicateFinder normalFinder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 100, null);
         Assert.assertTrue(countTrue(normalFinder.findOpticalDuplicates(locs, null)) > 0);
 
         // there should be zero optical duplicates
-        final OpticalDuplicateFinder constrainedFinder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 100, 1, log);
+        final OpticalDuplicateFinder constrainedFinder = new OpticalDuplicateFinder(OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX, 100, 1, null);
         Assert.assertEquals(countTrue(constrainedFinder.findOpticalDuplicates(locs, null)), 0);
     }
 
