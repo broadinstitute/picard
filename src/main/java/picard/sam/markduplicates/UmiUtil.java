@@ -87,13 +87,4 @@ public class UmiUtil {
 
         return read1FivePrimeCoordinate < read2FivePrimeCoordinate;
     }
-
-    static String getAssignedUmi(final String molecularIndex) {
-        if (molecularIndex == null) {
-            return null;
-        }
-        return molecularIndex.replaceAll(".*/", "");
-    }
-
-
 }

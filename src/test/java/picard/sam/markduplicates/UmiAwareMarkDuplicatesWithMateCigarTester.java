@@ -28,6 +28,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
+import org.apache.commons.lang3.StringUtils;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
 
@@ -196,7 +197,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
         for (final SAMRecord record : reader) {
             // If there are expected assigned UMIs, check to make sure they match
             if (expectedAssignedUmis != null) {
-                Assert.assertEquals(UmiUtil.getAssignedUmi(record.getStringAttribute("MI")), record.getAttribute(expectedUmiTag));
+                Assert.assertEquals(getAssignedUmi(record.getStringAttribute("MI")), record.getAttribute(expectedUmiTag));
             }
         }
 
@@ -235,4 +236,23 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
         UmiAwareMarkDuplicatesWithMateCigar uamdwmc = new UmiAwareMarkDuplicatesWithMateCigar();
         return uamdwmc;
     }
+
+
+    /**
+     *
+     * @param molecularIndex
+     * @return
+     */
+    private String getAssignedUmi(final String molecularIndex) {
+        if (molecularIndex == null) {
+            return null;
+        }
+
+        if (StringUtils.countMatches(molecularIndex, "/") == 2) {
+            return StringUtils.substringBetween(molecularIndex, "/", "/");
+        } else {
+            return StringUtils.substringAfter(molecularIndex, "/");
+        }
+    }
+
 }

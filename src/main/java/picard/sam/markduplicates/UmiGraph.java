@@ -59,7 +59,7 @@ public class UmiGraph {
     private final String[] umi;                 // Sequence of actual UMI, the index is the UMI ID
     private final int numUmis;                  // Number of observed UMIs
     private final String umiTag;                // UMI tag used in the SAM/BAM/CRAM file ie. RX
-    private final String molecularIdentifierTag; // Assigned UMI tag used in the SAM/BAM/CRAM file ie. MI
+    private final String molecularIdentifierTag; // Molecular identifier tag used in the SAM/BAM/CRAM file ie. MI
     private final boolean allowMissingUmis;     // Allow for missing UMIs
     private final boolean duplexUmis;
 
@@ -218,6 +218,7 @@ public class UmiGraph {
                     } else {
                         rec.setAttribute(molecularIdentifierTag, fragmentStartPosition + "/" + assignedUmi);
                     }
+                    rec.setTransientAttribute("inferredUmi", assignedUmi);
                 }
             }
 

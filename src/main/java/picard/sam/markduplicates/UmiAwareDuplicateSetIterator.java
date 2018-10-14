@@ -147,8 +147,6 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
         // and total numbers of observed and inferred UMIs
         for (final DuplicateSet ds : duplicateSets) {
             final List<SAMRecord> records = ds.getRecords();
-            final SAMRecord representativeRead = ds.getRepresentative();
-            //final String inferredUmi = (String) representativeRead.getTransientAttribute("aI");
 
             for (final SAMRecord rec : records) {
                 final String currentUmi;
@@ -176,7 +174,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
 
                         // Update UMI metrics associated with each record
                         // The hammingDistance between N and a base is a distance of 1. Comparing N to N is 0 distance.
-                        final String inferredUmi = UmiUtil.getAssignedUmi(rec.getStringAttribute(molecularIdentifierTag));
+                        final String inferredUmi = (String) rec.getTransientAttribute("inferredUmi");
                         metrics.OBSERVED_BASE_ERRORS += hammingDistance(currentUmi, inferredUmi);
                         observedUmiBases += currentUmi.length() - StringUtils.countMatches(currentUmi, "-");
                         metrics.addUmiObservation(currentUmi, inferredUmi);
