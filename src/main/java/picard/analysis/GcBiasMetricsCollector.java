@@ -141,7 +141,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                 }
                 return;
             }
-            if (!rec.getReadUnmappedFlag()) {
+            if (!rec.getReadUnmappedFlag() && args.getRef() != null) {
                 if (referenceIndex != rec.getReferenceIndex() || gc == null) {
                     final ReferenceSequence ref = args.getRef();
                     refBases = ref.getBases();
