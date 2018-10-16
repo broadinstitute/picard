@@ -207,6 +207,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         tileProcessingExecutor.shutdown();
 
+        workChecker.setTileProcessingExecutor(tileProcessingExecutor);
         awaitThreadPoolTermination("Reading executor", tileProcessingExecutor);
         awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor);
 
