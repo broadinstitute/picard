@@ -14,11 +14,9 @@ import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.illumina.parser.readers.LocsFileReader;
-import picard.util.ThreadPoolExecutorUtil;
 import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,7 +24,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,9 +36,48 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
     private final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
     private final File[] filterFiles;
     private final Map<String, ThreadPoolExecutorWithExceptions> barcodeWriterThreads = new HashMap<>();
-    private final Map<Integer, List<RecordWriter>> completedWork = Collections.synchronizedMap(new HashMap<>());
     private final Map<Integer, File> barcodesFiles = new HashMap<>();
     private final boolean includeNonPfReads;
+
+    /**
+     * Constructor setting includeNonPfReads to true by default.
+     *
+     * @param basecallsDir             Where to read basecalls from.
+     * @param barcodesDir              Where to read barcodes from (optional; use basecallsDir if not specified).
+     * @param lane                     What lane to process.
+     * @param readStructure            How to interpret each cluster.
+     * @param barcodeRecordWriterMap   Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
+     *                                 one writer stored with key=null.
+     * @param demultiplex              If true, output is split by barcode, otherwise all are written to the same output stream.
+     * @param maxReadsInRamPerTile     Configures number of reads each tile will store in RAM before spilling to disk.
+     * @param tmpDirs                  For SortingCollection spilling.
+     * @param numProcessors            Controls number of threads.  If <= 0, the number of threads allocated is
+     *                                 available cores - numProcessors.
+     * @param firstTile                (For debugging) If non-null, start processing at this tile.
+     * @param tileLimit                (For debugging) If non-null, process no more than this many tiles.
+     * @param outputRecordComparator   For sorting output records within a single tile.
+     * @param codecPrototype           For spilling output records to disk.
+     * @param outputRecordClass        Inconveniently needed to create SortingCollections.
+     * @param ignoreUnexpectedBarcodes If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
+     */
+    public NewIlluminaBasecallsConverter(final File basecallsDir, final File barcodesDir, final int lane,
+                                         final ReadStructure readStructure,
+                                         final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
+                                         final boolean demultiplex,
+                                         final int maxReadsInRamPerTile,
+                                         final List<File> tmpDirs, final int numProcessors,
+                                         final Integer firstTile,
+                                         final Integer tileLimit,
+                                         final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
+                                         final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
+                                         final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
+                                         final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
+                                         final boolean ignoreUnexpectedBarcodes) {
+        this(basecallsDir, barcodesDir, lane, readStructure, barcodeRecordWriterMap,
+                demultiplex, maxReadsInRamPerTile, tmpDirs, numProcessors, firstTile,
+                tileLimit, outputRecordComparator, codecPrototype, outputRecordClass,
+                bclQualityEvaluationStrategy, true, ignoreUnexpectedBarcodes);
+    }
 
     /**
      * @param basecallsDir             Where to read basecalls from.
@@ -157,26 +196,32 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
         completedWorkExecutor.shutdown();
 
         //thread by surface tile
-        final ThreadPoolExecutorWithExceptions tileProcessingExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
+        final ThreadPoolExecutor tileProcessingExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
 
         for (final Integer tile : tiles) {
-            tileProcessingExecutor.submit(new TileProcessor(tile, barcodesFiles.get(tile)));
+            tileProcessingExecutor.submit(new TileProcessor(tile, barcodesFiles.get(tile), workChecker));
         }
 
         tileProcessingExecutor.shutdown();
 
-        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileProcessingExecutor, Duration.ofMinutes(5));
+        workChecker.setTileProcessingExecutor(tileProcessingExecutor);
 
-        // if there was an exception reading then initiate an immediate shutdown.
-        if (tileProcessingExecutor.exception != null) {
-            int tasksStillRunning = completedWorkExecutor.shutdownNow().size();
-            tasksStillRunning += barcodeWriterThreads.values().stream().mapToLong(executor -> executor.shutdownNow().size()).sum();
-            throw new PicardException("Reading executor had exceptions. There were " + tasksStillRunning
-                    + " tasks were still running or queued and have been cancelled.", tileProcessingExecutor.exception);
-        } else {
-            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor, Duration.ofMinutes(5));
-            barcodeWriterThreads.values().forEach(ThreadPoolExecutor::shutdown);
-            barcodeWriterThreads.forEach((barcode, executor) -> ThreadPoolExecutorUtil.awaitThreadPoolTermination(barcode + " writer", executor, Duration.ofMinutes(5)));
+        awaitThreadPoolTermination("Reading executor", tileProcessingExecutor);
+        awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor);
+
+        barcodeWriterThreads.values().forEach(ThreadPoolExecutor::shutdown);
+        barcodeWriterThreads.forEach((barcode, executor) -> awaitThreadPoolTermination(barcode + " writer", executor));
+    }
+
+    private void awaitThreadPoolTermination(final String executorName, final ThreadPoolExecutor executorService) {
+        try {
+            while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
+                log.info(String.format("%s waiting for job completion. Finished jobs - %d : Running jobs - %d : Queued jobs  - %d",
+                        executorName, executorService.getCompletedTaskCount(), executorService.getActiveCount(),
+                        executorService.getQueue().size()));
+            }
+        } catch (final InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -205,30 +250,16 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
         }
     }
 
-    private class Closer implements Runnable {
-        private final ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer;
-        private final String barcode;
-
-        private Closer(final ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer, final String barcode) {
-            this.writer = writer;
-            this.barcode = barcode;
-        }
-
-        @Override
-        public void run() {
-            log.debug("Closing writer for barcode " + barcode);
-            this.writer.close();
-        }
-    }
-
     private class TileProcessor implements Runnable {
         private final int tileNum;
         private final Map<String, SortingCollection<CLUSTER_OUTPUT_RECORD>> barcodeToRecordCollection = new HashMap<>();
         private final File barcodeFile;
+        private final CompletedWorkChecker workChecker;
 
-        TileProcessor(final int tileNum, final File barcodeFile) {
+        TileProcessor(final int tileNum, final File barcodeFile, CompletedWorkChecker workChecker) {
             this.tileNum = tileNum;
             this.barcodeFile = barcodeFile;
+            this.workChecker = workChecker;
         }
 
         @Override
@@ -255,7 +286,8 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
                 writerList.add(new RecordWriter(writer, value, barcode));
 
             });
-            completedWork.put(tileNum, writerList);
+
+            workChecker.registerCompletedWork(tileNum, writerList);
 
             log.info("Finished processing tile " + tileNum);
         }
@@ -283,19 +315,21 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
             final int maxRecordsInRam =
                     Math.max(1, maxReadsInRamPerTile /
                             barcodeRecordWriterMap.size());
-            return SortingCollection.newInstanceFromPaths(
+            return SortingCollection.newInstance(
                     outputRecordClass,
                     codecPrototype.clone(),
                     outputRecordComparator,
                     maxRecordsInRam,
-                    IOUtil.filesToPaths(tmpDirs));
+                    tmpDirs);
         }
     }
 
 
     private class CompletedWorkChecker implements Runnable {
 
+        private final Map<Integer, List<RecordWriter>> completedWork = new ConcurrentHashMap<>();
         private int currentTileIndex = 0;
+        private ThreadPoolExecutor tileProcessingExecutor;
 
         @Override
         public void run() {
@@ -304,19 +338,30 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
                 if (completedWork.containsKey(currentTile)) {
                     log.info("Writing out tile " + currentTile);
                     completedWork.get(currentTile).forEach(writer -> barcodeWriterThreads.get(writer.getBarcode()).submit(writer));
+                    completedWork.remove(currentTile);
                     currentTileIndex++;
-                } else {
-                    try {
-                        Thread.sleep(5000);
-                    } catch (final InterruptedException e) {
-                        throw new PicardException(e.getMessage(), e);
-                    }
+                }
+                if(tileProcessingExecutor.isTerminated() && completedWork.size() == 0){
+                    break;
                 }
             }
 
             //we are all done scheduling work.. now schedule the closes
-            barcodeRecordWriterMap.forEach((barcode, writer) -> barcodeWriterThreads.get(barcode).submit(new Closer(writer, barcode)));
+            barcodeRecordWriterMap.forEach((barcode, writer) -> {
+                ThreadPoolExecutorWithExceptions executorService = barcodeWriterThreads.get(barcode);
+                executorService.shutdown();
+                awaitThreadPoolTermination( "Barcode writer ("  + barcode + ")", executorService);
+                log.debug("Closing writer for barcode " + barcode);
+                writer.close();
+            });
         }
 
+        void registerCompletedWork(int tileNum, List<RecordWriter> writerList) {
+            completedWork.put(tileNum, writerList);
+        }
+
+        void setTileProcessingExecutor(ThreadPoolExecutor tileProcessingExecutor) {
+            this.tileProcessingExecutor = tileProcessingExecutor;
+        }
     }
 }

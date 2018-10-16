@@ -200,12 +200,13 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
 
             for (final int outputLength : outputLengths) {
                 for (int cycle = 0; cycle < outputLength; cycle++) {
+                    final TileData currentCycleTileInfo = cycleData[totalCycleCount].tileInfo;
                     try {
                         if (cachedTile[totalCycleCount] == null) {
-                            if (!cachedFilter.containsKey(cycleData[totalCycleCount].tileInfo.tileNum)) {
-                                cacheFilterAndLocs(cycleData[totalCycleCount].tileInfo, locs);
+                            if (!cachedFilter.containsKey(currentCycleTileInfo.tileNum)) {
+                                cacheFilterAndLocs(currentCycleTileInfo, locs);
                             }
-                            cacheTile(totalCycleCount, cycleData[totalCycleCount].tileInfo);
+                            cacheTile(totalCycleCount, currentCycleTileInfo);
                         }
                     } catch (final IOException e) {
                         // when logging the error, increment cycle by 1, since totalCycleCount is zero-indexed but Illumina directories are 1-indexed.
@@ -298,20 +299,12 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
     private void cacheFilterAndLocs(final TileData currentTileData, final List<AbstractIlluminaPositionFileReader.PositionInfo> locs) {
         final List<Boolean> filterValues = new ArrayList<>();
         final FilterFileReader reader = new FilterFileReader(filterFileMap.get(currentTileData.tileNum));
-        final Iterator<AbstractIlluminaPositionFileReader.PositionInfo> positionInfoIterator = locs.iterator();
 
         while (reader.hasNext()) {
             filterValues.add(reader.next());
         }
 
-        final List<AbstractIlluminaPositionFileReader.PositionInfo> positions = new ArrayList<>();
-        for (final boolean filterValue : filterValues) {
-            final AbstractIlluminaPositionFileReader.PositionInfo info = positionInfoIterator.next();
-            if (filterValue) {
-                positions.add(info);
-            }
-        }
-        this.positionInfoIterator = positions.iterator();
+        this.positionInfoIterator = locs.iterator();
         cachedFilter.put(currentTileData.tileNum, filterValues);
     }
 

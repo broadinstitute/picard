@@ -65,7 +65,7 @@ class FilterParser extends PerTileParser<PfData> {
             public PfData next() {
                 final boolean nextValue = reader.next();
                 return new PfData() {
-                    public boolean isPf() {
+                    public boolean isPfRead() {
                         return nextValue;
                     }
                 };

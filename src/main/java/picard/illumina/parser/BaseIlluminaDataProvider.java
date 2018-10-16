@@ -42,7 +42,7 @@ public abstract class BaseIlluminaDataProvider implements Iterator<ClusterData>,
     }
 
     protected void addData(final ClusterData clusterData, final PfData pfData) {
-        clusterData.setPf(pfData.isPf());
+        clusterData.setPf(pfData.isPfRead());
     }
 
     protected void addData(final ClusterData clusterData, final BarcodeData barcodeData) {
@@ -72,7 +72,7 @@ public abstract class BaseIlluminaDataProvider implements Iterator<ClusterData>,
         for (int i = 0; i < numReads; i++) {
             clusterData.getRead(i).setQualities(qualities[i]);
         }
-        clusterData.setPf(cbclData.isPf());
+        clusterData.setPf(cbclData.isPfRead());
         clusterData.setX(cbclData.getXCoordinate());
         clusterData.setY(cbclData.getYCoordinate());
     }
