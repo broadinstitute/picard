@@ -311,6 +311,7 @@ public class CheckFingerprint extends CommandLineProgram {
         final MetricsFile<FingerprintingSummaryMetrics, ?> summaryFile = getMetricsFile();
         final MetricsFile<FingerprintingDetailMetrics, ?> detailsFile = getMetricsFile();
 
+        boolean anyNonzeroLod = false;
         for (final FingerprintResults fpr : results) {
             final MatchResults mr = fpr.getMatchResults().first();
 
@@ -365,10 +366,21 @@ public class CheckFingerprint extends CommandLineProgram {
 
             summaryFile.addMetric(metrics);
             log.info("Read Group: " + metrics.READ_GROUP + " / " + observedSampleAlias + " vs. " + metrics.SAMPLE + ": LOD = " + metrics.LOD_EXPECTED_SAMPLE);
+            if (metrics.LOD_EXPECTED_SAMPLE!=0) {
+                anyNonzeroLod |= true;
+            }
         }
 
         summaryFile.write(outputSummaryMetricsFile);
         detailsFile.write(outputDetailMetricsFile);
+
+
+        if (!anyNonzeroLod){
+            log.error("No non-zero results found. This is likely an error. " +
+                    "Probable cause: EXPECTED_SAMPLE (if provided) or the sample name from INPUT (if EXPECTED_SAMPLE isn't provided)" +
+                    "isn't a sample in GENOTYPES file.");
+            return 1;
+        }
 
         return 0;
     }
