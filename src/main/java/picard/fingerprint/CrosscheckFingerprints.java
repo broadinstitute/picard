@@ -296,7 +296,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     public boolean CALCULATE_TUMOR_AWARE_RESULTS = true;
 
     @Argument(doc = "Allow the use of duplicate reads in performing the comparison. Can be useful when duplicate " +
-            "marking has been overly aggressive and coverage is low.")
+            "marking has been overly aggressive and coverage is lo  w.")
     public boolean ALLOW_DUPLICATE_READS = false;
 
     @Argument(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from " +

@@ -46,6 +46,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.io.IOException;
 
 /**
  * This class is an extension of SamFileTester used to test AbstractMarkDuplicatesCommandLineProgram's with SAM files generated on the fly.
@@ -164,7 +165,9 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                 for (final SAMRecord record : reader) {
                     outputRecords++;
                     final String key = samRecordToDuplicatesFlagsKey(record);
-
+                    if (!this.duplicateFlags.containsKey(key)) {
+                        System.err.println("DOES NOT CONTAIN KEY: " + key);
+                    }
                     Assert.assertTrue(this.duplicateFlags.containsKey(key));
                     final boolean value = this.duplicateFlags.get(key);
                     this.duplicateFlags.remove(key);
@@ -172,7 +175,10 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                     if (testOpticalDuplicateDTTag && MarkDuplicates.DUPLICATE_TYPE_SEQUENCING.equals(record.getAttribute("DT"))) {
                         sequencingDTErrorsSeen.add(record.getReadName());
                     }
+                    Assert.assertEquals(record.getDuplicateReadFlag(), value);
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
             // Ensure the program output the same number of records as were read in
