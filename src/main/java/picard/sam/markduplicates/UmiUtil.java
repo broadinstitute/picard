@@ -51,6 +51,8 @@ class UmiUtil {
      * @return Normalized Duplex UMI.  If the UMI isn't duplex, it returns the UMI unaltered.
      */
     static String getTopStrandNormalizedDuplexUMI(final SAMRecord record, final String umiTag, final boolean duplexUmi) {
+        if(umiTag == null) return null;
+
         final String umi = record.getStringAttribute(umiTag);
 
         if (umi == null) return null;

@@ -702,7 +702,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         if (useBarcodes) {
             final ReadEndsForMarkDuplicatesWithBarcodes endsWithBarcode = (ReadEndsForMarkDuplicatesWithBarcodes) ends;
-            endsWithBarcode.barcode = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, BARCODE_TAG, DUPLEX_UMI).hashCode();
+            final String topStrandNormalizedUmi = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, BARCODE_TAG, DUPLEX_UMI);
+            endsWithBarcode.barcode = topStrandNormalizedUmi == null ? 0 : topStrandNormalizedUmi.hashCode();
 
             if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) {
                 endsWithBarcode.readOneBarcode = getReadOneBarcodeValue(rec);
