@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.counting;
-import static picard.sam.markduplicates.UmiUtil.isTopStrand;
 
 /**
  * UmiGraph is used to identify UMIs that come from the same original source molecule.  The assumption
@@ -53,19 +52,29 @@ import static picard.sam.markduplicates.UmiUtil.isTopStrand;
  * @author fleharty
  */
 public class UmiGraph {
-    private final List<SAMRecord> records;      // SAMRecords from the original duplicate set considered to break up by UMI
-    private final Map<String, Long> umiCounts;  // Map of UMI sequences and how many times they have been observed
-    private final int[] duplicateSetID;         // ID of the duplicate set that the UMI belongs to, the index is the UMI ID
-    private final String[] umi;                 // Sequence of actual UMI, the index is the UMI ID
-    private final int numUmis;                  // Number of observed UMIs
-    private final String umiTag;                // UMI tag used in the SAM/BAM/CRAM file ie. RX
-    private final String molecularIdentifierTag; // Molecular identifier tag used in the SAM/BAM/CRAM file ie. MI
-    private final boolean allowMissingUmis;     // Allow for missing UMIs
+    private final List<SAMRecord> records;
+    private final Map<String, Long> umiCounts;
+    private final int[] duplicateSetID;
+    private final String[] umi;
+    private final int numUmis;
+    private final String umiTag;
+    private final String molecularIdentifierTag;
+    private final boolean allowMissingUmis;
     private final boolean duplexUmis;
 
-    private String TOP_STRAND_DUPLEX = "/A";
-    private String BOTTOM_STRAND_DUPLEX = "/B";
+    private static final String TOP_STRAND_DUPLEX = "/A";
+    private static final String BOTTOM_STRAND_DUPLEX = "/B";
+    private static final String CONTIG_SEPARATOR = ":";
+    private static final String UMI_NAME_SEPARATOR = "/";
 
+    /**
+     * Creates a UmiGraph object
+     * @param set Set of reads that have the same start-stop positions, these will be broken up by UMI
+     * @param umiTag UMI tag used in the SAM/BAM/CRAM file ie. RX
+     * @param molecularIdentifierTag  Molecular identifier tag used in the SAM/BAM/CRAM file ie. MI
+     * @param allowMissingUmis Allow for missing UMIs
+     * @param duplexUmis Whether or not to use duplex of single strand UMIs
+     */
     UmiGraph(final DuplicateSet set, final String umiTag, final String molecularIdentifierTag,
                     final boolean allowMissingUmis, final boolean duplexUmis) {
         this.umiTag = umiTag;
@@ -77,16 +86,15 @@ public class UmiGraph {
         // First ensure that all the reads have a UMI, if any reads are missing a UMI throw an exception unless allowMissingUmis is true
         for (final SAMRecord rec : records) {
             if (rec.getStringAttribute(umiTag) == null) {
-                if (allowMissingUmis) {
-                    rec.setAttribute(umiTag, "");
-                } else {
+                if (!allowMissingUmis) {
                     throw new PicardException("Read " + rec.getReadName() + " does not contain a UMI with the " + umiTag + " attribute.");
                 }
+                rec.setAttribute(umiTag, "");
             }
         }
 
         // Count the number of times each UMI occurs
-        umiCounts = records.stream().collect(Collectors.groupingBy(p -> duplexUmis ? UmiUtil.getTopStrandNormalizedDuplexUMI(p, umiTag) : p.getStringAttribute(umiTag), counting()));
+        umiCounts = records.stream().collect(Collectors.groupingBy(p -> duplexUmis ? UmiUtil.getTopStrandNormalizedDuplexUMI(p, umiTag, duplexUmis) : p.getStringAttribute(umiTag), counting()));
 
         // At first we consider every UMI as if it were its own duplicate set
         numUmis = umiCounts.size();
@@ -128,13 +136,8 @@ public class UmiGraph {
         // Assign UMIs to duplicateSets
         final Map<String, Integer> duplicateSetsFromUmis = getDuplicateSetsFromUmis();
         for (final SAMRecord rec : records) {
-            final String umi;
+            final String umi = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, umiTag, duplexUmis);
 
-            if (duplexUmis) {
-                umi = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, umiTag);
-            } else {
-                umi = rec.getStringAttribute(umiTag);
-            }
             final Integer duplicateSetIndex = duplicateSetsFromUmis.get(umi);
 
             if (duplicateSets.containsKey(duplicateSetIndex)) {
@@ -162,13 +165,7 @@ public class UmiGraph {
             long nCount = 0;
 
             for (final SAMRecord rec : recordList) {
-                final String umi;
-
-                if (duplexUmis) {
-                    umi = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, umiTag);
-                } else {
-                    umi = rec.getStringAttribute(umiTag);
-                }
+                final String umi = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, umiTag, duplexUmis);
 
                 // If there is another choice, we don't want to choose the UMI with a N
                 // as the assignedUmi
@@ -202,21 +199,21 @@ public class UmiGraph {
                 } else {
                     final String fragmentStartPosition;
                     if (ds.getRepresentative().getReadNegativeStrandFlag()) {
-                        fragmentStartPosition = ds.getRepresentative().getContig() + ":" + ds.getRepresentative().getAlignmentStart();
+                        fragmentStartPosition = ds.getRepresentative().getContig() + CONTIG_SEPARATOR + ds.getRepresentative().getAlignmentStart();
                     } else {
-                        fragmentStartPosition = ds.getRepresentative().getContig() + ":" + ds.getRepresentative().getMateAlignmentStart();
+                        fragmentStartPosition = ds.getRepresentative().getContig() + CONTIG_SEPARATOR + ds.getRepresentative().getMateAlignmentStart();
                     }
 
                     final String strandPosition;
                     if (duplexUmis) {
-                        if (isTopStrand(rec)) {
+                        if (UmiUtil.isTopStrand(rec)) {
                             strandPosition = TOP_STRAND_DUPLEX;
                         } else {
                             strandPosition = BOTTOM_STRAND_DUPLEX;
                         }
-                        rec.setAttribute(molecularIdentifierTag, fragmentStartPosition + "/" + assignedUmi + strandPosition);
+                        rec.setAttribute(molecularIdentifierTag, fragmentStartPosition + UMI_NAME_SEPARATOR + assignedUmi + strandPosition);
                     } else {
-                        rec.setAttribute(molecularIdentifierTag, fragmentStartPosition + "/" + assignedUmi);
+                        rec.setAttribute(molecularIdentifierTag, fragmentStartPosition + UMI_NAME_SEPARATOR + assignedUmi);
                     }
                     rec.setTransientAttribute("inferredUmi", assignedUmi);
                 }
@@ -228,7 +225,11 @@ public class UmiGraph {
         return duplicateSetList;
     }
 
-    // Create a map that maps a umi to the duplicateSetID
+
+    /**
+     * Create a map that maps a umi to the duplicateSetID
+     * @return
+     */
     private Map<String, Integer> getDuplicateSetsFromUmis() {
         final Map<String, Integer> duplicateSetsFromUmis = new HashMap<>();
         for (int i = 0; i < duplicateSetID.length; i++) {

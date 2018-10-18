@@ -149,12 +149,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
             final List<SAMRecord> records = ds.getRecords();
 
             for (final SAMRecord rec : records) {
-                final String currentUmi;
-                if (duplexUmi) {
-                    currentUmi = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, umiTag);
-                } else {
-                    currentUmi = rec.getStringAttribute(umiTag);
-                }
+                final String currentUmi = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, umiTag, duplexUmi);
 
                 if (currentUmi != null) {
                     // All UMIs should be the same length, the code presently does not support variable length UMIs.

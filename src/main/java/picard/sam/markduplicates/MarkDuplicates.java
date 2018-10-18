@@ -218,11 +218,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     protected LibraryIdGenerator libraryIdGenerator = null; // this is initialized in buildSortedReadEndLists
 
     private int getBarcodeValue(final SAMRecord record) {
-        if (DUPLEX_UMI) {
-            return UmiUtil.getTopStrandNormalizedDuplexUMI(record, BARCODE_TAG).hashCode();
-        } else {
-            return EstimateLibraryComplexity.getReadBarcodeValue(record, BARCODE_TAG);
-        }
+        return UmiUtil.getTopStrandNormalizedDuplexUMI(record, BARCODE_TAG, DUPLEX_UMI).hashCode();
     }
 
     private int getReadOneBarcodeValue(final SAMRecord record) {
@@ -413,7 +409,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     }
                 }
             if (DUPLEX_UMI) {
-                rec.setAttribute(MOLECULAR_IDENTIFIER_TAG, rec.getContig() + ":" + rec.getAlignmentStart() + UmiUtil.getTopStrandNormalizedDuplexUMI(rec, BARCODE_TAG));
+                rec.setAttribute(MOLECULAR_IDENTIFIER_TAG, rec.getContig() + ":" + rec.getAlignmentStart() + UmiUtil.getTopStrandNormalizedDuplexUMI(rec, BARCODE_TAG, DUPLEX_UMI));
             }
 
             // Tag any read pair that was in a duplicate set with the duplicate set size and a representative read name
@@ -581,8 +577,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
                     final String key;
                     if (DUPLEX_UMI) {
-                        key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + ":" + rec.getReadName() + UmiUtil.getTopStrandNormalizedDuplexUMI(rec, BARCODE_TAG);
-
+                        key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + ":" + rec.getReadName() + UmiUtil.getTopStrandNormalizedDuplexUMI(rec, BARCODE_TAG, DUPLEX_UMI);
                     } else {
                         key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + ":" + rec.getReadName();
                     }
@@ -707,12 +702,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         if (useBarcodes) {
             final ReadEndsForMarkDuplicatesWithBarcodes endsWithBarcode = (ReadEndsForMarkDuplicatesWithBarcodes) ends;
-            if (DUPLEX_UMI) {
-                String normalizedBarcode = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, BARCODE_TAG);
-                endsWithBarcode.barcode = normalizedBarcode.hashCode();
-            } else {
-                endsWithBarcode.barcode = getBarcodeValue(rec);
-            }
+            endsWithBarcode.barcode = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, BARCODE_TAG, DUPLEX_UMI).hashCode();
+
             if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) {
                 endsWithBarcode.readOneBarcode = getReadOneBarcodeValue(rec);
             } else {
