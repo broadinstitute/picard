@@ -41,6 +41,8 @@ import java.util.List;
 public class GvcfMetricAccumulator extends CallingMetricAccumulator {
     String sample = null;
 
+    public static final String filenameTag = null;
+
     public GvcfMetricAccumulator(final DbSnpBitSetUtil.DbSnpBitSets dbsnp) {
         super(dbsnp);
     }
@@ -60,5 +62,10 @@ public class GvcfMetricAccumulator extends CallingMetricAccumulator {
         // the variant to the alleles that actually appear in the only sample's genotype
         final VariantContext subContext = vc.subContextFromSample(sample);
         super.accumulate(subContext);
+    }
+
+    @Override
+    public String getFilenameTag() {
+        return filenameTag;
     }
 }

@@ -23,12 +23,10 @@
  */
 package picard.vcf;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
@@ -80,6 +78,8 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
 
     private final Log log = Log.getInstance(CollectVariantCallingMetrics.class);
 
+    private String mitoContigName = null;
+
     public static void main(final String[] args) {
         new CollectVariantCallingMetrics().instanceMainWithExit(args);
     }
@@ -99,17 +99,52 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         final SAMSequenceDictionary sequenceDictionary =
                 SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY == null ? INPUT.toPath() : SEQUENCE_DICTIONARY.toPath());
 
-        final IntervalList targetIntervals = (TARGET_INTERVALS == null) ? null : IntervalList.fromFile(TARGET_INTERVALS).uniqued();
+        if(sequenceDictionary.getSequence("chrM") != null) {
+            mitoContigName = "chrM";
+        }
+        else if(sequenceDictionary.getSequence("MT") != null) {
+            mitoContigName = "MT";
+        }
+        else {
+            mitoContigName = "chrM";
+        }
+        final Interval mitoWholeContigInterval = new Interval(mitoContigName, 1, sequenceDictionary.getSequence(mitoContigName).getSequenceLength(), true, null);
+
+        IntervalList targetIntervals = null;
+        IntervalList mitoIntervals = null;
+        boolean collectOverMitochondria = false;
+        if (TARGET_INTERVALS != null) {
+            targetIntervals = IntervalList.fromFile(TARGET_INTERVALS).uniqued();
+            collectOverMitochondria = mitoContigName != null && targetIntervals.getIntervals().stream().anyMatch(i -> i.getContig().equals(mitoContigName));
+            mitoIntervals = IntervalList.intersection(targetIntervals, IntervalList.fromName(new SAMFileHeader(sequenceDictionary), mitoContigName));
+        }
+        else {
+            if (mitoContigName != null) {
+                collectOverMitochondria = true;
+                mitoIntervals = new IntervalList(sequenceDictionary);
+                mitoIntervals.add(mitoWholeContigInterval);
+            }
+        }
 
         log.info("Loading dbSNP file ...");
         final DbSnpBitSetUtil.DbSnpBitSets dbsnp = DbSnpBitSetUtil.createSnpAndIndelBitSets(DBSNP, sequenceDictionary, targetIntervals, Optional.of(log));
 
         log.info("Starting iteration of variants.");
 
+        accumulateAndOutput(GVCF_INPUT ? new GvcfMetricAccumulator(dbsnp) : new CallingMetricAccumulator(dbsnp), vcfHeader, targetIntervals);
+
+        if (collectOverMitochondria) {
+            accumulateAndOutput(new MitochondrialVariantMetricAccumulator(dbsnp), vcfHeader, mitoIntervals);
+        }
+
+        return 0;
+    }
+
+    private void accumulateAndOutput(final CallingMetricAccumulator typedAccumulator, final VCFHeader vcfHeader, final IntervalList targetIntervals) {
         final VariantProcessor.Builder<CallingMetricAccumulator, CallingMetricAccumulator.Result> builder =
                 VariantProcessor.Builder
                         .generatingAccumulatorsBy(() -> {
-                            CallingMetricAccumulator accumulator = GVCF_INPUT ? new GvcfMetricAccumulator(dbsnp) : new CallingMetricAccumulator(dbsnp);
+                            CallingMetricAccumulator accumulator = typedAccumulator;
                             accumulator.setup(vcfHeader);
                             return accumulator;
                         })
@@ -129,12 +164,13 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         summary.addMetric(result.summary);
         result.details.forEach(detail::addMetric);
 
-        final String outputPrefix = OUTPUT.getAbsolutePath() + ".";
+        final String outputPath = OUTPUT.getAbsolutePath() + ".";
+        final String outputPrefix = typedAccumulator.getFilenameTag() == null ? outputPath : outputPath + typedAccumulator.getFilenameTag();
         detail.write(new File(outputPrefix + CollectVariantCallingMetrics.VariantCallingDetailMetrics.getFileExtension()));
         summary.write(new File(outputPrefix + CollectVariantCallingMetrics.VariantCallingSummaryMetrics.getFileExtension()));
-
-        return 0;
     }
+
+
 
     /** A collection of metrics relating to snps and indels within a variant-calling file (VCF). */
     public static class VariantCallingSummaryMetrics extends MergeableMetricBase {
@@ -269,6 +305,15 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         }
     }
 
+    /** A collection of metrics relating to snps and indels within a variant-calling file (VCF). */
+    public static class MitochondrialVariantCallingSummaryMetrics extends VariantCallingSummaryMetrics {
+        public int TOTAL_HOMOPLASMIC_VARIANTS;
+
+        public int TOTAL_LOW_AF_VARIANTS;
+
+        public int TOTAL_MID_AF_VARIANTS;
+    }
+
     /**
      * Given the ratio (X/Y) and the sum (X+Y), returns Y.
      *
@@ -335,5 +380,26 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         
             calculateFromDerivedFields(TOTAL_HET_DEPTH);
         }
+    }
+
+    /** A collection of metrics relating to snps and indels within a variant-calling file (VCF) for a given sample. */
+    public static class MitochondrialVariantCallingDetailMetrics extends CollectVariantCallingMetrics.VariantCallingDetailMetrics {
+        /**
+         * Count of homoplasmic (defined to be AF >= 0.9) variants for a given sample
+         */
+        @MergeByAdding
+        public int TOTAL_HOMOPLASMIC_VARIANTS;
+
+        /**
+         * Count of low heteroplasmy (defined to be AF <= 0.1) variants for a given sample
+         */
+        @MergeByAdding
+        public int TOTAL_LOW_AF_VARIANTS;
+
+        /**
+         * Count of moderate heteroplasmy (0.1 < AF < 0.9) variants for a given sample
+         */
+        @MergeByAdding
+        public int TOTAL_MID_AF_VARIANTS;
     }
 }

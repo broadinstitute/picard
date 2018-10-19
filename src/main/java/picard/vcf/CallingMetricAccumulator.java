@@ -87,6 +87,8 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
         }
     }
 
+    public static final String filenameTag = null;
+
     private static final Log LOG = Log.getInstance(CallingMetricAccumulator.class);
     private static final ProgressLogger progress = new ProgressLogger(LOG, 10000);
 
@@ -96,7 +98,7 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
      * A map of sample names to metrics.  If .get() for a not-yet-existing sample name, a metric is generated, inserted into the map,
      * then returned.
      */
-    private final CollectionUtil.DefaultingMap<String, VariantCallingDetailMetrics> sampleMetricsMap =
+    protected CollectionUtil.DefaultingMap<String, VariantCallingDetailMetrics> sampleMetricsMap =
             new CollectionUtil.DefaultingMap<>(
                     sampleName -> {
                         final VariantCallingDetailMetrics detail = new VariantCallingDetailMetrics();
@@ -158,6 +160,10 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
         }
     }
 
+    public String getFilenameTag() {
+        return CallingMetricAccumulator.filenameTag;
+    }
+
     public Result result() {
         final Collection<VariantCallingDetailMetrics> values = sampleMetricsMap.values();
         values.forEach(CollectVariantCallingMetrics.VariantCallingDetailMetrics::calculateDerivedFields);
@@ -173,7 +179,7 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
         return !vc.isVariant() || vc.getGenotypes().stream().allMatch(Genotype::isHomRef);
     }
 
-    private void updateDetailMetric(final VariantCallingDetailMetrics metric,
+    protected void updateDetailMetric(final VariantCallingDetailMetrics metric,
                                     final Genotype genotype,
                                     final VariantContext vc,
                                     final boolean hasSingletonSample) {
@@ -192,7 +198,7 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
     }
 
     /** Amends the provided metric with the data in the provided variant.  Also amends the summary metric re: reference bias. */
-    private void updateSummaryMetric(final VariantCallingSummaryMetrics metric,
+    protected void updateSummaryMetric(final VariantCallingSummaryMetrics metric,
                                      final Genotype genotype,
                                      final VariantContext vc,
                                      final boolean hasSingletonSample) {
