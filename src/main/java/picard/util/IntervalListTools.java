@@ -1,3 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2010-2018 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package picard.util;
 
 import htsjdk.samtools.SAMException;
@@ -11,8 +35,10 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
+import picard.util.IntervalList.IntervalListScatterMode;
+import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -20,7 +46,7 @@ import java.util.*;
 
 /**
  * Performs various {@link IntervalList} manipulations.
- *
+ * <p>
  * <h3>Summary</h3>
  * This tool offers multiple interval list file manipulation capabilities, including: sorting,
  * merging, subtracting, padding, and other set-theoretic operations. The default action
@@ -31,14 +57,14 @@ import java.util.*;
  * {@value htsjdk.samtools.util.IOUtil#INTERVAL_LIST_FILE_EXTENSION}, while a VCF must have one of {@value htsjdk.samtools.util.IOUtil#VCF_FILE_EXTENSION}, {@value htsjdk.samtools.util.IOUtil#COMPRESSED_VCF_FILE_EXTENSION},
  * {@value htsjdk.samtools.util.IOUtil#BCF_FILE_EXTENSION}. When VCF file is used as input, each variant is translated into an using its reference allele or the END
  * INFO annotation (if present) to determine the extent of the interval.
- *
+ * <p>
  * {@link IntervalListTools} can also "scatter" the resulting interval-list into many interval-files. This can be useful
  * for creating multiple interval lists for scattering an analysis over.
- *
+ * <p>
  * <h3>Details</h3>
- *  The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and
- *  other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,
- *  the file then contains records, one per line in text format with the following
+ * The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and
+ * other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,
+ * the file then contains records, one per line in text format with the following
  * values tab-separated:
  * <pre>
  * <ul>
@@ -51,7 +77,7 @@ import java.util.*;
  * </pre>
  * The coordinate system is 1-based, closed-ended, so that the first base in a sequence is at position 1, and both the start
  * and the end positions are included in an interval.
- *
+ * <p>
  * For Example:
  * <pre>
  * \@HD	VN:1.0
@@ -60,7 +86,7 @@ import java.util.*;
  * chr1	1	100	+	starts at the first base of the contig and covers 100 bases
  * chr2	100	100	+	interval with exactly one base
  * </pre>
- *
+ * <p>
  * <h3>Usage examples</h3>
  * <h4>1. Combine the intervals from two interval lists:</h4>
  * <pre>
@@ -70,7 +96,7 @@ import java.util.*;
  *       I=input_2.interval_list \\
  *       O=new.interval_list
  * </pre>
- *
+ * <p>
  * <h4>2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting
  * intervals:</h4>
  * <pre>
@@ -82,7 +108,7 @@ import java.util.*;
  *       I=input_2.interval_list \\
  *       O=new.interval_list
  * </pre>
- *
+ * <p>
  * <h4>3. Subtract the intervals in SECOND_INPUT from those in INPUT:</h4>
  * <pre>
  * java -jar picard.jar IntervalListTools \\
@@ -91,7 +117,7 @@ import java.util.*;
  *       SI=input_2.interval_list \\
  *       O=new.interval_list
  * </pre>
- *
+ * <p>
  * <h4>4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:</h4>
  * <pre>
  * java -jar picard.jar IntervalListTools \\
@@ -102,7 +128,6 @@ import java.util.*;
  *       O=new.interval_list
  * </pre>
  *
- *
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
@@ -112,9 +137,9 @@ import java.util.*;
 )
 @DocumentedFeature
 public class IntervalListTools extends CommandLineProgram {
-    static final String USAGE_SUMMARY ="A tool for performing various IntervalList manipulations";
+    static final String USAGE_SUMMARY = "A tool for performing various IntervalList manipulations";
     static final String USAGE_DETAILS =
-                    " <h3>Summary</h3>" +
+            " <h3>Summary</h3>" +
                     "This tool offers multiple interval list file manipulation capabilities, including: sorting, " +
                     "merging, subtracting, padding, and other set-theoretic operations. The default action " +
                     "is to merge and sort the intervals provided in the INPUTs. Other options, e.g. interval subtraction, are " +
@@ -133,13 +158,13 @@ public class IntervalListTools extends CommandLineProgram {
                     "other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header, " +
                     "the file then contains records, one per line in text format with the following" +
                     "values tab-separated: \n" +
-                    "\n"+
+                    "\n" +
                     " - Sequence name (SN) \n" +
                     " - Start position (1-based)\n" +
                     " - End position (1-based, inclusive)\n" +
                     " - Strand (either + or -)\n" +
                     " - Interval name (ideally unique names for intervals)\n" +
-                    "\n"+
+                    "\n" +
                     "The coordinate system is 1-based, closed-ended so that the first base in a sequence has position 1, and both the start " +
                     "and the end positions are included in an interval.\n" +
                     "\n" +
@@ -225,9 +250,12 @@ public class IntervalListTools extends CommandLineProgram {
     @Argument(doc = "One or more lines of comment to add to the header of the output file (as @CO lines in the SAM header).", optional = true)
     public List<String> COMMENT = null;
 
-    @Argument(doc = "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  " +
-            "Note - if > 1, the resultant scattered intervals will be sorted and uniqued.  The sort will be inverted if the INVERT flag is set.")
+    @Argument(doc = "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  ")
     public int SCATTER_COUNT = 1;
+
+    @Argument(doc = "When scattering with this argument, each of the resultant files will (ideally) have this amount of 'content', which " +
+            " means either base-counts or interval-counts depending on SUBDIVISION_MODE. When provided, overrides SCATTER_COUNT", optional = true)
+    public Integer SCATTER_CONTENT = null;
 
     @Argument(doc = "Whether to include filtered variants in the vcf when generating an interval list from vcf.", optional = true)
     public boolean INCLUDE_FILTERED = false;
@@ -236,12 +264,34 @@ public class IntervalListTools extends CommandLineProgram {
             " broken up at integer multiples of this value. Set to 0 to NOT break up intervals.", optional = true)
     public int BREAK_BANDS_AT_MULTIPLES_OF = 0;
 
-    @Argument(shortName = "M", doc = "Selects between various ways in which scattering of the interval-list can happen.")
-    public IntervalListScatterer.Mode SUBDIVISION_MODE = IntervalListScatterer.Mode.INTERVAL_SUBDIVISION;
+    @Argument(shortName = "M", doc = "The mode used to scatter the interval list.")
+    public IntervalListScatterMode SUBDIVISION_MODE = IntervalListScatterMode.INTERVAL_SUBDIVISION;
 
     @Argument(doc = "Produce the inverse list of intervals, that is, the regions in the genome that are <br>not</br> covered " +
             "by any of the input intervals. Will merge abutting intervals first. Output will be sorted.", optional = true)
     public boolean INVERT = false;
+
+    @Argument(doc = "What value (if anything) to output to stdout (for scripting)")
+    public Output OUTPUT_VALUE = Output.NONE;
+
+    enum Output {
+        NONE() {
+            void output(long totalBaseCount, long intervalCount) {
+            }
+        },
+        BASES {
+            void output(long totalBaseCount, long intervalCount) {
+                System.out.println(totalBaseCount);
+            }
+        },
+        INTERVALS {
+            void output(long totalBaseCount, long intervalCount) {
+                System.out.println(intervalCount);
+            }
+        };
+
+        abstract void output(long totalBaseCount, long intervalCount);
+    }
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
 
@@ -310,14 +360,6 @@ public class IntervalListTools extends CommandLineProgram {
         IOUtil.assertFilesAreReadable(INPUT);
         IOUtil.assertFilesAreReadable(SECOND_INPUT);
 
-        if (OUTPUT != null) {
-            if (SCATTER_COUNT == 1) {
-                IOUtil.assertFileIsWritable(OUTPUT);
-            } else {
-                IOUtil.assertDirectoryIsWritable(OUTPUT);
-            }
-        }
-
         // Read in the interval lists and apply any padding
         final List<IntervalList> lists = openIntervalLists(INPUT);
 
@@ -329,12 +371,6 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         final IntervalList result = ACTION.act(lists, secondLists);
-
-        if (SCATTER_COUNT > 1) {
-            // Scattering requires a uniqued, sorted interval list.  We want to do this up front (before BREAKING AT BANDS)
-            SORT = true;
-            UNIQUE = true;
-        }
 
         if (INVERT) {
             SORT = false; // no need to sort, since return will be sorted by definition.
@@ -379,9 +415,24 @@ public class IntervalListTools extends CommandLineProgram {
 
         final List<IntervalList> resultIntervals;
         if (OUTPUT != null) {
+
+            if (SCATTER_CONTENT != null) {
+                final long listSize = SUBDIVISION_MODE.make().listWeight(output);
+                SCATTER_COUNT = (int) listSize / SCATTER_CONTENT;
+                LOG.info(String.format("Using SCATTER_CONTENT = %d and an interval of size %d, attempting to scatter into %s intervals.", SCATTER_CONTENT, listSize, SCATTER_COUNT));
+            }
+
+            if (OUTPUT != null) {
+                if (SCATTER_COUNT == 1) {
+                    IOUtil.assertFileIsWritable(OUTPUT);
+                } else {
+                    IOUtil.assertDirectoryIsWritable(OUTPUT);
+                }
+            }
+
             if (SCATTER_COUNT == 1) {
                 output.write(OUTPUT);
-                resultIntervals = Arrays.asList(output);
+                resultIntervals = Collections.singletonList(output);
             } else {
                 final List<IntervalList> scattered = writeScatterIntervals(output);
                 LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size(), OUTPUT));
@@ -396,28 +447,27 @@ public class IntervalListTools extends CommandLineProgram {
                 resultIntervals = scattered;
             }
         } else {
-            resultIntervals = Arrays.asList(output);
+            resultIntervals = Collections.singletonList(output);
         }
 
-        long totalUniqueBaseCount = 0;
+        long totalBaseCount = 0;
         long intervalCount = 0;
         for (final IntervalList finalInterval : resultIntervals) {
-            totalUniqueBaseCount += finalInterval.getUniqueBaseCount();
-            intervalCount += finalInterval.size();    
+            totalBaseCount += finalInterval.getBaseCount();
+            intervalCount += finalInterval.size();
         }
 
-        LOG.info("Produced " + intervalCount + " intervals totalling " + totalUniqueBaseCount + " unique bases.");
-        
+        LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
+        OUTPUT_VALUE.output(totalBaseCount, intervalCount);
         return 0;
     }
 
-
-    private List<IntervalList> openIntervalLists(final List<File> files){
+    private List<IntervalList> openIntervalLists(final List<File> files) {
         final List<IntervalList> lists = new ArrayList<>();
         for (final File f : files) {
             try {
                 lists.add(IntervalListInputType.getIntervalList(f, INCLUDE_FILTERED).padded(PADDING));
-            } catch (final Exception e){
+            } catch (final Exception e) {
                 LOG.error("There was a problem opening IntervalList file " + f.getAbsolutePath());
                 throw e;
             }
@@ -451,8 +501,8 @@ public class IntervalListTools extends CommandLineProgram {
      * @return The scattered intervals, represented as a {@link List} of {@link IntervalList}
      */
     private List<IntervalList> writeScatterIntervals(final IntervalList list) {
-        final IntervalListScatterer scatterer = new IntervalListScatterer(SUBDIVISION_MODE);
-        final List<IntervalList> scattered = scatterer.scatter(list, SCATTER_COUNT, UNIQUE);
+        final IntervalListScatterer scatterer = SUBDIVISION_MODE.make();
+        final List<IntervalList> scattered = scatterer.scatter(list, SCATTER_COUNT);
 
         final DecimalFormat fileNameFormatter = new DecimalFormat("0000");
         int fileIndex = 1;
@@ -463,7 +513,7 @@ public class IntervalListTools extends CommandLineProgram {
         return scattered;
     }
 
-    public static File getScatteredFileName(final File scatterDirectory, final long scatterTotal, final String formattedIndex) {
+    private static File getScatteredFileName(final File scatterDirectory, final long scatterTotal, final String formattedIndex) {
         return new File(scatterDirectory.getAbsolutePath() + "/temp_" + formattedIndex + "_of_" +
                 scatterTotal + "/scattered" + IntervalList.INTERVAL_LIST_FILE_EXTENSION);
     }
@@ -518,7 +568,7 @@ public class IntervalListTools extends CommandLineProgram {
             throw new SAMException("Cannot figure out type of file " + intervalListExtractable.getAbsolutePath() + " from extension. Current implementation understands the following types: " + Arrays.toString(IntervalListInputType.values()));
         }
 
-        public static IntervalList getIntervalList(final  File file, final boolean includeFiltered){
+        public static IntervalList getIntervalList(final File file, final boolean includeFiltered) {
             return forFile(file).getIntervalListInternal(file, includeFiltered);
         }
 
