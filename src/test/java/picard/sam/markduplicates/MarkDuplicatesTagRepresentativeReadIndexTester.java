@@ -58,6 +58,9 @@ public class MarkDuplicatesTagRepresentativeReadIndexTester extends AbstractMark
     }
 
     @Override
+    public void recordOpticalDuplicatesMarked() {}
+
+    @Override
     protected CommandLineProgram getProgram() { return new MarkDuplicates(); }
 
     @Override

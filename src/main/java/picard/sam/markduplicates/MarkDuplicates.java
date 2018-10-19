@@ -882,7 +882,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                 if (end.isOpticalDuplicate && this.opticalDuplicateIndexes != null) {
                     this.opticalDuplicateIndexes.add(end.read1IndexInFile);
-                    this.opticalDuplicateIndexes.add(end.read2IndexInFile);
+                    if(end.read2IndexInFile != end.read1IndexInFile) {
+                        this.opticalDuplicateIndexes.add(end.read2IndexInFile);
+                    }
                 }
             }
         }
