@@ -87,11 +87,11 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     /**
      * Tells MarkDuplicates to record which reads are optical duplicates
      *
-     * NOTE: this should be overridden as a blank methods for inhereting classes where the tested tool doesn't support the 'TAGGING_POLICY' argument
+     * NOTE: this should be overridden as a blank method for inheriting classes where the tested tool doesn't support the 'TAGGING_POLICY' argument
      */
     public void recordOpticalDuplicatesMarked() {
         testOpticalDuplicateDTTag = true;
-        addArg("TAGGING_POLICY="+MarkDuplicates.DuplicateTaggingPolicy.OpticalOnly);
+        addArg("TAGGING_POLICY=" + MarkDuplicates.DuplicateTaggingPolicy.OpticalOnly);
     }
 
     /**
@@ -149,7 +149,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
 
             // Read the output and check the duplicate flag
             int outputRecords = 0;
-            Set<String> sequencingDTErrorsSeen = new HashSet<>();
+            final Set<String> sequencingDTErrorsSeen = new HashSet<>();
             final SamReader reader = SamReaderFactory.makeDefault().open(getOutput());
             for (final SAMRecord record : reader) {
                 outputRecords++;
@@ -195,6 +195,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
             Assert.assertEquals(observedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, expectedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, "SECONDARY_OR_SUPPLEMENTARY_RDS does not match expected");
             if (testOpticalDuplicateDTTag) {
                 Assert.assertEquals(sequencingDTErrorsSeen.size(), expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES, "READ_PAIR_OPTICAL_DUPLICATES does not match duplicate groups observed in the file");
+                Assert.assertEquals(sequencingDTErrorsSeen.size(), observedMetrics.READ_PAIR_OPTICAL_DUPLICATES, "READ_PAIR_OPTICAL_DUPLICATES does not match duplicate groups observed in the file");
             }
         } finally {
             TestUtil.recursiveDelete(getOutputDir());
