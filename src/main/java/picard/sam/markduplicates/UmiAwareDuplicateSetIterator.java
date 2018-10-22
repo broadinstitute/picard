@@ -38,12 +38,12 @@ import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.DuplicateSetIterator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.CloseableIterator;
-import org.apache.commons.lang3.StringUtils;
 import picard.PicardException;
 
 import java.util.*;
 
 import static htsjdk.samtools.util.StringUtil.hammingDistance;
+import static picard.sam.markduplicates.UmiUtil.getUmiLength;
 
 /**
  * UmiAwareDuplicateSetIterator is an iterator that wraps a duplicate set iterator
@@ -149,7 +149,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
             final List<SAMRecord> records = ds.getRecords();
 
             for (final SAMRecord rec : records) {
-                final String currentUmi = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, umiTag, duplexUmi);
+                final String currentUmi = UmiUtil.getTopStrandNormalizedUmi(rec, umiTag, duplexUmi);
 
                 if (currentUmi != null) {
                     // All UMIs should be the same length, the code presently does not support variable length UMIs.
@@ -158,20 +158,21 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
                     if (currentUmi.contains("N")) {
                         metrics.addUmiObservationN();
                     } else {
+                        final int umiLength = getUmiLength(currentUmi);
                         if (!haveWeSeenFirstRead) {
-                            metrics.MEAN_UMI_LENGTH = currentUmi.length() - StringUtils.countMatches(currentUmi, "-");
+                            metrics.MEAN_UMI_LENGTH = umiLength;
                             haveWeSeenFirstRead = true;
                         } else {
-                            if (metrics.MEAN_UMI_LENGTH != currentUmi.length() - StringUtils.countMatches(currentUmi, "-")) {
+                            if (metrics.MEAN_UMI_LENGTH != umiLength) {
                                 throw new PicardException("UMIs of differing lengths were found.");
                             }
                         }
 
                         // Update UMI metrics associated with each record
                         // The hammingDistance between N and a base is a distance of 1. Comparing N to N is 0 distance.
-                        final String inferredUmi = (String) rec.getTransientAttribute("inferredUmi");
+                        final String inferredUmi = (String) rec.getTransientAttribute(UmiUtil.INFERRED_UMI_TAG);
                         metrics.OBSERVED_BASE_ERRORS += hammingDistance(currentUmi, inferredUmi);
-                        observedUmiBases += currentUmi.length() - StringUtils.countMatches(currentUmi, "-");
+                        observedUmiBases += umiLength;
                         metrics.addUmiObservation(currentUmi, inferredUmi);
                     }
                 }

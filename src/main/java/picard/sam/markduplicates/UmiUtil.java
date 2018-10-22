@@ -25,6 +25,7 @@
 package picard.sam.markduplicates;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
+import org.apache.commons.lang3.StringUtils;
 import picard.PicardException;
 
 /**
@@ -36,22 +37,28 @@ import picard.PicardException;
 
 class UmiUtil {
 
-    static final String DUPLEX_UMI_DELIMITER = "-";
+    public static final String DUPLEX_UMI_DELIMITER = "-";
+    public static final String TOP_STRAND_DUPLEX = "/A";
+    public static final String BOTTOM_STRAND_DUPLEX = "/B";
+    public static final String CONTIG_SEPARATOR = ":";
+    public static final String UMI_NAME_SEPARATOR = "/";
+    static final String INFERRED_UMI_TAG = "inferredUmi";
 
     /**
      * Creates a top-strand normalized duplex UMI.
-     * Duplex UMIs that come from a top strand read are by definition, top-strand normalized.
-     * The UMI from a bottom strand can be normalized to be identical to the UMI
+     * Single stranded UMIs are by definition already top-strand normalized, they require no transformation.
+     * Duplex UMIs that come from a top strand read are also by definition, top-strand normalized.
+     * A duplex UMI from a bottom strand can be normalized to be identical to the UMI
      * read from its corresponding top strand by swapping the content of the
      * UMI around the "-" found in duplex UMIs.  For example, a bottom strand
-     * UMI reading ATC-CGG when top-strand normalized will read CGG-ATC.
+     * duplex UMI reading ATC-CGG when top-strand normalized will read CGG-ATC.
      *
      * @param record SAM record to retrieve UMI from.
      * @param umiTag The tag used in the bam file that designates the UMI.
      * @return Normalized Duplex UMI.  If the UMI isn't duplex, it returns the UMI unaltered.
      */
-    static String getTopStrandNormalizedDuplexUMI(final SAMRecord record, final String umiTag, final boolean duplexUmi) {
-        if(umiTag == null) return null;
+    static String getTopStrandNormalizedUmi(final SAMRecord record, final String umiTag, final boolean duplexUmi) {
+        if (umiTag == null) return null;
 
         final String umi = record.getStringAttribute(umiTag);
 
@@ -68,8 +75,7 @@ class UmiUtil {
             } else {
                 return split[1] + DUPLEX_UMI_DELIMITER + split[0];
             }
-        }
-        else {
+        } else {
             return umi;
         }
     }
@@ -83,9 +89,56 @@ class UmiUtil {
      * @return Top or bottom strand, true (top), false (bottom).
      */
     static boolean isTopStrand(final SAMRecord rec) {
-
         final int read5PrimeStart = (rec.getReadNegativeStrandFlag()) ? rec.getUnclippedEnd() : rec.getUnclippedStart();
         final int mate5PrimeStart = (rec.getMateNegativeStrandFlag()) ? SAMUtils.getMateUnclippedEnd(rec) : SAMUtils.getMateUnclippedStart(rec);
         return rec.getFirstOfPairFlag() == (read5PrimeStart < mate5PrimeStart);
+    }
+
+    /**
+     * Creates a string that uniquely identifies a molecule using its UMI and alignment start position
+     * @param rec SAMRecord to create molecular identifier of
+     * @param umiTag Tag that contains the UMI record
+     * @return String that uniquely identifies a fragment
+     */
+    static String molecularIdentifierString(final SAMRecord rec, final String umiTag) {
+        return rec.getContig() + ":" + rec.getAlignmentStart() + getTopStrandNormalizedUmi(rec, umiTag, true);
+    }
+
+    /**
+     * Set molecular index tag of record using UMI and alignment start position along with top and bottom strand information
+     * @param rec
+     * @param assignedUmi
+     * @param molecularIdentifierTag
+     * @param duplexUmis
+     */
+    static void setMolecularIndex(final SAMRecord rec, final String assignedUmi, final String molecularIdentifierTag, final boolean duplexUmis) {
+
+        final String fragmentStartPosition;
+        if (rec.getReadNegativeStrandFlag()) {
+            fragmentStartPosition = rec.getContig() + CONTIG_SEPARATOR + rec.getAlignmentStart();
+        } else {
+            fragmentStartPosition = rec.getContig() + CONTIG_SEPARATOR + rec.getMateAlignmentStart();
+        }
+
+        final String strandPosition;
+        if (duplexUmis) {
+            if (isTopStrand(rec)) {
+                strandPosition = TOP_STRAND_DUPLEX;
+            } else {
+                strandPosition = BOTTOM_STRAND_DUPLEX;
+            }
+            rec.setAttribute(molecularIdentifierTag, fragmentStartPosition + UMI_NAME_SEPARATOR + assignedUmi + strandPosition);
+        } else {
+            rec.setAttribute(molecularIdentifierTag, fragmentStartPosition + UMI_NAME_SEPARATOR + assignedUmi);
+        }
+    }
+
+    /**
+     * Get the length of UMI ignoring the effect of hyphens
+     * @param umi String that represents a unique molecular index
+     * @return Length of the UMI ignoring hyphen characters
+     */
+    static int getUmiLength(final String umi) {
+        return umi.length() - StringUtils.countMatches(umi, UmiUtil.DUPLEX_UMI_DELIMITER);
     }
 }

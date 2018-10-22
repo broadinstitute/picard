@@ -203,7 +203,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     @Argument(doc = "Clear DT tag from input SAM records. Should be set to false if input SAM doesn't have this tag.  Default true")
     public boolean CLEAR_DT = true;
 
-    @Argument(doc= "Treat UMIs as duplex strand.  If true, UMIs will be accessed through the tag specified by the BARCODE_TAG argument.  Default false.")
+    @Argument(doc= "Treat UMIs as being duplex stranded.  This option requires that the UMI consist of two equal length " +
+            "strings that are separated by a hyphen.  Reads are duplicate marked if they meet standard duplicate marking " +
+            "criteria, come from the same (top or bottom) strand and have identical UMIs.  If however, reads come from " +
+            "opposite strands and the UMIs are considered to be identical only if the UMI from the top strand is of the " +
+            "form A-B while the UMI from the bottom strand has the form B-A. If this option is true, UMIs will be accessed " +
+            "through the tag specified by the BARCODE_TAG argument. Default false.")
     public boolean DUPLEX_UMI = false;
 
     private SortingCollection<ReadEndsForMarkDuplicates> pairSort;
@@ -216,10 +221,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     static private final long NO_SUCH_INDEX = Long.MAX_VALUE; // needs to be large so that that >= test fails for query-sorted traversal
 
     protected LibraryIdGenerator libraryIdGenerator = null; // this is initialized in buildSortedReadEndLists
-
-    private int getBarcodeValue(final SAMRecord record) {
-        return UmiUtil.getTopStrandNormalizedDuplexUMI(record, BARCODE_TAG, DUPLEX_UMI).hashCode();
-    }
 
     private int getReadOneBarcodeValue(final SAMRecord record) {
         return EstimateLibraryComplexity.getReadBarcodeValue(record, READ_ONE_BARCODE_TAG);
@@ -409,7 +410,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     }
                 }
             if (DUPLEX_UMI) {
-                rec.setAttribute(MOLECULAR_IDENTIFIER_TAG, rec.getContig() + ":" + rec.getAlignmentStart() + UmiUtil.getTopStrandNormalizedDuplexUMI(rec, BARCODE_TAG, DUPLEX_UMI));
+                rec.setAttribute(MOLECULAR_IDENTIFIER_TAG, UmiUtil.molecularIdentifierString(rec, MOLECULAR_IDENTIFIER_TAG));
             }
 
             // Tag any read pair that was in a duplicate set with the duplicate set size and a representative read name
@@ -575,11 +576,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 this.fragSort.add(fragmentEnd);
 
                 if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
-                    final String key;
+                    String key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + rec.getReadName();
                     if (DUPLEX_UMI) {
-                        key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + ":" + rec.getReadName() + UmiUtil.getTopStrandNormalizedDuplexUMI(rec, BARCODE_TAG, DUPLEX_UMI);
-                    } else {
-                        key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + ":" + rec.getReadName();
+                        key += UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI);
                     }
                     ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key);
 
@@ -702,8 +701,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         if (useBarcodes) {
             final ReadEndsForMarkDuplicatesWithBarcodes endsWithBarcode = (ReadEndsForMarkDuplicatesWithBarcodes) ends;
-            final String topStrandNormalizedUmi = UmiUtil.getTopStrandNormalizedDuplexUMI(rec, BARCODE_TAG, DUPLEX_UMI);
-            endsWithBarcode.barcode = topStrandNormalizedUmi == null ? 0 : topStrandNormalizedUmi.hashCode();
+            final String topStrandNormalizedUmi = UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI);
+            endsWithBarcode.barcode = Objects.hash(topStrandNormalizedUmi);
 
             if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) {
                 endsWithBarcode.readOneBarcode = getReadOneBarcodeValue(rec);
