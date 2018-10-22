@@ -197,14 +197,13 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         //thread by surface tile
         final ThreadPoolExecutor tileProcessingExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
+        workChecker.setTileProcessingExecutor(tileProcessingExecutor);
 
         for (final Integer tile : tiles) {
             tileProcessingExecutor.submit(new TileProcessor(tile, barcodesFiles.get(tile), workChecker));
         }
 
         tileProcessingExecutor.shutdown();
-
-        workChecker.setTileProcessingExecutor(tileProcessingExecutor);
 
         awaitThreadPoolTermination("Reading executor", tileProcessingExecutor);
         awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor);
