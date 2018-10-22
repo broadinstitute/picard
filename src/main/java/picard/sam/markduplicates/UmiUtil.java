@@ -101,15 +101,15 @@ class UmiUtil {
      * @return String that uniquely identifies a fragment
      */
     static String molecularIdentifierString(final SAMRecord rec, final String umiTag) {
-        return rec.getContig() + ":" + rec.getAlignmentStart() + getTopStrandNormalizedUmi(rec, umiTag, true);
+        return rec.getContig() + CONTIG_SEPARATOR + rec.getAlignmentStart() + getTopStrandNormalizedUmi(rec, umiTag, true);
     }
 
     /**
      * Set molecular index tag of record using UMI and alignment start position along with top and bottom strand information
-     * @param rec
-     * @param assignedUmi
-     * @param molecularIdentifierTag
-     * @param duplexUmis
+     * @param rec SAMRecord to set molecular index of
+     * @param assignedUmi Assigned or inferred UMI to use in the molecular index tag
+     * @param molecularIdentifierTag SAM tag to use as molecular identifier
+     * @param duplexUmis Treat UMI as duplex, if true /A and /B will be added to denote top and bottom strands respectively
      */
     static void setMolecularIndex(final SAMRecord rec, final String assignedUmi, final String molecularIdentifierTag, final boolean duplexUmis) {
 

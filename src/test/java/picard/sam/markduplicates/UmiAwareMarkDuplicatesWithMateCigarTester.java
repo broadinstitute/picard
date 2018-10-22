@@ -248,10 +248,10 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
             return null;
         }
 
-        if (StringUtils.countMatches(molecularIndex, "/") == 2) {
-            return StringUtils.substringBetween(molecularIndex, "/", "/");
+        if (StringUtils.countMatches(molecularIndex, UmiUtil.UMI_NAME_SEPARATOR) == 2) {
+            return StringUtils.substringBetween(molecularIndex, UmiUtil.UMI_NAME_SEPARATOR, UmiUtil.UMI_NAME_SEPARATOR);
         } else {
-            return StringUtils.substringAfter(molecularIndex, "/");
+            return StringUtils.substringAfter(molecularIndex, UmiUtil.UMI_NAME_SEPARATOR);
         }
     }
 
