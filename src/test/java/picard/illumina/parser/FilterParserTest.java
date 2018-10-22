@@ -94,7 +94,7 @@ public class FilterParserTest {
 
         for (final boolean expectedValue : values) {
             Assert.assertTrue(fp.hasNext());
-            Assert.assertEquals(fp.next().isPf(), expectedValue);
+            Assert.assertEquals(fp.next().isPfRead(), expectedValue);
         }
 
         Assert.assertFalse(fp.hasNext());
@@ -103,7 +103,7 @@ public class FilterParserTest {
         fp.seekToTile(tiles[0]);
         for (final boolean expectedValue : values) {
             Assert.assertTrue(fp.hasNext());
-            Assert.assertEquals(fp.next().isPf(), expectedValue);
+            Assert.assertEquals(fp.next().isPfRead(), expectedValue);
         }
 
         Assert.assertFalse(fp.hasNext());
@@ -137,7 +137,7 @@ public class FilterParserTest {
             }
 
             Assert.assertTrue(fp.hasNext());
-            Assert.assertEquals(fp.next().isPf(), expectedValue, " Failed on read: " + read);
+            Assert.assertEquals(fp.next().isPfRead(), expectedValue, " Failed on read: " + read);
             ++read;
         }
 

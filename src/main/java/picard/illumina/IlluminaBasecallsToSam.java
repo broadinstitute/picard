@@ -312,7 +312,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                     TMP_DIR, NUM_PROCESSORS,
                     FIRST_TILE, TILE_LIMIT, new QueryNameComparator(),
                     new Codec(numOutputRecords),
-                    SAMRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES);
+                    SAMRecordsForCluster.class, bclQualityEvaluationStrategy, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
         } else {
             basecallsConverter = new IlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
                     barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE / numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,

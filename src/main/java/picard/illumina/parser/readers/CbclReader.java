@@ -200,13 +200,13 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
 
             for (final int outputLength : outputLengths) {
                 for (int cycle = 0; cycle < outputLength; cycle++) {
-                    final CycleData currentCycleData = cycleData[totalCycleCount];
+                    final TileData currentCycleTileInfo = cycleData[totalCycleCount].tileInfo;
                     try {
                         if (cachedTile[totalCycleCount] == null) {
-                            if (!cachedFilter.containsKey(cycleData[totalCycleCount].tileInfo.tileNum)) {
-                                cacheFilterAndLocs(cycleData[totalCycleCount].tileInfo, locs);
+                            if (!cachedFilter.containsKey(currentCycleTileInfo.tileNum)) {
+                                cacheFilterAndLocs(currentCycleTileInfo, locs);
                             }
-                            cacheTile(totalCycleCount, cycleData[totalCycleCount].tileInfo, currentCycleData);
+                            cacheTile(totalCycleCount, currentCycleTileInfo);
                         }
                     } catch (final IOException e) {
                         // when logging the error, increment cycle by 1, since totalCycleCount is zero-indexed but Illumina directories are 1-indexed.
@@ -269,7 +269,9 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
 
     private void advance() {
         int totalCycleCount = 0;
-        final CbclData data = new CbclData(outputLengths, cycleData[totalCycleCount].tileInfo.tileNum);
+        int tileNum = cycleData[totalCycleCount].tileInfo.tileNum;
+        final CbclData data = new CbclData(outputLengths, tileNum);
+        int tilePosition = cachedTilePosition[totalCycleCount];
 
         for (int read = 0; read < outputLengths.length; read++) {
             for (int cycle = 0; cycle < outputLengths[read]; cycle++) {
@@ -288,31 +290,25 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
                 totalCycleCount++;
             }
         }
+
         data.setPositionInfo(positionInfoIterator.next());
+        data.setPfRead(cachedFilter.get(tileNum).get(tilePosition));
         this.queue = data;
     }
 
     private void cacheFilterAndLocs(final TileData currentTileData, final List<AbstractIlluminaPositionFileReader.PositionInfo> locs) {
         final List<Boolean> filterValues = new ArrayList<>();
         final FilterFileReader reader = new FilterFileReader(filterFileMap.get(currentTileData.tileNum));
-        final Iterator<AbstractIlluminaPositionFileReader.PositionInfo> positionInfoIterator = locs.iterator();
 
         while (reader.hasNext()) {
             filterValues.add(reader.next());
         }
 
-        final List<AbstractIlluminaPositionFileReader.PositionInfo> positions = new ArrayList<>();
-        for (final boolean filterValue : filterValues) {
-            final AbstractIlluminaPositionFileReader.PositionInfo info = positionInfoIterator.next();
-            if (filterValue) {
-                positions.add(info);
-            }
-        }
-        this.positionInfoIterator = positions.iterator();
+        this.positionInfoIterator = locs.iterator();
         cachedFilter.put(currentTileData.tileNum, filterValues);
     }
 
-    private void cacheTile(final int totalCycleCount, final TileData tileData, final CycleData currentCycleData) throws IOException {
+    private void cacheTile(final int totalCycleCount, final TileData tileData) throws IOException {
         final byte[] tileByteArray = new byte[tileData.compressedBlockSize];
 
         // Read the whole compressed block into a buffer, then sanity check the length
@@ -333,36 +329,9 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
         byte[] decompressedByteArray = decompressTile(totalCycleCount, tileData, byteInputStream);
 
         // Read uncompressed data from the buffer and expand each nibble into a full byte for ease of use
-        byte[] unNibbledByteArray = promoteNibblesToBytes(decompressedByteArray);
-        cachedTile[totalCycleCount] = filterNonPfReads(tileData, currentCycleData, unNibbledByteArray);
+        cachedTile[totalCycleCount] = promoteNibblesToBytes(decompressedByteArray);
 
         cachedTilePosition[totalCycleCount] = 0;
-    }
-
-    private byte[] filterNonPfReads(TileData tileData, CycleData currentCycleData, byte[] unNibbledByteArray) {
-        // Write buffer contents to cached tile array
-        // if nonPF reads are included we need to strip them out
-        if (!currentCycleData.pfExcluded) {
-            final List<Boolean> filterDatas = cachedFilter.get(tileData.tileNum);
-            int sum = 0;
-            for (final boolean b : filterDatas) {
-                sum += b ? 1 : 0;
-            }
-            final byte[] filteredByteArray = new byte[sum];
-            int filterIndex = 0;
-            int basecallIndex = 0;
-            for (final boolean filterData : filterDatas) {
-                final byte readByte = unNibbledByteArray[filterIndex];
-                if (filterData) {
-                    filteredByteArray[basecallIndex] = readByte;
-                    basecallIndex++;
-                }
-                filterIndex++;
-            }
-            return filteredByteArray;
-        } else {
-            return unNibbledByteArray;
-        }
     }
 
     private byte[] promoteNibblesToBytes(byte[] decompressedByteArray) {
@@ -405,10 +374,6 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
             }
         }
         return decompressedByteArray;
-    }
-
-    public CycleData[] getCycleData() {
-        return cycleData;
     }
 
     public int getHeaderSize() {
