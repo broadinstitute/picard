@@ -342,7 +342,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                 // Now try and figure out the next duplicate index (if going by coordinate. if going by query name, only do this
                 // if the query name has changed.
-                nextDuplicateIndex = iterateIndexesIfNecessary(sortOrder, recordInFileIndex, nextDuplicateIndex, duplicateQueryName, rec, this.duplicateIndexes);
+                nextDuplicateIndex = nextIndexIfNeeded(sortOrder, recordInFileIndex, nextDuplicateIndex, duplicateQueryName, rec, this.duplicateIndexes);
 
                 final boolean isDuplicate = recordInFileIndex == nextDuplicateIndex ||
                         (sortOrder == SAMFileHeader.SortOrder.queryname &&
@@ -363,7 +363,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 } else {
                     rec.setDuplicateReadFlag(false);
                 }
-            nextOpticalDuplicateIndex = iterateIndexesIfNecessary(sortOrder, recordInFileIndex, nextOpticalDuplicateIndex, duplicateQueryName, rec, this.opticalDuplicateIndexes);
+            nextOpticalDuplicateIndex = nextIndexIfNeeded(sortOrder, recordInFileIndex, nextOpticalDuplicateIndex, duplicateQueryName, rec, this.opticalDuplicateIndexes);
 
                 final boolean isOpticalDuplicate = sortOrder == SAMFileHeader.SortOrder.queryname &&
                         recordInFileIndex > nextOpticalDuplicateIndex &&
@@ -404,7 +404,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     }
                 }
 
-                if (isDuplicate) {
+                // Note, duplicateQueryName must be incremented after we have marked both optical and sequencing duplicates for queryname sorted files.
+            if (isDuplicate) {
                 duplicateQueryName = rec.getReadName();
             }
 
@@ -869,6 +870,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                 if (end.isOpticalDuplicate && this.opticalDuplicateIndexes != null) {
                     this.opticalDuplicateIndexes.add(end.read1IndexInFile);
+                    // We expect end.read2IndexInFile==read1IndexInFile when we are in queryname sorted files, as the read-pairs
+                    // will be sorted together and nextIndexIfNeeded() will only pull one index from opticalDuplicateIndexes.
                     if(end.read2IndexInFile != end.read1IndexInFile) {
                         this.opticalDuplicateIndexes.add(end.read2IndexInFile);
                     }
@@ -880,8 +883,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     /**
      * Method for deciding when to pull from the SortingLongCollection for the next read based on sorting order.
      * - If file is queryname sorted then we expect one index per pair of reads, so we only want to iterate when we
-     *   are no longer reading from that readgroup.
-     * - If file is sorted otherwise we want to base our iteration entirely on the indexes of both reads in the pair
+     *   are no longer reading from that read-pair.
+     * - If file is coordinate-sorted we want to base our iteration entirely on the indexes of both reads in the pair
      *
      * This logic is applied to both Optical and Library duplicates
      *
@@ -893,13 +896,13 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      * @param duplicateIndexes   DuplicateIndexes collection to iterate over
      * @return  the duplicate after iteration
      */
-    private long iterateIndexesIfNecessary(final SAMFileHeader.SortOrder sortOrder, final long recordInFileIndex, final long nextDuplicateIndex, final String lastQueryName, final SAMRecord rec, final SortingLongCollection duplicateIndexes) {
+    private long nextIndexIfNeeded(final SAMFileHeader.SortOrder sortOrder, final long recordInFileIndex, final long nextDuplicateIndex, final String lastQueryName, final SAMRecord rec, final SortingLongCollection duplicateIndexes) {
         // Manage the flagging of optical/sequencing duplicates
+        // Possibly figure out the next opticalDuplicate index (if going by coordinate, if going by query name, only do this
+        // if the query name has changed)
         final boolean needNextDuplicateIndex = recordInFileIndex > nextDuplicateIndex &&
                 (sortOrder == SAMFileHeader.SortOrder.coordinate || !rec.getReadName().equals(lastQueryName));
 
-        // Possibly figure out the next opticalDuplicate index (if going by coordinate, if going by query name, only do this
-        // if the query name has changed)
         if (needNextDuplicateIndex) {
             return (duplicateIndexes.hasNext() ? duplicateIndexes.next() : NO_SUCH_INDEX);
         }
