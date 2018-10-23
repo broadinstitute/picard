@@ -224,7 +224,9 @@ public class CheckFingerprint extends CommandLineProgram {
             outputDetailMetricsFile = DETAIL_OUTPUT;
             outputSummaryMetricsFile = SUMMARY_OUTPUT;
         } else {
-            if (!OUTPUT.endsWith(".")) OUTPUT = OUTPUT + ".";
+            if (!OUTPUT.endsWith(".")) {
+                OUTPUT += ".";
+            }
             outputDetailMetricsFile = new File(OUTPUT + FINGERPRINT_DETAIL_FILE_SUFFIX);
             outputSummaryMetricsFile = new File(OUTPUT + FINGERPRINT_SUMMARY_FILE_SUFFIX);
         }
@@ -245,8 +247,7 @@ public class CheckFingerprint extends CommandLineProgram {
         List<FingerprintResults> results;
 
         String observedSampleAlias = null;
-        final boolean isBamOrSamFile = isBamOrSam(inputPath);
-        if (isBamOrSamFile) {
+        if (isBamOrSam(inputPath)) {
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), SAMSequenceDictionaryExtractor.extractDictionary(genotypesPath), true);
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), checker.getHeader().getSequenceDictionary(), true);
 
@@ -311,6 +312,7 @@ public class CheckFingerprint extends CommandLineProgram {
         final MetricsFile<FingerprintingSummaryMetrics, ?> summaryFile = getMetricsFile();
         final MetricsFile<FingerprintingDetailMetrics, ?> detailsFile = getMetricsFile();
 
+        boolean allZeroLod = true;
         for (final FingerprintResults fpr : results) {
             final MatchResults mr = fpr.getMatchResults().first();
 
@@ -365,10 +367,19 @@ public class CheckFingerprint extends CommandLineProgram {
 
             summaryFile.addMetric(metrics);
             log.info("Read Group: " + metrics.READ_GROUP + " / " + observedSampleAlias + " vs. " + metrics.SAMPLE + ": LOD = " + metrics.LOD_EXPECTED_SAMPLE);
+
+            allZeroLod &= metrics.LOD_EXPECTED_SAMPLE == 0;
         }
 
         summaryFile.write(outputSummaryMetricsFile);
         detailsFile.write(outputDetailMetricsFile);
+
+        if (allZeroLod) {
+            log.error("No non-zero results found. This is likely an error. " +
+                    "Probable cause: EXPECTED_SAMPLE (if provided) or the sample name from INPUT (if EXPECTED_SAMPLE isn't provided)" +
+                    "isn't a sample in GENOTYPES file.");
+            return 1;
+        }
 
         return 0;
     }
@@ -387,10 +398,6 @@ public class CheckFingerprint extends CommandLineProgram {
             e.printStackTrace();
         }
         return super.customCommandLineValidation();
-    }
-
-    static boolean isBamOrSam(final File f) {
-        return isBamOrSam(f.toPath());
     }
 
     static boolean isBamOrSam(final Path p) {
