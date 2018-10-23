@@ -225,7 +225,7 @@ public class CheckFingerprint extends CommandLineProgram {
             outputSummaryMetricsFile = SUMMARY_OUTPUT;
         } else {
             if (!OUTPUT.endsWith(".")) {
-                OUTPUT = OUTPUT + ".";
+                OUTPUT += ".";
             }
             outputDetailMetricsFile = new File(OUTPUT + FINGERPRINT_DETAIL_FILE_SUFFIX);
             outputSummaryMetricsFile = new File(OUTPUT + FINGERPRINT_SUMMARY_FILE_SUFFIX);
@@ -312,7 +312,7 @@ public class CheckFingerprint extends CommandLineProgram {
         final MetricsFile<FingerprintingSummaryMetrics, ?> summaryFile = getMetricsFile();
         final MetricsFile<FingerprintingDetailMetrics, ?> detailsFile = getMetricsFile();
 
-        boolean anyNonzeroLod = false;
+        boolean allZeroLod = true;
         for (final FingerprintResults fpr : results) {
             final MatchResults mr = fpr.getMatchResults().first();
 
@@ -368,13 +368,13 @@ public class CheckFingerprint extends CommandLineProgram {
             summaryFile.addMetric(metrics);
             log.info("Read Group: " + metrics.READ_GROUP + " / " + observedSampleAlias + " vs. " + metrics.SAMPLE + ": LOD = " + metrics.LOD_EXPECTED_SAMPLE);
 
-            anyNonzeroLod |= metrics.LOD_EXPECTED_SAMPLE != 0;
+            allZeroLod &= metrics.LOD_EXPECTED_SAMPLE == 0;
         }
 
         summaryFile.write(outputSummaryMetricsFile);
         detailsFile.write(outputDetailMetricsFile);
 
-        if (!anyNonzeroLod) {
+        if (allZeroLod) {
             log.error("No non-zero results found. This is likely an error. " +
                     "Probable cause: EXPECTED_SAMPLE (if provided) or the sample name from INPUT (if EXPECTED_SAMPLE isn't provided)" +
                     "isn't a sample in GENOTYPES file.");
