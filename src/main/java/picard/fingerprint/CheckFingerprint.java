@@ -224,7 +224,9 @@ public class CheckFingerprint extends CommandLineProgram {
             outputDetailMetricsFile = DETAIL_OUTPUT;
             outputSummaryMetricsFile = SUMMARY_OUTPUT;
         } else {
-            if (!OUTPUT.endsWith(".")) OUTPUT = OUTPUT + ".";
+            if (!OUTPUT.endsWith(".")) {
+                OUTPUT = OUTPUT + ".";
+            }
             outputDetailMetricsFile = new File(OUTPUT + FINGERPRINT_DETAIL_FILE_SUFFIX);
             outputSummaryMetricsFile = new File(OUTPUT + FINGERPRINT_SUMMARY_FILE_SUFFIX);
         }
@@ -366,16 +368,15 @@ public class CheckFingerprint extends CommandLineProgram {
 
             summaryFile.addMetric(metrics);
             log.info("Read Group: " + metrics.READ_GROUP + " / " + observedSampleAlias + " vs. " + metrics.SAMPLE + ": LOD = " + metrics.LOD_EXPECTED_SAMPLE);
-            if (metrics.LOD_EXPECTED_SAMPLE!=0) {
-                anyNonzeroLod |= true;
+            if (metrics.LOD_EXPECTED_SAMPLE != 0) {
+                anyNonzeroLod = true;
             }
         }
 
         summaryFile.write(outputSummaryMetricsFile);
         detailsFile.write(outputDetailMetricsFile);
 
-
-        if (!anyNonzeroLod){
+        if (!anyNonzeroLod) {
             log.error("No non-zero results found. This is likely an error. " +
                     "Probable cause: EXPECTED_SAMPLE (if provided) or the sample name from INPUT (if EXPECTED_SAMPLE isn't provided)" +
                     "isn't a sample in GENOTYPES file.");
@@ -399,10 +400,6 @@ public class CheckFingerprint extends CommandLineProgram {
             e.printStackTrace();
         }
         return super.customCommandLineValidation();
-    }
-
-    static boolean isBamOrSam(final File f) {
-        return isBamOrSam(f.toPath());
     }
 
     static boolean isBamOrSam(final Path p) {
