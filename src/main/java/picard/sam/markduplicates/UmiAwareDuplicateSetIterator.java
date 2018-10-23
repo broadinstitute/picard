@@ -38,12 +38,11 @@ import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.DuplicateSetIterator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 
 import java.util.*;
 
-import static htsjdk.samtools.util.StringUtil.hammingDistance;
-import static picard.sam.markduplicates.UmiUtil.getUmiLength;
 
 /**
  * UmiAwareDuplicateSetIterator is an iterator that wraps a duplicate set iterator
@@ -158,7 +157,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
                     if (currentUmi.contains("N")) {
                         metrics.addUmiObservationN();
                     } else {
-                        final int umiLength = getUmiLength(currentUmi);
+                        final int umiLength = UmiUtil.getUmiLength(currentUmi);
                         if (!haveWeSeenFirstRead) {
                             metrics.MEAN_UMI_LENGTH = umiLength;
                             haveWeSeenFirstRead = true;
@@ -170,8 +169,8 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
 
                         // Update UMI metrics associated with each record
                         // The hammingDistance between N and a base is a distance of 1. Comparing N to N is 0 distance.
-                        final String inferredUmi = (String) rec.getTransientAttribute(UmiUtil.INFERRED_UMI_TAG);
-                        metrics.OBSERVED_BASE_ERRORS += hammingDistance(currentUmi, inferredUmi);
+                        final String inferredUmi = (String) rec.getTransientAttribute(UmiUtil.INFERRED_UMI_TRANSIENT_TAG);
+                        metrics.OBSERVED_BASE_ERRORS += StringUtil.hammingDistance(currentUmi, inferredUmi);
                         observedUmiBases += umiLength;
                         metrics.addUmiObservation(currentUmi, inferredUmi);
                     }

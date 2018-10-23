@@ -204,11 +204,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     public boolean CLEAR_DT = true;
 
     @Argument(doc= "Treat UMIs as being duplex stranded.  This option requires that the UMI consist of two equal length " +
-            "strings that are separated by a hyphen.  Reads are duplicate marked if they meet standard duplicate marking " +
-            "criteria, come from the same (top or bottom) strand and have identical UMIs.  If however, reads come from " +
-            "opposite strands and the UMIs are considered to be identical only if the UMI from the top strand is of the " +
-            "form A-B while the UMI from the bottom strand has the form B-A. If this option is true, UMIs will be accessed " +
-            "through the tag specified by the BARCODE_TAG argument. Default false.")
+            "strings that are separated by a hyphen (e.g. 'ATC-GTC'). Reads are considered duplicates if, in addition to standard " +
+            "definition, have identical normalized UMIs.  A UMI from the 'bottom' strand is normalized by swapping its content " +
+            "around the hyphen (eg. ATC-GTC becomes GTC-ATC).  A UMI from the 'top' strand is already normalized as it is. " +
+            "Both reads from a read pair considered top strand if the read 1 unclipped 5' coordinate is less than the read " +
+            "2 unclipped 5' coordinate. All chimeric reads and read fragments are treated as having come from the ttop strand. " +
+            "With this option is it required that the BARCODE_TAG hold non-normalized UMIs. Default false.")
     public boolean DUPLEX_UMI = false;
 
     private SortingCollection<ReadEndsForMarkDuplicates> pairSort;
@@ -576,18 +577,20 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 this.fragSort.add(fragmentEnd);
 
                 if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
-                    String key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + rec.getReadName();
+                    final StringBuilder key = new StringBuilder();
+                    key.append(ReservedTagConstants.READ_GROUP_ID);
+                    key.append(rec.getReadName());
                     if (DUPLEX_UMI) {
-                        key += UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI);
+                        key.append(UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI));
                     }
-                    ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key);
+                    ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key.toString());
 
                     // See if we've already seen the first end or not
                     if (pairedEnds == null) {
                         // at this point pairedEnds and fragmentEnd are the same, but we need to make
                         // a copy since pairedEnds will be modified when the mate comes along.
                         pairedEnds = fragmentEnd.clone();
-                        tmp.put(pairedEnds.read2ReferenceIndex, key, pairedEnds);
+                        tmp.put(pairedEnds.read2ReferenceIndex, key.toString(), pairedEnds);
                     } else {
                         final int matesRefIndex = fragmentEnd.read1ReferenceIndex;
                         final int matesCoordinate = fragmentEnd.read1Coordinate;

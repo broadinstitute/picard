@@ -23,10 +23,10 @@
  */
 
 package picard.sam.markduplicates;
+import picard.PicardException;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
 import org.apache.commons.lang3.StringUtils;
-import picard.PicardException;
 
 /**
  *
@@ -42,27 +42,33 @@ class UmiUtil {
     public static final String BOTTOM_STRAND_DUPLEX = "/B";
     public static final String CONTIG_SEPARATOR = ":";
     public static final String UMI_NAME_SEPARATOR = "/";
-    static final String INFERRED_UMI_TAG = "inferredUmi";
+    static final String INFERRED_UMI_TRANSIENT_TAG = "inferredUmi";
 
     /**
      * Creates a top-strand normalized duplex UMI.
      * Single stranded UMIs are by definition already top-strand normalized, they require no transformation.
-     * Duplex UMIs that come from a top strand read are also by definition, top-strand normalized.
-     * A duplex UMI from a bottom strand can be normalized to be identical to the UMI
-     * read from its corresponding top strand by swapping the content of the
-     * UMI around the "-" found in duplex UMIs.  For example, a bottom strand
+     * Duplex UMIs that come from a top strand read are also by definition, top-strand normalized. A duplex
+     * UMI from a bottom strand can be normalized to be identical to the read from its corresponding top strand
+     * by swapping the content of the UMI around the "-" found in duplex UMIs.  For example, a bottom strand
      * duplex UMI reading ATC-CGG when top-strand normalized will read CGG-ATC.
      *
      * @param record SAM record to retrieve UMI from.
-     * @param umiTag The tag used in the bam file that designates the UMI.
+     * @param umiTag The tag used in the bam file that designates the UMI, null returns null
      * @return Normalized Duplex UMI.  If the UMI isn't duplex, it returns the UMI unaltered.
      */
     static String getTopStrandNormalizedUmi(final SAMRecord record, final String umiTag, final boolean duplexUmi) {
-        if (umiTag == null) return null;
+        if (umiTag == null) {
+            return null;
+        }
 
         final String umi = record.getStringAttribute(umiTag);
 
-        if (umi == null) return null;
+        if (umi == null) {
+            return null;
+        }
+        if (!umi.matches("^[ATCGNatcgn-]*$")) {
+            throw new PicardException("UMI found with illegal characters.  UMIs must match the regular expression ^[ATCGNatcgn-]*$.");
+        }
 
         if (duplexUmi) {
             final String[] split = umi.split(DUPLEX_UMI_DELIMITER);
@@ -75,20 +81,20 @@ class UmiUtil {
             } else {
                 return split[1] + DUPLEX_UMI_DELIMITER + split[0];
             }
-        } else {
-            return umi;
         }
+        return umi;
     }
 
     /**
      * Determines if the read represented by a SAM record belongs to the top or bottom strand.
-     * Top strand is defined as having a Read 1 unclipped 5' coordinate
-     * less than the Read 2 unclipped 5' coordinate.  If a read is unmapped
+     * Top strand is defined as having a read 1 unclipped 5' coordinate
+     * less than the read 2 unclipped 5' coordinate.  If a read is unmapped
      * it is considered to have an unclipped 5' coordinate of 0.
      * @param rec Record to determine top or bottom strand
      * @return Top or bottom strand, true (top), false (bottom).
      */
     static boolean isTopStrand(final SAMRecord rec) {
+
         final int read5PrimeStart = (rec.getReadNegativeStrandFlag()) ? rec.getUnclippedEnd() : rec.getUnclippedStart();
         final int mate5PrimeStart = (rec.getMateNegativeStrandFlag()) ? SAMUtils.getMateUnclippedEnd(rec) : SAMUtils.getMateUnclippedStart(rec);
         return rec.getFirstOfPairFlag() == (read5PrimeStart < mate5PrimeStart);
@@ -113,23 +119,18 @@ class UmiUtil {
      */
     static void setMolecularIndex(final SAMRecord rec, final String assignedUmi, final String molecularIdentifierTag, final boolean duplexUmis) {
 
-        final String fragmentStartPosition;
-        if (rec.getReadNegativeStrandFlag()) {
-            fragmentStartPosition = rec.getContig() + CONTIG_SEPARATOR + rec.getAlignmentStart();
-        } else {
-            fragmentStartPosition = rec.getContig() + CONTIG_SEPARATOR + rec.getMateAlignmentStart();
-        }
+        final StringBuilder molecularIdentifier = new StringBuilder();
+        molecularIdentifier.append(rec.getContig());
+        molecularIdentifier.append(CONTIG_SEPARATOR);
+        molecularIdentifier.append(rec.getReadNegativeStrandFlag() ? rec.getAlignmentStart() : rec.getMateAlignmentStart());
+        molecularIdentifier.append(UMI_NAME_SEPARATOR);
+        molecularIdentifier.append(assignedUmi);
 
-        final String strandPosition;
         if (duplexUmis) {
-            if (isTopStrand(rec)) {
-                strandPosition = TOP_STRAND_DUPLEX;
-            } else {
-                strandPosition = BOTTOM_STRAND_DUPLEX;
-            }
-            rec.setAttribute(molecularIdentifierTag, fragmentStartPosition + UMI_NAME_SEPARATOR + assignedUmi + strandPosition);
+            molecularIdentifier.append(isTopStrand(rec) ? TOP_STRAND_DUPLEX : BOTTOM_STRAND_DUPLEX);
+            rec.setAttribute(molecularIdentifierTag, molecularIdentifier.toString());
         } else {
-            rec.setAttribute(molecularIdentifierTag, fragmentStartPosition + UMI_NAME_SEPARATOR + assignedUmi);
+            rec.setAttribute(molecularIdentifierTag, molecularIdentifier.toString());
         }
     }
 

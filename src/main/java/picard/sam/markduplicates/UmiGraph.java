@@ -194,7 +194,7 @@ public class UmiGraph {
                 } else {
                     UmiUtil.setMolecularIndex(rec, assignedUmi, molecularIdentifierTag, duplexUmis);
                 }
-                rec.setTransientAttribute(UmiUtil.INFERRED_UMI_TAG, assignedUmi);
+                rec.setTransientAttribute(UmiUtil.INFERRED_UMI_TRANSIENT_TAG, assignedUmi);
             }
 
             duplicateSetList.add(ds);
@@ -205,8 +205,7 @@ public class UmiGraph {
 
 
     /**
-     * Create a map that maps a umi to the duplicateSetID
-     * @return
+     * @return a map that maps a umi to the duplicateSetID
      */
     private Map<String, Integer> getDuplicateSetsFromUmis() {
         final Map<String, Integer> duplicateSetsFromUmis = new HashMap<>();

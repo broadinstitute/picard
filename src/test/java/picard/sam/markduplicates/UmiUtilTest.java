@@ -26,38 +26,56 @@ package picard.sam.markduplicates;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 
 public class UmiUtilTest {
 
     @DataProvider(name = "topStrandDataProvider")
     private Object[][] testIsTopStrandDataProvider() {
         return new Object[][]{
-                {100, 200, true, false, true, true},    // Read 1 in F1R2 pair
-                {100, 200, false, false, true, false},  // Read 2 in F1R2 pair
-                {100, 200, true, true, false, true},    // Read 1 in F2R1 pair
-                {200, 100, false, false, true, true},   // Read 2 in F2R1 pair
-                {100, 200, true, false, false, true},   // Read 1 in F1F2 pair
-                {200, 100, false, false, false, true},  // Read 2 in F1F2 pair
-                {100, 200, true, true, true, true},     // Read 1 in R1R2 pair
-                {200, 100, false, true, true, true},    // Read 2 in R1R2 pair
+                {0, 100, 0, 200, true, false, true, true},    // Read 1 in F1R2 pair
+                {0, 100, 0, 200, false, false, true, false},  // Read 2 in F1R2 pair
+                {0, 100, 0, 200, true, true, false, true},    // Read 1 in F2R1 pair
+                {0, 200, 0, 100, false, false, true, true},   // Read 2 in F2R1 pair
+                {0, 100, 0, 200, true, false, false, true},   // Read 1 in F1F2 pair
+                {0, 200, 0, 100, false, false, false, true},  // Read 2 in F1F2 pair
+                {0, 100, 0, 200, true, true, true, true},     // Read 1 in R1R2 pair
+                {0, 200, 0, 100, false, true, true, true},    // Read 2 in R1R2 pair
+                {0, 100, 1, 200, false, false, true, true},  // Read 2 in F1R2 chimera
         };
     }
 
     @Test(dataProvider = "topStrandDataProvider")
-    public void testIsTopStrand(final int alignmentStart, final int mateAlignmentStart, final boolean firstOfPairFlag,
+    public void testIsTopStrand(final int referenceIndex, final int alignmentStart, final int mateReferenceIndex, final int mateAlignmentStart, final boolean firstOfPairFlag,
                               final boolean negativeStrandFlag, final boolean mateNegativeStrandFlag, final boolean topStrand) {
 
         SAMFileHeader header = new SAMFileHeader();
+        SAMSequenceDictionary sequenceDictionary = new SAMSequenceDictionary();
+
+        sequenceDictionary.addSequence(new SAMSequenceRecord("chr1", 500));
+        sequenceDictionary.addSequence(new SAMSequenceRecord("chr2", 500));
+
+        System.out.println(sequenceDictionary.getSequences());
+
+        header.setSequenceDictionary(sequenceDictionary);
+
         SAMRecord rec = new SAMRecord(header);
 
         rec.setReadPairedFlag(true);
 
         rec.setCigarString("10M");
         rec.setAttribute("MC", "10M");
+        System.out.println("reference name = " + rec.getReferenceName());
+
+        rec.setReferenceIndex(referenceIndex);
         rec.setAlignmentStart(alignmentStart);
+
+        rec.setMateReferenceIndex(mateReferenceIndex);
         rec.setMateAlignmentStart(mateAlignmentStart);
 
         rec.setFirstOfPairFlag(firstOfPairFlag);
@@ -65,5 +83,28 @@ public class UmiUtilTest {
         rec.setMateNegativeStrandFlag(mateNegativeStrandFlag);
 
         Assert.assertEquals(UmiUtil.isTopStrand(rec), topStrand);
+    }
+
+    @DataProvider(name = "brokenUmiProvider")
+    private Object[][] testBrokenUmiDataProvider() {
+        // The following are broken UMIs due to illegal characters that should result in a thrown exception when used.
+        return new Object[][]{
+                {"ATCxG-AGCG"},
+                {"A1C"},
+                {"@Agtc"},
+                {"TA/AC"},
+                {"AT:CG"}
+        };
+    }
+
+    @Test(dataProvider = "brokenUmiProvider", expectedExceptions = PicardException.class)
+    public void testBrokenUmi(final String brokenUmi) {
+        SAMFileHeader header = new SAMFileHeader();
+        SAMRecord rec = new SAMRecord(header);
+
+        rec.setAttribute("RX", brokenUmi);
+
+        // This should throw an exception due to a broken UMI in rec
+        UmiUtil.getTopStrandNormalizedUmi(rec, "RX", true);
     }
 }
