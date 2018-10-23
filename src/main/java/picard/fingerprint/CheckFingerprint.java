@@ -247,8 +247,7 @@ public class CheckFingerprint extends CommandLineProgram {
         List<FingerprintResults> results;
 
         String observedSampleAlias = null;
-        final boolean isBamOrSamFile = isBamOrSam(inputPath);
-        if (isBamOrSamFile) {
+        if (isBamOrSam(inputPath)) {
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), SAMSequenceDictionaryExtractor.extractDictionary(genotypesPath), true);
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), checker.getHeader().getSequenceDictionary(), true);
 
@@ -368,9 +367,8 @@ public class CheckFingerprint extends CommandLineProgram {
 
             summaryFile.addMetric(metrics);
             log.info("Read Group: " + metrics.READ_GROUP + " / " + observedSampleAlias + " vs. " + metrics.SAMPLE + ": LOD = " + metrics.LOD_EXPECTED_SAMPLE);
-            if (metrics.LOD_EXPECTED_SAMPLE != 0) {
-                anyNonzeroLod = true;
-            }
+
+            anyNonzeroLod |= metrics.LOD_EXPECTED_SAMPLE != 0;
         }
 
         summaryFile.write(outputSummaryMetricsFile);
