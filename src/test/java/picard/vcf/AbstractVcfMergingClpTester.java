@@ -58,7 +58,16 @@ public abstract class AbstractVcfMergingClpTester {
         runClp(Arrays.asList(contiglessIndelFile, snpInputFile), output, 1);
 	}
 
-	@Test (expectedExceptions = IllegalArgumentException.class)
+    @Test
+    public void testSucceedsWithProvidedSequenceDictionary() {
+        final File f1 = new File(TEST_DATA_PATH, "noSeqDict.vcf");
+        final File output = new File("/dev/null");
+        final List<String> additionalArgs = Arrays.asList("CREATE_INDEX=false", "SEQUENCE_DICTIONARY=testdata/picard/reference/test.dict");
+
+        runClp(Arrays.asList(f1), output, additionalArgs, 0);
+    }
+
+    @Test (expectedExceptions = IllegalArgumentException.class)
 	public void testFailsOnDissimilarSampleLists() {
 		final File badSampleIndelFile = new File(TEST_DATA_PATH, "CEUTrio-indels-bad-samples.vcf");
 		final File snpInputFile = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
