@@ -250,6 +250,10 @@ public class LiftoverVcf extends CommandLineProgram {
     private Map<String, Long> liftedByDestContig = new TreeMap<>();
     private Map<String, Long> liftedBySourceContig = new TreeMap<>();
 
+    public static void main(final String[] args) {
+        System.exit(new LiftoverVcf().instanceMain(args));
+    }
+
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         return new ReferenceArgumentCollection() {
@@ -362,7 +366,8 @@ public class LiftoverVcf extends CommandLineProgram {
             // if the sizes of target and ctx do not match, it means that the interval grew or shrank during
             // liftover which must be due to straddling multiple intervals in the liftover chain.
             // This would invalidate the indel as it isn't clear what the resulting alleles should be.
-            if (ctx.getReference().length() != target.length()) {
+            boolean gvcfBlock = LiftoverUtils.isGvcfRefBlock(ctx);
+            if ((ctx.getReference().length() != target.length() && !gvcfBlock) || (gvcfBlock && target.length() != (ctx.getEnd() - ctx.getStart() + 1))) {
                 rejectVariant(ctx, FILTER_INDEL_STRADDLES_TWO_INTERVALS);
                 continue;
             }
@@ -491,7 +496,13 @@ public class LiftoverVcf extends CommandLineProgram {
         for (final Allele allele : vc.getAlleles()) {
             if (allele.isReference()) {
                 final byte[] ref = refSeq.getBases();
-                final String refString = StringUtil.bytesToString(ref, vc.getStart() - 1, vc.getEnd() - vc.getStart() + 1);
+                String refString;
+                // if we're looking at a gvcf block we only have the first base of the reference so we can only compare against that
+                if(LiftoverUtils.isGvcfRefBlock(vc)){
+                    refString = StringUtil.bytesToString(ref, vc.getStart() - 1, 1);
+                } else {
+                    refString = StringUtil.bytesToString(ref, vc.getStart() - 1, vc.getEnd() - vc.getStart() + 1);
+                }
 
                 if (!refString.equalsIgnoreCase(allele.getBaseString())) {
                     // consider that the ref and the alt may have been swapped in a simple biallelic SNP

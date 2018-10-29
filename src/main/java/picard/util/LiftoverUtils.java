@@ -85,6 +85,10 @@ public class LiftoverUtils {
         builder.filters(source.getFilters());
         builder.log10PError(source.getLog10PError());
         builder.attributes(source.getAttributes());
+        // Update `END` for gvcf blocks
+        if (isGvcfRefBlock(source)) {
+            builder.attribute(VCFConstants.END_KEY, target.getEnd());
+        }
         // make sure that the variant isn't mistakenly set as "SwappedAlleles"
         builder.rmAttribute(SWAPPED_ALLELES);
         if (target.isNegativeStrand()) {
@@ -122,7 +126,8 @@ public class LiftoverUtils {
     }
 
     protected static VariantContextBuilder liftSimpleVariantContext(VariantContext source, Interval target){
-        if (target == null || source.getReference().length() != target.length()) {
+        final int lengthOfVariantContext = isGvcfRefBlock(source) ? source.getEnd() - source.getStart() + 1 : source.getReference().length();
+        if (target == null || lengthOfVariantContext != target.length()) {
             return null;
         }
 
@@ -442,5 +447,9 @@ public class LiftoverUtils {
         newBases[0] = base;
 
         return newBases;
+    }
+
+    public static boolean isGvcfRefBlock(VariantContext vc){
+        return vc.getAlternateAlleles().size() == 1 && vc.getAlternateAllele(0).equals(Allele.NON_REF_ALLELE);
     }
 }
