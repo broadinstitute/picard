@@ -105,6 +105,6 @@ public class UmiUtilTest {
         rec.setAttribute("RX", brokenUmi);
 
         // This should throw an exception due to a broken UMI in rec
-        UmiUtil.getTopStrandNormalizedUmi(rec, "RX", true);
+        UmiUtil.getTopStrandNormalizedUmi(rec, "RX", true, false);
     }
 }

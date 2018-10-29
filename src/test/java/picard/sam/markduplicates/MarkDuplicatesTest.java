@@ -217,6 +217,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
             record.setAttribute(barcodeTag, "Barcode1");
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.addArg("ALLOW_NON_DNA_UMI=" + true);
         tester.runTest();
     }
 
@@ -230,6 +231,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
             record.setAttribute(barcodeTag, "Barcode1");
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.addArg("ALLOW_NON_DNA_UMI=" + true);
         tester.runTest();
     }
 
@@ -244,6 +246,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
             record.setAttribute(barcodeTag, "Barcode1");
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.addArg("ALLOW_NON_DNA_UMI=" + true);
         tester.runTest();
     }
 
@@ -270,6 +273,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
             }
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.addArg("ALLOW_NON_DNA_UMI=" + true);
         tester.runTest();
     }
 
@@ -305,6 +309,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addArg("BARCODE_TAG=" + barcodeTag);
         tester.addArg("READ_ONE_BARCODE_TAG=" + readOneBarcodeTag);
         tester.addArg("READ_TWO_BARCODE_TAG=" + readTwoBarcodeTag);
+        tester.addArg("ALLOW_NON_DNA_UMI=" + true);
 
         tester.runTest();
     }

@@ -37,6 +37,7 @@ import picard.sam.markduplicates.util.*;
 import picard.sam.util.RepresentativeReadIndexer;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -208,9 +209,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             "definition, have identical normalized UMIs.  A UMI from the 'bottom' strand is normalized by swapping its content " +
             "around the hyphen (eg. ATC-GTC becomes GTC-ATC).  A UMI from the 'top' strand is already normalized as it is. " +
             "Both reads from a read pair considered top strand if the read 1 unclipped 5' coordinate is less than the read " +
-            "2 unclipped 5' coordinate. All chimeric reads and read fragments are treated as having come from the ttop strand. " +
+            "2 unclipped 5' coordinate. All chimeric reads and read fragments are treated as having come from the top strand. " +
             "With this option is it required that the BARCODE_TAG hold non-normalized UMIs. Default false.")
     public boolean DUPLEX_UMI = false;
+
+    @Argument(doc = "By default, UMIs are only allowed to contain characters that correspond to common DNA bases (e.g. upper " +
+            "and lower-case 'A','T', 'C', 'G', 'N') and '-'.  When set to true, this option allows for the use of UMIs with " +
+            "characters outside this set.  Default false.")
+    public boolean ALLOW_NON_DNA_UMI = false;
 
     private SortingCollection<ReadEndsForMarkDuplicates> pairSort;
     private SortingCollection<ReadEndsForMarkDuplicates> fragSort;
@@ -411,7 +417,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     }
                 }
             if (DUPLEX_UMI) {
-                rec.setAttribute(MOLECULAR_IDENTIFIER_TAG, UmiUtil.molecularIdentifierString(rec, MOLECULAR_IDENTIFIER_TAG));
+                rec.setAttribute(MOLECULAR_IDENTIFIER_TAG, UmiUtil.molecularIdentifierString(rec, MOLECULAR_IDENTIFIER_TAG, ALLOW_NON_DNA_UMI));
             }
 
             // Tag any read pair that was in a duplicate set with the duplicate set size and a representative read name
@@ -581,7 +587,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     key.append(ReservedTagConstants.READ_GROUP_ID);
                     key.append(rec.getReadName());
                     if (DUPLEX_UMI) {
-                        key.append(UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI));
+                        key.append(UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI, ALLOW_NON_DNA_UMI));
                     }
                     ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key.toString());
 
@@ -704,7 +710,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         if (useBarcodes) {
             final ReadEndsForMarkDuplicatesWithBarcodes endsWithBarcode = (ReadEndsForMarkDuplicatesWithBarcodes) ends;
-            final String topStrandNormalizedUmi = UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI);
+            final String topStrandNormalizedUmi = UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI, ALLOW_NON_DNA_UMI);
             endsWithBarcode.barcode = Objects.hash(topStrandNormalizedUmi);
 
             if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) {

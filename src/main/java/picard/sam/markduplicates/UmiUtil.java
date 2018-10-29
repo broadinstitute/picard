@@ -56,7 +56,7 @@ class UmiUtil {
      * @param umiTag The tag used in the bam file that designates the UMI, null returns null
      * @return Normalized Duplex UMI.  If the UMI isn't duplex, it returns the UMI unaltered.
      */
-    static String getTopStrandNormalizedUmi(final SAMRecord record, final String umiTag, final boolean duplexUmi) {
+    static String getTopStrandNormalizedUmi(final SAMRecord record, final String umiTag, final boolean duplexUmi, final boolean allowNonDnaUmi) {
         if (umiTag == null) {
             return null;
         }
@@ -66,8 +66,11 @@ class UmiUtil {
         if (umi == null) {
             return null;
         }
-        if (!umi.matches("^[ATCGNatcgn-]*$")) {
-            throw new PicardException("UMI found with illegal characters.  UMIs must match the regular expression ^[ATCGNatcgn-]*$.");
+
+        if (!allowNonDnaUmi) {
+            if (!umi.matches("^[ATCGNatcgn-]*$")) {
+                throw new PicardException("UMI found with illegal characters.  UMIs must match the regular expression ^[ATCGNatcgn-]*$.");
+            }
         }
 
         if (duplexUmi) {
@@ -106,8 +109,8 @@ class UmiUtil {
      * @param umiTag Tag that contains the UMI record
      * @return String that uniquely identifies a fragment
      */
-    static String molecularIdentifierString(final SAMRecord rec, final String umiTag) {
-        return rec.getContig() + CONTIG_SEPARATOR + rec.getAlignmentStart() + getTopStrandNormalizedUmi(rec, umiTag, true);
+    static String molecularIdentifierString(final SAMRecord rec, final String umiTag, final boolean allowNonDnaUmi) {
+        return rec.getContig() + CONTIG_SEPARATOR + rec.getAlignmentStart() + getTopStrandNormalizedUmi(rec, umiTag, true, allowNonDnaUmi);
     }
 
     /**
