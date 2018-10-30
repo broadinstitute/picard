@@ -1,10 +1,35 @@
 package picard.sam;
 
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2018 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
@@ -24,7 +49,8 @@ public class AddOATag extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Add the OA tag to reads";
     static final String USAGE_DETAILS = "This tool takes in an aligned SAM or BAM and adds the " +
             "OA tag to every aligned read unless an interval list is specified, where it only adds the tag to reads " +
-            "that fall within the intervals in the interval list" +
+            "that fall within the intervals in the interval list. This can be useful if you are about to realign but want " +
+            "to keep the original alignment information as a separate tag." +
             "<br />"+
             "<h4>Usage example:</h4>" +
             "<pre>" +
@@ -40,10 +66,10 @@ public class AddOATag extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "SAM or BAM file to write merged result to")
     public File OUTPUT;
 
-    @Argument(shortName = "OV", doc = "Whether or not to override any existing OA tag values", optional = true)
+    @Argument(shortName = "OV", doc = "Whether or not to override any existing OA tag values, otherwise the current alignment will be appended to the tag.", optional = true)
     public Boolean OVERWRITE_TAG = true;
 
-    @Argument(shortName = "L", doc = "An interval list file that contains the locations of reads to add the OA tag to", optional = true)
+    @Argument(shortName = "L", doc = "An interval list file for which records that overlap will have the OA tag added", optional = true)
     public File INTERVAL_LIST;
 
     private static final Log log = Log.getInstance(AddOATag.class);
@@ -54,21 +80,20 @@ public class AddOATag extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT)) {
-            try (final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT)) {
+        try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+             final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, OUTPUT, REFERENCE_SEQUENCE)) {
                 writer.setProgressLogger(
                         new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
 
                 OverlapDetector overlapDetector = getOverlapDetectorFromIntervalListFile(INTERVAL_LIST, 0, 0);
                 for (SAMRecord rec : reader) {
-                    if (!rec.getReadUnmappedFlag() && (overlapDetector == null || overlapDetector.overlapsAny(rec))) {
+                    if (overlapDetector == null || overlapDetector.overlapsAny(rec)) {
                         setOATag(rec, OVERWRITE_TAG);
                     }
                     writer.addAlignment(rec);
                 }
-            }
         } catch (IOException e) {
-            log.error("Exception running AddOATag tool: " + e.getMessage());
+            log.error("Exception: " + e.getMessage());
             return 1;
         }
 
@@ -88,14 +113,23 @@ public class AddOATag extends CommandLineProgram {
     }
 
     // format OA tag string according to the spec
+    //TODO: Move this to htsjdk once https://github.com/samtools/hts-specs/pull/193 is merged
     private void setOATag(SAMRecord rec, Boolean overrideTag) {
-        String OAValue = String.format("%s,%s,%s,%s,%s,%s;",
-                (rec.getReferenceName().replace(",", "_")),
-                (rec.getAlignmentStart()),
-                ((rec.getReadNegativeStrandFlag() ? "-" : "+")),
-                (rec.getCigarString()),
-                (rec.getMappingQuality()),
-                (Optional.ofNullable(rec.getAttribute(SAMTag.NM.name())).orElse("").toString()));
+        if (rec.getReferenceName().contains(",")) {
+            throw new PicardException(String.format("Reference name for record %s contains a comma character.", rec.getReadName()));
+        }
+        String OAValue;
+        if (rec.getReadUnmappedFlag()) {
+            OAValue = String.format("*,0,%s,*,255,;", rec.getReadNegativeStrandFlag() ? "-" : "+");
+        } else {
+            OAValue = String.format("%s,%s,%s,%s,%s,%s;",
+                    (rec.getReferenceName()),
+                    (rec.getAlignmentStart()),
+                    ((rec.getReadNegativeStrandFlag() ? "-" : "+")),
+                    (rec.getCigarString()),
+                    (rec.getMappingQuality()),
+                    (Optional.ofNullable(rec.getAttribute(SAMTag.NM.name())).orElse("").toString()));
+        }
         if (overrideTag) {
             rec.setAttribute("OA", OAValue);
         } else {

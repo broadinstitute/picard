@@ -1,10 +1,32 @@
 package picard.sam;
 
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2018 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.OverlapDetector;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -14,27 +36,28 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class AddOATagTest {
+
     @DataProvider(name="testOAData")
     Object[][] testOAData() {
         return new Object[][]{
-                new Object[]{new File("testdata/picard/sam/aligned_withoutOA.sam"), new File("testdata/picard/sam/aligned_withOA.sam")},
+                new Object[]{new File("testdata/picard/sam/AddOATag/aligned_withoutOA.sam"), new File("testdata/picard/sam/AddOATag/aligned_withOA.sam")},
         };
     }
 
     @DataProvider(name="testIntervalListData")
     Object[][] testIntervalListData() {
         return new Object[][]{
-                new Object[]{new File("testdata/picard/sam/aligned.sam"), null},
-                new Object[]{new File("testdata/picard/sam/aligned.sam"), new File("testdata/picard/analysis/directed/CollectHsMetrics/chrM.interval_list")},
-                new Object[]{new File("testdata/picard/sam/aligned.sam"), new File("testdata/picard/sam/contiguous.interval_list")}
+                new Object[]{new File("testdata/picard/sam/aligned.sam"), null, new File("testdata/picard/sam/AddOATag/aligned_no_intervals.sam")},
+                new Object[]{new File("testdata/picard/sam/aligned.sam"), new File("testdata/picard/analysis/directed/CollectHsMetrics/chrM.interval_list"), new File("testdata/picard/sam/aligned.sam")},
+                new Object[]{new File("testdata/picard/sam/aligned.sam"), new File("testdata/picard/sam/contiguous.interval_list"), new File("testdata/picard/sam/AddOATag/aligned_with_intervals.sam")}
         };
     }
 
     @DataProvider(name="testOverwriteData")
     Object[][] overwriteTestData() {
         return new Object[][]{
-                new Object[]{new File("testdata/picard/sam/aligned.sam"), null, true},
-                new Object[]{new File("testdata/picard/sam/aligned.sam"), null, false}
+                new Object[]{new File("testdata/picard/sam/aligned.sam"), new File("testdata/picard/sam/contiguous.interval_list"), true, new File("testdata/picard/sam/AddOATag/aligned_with_intervals.sam")},
+                new Object[]{new File("testdata/picard/sam/aligned.sam"), null, false, new File("testdata/picard/sam/AddOATag/aligned_two_oa_tags.sam")}
         };
     }
 
@@ -45,21 +68,21 @@ public class AddOATagTest {
 
         runAddOATag(testSam, clpOutput, null, null);
 
-        validateOATAG(clpOutput, truthSam);
+        validateOATag(clpOutput, truthSam);
     }
 
     @Test(dataProvider = "testIntervalListData")
-    public void testIntervalList(final File inputSam, final File interval_list) throws IOException {
+    public void testIntervalList(final File inputSam, final File intervalList, final File truthSam) throws IOException {
         final File clpOutput = File.createTempFile("AddOATag", ".bam");
         clpOutput.deleteOnExit();
 
-        runAddOATag(inputSam, clpOutput, interval_list, null);
+        runAddOATag(inputSam, clpOutput, intervalList, null);
 
-        validateBamHasOA(clpOutput, interval_list, null);
+        validateOATag(clpOutput, truthSam);
     }
 
     @Test(dataProvider = "testOverwriteData")
-    public void testOverWrite(final File inputSam, final File interval_list, Boolean overWriteTag) throws IOException {
+    public void testOverWrite(final File inputSam, final File interval_list, final Boolean overWriteTag, final File truthSam) throws IOException {
         final File firstPassOutput = File.createTempFile("FirstPassAddOATag", ".bam");
         firstPassOutput.deleteOnExit();
         final File secondPassOutput = File.createTempFile("SecondPassAddOATag", ".bam");
@@ -71,7 +94,7 @@ public class AddOATagTest {
         // make bam we want to test the overwrite option with
         runAddOATag(firstPassOutput, secondPassOutput, interval_list, overWriteTag);
 
-        validateBamHasOA(secondPassOutput, interval_list, overWriteTag);
+        validateOATag(secondPassOutput, truthSam);
     }
 
     private void runAddOATag(final File inputSam, final File output, final File intervalList, Boolean overwriteTag) throws IOException {
@@ -91,7 +114,7 @@ public class AddOATagTest {
         Assert.assertEquals(addOATag.instanceMain(args.toArray(new String[args.size()])), 0, "Running addOATag did not succeed");
     }
 
-    private void validateOATAG(final File testSam, final File truthSam) {
+    private void validateOATag(final File testSam, final File truthSam) {
         final ArrayList<String> truthOAValues = new ArrayList<>();
         final ArrayList<String> testOAValues = new ArrayList<>();
 
@@ -107,36 +130,6 @@ public class AddOATagTest {
             testOAValues.add(rec.getStringAttribute("OA"));
         }
 
-        Assert.assertTrue(truthOAValues.equals(testOAValues));
-    }
-
-    private void validateBamHasOA(final File input, final File intervalList, Boolean overwriteTag) {
-        final SAMRecordIterator iterator = SamReaderFactory.makeDefault().open(input).iterator();
-
-        OverlapDetector<Interval> detector = AddOATag.getOverlapDetectorFromIntervalListFile(intervalList, 0, 0);
-        while (iterator.hasNext()){
-            SAMRecord rec = iterator.next();
-            if (!rec.getReadUnmappedFlag() && (detector == null || detector.overlapsAny(rec))){
-                Assert.assertNotNull(rec.getAttribute("OA"));
-                if (overwriteTag != null){
-                    validateOverwriteTag(rec, overwriteTag);
-                }
-            } else {
-                Assert.assertNull(rec.getAttribute("OA"));
-            }
-        }
-    }
-
-    private void validateOverwriteTag(SAMRecord rec, Boolean overwriteTag) {
-        String OAValue = rec.getStringAttribute("OA");
-        String[] OASplitOnColon = OAValue.split(";");
-        if (overwriteTag) {
-            Assert.assertTrue(OASplitOnColon.length == 1);
-        } else {
-            Assert.assertTrue(OASplitOnColon.length == 2);
-        }
-        for (String s : OASplitOnColon) {
-            Assert.assertTrue(s.matches("^[\\w]+,[\\w]+,[-+],[\\w]+,[\\w]+,[\\w]*"));
-        }
+        Assert.assertEquals(testOAValues, truthOAValues);
     }
 }
