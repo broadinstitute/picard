@@ -73,4 +73,39 @@ public class GraphUtilsTest {
         assertNotEquals(fivesCluster, eightsCluster);
         assertNotEquals(eightsCluster, threesCluster);
     }
+
+
+    @Test
+    public void pathologicalInputOrderingTest() {
+        final GraphUtils.Graph<Integer> graph = new GraphUtils.Graph<>();
+
+        final int a = 0, b = 1, c = 2, d = 3, e = 4, f = 5, h = 6, g = 7;
+        graph.addNode(a);
+        graph.addNode(b);
+        graph.addNode(c);
+        graph.addNode(d);
+        graph.addNode(f);
+        graph.addNode(h);
+        graph.addNode(e);
+        graph.addNode(g);
+
+        // This graph is a hand constructed case where the algorithm produces in its final form an orphaned node that only
+        // transitively points to the root for the rest of the graph (node d as it turns out)
+        graph.addEdge(a, h);
+        graph.addEdge(b, f);
+        graph.addEdge(c, h);
+        graph.addEdge(d, f);
+        graph.addEdge(e, h);
+        graph.addEdge(e, f);
+        graph.addEdge(g, a);
+
+        final Map<Integer, Integer> clusters = graph.cluster();
+
+        // 9 nodes
+        assertEquals(clusters.size(), 8);
+
+        // Asserting that this connected graph has every node pointing to the same place
+        final Integer repCluster = clusters.get(a);
+        IntStream.range(0,7).forEach(i -> assertEquals(clusters.get(i), repCluster));
+    }
 }
