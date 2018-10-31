@@ -56,7 +56,7 @@ class UmiUtil {
      * @param umiTag The tag used in the bam file that designates the UMI, null returns null
      * @return Normalized Duplex UMI.  If the UMI isn't duplex, it returns the UMI unaltered.
      */
-    static String getTopStrandNormalizedUmi(final SAMRecord record, final String umiTag, final boolean duplexUmi, final boolean allowNonDnaUmi) {
+    static String getTopStrandNormalizedUmi(final SAMRecord record, final String umiTag, final boolean duplexUmi) {
         if (umiTag == null) {
             return null;
         }
@@ -67,10 +67,8 @@ class UmiUtil {
             return null;
         }
 
-        if (!allowNonDnaUmi) {
-            if (!umi.matches("^[ATCGNatcgn-]*$")) {
-                throw new PicardException("UMI found with illegal characters.  UMIs must match the regular expression ^[ATCGNatcgn-]*$.");
-            }
+        if (!umi.matches("^[ATCGNatcgn-]*$")) {
+            throw new PicardException("UMI found with illegal characters.  UMIs must match the regular expression ^[ATCGNatcgn-]*$.");
         }
 
         if (duplexUmi) {
@@ -98,6 +96,12 @@ class UmiUtil {
      */
     static boolean isTopStrand(final SAMRecord rec) {
 
+        // If the read pair are aligned to different contigs we use
+        // the reference index to determine relative 5' coordinate ordering.
+        if (!rec.getReferenceIndex().equals(rec.getMateReferenceIndex())) {
+            return rec.getFirstOfPairFlag() == (rec.getReferenceIndex() < rec.getMateReferenceIndex());
+        }
+
         final int read5PrimeStart = (rec.getReadNegativeStrandFlag()) ? rec.getUnclippedEnd() : rec.getUnclippedStart();
         final int mate5PrimeStart = (rec.getMateNegativeStrandFlag()) ? SAMUtils.getMateUnclippedEnd(rec) : SAMUtils.getMateUnclippedStart(rec);
         return rec.getFirstOfPairFlag() == (read5PrimeStart < mate5PrimeStart);
@@ -109,8 +113,8 @@ class UmiUtil {
      * @param umiTag Tag that contains the UMI record
      * @return String that uniquely identifies a fragment
      */
-    static String molecularIdentifierString(final SAMRecord rec, final String umiTag, final boolean allowNonDnaUmi) {
-        return rec.getContig() + CONTIG_SEPARATOR + rec.getAlignmentStart() + getTopStrandNormalizedUmi(rec, umiTag, true, allowNonDnaUmi);
+    static String molecularIdentifierString(final SAMRecord rec, final String umiTag) {
+        return rec.getContig() + CONTIG_SEPARATOR + rec.getAlignmentStart() + getTopStrandNormalizedUmi(rec, umiTag, true);
     }
 
     /**

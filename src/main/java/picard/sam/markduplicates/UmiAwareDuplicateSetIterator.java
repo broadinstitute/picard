@@ -59,7 +59,6 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
     private final boolean allowMissingUmis;
     private boolean isOpen = false;
     private final boolean duplexUmi;
-    private final boolean allowNonDnaUmis;
     private final Map<String, UmiMetrics> umiMetricsMap;
     private boolean haveWeSeenFirstRead = false;
 
@@ -77,13 +76,12 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
     UmiAwareDuplicateSetIterator(final DuplicateSetIterator wrappedIterator, final int maxEditDistanceToJoin,
                                  final String umiTag, final String molecularIdentifierTag,
                                  final boolean allowMissingUmis, final boolean duplexUmi,
-                                 final boolean allowNonDnaUmis, final Map<String, UmiMetrics> umiMetricsMap) {
+                                 final Map<String, UmiMetrics> umiMetricsMap) {
         this.wrappedIterator = wrappedIterator;
         this.maxEditDistanceToJoin = maxEditDistanceToJoin;
         this.umiTag = umiTag;
         this.molecularIdentifierTag = molecularIdentifierTag;
         this.allowMissingUmis = allowMissingUmis;
-        this.allowNonDnaUmis = allowNonDnaUmis;
         this.umiMetricsMap = umiMetricsMap;
         this.duplexUmi = duplexUmi;
         isOpen = true;
@@ -150,7 +148,7 @@ class UmiAwareDuplicateSetIterator implements CloseableIterator<DuplicateSet> {
             final List<SAMRecord> records = ds.getRecords();
 
             for (final SAMRecord rec : records) {
-                final String currentUmi = UmiUtil.getTopStrandNormalizedUmi(rec, umiTag, duplexUmi, allowNonDnaUmis);
+                final String currentUmi = UmiUtil.getTopStrandNormalizedUmi(rec, umiTag, duplexUmi);
 
                 if (currentUmi != null) {
                     // All UMIs should be the same length, the code presently does not support variable length UMIs.

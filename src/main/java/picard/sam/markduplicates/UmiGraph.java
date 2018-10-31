@@ -89,7 +89,7 @@ public class UmiGraph {
         }
 
         // Count the number of times each UMI occurs
-        umiCounts = records.stream().collect(Collectors.groupingBy(p -> duplexUmis ? UmiUtil.getTopStrandNormalizedUmi(p, umiTag, duplexUmis, allowMissingUmis) : p.getStringAttribute(umiTag), counting()));
+        umiCounts = records.stream().collect(Collectors.groupingBy(p -> duplexUmis ? UmiUtil.getTopStrandNormalizedUmi(p, umiTag, duplexUmis) : p.getStringAttribute(umiTag), counting()));
 
         // At first we consider every UMI as if it were its own duplicate set
         numUmis = umiCounts.size();
@@ -131,7 +131,7 @@ public class UmiGraph {
         // Assign UMIs to duplicateSets
         final Map<String, Integer> duplicateSetsFromUmis = getDuplicateSetsFromUmis();
         for (final SAMRecord rec : records) {
-            final String umi = UmiUtil.getTopStrandNormalizedUmi(rec, umiTag, duplexUmis, allowMissingUmis);
+            final String umi = UmiUtil.getTopStrandNormalizedUmi(rec, umiTag, duplexUmis);
 
             final Integer duplicateSetIndex = duplicateSetsFromUmis.get(umi);
 
@@ -160,7 +160,7 @@ public class UmiGraph {
             long nCount = 0;
 
             for (final SAMRecord rec : recordList) {
-                final String umi = UmiUtil.getTopStrandNormalizedUmi(rec, umiTag, duplexUmis, allowMissingUmis);
+                final String umi = UmiUtil.getTopStrandNormalizedUmi(rec, umiTag, duplexUmis);
 
                 // If there is another choice, we don't want to choose the UMI with a N
                 // as the assignedUmi

@@ -37,28 +37,39 @@ public class UmiUtilTest {
 
     @DataProvider(name = "topStrandDataProvider")
     private Object[][] testIsTopStrandDataProvider() {
+        final boolean read1 = true;
+        final boolean read2 = false;
         return new Object[][]{
-                {0, 100, 0, 200, true, false, true, true},    // Read 1 in F1R2 pair
-                {0, 100, 0, 200, false, false, true, false},  // Read 2 in F1R2 pair
-                {0, 100, 0, 200, true, true, false, true},    // Read 1 in F2R1 pair
-                {0, 200, 0, 100, false, false, true, true},   // Read 2 in F2R1 pair
-                {0, 100, 0, 200, true, false, false, true},   // Read 1 in F1F2 pair
-                {0, 200, 0, 100, false, false, false, true},  // Read 2 in F1F2 pair
-                {0, 100, 0, 200, true, true, true, true},     // Read 1 in R1R2 pair
-                {0, 200, 0, 100, false, true, true, true},    // Read 2 in R1R2 pair
-                {0, 100, 1, 200, false, false, true, true},  // Read 2 in F1R2 chimera
+                {0, 100, 0, 200, read1, false, true, true},    // Read 1 in F1R2 pair, reads point inwards, top strand
+                {0, 200, 0, 100, read2, true, false, true},    // Read 2 in F1R2 pair, reads point inwards, top strand
+                {0, 200, 0, 100, read1, false, true, false},   // Read 1 in F1R2 pair, reads point outwards
+                {0, 100, 0, 200, read2, true, false, false},   // Read 2 in F1R2 pair, reads point outwards
+                {0, 100, 0, 200, read1, true, false, true},    // Read 1 in F2R1 pair
+                {0, 200, 0, 100, read2, false, false, true},   // Read 2 in F2R1 pair
+                {0, 100, 0, 200, read1, false, false, true},   // Read 1 in F1F2 pair
+                {0, 200, 0, 100, read2, false, false, true},   // Read 2 in F1F2 pair
+                {0, 100, 0, 200, read1, true, true, true},     // Read 1 in R1R2 pair
+                {0, 200, 0, 100, read2, true, true, true},     // Read 2 in R1R2 pair
+                {0, 100, 1, 200, read1, false, true, true},    // Read 1 in F1R2 chimera
+                {0, 100, 1, 200, read2, true, false, false},   // Read 2 in F1R2 chimera
+                {0, 100, 1, 200, read1, true, false, true},    // Read 1 in F2R1 chimera
+                {0, 100, 1, 200, read2, false, false, false},  // Read 2 in F2R1 chimera
+                {0, 100, 1, 200, read2, false, true, false},   // Read 2 in F2R1 chimera
         };
     }
 
     @Test(dataProvider = "topStrandDataProvider")
-    public void testIsTopStrand(final int referenceIndex, final int alignmentStart, final int mateReferenceIndex, final int mateAlignmentStart, final boolean firstOfPairFlag,
-                              final boolean negativeStrandFlag, final boolean mateNegativeStrandFlag, final boolean topStrand) {
+    public void testIsTopStrand(final int referenceIndex, final int alignmentStart, final int mateReferenceIndex, final int mateAlignmentStart,
+                                final boolean firstOfPairFlag, final boolean negativeStrandFlag, final boolean mateNegativeStrandFlag,
+                                final boolean topStrand) {
 
+        final int readLength = 15;
+        final int contigLength = 500;
         SAMFileHeader header = new SAMFileHeader();
         SAMSequenceDictionary sequenceDictionary = new SAMSequenceDictionary();
 
-        sequenceDictionary.addSequence(new SAMSequenceRecord("chr1", 500));
-        sequenceDictionary.addSequence(new SAMSequenceRecord("chr2", 500));
+        sequenceDictionary.addSequence(new SAMSequenceRecord("chr1", contigLength));
+        sequenceDictionary.addSequence(new SAMSequenceRecord("chr2", contigLength));
 
         System.out.println(sequenceDictionary.getSequences());
 
@@ -68,9 +79,8 @@ public class UmiUtilTest {
 
         rec.setReadPairedFlag(true);
 
-        rec.setCigarString("10M");
-        rec.setAttribute("MC", "10M");
-        System.out.println("reference name = " + rec.getReferenceName());
+        rec.setCigarString(readLength + "M");
+        rec.setAttribute("MC", readLength + "M");
 
         rec.setReferenceIndex(referenceIndex);
         rec.setAlignmentStart(alignmentStart);
@@ -105,6 +115,6 @@ public class UmiUtilTest {
         rec.setAttribute("RX", brokenUmi);
 
         // This should throw an exception due to a broken UMI in rec
-        UmiUtil.getTopStrandNormalizedUmi(rec, "RX", true, false);
+        UmiUtil.getTopStrandNormalizedUmi(rec, "RX", true);
     }
 }

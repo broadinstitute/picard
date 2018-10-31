@@ -214,10 +214,9 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addMappedFragment(2, 41212324, true, "50M", DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
-            record.setAttribute(barcodeTag, "Barcode1");
+            record.setAttribute(barcodeTag, "GACT");
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
-        tester.addArg("ALLOW_NON_DNA_UMI=" + true);
         tester.runTest();
     }
 
@@ -243,10 +242,9 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addMatePair("RUNID:2:2:15993:13362", 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
-            record.setAttribute(barcodeTag, "Barcode1");
+            record.setAttribute(barcodeTag, "ATGC");
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
-        tester.addArg("ALLOW_NON_DNA_UMI=" + true);
         tester.runTest();
     }
 
@@ -266,14 +264,13 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
             if (record.getReadName().equals(readNameOne) || record.getReadName().equals(readNameTwo)) {
-                record.setAttribute(barcodeTag, "Barcode1");
+                record.setAttribute(barcodeTag, "AAAA");
             }
             else if (record.getReadName().equals(readNameThree)) {
-                record.setAttribute(barcodeTag, "Barcode2");
+                record.setAttribute(barcodeTag, "CCCC");
             }
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
-        tester.addArg("ALLOW_NON_DNA_UMI=" + true);
         tester.runTest();
     }
 
@@ -294,22 +291,21 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         final String readOneBarcodeTag = "BX"; // want the same tag as the second end, since this is allowed
         final String readTwoBarcodeTag = "BX";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
-            record.setAttribute(barcodeTag, "Barcode1"); // same barcode
+            record.setAttribute(barcodeTag, "ATC"); // same barcode
             if (record.getFirstOfPairFlag()) { // always the same value for the first end
-                record.setAttribute(readOneBarcodeTag, "readOne1");
+                record.setAttribute(readOneBarcodeTag, "ACA");
             }
             else { // second end
                 if (record.getReadName().equals(readNameOne) || record.getReadName().equals(readNameTwo)) {
-                    record.setAttribute(readTwoBarcodeTag, "readTwo1");
+                    record.setAttribute(readTwoBarcodeTag, "GTC");
                 } else if (record.getReadName().equals(readNameThree)) {
-                    record.setAttribute(readTwoBarcodeTag, "readTwo2");
+                    record.setAttribute(readTwoBarcodeTag, "CGA");
                 }
             }
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
         tester.addArg("READ_ONE_BARCODE_TAG=" + readOneBarcodeTag);
         tester.addArg("READ_TWO_BARCODE_TAG=" + readTwoBarcodeTag);
-        tester.addArg("ALLOW_NON_DNA_UMI=" + true);
 
         tester.runTest();
     }
