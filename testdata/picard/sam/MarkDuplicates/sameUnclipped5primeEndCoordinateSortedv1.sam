@@ -1,4 +1,4 @@
-@HD	VN:1.5	SO:coordinate
+@HD	VN:1.6	SO:coordinate
 @SQ	SN:1	LN:197195432	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:f05d753079c455c0e57af88eeda24493	SP:Mus musculus
 @SQ	SN:2	LN:181748087	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:9b9d64dc89ecc73d3288eb38af3f94bd	SP:Mus musculus
 @SQ	SN:3	LN:159599783	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	AS:mm9	M5:0a692666a1b8526e1d1e799beb71b6d0	SP:Mus musculus

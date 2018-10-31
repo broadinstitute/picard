@@ -1,4 +1,4 @@
-@HD	VN:1.5
+@HD	VN:1.6
 @SQ	SN:chr1	LN:101	M5:bd01f7e11515bb6beda8f7257902aa67	UR:file:/path/to/testdata/picard/reference/test.fasta
 @SQ	SN:chr2	LN:101	M5:31c33e2155b3de5e2554b693c475b310	UR:file:/path/to/testdata/picard/reference/test.fasta
 @SQ	SN:chr3	LN:101	M5:631593c6dd2048ae88dcce2bd505d295	UR:file:/path/to/testdata/picard/reference/test.fasta
