@@ -37,7 +37,7 @@ public class GraphUtils {
         final private List<Node> nodes;
         final private List<List<Integer>> neighbors;
 
-        // A public getter for the nodes in the list for iteration, note that this is no
+        // A public getter for an unmodifiable list of nodes currently held in the graph for iteration.
         public List<Node> getNodes() {
             return Collections.unmodifiableList(nodes);
         }
