@@ -37,6 +37,11 @@ public class GraphUtils {
         final private List<Node> nodes;
         final private List<List<Integer>> neighbors;
 
+        // A public getter for the nodes in the list for iteration, note that this is no
+        public List<Node> getNodes() {
+            return Collections.unmodifiableList(nodes);
+        }
+
         /**
          * returns the cluster map of connected components
          *
@@ -50,7 +55,7 @@ public class GraphUtils {
                     neighbors.get(i).stream().forEach(j -> joinNodes(cluster, j, i)));
 
             // Must call findRepNode() here in case nodes are orphaned and become only transitively equal to roots in their cluster.
-            return nodes.stream().collect(Collectors.toMap(n -> n, n -> findRepNode(cluster, cluster[nodes.indexOf(n)])));
+            return nodes.stream().collect(Collectors.toMap(n -> n, n -> findRepNode(cluster, nodes.indexOf(n))));
 
         }
 

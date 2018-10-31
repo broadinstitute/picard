@@ -106,6 +106,6 @@ public class GraphUtilsTest {
 
         // Asserting that this connected graph has every node pointing to the same place
         final Integer repCluster = clusters.get(a);
-        IntStream.range(0,7).forEach(i -> assertEquals(clusters.get(i), repCluster));
+        graph.getNodes().forEach(i -> assertEquals(clusters.get(i), repCluster));
     }
 }
