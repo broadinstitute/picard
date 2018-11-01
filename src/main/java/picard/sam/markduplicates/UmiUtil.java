@@ -28,6 +28,8 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.regex.Pattern;
+
 /**
  *
  * A collection of functions for use in processing UMIs
@@ -43,7 +45,7 @@ class UmiUtil {
     public static final String CONTIG_SEPARATOR = ":";
     public static final String UMI_NAME_SEPARATOR = "/";
     static final String INFERRED_UMI_TRANSIENT_TAG = "inferredUmi";
-
+    static final Pattern ALLOWED_UMI = Pattern.compile("^[ATCGNatcgn-]*$");
     /**
      * Creates a top-strand normalized duplex UMI.
      * Single stranded UMIs are by definition already top-strand normalized, they require no transformation.
@@ -67,30 +69,33 @@ class UmiUtil {
             return null;
         }
 
-        if (!umi.matches("^[ATCGNatcgn-]*$")) {
+        if (!ALLOWED_UMI.matcher(umi).matches()) {
             throw new PicardException("UMI found with illegal characters.  UMIs must match the regular expression ^[ATCGNatcgn-]*$.");
         }
 
-        if (duplexUmi) {
-            final String[] split = umi.split(DUPLEX_UMI_DELIMITER);
-            if (split.length != 2) {
-                throw new PicardException("Duplex UMIs must be of the form X-Y where X and Y are equal length UMIs, for example AT-GA.  Found UMI, " + umi);
-            }
-
-            if (isTopStrand(record)) {
-                return split[0] + DUPLEX_UMI_DELIMITER + split[1];
-            } else {
-                return split[1] + DUPLEX_UMI_DELIMITER + split[0];
-            }
+        if (!duplexUmi) {
+            return umi;
         }
-        return umi;
+
+        final String[] split = umi.split(DUPLEX_UMI_DELIMITER);
+        if (split.length != 2) {
+            throw new PicardException("Duplex UMIs must be of the form X-Y where X and Y are equal length UMIs, for example AT-GA.  Found UMI, " + umi);
+        }
+
+        if (isTopStrand(record)) {
+            return split[0] + DUPLEX_UMI_DELIMITER + split[1];
+        } else {
+            return split[1] + DUPLEX_UMI_DELIMITER + split[0];
+        }
     }
 
     /**
      * Determines if the read represented by a SAM record belongs to the top or bottom strand.
      * Top strand is defined as having a read 1 unclipped 5' coordinate
      * less than the read 2 unclipped 5' coordinate.  If a read is unmapped
-     * it is considered to have an unclipped 5' coordinate of 0.
+     * it is considered to have an unclipped 5' coordinate of 0.  If the mate
+     * belongs to a different contig from the read, then the reference
+     * index for the read and its mate is used in leu of the unclipped 5' coordinate.
      * @param rec Record to determine top or bottom strand
      * @return Top or bottom strand, true (top), false (bottom).
      */
@@ -108,23 +113,17 @@ class UmiUtil {
     }
 
     /**
-     * Creates a string that uniquely identifies a molecule using its UMI and alignment start position
-     * @param rec SAMRecord to create molecular identifier of
-     * @param umiTag Tag that contains the UMI record
-     * @return String that uniquely identifies a fragment
-     */
-    static String molecularIdentifierString(final SAMRecord rec, final String umiTag) {
-        return rec.getContig() + CONTIG_SEPARATOR + rec.getAlignmentStart() + getTopStrandNormalizedUmi(rec, umiTag, true);
-    }
-
-    /**
-     * Set molecular index tag of record using UMI and alignment start position along with top and bottom strand information
+     * Set molecular identifier tag of record using UMI and alignment start position along with top and bottom strand information
      * @param rec SAMRecord to set molecular index of
      * @param assignedUmi Assigned or inferred UMI to use in the molecular index tag
-     * @param molecularIdentifierTag SAM tag to use as molecular identifier
+     * @param molecularIdentifierTag SAM tag to use as molecular identifier, if null no modification to the record will be made
      * @param duplexUmis Treat UMI as duplex, if true /A and /B will be added to denote top and bottom strands respectively
      */
-    static void setMolecularIndex(final SAMRecord rec, final String assignedUmi, final String molecularIdentifierTag, final boolean duplexUmis) {
+    static void setMolecularIdentifier(final SAMRecord rec, final String assignedUmi, final String molecularIdentifierTag, final boolean duplexUmis) {
+
+        if (molecularIdentifierTag == null) {
+            return;
+        }
 
         final StringBuilder molecularIdentifier = new StringBuilder();
         molecularIdentifier.append(rec.getContig());
@@ -135,10 +134,8 @@ class UmiUtil {
 
         if (duplexUmis) {
             molecularIdentifier.append(isTopStrand(rec) ? TOP_STRAND_DUPLEX : BOTTOM_STRAND_DUPLEX);
-            rec.setAttribute(molecularIdentifierTag, molecularIdentifier.toString());
-        } else {
-            rec.setAttribute(molecularIdentifierTag, molecularIdentifier.toString());
         }
+        rec.setAttribute(molecularIdentifierTag, molecularIdentifier.toString());
     }
 
     /**

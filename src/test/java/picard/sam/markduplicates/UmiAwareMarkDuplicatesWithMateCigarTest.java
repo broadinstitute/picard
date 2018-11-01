@@ -155,6 +155,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
     public void testUmi(List<String> umis, List<String> assignedUmi, final List<Boolean> isDuplicate, final int editDistanceToJoin) {
         UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
         tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
+        tester.addArg("MOLECULAR_IDENTIFIER_TAG=MI");
         final String dummyLibraryName = "A";
 
         for (int i = 0; i < umis.size(); i++) {
@@ -282,6 +283,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                                final int editDistanceToJoin, final UmiMetrics expectedMetrics) {
         UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
         tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
+        tester.addArg("MOLECULAR_IDENTIFIER_TAG=MI");
 
         for (int i = 0; i < umis.size(); i++) {
             tester.addMatePairWithUmi("A", umis.get(i), assignedUmi.get(i), isDuplicate.get(i), isDuplicate.get(i));
@@ -396,6 +398,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
         for (final UmiMetrics expectedMetrics : expectedMetricsList) {
             final UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
             tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
+            tester.addArg("MOLECULAR_IDENTIFIER_TAG=MI");
             for (int i = 0; i < umis.size(); i++) {
                 if (expectedMetrics.LIBRARY.equals(libraries.get(i))) {
                     tester.addMatePairWithUmi(libraries.get(i), umis.get(i), assignedUmi.get(i), isDuplicate.get(i), isDuplicate.get(i));

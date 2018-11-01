@@ -120,9 +120,6 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
     @Argument(shortName = "UMI_TAG_NAME", doc = "Tag name to use for UMI", optional = true)
     public String UMI_TAG_NAME = "RX";
 
-    @Argument(shortName = "MOLECULAR_IDENTIFIER_TAG", doc = "Tag name to use for molecular identifier", optional = true)
-    public String MOLECULAR_IDENTIFIER_TAG = "MI";
-
     // Since we inherit from SimpleMarkDuplicatesWithMateCigar, it is useful for us to also inherit the tests
     // which do not contain UMIs.  By default, we don't allow for missing UMIs, but for the inherited tests
     // we allow for missing UMIs.
