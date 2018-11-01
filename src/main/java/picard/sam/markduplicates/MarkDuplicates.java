@@ -872,6 +872,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     this.opticalDuplicateIndexes.add(end.read1IndexInFile);
                     // We expect end.read2IndexInFile==read1IndexInFile when we are in queryname sorted files, as the read-pairs
                     // will be sorted together and nextIndexIfNeeded() will only pull one index from opticalDuplicateIndexes.
+                    // This means that in queryname sorted order we will only pull from the sorting collection once,
+                    // where as we would pull twice for coordinate sorted files. 
                     if(end.read2IndexInFile != end.read1IndexInFile) {
                         this.opticalDuplicateIndexes.add(end.read2IndexInFile);
                     }
