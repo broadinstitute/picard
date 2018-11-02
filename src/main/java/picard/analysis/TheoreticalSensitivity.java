@@ -244,6 +244,11 @@ public class TheoreticalSensitivity {
      * @return Theoretical sensitivity for the given arguments at a constant depth.
      */
     public static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram, final double logOddsThreshold, final int sampleSize, final double alleleFraction, final long randomSeed) {
+        // If the depth is 0 at a particular locus, the sensitivity is trivially 0.0.
+        if (depth == 0) {
+            return 0.0;
+        }
+
         final RouletteWheel qualityRW = new RouletteWheel(trimDistribution(normalizeHistogram(qualityHistogram)));
         final Random randomNumberGenerator = new Random(randomSeed);
         final RandomGenerator rg = new Well19937c(randomSeed);
@@ -354,9 +359,13 @@ public class TheoreticalSensitivity {
      * @return Distribution of base qualities removing any trailing zeros
      */
      static double[] trimDistribution(final double[] distribution) {
-         int endOfDistribution = distribution.length - 1;
-         while(distribution[endOfDistribution] == 0) {
+         int endOfDistribution = distribution.length;
+         if (distribution.length == 0) {
+             return distribution;
+         }
+         while(distribution[endOfDistribution - 1] == 0) {
              endOfDistribution--;
+             if (endOfDistribution == 0) break;
          }
 
         // Remove trailing zeros and return.

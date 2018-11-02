@@ -268,7 +268,7 @@ public class TheoreticalSensitivityTest {
         // keeping the compute time of the tests short.
         return new Object[][]{
                 {0.90, wgsMetricsFile, 0.5, 400},
-                {0.77, wgsMetricsFile, 0.3, 400},
+                {0.78, wgsMetricsFile, 0.3, 400},
                 {0.29, wgsMetricsFile, 0.1, 500},
                 {0.08, wgsMetricsFile, 0.05, 500},
         };
@@ -396,5 +396,21 @@ public class TheoreticalSensitivityTest {
 
             Assert.assertEquals(sumOfQualitiesFull, sumOfQualities, sumOfQualitiesFull * tolerance);
         }
+    }
+
+    @DataProvider(name = "trimDistributionDataProvider")
+    public Object[][] trimDistributions() {
+        return new Object[][]{
+                {new double[]{}, new double[]{}},
+                {new double[]{0.0}, new double[]{}},
+                {new double[]{1.0}, new double[]{1.0}},
+                {new double[]{0.0, 0.0, 1.0}, new double[]{0.0, 0.0, 1.0}},
+                {new double[]{0.0, 0.0, 1.0, 0.0, 0.0}, new double[]{0.0, 0.0, 1.0}}
+        };
+    }
+
+    @Test(dataProvider = "trimDistributionDataProvider")
+    public void testTrimDistributions(final double[] distributionToTrim, final double[] expected) {
+        Assert.assertEquals(expected, TheoreticalSensitivity.trimDistribution(distributionToTrim));
     }
 }
