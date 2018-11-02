@@ -89,7 +89,6 @@ public class UmiGraph {
         }
 
         // Count the number of times each UMI occurs
-//        umiCounts = records.stream().collect(Collectors.groupingBy(p -> duplexUmis ? UmiUtil.getTopStrandNormalizedUmi(p, umiTag, duplexUmis) : p.getStringAttribute(umiTag), counting()));
         umiCounts = records.stream().collect(Collectors.groupingBy(p -> UmiUtil.getTopStrandNormalizedUmi(p, umiTag, duplexUmis), counting()));
 
         // At first we consider every UMI as if it were its own duplicate set
