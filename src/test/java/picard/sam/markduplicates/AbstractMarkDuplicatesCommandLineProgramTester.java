@@ -43,6 +43,8 @@ import picard.sam.testers.SamFileTester;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This class is an extension of SamFileTester used to test AbstractMarkDuplicatesCommandLineProgram's with SAM files generated on the fly.
@@ -52,6 +54,8 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
 
     final File metricsFile;
     final DuplicationMetrics expectedMetrics;
+
+    boolean testOpticalDuplicateDTTag = false;
 
     public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder) {
         this(duplicateScoringStrategy, sortOrder, true);
@@ -66,6 +70,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
         metricsFile = new File(getOutputDir(), "metrics.txt");
         addArg("METRICS_FILE=" + metricsFile);
         addArg("DUPLICATE_SCORING_STRATEGY=" + duplicateScoringStrategy.name());
+        recordOpticalDuplicatesMarked();
     }
 
     public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy) {
@@ -78,6 +83,16 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
 
     @Override
     public String getCommandLineProgramName() { return getProgram().getClass().getSimpleName(); }
+
+    /**
+     * Tells MarkDuplicates to record which reads are optical duplicates
+     *
+     * NOTE: this should be overridden as a blank method for inheriting classes where the tested tool doesn't support the 'TAGGING_POLICY' argument
+     */
+    public void recordOpticalDuplicatesMarked() {
+        testOpticalDuplicateDTTag = true;
+        addArg("TAGGING_POLICY=" + MarkDuplicates.DuplicateTaggingPolicy.OpticalOnly);
+    }
 
     /**
      * Fill in expected duplication metrics directly from the input records given to this tester
@@ -134,6 +149,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
 
             // Read the output and check the duplicate flag
             int outputRecords = 0;
+            final Set<String> sequencingDTErrorsSeen = new HashSet<>();
             final SamReader reader = SamReaderFactory.makeDefault().open(getOutput());
             for (final SAMRecord record : reader) {
                 outputRecords++;
@@ -149,6 +165,9 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                     System.err.print(record.getSAMString());
                 }
                 Assert.assertEquals(record.getDuplicateReadFlag(), value);
+                if (testOpticalDuplicateDTTag && MarkDuplicates.DUPLICATE_TYPE_SEQUENCING.equals(record.getAttribute("DT"))) {
+                    sequencingDTErrorsSeen.add(record.getReadName());
+                }
             }
             CloserUtil.close(reader);
 
@@ -174,6 +193,10 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
             Assert.assertEquals(observedMetrics.PERCENT_DUPLICATION, expectedMetrics.PERCENT_DUPLICATION, "PERCENT_DUPLICATION does not match expected");
             Assert.assertEquals(observedMetrics.ESTIMATED_LIBRARY_SIZE, expectedMetrics.ESTIMATED_LIBRARY_SIZE, "ESTIMATED_LIBRARY_SIZE does not match expected");
             Assert.assertEquals(observedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, expectedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, "SECONDARY_OR_SUPPLEMENTARY_RDS does not match expected");
+            if (testOpticalDuplicateDTTag) {
+                Assert.assertEquals(sequencingDTErrorsSeen.size(), expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES, "READ_PAIR_OPTICAL_DUPLICATES does not match duplicate groups observed in the file");
+                Assert.assertEquals(sequencingDTErrorsSeen.size(), observedMetrics.READ_PAIR_OPTICAL_DUPLICATES, "READ_PAIR_OPTICAL_DUPLICATES does not match duplicate groups observed in the file");
+            }
         } finally {
             TestUtil.recursiveDelete(getOutputDir());
         }

@@ -68,6 +68,9 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
         }
     }
 
+    @Override
+    public void recordOpticalDuplicatesMarked() {}
+
     public void addMatePairWithUmi(final String library, final String umi, final String assignedUMI, final boolean isDuplicate1, final boolean isDuplicate2) {
 
         final String readName = "READ" + readNameCounter++;
