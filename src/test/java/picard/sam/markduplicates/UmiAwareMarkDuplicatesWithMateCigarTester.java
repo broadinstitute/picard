@@ -28,6 +28,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
+import org.apache.commons.lang3.StringUtils;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
 
@@ -97,6 +98,30 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
                 record2Unmapped, isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2, firstOnly, record1NonPrimary, record2NonPrimary,
                 defaultQuality, umi, assignedUMI);
 
+    }
+
+    public void addMatePairWithUmi(final String library, final String umi, final String assignedUMI, final boolean isDuplicate1, final boolean isDuplicate2,
+                                   final int alignmentStart1, final int alignmentStart2, final boolean strand1, final boolean strand2) {
+
+        final String readName = "READ" + readNameCounter++;
+        final String cigar1 = null;
+        final String cigar2 = null;
+
+        final int referenceSequenceIndex1 = 0;
+        final int referenceSequenceIndex2 = 0;
+
+        final boolean record1Unmapped = false;
+        final boolean record2Unmapped = false;
+
+        final boolean firstOnly = false;
+        final boolean record1NonPrimary = false;
+        final boolean record2NonPrimary = false;
+
+        final int defaultQuality = 10;
+
+        addMatePairWithUmi(library, readName, referenceSequenceIndex1, referenceSequenceIndex2, alignmentStart1, alignmentStart2, record1Unmapped,
+                record2Unmapped, isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2, firstOnly, record1NonPrimary, record2NonPrimary,
+                defaultQuality, umi, assignedUMI);
     }
 
     public void addMatePairWithUmi(final String library,
@@ -172,7 +197,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
         for (final SAMRecord record : reader) {
             // If there are expected assigned UMIs, check to make sure they match
             if (expectedAssignedUmis != null) {
-                Assert.assertEquals(record.getAttribute("MI"), record.getAttribute(expectedUmiTag));
+                Assert.assertEquals(getAssignedUmi(record.getStringAttribute("MI")), record.getAttribute(expectedUmiTag));
             }
         }
 
@@ -185,7 +210,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
             catch (final FileNotFoundException ex) {
                 System.err.println("Metrics file not found: " + ex);
             }
-            double tolerance = 1e-6;
+            final double tolerance = 1e-6;
             Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
             final UmiMetrics observedMetrics = metricsOutput.getMetrics().get(0);
 
@@ -211,4 +236,23 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
         UmiAwareMarkDuplicatesWithMateCigar uamdwmc = new UmiAwareMarkDuplicatesWithMateCigar();
         return uamdwmc;
     }
+
+
+    /**
+     *
+     * @param molecularIndex
+     * @return
+     */
+    private String getAssignedUmi(final String molecularIndex) {
+        if (molecularIndex == null) {
+            return null;
+        }
+
+        if (StringUtils.countMatches(molecularIndex, UmiUtil.UMI_NAME_SEPARATOR) == 2) {
+            return StringUtils.substringBetween(molecularIndex, UmiUtil.UMI_NAME_SEPARATOR, UmiUtil.UMI_NAME_SEPARATOR);
+        } else {
+            return StringUtils.substringAfter(molecularIndex, UmiUtil.UMI_NAME_SEPARATOR);
+        }
+    }
+
 }
