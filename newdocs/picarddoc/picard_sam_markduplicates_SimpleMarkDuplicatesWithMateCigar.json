@@ -158,6 +158,21 @@
       "options": []
     },
     {
+      "summary": "Treat UMIs as being duplex stranded.  This option requires that the UMI consist of two equal length strings that are separated by a hyphen (e.g. \u0027ATC-GTC\u0027). Reads are considered duplicates if, in addition to standard definition, have identical normalized UMIs.  A UMI from the \u0027bottom\u0027 strand is normalized by swapping its content around the hyphen (eg. ATC-GTC becomes GTC-ATC).  A UMI from the \u0027top\u0027 strand is already normalized as it is. Both reads from a read pair considered top strand if the read 1 unclipped 5\u0027 coordinate is less than the read 2 unclipped 5\u0027 coordinate. All chimeric reads and read fragments are treated as having come from the top strand. With this option is it required that the BARCODE_TAG hold non-normalized UMIs. Default false.",
+      "name": "--DUPLEX_UMI",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "The scoring strategy for choosing the non-duplicate among candidates.",
       "name": "--DUPLICATE_SCORING_STRATEGY",
       "synonyms": "-DS",
@@ -288,6 +303,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "SAM tag to uniquely identify the molecule from which a read was derived.  Use of this option requires that the BARCODE_TAG option be set to a non null value.  Default null.",
+      "name": "--MOLECULAR_IDENTIFIER_TAG",
+      "synonyms": "NA",
+      "type": "String",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {

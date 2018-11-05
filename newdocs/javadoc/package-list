@@ -25,6 +25,7 @@ picard.sam.markduplicates
 picard.sam.markduplicates.util
 picard.sam.util
 picard.util
+picard.util.IntervalList
 picard.util.help
 picard.vcf
 picard.vcf.MendelianViolations

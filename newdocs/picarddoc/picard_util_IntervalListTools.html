@@ -400,7 +400,7 @@
 		<hr>
 		<h2>Overview</h2>
 		Performs various IntervalList manipulations.
-
+ <p>
  <h3>Summary</h3>
  This tool offers multiple interval list file manipulation capabilities, including: sorting,
  merging, subtracting, padding, and other set-theoretic operations. The default action
@@ -411,14 +411,14 @@
  htsjdk.samtools.util.IOUtil#INTERVAL_LIST_FILE_EXTENSION, while a VCF must have one of htsjdk.samtools.util.IOUtil#VCF_FILE_EXTENSION, htsjdk.samtools.util.IOUtil#COMPRESSED_VCF_FILE_EXTENSION,
  htsjdk.samtools.util.IOUtil#BCF_FILE_EXTENSION. When VCF file is used as input, each variant is translated into an using its reference allele or the END
  INFO annotation (if present) to determine the extent of the interval.
-
+ <p>
  IntervalListTools can also "scatter" the resulting interval-list into many interval-files. This can be useful
  for creating multiple interval lists for scattering an analysis over.
-
+ <p>
  <h3>Details</h3>
-  The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and
-  other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,
-  the file then contains records, one per line in text format with the following
+ The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and
+ other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,
+ the file then contains records, one per line in text format with the following
  values tab-separated:
  <pre>
  <ul>
@@ -431,7 +431,7 @@
  </pre>
  The coordinate system is 1-based, closed-ended, so that the first base in a sequence is at position 1, and both the start
  and the end positions are included in an interval.
-
+ <p>
  For Example:
  <pre>
  \@HD	VN:1.0
@@ -440,7 +440,7 @@
  chr1	1	100	+	starts at the first base of the contig and covers 100 bases
  chr2	100	100	+	interval with exactly one base
  </pre>
-
+ <p>
  <h3>Usage examples</h3>
  <h4>1. Combine the intervals from two interval lists:</h4>
  <pre>
@@ -450,7 +450,7 @@
        I=input_2.interval_list \\
        O=new.interval_list
  </pre>
-
+ <p>
  <h4>2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting
  intervals:</h4>
  <pre>
@@ -462,7 +462,7 @@
        I=input_2.interval_list \\
        O=new.interval_list
  </pre>
-
+ <p>
  <h4>3. Subtract the intervals in SECOND_INPUT from those in INPUT:</h4>
  <pre>
  java -jar picard.jar IntervalListTools \\
@@ -471,7 +471,7 @@
        SI=input_2.interval_list \\
        O=new.interval_list
  </pre>
-
+ <p>
  <h4>4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:</h4>
  <pre>
  java -jar picard.jar IntervalListTools \\
@@ -553,6 +553,13 @@
 					<td>The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1).</td>
 				</tr>
 				<tr>
+					<td><a href="#--OUTPUT_VALUE">--OUTPUT_VALUE</a><br />
+					</td>
+					<!--<td>Output</td> -->
+					<td>NONE</td>
+					<td>What value (if anything) to output to stdout (for scripting)</td>
+				</tr>
+				<tr>
 					<td><a href="#--PADDING">--PADDING</a><br />
 					</td>
 					<!--<td>int</td> -->
@@ -560,11 +567,18 @@
 					<td>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists (both INPUT and SECOND_INPUT, if provided) <b> before </b> the ACTION is performed.</td>
 				</tr>
 				<tr>
+					<td><a href="#--SCATTER_CONTENT">--SCATTER_CONTENT</a><br />
+					</td>
+					<!--<td>Integer</td> -->
+					<td>null</td>
+					<td>When scattering with this argument, each of the resultant files will (ideally) have this amount of 'content', which  means either base-counts or interval-counts depending on SUBDIVISION_MODE. When provided, overrides SCATTER_COUNT</td>
+				</tr>
+				<tr>
 					<td><a href="#--SCATTER_COUNT">--SCATTER_COUNT</a><br />
 					</td>
 					<!--<td>int</td> -->
 					<td>1</td>
-					<td>The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  Note - if > 1, the resultant scattered intervals will be sorted and uniqued.  The sort will be inverted if the INVERT flag is set.</td>
+					<td>The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  </td>
 				</tr>
 				<tr>
 					<td><a href="#--SECOND_INPUT">--SECOND_INPUT</a><br />
@@ -585,9 +599,9 @@
 					<td><a href="#--SUBDIVISION_MODE">--SUBDIVISION_MODE</a><br />
 								&nbsp;<em>-M</em>
 					</td>
-					<!--<td>Mode</td> -->
+					<!--<td>IntervalListScatterMode</td> -->
 					<td>INTERVAL_SUBDIVISION</td>
-					<td>Selects between various ways in which scattering of the interval-list can happen.</td>
+					<td>The mode used to scatter the interval list.</td>
 				</tr>
 				<tr>
 					<td><a href="#--UNIQUE">--UNIQUE</a><br />
@@ -860,6 +874,29 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--OUTPUT_VALUE">--OUTPUT_VALUE </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>What value (if anything) to output to stdout (for scripting)</b><br />
+			
+		</p>
+			<p>
+				The --OUTPUT_VALUE argument is an enumerated type (Output), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">NONE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">BASES</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INTERVALS</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">Output</span>
+			&nbsp;<span class="label">NONE</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--PADDING">--PADDING </a>
 			 / <small>NA</small>
 		</h3>
@@ -898,11 +935,23 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--SCATTER_CONTENT">--SCATTER_CONTENT </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>When scattering with this argument, each of the resultant files will (ideally) have this amount of 'content', which  means either base-counts or interval-counts depending on SUBDIVISION_MODE. When provided, overrides SCATTER_COUNT</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Integer</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--SCATTER_COUNT">--SCATTER_COUNT </a>
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  Note - if > 1, the resultant scattered intervals will be sorted and uniqued.  The sort will be inverted if the INVERT flag is set.</b><br />
+			<b>The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  </b><br />
 			
 		</p>
 		<p>
@@ -940,37 +989,42 @@
 			 / <small>-M</small>
 		</h3>
 		<p class="args">
-			<b>Selects between various ways in which scattering of the interval-list can happen.</b><br />
+			<b>The mode used to scatter the interval list.</b><br />
 			
 		</p>
 			<p>
-				The --SUBDIVISION_MODE argument is an enumerated type (Mode), which can have one of the following values:
+				The --SUBDIVISION_MODE argument is an enumerated type (IntervalListScatterMode), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">INTERVAL_SUBDIVISION</dt>
-					<dd class="enum">A simple scatter approach in which all output intervals have size equal to the total base count of the source list divided by the
- scatter count (except, possibly, in the last interval list).</dd>
+					<dd class="enum">A simple scatter approach in which all output intervals have size equal to the total base count of the source list divide by the
+ scatter count (except for possible variance in the final interval list).</dd>
 					<dt class="enum">BALANCING_WITHOUT_INTERVAL_SUBDIVISION</dt>
-					<dd class="enum">A scatter approach that differs from {@link Mode#INTERVAL_SUBDIVISION} in a few ways:
+					<dd class="enum">A scatter approach that differs from {@link #INTERVAL_SUBDIVISION} in a few ways.
  <ol>
- <li>No interval will be subdivided, and consequently, the requested {@link IntervalListTools#SCATTER_COUNT} is
- an upper bound of scatter count, not a guarantee of the number of {@link IntervalList}s that will be produced
- (e.g., if scatterCount = 10 but there is only one interval in the input, only 1 interval list will be emitted).</li>
+ <li>No interval will be subdivided, and consequently, the requested scatter count is an upper bound of scatter count, not a
+ guarantee as to how many {@link IntervalList}s will be produced (e.g., if scatterCount = 10 but there is only one input interval,
+ only 1 interval list will be emitted).</li>
  <li>When an interval would otherwise be split, it is instead deferred to the next scatter list.</li>
- <li>The "target width" of each scatter list may be wider than what is computed for {@link Mode#INTERVAL_SUBDIVISION}.
+ <li>The "target width" of each scatter list may be wider than what is computed for INTERVAL_SUBDIVISION.
  Specifically, if the widest interval in the source interval list is larger than what would otherwise be the target width, that
- interval's width is used.<br/><br/>This approach produces more consistently-sized interval lists, which is one of
- the objectives of scattering.</li>
+ interval's width is used.<br/><br/>The reasoning for this is that this approach produces more consistently-sized interval lists,
+ which is one of the objectives of scattering.</li>
  </ol></dd>
 					<dt class="enum">BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW</dt>
-					<dd class="enum">A scatter approach that differs from {@link Mode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.
-
- This approach tries to balance the number of bases in each interval list by estimating the remaining interval lists sizes.  This is
+					<dd class="enum">A scatter approach that differs from {@link IntervalListScatterMode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.
+ <ol>
+ <li>We try to balance the number of unique bases in each interval list by estimating the remaining interval lists sizes.  This is
  computed from the total number of unique bases and the bases we have consumed.  This means that the interval list with the most
- number of unique bases is at most the ideal split length larger than the smallest interval list (unique number of bases).</dd>
+ number of unique bases is at most the ideal split length larger than the smallest interval list (unique # of bases).</li>
+ </ol></dd>
+					<dt class="enum">INTERVAL_COUNT</dt>
+					<dd class="enum">A scatter by interval **count** which attempts to fill each resulting interval list with the same number
+ of intervals, disregarding the base count. This approach can be useful for tools that operate on the interval level
+ rather than the base level, for example CNV calling.</dd>
 			</dl>
 			</p>
 		<p>
-		<span class="label label-info ">Mode</span>
+		<span class="label label-info ">IntervalListScatterMode</span>
 			&nbsp;<span class="label">INTERVAL_SUBDIVISION</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
@@ -1079,7 +1133,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.18.14-SNAPSHOT built at 12-04-2018 02:04:06.
+        <p class="version">Picard version 2.18.16-SNAPSHOT built at 05-07-2018 03:07:25.
         </p>
 
 	</div>

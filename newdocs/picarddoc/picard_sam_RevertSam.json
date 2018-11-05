@@ -274,7 +274,7 @@
       "options": []
     },
     {
-      "summary": "Remove duplicate read flags from all reads.  Note that if this is true and REMOVE_ALIGNMENT_INFORMATION\u003d\u003dfalse,  the output may have the unusual but sometimes desirable trait of having unmapped reads that are marked as duplicates.",
+      "summary": "Remove duplicate read flags from all reads.  Note that if this is false and REMOVE_ALIGNMENT_INFORMATION\u003d\u003dtrue,  the output may have the unusual but sometimes desirable trait of having unmapped reads that are marked as duplicates.",
       "name": "--REMOVE_DUPLICATE_INFORMATION",
       "synonyms": "NA",
       "type": "boolean",

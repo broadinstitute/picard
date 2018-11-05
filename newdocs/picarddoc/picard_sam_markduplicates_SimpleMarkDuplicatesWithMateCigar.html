@@ -482,6 +482,13 @@
 					<td>Comment(s) to include in the output file's header.</td>
 				</tr>
 				<tr>
+					<td><a href="#--DUPLEX_UMI">--DUPLEX_UMI</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Treat UMIs as being duplex stranded.  This option requires that the UMI consist of two equal length strings that are separated by a hyphen (e.g. 'ATC-GTC'). Reads are considered duplicates if, in addition to standard definition, have identical normalized UMIs.  A UMI from the 'bottom' strand is normalized by swapping its content around the hyphen (eg. ATC-GTC becomes GTC-ATC).  A UMI from the 'top' strand is already normalized as it is. Both reads from a read pair considered top strand if the read 1 unclipped 5' coordinate is less than the read 2 unclipped 5' coordinate. All chimeric reads and read fragments are treated as having come from the top strand. With this option is it required that the BARCODE_TAG hold non-normalized UMIs. Default false.</td>
+				</tr>
+				<tr>
 					<td><a href="#--DUPLICATE_SCORING_STRATEGY">--DUPLICATE_SCORING_STRATEGY</a><br />
 								&nbsp;<em>-DS</em>
 					</td>
@@ -511,6 +518,13 @@
 					<!--<td>int</td> -->
 					<td>50000</td>
 					<td>This option is obsolete. ReadEnds will always be spilled to disk.</td>
+				</tr>
+				<tr>
+					<td><a href="#--MOLECULAR_IDENTIFIER_TAG">--MOLECULAR_IDENTIFIER_TAG</a><br />
+					</td>
+					<!--<td>String</td> -->
+					<td>null</td>
+					<td>SAM tag to uniquely identify the molecule from which a read was derived.  Use of this option requires that the BARCODE_TAG option be set to a non null value.  Default null.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OPTICAL_DUPLICATE_PIXEL_DISTANCE">--OPTICAL_DUPLICATE_PIXEL_DISTANCE</a><br />
@@ -848,6 +862,18 @@
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--DUPLEX_UMI">--DUPLEX_UMI </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Treat UMIs as being duplex stranded.  This option requires that the UMI consist of two equal length strings that are separated by a hyphen (e.g. 'ATC-GTC'). Reads are considered duplicates if, in addition to standard definition, have identical normalized UMIs.  A UMI from the 'bottom' strand is normalized by swapping its content around the hyphen (eg. ATC-GTC becomes GTC-ATC).  A UMI from the 'top' strand is already normalized as it is. Both reads from a read pair considered top strand if the read 1 unclipped 5' coordinate is less than the read 2 unclipped 5' coordinate. All chimeric reads and read fragments are treated as having come from the top strand. With this option is it required that the BARCODE_TAG hold non-normalized UMIs. Default false.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--DUPLICATE_SCORING_STRATEGY">--DUPLICATE_SCORING_STRATEGY </a>
 			 / <small>-DS</small>
 		</h3>
@@ -963,6 +989,18 @@
 		<p>
 				<span class="badge badge-important">R</span>
 		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MOLECULAR_IDENTIFIER_TAG">--MOLECULAR_IDENTIFIER_TAG </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>SAM tag to uniquely identify the molecule from which a read was derived.  Use of this option requires that the BARCODE_TAG option be set to a non null value.  Default null.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
@@ -1267,7 +1305,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.18.14-SNAPSHOT built at 12-04-2018 02:04:06.
+        <p class="version">Picard version 2.18.16-SNAPSHOT built at 05-07-2018 03:07:25.
         </p>
 
 	</div>

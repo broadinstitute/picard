@@ -207,6 +207,34 @@
       "options": []
     },
     {
+      "summary": "What value (if anything) to output to stdout (for scripting)",
+      "name": "--OUTPUT_VALUE",
+      "synonyms": "NA",
+      "type": "Output",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "NONE",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": [
+        {
+          "summary": "",
+          "name": "NONE"
+        },
+        {
+          "summary": "",
+          "name": "BASES"
+        },
+        {
+          "summary": "",
+          "name": "INTERVALS"
+        }
+      ]
+    },
+    {
       "summary": "The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals \u003c 0 bases long will be removed. Padding is applied to the interval lists (both INPUT and SECOND_INPUT, if provided) \u003cb\u003e before \u003c/b\u003e the ACTION is performed.",
       "name": "--PADDING",
       "synonyms": "NA",
@@ -252,7 +280,22 @@
       "options": []
     },
     {
-      "summary": "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  Note - if \u003e 1, the resultant scattered intervals will be sorted and uniqued.  The sort will be inverted if the INVERT flag is set.",
+      "summary": "When scattering with this argument, each of the resultant files will (ideally) have this amount of \u0027content\u0027, which  means either base-counts or interval-counts depending on SUBDIVISION_MODE. When provided, overrides SCATTER_COUNT",
+      "name": "--SCATTER_CONTENT",
+      "synonyms": "NA",
+      "type": "Integer",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  ",
       "name": "--SCATTER_COUNT",
       "synonyms": "NA",
       "type": "int",
@@ -297,10 +340,10 @@
       "options": []
     },
     {
-      "summary": "Selects between various ways in which scattering of the interval-list can happen.",
+      "summary": "The mode used to scatter the interval list.",
       "name": "--SUBDIVISION_MODE",
       "synonyms": "-M",
-      "type": "Mode",
+      "type": "IntervalListScatterMode",
       "required": "no",
       "fulltext": "",
       "defaultValue": "INTERVAL_SUBDIVISION",
@@ -311,16 +354,20 @@
       "kind": "optional",
       "options": [
         {
-          "summary": "A simple scatter approach in which all output intervals have size equal to the total base count of the source list divided by the\n scatter count (except, possibly, in the last interval list).",
+          "summary": "A simple scatter approach in which all output intervals have size equal to the total base count of the source list divide by the\n scatter count (except for possible variance in the final interval list).",
           "name": "INTERVAL_SUBDIVISION"
         },
         {
-          "summary": "A scatter approach that differs from {@link Mode#INTERVAL_SUBDIVISION} in a few ways:\n \u003col\u003e\n \u003cli\u003eNo interval will be subdivided, and consequently, the requested {@link IntervalListTools#SCATTER_COUNT} is\n an upper bound of scatter count, not a guarantee of the number of {@link IntervalList}s that will be produced\n (e.g., if scatterCount \u003d 10 but there is only one interval in the input, only 1 interval list will be emitted).\u003c/li\u003e\n \u003cli\u003eWhen an interval would otherwise be split, it is instead deferred to the next scatter list.\u003c/li\u003e\n \u003cli\u003eThe \"target width\" of each scatter list may be wider than what is computed for {@link Mode#INTERVAL_SUBDIVISION}.\n Specifically, if the widest interval in the source interval list is larger than what would otherwise be the target width, that\n interval\u0027s width is used.\u003cbr/\u003e\u003cbr/\u003eThis approach produces more consistently-sized interval lists, which is one of\n the objectives of scattering.\u003c/li\u003e\n \u003c/ol\u003e",
+          "summary": "A scatter approach that differs from {@link #INTERVAL_SUBDIVISION} in a few ways.\n \u003col\u003e\n \u003cli\u003eNo interval will be subdivided, and consequently, the requested scatter count is an upper bound of scatter count, not a\n guarantee as to how many {@link IntervalList}s will be produced (e.g., if scatterCount \u003d 10 but there is only one input interval,\n only 1 interval list will be emitted).\u003c/li\u003e\n \u003cli\u003eWhen an interval would otherwise be split, it is instead deferred to the next scatter list.\u003c/li\u003e\n \u003cli\u003eThe \"target width\" of each scatter list may be wider than what is computed for INTERVAL_SUBDIVISION.\n Specifically, if the widest interval in the source interval list is larger than what would otherwise be the target width, that\n interval\u0027s width is used.\u003cbr/\u003e\u003cbr/\u003eThe reasoning for this is that this approach produces more consistently-sized interval lists,\n which is one of the objectives of scattering.\u003c/li\u003e\n \u003c/ol\u003e",
           "name": "BALANCING_WITHOUT_INTERVAL_SUBDIVISION"
         },
         {
-          "summary": "A scatter approach that differs from {@link Mode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.\n\n This approach tries to balance the number of bases in each interval list by estimating the remaining interval lists sizes.  This is\n computed from the total number of unique bases and the bases we have consumed.  This means that the interval list with the most\n number of unique bases is at most the ideal split length larger than the smallest interval list (unique number of bases).",
+          "summary": "A scatter approach that differs from {@link IntervalListScatterMode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.\n \u003col\u003e\n \u003cli\u003eWe try to balance the number of unique bases in each interval list by estimating the remaining interval lists sizes.  This is\n computed from the total number of unique bases and the bases we have consumed.  This means that the interval list with the most\n number of unique bases is at most the ideal split length larger than the smallest interval list (unique # of bases).\u003c/li\u003e\n \u003c/ol\u003e",
           "name": "BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW"
+        },
+        {
+          "summary": "A scatter by interval **count** which attempts to fill each resulting interval list with the same number\n of intervals, disregarding the base count. This approach can be useful for tools that operate on the interval level\n rather than the base level, for example CNV calling.",
+          "name": "INTERVAL_COUNT"
         }
       ]
     },
@@ -445,7 +492,7 @@
       ]
     }
   ],
-  "description": "Performs various IntervalList manipulations.\n\n \u003ch3\u003eSummary\u003c/h3\u003e\n This tool offers multiple interval list file manipulation capabilities, including: sorting,\n merging, subtracting, padding, and other set-theoretic operations. The default action\n is to merge and sort the intervals provided in the #INPUTs. Other options, e.g. interval subtraction, are\n controlled by the arguments.\n \u003cbr /\u003e\n Both IntervalList and VCF files are accepted as input. IntervalList should be denoted with the extension\n htsjdk.samtools.util.IOUtil#INTERVAL_LIST_FILE_EXTENSION, while a VCF must have one of htsjdk.samtools.util.IOUtil#VCF_FILE_EXTENSION, htsjdk.samtools.util.IOUtil#COMPRESSED_VCF_FILE_EXTENSION,\n htsjdk.samtools.util.IOUtil#BCF_FILE_EXTENSION. When VCF file is used as input, each variant is translated into an using its reference allele or the END\n INFO annotation (if present) to determine the extent of the interval.\n\n IntervalListTools can also \"scatter\" the resulting interval-list into many interval-files. This can be useful\n for creating multiple interval lists for scattering an analysis over.\n\n \u003ch3\u003eDetails\u003c/h3\u003e\n  The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and\n  other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,\n  the file then contains records, one per line in text format with the following\n values tab-separated:\n \u003cpre\u003e\n \u003cul\u003e\n \u003cli\u003eSequence name (SN)\u003c/li\u003e\n \u003cli\u003eStart position (1-based)\u003c/li\u003e\n \u003cli\u003eEnd position (1-based, end inclusive)\u003c/li\u003e\n \u003cli\u003eStrand (either + or -)\u003c/li\u003e\n \u003cli\u003eInterval name (ideally unique names for intervals)\u003c/li\u003e\n \u003c/ul\u003e\n \u003c/pre\u003e\n The coordinate system is 1-based, closed-ended, so that the first base in a sequence is at position 1, and both the start\n and the end positions are included in an interval.\n\n For Example:\n \u003cpre\u003e\n \\@HD\tVN:1.0\n \\@SQ\tSN:chr1\tLN:501\n \\@SQ\tSN:chr2\tLN:401\n chr1\t1\t100\t+\tstarts at the first base of the contig and covers 100 bases\n chr2\t100\t100\t+\tinterval with exactly one base\n \u003c/pre\u003e\n\n \u003ch3\u003eUsage examples\u003c/h3\u003e\n \u003ch4\u003e1. Combine the intervals from two interval lists:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dCONCAT \\\\\n       I\u003dinput.interval_list \\\\\n       I\u003dinput_2.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e\n\n \u003ch4\u003e2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting\n intervals:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dCONCAT \\\\\n       SORT\u003dtrue \\\\\n       UNIQUE\u003dtrue \\\\\n       I\u003dinput.interval_list \\\\\n       I\u003dinput_2.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e\n\n \u003ch4\u003e3. Subtract the intervals in SECOND_INPUT from those in INPUT:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dSUBTRACT \\\\\n       I\u003dinput.interval_list \\\\\n       SI\u003dinput_2.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e\n\n \u003ch4\u003e4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dINTERSECT \\\\\n       I\u003dinput1.interval_list \\\\\n       I\u003dinput2.interval_list \\\\\n       SI\u003dinput3.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e",
+  "description": "Performs various IntervalList manipulations.\n \u003cp\u003e\n \u003ch3\u003eSummary\u003c/h3\u003e\n This tool offers multiple interval list file manipulation capabilities, including: sorting,\n merging, subtracting, padding, and other set-theoretic operations. The default action\n is to merge and sort the intervals provided in the #INPUTs. Other options, e.g. interval subtraction, are\n controlled by the arguments.\n \u003cbr /\u003e\n Both IntervalList and VCF files are accepted as input. IntervalList should be denoted with the extension\n htsjdk.samtools.util.IOUtil#INTERVAL_LIST_FILE_EXTENSION, while a VCF must have one of htsjdk.samtools.util.IOUtil#VCF_FILE_EXTENSION, htsjdk.samtools.util.IOUtil#COMPRESSED_VCF_FILE_EXTENSION,\n htsjdk.samtools.util.IOUtil#BCF_FILE_EXTENSION. When VCF file is used as input, each variant is translated into an using its reference allele or the END\n INFO annotation (if present) to determine the extent of the interval.\n \u003cp\u003e\n IntervalListTools can also \"scatter\" the resulting interval-list into many interval-files. This can be useful\n for creating multiple interval lists for scattering an analysis over.\n \u003cp\u003e\n \u003ch3\u003eDetails\u003c/h3\u003e\n The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and\n other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,\n the file then contains records, one per line in text format with the following\n values tab-separated:\n \u003cpre\u003e\n \u003cul\u003e\n \u003cli\u003eSequence name (SN)\u003c/li\u003e\n \u003cli\u003eStart position (1-based)\u003c/li\u003e\n \u003cli\u003eEnd position (1-based, end inclusive)\u003c/li\u003e\n \u003cli\u003eStrand (either + or -)\u003c/li\u003e\n \u003cli\u003eInterval name (ideally unique names for intervals)\u003c/li\u003e\n \u003c/ul\u003e\n \u003c/pre\u003e\n The coordinate system is 1-based, closed-ended, so that the first base in a sequence is at position 1, and both the start\n and the end positions are included in an interval.\n \u003cp\u003e\n For Example:\n \u003cpre\u003e\n \\@HD\tVN:1.0\n \\@SQ\tSN:chr1\tLN:501\n \\@SQ\tSN:chr2\tLN:401\n chr1\t1\t100\t+\tstarts at the first base of the contig and covers 100 bases\n chr2\t100\t100\t+\tinterval with exactly one base\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch3\u003eUsage examples\u003c/h3\u003e\n \u003ch4\u003e1. Combine the intervals from two interval lists:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dCONCAT \\\\\n       I\u003dinput.interval_list \\\\\n       I\u003dinput_2.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch4\u003e2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting\n intervals:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dCONCAT \\\\\n       SORT\u003dtrue \\\\\n       UNIQUE\u003dtrue \\\\\n       I\u003dinput.interval_list \\\\\n       I\u003dinput_2.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch4\u003e3. Subtract the intervals in SECOND_INPUT from those in INPUT:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dSUBTRACT \\\\\n       I\u003dinput.interval_list \\\\\n       SI\u003dinput_2.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch4\u003e4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dINTERSECT \\\\\n       I\u003dinput1.interval_list \\\\\n       I\u003dinput2.interval_list \\\\\n       SI\u003dinput3.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e",
   "name": "IntervalListTools",
   "group": "Intervals Manipulation",
   "beta": false,
