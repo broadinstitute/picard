@@ -363,7 +363,10 @@ public class TheoreticalSensitivity {
          if (distribution.length == 0) {
              return distribution;
          }
-         while(distribution[endOfDistribution - 1] == 0) {
+
+         // Locate last element in array that is non-zero,
+         // if all elements are zeros the last element is
+         while (distribution[endOfDistribution - 1] == 0) {
              endOfDistribution--;
              if (endOfDistribution == 0) break;
          }
