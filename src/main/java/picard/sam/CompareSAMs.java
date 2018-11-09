@@ -23,26 +23,25 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.SecondaryOrSupplementarySkippingIterator;
-import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.PositionalArguments;
+import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.sam.markduplicates.util.LibraryIdGenerator;
 
+
+import java.io.BufferedWriter;
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.charset.Charset;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Rudimentary SAM comparer.  Compares headers, and if headers are compatible enough, compares SAMRecords,
@@ -72,6 +71,15 @@ public class CompareSAMs extends CommandLineProgram {
     @PositionalArguments(minElements = 2, maxElements = 2)
     public List<File> samFiles;
 
+    @Argument(shortName="IGNORE_SPECIES")
+    boolean IGNORE_SPECIES=false;
+
+    @Argument(shortName="IGNORE_ASSEMBLY")
+    boolean IGNORE_ASSEMBLY=false;
+
+    @Argument(shortName="IGNORE_UR")
+    boolean IGNORE_UR=false;
+
     private final SamReader[] samReaders = new SamReader[2];
     private boolean sequenceDictionariesDiffer;
     private int mappingsMatch = 0;
@@ -79,9 +87,30 @@ public class CompareSAMs extends CommandLineProgram {
     private int unmappedLeft = 0;
     private int unmappedRight = 0;
     private int mappingsDiffer = 0;
+    private int mappingsDifferMultipleMappings = 0;
+    private int mappingQualsDiffer = 0;
     private int missingLeft = 0;
     private int missingRight = 0;
+    private int duplicateMarkingsDiffer=0;
+    private int duplicateMarkingsDifferSophisticated=0;
+    private int totalCount=0;
     private boolean areEqual;
+
+    private final static Log log = Log.getInstance(CompareSAMs.class);
+
+
+    private SAMFileWriter LeftUnmappedInLeftWriter;
+    private SAMFileWriter RightUnmappedInLeftWriter;
+    private SAMFileWriter LeftUnmappedInRightWriter;
+    private SAMFileWriter RightUnmappedInRightWriter;
+    private SAMFileWriter differWriterLeft;
+    private SAMFileWriter differWriterRight;
+    private SAMFileWriter duplicateMarksDifferNaiveLeftWriter;
+    private SAMFileWriter duplicateMarksDifferNaiveRightWriter;
+    private SAMFileWriter duplicateMarksDifferSophisticatedLeftWriter;
+    private SAMFileWriter duplicateMarksDifferSophisticatedRightWriter;
+    private SortingCollection<SAMRecord> duplicateMarksDifferNaiveSorterLeft;
+    private SortingCollection<SAMRecord> duplicateMarksDifferNaiveSorterRight;
 
     public static void main(String[] argv) {
         new CompareSAMs().instanceMainWithExit(argv);
@@ -95,11 +124,44 @@ public class CompareSAMs extends CommandLineProgram {
      */
     @Override
     protected int doWork() {
+
         for (int i = 0; i < samFiles.size(); ++i) {
             samReaders[i] = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(samFiles.get(i));
         }
+
+        LeftUnmappedInLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("LeftUnmappedInLeft.bam"));
+        RightUnmappedInLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("RightUnmappedInLeft.bam"));
+        LeftUnmappedInRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("LeftUnmappedInRight.bam"));
+        RightUnmappedInRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("RightUnmappedInRight.bam"));
+        differWriterLeft = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("differLeft.bam"));
+        differWriterRight = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("differRight.bam"));
+        duplicateMarksDifferNaiveLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("duplicateMarksDifferLeft.bam"));
+        duplicateMarksDifferNaiveRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("duplicateMarksDifferRight.bam"));
+        duplicateMarksDifferSophisticatedLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("duplicateMarksDifferSophisticatedLeft.bam"));
+        duplicateMarksDifferSophisticatedRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("duplicateMarksDifferSophisticatedRight.bam"));
+        duplicateMarksDifferNaiveSorterLeft = SortingCollection.newInstance(SAMRecord.class,new BAMRecordCodec(samReaders[0].getFileHeader()),
+                new SAMRecordQueryNameComparator(),500000, Paths.get(System.getProperty("java.io.tmpdir")));
+        duplicateMarksDifferNaiveSorterRight = SortingCollection.newInstance(SAMRecord.class,new BAMRecordCodec(samReaders[1].getFileHeader()),
+                new SAMRecordQueryNameComparator(),500000, Paths.get(System.getProperty("java.io.tmpdir")));
+
         areEqual = compareHeaders();
+
         areEqual = compareAlignments() && areEqual;
+
+        areEqual = compareMarkDuplicates() && areEqual;
+
+
+        LeftUnmappedInLeftWriter.close();
+        RightUnmappedInLeftWriter.close();
+        LeftUnmappedInRightWriter.close();
+        RightUnmappedInRightWriter.close();
+        differWriterLeft.close();
+        differWriterRight.close();
+        duplicateMarksDifferNaiveLeftWriter.close();
+        duplicateMarksDifferNaiveRightWriter.close();
+        duplicateMarksDifferSophisticatedLeftWriter.close();
+        duplicateMarksDifferSophisticatedRightWriter.close();
+
         printReport();
         if (!areEqual) {
             System.out.println("SAM files differ.");
@@ -111,13 +173,178 @@ public class CompareSAMs extends CommandLineProgram {
     }
 
     private void printReport() {
-        System.out.println("Match\t" + mappingsMatch);
-        System.out.println("Differ\t" + mappingsDiffer);
-        System.out.println("Unmapped_both\t" + unmappedBoth);
-        System.out.println("Unmapped_left\t" + unmappedLeft);
-        System.out.println("Unmapped_right\t" + unmappedRight);
-        System.out.println("Missing_left\t" + missingLeft);
-        System.out.println("Missing_right\t" + missingRight);
+        try {
+            final BufferedWriter reportWriter = Files.newBufferedWriter(Paths.get("report.tsv"), Charset.forName("UTF-8"));
+            reportWriter.write("Match\tDiffer\tDifferQ0\tQualDiffer\tUnmappedBoth\tUnmappedLeft\tUnmappedRight\tMissingLeft\tMissingRight\tDuplicateMarksDifferNaive\tDuplicateMarksDifferSophisticated");
+            reportWriter.newLine();
+            reportWriter.write(mappingsMatch+"\t"+mappingsDiffer+"\t"+mappingsDifferMultipleMappings+"\t"+mappingQualsDiffer+"\t"+unmappedBoth+"\t"+unmappedLeft+
+                    "\t"+unmappedRight+"\t"+missingLeft+"\t"+missingRight+"\t"+duplicateMarkingsDiffer+"\t"+duplicateMarkingsDifferSophisticated);
+            reportWriter.close();
+
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println(totalCount);
+    }
+
+    private boolean compareMarkDuplicates() {
+        //can only be called once
+        duplicateMarksDifferNaiveSorterLeft.setDestructiveIteration(false);
+        duplicateMarksDifferNaiveSorterRight.setDestructiveIteration(false);
+        final HashSet<String> differSet=selectMarkDuplicateDiffs(duplicateMarksDifferNaiveSorterLeft,duplicateMarksDifferSophisticatedLeftWriter.getFileHeader());
+        differSet.addAll(selectMarkDuplicateDiffs(duplicateMarksDifferNaiveSorterRight,duplicateMarksDifferSophisticatedRightWriter.getFileHeader()));
+        //add reads from opposite file which correspond to those selected as truly having differing duplicate marking
+        duplicateMarksDifferNaiveSorterLeft.setDestructiveIteration(true);
+        duplicateMarksDifferNaiveSorterRight.setDestructiveIteration(true);
+        for (final SAMRecord rec : duplicateMarksDifferNaiveSorterRight) {
+            if (differSet.contains(rec.getReadName())) {
+                duplicateMarksDifferSophisticatedRightWriter.addAlignment(rec);
+                duplicateMarkingsDifferSophisticated++;
+            }
+        }
+        for (final SAMRecord rec : duplicateMarksDifferNaiveSorterLeft) {
+            if (differSet.contains(rec.getReadName())) {
+                duplicateMarksDifferSophisticatedLeftWriter.addAlignment(rec);
+                //don't count here because would be double counting
+            }
+        }
+        duplicateMarksDifferNaiveSorterLeft.cleanup();
+        duplicateMarksDifferNaiveSorterLeft=null;
+        duplicateMarksDifferNaiveSorterRight.cleanup();
+        duplicateMarksDifferNaiveSorterRight=null;
+        return duplicateMarkingsDifferSophisticated==0;
+    }
+
+    private HashSet<String> selectMarkDuplicateDiffs(final SortingCollection<SAMRecord> collection, SAMFileHeader header) {
+        //collection is sorted by queryname.  assume all reads are paired, and count only primary reads
+        //count reads which are marked as duplicate and do not have same summed base quality as representative read
+        //returns set of readNames for reads which have been marked as duplicates and do not have same summed base quality as representative read
+        final LibraryIdGenerator libraryIdGenerator=new LibraryIdGenerator(header);
+        String currentReadName="";
+        final HashMap<String,ArrayList<Integer>> uncheckDuplicateReadScoresMap=new HashMap<>();
+        final HashMap<String,Integer> representativeReadScoresMap=new HashMap<>();
+        final HashMap<String,ArrayList<SAMRecord>> uncheckedDuplicateReadListMap=new HashMap<>();
+        boolean mateRead=false;
+        int mateRefIndex=-1;
+        int mateCoord=-1;
+        String mateOrientation="";
+        int score=0;
+        SAMRecord mate=null;
+        HashSet<String> readNamesSet=new HashSet<>();
+
+        for(final SAMRecord rec : collection) {
+            if(rec.isSecondaryOrSupplementary()) {
+                continue;
+            }
+            if (mateRead) {
+                if(!rec.getReadName().equals(currentReadName)) {
+                    throw(new PicardException("reads not queryname sorted for countMarkDuplicateDiffs"));
+                }
+                currentReadName="";
+                mateRead=false;
+                //build key
+                int refIndex=rec.getReferenceIndex();
+                int coord=rec.getReadNegativeStrandFlag() ? rec.getUnclippedEnd() : rec.getUnclippedStart();
+
+                int refIndex1, refIndex2, coord1, coord2;
+                String orientation1, orientation2;
+                boolean read1Mapped, read2Mapped;
+                if (mateRefIndex>refIndex || mateRefIndex==refIndex && mateCoord>=coord) {
+                    refIndex1=refIndex;
+                    refIndex2=mateRefIndex;
+                    coord1=coord;
+                    coord2=mateCoord;
+                    orientation1=rec.getReadNegativeStrandFlag()? "R" : "F";
+                    orientation2=mateOrientation;
+                    //if location is same and reads point in opposite directions, make sure orientation is "FR"
+                    if (mateRefIndex==refIndex && mateCoord==coord && orientation1.equals("R") && orientation2.equals("F")) {
+                        orientation1="F";
+                        orientation2="R";
+                    }
+                    read1Mapped=!rec.getReadUnmappedFlag();
+                    read2Mapped=!mate.getReadUnmappedFlag();
+                } else {
+                    refIndex1=mateRefIndex;
+                    refIndex2=refIndex;
+                    coord1=mateCoord;
+                    coord2=coord;
+                    orientation1=mateOrientation;
+                    orientation2=rec.getReadNegativeStrandFlag()? "R" : "F";
+                    read1Mapped=!mate.getReadUnmappedFlag();
+                    read2Mapped=!rec.getReadUnmappedFlag();
+                }
+                final short libraryId=libraryIdGenerator.getLibraryId(rec);
+                if(!read1Mapped && !read2Mapped) {
+                    if(rec.getDuplicateReadFlag()) {
+                        //should never mark a fragment with 2 unmarked reads as duplicate, cannot be saved
+                        readNamesSet.add(rec.getReadName());
+                    }
+                    continue;
+                }
+                String key1=read1Mapped ? refIndex1+":"+coord1+":"+orientation1 : "";
+                String key2=read2Mapped ? refIndex2+":"+coord2+":"+orientation2 : "";
+                final String key=libraryId+key1+key2;
+                if(!rec.getReadUnmappedFlag()) {
+                    score+=DuplicateScoringStrategy.computeDuplicateScore(rec,DuplicateScoringStrategy.ScoringStrategy.SUM_OF_BASE_QUALITIES);
+                }
+                if(rec.getDuplicateReadFlag()) {
+                    //duplicate read, check if representative read already found
+                    if(representativeReadScoresMap.containsKey(key)) {
+                        if(representativeReadScoresMap.get(key)!=score) {
+                            readNamesSet.add(rec.getReadName());
+                        }
+                    }
+                    else {
+                        //representative read not yet found, so add to unchecked maps
+                        if(uncheckDuplicateReadScoresMap.containsKey(key)) {
+                            uncheckDuplicateReadScoresMap.get(key).add(score);
+                            uncheckedDuplicateReadListMap.get(key).add(rec);
+                            uncheckedDuplicateReadListMap.get(key).add(mate);
+                        } else {
+                            uncheckDuplicateReadScoresMap.put(key,new ArrayList<>(Arrays.asList(score)));
+                            uncheckedDuplicateReadListMap.put(key,new ArrayList<>(Arrays.asList(rec,mate)));
+                        }
+                    }
+                } else {
+                    //representative read, first add to map of representative reads
+                    if (representativeReadScoresMap.containsKey(key)) {
+                        throw(new PicardException("Multiple representative reads found for same duplicate grouping key: "+key+" readname:"+rec.getReadName()));
+                    }
+                    representativeReadScoresMap.put(key,score);
+                    //check an unchecked duplicate marked reads associated with this representative read
+                    ArrayList<Integer> uncheckedScores=uncheckDuplicateReadScoresMap.remove(key);
+                    ArrayList<SAMRecord> uncheckedReads=uncheckedDuplicateReadListMap.remove(key);
+                    if(uncheckedScores!=null) {
+                        for (int i=0;i<uncheckedScores.size();i++) {
+                            if (uncheckedScores.get(i)!=score) {
+                                for(final SAMRecord uncheckedRec: uncheckedReads) {
+                                    readNamesSet.add(uncheckedRec.getReadName());
+                                }
+                            }
+                        }
+                    }
+                }
+                mate=null;
+            } else {
+                if (mateRead) {
+                    throw (new PicardException("read fragment with more than one primary read alignment found"));
+                }
+                mateRead=true;
+                mateRefIndex=rec.getReferenceIndex();
+                mateCoord=rec.getReadNegativeStrandFlag() ? rec.getUnclippedEnd() : rec.getUnclippedStart();
+                currentReadName=rec.getReadName();
+                mateOrientation=rec.getReadNegativeStrandFlag()? "R" : "F";
+                mate=rec;
+                if(!rec.getReadUnmappedFlag()) {
+                    score=DuplicateScoringStrategy.computeDuplicateScore(rec,DuplicateScoringStrategy.ScoringStrategy.SUM_OF_BASE_QUALITIES);
+                }
+            }
+        }
+        //count remaining unchecked duplicates which did not have a corresponding representative read difference
+        for(Map.Entry<String,ArrayList<SAMRecord>> entry : uncheckedDuplicateReadListMap.entrySet()) {
+            readNamesSet.addAll(entry.getValue().stream().map(r->r.getReadName()).collect(Collectors.toSet()));
+        }
+        return readNamesSet;
     }
 
     private boolean compareAlignments() {
@@ -156,6 +383,8 @@ public class CompareSAMs extends CommandLineProgram {
 
         boolean ret = true;
 
+        final ProgressLogger progress = new ProgressLogger(log, 1000000, "Compared");
+
         while (itLeft.hasCurrent()) {
             if (!itRight.hasCurrent()) {
                 // Exhausted right side.  See if any of the remaining left reads match
@@ -178,6 +407,7 @@ public class CompareSAMs extends CommandLineProgram {
             leftCurrentCoordinate.put(getKeyForRecord(left), left);
             while (itLeft.advance()) {
                 final SAMRecord nextLeft = itLeft.getCurrent();
+                progress.record(nextLeft);
                 if (compareAlignmentCoordinates(left, nextLeft) == 0) {
                     leftCurrentCoordinate.put(getKeyForRecord(nextLeft), nextLeft);
                 } else {
@@ -235,6 +465,9 @@ public class CompareSAMs extends CommandLineProgram {
 
         // Any elements remaining in rightUnmatched are guaranteed not to be in leftUnmatched.
         missingLeft += rightUnmatched.size();
+        for (final Map.Entry<String, SAMRecord> rightEntry : rightUnmatched.entrySet()) {
+            final SAMRecord right = rightEntry.getValue();
+        }
 
         if (ret && (missingLeft > 0 || missingRight > 0 || mappingsDiffer > 0 || unmappedLeft > 0 || unmappedRight > 0)) {
             ret = false;
@@ -265,6 +498,7 @@ public class CompareSAMs extends CommandLineProgram {
         final SecondaryOrSupplementarySkippingIterator it1 = new SecondaryOrSupplementarySkippingIterator(samReaders[0].iterator());
         final SecondaryOrSupplementarySkippingIterator it2 = new SecondaryOrSupplementarySkippingIterator(samReaders[1].iterator());
 
+        final ProgressLogger progress = new ProgressLogger(log, 1000000, "Compared");
         boolean ret = true;
         while (it1.hasCurrent()) {
             if (!it2.hasCurrent()) {
@@ -284,6 +518,7 @@ public class CompareSAMs extends CommandLineProgram {
                 if (!tallyAlignmentRecords(it1.getCurrent(), it2.getCurrent())) {
                     ret = false;
                 }
+                progress.record(it1.getCurrent());
                 it1.advance();
                 it2.advance();
             }
@@ -299,6 +534,7 @@ public class CompareSAMs extends CommandLineProgram {
         final SecondaryOrSupplementarySkippingIterator it1 = new SecondaryOrSupplementarySkippingIterator(samReaders[0].iterator());
         final SecondaryOrSupplementarySkippingIterator it2 = new SecondaryOrSupplementarySkippingIterator(samReaders[1].iterator());
         boolean ret = true;
+        final ProgressLogger progress = new ProgressLogger(log, 1000000, "Compared");
         for (; it1.hasCurrent(); it1.advance(), it2.advance()) {
             if (!it2.hasCurrent()) {
                 missingRight += countRemaining(it1);
@@ -306,6 +542,7 @@ public class CompareSAMs extends CommandLineProgram {
             }
             final SAMRecord s1 = it1.getCurrent();
             final SAMRecord s2 = it2.getCurrent();
+            progress.record(s1);
             if (!compareValues(s1.getReadName(), s2.getReadName(), "Read names")) {
                 System.out.println("Read names cease agreeing in unsorted SAM files .  Comparison aborting.");
             }
@@ -331,27 +568,65 @@ public class CompareSAMs extends CommandLineProgram {
         if (!s1.getReadName().equals(s2.getReadName())) {
             throw new PicardException("Read names do not match: " + s1.getReadName() + " : " + s2.getReadName());
         }
+        if(mappingsMatch+mappingsDiffer+unmappedLeft+unmappedRight+unmappedBoth!=totalCount) {
+            throw new PicardException("counts don't add up");
+        }
+        totalCount++;
+
+        catalogDuplicateDifferences(s1,s2);
         if (s1.getReadUnmappedFlag() && s2.getReadUnmappedFlag()) {
             ++unmappedBoth;
             return true;
         }
         if (s1.getReadUnmappedFlag()) {
+            LeftUnmappedInLeftWriter.addAlignment(s1);
+            RightUnmappedInLeftWriter.addAlignment(s1);
             ++unmappedLeft;
             return false;
         }
         if (s2.getReadUnmappedFlag()) {
+            LeftUnmappedInRightWriter.addAlignment(s1);
+            RightUnmappedInRightWriter.addAlignment(s2);
             ++unmappedRight;
             return false;
         }
-        final boolean ret = (s1.getReferenceName().equals(s2.getReferenceName()) &&
-                s1.getAlignmentStart() == s2.getAlignmentStart() &&
-                s1.getReadNegativeStrandFlag() == s1.getReadNegativeStrandFlag());
+        final boolean ret = compareAlignmentsWithAlternates(s1,s2);
         if (!ret) {
+            differWriterLeft.addAlignment(s1);
+            differWriterRight.addAlignment(s2);
             ++mappingsDiffer;
         } else {
             ++mappingsMatch;
         }
         return ret;
+    }
+
+    private void catalogDuplicateDifferences(final SAMRecord s1, final SAMRecord s2) {
+            if (s1.getDuplicateReadFlag()!=s2.getDuplicateReadFlag()) {
+                duplicateMarkingsDiffer++;
+                duplicateMarksDifferNaiveLeftWriter.addAlignment(s1);
+                duplicateMarksDifferNaiveRightWriter.addAlignment(s2);
+                duplicateMarksDifferNaiveSorterLeft.add(s1);
+                duplicateMarksDifferNaiveSorterRight.add(s2);
+        }
+
+    }
+
+    private boolean compareAlignmentsWithAlternates(SAMRecord s1, SAMRecord s2) {
+        if (s1.getReferenceName().equals(s2.getReferenceName()) &&
+                s1.getAlignmentStart() == s2.getAlignmentStart() &&
+                s1.getReadNegativeStrandFlag() == s1.getReadNegativeStrandFlag()) {
+            if (s1.getMappingQuality() != s2.getMappingQuality()) {
+                mappingQualsDiffer++;
+            }
+            return true;
+        }
+        //check if mapping qualities are 0
+        else if (s1.getMappingQuality()<=3 && s2.getMappingQuality()<=3){
+            mappingsDifferMultipleMappings++;
+            return true;
+        }
+    return false;
     }
 
     private boolean compareHeaders() {
@@ -454,14 +729,14 @@ public class CompareSAMs extends CommandLineProgram {
         }
         boolean ret = compareValues(sequenceRecord1.getSequenceLength(), sequenceRecord2.getSequenceLength(), "Length of sequence " +
                 sequenceRecord1.getSequenceName());
-        ret = compareValues(sequenceRecord1.getSpecies(), sequenceRecord2.getSpecies(), "Species of sequence " +
-                sequenceRecord1.getSequenceName()) && ret;
-        ret = compareValues(sequenceRecord1.getAssembly(), sequenceRecord2.getAssembly(), "Assembly of sequence " +
-                sequenceRecord1.getSequenceName()) && ret;
+        ret = (IGNORE_SPECIES || compareValues(sequenceRecord1.getSpecies(), sequenceRecord2.getSpecies(), "Species of sequence " +
+                sequenceRecord1.getSequenceName())) && ret;
+        ret = (IGNORE_ASSEMBLY || compareValues(sequenceRecord1.getAssembly(), sequenceRecord2.getAssembly(), "Assembly of sequence " +
+                sequenceRecord1.getSequenceName())) && ret;
         ret = compareValues(sequenceRecord1.getAttribute("M5"), sequenceRecord2.getAttribute("M5"), "MD5 of sequence " +
                 sequenceRecord1.getSequenceName()) && ret;
-        ret = compareValues(sequenceRecord1.getAttribute("UR"), sequenceRecord2.getAttribute("UR"), "URI of sequence " +
-                sequenceRecord1.getSequenceName()) && ret;
+        ret = (IGNORE_UR || compareValues(sequenceRecord1.getAttribute("UR"), sequenceRecord2.getAttribute("UR"), "URI of sequence " +
+                sequenceRecord1.getSequenceName())) && ret;
         return ret;
     }
 
