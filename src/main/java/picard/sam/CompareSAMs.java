@@ -128,20 +128,20 @@ public class CompareSAMs extends CommandLineProgram {
         for (int i = 0; i < samFiles.size(); ++i) {
             samReaders[i] = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(samFiles.get(i));
         }
-
-        LeftUnmappedInLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("LeftUnmappedInLeft.bam"));
-        RightUnmappedInLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("RightUnmappedInLeft.bam"));
-        LeftUnmappedInRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("LeftUnmappedInRight.bam"));
-        RightUnmappedInRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("RightUnmappedInRight.bam"));
-        differWriterLeft = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("differLeft.bam"));
-        differWriterRight = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("differRight.bam"));
-        duplicateMarksDifferNaiveLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("duplicateMarksDifferLeft.bam"));
-        duplicateMarksDifferNaiveRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("duplicateMarksDifferRight.bam"));
-        duplicateMarksDifferSophisticatedLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("duplicateMarksDifferSophisticatedLeft.bam"));
-        duplicateMarksDifferSophisticatedRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samReaders[0].getFileHeader(), false, Paths.get("duplicateMarksDifferSophisticatedRight.bam"));
-        duplicateMarksDifferNaiveSorterLeft = SortingCollection.newInstance(SAMRecord.class,new BAMRecordCodec(samReaders[0].getFileHeader()),
+        final SAMFileHeader header=samReaders[0].getFileHeader().clone();
+        LeftUnmappedInLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, Paths.get("LeftUnmappedInLeft.bam"));
+        RightUnmappedInLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, Paths.get("RightUnmappedInLeft.bam"));
+        LeftUnmappedInRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, Paths.get("LeftUnmappedInRight.bam"));
+        RightUnmappedInRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, Paths.get("RightUnmappedInRight.bam"));
+        differWriterLeft = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, Paths.get("differLeft.bam"));
+        differWriterRight = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, Paths.get("differRight.bam"));
+        duplicateMarksDifferNaiveLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, Paths.get("duplicateMarksDifferLeft.bam"));
+        duplicateMarksDifferNaiveRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, Paths.get("duplicateMarksDifferRight.bam"));
+        duplicateMarksDifferSophisticatedLeftWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, Paths.get("duplicateMarksDifferSophisticatedLeft.bam"));
+        duplicateMarksDifferSophisticatedRightWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, Paths.get("duplicateMarksDifferSophisticatedRight.bam"));
+        duplicateMarksDifferNaiveSorterLeft = SortingCollection.newInstance(SAMRecord.class,new BAMRecordCodec(header),
                 new SAMRecordQueryNameComparator(),500000, Paths.get(System.getProperty("java.io.tmpdir")));
-        duplicateMarksDifferNaiveSorterRight = SortingCollection.newInstance(SAMRecord.class,new BAMRecordCodec(samReaders[1].getFileHeader()),
+        duplicateMarksDifferNaiveSorterRight = SortingCollection.newInstance(SAMRecord.class,new BAMRecordCodec(header),
                 new SAMRecordQueryNameComparator(),500000, Paths.get(System.getProperty("java.io.tmpdir")));
 
         areEqual = compareHeaders();
@@ -238,7 +238,7 @@ public class CompareSAMs extends CommandLineProgram {
             }
             if (mateRead) {
                 if(!rec.getReadName().equals(currentReadName)) {
-                    throw(new PicardException("reads not queryname sorted for countMarkDuplicateDiffs"));
+                    throw(new PicardException("reads not queryname sorted for countMarkDuplicateDiffs, or read not paired"));
                 }
                 currentReadName="";
                 mateRead=false;
@@ -339,6 +339,9 @@ public class CompareSAMs extends CommandLineProgram {
                     score=DuplicateScoringStrategy.computeDuplicateScore(rec,DuplicateScoringStrategy.ScoringStrategy.SUM_OF_BASE_QUALITIES);
                 }
             }
+        }
+        if (mateRead) {
+            throw new PicardException("read not paired");
         }
         //count remaining unchecked duplicates which did not have a corresponding representative read difference
         for(Map.Entry<String,ArrayList<SAMRecord>> entry : uncheckedDuplicateReadListMap.entrySet()) {
@@ -811,5 +814,13 @@ public class CompareSAMs extends CommandLineProgram {
     public boolean areEqual() {
         return areEqual;
     }
+
+    public int getDifferQ0() { return mappingsDifferMultipleMappings;}
+
+    public int getDuplicateMarkingsDiffer() { return duplicateMarkingsDiffer;}
+
+    public int getDuplicateMarkingsDifferSophisticated() {return duplicateMarkingsDifferSophisticated;}
+
+    public int getMappingQualsDiffer() {return mappingQualsDiffer;}
 
 }
