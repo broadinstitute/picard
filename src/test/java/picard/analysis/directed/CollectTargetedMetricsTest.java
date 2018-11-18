@@ -167,7 +167,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
                 // the tests from taking too long to run.
                 {tempSamFile, outfile, tsOutfile, perTargetOutfile, referenceFile, singleIntervals, 2000,
                         Arrays.asList(0.01, 0.05, 0.10,  0.30,  0.50), // Allele fraction
-                        Arrays.asList(0.01, 0.52, 0.93,  0.99,  0.99)  // Expected sensitivity
+                        Arrays.asList(0.01, 0.54, 0.93,  0.99,  0.99)  // Expected sensitivity
                 }
         };
     }
