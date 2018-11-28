@@ -126,7 +126,7 @@ public class OpticalDuplicateFinder extends ReadNameParser implements Serializab
         // If there is only one or zero reads passed in (so there are obviously no optical duplicates),
         // or if there are too many reads (so we don't want to try to run this expensive n^2 algorithm),
         // then just return an array of all false
-        if (length < 2 || length > maxDuplicateSetSize) {
+        if (this.readNameRegex == null || length < 2 || length > maxDuplicateSetSize) {
             return opticalDuplicateFlags;
         }
 

@@ -31,7 +31,7 @@ public class ReadNameParser implements Serializable {
 
     private final boolean useOptimizedDefaultParsing; // was the regex default?
 
-    private final String readNameRegex;
+    protected final String readNameRegex;
 
     private Pattern readNamePattern;
 
@@ -63,7 +63,7 @@ public class ReadNameParser implements Serializable {
      * @param log the log to which to write messages.
      */
     public ReadNameParser(final String readNameRegex, final Log log) {
-        this.useOptimizedDefaultParsing = readNameRegex.equals(DEFAULT_READ_NAME_REGEX);
+        this.useOptimizedDefaultParsing = DEFAULT_READ_NAME_REGEX.equals(readNameRegex);
         this.readNameRegex = readNameRegex;
         this.log = log;
     }
