@@ -42,7 +42,7 @@ public abstract class BaseIlluminaDataProvider implements Iterator<ClusterData>,
     }
 
     protected void addData(final ClusterData clusterData, final PfData pfData) {
-        clusterData.setPf(pfData.isPfRead());
+        clusterData.setPf(pfData.isPf());
     }
 
     protected void addData(final ClusterData clusterData, final BarcodeData barcodeData) {
@@ -72,9 +72,9 @@ public abstract class BaseIlluminaDataProvider implements Iterator<ClusterData>,
         for (int i = 0; i < numReads; i++) {
             clusterData.getRead(i).setQualities(qualities[i]);
         }
-        clusterData.setPf(cbclData.isPfRead());
-        clusterData.setX(cbclData.getXCoordinate());
-        clusterData.setY(cbclData.getYCoordinate());
+        clusterData.setPf(cbclData.isPf());
+        clusterData.setX(cbclData.getPositionInfo().xQseqCoord);
+        clusterData.setY(cbclData.getPositionInfo().yQseqCoord);
     }
 
     abstract void seekToTile(int seekAfterFirstRead);

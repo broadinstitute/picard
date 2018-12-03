@@ -46,7 +46,7 @@ public class MultiTileFilterParser extends MultiTileParser<PfData> {
         final boolean nextVal = reader.next();
         return new PfData() {
             @Override
-            public boolean isPfRead() {
+            public boolean isPf() {
                 return nextVal;
             }
         };

@@ -288,8 +288,8 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 0);
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<>();
         result.read(new FileReader(metricsFile));
-        Assert.assertEquals(result.getMetrics().get(0).PF_PERFECT_MATCHES, 1, "Got wrong number of perfect matches");
-        Assert.assertEquals(result.getMetrics().get(0).PF_ONE_MISMATCH_MATCHES, 0, "Got wrong number of one-mismatch matches");
+        Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, 1, "Got wrong number of perfect matches");
+        Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, 0, "Got wrong number of one-mismatch matches");
     }
 
     /**

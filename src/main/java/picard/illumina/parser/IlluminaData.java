@@ -59,7 +59,7 @@ interface RawIntensityData extends IlluminaData{
 }
 
 interface PfData extends IlluminaData {
-    public boolean isPfRead();
+    public boolean isPf();
 }
 
 interface BarcodeData extends IlluminaData {

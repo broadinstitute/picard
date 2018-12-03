@@ -6,10 +6,6 @@ CCTGGTAC
 TATGCANC
 +
 F8-F!-#-
-@machine1:HiMom:abcdeACXX:1:1101:1054:1000 :Y:0:
-GTGCAGAC
-+
-FF--88F-
 @machine1:HiMom:abcdeACXX:1:1101:1072:1000 :N:0:
 GTGTCTCG
 +
@@ -26,10 +22,6 @@ F8F#-!--
 GTTGTAGG
 +
 -!!F-88!
-@machine1:HiMom:abcdeACXX:1:1101:1145:1000 :Y:0:
-AGCCGGCG
-+
-FF!F88-F
 @machine1:HiMom:abcdeACXX:1:1101:1163:1000 :N:0:
 CTGCGTAC
 +
@@ -86,10 +78,6 @@ ANCGGGCT
 AGCAGNGT
 +
 8!!88#!-
-@machine1:HiMom:abcdeACXX:1:1101:1452:1000 :Y:0:
-CCNATNCT
-+
-8-#8-#88
 @machine1:HiMom:abcdeACXX:1:1101:1470:1000 :N:0:
 AGNTGGCN
 +
@@ -110,10 +98,6 @@ CGTGGATT
 ANAGGCCG
 +
 8#88!!F!
-@machine1:HiMom:abcdeACXX:1:1102:1054:1000 :Y:0:
-GGCTNTAG
-+
--!88#888
 @machine1:HiMom:abcdeACXX:1:1102:1072:1000 :N:0:
 GATGTTTA
 +
@@ -130,10 +114,6 @@ CATCCNTG
 GAAACGAA
 +
 F-8-8-FF
-@machine1:HiMom:abcdeACXX:1:1102:1145:1000 :Y:0:
-TCCACGTT
-+
-!8-F!F8!
 @machine1:HiMom:abcdeACXX:1:1102:1163:1000 :N:0:
 NGGGATAT
 +
@@ -194,10 +174,6 @@ F-F-88F!
 TTACGCGC
 +
 !!FF!8!8
-@machine1:HiMom:abcdeACXX:1:1102:1452:1000 :Y:0:
-GGCCCGCT
-+
-!F-F--F!
 @machine1:HiMom:abcdeACXX:1:1102:1470:1000 :N:0:
 CTGGTNNN
 +
