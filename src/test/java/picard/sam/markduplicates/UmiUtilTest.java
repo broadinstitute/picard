@@ -40,27 +40,31 @@ public class UmiUtilTest {
         final boolean read1 = true;
         final boolean read2 = false;
         return new Object[][]{
-                {0, 100, 0, 200, read1, false, true, true},    // Read 1 in F1R2 pair, reads point inwards, top strand
-                {0, 200, 0, 100, read2, true, false, true},    // Read 2 in F1R2 pair, reads point inwards, top strand
-                {0, 200, 0, 100, read1, false, true, false},   // Read 1 in F1R2 pair, reads point outwards
-                {0, 100, 0, 200, read2, true, false, false},   // Read 2 in F1R2 pair, reads point outwards
-                {0, 100, 0, 200, read1, true, false, true},    // Read 1 in F2R1 pair
-                {0, 200, 0, 100, read2, false, false, true},   // Read 2 in F2R1 pair
-                {0, 100, 0, 200, read1, false, false, true},   // Read 1 in F1F2 pair
-                {0, 200, 0, 100, read2, false, false, true},   // Read 2 in F1F2 pair
-                {0, 100, 0, 200, read1, true, true, true},     // Read 1 in R1R2 pair
-                {0, 200, 0, 100, read2, true, true, true},     // Read 2 in R1R2 pair
-                {0, 100, 1, 200, read1, false, true, true},    // Read 1 in F1R2 chimera
-                {0, 100, 1, 200, read2, true, false, false},   // Read 2 in F1R2 chimera
-                {0, 100, 1, 200, read1, true, false, true},    // Read 1 in F2R1 chimera
-                {0, 100, 1, 200, read2, false, false, false},  // Read 2 in F2R1 chimera
-                {0, 100, 1, 200, read2, false, true, false},   // Read 2 in F2R1 chimera
+                {0, 100, 0, 200, read1, false, true, true, true, true},    // Read 1 in F1R2 pair, reads point inwards, top strand
+                {0, 200, 0, 100, read2, true, false, true, true, true},    // Read 2 in F1R2 pair, reads point inwards, top strand
+                {0, 200, 0, 100, read1, false, true, true, true, false},   // Read 1 in F1R2 pair, reads point outwards
+                {0, 100, 0, 200, read2, true, false, true, true, false},   // Read 2 in F1R2 pair, reads point outwards
+                {0, 100, 0, 200, read1, true, false, true, true, true},    // Read 1 in F2R1 pair
+                {0, 200, 0, 100, read2, false, false, true, true, true},   // Read 2 in F2R1 pair
+                {0, 100, 0, 200, read1, false, false, true, true, true},   // Read 1 in F1F2 pair
+                {0, 200, 0, 100, read2, false, false, true, true, true},   // Read 2 in F1F2 pair
+                {0, 100, 0, 200, read1, true, true, true, true, true},     // Read 1 in R1R2 pair
+                {0, 200, 0, 100, read2, true, true, true, true, true},     // Read 2 in R1R2 pair
+                {0, 100, 1, 200, read1, false, true, true, true, true},    // Read 1 in F1R2 chimera
+                {0, 100, 1, 200, read2, true, false, true, true, false},   // Read 2 in F1R2 chimera
+                {0, 100, 1, 200, read1, true, false, true, true, true},    // Read 1 in F2R1 chimera
+                {0, 100, 1, 200, read2, false, false, true, true, false},  // Read 2 in F2R1 chimera
+                {0, 100, 1, 200, read2, false, true, true, true, false},   // Read 2 in F2R1 chimera
+                {0, 100, 0, 200, read1, false, true, false, true, true},   // Read 1 in F1R2 pair, top strand, read not mapped
+                {0, 100, 0, 200, read1, false, true, true, false, false},  // Read 1 in F1R2 pair, top strand, mate not mapped
+                {0, 100, 0, 200, read1, false, true, false, false, true},  // Read 1 in F1R2 pair, top strand, neither mapped
         };
     }
 
     @Test(dataProvider = "topStrandDataProvider")
     public void testIsTopStrand(final int referenceIndex, final int alignmentStart, final int mateReferenceIndex, final int mateAlignmentStart,
                                 final boolean firstOfPairFlag, final boolean negativeStrandFlag, final boolean mateNegativeStrandFlag,
+                                final boolean mapped, final boolean mateMapped,
                                 final boolean topStrand) {
 
         final int readLength = 15;
@@ -77,6 +81,8 @@ public class UmiUtilTest {
 
         SAMRecord rec = new SAMRecord(header);
 
+        rec.setReadUnmappedFlag(!mapped);
+        rec.setMateUnmappedFlag(!mateMapped);
         rec.setReadPairedFlag(true);
 
         rec.setCigarString(readLength + "M");

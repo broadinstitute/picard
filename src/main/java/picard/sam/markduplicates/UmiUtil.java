@@ -103,13 +103,20 @@ class UmiUtil {
 
         // If the read pair are aligned to different contigs we use
         // the reference index to determine relative 5' coordinate ordering.
-        if (!rec.getReferenceIndex().equals(rec.getMateReferenceIndex())) {
+        // Both the read and its mate should not have their unmapped flag set to true.
+        if (!rec.getReferenceIndex().equals(rec.getMateReferenceIndex()) && !rec.getReadUnmappedFlag() && !rec.getMateUnmappedFlag()) {
             return rec.getFirstOfPairFlag() == (rec.getReferenceIndex() < rec.getMateReferenceIndex());
         }
 
-        final int read5PrimeStart = (rec.getReadNegativeStrandFlag()) ? rec.getUnclippedEnd() : rec.getUnclippedStart();
-        final int mate5PrimeStart = (rec.getMateNegativeStrandFlag()) ? SAMUtils.getMateUnclippedEnd(rec) : SAMUtils.getMateUnclippedStart(rec);
-        return rec.getFirstOfPairFlag() == (read5PrimeStart < mate5PrimeStart);
+        final int readUnclippedStart = rec.getReadUnmappedFlag() ? 0 : rec.getUnclippedStart();
+        final int readUnclippedEnd = rec.getReadUnmappedFlag() ? 0 : rec.getUnclippedEnd();
+        final int read5PrimeStart = (rec.getReadNegativeStrandFlag()) ? readUnclippedEnd : readUnclippedStart;
+
+        final int mateUnclippedStart = rec.getMateUnmappedFlag() ? 0 : SAMUtils.getMateUnclippedStart(rec);
+        final int mateUnclippedEnd = rec.getMateUnmappedFlag() ? 0 : SAMUtils.getMateUnclippedEnd(rec);
+        final int mate5PrimeStart = (rec.getMateNegativeStrandFlag()) ? mateUnclippedEnd : mateUnclippedStart;
+
+        return rec.getFirstOfPairFlag() == (read5PrimeStart <= mate5PrimeStart);
     }
 
     /**
