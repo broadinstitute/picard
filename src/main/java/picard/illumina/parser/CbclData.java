@@ -9,26 +9,29 @@ import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 public class CbclData extends BclData implements PfData, PositionalData {
     private final int tile;
     private AbstractIlluminaPositionFileReader.PositionInfo positionInfo;
-    private boolean pfRead;
-
 
     public CbclData(int[] outputLengths, int tile) {
         super(outputLengths);
         this.tile = tile;
     }
 
+    //CBCLs currently only contain PF reads.
+    @Override
+    public boolean isPf() {
+        return true;
+    }
+
     public int getTile() {
         return tile;
+    }
+
+    public AbstractIlluminaPositionFileReader.PositionInfo getPositionInfo() {
+        return positionInfo;
     }
 
     public void setPositionInfo(AbstractIlluminaPositionFileReader.PositionInfo positionInfo) {
         this.positionInfo = positionInfo;
     }
-
-    public void setPfRead(boolean pfRead) {
-        this.pfRead = pfRead;
-    }
-
 
     @Override
     public int getXCoordinate() {
@@ -38,10 +41,5 @@ public class CbclData extends BclData implements PfData, PositionalData {
     @Override
     public int getYCoordinate() {
         return this.positionInfo.yQseqCoord;
-    }
-
-    @Override
-    public boolean isPfRead() {
-        return pfRead;
     }
 }

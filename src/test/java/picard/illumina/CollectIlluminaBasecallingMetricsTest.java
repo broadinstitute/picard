@@ -157,20 +157,20 @@ public class CollectIlluminaBasecallingMetricsTest {
     public void testNovaseqIndexedRun() throws Exception {
         final MetricsFile<IlluminaBasecallingMetrics, Integer> metricsFile = runIt(1, "151T8B8B151T",
                 new File("testdata/picard/illumina/151T8B8B151T_cbcl/Data/Intensities/BaseCalls"), null, true);
-        final IlluminaBasecallingMetrics laneMetric = metricsFile.getMetrics().get(metricsFile.getMetrics().size() - 1);
+        final IlluminaBasecallingMetrics laneMetric = metricsFile.getMetrics().get(0);
         Assert.assertEquals(laneMetric.LANE, "1");
-        Assert.assertNull(laneMetric.MOLECULAR_BARCODE_SEQUENCE_1);
-        Assert.assertNull(laneMetric.MOLECULAR_BARCODE_NAME);
-        Assert.assertEquals(laneMetric.MEAN_CLUSTERS_PER_TILE, 28.0);
+        Assert.assertEquals(laneMetric.MOLECULAR_BARCODE_SEQUENCE_1, "CACCTAGTACTCGAGT");
+        Assert.assertEquals(laneMetric.MOLECULAR_BARCODE_NAME, "SA_CACCTAGTACTCGAGT");
+        Assert.assertEquals(laneMetric.MEAN_CLUSTERS_PER_TILE, 1.0);
         Assert.assertEquals(laneMetric.SD_CLUSTERS_PER_TILE, 0.0);
-        Assert.assertEquals(laneMetric.MEAN_PF_CLUSTERS_PER_TILE,25.0);
+        Assert.assertEquals(laneMetric.MEAN_PF_CLUSTERS_PER_TILE,1.0);
         Assert.assertEquals(laneMetric.SD_PF_CLUSTERS_PER_TILE, 0.0);
-        Assert.assertEquals(laneMetric.MEAN_PCT_PF_CLUSTERS_PER_TILE, 89.29);
+        Assert.assertEquals(laneMetric.MEAN_PCT_PF_CLUSTERS_PER_TILE, 100.0);
         Assert.assertEquals(laneMetric.SD_PCT_PF_CLUSTERS_PER_TILE, 0.0);
-        Assert.assertEquals(laneMetric.TOTAL_BASES, 16912);
-        Assert.assertEquals(laneMetric.TOTAL_READS, 112);
-        Assert.assertEquals(laneMetric.PF_BASES, 15100);
-        Assert.assertEquals(laneMetric.PF_READS, 100);
+        Assert.assertEquals(laneMetric.TOTAL_BASES, 302);
+        Assert.assertEquals(laneMetric.TOTAL_READS, 2);
+        Assert.assertEquals(laneMetric.PF_BASES, 302);
+        Assert.assertEquals(laneMetric.PF_READS, 2);
 
 
         Assert.assertEquals(metricsFile.getMetrics().size(),6);
