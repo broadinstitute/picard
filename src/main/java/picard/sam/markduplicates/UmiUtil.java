@@ -82,41 +82,49 @@ class UmiUtil {
             throw new PicardException("Duplex UMIs must be of the form X-Y where X and Y are equal length UMIs, for example AT-GA.  Found UMI, " + umi);
         }
 
-        if (isTopStrand(record)) {
-            return split[0] + DUPLEX_UMI_DELIMITER + split[1];
-        } else {
-            return split[1] + DUPLEX_UMI_DELIMITER + split[0];
+        switch (getStrand(record)) {
+            case BOTTOM:
+                return split[1] + DUPLEX_UMI_DELIMITER + split[0];
+                default:
+                    return umi;
         }
     }
 
     /**
-     * Determines if the read represented by a SAM record belongs to the top or bottom strand.
+     * Determines if the read represented by a SAM record belongs to the top or bottom strand
+     * or if it cannot determine strand position due to one of the reads being unmapped.
      * Top strand is defined as having a read 1 unclipped 5' coordinate
      * less than the read 2 unclipped 5' coordinate.  If a read is unmapped
-     * it is considered to have an unclipped 5' coordinate of 0.  If the mate
-     * belongs to a different contig from the read, then the reference
+     * we do not attempt to determine the strand to which the read or its mate belongs.
+     * If the mate belongs to a different contig from the read, then the reference
      * index for the read and its mate is used in leu of the unclipped 5' coordinate.
      * @param rec Record to determine top or bottom strand
-     * @return Top or bottom strand, true (top), false (bottom).
+     * @return Top or bottom strand, unknown if it cannot be determined.
      */
-    static boolean isTopStrand(final SAMRecord rec) {
+    static ReadStrand getStrand(final SAMRecord rec) {
+        if (rec.getReadUnmappedFlag() || rec.getMateUnmappedFlag()) {
+            return ReadStrand.UNKNOWN;
+        }
 
         // If the read pair are aligned to different contigs we use
         // the reference index to determine relative 5' coordinate ordering.
         // Both the read and its mate should not have their unmapped flag set to true.
         if (!rec.getReferenceIndex().equals(rec.getMateReferenceIndex()) && !rec.getReadUnmappedFlag() && !rec.getMateUnmappedFlag()) {
-            return rec.getFirstOfPairFlag() == (rec.getReferenceIndex() < rec.getMateReferenceIndex());
+            if (rec.getFirstOfPairFlag() == (rec.getReferenceIndex() < rec.getMateReferenceIndex())) {
+                return ReadStrand.TOP;
+            } else {
+                return ReadStrand.BOTTOM;
+            }
         }
 
-        final int readUnclippedStart = rec.getReadUnmappedFlag() ? 0 : rec.getUnclippedStart();
-        final int readUnclippedEnd = rec.getReadUnmappedFlag() ? 0 : rec.getUnclippedEnd();
-        final int read5PrimeStart = (rec.getReadNegativeStrandFlag()) ? readUnclippedEnd : readUnclippedStart;
+        final int read5PrimeStart = (rec.getReadNegativeStrandFlag()) ? rec.getUnclippedEnd() : rec.getUnclippedStart();
+        final int mate5PrimeStart = (rec.getMateNegativeStrandFlag()) ? SAMUtils.getMateUnclippedEnd(rec) : SAMUtils.getMateUnclippedStart(rec);
 
-        final int mateUnclippedStart = rec.getMateUnmappedFlag() ? 0 : SAMUtils.getMateUnclippedStart(rec);
-        final int mateUnclippedEnd = rec.getMateUnmappedFlag() ? 0 : SAMUtils.getMateUnclippedEnd(rec);
-        final int mate5PrimeStart = (rec.getMateNegativeStrandFlag()) ? mateUnclippedEnd : mateUnclippedStart;
-
-        return rec.getFirstOfPairFlag() == (read5PrimeStart <= mate5PrimeStart);
+        if(rec.getFirstOfPairFlag() == (read5PrimeStart <= mate5PrimeStart)) {
+            return ReadStrand.TOP;
+        } else {
+            return ReadStrand.BOTTOM;
+        }
     }
 
     /**
@@ -140,7 +148,17 @@ class UmiUtil {
         molecularIdentifier.append(assignedUmi);
 
         if (duplexUmis) {
-            molecularIdentifier.append(isTopStrand(rec) ? TOP_STRAND_DUPLEX : BOTTOM_STRAND_DUPLEX);
+            ReadStrand strand = getStrand(rec);
+            switch (strand) {
+                case TOP:
+                    molecularIdentifier.append(TOP_STRAND_DUPLEX);
+                    break;
+                case BOTTOM:
+                    molecularIdentifier.append(BOTTOM_STRAND_DUPLEX);
+                    break;
+                default:
+                    break;
+            }
         }
         rec.setAttribute(molecularIdentifierTag, molecularIdentifier.toString());
     }
@@ -153,4 +171,21 @@ class UmiUtil {
     static int getUmiLength(final String umi) {
         return umi.length() - StringUtils.countMatches(umi, UmiUtil.DUPLEX_UMI_DELIMITER);
     }
+
+    /**
+     * An enum to hold the ordinality of a read
+     */
+    public enum ReadStrand {
+        TOP,
+        BOTTOM,
+        UNKNOWN;
+
+        public static ReadStrand of(final SAMRecord sam) {
+            if (!sam.getReadPairedFlag()) {
+                return null;
+            }
+            return sam.getFirstOfPairFlag() ? ReadStrand.TOP : ReadStrand.BOTTOM;
+        }
+    }
+
 }

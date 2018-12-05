@@ -39,25 +39,28 @@ public class UmiUtilTest {
     private Object[][] testIsTopStrandDataProvider() {
         final boolean read1 = true;
         final boolean read2 = false;
+        final UmiUtil.ReadStrand top = UmiUtil.ReadStrand.TOP;
+        final UmiUtil.ReadStrand bottom = UmiUtil.ReadStrand.BOTTOM;
+        final UmiUtil.ReadStrand unknown = UmiUtil.ReadStrand.UNKNOWN;
         return new Object[][]{
-                {0, 100, 0, 200, read1, false, true, true, true, true},    // Read 1 in F1R2 pair, reads point inwards, top strand
-                {0, 200, 0, 100, read2, true, false, true, true, true},    // Read 2 in F1R2 pair, reads point inwards, top strand
-                {0, 200, 0, 100, read1, false, true, true, true, false},   // Read 1 in F1R2 pair, reads point outwards
-                {0, 100, 0, 200, read2, true, false, true, true, false},   // Read 2 in F1R2 pair, reads point outwards
-                {0, 100, 0, 200, read1, true, false, true, true, true},    // Read 1 in F2R1 pair
-                {0, 200, 0, 100, read2, false, false, true, true, true},   // Read 2 in F2R1 pair
-                {0, 100, 0, 200, read1, false, false, true, true, true},   // Read 1 in F1F2 pair
-                {0, 200, 0, 100, read2, false, false, true, true, true},   // Read 2 in F1F2 pair
-                {0, 100, 0, 200, read1, true, true, true, true, true},     // Read 1 in R1R2 pair
-                {0, 200, 0, 100, read2, true, true, true, true, true},     // Read 2 in R1R2 pair
-                {0, 100, 1, 200, read1, false, true, true, true, true},    // Read 1 in F1R2 chimera
-                {0, 100, 1, 200, read2, true, false, true, true, false},   // Read 2 in F1R2 chimera
-                {0, 100, 1, 200, read1, true, false, true, true, true},    // Read 1 in F2R1 chimera
-                {0, 100, 1, 200, read2, false, false, true, true, false},  // Read 2 in F2R1 chimera
-                {0, 100, 1, 200, read2, false, true, true, true, false},   // Read 2 in F2R1 chimera
-                {0, 100, 0, 200, read1, false, true, false, true, true},   // Read 1 in F1R2 pair, top strand, read not mapped
-                {0, 100, 0, 200, read1, false, true, true, false, false},  // Read 1 in F1R2 pair, top strand, mate not mapped
-                {0, 100, 0, 200, read1, false, true, false, false, true},  // Read 1 in F1R2 pair, top strand, neither mapped
+                {0, 100, 0, 200, read1, false, true, true, true, top},    // Read 1 in F1R2 pair, reads point inwards, top strand
+                {0, 200, 0, 100, read2, true, false, true, true, top},    // Read 2 in F1R2 pair, reads point inwards, top strand
+                {0, 200, 0, 100, read1, false, true, true, true, bottom},   // Read 1 in F1R2 pair, reads point outwards
+                {0, 100, 0, 200, read2, true, false, true, true, bottom},   // Read 2 in F1R2 pair, reads point outwards
+                {0, 100, 0, 200, read1, true, false, true, true, top},    // Read 1 in F2R1 pair
+                {0, 200, 0, 100, read2, false, false, true, true, top},   // Read 2 in F2R1 pair
+                {0, 100, 0, 200, read1, false, false, true, true, top},   // Read 1 in F1F2 pair
+                {0, 200, 0, 100, read2, false, false, true, true, top},   // Read 2 in F1F2 pair
+                {0, 100, 0, 200, read1, true, true, true, true, top},     // Read 1 in R1R2 pair
+                {0, 200, 0, 100, read2, true, true, true, true, top},     // Read 2 in R1R2 pair
+                {0, 100, 1, 200, read1, false, true, true, true, top},    // Read 1 in F1R2 chimera
+                {0, 100, 1, 200, read2, true, false, true, true, bottom},   // Read 2 in F1R2 chimera
+                {0, 100, 1, 200, read1, true, false, true, true, top},    // Read 1 in F2R1 chimera
+                {0, 100, 1, 200, read2, false, false, true, true, bottom},  // Read 2 in F2R1 chimera
+                {0, 100, 1, 200, read2, false, true, true, true, bottom},   // Read 2 in F2R1 chimera
+                {0, 100, 0, 200, read1, false, true, false, true, unknown},   // Read 1 in F1R2 pair, top strand, read not mapped
+                {0, 100, 0, 200, read1, false, true, true, false, unknown},  // Read 1 in F1R2 pair, top strand, mate not mapped
+                {0, 100, 0, 200, read1, false, true, false, false, unknown},  // Read 1 in F1R2 pair, top strand, neither mapped
         };
     }
 
@@ -65,7 +68,7 @@ public class UmiUtilTest {
     public void testIsTopStrand(final int referenceIndex, final int alignmentStart, final int mateReferenceIndex, final int mateAlignmentStart,
                                 final boolean firstOfPairFlag, final boolean negativeStrandFlag, final boolean mateNegativeStrandFlag,
                                 final boolean mapped, final boolean mateMapped,
-                                final boolean topStrand) {
+                                final UmiUtil.ReadStrand strand) {
 
         final int readLength = 15;
         final int contigLength = 500;
@@ -98,7 +101,7 @@ public class UmiUtilTest {
         rec.setReadNegativeStrandFlag(negativeStrandFlag);
         rec.setMateNegativeStrandFlag(mateNegativeStrandFlag);
 
-        Assert.assertEquals(UmiUtil.isTopStrand(rec), topStrand);
+        Assert.assertEquals(UmiUtil.getStrand(rec), strand);
     }
 
     @DataProvider(name = "brokenUmiProvider")
