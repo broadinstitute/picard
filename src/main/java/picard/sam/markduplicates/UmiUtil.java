@@ -178,14 +178,7 @@ class UmiUtil {
     public enum ReadStrand {
         TOP,
         BOTTOM,
-        UNKNOWN;
-
-        public static ReadStrand of(final SAMRecord sam) {
-            if (!sam.getReadPairedFlag()) {
-                return null;
-            }
-            return sam.getFirstOfPairFlag() ? ReadStrand.TOP : ReadStrand.BOTTOM;
-        }
+        UNKNOWN
     }
 
 }
