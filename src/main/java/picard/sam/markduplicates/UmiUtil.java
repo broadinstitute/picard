@@ -109,7 +109,7 @@ class UmiUtil {
         // If the read pair are aligned to different contigs we use
         // the reference index to determine relative 5' coordinate ordering.
         // Both the read and its mate should not have their unmapped flag set to true.
-        if (!rec.getReferenceIndex().equals(rec.getMateReferenceIndex()) && !rec.getReadUnmappedFlag() && !rec.getMateUnmappedFlag()) {
+        if (!rec.getReferenceIndex().equals(rec.getMateReferenceIndex())) {
             if (rec.getFirstOfPairFlag() == (rec.getReferenceIndex() < rec.getMateReferenceIndex())) {
                 return ReadStrand.TOP;
             } else {
@@ -120,7 +120,7 @@ class UmiUtil {
         final int read5PrimeStart = (rec.getReadNegativeStrandFlag()) ? rec.getUnclippedEnd() : rec.getUnclippedStart();
         final int mate5PrimeStart = (rec.getMateNegativeStrandFlag()) ? SAMUtils.getMateUnclippedEnd(rec) : SAMUtils.getMateUnclippedStart(rec);
 
-        if(rec.getFirstOfPairFlag() == (read5PrimeStart <= mate5PrimeStart)) {
+        if (rec.getFirstOfPairFlag() == (read5PrimeStart <= mate5PrimeStart)) {
             return ReadStrand.TOP;
         } else {
             return ReadStrand.BOTTOM;
@@ -148,6 +148,9 @@ class UmiUtil {
         molecularIdentifier.append(assignedUmi);
 
         if (duplexUmis) {
+            // Reads whose strand position can be determined will have their
+            // molecularIdentifier set to include an identifier appended that
+            // indicates top or bottom strand.
             ReadStrand strand = getStrand(rec);
             switch (strand) {
                 case TOP:
@@ -157,6 +160,8 @@ class UmiUtil {
                     molecularIdentifier.append(BOTTOM_STRAND_DUPLEX);
                     break;
                 default:
+                    // If we can't determine strand position nothing
+                    // is appended to the molecularIdentifier.
                     break;
             }
         }
@@ -173,7 +178,7 @@ class UmiUtil {
     }
 
     /**
-     * An enum to hold the ordinality of a read
+     * An enum to hold the strand position (TOP or BOTTOM) of a read.
      */
     public enum ReadStrand {
         TOP,

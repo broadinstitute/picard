@@ -72,17 +72,15 @@ public class UmiUtilTest {
 
         final int readLength = 15;
         final int contigLength = 500;
-        SAMFileHeader header = new SAMFileHeader();
-        SAMSequenceDictionary sequenceDictionary = new SAMSequenceDictionary();
+        final SAMFileHeader header = new SAMFileHeader();
+        final SAMSequenceDictionary sequenceDictionary = new SAMSequenceDictionary();
 
         sequenceDictionary.addSequence(new SAMSequenceRecord("chr1", contigLength));
         sequenceDictionary.addSequence(new SAMSequenceRecord("chr2", contigLength));
 
-        System.out.println(sequenceDictionary.getSequences());
-
         header.setSequenceDictionary(sequenceDictionary);
 
-        SAMRecord rec = new SAMRecord(header);
+        final SAMRecord rec = new SAMRecord(header);
 
         rec.setReadUnmappedFlag(!mapped);
         rec.setMateUnmappedFlag(!mateMapped);
