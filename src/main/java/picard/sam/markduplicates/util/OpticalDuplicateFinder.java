@@ -129,7 +129,6 @@ public class OpticalDuplicateFinder extends ReadNameParser implements Serializab
             return opticalDuplicateFlags;
         }
 
-        final int distance = this.opticalDuplicatePixelDistance;
         final PhysicalLocation actualKeeper = keeperOrNull(list, keeper);
 
         final Log log;
@@ -148,7 +147,63 @@ public class OpticalDuplicateFinder extends ReadNameParser implements Serializab
             progressLoggerForKeeper = null;
             progressLoggerForRest = null;
         }
+        if (length >= (keeper == null ? 3 : 4)) {
+            return getOpticalDuplicatesFlagWithGraph(list, keeper, opticalDuplicateFlags, log, progressLoggerForKeeper, progressLoggerForRest, logProgress);
+        } else {
+            return getOpticalDuplicatesFlagFast(list, keeper, opticalDuplicateFlags, log, progressLoggerForKeeper, progressLoggerForRest, logProgress);
+        }
+    }
 
+    /**
+     * Compute optical duplicates quickly in the standard case where we know that there won't be any transitive distances to worry about.
+     *
+     * Note, this is guaranteed to be correct when there are at most 2x reads from a readgroup or 3x with the keeper present
+     */
+    private boolean[] getOpticalDuplicatesFlagFast(List<? extends PhysicalLocation> list, PhysicalLocation actualKeeper, boolean[] opticalDuplicateFlags, Log log, ProgressLogger progressLoggerForKeeper, ProgressLogger progressLoggerForRest, boolean logProgress) {
+        final int length = list.size();
+
+        // First go through and compare all the reads to the keeper
+        if (actualKeeper != null) {
+            for (int i = 0; i < length; ++i) {
+                final PhysicalLocation other = list.get(i);
+                opticalDuplicateFlags[i] = closeEnough(actualKeeper, other, this.opticalDuplicatePixelDistance);
+                // The main point of adding this log and if statement (also below) is a workaround a bug in the JVM
+                // which causes a deep exception (https://github.com/broadinstitute/picard/issues/472).
+                // It seems that this is related to https://bugs.openjdk.java.net/browse/JDK-8033717 which
+                // was closed due to non-reproducibility. We came across a bam file that evoked this error
+                // every time we tried to duplicate-mark it. The problem seemed to be a duplicate-set of size 500,000,
+                // and this loop seemed to kill the JVM for some reason. This logging statement (and the one in the
+                // loop below) solved the problem.
+            }
+        }
+        if (logProgress) log.debug("Done with comparing to keeper, now the rest.");
+        // Now go through and do each pairwise comparison not involving the actualKeeper
+        for (int i = 0; i < length; ++i) {
+            final PhysicalLocation lhs = list.get(i);
+            if (lhs == actualKeeper) continue; // no comparisons to actualKeeper since those are all handled above
+            // logging here for same reason as above
+            if (logProgress) progressLoggerForRest.record(String.format("%d", lhs.getReadGroup()), lhs.getX());
+            for (int j = i + 1; j < length; ++j) {
+                final PhysicalLocation rhs = list.get(j);
+                if (rhs == actualKeeper) continue; // no comparisons to actualKeeper since those are all handled above
+                if (opticalDuplicateFlags[i] && opticalDuplicateFlags[j])
+                    continue; // both already marked, no need to check
+                if (closeEnough(lhs, rhs, this.opticalDuplicatePixelDistance)) {
+                    // At this point we want to mark either lhs or rhs as duplicate. Either could have been marked
+                    // as a duplicate of the keeper (but not both - that's checked above), so be careful about which
+                    // one to now mark as a duplicate.
+                    final int index = opticalDuplicateFlags[j] ? i : j;
+                    opticalDuplicateFlags[index] = true;
+                }
+            }
+        }
+        return opticalDuplicateFlags;
+    }
+
+    /**
+     * Compute the optical duplicates correctly in the case where the duplicate group could end up with transitive optical duplicates
+     */
+    private boolean[] getOpticalDuplicatesFlagWithGraph(List<? extends PhysicalLocation> list, PhysicalLocation keeper, boolean[] opticalDuplicateFlags, Log log, ProgressLogger progressLoggerForKeeper, ProgressLogger progressLoggerForRest, boolean logProgress) {
         // Make a graph where the edges are reads that lie within the optical duplicate pixel distance from each other,
         // we will then use the union-find algorithm to cluster the graph and find optical duplicate groups
         final GraphUtils.Graph<Integer> opticalDistanceRelationGraph = new GraphUtils.Graph<>();
@@ -182,7 +237,7 @@ public class OpticalDuplicateFinder extends ReadNameParser implements Serializab
         // readgroups in order to reduce the amount of redundant checks across readgroups between reads.
         for (List<Integer> tileGroup : tileRGmap.values()) {
             if (tileGroup.size() > 1) {
-                fillGraphFromAGroup(list, tileGroup, logProgress, progressLoggerForKeeper, distance, opticalDistanceRelationGraph);
+                fillGraphFromAGroup(list, tileGroup, logProgress, progressLoggerForKeeper,  this.opticalDuplicatePixelDistance, opticalDistanceRelationGraph);
             }
         }
 
@@ -228,7 +283,7 @@ public class OpticalDuplicateFinder extends ReadNameParser implements Serializab
                 clusterToRepresentativeRead.put(recordAssignedCluster, recordIndex);
             }
         }
-        
+
         return opticalDuplicateFlags;
     }
 
