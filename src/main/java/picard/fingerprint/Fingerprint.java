@@ -24,18 +24,21 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.metrics.MetricBase;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
+import org.broadinstitute.barclay.argparser.CommandLineParser;
+import picard.PicardException;
 import picard.util.MathUtil;
 
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
- * Small class to represent a genetic fingerprint as a set of HaplotypeProbabilities
+ * class to represent a genetic fingerprint as a set of HaplotypeProbabilities
  * objects that give the relative probabilities of each of the possible haplotypes
  * at a locus.
  *
@@ -131,8 +134,6 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
         // calculate LOD (cross-entropy)
         final double homsCrossEntropy = -MathUtil.klDivergance(homRefVsVarexpectedRatios, homRefVsVarCounts);
 
-
-
         final double lodSelfCheck = FingerprintChecker.calculateMatchResults(this, this).getLOD();
 
         final double[] randomizationTrials = new double[NUMBER_OF_SAMPLING];
@@ -143,10 +144,10 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
 
         FingerprintMetrics fingerprintMetrics = new FingerprintMetrics();
 
-        fingerprintMetrics.SAMPLE_NAME = sample;
+        fingerprintMetrics.SAMPLE_ALIAS = sample;
         fingerprintMetrics.SOURCE = source.toUri().toString();
         fingerprintMetrics.INFO = info;
-        fingerprintMetrics.HAPLOTYPE = values().size();
+        fingerprintMetrics.HAPLOTYPES = values().size();
         fingerprintMetrics.HAPLOTYPES_WITH_EVIDENCE = values().stream().filter(HaplotypeProbabilities::hasEvidence).count();
         fingerprintMetrics.DEFINITE_GENOTYPES = values().stream().filter(h -> h.getLodMostProbableGenotype() > GENOTYPE_LOD_THRESHOLD).count();
         fingerprintMetrics.NUM_HOM_REF = actualGenotypeCounts[0];
@@ -208,27 +209,81 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
         }
     }
 
-    public static class FingerprintMetrics extends MetricBase {
-        public String SAMPLE_NAME;
-        public String SOURCE;
-        public String INFO;
-        public long HAPLOTYPE;
-        public long HAPLOTYPES_WITH_EVIDENCE;
-        public long DEFINITE_GENOTYPES;
-        public long NUM_HOM_REF;
-        public long NUM_HET;
-        public long NUM_HOM_VAR;
-        public double CHI_SQUARED_PVALUE;
-        public double LOG10_CHI_SQUARED_PVALUE;
-        public double CROSS_ENTROPY_LOD;
-        public double HET_CHI_SQUARED_PVALUE;
-        public double HET_LOG10_CHI_SQUARED_PVALUE;
-        public double HET_CROSS_ENTROPY_LOD;
-        public double HOM_CHI_SQUARED_PVALUE;
-        public double HOM_LOG10_CHI_SQUARED_PVALUE;
-        public double HOM_CROSS_ENTROPY_LOD;
-        public double DISCRIMINATORY_POWER;
-        public double LOD_SELF_CHECK;
+    public static Function<FingerprintIdDetails, String> getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType CROSSCHECK_BY) {
+        final Function<FingerprintIdDetails, String> groupByTemp;
+        switch (CROSSCHECK_BY) {
+            case READGROUP:
+                groupByTemp = details -> details.platformUnit;
+                break;
+            case LIBRARY:
+                groupByTemp = details -> details.sample + "::" + details.library;
+                break;
+            case FILE:
+                groupByTemp = details -> details.file + "::" + details.sample;
+                break;
+            case SAMPLE:
+                groupByTemp = details -> details.sample;
+                break;
+            default:
+                throw new PicardException("unpossible");
+        }
 
+        // if the groupBy string is null (e.g. a vcf file has no read group info) then the hashcode is
+        // used intending to be unique per object (ignoring possible collisions)
+        return key -> {
+            final String temp = groupByTemp.apply(key);
+            return temp == null ? Integer.toString(key.hashCode()) : temp;
+        };
+    }
+
+    public static Map<FingerprintIdDetails, Fingerprint> mergeFingerprintsBy(
+            final Map<FingerprintIdDetails, Fingerprint> fingerprints,
+            final Function<FingerprintIdDetails, String> by) {
+
+        // collect the various entries according to the grouping "by"
+
+        final Map<String, List<Map.Entry<FingerprintIdDetails, Fingerprint>>> collection =
+                fingerprints.entrySet()
+                        .stream()
+                        .collect(Collectors.groupingBy(entry -> by.apply(entry.getKey())));
+
+        return collection.entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> {
+                            // merge the keys (unequal values are eliminated by merge).
+
+                            final FingerprintIdDetails finalId = new FingerprintIdDetails();
+                            entry.getValue().forEach(id -> finalId.merge(id.getKey()));
+                            finalId.group = entry.getKey();
+                            return finalId;
+
+                        }, entry -> {
+                            // merge the values by merging the fingerprints.
+
+                            final FingerprintIdDetails firstDetail = entry.getValue().get(0).getKey();
+                            //use the "by" function to determine the "info" part of the fingerprint
+                            final Fingerprint sampleFp = new Fingerprint(firstDetail.sample, null, by.apply(firstDetail));
+                            entry.getValue().stream().map(Map.Entry::getValue).collect(Collectors.toSet()).forEach(sampleFp::merge);
+                            return sampleFp;
+
+                        }));
+    }
+
+    enum CrosscheckMode implements CommandLineParser.ClpEnum {
+        CHECK_SAME_SAMPLE {
+            @Override
+            public String getHelpDoc() {
+                return "In this mode, each sample in INPUT will only be checked against a single corresponding sample in SECOND_INPUT. " +
+                        "If a corresponding sample cannot be found, the program will proceed, but report the missing samples" +
+                        " and return the value specified in EXIT_CODE_WHEN_MISMATCH. The corresponding samples are those that equal each other, after possible renaming " +
+                        "via INPUT_SAMPLE_MAP and SECOND_INPUT_SAMPLE_MAP. In this mode CROSSCHECK_BY must be SAMPLE.";
+            }
+        },
+        CHECK_ALL_OTHERS {
+            @Override
+            public String getHelpDoc() {
+                return "In this mode, each sample in INPUT will be checked against all the samples in SECOND_INPUT.";
+            }
+        }
     }
 }
