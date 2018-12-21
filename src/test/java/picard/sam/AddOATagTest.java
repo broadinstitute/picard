@@ -36,28 +36,30 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class AddOATagTest {
+    private static final String TEST_DIR = "testdata/picard/sam/";
+    private static final String OA_TEST_DIR = TEST_DIR + "AddOATag/";
 
     @DataProvider(name="testOAData")
     Object[][] testOAData() {
         return new Object[][]{
-                new Object[]{new File("testdata/picard/sam/AddOATag/aligned_withoutOA.sam"), new File("testdata/picard/sam/AddOATag/aligned_withOA.sam")},
+                new Object[]{new File(OA_TEST_DIR + "aligned_withoutOA.sam"), new File(OA_TEST_DIR + "aligned_withOA.sam")},
         };
     }
 
     @DataProvider(name="testIntervalListData")
     Object[][] testIntervalListData() {
         return new Object[][]{
-                new Object[]{new File("testdata/picard/sam/aligned.sam"), null, new File("testdata/picard/sam/AddOATag/aligned_no_intervals.sam")},
-                new Object[]{new File("testdata/picard/sam/aligned.sam"), new File("testdata/picard/analysis/directed/CollectHsMetrics/chrM.interval_list"), new File("testdata/picard/sam/aligned.sam")},
-                new Object[]{new File("testdata/picard/sam/aligned.sam"), new File("testdata/picard/sam/contiguous.interval_list"), new File("testdata/picard/sam/AddOATag/aligned_with_intervals.sam")}
+                new Object[]{new File(TEST_DIR + "aligned.sam"), null, new File(OA_TEST_DIR + "aligned_no_intervals.sam")},
+                new Object[]{new File(TEST_DIR + "aligned.sam"), new File("testdata/picard/analysis/directed/CollectHsMetrics/chrM.interval_list"), new File(TEST_DIR + "aligned.sam")},
+                new Object[]{new File(TEST_DIR + "aligned.sam"), new File(TEST_DIR + "contiguous.interval_list"), new File(OA_TEST_DIR + "aligned_with_intervals.sam")}
         };
     }
 
     @DataProvider(name="testOverwriteData")
     Object[][] overwriteTestData() {
         return new Object[][]{
-                new Object[]{new File("testdata/picard/sam/aligned.sam"), new File("testdata/picard/sam/contiguous.interval_list"), true, new File("testdata/picard/sam/AddOATag/aligned_with_intervals.sam")},
-                new Object[]{new File("testdata/picard/sam/aligned.sam"), null, false, new File("testdata/picard/sam/AddOATag/aligned_two_oa_tags.sam")}
+                new Object[]{new File(TEST_DIR + "aligned.sam"), new File(TEST_DIR + "contiguous.interval_list"), true, new File(OA_TEST_DIR + "aligned_with_intervals.sam")},
+                new Object[]{new File(TEST_DIR + "aligned.sam"), null, false, new File(OA_TEST_DIR + "aligned_two_oa_tags.sam")}
         };
     }
 

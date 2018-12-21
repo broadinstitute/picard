@@ -1,5 +1,3 @@
-package picard.sam;
-
 /*
  * The MIT License
  *
@@ -24,6 +22,8 @@ package picard.sam;
  * THE SOFTWARE.
  */
 
+package picard.sam;
+
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -46,7 +46,7 @@ import java.util.Optional;
 @DocumentedFeature
 public class AddOATag extends CommandLineProgram {
 
-    static final String USAGE_SUMMARY = "Add the OA tag to reads";
+    static final String USAGE_SUMMARY = "Record current alignment information to OA tag.";
     static final String USAGE_DETAILS = "This tool takes in an aligned SAM or BAM and adds the " +
             "OA tag to every aligned read unless an interval list is specified, where it only adds the tag to reads " +
             "that fall within the intervals in the interval list. This can be useful if you are about to realign but want " +
@@ -69,14 +69,11 @@ public class AddOATag extends CommandLineProgram {
     @Argument(shortName = "OV", doc = "Whether or not to override any existing OA tag values, otherwise the current alignment will be appended to the tag.", optional = true)
     public Boolean OVERWRITE_TAG = true;
 
-    @Argument(shortName = "L", doc = "An interval list file for which records that overlap will have the OA tag added", optional = true)
+    @Argument(shortName = "L", doc = "If provided, only records that overlap given interval list will have the OA tag added.", optional = true)
     public File INTERVAL_LIST;
 
+    public static final String OA = "OA";
     private static final Log log = Log.getInstance(AddOATag.class);
-
-    public static void main(final String[] argv) {
-        System.exit(new AddOATag().instanceMain(argv));
-    }
 
     @Override
     protected int doWork() {
@@ -85,8 +82,8 @@ public class AddOATag extends CommandLineProgram {
                 writer.setProgressLogger(
                         new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
 
-                OverlapDetector overlapDetector = getOverlapDetectorFromIntervalListFile(INTERVAL_LIST, 0, 0);
-                for (SAMRecord rec : reader) {
+                final OverlapDetector overlapDetector = getOverlapDetectorFromIntervalListFile(INTERVAL_LIST, 0, 0);
+                for (final SAMRecord rec : reader) {
                     if (overlapDetector == null || overlapDetector.overlapsAny(rec)) {
                         setOATag(rec, OVERWRITE_TAG);
                     }
@@ -118,7 +115,7 @@ public class AddOATag extends CommandLineProgram {
         if (rec.getReferenceName().contains(",")) {
             throw new PicardException(String.format("Reference name for record %s contains a comma character.", rec.getReadName()));
         }
-        String OAValue;
+        final String OAValue;
         if (rec.getReadUnmappedFlag()) {
             OAValue = String.format("*,0,%s,*,255,;", rec.getReadNegativeStrandFlag() ? "-" : "+");
         } else {
@@ -131,9 +128,9 @@ public class AddOATag extends CommandLineProgram {
                     (Optional.ofNullable(rec.getAttribute(SAMTag.NM.name())).orElse("").toString()));
         }
         if (overrideTag) {
-            rec.setAttribute("OA", OAValue);
+            rec.setAttribute(OA, OAValue);
         } else {
-            rec.setAttribute("OA",Optional.ofNullable(rec.getAttribute("OA")).orElse("") +  OAValue);
+            rec.setAttribute(OA,Optional.ofNullable(rec.getAttribute(OA)).orElse("") +  OAValue);
         }
     }
 }
