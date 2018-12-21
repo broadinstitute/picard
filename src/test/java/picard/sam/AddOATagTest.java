@@ -55,20 +55,12 @@ public class AddOATagTest {
         };
     }
 
-    @DataProvider(name="testOverwriteData")
-    Object[][] overwriteTestData() {
-        return new Object[][]{
-                new Object[]{new File(TEST_DIR + "aligned.sam"), new File(TEST_DIR + "contiguous.interval_list"), true, new File(OA_TEST_DIR + "aligned_with_intervals.sam")},
-                new Object[]{new File(TEST_DIR + "aligned.sam"), null, false, new File(OA_TEST_DIR + "aligned_two_oa_tags.sam")}
-        };
-    }
-
     @Test(dataProvider = "testOAData")
     public void testWritingOATag(final File testSam, final File truthSam) throws IOException {
         final File clpOutput = File.createTempFile("AddOATag", ".bam");
         clpOutput.deleteOnExit();
 
-        runAddOATag(testSam, clpOutput, null, null);
+        runAddOATag(testSam, clpOutput, null);
 
         validateOATag(clpOutput, truthSam);
     }
@@ -78,28 +70,12 @@ public class AddOATagTest {
         final File clpOutput = File.createTempFile("AddOATag", ".bam");
         clpOutput.deleteOnExit();
 
-        runAddOATag(inputSam, clpOutput, intervalList, null);
+        runAddOATag(inputSam, clpOutput, intervalList);
 
         validateOATag(clpOutput, truthSam);
     }
 
-    @Test(dataProvider = "testOverwriteData")
-    public void testOverWrite(final File inputSam, final File interval_list, final Boolean overWriteTag, final File truthSam) throws IOException {
-        final File firstPassOutput = File.createTempFile("FirstPassAddOATag", ".bam");
-        firstPassOutput.deleteOnExit();
-        final File secondPassOutput = File.createTempFile("SecondPassAddOATag", ".bam");
-        secondPassOutput.deleteOnExit();
-
-        // make first pass bam that only has one value per OA tag
-        runAddOATag(inputSam, firstPassOutput, interval_list, true);
-
-        // make bam we want to test the overwrite option with
-        runAddOATag(firstPassOutput, secondPassOutput, interval_list, overWriteTag);
-
-        validateOATag(secondPassOutput, truthSam);
-    }
-
-    private void runAddOATag(final File inputSam, final File output, final File intervalList, Boolean overwriteTag) throws IOException {
+    private void runAddOATag(final File inputSam, final File output, final File intervalList) throws IOException {
         final ArrayList<String> args = new ArrayList<String>(){
             {
                 add("INPUT=" + inputSam);
@@ -108,9 +84,6 @@ public class AddOATagTest {
         };
         if (intervalList != null) {
             args.add("INTERVAL_LIST=" + intervalList);
-        }
-        if (overwriteTag != null) {
-            args.add("OVERWRITE_TAG=" + overwriteTag);
         }
         AddOATag addOATag = new AddOATag();
         Assert.assertEquals(addOATag.instanceMain(args.toArray(new String[args.size()])), 0, "Running addOATag did not succeed");
@@ -123,13 +96,13 @@ public class AddOATagTest {
         SAMRecordIterator iterator = SamReaderFactory.makeDefault().open(truthSam).iterator();
         while (iterator.hasNext()){
             SAMRecord rec = iterator.next();
-            truthOAValues.add(rec.getStringAttribute("OA"));
+            truthOAValues.add(rec.getStringAttribute(AddOATag.OA));
         }
 
         iterator = SamReaderFactory.makeDefault().open(testSam).iterator();
         while (iterator.hasNext()){
             SAMRecord rec = iterator.next();
-            testOAValues.add(rec.getStringAttribute("OA"));
+            testOAValues.add(rec.getStringAttribute(AddOATag.OA));
         }
 
         Assert.assertEquals(testOAValues, truthOAValues);

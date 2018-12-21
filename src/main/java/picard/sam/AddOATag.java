@@ -66,9 +66,6 @@ public class AddOATag extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "SAM or BAM file to write merged result to")
     public File OUTPUT;
 
-    @Argument(shortName = "OV", doc = "Whether or not to override any existing OA tag values, otherwise the current alignment will be appended to the tag.", optional = true)
-    public Boolean OVERWRITE_TAG = true;
-
     @Argument(shortName = "L", doc = "If provided, only records that overlap given interval list will have the OA tag added.", optional = true)
     public File INTERVAL_LIST;
 
@@ -85,7 +82,7 @@ public class AddOATag extends CommandLineProgram {
                 final OverlapDetector overlapDetector = getOverlapDetectorFromIntervalListFile(INTERVAL_LIST, 0, 0);
                 for (final SAMRecord rec : reader) {
                     if (overlapDetector == null || overlapDetector.overlapsAny(rec)) {
-                        setOATag(rec, OVERWRITE_TAG);
+                        setOATag(rec);
                     }
                     writer.addAlignment(rec);
                 }
@@ -111,7 +108,7 @@ public class AddOATag extends CommandLineProgram {
 
     // format OA tag string according to the spec
     //TODO: Move this to htsjdk once https://github.com/samtools/hts-specs/pull/193 is merged
-    private void setOATag(SAMRecord rec, Boolean overrideTag) {
+    private void setOATag(SAMRecord rec) {
         if (rec.getReferenceName().contains(",")) {
             throw new PicardException(String.format("Reference name for record %s contains a comma character.", rec.getReadName()));
         }
@@ -127,10 +124,6 @@ public class AddOATag extends CommandLineProgram {
                     (rec.getMappingQuality()),
                     (Optional.ofNullable(rec.getAttribute(SAMTag.NM.name())).orElse("").toString()));
         }
-        if (overrideTag) {
-            rec.setAttribute(OA, OAValue);
-        } else {
-            rec.setAttribute(OA,Optional.ofNullable(rec.getAttribute(OA)).orElse("") +  OAValue);
-        }
+        rec.setAttribute(OA,Optional.ofNullable(rec.getAttribute(OA)).orElse("") +  OAValue);
     }
 }
