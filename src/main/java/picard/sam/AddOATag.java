@@ -61,21 +61,24 @@ public class AddOATag extends CommandLineProgram {
             "</pre>";
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "SAM or BAM input file")
-    public File INPUT;
+    public String INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "SAM or BAM file to write merged result to")
-    public File OUTPUT;
+    public String OUTPUT;
 
     @Argument(shortName = "L", doc = "If provided, only records that overlap given interval list will have the OA tag added.", optional = true)
     public File INTERVAL_LIST;
 
+    /**
+     * Original Alignment tag key.
+     */
     public static final String OA = "OA";
     private static final Log log = Log.getInstance(AddOATag.class);
 
     @Override
     protected int doWork() {
-        try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-             final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, OUTPUT, REFERENCE_SEQUENCE)) {
+        try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(IOUtil.getPath(INPUT));
+             final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, IOUtil.getPath(OUTPUT), REFERENCE_SEQUENCE)) {
                 writer.setProgressLogger(
                         new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
 
@@ -87,7 +90,7 @@ public class AddOATag extends CommandLineProgram {
                     writer.addAlignment(rec);
                 }
         } catch (IOException e) {
-            log.error("Exception: " + e.getMessage());
+            log.error(e);
             return 1;
         }
 
@@ -98,12 +101,11 @@ public class AddOATag extends CommandLineProgram {
     static OverlapDetector<Interval> getOverlapDetectorFromIntervalListFile(File intervalList, int lhsBuffer, int rhsBuffer) {
         if (intervalList == null) {
             return null;
-        } else {
-            List<Interval> intervals = IntervalList.fromFile(intervalList).uniqued().getIntervals();
-            OverlapDetector<Interval> detector = new OverlapDetector<>(lhsBuffer, rhsBuffer);
-            detector.addAll(intervals, intervals);
-            return detector;
         }
+        List<Interval> intervals = IntervalList.fromFile(intervalList).uniqued().getIntervals();
+        OverlapDetector<Interval> detector = new OverlapDetector<>(lhsBuffer, rhsBuffer);
+        detector.addAll(intervals, intervals);
+        return detector;
     }
 
     // format OA tag string according to the spec
@@ -112,18 +114,18 @@ public class AddOATag extends CommandLineProgram {
         if (rec.getReferenceName().contains(",")) {
             throw new PicardException(String.format("Reference name for record %s contains a comma character.", rec.getReadName()));
         }
-        final String OAValue;
+        final String oAValue;
         if (rec.getReadUnmappedFlag()) {
-            OAValue = String.format("*,0,%s,*,255,;", rec.getReadNegativeStrandFlag() ? "-" : "+");
+            oAValue = String.format("*,0,%s,*,255,;", rec.getReadNegativeStrandFlag() ? "-" : "+");
         } else {
-            OAValue = String.format("%s,%s,%s,%s,%s,%s;",
-                    (rec.getReferenceName()),
-                    (rec.getAlignmentStart()),
-                    ((rec.getReadNegativeStrandFlag() ? "-" : "+")),
-                    (rec.getCigarString()),
-                    (rec.getMappingQuality()),
-                    (Optional.ofNullable(rec.getAttribute(SAMTag.NM.name())).orElse("").toString()));
+            oAValue = String.format("%s,%s,%s,%s,%s,%s;",
+                    rec.getReferenceName(),
+                    rec.getAlignmentStart(),
+                    rec.getReadNegativeStrandFlag() ? "-" : "+",
+                    rec.getCigarString(),
+                    rec.getMappingQuality(),
+                    Optional.ofNullable(rec.getAttribute(SAMTag.NM.name())).orElse(""));
         }
-        rec.setAttribute(OA,Optional.ofNullable(rec.getAttribute(OA)).orElse("") +  OAValue);
+        rec.setAttribute(OA, Optional.ofNullable(rec.getAttribute(OA)).orElse("") +  oAValue);
     }
 }

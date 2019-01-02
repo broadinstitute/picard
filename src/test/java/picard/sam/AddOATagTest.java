@@ -34,6 +34,8 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class AddOATagTest {
     private static final String TEST_DIR = "testdata/picard/sam/";
@@ -75,32 +77,30 @@ public class AddOATagTest {
         validateOATag(clpOutput, truthSam);
     }
 
-    private void runAddOATag(final File inputSam, final File output, final File intervalList) throws IOException {
-        final ArrayList<String> args = new ArrayList<String>(){
-            {
-                add("INPUT=" + inputSam);
-                add("OUTPUT=" + output);
-            }
-        };
+    private static void runAddOATag(final File inputSam, final File output, final File intervalList) throws IOException {
+        final List<String> args = new ArrayList<>(Arrays.asList(
+          "INPUT=" + inputSam,
+          "OUTPUT=" + output
+        ));
         if (intervalList != null) {
             args.add("INTERVAL_LIST=" + intervalList);
         }
         AddOATag addOATag = new AddOATag();
-        Assert.assertEquals(addOATag.instanceMain(args.toArray(new String[args.size()])), 0, "Running addOATag did not succeed");
+        Assert.assertEquals(addOATag.instanceMain(args.toArray(new String[0])), 0, "Running addOATag did not succeed");
     }
 
-    private void validateOATag(final File testSam, final File truthSam) {
+    private static void validateOATag(final File testSam, final File truthSam) {
         final ArrayList<String> truthOAValues = new ArrayList<>();
         final ArrayList<String> testOAValues = new ArrayList<>();
 
         SAMRecordIterator iterator = SamReaderFactory.makeDefault().open(truthSam).iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             SAMRecord rec = iterator.next();
             truthOAValues.add(rec.getStringAttribute(AddOATag.OA));
         }
 
         iterator = SamReaderFactory.makeDefault().open(testSam).iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             SAMRecord rec = iterator.next();
             testOAValues.add(rec.getStringAttribute(AddOATag.OA));
         }
