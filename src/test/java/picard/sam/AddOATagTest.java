@@ -33,27 +33,29 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class AddOATagTest {
-    private static final String TEST_DIR = "testdata/picard/sam/";
-    private static final String OA_TEST_DIR = TEST_DIR + "AddOATag/";
+    private static final Path TEST_DIR = Paths.get("testdata/picard/sam/");
+    private static final Path OA_TEST_DIR = TEST_DIR.resolve("AddOATag/");
 
     @DataProvider(name="testOAData")
     Object[][] testOAData() {
         return new Object[][]{
-                new Object[]{new File(OA_TEST_DIR + "aligned_withoutOA.sam"), new File(OA_TEST_DIR + "aligned_withOA.sam")},
+                new Object[]{OA_TEST_DIR.resolve("aligned_withoutOA.sam").toFile(), OA_TEST_DIR.resolve("aligned_withOA.sam").toFile()},
         };
     }
 
     @DataProvider(name="testIntervalListData")
     Object[][] testIntervalListData() {
         return new Object[][]{
-                new Object[]{new File(TEST_DIR + "aligned.sam"), null, new File(OA_TEST_DIR + "aligned_no_intervals.sam")},
-                new Object[]{new File(TEST_DIR + "aligned.sam"), new File("testdata/picard/analysis/directed/CollectHsMetrics/chrM.interval_list"), new File(TEST_DIR + "aligned.sam")},
-                new Object[]{new File(TEST_DIR + "aligned.sam"), new File(TEST_DIR + "contiguous.interval_list"), new File(OA_TEST_DIR + "aligned_with_intervals.sam")}
+                new Object[]{TEST_DIR.resolve("aligned.sam").toFile(), null, OA_TEST_DIR.resolve("aligned_no_intervals.sam").toFile()},
+                new Object[]{TEST_DIR.resolve("aligned.sam").toFile(), new File("testdata/picard/analysis/directed/CollectHsMetrics/chrM.interval_list"), TEST_DIR.resolve("aligned.sam").toFile()},
+                new Object[]{TEST_DIR.resolve("aligned.sam").toFile(), TEST_DIR.resolve("contiguous.interval_list").toFile(), OA_TEST_DIR.resolve("aligned_with_intervals.sam").toFile()}
         };
     }
 
