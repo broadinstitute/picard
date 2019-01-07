@@ -60,4 +60,19 @@ public class PicardCommandLineTest {
     public void testPrintUsage() {
         Assert.assertEquals(new PicardCommandLine().instanceMain(new String[]{"-h"}), 1);
     }
+
+    @Test
+    public void testCommandlineProgramPropertiesOneLineSummaryLength() {
+        // Find and test each command line tool to ensure that one line
+        // summaries don't exceed the maximum allowable length
+        PicardCommandLine.processAllCommandLinePrograms(
+                Collections.singletonList("picard"),
+                (Class<picard.cmdline.CommandLineProgram> clazz, CommandLineProgramProperties clProperties) ->
+                    Assert.assertTrue(
+                            clProperties.oneLineSummary().length() <= CommandLineProgram.MAX_ALLOWABLE_ONE_LINE_SUMMARY_LENGTH,
+                            String.format("One line summary for tool '%s' exceeds allowable length of %d",
+                                    clazz.getCanonicalName(),
+                                    CommandLineProgram.MAX_ALLOWABLE_ONE_LINE_SUMMARY_LENGTH)));
+    }
+
 }
