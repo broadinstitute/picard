@@ -89,7 +89,8 @@ public class MarkDuplicatesSetSizeHistogramTester extends AbstractMarkDuplicates
         try {
             metricsOutput.read(new FileReader(metricsFile));
         } catch (final FileNotFoundException ex) {
-            System.err.println("Metrics file not found: " + ex);
+            // Rethrows as unchecked exception to avoid having to change existing tests
+            throw new RuntimeException(ex);
         }
         Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
         final DuplicationMetrics observedMetrics = metricsOutput.getMetrics().get(0);

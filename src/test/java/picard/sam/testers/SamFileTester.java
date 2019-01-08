@@ -359,7 +359,8 @@ public abstract class SamFileTester extends CommandLineProgramTest {
             Assert.assertEquals(runPicardCommandLine(args), 0);
             test();
         } catch (IOException ex) {
-            ex.printStackTrace();
+            // Rethrows as unchecked exception to avoid having to change existing tests
+            throw new RuntimeException(ex);
         }
     }
 

@@ -155,17 +155,11 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                 for (final SAMRecord record : reader) {
                     outputRecords++;
                     final String key = samRecordToDuplicatesFlagsKey(record);
-                    if (!this.duplicateFlags.containsKey(key)) {
-                        System.err.println("DOES NOT CONTAIN KEY: " + key);
-                    }
+
                     Assert.assertTrue(this.duplicateFlags.containsKey(key));
                     final boolean value = this.duplicateFlags.get(key);
                     this.duplicateFlags.remove(key);
-                    if (value != record.getDuplicateReadFlag()) {
-                        System.err.println("Mismatching read:");
-                        System.err.print(record.getSAMString());
-                    }
-                    Assert.assertEquals(record.getDuplicateReadFlag(), value);
+                    Assert.assertEquals(record.getDuplicateReadFlag(), value, "Mismatching read: " + record.getSAMString());
                     if (testOpticalDuplicateDTTag && MarkDuplicates.DUPLICATE_TYPE_SEQUENCING.equals(record.getAttribute("DT"))) {
                         sequencingDTErrorsSeen.add(record.getReadName());
                     }

@@ -231,8 +231,9 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
         // Also do tests from AbstractMarkDuplicatesCommandLineProgramTester
         try {
             super.test();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            // Rethrows as unchecked exception to avoid having to change existing tests
+            throw new RuntimeException(ex);
         }
     }
 
