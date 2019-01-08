@@ -161,7 +161,6 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     protected void finalizeAndWriteMetrics(final LibraryIdGenerator libraryIdGenerator) {
         final Map<String, DuplicationMetrics> metricsByLibrary = libraryIdGenerator.getMetricsByLibraryMap();
         final Histogram<Short> opticalDuplicatesByLibraryId = libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap();
-
         final Map<String, Short> libraryIds = libraryIdGenerator.getLibraryIdsMap();
 
         // Write out the metrics
@@ -284,13 +283,13 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
 
             // track the duplicates
             final int nOpticalDupF = trackOpticalDuplicates(trackOpticalDuplicatesF,
-                                                    keeper,
-                                                    opticalDuplicateFinder,
-                                                    libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
+                    keeper,
+                    opticalDuplicateFinder,
+                    libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
             final int nOpticalDupR = trackOpticalDuplicates(trackOpticalDuplicatesR,
-                                                    keeper,
-                                                    opticalDuplicateFinder,
-                                                    libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
+                    keeper,
+                    opticalDuplicateFinder,
+                    libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
             trackDuplicateCounts(ends.size(),
                     nOpticalDupF + nOpticalDupR,
                     libraryIdGenerator.getDuplicateCountHist(),
@@ -346,7 +345,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
                                              final Histogram<Double> duplicatesCountHist,
                                              final Histogram<Double> nonOpticalDuplicatesCountHist,
                                              final Histogram<Double> opticalDuplicatesCountHist) {
-        duplicatesCountHist.increment((double)(listSize));
+        duplicatesCountHist.increment((double) listSize);
         if ((listSize - optDupCnt) > 0) {
             nonOpticalDuplicatesCountHist.increment((double) (listSize - optDupCnt));
         }

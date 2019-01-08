@@ -82,7 +82,7 @@ public class MarkDuplicatesSetSizeHistogramTester extends AbstractMarkDuplicates
         }
 
         // Ensure the program output the same number of records as were read in
-        Assert.assertEquals(outputRecords, this.getNumberOfRecords(), ("saw " + outputRecords + " output records, vs. " + this.getNumberOfRecords() + " input records"));
+        Assert.assertEquals(outputRecords, this.getNumberOfRecords());
 
         // Check the values written to metrics.txt against our input expectations
         final MetricsFile<DuplicationMetrics, Double> metricsOutput = new MetricsFile<DuplicationMetrics, Double>();
