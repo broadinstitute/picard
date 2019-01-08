@@ -756,27 +756,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             if (firstOfNextChunk != null && areComparableForDuplicates(firstOfNextChunk, next, true, useBarcodes)) {
                 nextChunk.add(next);
             } else {
-                if (nextChunk.size() > 1) {
-                    markDuplicatePairs(nextChunk);
-                    if (TAG_DUPLICATE_SET_MEMBERS) {
-                        addRepresentativeReadIndex(nextChunk);
-                    }
-                } else if (nextChunk.size() == 1) {
-                    addSingletonToCount(libraryIdGenerator);
-                }
+                handleChunk(nextChunk);
                 nextChunk.clear();
                 nextChunk.add(next);
                 firstOfNextChunk = next;
             }
         }
-        if (nextChunk.size() > 1) {
-            markDuplicatePairs(nextChunk);
-            if (TAG_DUPLICATE_SET_MEMBERS) {
-                addRepresentativeReadIndex(nextChunk);
-            }
-        }  else if (nextChunk.size() == 1) {
-            addSingletonToCount(libraryIdGenerator);
-        }
+        handleChunk(nextChunk);
+
         this.pairSort.cleanup();
         this.pairSort = null;
 
@@ -814,6 +801,17 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
         if (TAG_DUPLICATE_SET_MEMBERS) {
             this.representativeReadIndicesForDuplicates.doneAdding();
+        }
+    }
+
+    private void handleChunk(List<ReadEndsForMarkDuplicates> nextChunk) {
+        if (nextChunk.size() > 1) {
+            markDuplicatePairs(nextChunk);
+            if (TAG_DUPLICATE_SET_MEMBERS) {
+                addRepresentativeReadIndex(nextChunk);
+            }
+        } else if (nextChunk.size() == 1) {
+            addSingletonToCount(libraryIdGenerator);
         }
     }
 
