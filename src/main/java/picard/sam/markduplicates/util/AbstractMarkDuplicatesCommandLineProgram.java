@@ -297,9 +297,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         }
         trackDuplicateCounts(ends.size(),
                 nOpticalDup,
-                libraryIdGenerator.getDuplicateCountHist(),
-                libraryIdGenerator.getNonOpticalDuplicateCountHist(),
-                libraryIdGenerator.getOpticalDuplicateCountHist());
+                libraryIdGenerator);
     }
 
     public static void addSingletonToCount(final LibraryIdGenerator libraryIdGenerator) {
@@ -339,9 +337,12 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
 
     private static void trackDuplicateCounts(final int listSize,
                                              final int optDupCnt,
-                                             final Histogram<Double> duplicatesCountHist,
-                                             final Histogram<Double> nonOpticalDuplicatesCountHist,
-                                             final Histogram<Double> opticalDuplicatesCountHist) {
+                                             final LibraryIdGenerator libraryIdGenerator) {
+
+        final Histogram<Double> duplicatesCountHist = libraryIdGenerator.getDuplicateCountHist();
+        final Histogram<Double> nonOpticalDuplicatesCountHist = libraryIdGenerator.getNonOpticalDuplicateCountHist();
+        final Histogram<Double> opticalDuplicatesCountHist = libraryIdGenerator.getOpticalDuplicateCountHist();
+
         duplicatesCountHist.increment((double) listSize);
         if ((listSize - optDupCnt) > 0) {
             nonOpticalDuplicatesCountHist.increment((double) (listSize - optDupCnt));
