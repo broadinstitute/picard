@@ -301,8 +301,8 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     }
 
     public static void addSingletonToCount(final LibraryIdGenerator libraryIdGenerator) {
-        addSingletonToCount(libraryIdGenerator.getDuplicateCountHist(),
-                libraryIdGenerator.getNonOpticalDuplicateCountHist());
+        libraryIdGenerator.getDuplicateCountHist().increment(1.0);
+        libraryIdGenerator.getNonOpticalDuplicateCountHist().increment(1.0);
     }
 
     /**
@@ -351,11 +351,4 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             opticalDuplicatesCountHist.increment((double) (optDupCnt + 1.0));
         }
     }
-
-    private static void addSingletonToCount(final Histogram<Double> duplicatesCountHist,
-                                            final Histogram<Double> nonOpticalDuplicatesCountHist) {
-        duplicatesCountHist.increment(1.0);
-        nonOpticalDuplicatesCountHist.increment(1.0);
-    }
-
 }
