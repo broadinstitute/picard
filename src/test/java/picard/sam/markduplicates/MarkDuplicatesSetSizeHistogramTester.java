@@ -31,6 +31,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.TestUtil;
+import org.apache.commons.jexl2.UnifiedJEXL;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import picard.cmdline.CommandLineProgram;
@@ -104,19 +105,25 @@ public class MarkDuplicatesSetSizeHistogramTester extends AbstractMarkDuplicates
         Assert.assertEquals(observedMetrics.ESTIMATED_LIBRARY_SIZE, expectedMetrics.ESTIMATED_LIBRARY_SIZE, "ESTIMATED_LIBRARY_SIZE does not match expected");
         Assert.assertEquals(observedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, expectedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, "SECONDARY_OR_SUPPLEMENTARY_RDS does not match expected");
 
-
-        // Check contents of set size bin against expected values //
-        for (final Histogram<Double> histo : metricsOutput.getAllHistograms()) {
-            final String label = histo.getValueLabel();
-            for (final Double bin : histo.keySet()) {
-                final String binStr = String.valueOf(bin);
-                final List<String> labelBinStr = Arrays.asList(label, binStr);
-                if (expectedSetSizeMap.containsKey(labelBinStr)) {
-                    Histogram.Bin<Double> binValue = histo.get(bin);
-                    final double actual = binValue.getValue();
-                    final double expected = expectedSetSizeMap.get(labelBinStr);
-                    Assert.assertEquals(actual, expected);
+        // Check contents of set size bin against expected values
+        if (!expectedSetSizeMap.isEmpty()) {
+            boolean checked = false;
+            for (final Histogram<Double> histo : metricsOutput.getAllHistograms()) {
+                final String label = histo.getValueLabel();
+                for (final Double bin : histo.keySet()) {
+                    final String binStr = String.valueOf(bin);
+                    final List<String> labelBinStr = Arrays.asList(label, binStr);
+                    if (expectedSetSizeMap.containsKey(labelBinStr)) {
+                        checked = true;
+                        Histogram.Bin<Double> binValue = histo.get(bin);
+                        final double actual = binValue.getValue();
+                        final double expected = expectedSetSizeMap.get(labelBinStr);
+                        Assert.assertEquals(actual, expected);
+                    }
                 }
+            }
+            if (!checked) {
+                throw new RuntimeException("Could not not find matching entry for expectedSetSizeMap in metrics.");
             }
         }
     }
