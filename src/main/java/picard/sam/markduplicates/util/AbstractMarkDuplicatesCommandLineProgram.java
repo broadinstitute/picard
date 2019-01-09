@@ -265,6 +265,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         }
 
         // Check if we need to partition since the orientations could have changed
+        final int nOpticalDup;
         if (hasFR && hasRF) { // need to track them independently
             // Variables used for optical duplicate detection and tracking
             final List<ReadEnds> trackOpticalDuplicatesF = new ArrayList<>();
@@ -290,19 +291,15 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
                     keeper,
                     opticalDuplicateFinder,
                     libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
-            trackDuplicateCounts(ends.size(),
-                    nOpticalDupF + nOpticalDupR,
-                    libraryIdGenerator.getDuplicateCountHist(),
-                    libraryIdGenerator.getNonOpticalDuplicateCountHist(),
-                    libraryIdGenerator.getOpticalDuplicateCountHist());
+            nOpticalDup = nOpticalDupF + nOpticalDupR;
         } else { // No need to partition
-            final int nOpticalDup = trackOpticalDuplicates(ends, keeper, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
-            trackDuplicateCounts(ends.size(),
-                    nOpticalDup,
-                    libraryIdGenerator.getDuplicateCountHist(),
-                    libraryIdGenerator.getNonOpticalDuplicateCountHist(),
-                    libraryIdGenerator.getOpticalDuplicateCountHist());
+            nOpticalDup = trackOpticalDuplicates(ends, keeper, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
         }
+        trackDuplicateCounts(ends.size(),
+                nOpticalDup,
+                libraryIdGenerator.getDuplicateCountHist(),
+                libraryIdGenerator.getNonOpticalDuplicateCountHist(),
+                libraryIdGenerator.getOpticalDuplicateCountHist());
     }
 
     public static void addSingletonToCount(final LibraryIdGenerator libraryIdGenerator) {
