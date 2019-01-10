@@ -114,11 +114,11 @@ public class AddOATag extends CommandLineProgram {
         if (rec.getReferenceName().contains(",")) {
             throw new PicardException(String.format("Reference name for record %s contains a comma character.", rec.getReadName()));
         }
-        final String oAValue;
+        final String oaValue;
         if (rec.getReadUnmappedFlag()) {
-            oAValue = String.format("*,0,%s,*,255,;", rec.getReadNegativeStrandFlag() ? "-" : "+");
+            oaValue = String.format("*,0,%s,*,255,;", rec.getReadNegativeStrandFlag() ? "-" : "+");
         } else {
-            oAValue = String.format("%s,%s,%s,%s,%s,%s;",
+            oaValue = String.format("%s,%s,%s,%s,%s,%s;",
                     rec.getReferenceName(),
                     rec.getAlignmentStart(),
                     rec.getReadNegativeStrandFlag() ? "-" : "+",
@@ -126,6 +126,6 @@ public class AddOATag extends CommandLineProgram {
                     rec.getMappingQuality(),
                     Optional.ofNullable(rec.getAttribute(SAMTag.NM.name())).orElse(""));
         }
-        rec.setAttribute(OA, Optional.ofNullable(rec.getAttribute(OA)).orElse("") +  oAValue);
+        rec.setAttribute(OA, Optional.ofNullable(rec.getAttribute(OA)).orElse("") +  oaValue);
     }
 }
