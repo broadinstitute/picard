@@ -32,7 +32,6 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.FormatUtil;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
@@ -145,6 +144,15 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
 
     @Override
     public void test() throws IOException {
+        testMetrics();
+    }
+
+    /**
+     * Runs test and returns metrics
+     * @return Duplication metrics
+     * @throws IOException
+     */
+    public MetricsFile<DuplicationMetrics, Double> testMetrics() throws IOException {
         try {
             updateExpectedDuplicationMetrics();
 
@@ -170,12 +178,12 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
             Assert.assertEquals(outputRecords, this.getNumberOfRecords(), ("saw " + outputRecords + " output records, vs. " + this.getNumberOfRecords() + " input records"));
 
             // Check the values written to metrics.txt against our input expectations
-            final MetricsFile<DuplicationMetrics, Comparable<?>> metricsOutput = new MetricsFile<DuplicationMetrics, Comparable<?>>();
+            final MetricsFile<DuplicationMetrics, Double> metricsOutput = new MetricsFile<>();
             try{
                 metricsOutput.read(new FileReader(metricsFile));
             }
             catch (final FileNotFoundException ex) {
-                System.err.println("Metrics file not found: " + ex);
+                Assert.fail("Metrics file not found: " + ex.getMessage());
             }
             Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
             final DuplicationMetrics observedMetrics = metricsOutput.getMetrics().get(0);
@@ -192,6 +200,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                 Assert.assertEquals(sequencingDTErrorsSeen.size(), expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES, "READ_PAIR_OPTICAL_DUPLICATES does not match duplicate groups observed in the file");
                 Assert.assertEquals(sequencingDTErrorsSeen.size(), observedMetrics.READ_PAIR_OPTICAL_DUPLICATES, "READ_PAIR_OPTICAL_DUPLICATES does not match duplicate groups observed in the file");
             }
+            return metricsOutput;
         } finally {
             TestUtil.recursiveDelete(getOutputDir());
         }
