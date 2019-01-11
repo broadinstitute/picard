@@ -57,8 +57,8 @@ import picard.util.PropertyUtils;
 import java.io.File;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -342,7 +342,7 @@ public abstract class CommandLineProgram {
     */
     protected boolean parseArgs(final String[] argv) {
 
-        commandLineParser = getCommandLineParser();
+        commandLineParser = determineArgParser(argv);
 
         boolean ret;
         try {
@@ -369,6 +369,18 @@ public abstract class CommandLineProgram {
             return false;
         }
         return true;
+    }
+
+    private CommandLineParser determineArgParser(String[] argv) {
+        // If there are args that don't start with dashes and contain equals then we use the old argument parser
+        boolean hasEqualsNoDash = Arrays.stream(argv).anyMatch(arg -> arg.contains("=") && !arg.startsWith("-"));
+
+        commandLineParser = (hasEqualsNoDash) ?
+                new LegacyCommandLineArgumentParser(this) :
+                new CommandLineArgumentParser(this,
+                        Collections.emptyList(),
+                        new HashSet<>(Collections.singleton(CommandLineParserOptions.APPEND_TO_COLLECTIONS)));
+        return commandLineParser;
     }
 
     /** Gets a MetricsFile with default headers already written into it. */
