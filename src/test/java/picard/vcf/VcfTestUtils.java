@@ -18,6 +18,7 @@ public class VcfTestUtils {
 
     /**
      * This method creates a temporary VCF or Bam file and its appropriately named index file, and will delete them on exit.
+     *
      * @param prefix - The prefix string to be used in generating the file's name; must be at least three characters long
      * @param suffix - The suffix string to be used in generating the file's name; may be null, in which case the suffix ".tmp" will be used
      * @return A File object referencing the newly created temporary file
@@ -46,7 +47,7 @@ public class VcfTestUtils {
      * Given a VCF file, create a temporary VCF file with an index file. Both the temporary file and its index are
      * deleted when the JVM exits.
      *
-     * @param vcfFile the file to use as a source
+     * @param vcfFile        the file to use as a source
      * @param tempFilePrefix a prefix name for the temporary file
      * @return the temporary VCF file
      */
@@ -67,9 +68,9 @@ public class VcfTestUtils {
 
         if (suffix != null) {
             extension = suffix;
-        } else if (vcfFile.getAbsolutePath().endsWith(".vcf") ) {
+        } else if (vcfFile.getAbsolutePath().endsWith(".vcf")) {
             extension = ".vcf";
-        } else if (vcfFile.getAbsolutePath().endsWith(".vcf.gz") ) {
+        } else if (vcfFile.getAbsolutePath().endsWith(".vcf.gz")) {
             extension = ".vcf.gz";
         } else {
             extension = "";
@@ -118,18 +119,18 @@ public class VcfTestUtils {
             Assert.assertNull(actual);
             return;
         }
-
+        final String expectedString = expected.toString();
         Assert.assertNotNull(actual, "null status");
-        Assert.assertEquals(actual.getContig(), expected.getContig(), "Different contigs: ");
-        Assert.assertEquals(actual.getStart(), expected.getStart(), "Different starts: ");
-        Assert.assertEquals(actual.getEnd(), expected.getEnd(), "Different ends: ");
+        Assert.assertEquals(actual.getContig(), expected.getContig(), expectedString + " Different contigs: ");
+        Assert.assertEquals(actual.getStart(), expected.getStart(), expectedString + " Different starts: ");
+        Assert.assertEquals(actual.getEnd(), expected.getEnd(), expectedString + " Different ends: ");
 
         Assert.assertTrue(actual.hasSameAllelesAs(expected), "Alleles differ between " + actual + " and " + expected + ": ");
         assertEquals(actual.getGenotypes(), expected.getGenotypes());
 
-        Assert.assertEquals(actual.getID(), expected.getID());
-        Assert.assertEquals(actual.getFilters(), expected.getFilters());
-        Assert.assertEquals(actual.getAttributes(), expected.getAttributes());
+        Assert.assertEquals(actual.getID(), expected.getID(), "IDs differ for " + expectedString);
+        Assert.assertEquals(actual.getFilters(), expected.getFilters(), "Filters differ for " + expectedString);
+        Assert.assertEquals(actual.getAttributes(), expected.getAttributes(), "Attributes differ for " + expectedString);
     }
 
     public static void assertEquals(final GenotypesContext actual, final GenotypesContext expected) {
