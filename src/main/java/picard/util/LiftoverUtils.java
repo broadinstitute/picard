@@ -89,7 +89,10 @@ public class LiftoverUtils {
 
         builder.filters(source.getFilters());
         builder.log10PError(source.getLog10PError());
-        builder.attributes(source.getAttributes());
+
+        //not using builder::attributes so that already set
+        source.getAttributes().forEach((k, v)->{if(!Objects.equals(k, "END")) builder.attribute(k,v);});
+
         // make sure that the variant isn't mistakenly set as "SwappedAlleles"
         builder.rmAttribute(SWAPPED_ALLELES);
         if (target.isNegativeStrand()) {
