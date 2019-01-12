@@ -163,7 +163,7 @@ public class LiftoverUtils {
 
         vcb.alleles(reverseComplementAlleles(origAlleles, target, refSeq, source.isIndel(), addToStart));
 
-        if (source.getReference().getBases().length > 1) {
+        if (!source.isSNP()) {
             // check that the reverse complemented bases match the new reference
             if (!referenceAlleleMatchesReferenceForIndel(vcb.getAlleles(), refSeq, start, stop)) {
                 return null;
