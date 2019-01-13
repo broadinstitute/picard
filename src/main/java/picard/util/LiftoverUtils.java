@@ -146,18 +146,14 @@ public class LiftoverUtils {
             throw new IllegalArgumentException("This should only be called for negative strand liftovers");
         }
 
-//        // not currently supported
-//        if (source.isIndel() && !source.isBiallelic()) {
-//            return null;
-//        }
-
         final List<Allele> origAlleles = new ArrayList<>(source.getAlleles());
         final VariantContextBuilder vcb = new VariantContextBuilder(source);
         vcb.chr(target.getContig());
 
         // By convention, indels are left aligned and include the base prior to that indel.
         // When reverse complementing, will be necessary to include this additional base.
-        // This check prevents the presumably rare situation in which the indel occurs on the first position of the sequence
+        // This check prevents the extremely rare situation in which the indel occurs on the
+        // first base of the sequence
         final boolean addToStart = source.isIndel() && target.getStart() > 1;
 
         final int start = target.getStart() - (addToStart ? 1 : 0);
@@ -426,7 +422,9 @@ public class LiftoverUtils {
                 .collect(Collectors.toMap(Map.Entry::getKey, me -> Allele.create(me.getValue(), me.getKey().isReference())));
 
         //retain original order:
-        List<Allele> fixedAlleles = alleles.stream().map(fixedAlleleMap::get).collect(Collectors.toList());
+        List<Allele> fixedAlleles = alleles.stream()
+                .map(fixedAlleleMap::get)
+                .collect(Collectors.toList());
 
         builder.alleles(fixedAlleles);
     }

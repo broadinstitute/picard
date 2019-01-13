@@ -30,27 +30,14 @@ import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFFilterHeaderLine;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
-import htsjdk.variant.vcf.VCFRecordCodec;
+import htsjdk.variant.vcf.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -63,14 +50,7 @@ import picard.util.LiftoverUtils;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -255,7 +235,7 @@ public class LiftoverVcf extends CommandLineProgram {
      */
     public static final String ATTEMPTED_LOCUS = "AttemptedLocus";
 
-/**
+    /**
      * Attribute used to store the position of the failed variant on the target contig prior to finding out that alleles do not match.
      */
     public static final String ATTEMPTED_ALLELES = "AttemptedAlleles";
@@ -267,7 +247,7 @@ public class LiftoverVcf extends CommandLineProgram {
             new VCFInfoHeaderLine(ORIGINAL_CONTIG, 1, VCFHeaderLineType.String, "The name of the source contig/chromosome prior to liftover."),
             new VCFInfoHeaderLine(ORIGINAL_START, 1, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover."),
             new VCFInfoHeaderLine(ORIGINAL_ALLELES, VCFHeaderLineCount.R, VCFHeaderLineType.String, "A list of the original alleles (including REF) of the variant prior to liftover.  If the alleles were not changed during liftover, this attribute will be omitted.")
-            );
+    );
 
     private VariantContextWriter rejects;
     private final Log log = Log.getInstance(LiftoverVcf.class);
@@ -352,10 +332,12 @@ public class LiftoverVcf extends CommandLineProgram {
                 .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
                 .build();
         final VCFHeader rejectHeader = new VCFHeader(in.getFileHeader());
-        for (final VCFFilterHeaderLine line : FILTERS) rejectHeader.addMetaDataLine(line);
+        for (final VCFFilterHeaderLine line : FILTERS) {
+            rejectHeader.addMetaDataLine(line);
+        }
 
-        rejectHeader.addMetaDataLine(new VCFInfoHeaderLine(ATTEMPTED_LOCUS,1, VCFHeaderLineType.String, "The locus of the variant in the TARGET prior to failing due to reference allele mismatching to the target reference."));
-        rejectHeader.addMetaDataLine(new VCFInfoHeaderLine(ATTEMPTED_ALLELES,1, VCFHeaderLineType.String, "The alleles of the variant in the TARGET prior to failing due to reference allele mismatching to the target reference."));
+        rejectHeader.addMetaDataLine(new VCFInfoHeaderLine(ATTEMPTED_LOCUS, 1, VCFHeaderLineType.String, "The locus of the variant in the TARGET prior to failing due to reference allele mismatching to the target reference."));
+        rejectHeader.addMetaDataLine(new VCFInfoHeaderLine(ATTEMPTED_ALLELES, 1, VCFHeaderLineType.String, "The alleles of the variant in the TARGET prior to failing due to reference allele mismatching to the target reference."));
 
         rejects.writeHeader(rejectHeader);
 
