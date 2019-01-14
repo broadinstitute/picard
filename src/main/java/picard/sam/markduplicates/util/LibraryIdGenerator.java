@@ -47,11 +47,11 @@ public class LibraryIdGenerator {
     private final SAMFileHeader header;
     private final Map<String, Short> libraryIds = new HashMap<String, Short>(); // from library string to library id
     private short nextLibraryId = 1;
-    private final Map<String, DuplicationMetrics> metricsByLibrary = new HashMap<String, DuplicationMetrics>();
-    private final Histogram<Short> opticalDuplicatesByLibraryId = new Histogram<Short>();
-    public final Histogram<Double> duplicateCountHist = new Histogram<Double>("set_size", "all_sets");
-    public final Histogram<Double> nonOpticalDuplicateCountHist = new Histogram<Double>("set_size", "non_optical_sets");
-    public final Histogram<Double> opticalDuplicateCountHist = new Histogram<Double>("set_size", "optical_sets");
+    private final Map<String, DuplicationMetrics> metricsByLibrary = new HashMap<>();
+    private final Histogram<Short> opticalDuplicatesByLibraryId = new Histogram<>();
+    private final Histogram<Double> duplicateCountHist = new Histogram<>("set_size", "all_sets");
+    private final Histogram<Double> nonOpticalDuplicateCountHist = new Histogram<>("set_size", "non_optical_sets");
+    private final Histogram<Double> opticalDuplicateCountHist = new Histogram<>("set_size", "optical_sets");
 
     public LibraryIdGenerator(final SAMFileHeader header) {
         this.header = header;
