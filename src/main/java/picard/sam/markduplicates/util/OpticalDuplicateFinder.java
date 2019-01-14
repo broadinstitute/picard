@@ -148,9 +148,9 @@ public class OpticalDuplicateFinder extends ReadNameParser implements Serializab
             progressLoggerForRest = null;
         }
         if (length >= (keeper == null ? 3 : 4)) {
-            return getOpticalDuplicatesFlagWithGraph(list, keeper, opticalDuplicateFlags, log, progressLoggerForKeeper, progressLoggerForRest, logProgress);
+            return getOpticalDuplicatesFlagWithGraph(list, actualKeeper, opticalDuplicateFlags, log, progressLoggerForKeeper, progressLoggerForRest, logProgress);
         } else {
-            return getOpticalDuplicatesFlagFast(list, keeper, opticalDuplicateFlags, log, progressLoggerForKeeper, progressLoggerForRest, logProgress);
+            return getOpticalDuplicatesFlagFast(list, actualKeeper, opticalDuplicateFlags, log, progressLoggerForKeeper, progressLoggerForRest, logProgress);
         }
     }
 
