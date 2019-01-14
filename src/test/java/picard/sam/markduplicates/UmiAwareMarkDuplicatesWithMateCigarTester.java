@@ -35,6 +35,7 @@ import picard.cmdline.CommandLineProgram;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -228,7 +229,11 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
         }
 
         // Also do tests from AbstractMarkDuplicatesCommandLineProgramTester
-        super.test();
+        try {
+            super.test();
+        } catch (IOException ex) {
+            Assert.fail("Could not open metrics file: " + ex);
+        }
     }
 
     @Override
