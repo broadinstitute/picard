@@ -376,15 +376,4 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addArg("DUPLEX_UMI=" + duplexUmi);
         tester.runTest();
     }
-
-    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = ".*boolean field.*")
-    public void testNullFailsFastFor_ADD_PG_TAG_TO_READS(){
-        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
-        tester.getSamRecordSetBuilder().setReadLength(10);
-        tester.addMatePair("READ", 2, 2, 1, 1, false, false, true, true,
-                           "10M", "10M", true, false,
-                           false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addArg("ADD_PG_TAG_TO_READS=null");
-        tester.runTest();
-    }
 }
