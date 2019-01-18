@@ -29,7 +29,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.Lazy;
-import htsjdk.samtools.util.SamLocusIterator.*;
+import htsjdk.samtools.util.SamLocusIterator.RecordAndOffset;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import picard.sam.markduplicates.util.OpticalDuplicateFinder;
@@ -47,7 +47,6 @@ import java.util.stream.Stream;
 
 /**
  * Classes, methods, and enums that deal with the stratification of read bases and reference information.
- *
  */
 public class ReadBaseStratification {
     // This variable has to be set using setLongHomopolymer _before_ the first call to binnedHomopolymerStratifier.get()
@@ -76,8 +75,6 @@ public class ReadBaseStratification {
      * The main interface for a stratifier.
      * The Stratifier needs to be able to ake a {@link htsjdk.samtools.util.SamLocusIterator.RecordAndOffset RecordAndOffset}
      * and return a value of type T. It also needs to have a suffix for automatically generating metrics file suffixes.
-     *
-     * @param <T>
      */
     public interface RecordAndOffsetStratifier<T extends Comparable<T>> {
         // The method that stratifies a base in a read (provided by RecordAndOffset) into a type T.
@@ -195,7 +192,7 @@ public class ReadBaseStratification {
     public static class CollectionStratifier implements RecordAndOffsetStratifier {
         public CollectionStratifier(final Collection<RecordAndOffsetStratifier<?>> stratifiers) {
 
-            if (stratifiers.isEmpty()){
+            if (stratifiers.isEmpty()) {
                 throw new IllegalArgumentException("Must construct with a non-empty collection of stratifiers.");
             }
 
@@ -210,12 +207,13 @@ public class ReadBaseStratification {
 
             stratifier = linkedListStratifiers.remove();
         }
+
         final RecordAndOffsetStratifier stratifier;
 
         @Override
         public Comparable stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
 
-            return stratifier.stratify(recordAndOffset,locusInfo);
+            return stratifier.stratify(recordAndOffset, locusInfo);
         }
 
         @Override
@@ -224,16 +222,14 @@ public class ReadBaseStratification {
         }
     }
 
-
     /**
      * A factory for generating "pair" stratifier instances from two stratifiers and a string
      *
-     * @param <T>    the type of the left Stratifier
-     * @param <S>    the type of the right Stratifier
-     * @param leftStratifier a {@link RecordAndOffsetStratifier<T>} to use
+     * @param <T>             the type of the left Stratifier
+     * @param <S>             the type of the right Stratifier
+     * @param leftStratifier  a {@link RecordAndOffsetStratifier<T>} to use
      * @param rightStratifier a {@link RecordAndOffsetStratifier<S>} to use
-     * @param suffix the suffix to use for the new stratifier
-     *
+     * @param suffix          the suffix to use for the new stratifier
      * @return an instance of {@link  PairStratifier>} that will stratify according to both <code>leftStratifier</code>
      * and <code>rightStratifier</code>
      */
@@ -293,7 +289,9 @@ public class ReadBaseStratification {
                                              final SAMLocusAndReference locusInfo) {
 
             final Integer hpLength = homoPolymerLengthStratifier.stratify(recordAndOffset, locusInfo);
-            if (hpLength == null) return null;
+            if (hpLength == null) {
+                return null;
+            }
 
             return hpLength < longHomopolymer ? LongShortHomopolymer.SHORT_HOMOPOLYMER : LongShortHomopolymer.LONG_HOMOPOLYMER;
 
@@ -537,7 +535,7 @@ public class ReadBaseStratification {
      * <p>
      * This is done with a Lazy wrapper since it requires access to {@link #LONG_HOMOPOLYMER} which can be set with {@link #setLongHomopolymer(int)}.
      */
-    public static final Lazy<PairStratifier<LongShortHomopolymer, Pair<Character, Character>>> binnedHomopolymerStratifier = new Lazy<>(() -> PairStratifierFactory( new LongShortHomopolymerStratifier(LONG_HOMOPOLYMER), preDiNucleotideStratifier,
+    public static final Lazy<PairStratifier<LongShortHomopolymer, Pair<Character, Character>>> binnedHomopolymerStratifier = new Lazy<>(() -> PairStratifierFactory(new LongShortHomopolymerStratifier(LONG_HOMOPOLYMER), preDiNucleotideStratifier,
             "binned_length_homopolymer_and_following_ref_base"));
 
     /**
@@ -580,6 +578,11 @@ public class ReadBaseStratification {
      * Stratifies bases into their read's Ordinality (i.e. First or Second)
      */
     public static final RecordAndOffsetStratifier<ReadOrdinality> readOrdinalityStratifier = wrapStaticReadFunction(ReadOrdinality::of, "read_ordinality");
+
+    /**
+     * Stratifies bases into their read's Proper-pairedness
+     */
+    public static final RecordAndOffsetStratifier<ProperPaired> readPairednessStratifier = wrapStaticReadFunction(ProperPaired::of, "pair_proper");
 
     /**
      * Stratifies bases into their read's Direction (i.e. forward or reverse)
@@ -706,6 +709,48 @@ public class ReadBaseStratification {
     }
 
     /**
+     * An enum to hold information about the "properness" of a read pair
+     */
+    public enum ProperPaired {
+        // Read has no supplementary alignments, is aligned to the same reference as its mate
+        // and has the "properly aligned" flag 0x2 set.
+        PROPER,
+        // Read has no supplementary alignments, is aligned to the same reference as its mate
+        // and has the "properly aligned" flag 0x2 UN-set.
+        IMPROPER,
+        // Read is softclipped and is aligned to the same reference as its mate and
+        // has at-least one supplementary alignment
+        CHIMERIC,
+        // Read is not aligned to the same reference as its mate
+        DISCORDANT,
+        // Read or Mate are not aligned, or read has no mate and cannot be declared to be CHIMERIC.
+        UNKOWN;
+
+        public static ProperPaired of(final SAMRecord sam) {
+
+            if (sam.getReadPairedFlag() &&
+                    sam.getMateUnmappedFlag() && sam.getReadUnmappedFlag() &&
+                    !sam.getMateReferenceIndex().equals(sam.getReferenceIndex())) {
+                return DISCORDANT;
+            }
+
+            if (!sam.getReadUnmappedFlag() && sam.getCigar().isClipped() && sam.hasAttribute(SAMTag.SA.toString())) {
+                return CHIMERIC;
+            }
+
+            if (sam.getReadUnmappedFlag() || sam.getReadPairedFlag() && sam.getMateUnmappedFlag()) {
+                return UNKOWN;
+            }
+
+            if (!sam.getProperPairFlag()) {
+                return IMPROPER;
+            }
+
+            return PROPER;
+        }
+    }
+
+    /**
      * An enum designed to hold a binned version of any probability-like number (between 0 and 1)
      * in quintiles
      */
@@ -785,7 +830,9 @@ public class ReadBaseStratification {
             // if read is unmapped, read isn't mapped, or mate is unmapped, return null
             if (direction == null ||
                     sam.getReadUnmappedFlag() ||
-                    sam.getMateUnmappedFlag()) return null;
+                    sam.getMateUnmappedFlag()) {
+                return null;
+            }
 
             final boolean matePositiveStrand = !sam.getMateNegativeStrandFlag();
 
