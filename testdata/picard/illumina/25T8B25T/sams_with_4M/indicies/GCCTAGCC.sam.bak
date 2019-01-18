@@ -1,4 +1,4 @@
-@HD	VN:1.5	SO:queryname
+@HD	VN:1.6	SO:queryname
 @RG	ID:HiMom.1	SM:SA_GCCTAGCC	LB:LN_GCCTAGCC	PL:illumina	PU:HiMom.1.GCCTAGCC	CN:BI
 HiMom:1:1101:1165:2239	4	*	0	0	*	*	0	0	ATGG	####	RG:Z:HiMom.1
 HiMom:1:1101:1290:2225	4	*	0	0	*	*	0	0	TCAG	C@@F	RG:Z:HiMom.1

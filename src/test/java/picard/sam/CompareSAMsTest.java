@@ -99,6 +99,11 @@ public class CompareSAMsTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testIdenticalExceptHeaderVersion() {
+        testHelper("genomic_sorted.sam", "genomic_sorted_sam_v1.6.sam", 2, 0, 0, 0, 0, 0, 0, false);
+    }
+
+    @Test
     public void testHasNonPrimary() {
         testHelper("genomic_sorted.sam", "has_non_primary.sam", 2, 0, 0, 0, 0, 0, 0, true);
     }

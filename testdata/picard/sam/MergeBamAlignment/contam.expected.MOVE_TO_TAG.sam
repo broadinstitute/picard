@@ -1,4 +1,4 @@
-@HD	VN:1.5	SO:coordinate
+@HD	VN:1.6	SO:coordinate
 @SQ	SN:chr1	LN:1000	M5:17522ddd273279f4595f50fea9864734	UR:file:testdata/net/sf/picard/sam/MergeBamAlignment/cliptest.fasta
 @RG	ID:0	SM:Hi,Mom!	PL:ILLUMINA
 @PG	ID:0	VN:1.0	CL:align!	PN:myAligner
