@@ -25,8 +25,7 @@ package picard.sam.SamErrorMetric;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.*;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.Lazy;
 import htsjdk.samtools.util.SamLocusIterator.RecordAndOffset;
@@ -610,6 +609,11 @@ public class ReadBaseStratification {
     public static final RecordAndOffsetStratifier<Integer> insertLengthStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifyInsertLength, "insert_length");
 
     /**
+     * Stratifies into the number of soft-clipped bases that the read has in its alignment, or -1 if not aligned.
+     */
+    public static final RecordAndOffsetStratifier<Integer> softClipsLengthStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifyInsertLength, "softclipped_bases");
+
+    /**
      * Stratifies into the base-quality of the base under consideration
      */
     public static final RecordAndOffsetStratifier<Byte> baseQualityStratifier = wrapStaticFunction(ReadBaseStratification::stratifyBaseQuality, "base_quality");
@@ -649,30 +653,32 @@ public class ReadBaseStratification {
      */
     enum Stratifier implements CommandLineParser.ClpEnum {
         ALL(() -> nonStratifier, "Puts all bases in the same stratum."),
-        GC_CONTENT(() -> gcContentStratifier, "Stratifies bases according to the gc content of their read."),
-        READ_ORDINALITY(() -> readOrdinalityStratifier, "Stratifies bases according to their read ordinality (i.e. first or second)."),
-        READ_BASE(() -> currentReadBaseStratifier, "Stratifies bases by the read in the original reading direction."),
-        READ_DIRECTION(() -> readDirectionStratifier, "Stratifies bases to +/- based on the alignment direction of the read."),
-        PAIR_ORIENTATION(() -> readOrientationStratifier, "Stratifies bases into F1R2/F2R1 according to their reads orientation and ordinality. Assumes reads are \"innies\"."),
-        REFERENCE_BASE(() -> referenceBaseStratifier, "Stratifies bases by the read-directed reference base."),
-        PRE_DINUC(() -> preDiNucleotideStratifier, "Stratifies bases by the read base at the previous cycle, and the current reference base."),
-        POST_DINUC(() -> postDiNucleotideStratifier, "Stratifies bases by the read base at the previous cycle, and the current reference base."),
-        HOMOPOLYMER_LENGTH(() -> homoPolymerLengthStratifier, "Stratifies bases based on the length of homopolymer they are part of (only accounts for bases that were read prior to the current base)."),
-        HOMOPOLYMER(() -> homopolymerStratifier, "Stratifies bases based on the length of homopolymer, the base that the homopolymer is comprised of, and the reference base."),
+        GC_CONTENT(() -> gcContentStratifier, "The gc content of their read."),
+        READ_ORDINALITY(() -> readOrdinalityStratifier, "The read ordinality (i.e. first or second)."),
+        READ_BASE(() -> currentReadBaseStratifier, "the base in the original reading direction."),
+        READ_DIRECTION(() -> readDirectionStratifier, "The alignment direction of the read (encoded as + or -)."),
+        PAIR_ORIENTATION(() -> readOrientationStratifier, "The reads orientation and ordinality. (into F1R2 or F2R1) Assumes reads are \"innies\"."),
+        PAIR_PROPERNESS(() -> readPairednessStratifier, "The properness of the reads alignment. Looks for indications of chimerism."),
+        REFERENCE_BASE(() -> referenceBaseStratifier, "The reference base in the read's direction."),
+        PRE_DINUC(() -> preDiNucleotideStratifier, "The read base at the previous cycle, and the current reference base."),
+        POST_DINUC(() -> postDiNucleotideStratifier, "The read base at the previous cycle, and the current reference base."),
+        HOMOPOLYMER_LENGTH(() -> homoPolymerLengthStratifier, "The length of homopolymer the base is part of (only accounts for bases that were read prior to the current base)."),
+        HOMOPOLYMER(() -> homopolymerStratifier, "The length of homopolymer, the base that the homopolymer is comprised of, and the reference base."),
         //using a lazy initializer to enable the value of LONG_HOMOPOLYMER to be used;
-        BINNED_HOMOPOLYMER(binnedHomopolymerStratifier::get, "Stratifies bases based on the scale of homopolymer (long or short), the base that the homopolymer is comprised of, and the reference base."),
-        FLOWCELL_TILE(() -> flowCellTileStratifier, "Stratifies according to the flowcell-tile where the base was read (taken from the read name)."),
-        READ_GROUP(() -> readgroupStratifier, "Stratifies bases according to their read-group id."),
-        CYCLE(() -> baseCycleStratifier, "Stratifies bases to the machine cycle during which they were read."),
-        BINNED_CYCLE(() -> binnedReadCycleStratifier, "Stratifies bases according to the binned machine cycle in the read similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads."),
-        INSERT_LENGTH(() -> insertLengthStratifier, "Stratifies bases according to the insert-size they came from (taken from the TLEN field.)"),
-        BASE_QUALITY(() -> baseQualityStratifier, "Stratifies bases according to their base quality."),
-        MAPPING_QUALITY(() -> mappingQualityStratifier, "Stratifies bases according to their read's mapping quality."),
-        MISMATCHES_IN_READ(() -> mismatchesInReadStratifier, "Stratifies bases according to the number of bases in the read that mismatch the reference excluding the current base.  This stratifier requires the NM tag."),
-        ONE_BASE_PADDED_CONTEXT(() -> oneBasePaddedContextStratifier, "Stratifies bases according the current reference base and a one base padded region from the read resulting in a 3-base context."),
-        TWO_BASE_PADDED_CONTEXT(() -> twoBasePaddedContextStratifier, "Stratifies bases according the current reference base and a two base padded region from the read resulting in a 5-base context."),
-        CONSENSUS(() -> consensusStratifier, "Stratifies bases according to whether or not duplicate reads were used to form a consensus read.  This stratifier makes use of the aD, bD, and cD tags for duplex consensus reads.  If the reads are single index consensus, only the cD tags are used."),
-        NS_IN_READ(() -> nsInReadStratifier, "Stratifies bases according to the number of Ns in the read.");
+        BINNED_HOMOPOLYMER(binnedHomopolymerStratifier::get, "The scale of homopolymer (long or short), the base that the homopolymer is comprised of, and the reference base."),
+        FLOWCELL_TILE(() -> flowCellTileStratifier, "The flowcell and tile where the base was read (taken from the read name)."),
+        READ_GROUP(() -> readgroupStratifier, "The read-group id of the read."),
+        CYCLE(() -> baseCycleStratifier, "The machine cycle during which the base was read."),
+        BINNED_CYCLE(() -> binnedReadCycleStratifier, "The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads."),
+        SOFT_CLIPS(() -> softClipsLengthStratifier, "The number of softclipped bases their read has."),
+        INSERT_LENGTH(() -> insertLengthStratifier, "The insert-size they came from (taken from the TLEN field.)"),
+        BASE_QUALITY(() -> baseQualityStratifier, "The base quality."),
+        MAPPING_QUALITY(() -> mappingQualityStratifier, "The read's mapping quality."),
+        MISMATCHES_IN_READ(() -> mismatchesInReadStratifier, "The number of bases in the read that mismatch the reference, excluding the current base.  This stratifier requires the NM tag."),
+        ONE_BASE_PADDED_CONTEXT(() -> oneBasePaddedContextStratifier, "The current reference base and a one base padded region from the read resulting in a 3-base context."),
+        TWO_BASE_PADDED_CONTEXT(() -> twoBasePaddedContextStratifier, "The current reference base and a two base padded region from the read resulting in a 5-base context."),
+        CONSENSUS(() -> consensusStratifier, "Whether or not duplicate reads were used to form a consensus read.  This stratifier makes use of the aD, bD, and cD tags for duplex consensus reads.  If the reads are single index consensus, only the cD tags are used."),
+        NS_IN_READ(() -> nsInReadStratifier, "The number of Ns in the read.");
 
         private final String docString;
 
@@ -984,6 +990,16 @@ public class ReadBaseStratification {
         return Math.min(
                 sam.getReadLength() * 10,
                 Math.abs(sam.getInferredInsertSize()));
+    }
+
+    private static Integer stratifySoftClippedBases(final SAMRecord sam) {
+        final Cigar cigar = sam.getCigar();
+        if (cigar == null) {
+            return -1;
+        }
+        return cigar.getCigarElements().stream()
+                .filter(e->e.getOperator()== CigarOperator.S)
+                .mapToInt(CigarElement::getLength).sum();
     }
 
     private static Byte stratifyBaseQuality(final RecordAndOffset recordAndOffset) {
