@@ -85,12 +85,15 @@ public class LiftoverUtils {
         builder.filters(source.getFilters());
         builder.log10PError(source.getLog10PError());
 
-        //not using builder::attributes so that already set
-        source.getAttributes().forEach((k, v)->{if(!Objects.equals(k, VCFConstants.END_KEY)) builder.attribute(k,v);});
-        if (source.hasAttribute(VCFConstants.END_KEY)){
+        // If any of the source alleles is symbolic, do not populate the END tag (protecting things like <NON_REF> from
+        // getting screwed up in reverse-complemented variants
+        if (source.hasAttribute(VCFConstants.END_KEY) && builder.getAlleles().stream().noneMatch(Allele::isSymbolic)) {
             // TODO: add start() and stop() methods to the builder in htsjdk and use stop() here.
             builder.attribute(VCFConstants.END_KEY, builder.make().getEnd());
+        } else {
+            builder.rmAttribute(VCFConstants.END_KEY);
         }
+
         // make sure that the variant isn't mistakenly set as "SwappedAlleles"
         builder.rmAttribute(SWAPPED_ALLELES);
         if (target.isNegativeStrand()) {
