@@ -611,7 +611,7 @@ public class ReadBaseStratification {
     /**
      * Stratifies into the number of soft-clipped bases that the read has in its alignment, or -1 if not aligned.
      */
-    public static final RecordAndOffsetStratifier<Integer> softClipsLengthStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifyInsertLength, "softclipped_bases");
+    public static final RecordAndOffsetStratifier<Integer> softClipsLengthStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifySoftClippedBases, "softclipped_bases");
 
     /**
      * Stratifies into the base-quality of the base under consideration
