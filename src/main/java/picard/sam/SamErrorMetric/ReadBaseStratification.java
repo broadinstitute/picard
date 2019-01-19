@@ -718,14 +718,14 @@ public class ReadBaseStratification {
      * An enum to hold information about the "properness" of a read pair
      */
     public enum ProperPaired {
-        // Read has no supplementary alignments, is aligned to the same reference as its mate
+        // Read has no supplementary alignments, is aligned to the same reference as its mate,
         // and has the "properly aligned" flag 0x2 set.
         PROPER,
-        // Read has no supplementary alignments, is aligned to the same reference as its mate
+        // Read has no supplementary alignments, is aligned to the same reference as its mate,
         // and has the "properly aligned" flag 0x2 UN-set.
         IMPROPER,
-        // Read is softclipped and is aligned to the same reference as its mate and
-        // has at-least one supplementary alignment
+        // Read is softclipped, is aligned to the same reference as its mate, and
+        // has at least one supplementary alignment
         CHIMERIC,
         // Read is aligned to a different reference than its mate
         DISCORDANT,
