@@ -727,15 +727,15 @@ public class ReadBaseStratification {
         // Read is softclipped and is aligned to the same reference as its mate and
         // has at-least one supplementary alignment
         CHIMERIC,
-        // Read is not aligned to the same reference as its mate
+        // Read is aligned to a different reference than its mate
         DISCORDANT,
         // Read or Mate are not aligned, or read has no mate and cannot be declared to be CHIMERIC.
-        UNKOWN;
+        UNKNOWN;
 
         public static ProperPaired of(final SAMRecord sam) {
 
             if (sam.getReadPairedFlag() &&
-                    sam.getMateUnmappedFlag() && sam.getReadUnmappedFlag() &&
+                    !sam.getMateUnmappedFlag() && !sam.getReadUnmappedFlag() &&
                     !sam.getMateReferenceIndex().equals(sam.getReferenceIndex())) {
                 return DISCORDANT;
             }
@@ -745,7 +745,7 @@ public class ReadBaseStratification {
             }
 
             if (sam.getReadUnmappedFlag() || sam.getReadPairedFlag() && sam.getMateUnmappedFlag()) {
-                return UNKOWN;
+                return UNKNOWN;
             }
 
             if (!sam.getProperPairFlag()) {
