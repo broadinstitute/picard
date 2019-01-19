@@ -1,5 +1,6 @@
 ##fileformat=VCFv4.1
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=END,Number=1,Type=Integer,Description="Stop position of the interval">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample1
 chr1	1	.	C	CCCCT	15676.17	PASS	END=1	GT	0/0
 chr1	61	.	GT	G	724.43	PASS	END=62	GT	0/1

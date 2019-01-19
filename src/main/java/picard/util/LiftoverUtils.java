@@ -34,12 +34,7 @@ import htsjdk.variant.vcf.VCFConstants;
 import org.apache.commons.lang3.ArrayUtils;
 import picard.vcf.LiftoverVcf;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class LiftoverUtils {
@@ -91,8 +86,11 @@ public class LiftoverUtils {
         builder.log10PError(source.getLog10PError());
 
         //not using builder::attributes so that already set
-        source.getAttributes().forEach((k, v)->{if(!Objects.equals(k, "END")) builder.attribute(k,v);});
-
+        source.getAttributes().forEach((k, v)->{if(!Objects.equals(k, VCFConstants.END_KEY)) builder.attribute(k,v);});
+        if (source.hasAttribute(VCFConstants.END_KEY)){
+            // TODO: add start() and stop() methods to the builder in htsjdk and use stop() here.
+            builder.attribute(VCFConstants.END_KEY, builder.make().getEnd());
+        }
         // make sure that the variant isn't mistakenly set as "SwappedAlleles"
         builder.rmAttribute(SWAPPED_ALLELES);
         if (target.isNegativeStrand()) {
@@ -151,6 +149,8 @@ public class LiftoverUtils {
 
         final List<Allele> origAlleles = new ArrayList<>(source.getAlleles());
         final VariantContextBuilder vcb = new VariantContextBuilder(source);
+
+        vcb.rmAttribute(VCFConstants.END_KEY);
         vcb.chr(target.getContig());
 
         // By convention, indels are left aligned and include the base prior to that indel.
