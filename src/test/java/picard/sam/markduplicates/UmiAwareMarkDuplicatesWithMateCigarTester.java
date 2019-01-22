@@ -232,7 +232,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
         try {
             super.test();
         } catch (IOException ex) {
-            Assert.fail("Could not open metrics file: " + ex);
+            Assert.fail("Could not open metrics file: ", ex);
         }
     }
 
