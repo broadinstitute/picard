@@ -20,7 +20,7 @@
       "summary": "Add PG tag to each read in a SAM or BAM",
       "name": "--ADD_PG_TAG_TO_READS",
       "synonyms": "NA",
-      "type": "Boolean",
+      "type": "boolean",
       "required": "no",
       "fulltext": "",
       "defaultValue": "true",
