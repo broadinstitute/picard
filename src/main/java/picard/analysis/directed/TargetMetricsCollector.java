@@ -556,22 +556,22 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             //   3. Unfiltered coverage information for het sensitivity
             //   4. The count of bases rejected for being low baseq or off-target
             //   5. The count of on-target bases and on-target bases from paired reads
-            // Find the target overlaps
             final Set<Interval> coveredTargets = new HashSet<>(); // Each target is added to this the first time the read covers it
             int readOffset = 0;
             int refOffset  = rec.getAlignmentStart() -1;
 
             for (final CigarElement cig : rec.getCigar()) {
                 final CigarOperator op = cig.getOperator();
+                final int len = cig.getLength();
 
-                for (int i=0; i<cig.getLength(); ++i) {
-                    final int refPos       = refOffset + 1;
-                    final int qual         = baseQualities[readOffset];
-                    final boolean highQual = qual >= this.minimumBaseQuality;
-                    final boolean onTarget = targets.stream().anyMatch(t -> t.getStart() <= refPos && t.getEnd() >= refPos);
-                    final boolean incrementPerTargetCoverage = op != CigarOperator.INSERTION;  // Inserted bases don't have a target position
-
+                for (int i=0; i<len; ++i) {
                     if (op.isAlignment() || (this.includeIndels && op.isIndel())) {
+                        final int refPos       = refOffset + 1;
+                        final int qual         = baseQualities[readOffset];
+                        final boolean highQual = qual >= this.minimumBaseQuality;
+                        final boolean onTarget = overlapsAny(refPos, targets);
+                        final boolean incrementPerTargetCoverage = op != CigarOperator.INSERTION;  // Inserted bases don't have a target position
+
                         // Firstly handle all the summary metrics
                         if (!highQual) {
                             metrics.PCT_EXC_BASEQ++;
@@ -584,7 +584,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
                         // Then go through the per-target/per-base hq and unfiltered coverage
                         // The cutoff of >= 2 is because even the unfilteredCoverage doesn't want Q1 or Q0 bases!
-                        if (qual > 2 && incrementPerTargetCoverage) {
+                        if (qual > 2 && incrementPerTargetCoverage && onTarget) {
                             for (final Interval target : targets) {
                                 if (refPos >= target.getStart() && refPos <= target.getEnd()) {
                                     final int targetOffset = refPos - target.getStart();
@@ -613,6 +613,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                     if (op.consumesReferenceBases()) refOffset += 1;
                 }
             }
+        }
+
+        /* Returns true if the `pos` is between the `start` and `end` of at least one interval. */
+        private boolean overlapsAny(final int pos, final Collection<Interval> intervals) {
+            for (final Interval interval : intervals) {
+                if (pos >= interval.getStart() && pos <= interval.getEnd()) return true;
+            }
+            return false;
         }
 
         @Override
