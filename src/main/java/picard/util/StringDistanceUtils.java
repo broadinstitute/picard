@@ -107,16 +107,27 @@ public class StringDistanceUtils {
 
     }
 
-    public static int levenshteinDistanceForBarcodes(final byte[] barcodeBases, final byte[] readBases, final byte[] readQualities, final int minimumBaseQuality) {
+    private static byte[] getBytesMasked(final byte[] readBases, final byte[] readQualities, final int minimumBaseQuality) {
         final byte[] maskedReadBases;
         if (readQualities == null || !anySmaller(readQualities, minimumBaseQuality)) {
             maskedReadBases = readBases;
         } else {
             maskedReadBases = maskSmaller(readBases, readQualities, minimumBaseQuality);
         }
-
-        return levenshteinDistance(barcodeBases, readBases, 10);
+        return maskedReadBases;
     }
+
+    public static int levenshteinDistanceForBarcodes(final byte[] barcodeBases, final byte[] readBases, final byte[] readQualities, final int minimumBaseQuality) {
+        final byte[] maskedReadBases = getBytesMasked(readBases, readQualities, minimumBaseQuality);
+
+        return levenshteinDistance(barcodeBases, maskedReadBases, 10);
+    }
+
+//    public static int levenshteinDistance(final byte[] barcodeBases, final byte[] readBases, final byte[] readQualities, final int minimumBaseQuality) {
+//        final byte[] maskedReadBases = getBytesMasked(readBases, readQualities, minimumBaseQuality);
+//
+//        return Stringlevenshtein(barcodeBases, maskedReadBases, 10);
+//    }
 
     /**
      * +++lifted from Commons Lang Text +++
