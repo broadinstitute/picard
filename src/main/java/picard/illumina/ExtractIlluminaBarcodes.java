@@ -773,7 +773,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         /**
          * run method which extracts barcodes and accumulates metrics for an entire tile
          */
-        synchronized public void run() {
+        public synchronized void run() {
             try {
                 //delayed instantiation for new provider
                 if (this.provider == null) {
