@@ -178,13 +178,13 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
 
         // Now run CollectHsMetrics four times
         final File out = Files.createTempFile("hsmetrics.", ".txt").toFile();
-        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=false", "SAMPLE_SIZE=0", "TI=", ts.getPath(), "BI=", bs.getPath(), "O=", out.getPath(), "I=", withDelBam.getAbsolutePath()));
+        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=false", "SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withDelBam.getAbsolutePath()));
         final HsMetrics delsWithoutIndelHandling = readMetrics(out);
-        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=true", "SAMPLE_SIZE=0", "TI=", ts.getPath(), "BI=", bs.getPath(), "O=", out.getPath(), "I=", withDelBam.getAbsolutePath()));
+        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=true", "SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withDelBam.getAbsolutePath()));
         final HsMetrics delsWithIndelHandling = readMetrics(out);
-        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=false", "SAMPLE_SIZE=0", "TI=", ts.getPath(), "BI=", bs.getPath(), "O=", out.getPath(), "I=", withInsBam.getAbsolutePath()));
+        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=false", "SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withInsBam.getAbsolutePath()));
         final HsMetrics insWithoutIndelHandling = readMetrics(out);
-        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=true", "SAMPLE_SIZE=0", "TI=", ts.getPath(), "BI=", bs.getPath(), "O=", out.getPath(), "I=", withInsBam.getAbsolutePath()));
+        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=true", "SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withInsBam.getAbsolutePath()));
         final HsMetrics insWithIndelHandling = readMetrics(out);
 
         Assert.assertEquals(delsWithoutIndelHandling.MEAN_TARGET_COVERAGE, 90.0);  // 100X over 180/200 bases due to deletion
