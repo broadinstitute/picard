@@ -609,7 +609,7 @@ public class ReadBaseStratification {
     public static final RecordAndOffsetStratifier<Integer> insertLengthStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifyInsertLength, "insert_length");
 
     /**
-     * Stratifies into the number of soft-clipped bases that the read has in its alignment, or -1 if not aligned.
+     * Stratifies into the number of soft-clipped bases that the read has in its alignment, or {@value NOT_ALIGNED_ERROR} if not aligned.
      */
     public static final RecordAndOffsetStratifier<Integer> softClipsLengthStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifySoftClippedBases, "softclipped_bases");
 
@@ -653,15 +653,15 @@ public class ReadBaseStratification {
      */
     enum Stratifier implements CommandLineParser.ClpEnum {
         ALL(() -> nonStratifier, "Puts all bases in the same stratum."),
-        GC_CONTENT(() -> gcContentStratifier, "The gc content of their read."),
+        GC_CONTENT(() -> gcContentStratifier, "The GC-content of the read."),
         READ_ORDINALITY(() -> readOrdinalityStratifier, "The read ordinality (i.e. first or second)."),
         READ_BASE(() -> currentReadBaseStratifier, "the base in the original reading direction."),
         READ_DIRECTION(() -> readDirectionStratifier, "The alignment direction of the read (encoded as + or -)."),
-        PAIR_ORIENTATION(() -> readOrientationStratifier, "The reads orientation and ordinality. (into F1R2 or F2R1) Assumes reads are \"innies\"."),
+        PAIR_ORIENTATION(() -> readOrientationStratifier, "The read-pair's orientation and ordinality (encoded as F1R2 or F2R1). Assumes reads are \"innies\"."),
         PAIR_PROPERNESS(() -> readPairednessStratifier, "The properness of the reads alignment. Looks for indications of chimerism."),
         REFERENCE_BASE(() -> referenceBaseStratifier, "The reference base in the read's direction."),
         PRE_DINUC(() -> preDiNucleotideStratifier, "The read base at the previous cycle, and the current reference base."),
-        POST_DINUC(() -> postDiNucleotideStratifier, "The read base at the previous cycle, and the current reference base."),
+        POST_DINUC(() -> postDiNucleotideStratifier, "The read base at the subsequent cycle, and the current reference base."),
         HOMOPOLYMER_LENGTH(() -> homoPolymerLengthStratifier, "The length of homopolymer the base is part of (only accounts for bases that were read prior to the current base)."),
         HOMOPOLYMER(() -> homopolymerStratifier, "The length of homopolymer, the base that the homopolymer is comprised of, and the reference base."),
         //using a lazy initializer to enable the value of LONG_HOMOPOLYMER to be used;
@@ -670,7 +670,7 @@ public class ReadBaseStratification {
         READ_GROUP(() -> readgroupStratifier, "The read-group id of the read."),
         CYCLE(() -> baseCycleStratifier, "The machine cycle during which the base was read."),
         BINNED_CYCLE(() -> binnedReadCycleStratifier, "The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads."),
-        SOFT_CLIPS(() -> softClipsLengthStratifier, "The number of softclipped bases their read has."),
+        SOFT_CLIPS(() -> softClipsLengthStratifier, "The number of softclipped bases the read has."),
         INSERT_LENGTH(() -> insertLengthStratifier, "The insert-size they came from (taken from the TLEN field.)"),
         BASE_QUALITY(() -> baseQualityStratifier, "The base quality."),
         MAPPING_QUALITY(() -> mappingQualityStratifier, "The read's mapping quality."),
@@ -992,13 +992,14 @@ public class ReadBaseStratification {
                 Math.abs(sam.getInferredInsertSize()));
     }
 
+    public static final int NOT_ALIGNED_ERROR = -1;
     private static Integer stratifySoftClippedBases(final SAMRecord sam) {
         final Cigar cigar = sam.getCigar();
         if (cigar == null) {
-            return -1;
+            return NOT_ALIGNED_ERROR;
         }
         return cigar.getCigarElements().stream()
-                .filter(e->e.getOperator()== CigarOperator.S)
+                .filter(e -> e.getOperator() == CigarOperator.S)
                 .mapToInt(CigarElement::getLength).sum();
     }
 

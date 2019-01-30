@@ -74,7 +74,7 @@ import java.util.stream.Collectors;
                 "<p>" +
                 "The resulting metric file will be named according to a provided prefix and a suffix which is generated " +
                 " automatically according to the error metric. " +
-                "The tool can collect multiple metrics in a single pass and there [ be hardly any " +
+                "The tool can collect multiple metrics in a single pass and there should be hardly any " +
                 "performance loss when specifying multiple metrics at the same time; the default includes a " +
                 "large collection of metrics. \n" +
                 "<p>" +
