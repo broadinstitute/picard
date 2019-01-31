@@ -555,10 +555,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             //   2. The number of reads contributing to per-base coverage per target
             //   3. Unfiltered coverage information for het sensitivity
             //   4. The count of bases rejected for being low baseq or off-target
-            //   5. The count of on-target bases and on-target bases from paired reads
+            //   5. The count of overall on-target bases, and on-target bases from paired reads
             final Set<Interval> coveredTargets = new HashSet<>(); // Each target is added to this the first time the read covers it
             int readOffset = 0;
-            int refOffset  = rec.getAlignmentStart() -1;
+            int refOffset  = rec.getAlignmentStart() - 1;
 
             for (final CigarElement cig : rec.getCigar()) {
                 final CigarOperator op = cig.getOperator();
