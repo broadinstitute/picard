@@ -487,7 +487,7 @@ public class ReadBaseStratificationTest {
         final List<SAMRecord> chimeric = records.addPair(name, contig, contig, start1, start2, false, false, "20M16S", "15S21M", strand1, strand2, false, false, 30);
         final List<SAMRecord> chimeric_sup = records.addPair(name, contig_sup, start_sup1, start_sup2, false, false, "16S20M", "21M15S", strand_sup1, strand_sup2, false, false, 30);
         chimeric_sup.forEach(s -> s.setSupplementaryAlignmentFlag(true));
-        IntStream.range(0, 2).forEach(i -> chimeric.get(i).setAttribute("SA", AbstractAlignmentMerger.encodeMappingInformation(chimeric_sup.get(i))));
+        IntStream.range(0, 2).forEach(i -> chimeric.get(i).setAttribute(SAMTag.SA.toString(), AbstractAlignmentMerger.encodeMappingInformation(chimeric_sup.get(i))));
         return chimeric_sup;
     }
 

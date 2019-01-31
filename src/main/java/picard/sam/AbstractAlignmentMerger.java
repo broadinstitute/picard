@@ -699,7 +699,7 @@ public abstract class AbstractAlignmentMerger {
      * @param rec SAMRecord whose alignment information will be encoded
      * @return String encoding rec's alignment information according to SA tag in the SAM spec
      */
-    static public String encodeMappingInformation(SAMRecord rec) {
+    static public String encodeMappingInformation(final SAMRecord rec) {
         return String.join(",",
                 rec.getContig(),
                 ((Integer) rec.getAlignmentStart()).toString(),
