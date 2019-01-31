@@ -61,9 +61,9 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
 
     /** Writes the contents of a SAMRecordSetBuilder out to a file. */
     File writeBam(final SAMRecordSetBuilder builder, final File f) {
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(builder.getHeader(), false, f);
-        builder.forEach(out::addAlignment);
-        out.close();
+        try (final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(builder.getHeader(), false, f)) {
+            builder.forEach(out::addAlignment);
+        }
         return f;
     }
 
@@ -186,6 +186,8 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         final HsMetrics insWithoutIndelHandling = readMetrics(out);
         runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=true", "SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withInsBam.getAbsolutePath()));
         final HsMetrics insWithIndelHandling = readMetrics(out);
+
+        IOUtil.deleteDirectoryTree(dir);
 
         Assert.assertEquals(delsWithoutIndelHandling.MEAN_TARGET_COVERAGE, 90.0);  // 100X over 180/200 bases due to deletion
         Assert.assertEquals(delsWithIndelHandling.MEAN_TARGET_COVERAGE, 100.0);    // 100X with counting the deletion

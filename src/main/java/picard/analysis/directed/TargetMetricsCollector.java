@@ -430,7 +430,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /** Adds information about an individual SAMRecord to the statistics. */
         public void acceptRecord(final SAMRecord record) {
             // Just ignore secondary alignments altogether
-            if (record.getNotPrimaryAlignmentFlag()) return;
+            if (record.isSecondaryAlignment()) return;
 
             // Cache some things, and compute the total number of bases aligned in the record.
             final boolean mappedInPair = record.getReadPairedFlag() && !record.getReadUnmappedFlag() && !record.getMateUnmappedFlag() && !record.getSupplementaryAlignmentFlag();
@@ -583,10 +583,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                         }
 
                         // Then go through the per-target/per-base hq and unfiltered coverage
-                        // The cutoff of >= 2 is because even the unfilteredCoverage doesn't want Q1 or Q0 bases!
+                        // The cutoff of > 2 is because even the unfilteredCoverage doesn't want those bases
                         if (qual > 2 && incrementPerTargetCoverage && onTarget) {
                             for (final Interval target : targets) {
-                                if (refPos >= target.getStart() && refPos <= target.getEnd()) {
+                                if (overlapsInterval(refPos, target)) {
                                     final int targetOffset = refPos - target.getStart();
 
                                     // Unfiltered first (for theoretical het sensitivity)
@@ -618,9 +618,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /* Returns true if the `pos` is between the `start` and `end` of at least one interval. */
         private boolean overlapsAny(final int pos, final Collection<Interval> intervals) {
             for (final Interval interval : intervals) {
-                if (pos >= interval.getStart() && pos <= interval.getEnd()) return true;
+                if (overlapsInterval(pos, interval)) return true;
             }
             return false;
+        }
+
+        /** Returns true if the position is within the start-end range inclusive of the given interval. */
+        private boolean overlapsInterval(final int pos, final Interval interval) {
+            return pos >= interval.getStart() && pos <= interval.getEnd();
         }
 
         @Override
