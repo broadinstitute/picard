@@ -176,6 +176,6 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file input and
                                               final String probeSetName,
                                               final int nearProbeDistance) {
         return new HsMetricCollector(accumulationLevels, samRgRecords, refFile, perTargetCoverage, perBaseCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance,
-                MINIMUM_MAPPING_QUALITY, MINIMUM_BASE_QUALITY, CLIP_OVERLAPPING_READS, true, COVERAGE_CAP, SAMPLE_SIZE);
+                MINIMUM_MAPPING_QUALITY, MINIMUM_BASE_QUALITY, CLIP_OVERLAPPING_READS, true, INCLUDE_INDELS, COVERAGE_CAP, SAMPLE_SIZE);
     }
 }

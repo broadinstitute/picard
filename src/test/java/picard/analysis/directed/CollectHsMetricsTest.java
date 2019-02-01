@@ -1,7 +1,11 @@
 package picard.analysis.directed;
 
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.*;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -10,6 +14,8 @@ import picard.cmdline.CommandLineProgramTest;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Arrays;
 
 public class CollectHsMetricsTest extends CommandLineProgramTest {
     private final static File TEST_DIR = new File("testdata/picard/analysis/directed/CollectHsMetrics");
@@ -39,6 +45,26 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
                 {TEST_DIR + "/single-short-read.sam", twoSmallIntervals, 20, 20, true, 1, 10, 0.0, 0.0, 0.5, 0.0, 1, 1000 }
 
         };
+    }
+
+    /** Read back the first metrics record in an hs metrics file. */
+    HsMetrics readMetrics(final File f) {
+        try {
+            final MetricsFile<HsMetrics, Comparable<?>> mFile = new MetricsFile<HsMetrics, Comparable<?>>();
+            mFile.read(new FileReader(f));
+            return mFile.getMetrics().get(0);
+        }
+        catch (IOException ioe) {
+             throw new RuntimeIOException(ioe);
+        }
+    }
+
+    /** Writes the contents of a SAMRecordSetBuilder out to a file. */
+    File writeBam(final SAMRecordSetBuilder builder, final File f) {
+        try (final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(builder.getHeader(), false, f)) {
+            builder.forEach(out::addAlignment);
+        }
+        return f;
     }
 
     @Test(dataProvider = "collectHsMetricsDataProvider")
@@ -72,19 +98,14 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<HsMetrics, Comparable<?>> output = new MetricsFile<HsMetrics, Comparable<?>>();
-        output.read(new FileReader(outfile));
-
-        for (final HsMetrics metrics : output.getMetrics()) {
-            // overlap
-            Assert.assertEquals(metrics.TOTAL_READS, totalReads);
-            Assert.assertEquals(metrics.PF_UQ_BASES_ALIGNED, pfUqBasesAligned);
-            Assert.assertEquals(metrics.PCT_EXC_BASEQ, pctExcBaseq);
-            Assert.assertEquals(metrics.PCT_EXC_OVERLAP, pctExcOverlap);
-            Assert.assertEquals(metrics.PCT_TARGET_BASES_1X, pctTargetBases1x);
-            Assert.assertEquals(metrics.PCT_TARGET_BASES_2X, pctTargetBases2x);
-            Assert.assertEquals(metrics.MAX_TARGET_COVERAGE, maxTargetCoverage);
-        }
+        final HsMetrics metrics = readMetrics(outfile);
+        Assert.assertEquals(metrics.TOTAL_READS, totalReads);
+        Assert.assertEquals(metrics.PF_UQ_BASES_ALIGNED, pfUqBasesAligned);
+        Assert.assertEquals(metrics.PCT_EXC_BASEQ, pctExcBaseq);
+        Assert.assertEquals(metrics.PCT_EXC_OVERLAP, pctExcOverlap);
+        Assert.assertEquals(metrics.PCT_TARGET_BASES_1X, pctTargetBases1x);
+        Assert.assertEquals(metrics.PCT_TARGET_BASES_2X, pctTargetBases2x);
+        Assert.assertEquals(metrics.MAX_TARGET_COVERAGE, maxTargetCoverage);
     }
 
     @Test
@@ -127,5 +148,51 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         final Histogram<Integer> coverageHistogram = output.getAllHistograms().get(0);
         Assert.assertEquals(coverageHistogram.get(0).getValue(), 10.0);
         Assert.assertEquals(coverageHistogram.get(1).getValue(), 10.0);
+    }
+
+    @Test
+    public void testHsMetricsHandlesIndelsAppropriately() throws IOException {
+        final SAMRecordSetBuilder withDeletions = new SAMRecordSetBuilder(true, SortOrder.coordinate);
+        final SAMRecordSetBuilder withInsertions = new SAMRecordSetBuilder(true, SortOrder.coordinate);
+        final IntervalList targets = new IntervalList(withDeletions.getHeader());
+        final IntervalList baits   = new IntervalList(withDeletions.getHeader());
+        targets.add(new Interval("chr1", 1000, 1199, false, "t1"));
+        baits.add(new Interval("chr1", 950,  1049, false, "b1"));
+        baits.add(new Interval("chr1", 1050, 1149, false, "b2"));
+        baits.add(new Interval("chr1", 1150, 1249, false, "b3"));
+
+        // Generate 100 reads that fully cover the the target in each BAM
+        for (int i=0; i<100; ++i) {
+            withDeletions.addFrag( "d" + i, 0, 1000, false, false, "100M20D80M", null, 30);
+            withInsertions.addFrag("i" + i, 0, 1000, false, false, "100M50I100M", null, 30);
+        }
+
+        // Write things out to file
+        final File dir = IOUtil.createTempDir("hsmetrics.", ".test");
+        final File bs = new File(dir, "baits.interval_list").getAbsoluteFile();
+        final File ts = new File(dir, "targets.interval_list").getAbsoluteFile();
+        baits.write(bs);
+        targets.write(ts);
+        final File withDelBam = writeBam(withDeletions,  new File(dir, "with_del.bam"));
+        final File withInsBam = writeBam(withInsertions, new File(dir, "with_ins.bam"));
+
+        // Now run CollectHsMetrics four times
+        final File out = Files.createTempFile("hsmetrics.", ".txt").toFile();
+        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=false", "SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withDelBam.getAbsolutePath()));
+        final HsMetrics delsWithoutIndelHandling = readMetrics(out);
+        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=true", "SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withDelBam.getAbsolutePath()));
+        final HsMetrics delsWithIndelHandling = readMetrics(out);
+        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=false", "SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withInsBam.getAbsolutePath()));
+        final HsMetrics insWithoutIndelHandling = readMetrics(out);
+        runPicardCommandLine(Arrays.asList("INCLUDE_INDELS=true", "SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withInsBam.getAbsolutePath()));
+        final HsMetrics insWithIndelHandling = readMetrics(out);
+
+        IOUtil.deleteDirectoryTree(dir);
+
+        Assert.assertEquals(delsWithoutIndelHandling.MEAN_TARGET_COVERAGE, 90.0);  // 100X over 180/200 bases due to deletion
+        Assert.assertEquals(delsWithIndelHandling.MEAN_TARGET_COVERAGE, 100.0);    // 100X with counting the deletion
+
+        Assert.assertEquals(insWithoutIndelHandling.PCT_USABLE_BASES_ON_TARGET, 200/250d); // 50/250 inserted bases are not counted as on target
+        Assert.assertEquals(insWithIndelHandling.PCT_USABLE_BASES_ON_TARGET,   1.0d);      // inserted bases are counted as on target
     }
 }

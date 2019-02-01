@@ -24,11 +24,7 @@
 
 package picard.analysis.directed;
 
-import htsjdk.samtools.AlignmentBlock;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SAMUtils;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -130,6 +126,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     private final int minimumBaseQuality;
     private final boolean clipOverlappingReads;
     private boolean noSideEffects;
+    private final boolean includeIndels;
 
     //A map of coverage by target in which coverage is reset every read, this is done
     //so that we can calculate overlap for a read once and the resulting coverage is
@@ -254,7 +251,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                   final boolean clipOverlappingReads,
                                   final int coverageCap,
                                   final int sampleSize) {
-        this(accumulationLevels, samRgRecords, refFile, perTargetCoverage, perBaseCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, false, coverageCap, sampleSize);
+        this(accumulationLevels, samRgRecords, refFile, perTargetCoverage, perBaseCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, false, false, coverageCap, sampleSize);
     }
 
     public TargetMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels,
@@ -270,6 +267,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                   final int minimumBaseQuality,
                                   final boolean clipOverlappingReads,
                                   final boolean noSideEffects,
+                                  final boolean includeIndels,
                                   final int coverageCap,
                                   final int sampleSize) {
         this.perTargetCoverage = perTargetCoverage;
@@ -321,6 +319,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         this.minimumBaseQuality = minimumBaseQuality;
         this.clipOverlappingReads = clipOverlappingReads;
         this.noSideEffects = noSideEffects;
+        this.includeIndels = includeIndels;
 
         setup(accumulationLevels, samRgRecords);
     }
@@ -329,7 +328,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     protected PerUnitMetricCollector<METRIC_TYPE, Integer, SAMRecord> makeChildCollector(final String sample, final String library, final String readGroup) {
         final PerUnitTargetMetricCollector collector =  new PerUnitTargetMetricCollector(probeSetName, coverageByTargetForRead.keySet(),
                 sample, library, readGroup, probeTerritory, targetTerritory, genomeSize,
-                intervalToGc, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads);
+                intervalToGc, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, includeIndels);
         if (this.probeSetName != null) {
             collector.setBaitSetName(probeSetName);
         }
@@ -366,6 +365,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         private final int minimumBaseQuality;
         private final CountingMapQFilter mapQFilter;
         private final boolean clipOverlappingReads;
+        private final boolean includeIndels;
 
         /**
          * Constructor that parses the squashed reference to genome reference file and stores the
@@ -377,7 +377,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                             final Map<Interval, Double> intervalToGc,
                                             final int minimumMappingQuality,
                                             final int minimumBaseQuality,
-                                            final boolean clipOverlappingReads) {
+                                            final boolean clipOverlappingReads,
+                                            final boolean includeIndels) {
             this.metrics.SAMPLE      = sample;
             this.metrics.LIBRARY     = library;
             this.metrics.READ_GROUP  = readGroup;
@@ -399,6 +400,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             this.minimumBaseQuality = minimumBaseQuality;
             this.intervalToGc = intervalToGc;
             this.clipOverlappingReads = clipOverlappingReads;
+            this.includeIndels = includeIndels;
         }
 
         /** Sets the (optional) File to write per-target coverage information to. If null (the default), no file is produced. */
@@ -428,7 +430,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /** Adds information about an individual SAMRecord to the statistics. */
         public void acceptRecord(final SAMRecord record) {
             // Just ignore secondary alignments altogether
-            if (record.getNotPrimaryAlignmentFlag()) return;
+            if (record.isSecondaryAlignment()) return;
 
             // Cache some things, and compute the total number of bases aligned in the record.
             final boolean mappedInPair = record.getReadPairedFlag() && !record.getReadUnmappedFlag() && !record.getMateUnmappedFlag() && !record.getSupplementaryAlignmentFlag();
@@ -548,61 +550,82 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 rec = record;
             }
 
-            // Find the target overlaps
-            final Set<Interval> coveredTargets = new HashSet<>();
-            for (final AlignmentBlock block : rec.getAlignmentBlocks()) {
-                final int length = block.getLength();
-                final int refStart = block.getReferenceStart();
-                final int readStart = block.getReadStart();
+            // Calculate all the things that require examining individual bases in the read. This includes:
+            //   1. Per-base coverage
+            //   2. The number of reads contributing to per-base coverage per target
+            //   3. Unfiltered coverage information for het sensitivity
+            //   4. The count of bases rejected for being low baseq or off-target
+            //   5. The count of overall on-target bases, and on-target bases from paired reads
+            final Set<Interval> coveredTargets = new HashSet<>(); // Each target is added to this the first time the read covers it
+            int readOffset = 0;
+            int refOffset  = rec.getAlignmentStart() - 1;
 
-                for (int offset = 0; offset < length; ++offset) {
-                    final int refPos = refStart + offset;
-                    final int readPos = readStart + offset;
-                    final int qual = baseQualities[readPos - 1];
+            for (final CigarElement cig : rec.getCigar()) {
+                final CigarOperator op = cig.getOperator();
+                final int len = cig.getLength();
 
-                    if (qual <= 2) {
-                        metrics.PCT_EXC_BASEQ++;
-                        continue;
-                    }
+                for (int i=0; i<len; ++i) {
+                    if (op.isAlignment() || (this.includeIndels && op.isIndel())) {
+                        final int refPos       = refOffset + 1;
+                        final int qual         = baseQualities[readOffset];
+                        final boolean highQual = qual >= this.minimumBaseQuality;
+                        final boolean onTarget = overlapsAny(refPos, targets);
+                        final boolean incrementPerTargetCoverage = op != CigarOperator.INSERTION;  // Inserted bases don't have a target position
 
-                    boolean isOnTarget = false;
-                    for (final Interval target : targets) {
-                        if (refPos >= target.getStart() && refPos <= target.getEnd()) {
-                            final int targetOffset = refPos - target.getStart();
+                        // Firstly handle all the summary metrics
+                        if (!highQual) {
+                            metrics.PCT_EXC_BASEQ++;
+                        } else if (!onTarget) {
+                            metrics.PCT_EXC_OFF_TARGET++;
+                        } else {
+                            metrics.ON_TARGET_BASES++;
+                            if (mappedInPair) metrics.ON_TARGET_FROM_PAIR_BASES++;
+                        }
 
-                            // if the base quality exceeds the minimum threshold, then we update various metrics
-                            if (qual >= minimumBaseQuality) {
-                                ++metrics.ON_TARGET_BASES;
-                                if (mappedInPair) ++metrics.ON_TARGET_FROM_PAIR_BASES;
-                                final Coverage highQualityCoverage = highQualityCoverageByTarget.get(target);
-                                highQualityCoverage.addBase(targetOffset);
-                                if (!coveredTargets.contains(target)) {
-                                    highQualityCoverage.incrementReadCount();
-                                    coveredTargets.add(target);
-                                    isOnTarget = true;
+                        // Then go through the per-target/per-base hq and unfiltered coverage
+                        // The cutoff of > 2 is because even the unfilteredCoverage doesn't want those bases
+                        if (qual > 2 && incrementPerTargetCoverage && onTarget) {
+                            for (final Interval target : targets) {
+                                if (overlapsInterval(refPos, target)) {
+                                    final int targetOffset = refPos - target.getStart();
+
+                                    // Unfiltered first (for theoretical het sensitivity)
+                                    final Coverage ufCoverage = unfilteredCoverageByTarget.get(target);
+                                    ufCoverage.addBase(targetOffset);
+                                    if (ufCoverage.getDepths()[targetOffset] <= coverageCap) baseQHistogramArray[qual]++;
+
+                                    // Then filtered
+                                    if (highQual) {
+                                        final Coverage hqCoverage = highQualityCoverageByTarget.get(target);
+                                        hqCoverage.addBase(targetOffset);
+
+                                        if (coveredTargets.add(target)) {
+                                            hqCoverage.incrementReadCount();
+                                        }
+                                    }
                                 }
-
-                            } else {
-                                // the base quality is in the range (2, minimumBaseQuality). we exclude them from the high-quality coverage histogram
-                                this.metrics.PCT_EXC_BASEQ++;
-                            }
-
-                            // even when the base quality is below minimumBaseQuality (but higher than 2), update the base quality and unfiltered coverage histogram for theoretical het sensitivity
-                            // we don't bother with the read count for unfiltered coverage histogram because we don't use it
-                            unfilteredCoverageByTarget.get(target).addBase(targetOffset);
-
-                            // we do not want to increment the base quality histogram for bases that will eventually get thrown out by the coverage cap
-                            if (unfilteredCoverageByTarget.get(target).getDepths()[targetOffset] <= coverageCap){
-                                baseQHistogramArray[qual]++;
                             }
                         }
                     }
 
-                    // a base must not be on target and its base quality must exceed minimumBaseQuality for us to increment PCT_EXC_OFF_TARGET
-                    if (!isOnTarget) this.metrics.PCT_EXC_OFF_TARGET++;
-
+                    // Finally update the offsets!
+                    if (op.consumesReadBases()) readOffset += 1;
+                    if (op.consumesReferenceBases()) refOffset += 1;
                 }
             }
+        }
+
+        /* Returns true if the `pos` is between the `start` and `end` of at least one interval. */
+        private boolean overlapsAny(final int pos, final Collection<Interval> intervals) {
+            for (final Interval interval : intervals) {
+                if (overlapsInterval(pos, interval)) return true;
+            }
+            return false;
+        }
+
+        /** Returns true if the position is within the start-end range inclusive of the given interval. */
+        private boolean overlapsInterval(final int pos, final Interval interval) {
+            return pos >= interval.getStart() && pos <= interval.getEnd();
         }
 
         @Override

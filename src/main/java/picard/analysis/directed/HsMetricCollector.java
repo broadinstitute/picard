@@ -73,9 +73,10 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
                              final int minimumBaseQuality,
                              final boolean clipOverlappingReads,
                              final boolean noSideEffects,
+                             final boolean includeIndels,
                              final int coverageCap,
                              final int sampleSize) {
-        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, perBaseCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, noSideEffects, coverageCap, sampleSize);
+        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, perBaseCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, noSideEffects, includeIndels, coverageCap, sampleSize);
     }
 
     @Override
