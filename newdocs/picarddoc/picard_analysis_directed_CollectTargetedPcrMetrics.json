@@ -137,6 +137,21 @@
       "options": []
     },
     {
+      "summary": "If true count inserted bases as on target and deleted bases as covered by a read.",
+      "name": "--INCLUDE_INDELS",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "An aligned SAM or BAM file.",
       "name": "--INPUT",
       "synonyms": "-I",

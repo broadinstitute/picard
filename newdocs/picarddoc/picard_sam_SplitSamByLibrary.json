@@ -98,7 +98,7 @@
       "type": "File",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "/Users/mreinema/clones/picard/.",
+      "defaultValue": "/Users/npetrill/picard/.",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
