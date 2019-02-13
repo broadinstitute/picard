@@ -123,7 +123,7 @@ public class ClusterDataToSamConverter implements
         this.readNameEncoder = new IlluminaReadNameEncoder(runBarcode);
 
         this.isPairedEnd = readStructure.templates.length() == 2;
-        this.hasSampleBarcode = !readStructure.sampleBarcodes.isEmpty();
+        this.hasSampleBarcode = readStructure.hasSampleBarcode();
         this.hasMolecularBarcode = !readStructure.molecularBarcode.isEmpty();
 
         if (adapters.isEmpty()) {

@@ -789,7 +789,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
      */
     private static IlluminaDataType[] getDataTypesFromReadStructure(final ReadStructure readStructure,
                                                                     final boolean demultiplex) {
-        if (readStructure.sampleBarcodes.isEmpty() || !demultiplex) {
+        if (!readStructure.hasSampleBarcode() || !demultiplex) {
             return DATA_TYPES_NO_BARCODE;
         } else {
             return DATA_TYPES_WITH_BARCODE;

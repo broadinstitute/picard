@@ -305,7 +305,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             adapters.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
         }
 
-        final boolean demultiplex = !readStructure.sampleBarcodes.isEmpty();
+        final boolean demultiplex = readStructure.hasSampleBarcode();
         if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
             if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
             basecallsConverter = new NewIlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
@@ -531,7 +531,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final ArrayList<String> messages = new ArrayList<>();
 
         readStructure = new ReadStructure(READ_STRUCTURE);
-        if (!readStructure.sampleBarcodes.isEmpty() && LIBRARY_PARAMS == null) {
+        if (readStructure.hasSampleBarcode() && LIBRARY_PARAMS == null) {
             messages.add("BARCODE_PARAMS or LIBRARY_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode)" +
                     " then either LIBRARY_PARAMS or BARCODE_PARAMS(deprecated) must be provided!");
         }
