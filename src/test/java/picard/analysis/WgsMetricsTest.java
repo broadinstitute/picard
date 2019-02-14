@@ -40,18 +40,18 @@ public class WgsMetricsTest {
         return new WgsMetrics(
                 buildIntervalList(-1, -1),
                 emptyDepthHistogram(), emptyDepthHistogram(),
-                0, 0, 0, 0, 0, 0, 0, 1000000,
+                0, 0, 0, 0, 0, 0, 0, 0, 1000000,
                 null, -1
         );
     }
 
     private WgsMetrics singleDepthMetrics(final int depth, final int countScale, final int start) {
         final int count = 100000 * countScale;
-        final int totalExcluded = (10 + 20 + 30 + 40 + 50 + 60) * countScale;
-        return new CollectWgsMetrics.WgsMetrics(
+        final int totalExcluded = (5 + 10 + 20 + 30 + 40 + 50 + 60) * countScale;
+        return new WgsMetrics(
                 buildIntervalList(start, start),
                 singleDepthHistogram(depth, count),
-                singleDepthHistogram(depth, count),
+                singleDepthHistogram(depth, count),5d * countScale / count,
                 10d * countScale / count, 20d * countScale / count, 30d * countScale / count,
                 40d * countScale / count, 50d * countScale / count, 60d * countScale / count,
                 totalExcluded / (double) (count + totalExcluded),
@@ -67,11 +67,11 @@ public class WgsMetricsTest {
         final int count2 = 100000 * countScale2;
         final int count  = count1 + count2;
         final int countScale = countScale1 + countScale2;
-        final int totalExcluded = (10 + 20 + 30 + 40 + 50 + 60) * countScale;
-        return new CollectWgsMetrics.WgsMetrics(
+        final int totalExcluded = (5 + 10 + 20 + 30 + 40 + 50 + 60) * countScale;
+        return new WgsMetrics(
                 buildIntervalList(start, start+1),
                 twoSiteDepthHistogram(depth1, count1, depth2, count2),
-                twoSiteDepthHistogram(depth1, count1, depth2, count2),
+                twoSiteDepthHistogram(depth1, count1, depth2, count2),5d * countScale / count,
                 10d * countScale / count, 20d * countScale / count, 30d * countScale / count,
                 40d * countScale / count, 50d * countScale / count, 60d * countScale / count,
                 totalExcluded / (double) (count + totalExcluded),

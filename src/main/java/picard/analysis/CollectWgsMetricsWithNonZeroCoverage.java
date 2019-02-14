@@ -98,6 +98,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         public WgsMetricsWithNonZeroCoverage(final IntervalList intervals,
                                              final Histogram<Integer> highQualityDepthHistogram,
                                              final Histogram<Integer> unfilteredDepthHistogram,
+                                             final double pctExcludedByAdapter,
                                              final double pctExcludedByMapq,
                                              final double pctExcludedByDupes,
                                              final double pctExcludedByPairing,
@@ -108,7 +109,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
                                              final int coverageCap,
                                              final Histogram<Integer> unfilteredBaseQHistogram,
                                              final int sampleSize) {
-            super(intervals, highQualityDepthHistogram, unfilteredDepthHistogram, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
+            super(intervals, highQualityDepthHistogram, unfilteredDepthHistogram, pctExcludedByAdapter, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
                     pctExcludedByOverlap, pctExcludedByCapping, pctTotal, coverageCap, unfilteredBaseQHistogram, sampleSize);
         }
     }
@@ -155,6 +156,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     protected WgsMetrics generateWgsMetrics(final IntervalList intervals,
                                             final Histogram<Integer> highQualityDepthHistogram,
                                             final Histogram<Integer> unfilteredDepthHistogram,
+                                            final double pctExcludedByAdapter,
                                             final double pctExcludedByMapq,
                                             final double pctExcludedByDupes,
                                             final double pctExcludedByPairing,
@@ -169,6 +171,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
                 intervals,
                 highQualityDepthHistogram,
                 unfilteredDepthHistogram,
+                pctExcludedByAdapter,
                 pctExcludedByMapq,
                 pctExcludedByDupes,
                 pctExcludedByPairing,
@@ -200,13 +203,14 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         public void addToMetricsFile(final MetricsFile<WgsMetrics, Integer> file,
                                      final boolean includeBQHistogram,
                                      final CountingFilter dupeFilter,
+                                     final CountingFilter adapterFilter,
                                      final CountingFilter mapqFilter,
                                      final CountingPairedFilter pairFilter) {
             highQualityDepthHistogram = getDepthHistogram();
             highQualityDepthHistogramNonZero = getDepthHistogramNonZero();
 
             // calculate metrics the same way as in CollectWgsMetrics
-            final WgsMetricsWithNonZeroCoverage metrics = (WgsMetricsWithNonZeroCoverage) getMetrics(dupeFilter, mapqFilter, pairFilter);
+            final WgsMetricsWithNonZeroCoverage metrics = (WgsMetricsWithNonZeroCoverage) getMetrics(dupeFilter, adapterFilter, mapqFilter, pairFilter);
             metrics.CATEGORY = WgsMetricsWithNonZeroCoverage.Category.WHOLE_GENOME;
 
             // set count of the coverage-zero bin to 0 and re-calculate metrics
@@ -214,7 +218,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
             highQualityDepthHistogramArray[0] = 0;
             unfilteredDepthHistogramArray[0] = 0;
 
-            final WgsMetricsWithNonZeroCoverage metricsNonZero = (WgsMetricsWithNonZeroCoverage) getMetrics(dupeFilter, mapqFilter, pairFilter);
+            final WgsMetricsWithNonZeroCoverage metricsNonZero = (WgsMetricsWithNonZeroCoverage) getMetrics(dupeFilter, adapterFilter, mapqFilter, pairFilter);
             metricsNonZero.CATEGORY = WgsMetricsWithNonZeroCoverage.Category.NON_ZERO_REGIONS;
 
             file.addMetric(metrics);

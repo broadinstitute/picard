@@ -120,16 +120,17 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
      * Adds collected metrics and depth histogram to file
      * @param file MetricsFile for result of collector's work
      * @param dupeFilter         counting filter for duplicate reads
+     * @param adapterFilter      counting filter for adapter reads
      * @param mapqFilter         counting filter for mapping quality
      * @param pairFilter         counting filter for reads without a mapped mate pair
      */
-    public void addToMetricsFile(final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> file,
+    public void addToMetricsFile(final MetricsFile<WgsMetrics, Integer> file,
             final boolean includeBQHistogram,
             final CountingFilter dupeFilter,
+            final CountingFilter adapterFilter,
             final CountingFilter mapqFilter,
             final CountingPairedFilter pairFilter) {
-        final CollectWgsMetrics.WgsMetrics
-                metrics = getMetrics(dupeFilter, mapqFilter, pairFilter);
+        final WgsMetrics metrics = getMetrics(dupeFilter, adapterFilter, mapqFilter, pairFilter);
 
         // add them to the file
         file.addMetric(metrics);
@@ -137,7 +138,7 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
         if (includeBQHistogram) addBaseQHistogram(file);
     }
 
-    protected void addBaseQHistogram(final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> file) {
+    protected void addBaseQHistogram(final MetricsFile<WgsMetrics, Integer> file) {
         file.addHistogram(getUnfilteredBaseQHistogram());
     }
 
@@ -169,13 +170,15 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
      * @param pairFilter     counting filter for reads without a mapped mate pair
      * @return CollectWgsMetrics.WgsMetrics with set fields
      */
-    protected CollectWgsMetrics.WgsMetrics getMetrics(final CountingFilter dupeFilter,
+    protected WgsMetrics getMetrics(final CountingFilter dupeFilter,
+            final CountingFilter adapterFilter,
             final CountingFilter mapqFilter,
             final CountingPairedFilter pairFilter) {
         return collectWgsMetrics.generateWgsMetrics(
                 this.intervals,
                 getHighQualityDepthHistogram(),
                 getUnfilteredDepthHistogram(),
+                collectWgsMetrics.getBasesExcludedBy(adapterFilter),
                 collectWgsMetrics.getBasesExcludedBy(mapqFilter),
                 collectWgsMetrics.getBasesExcludedBy(dupeFilter),
                 collectWgsMetrics.getBasesExcludedBy(pairFilter),

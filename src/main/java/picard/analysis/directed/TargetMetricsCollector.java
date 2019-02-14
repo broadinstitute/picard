@@ -44,6 +44,7 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
+import picard.filter.CountingAdapterFilter;
 import picard.filter.CountingMapQFilter;
 import picard.metrics.MultilevelMetrics;
 import picard.metrics.PerUnitMetricCollector;
@@ -363,6 +364,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         private final TargetMetrics metrics = new TargetMetrics();
         private final int minimumBaseQuality;
+        private final CountingAdapterFilter adapterFilter;
         private final CountingMapQFilter mapQFilter;
         private final boolean clipOverlappingReads;
         private final boolean includeIndels;
@@ -397,6 +399,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             }
 
             this.mapQFilter = new CountingMapQFilter(minimumMappingQuality);
+            this.adapterFilter = new CountingAdapterFilter();
             this.minimumBaseQuality = minimumBaseQuality;
             this.intervalToGc = intervalToGc;
             this.clipOverlappingReads = clipOverlappingReads;
@@ -502,7 +505,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             // filtering, overlap clipping and the map-q threshold, since those would
             // skew the assay-related metrics
             {
-                final int mappedBases = basesAlignedInRecord;
                 int onBaitBases = 0;
 
                 if (!probes.isEmpty()) {
@@ -517,9 +519,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                     }
 
                     this.metrics.ON_PROBE_BASES += onBaitBases;
-                    this.metrics.NEAR_PROBE_BASES += (mappedBases - onBaitBases);
+                    this.metrics.NEAR_PROBE_BASES += (basesAlignedInRecord - onBaitBases);
                 } else {
-                    this.metrics.OFF_PROBE_BASES += mappedBases;
+                    this.metrics.OFF_PROBE_BASES += basesAlignedInRecord;
                 }
             }
 
@@ -530,6 +532,11 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 this.metrics.PCT_EXC_DUPE += basesAlignedInRecord;
                 return;
             }
+
+            ///////////////////////////////////////////////////////////////////
+            // MapQ 0 adapter reads can be ignored beyond this point
+            ///////////////////////////////////////////////////////////////////
+            if (this.adapterFilter.filterOut(record)) return;
 
             ///////////////////////////////////////////////////////////////////
             // And lastly, ignore reads falling below the mapq threshold
@@ -643,6 +650,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             metrics.FOLD_ENRICHMENT         = (metrics.ON_PROBE_BASES/ denominator) / ((double) metrics.PROBE_TERRITORY / metrics.GENOME_SIZE);
 
             metrics.PCT_EXC_DUPE           /= (double) metrics.PF_BASES_ALIGNED;
+            metrics.PCT_EXC_ADAPTER         = adapterFilter.getFilteredBases() / (double) metrics.PF_BASES_ALIGNED;
             metrics.PCT_EXC_MAPQ            = mapQFilter.getFilteredBases() / (double) metrics.PF_BASES_ALIGNED;
             metrics.PCT_EXC_BASEQ          /= (double) metrics.PF_BASES_ALIGNED;
             metrics.PCT_EXC_OVERLAP        /= (double) metrics.PF_BASES_ALIGNED;

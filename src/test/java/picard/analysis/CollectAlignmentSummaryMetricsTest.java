@@ -609,4 +609,34 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
             }
         }
     }
+
+    @Test
+    public void testAdapterReads() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_adapter_reads.sam");
+        final File outfile = File.createTempFile("alignmentMetrics", ".txt");
+        outfile.deleteOnExit();
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "MAX_INSERT_SIZE=200",
+                "REFERENCE_SEQUENCE=" + CHR_M_REFERENCE.getAbsolutePath(),
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
+            if (metrics.CATEGORY == AlignmentSummaryMetrics.Category.FIRST_OF_PAIR) {
+                TestNGUtil.compareDoubleWithAccuracy(metrics.PCT_ADAPTER, 0D, 0.0001);
+                TestNGUtil.compareDoubleWithAccuracy(metrics.PCT_PF_READS_ALIGNED, 1D, 0.0001);
+            }
+            if (metrics.CATEGORY == AlignmentSummaryMetrics.Category.SECOND_OF_PAIR) {
+                TestNGUtil.compareDoubleWithAccuracy(metrics.PCT_ADAPTER, 1D, 0.0001);
+                TestNGUtil.compareDoubleWithAccuracy(metrics.PCT_PF_READS_ALIGNED, 0D, 0.0001);
+            }
+        }
+    }
 }

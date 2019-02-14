@@ -35,6 +35,8 @@ import htsjdk.samtools.util.Log;
 import picard.filter.CountingFilter;
 import picard.filter.CountingPairedFilter;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.Inherited;
 import java.util.Arrays;
 import java.util.stream.LongStream;
 
@@ -109,21 +111,13 @@ public class WgsMetricsProcessorImpl<T extends AbstractRecordAndOffset> implemen
         }
     }
 
-    /**
-     * Adds result metric's data to input file
-     *
-     * @param file               MetricsFile for result of collector's work
-     * @param includeBQHistogram include base quality histogram
-     * @param dupeFilter         counting filter for duplicate reads
-     * @param mapqFilter         counting filter for mapping quality
-     * @param pairFilter         counting filter for reads without a mapped mate pair
-     */
     @Override
-    public void addToMetricsFile(MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> file,
+    public void addToMetricsFile(MetricsFile<WgsMetrics, Integer> file,
             boolean includeBQHistogram,
             CountingFilter dupeFilter,
+            CountingFilter adapterFilter,
             CountingFilter mapqFilter,
             CountingPairedFilter pairFilter) {
-        collector.addToMetricsFile(file, includeBQHistogram, dupeFilter, mapqFilter, pairFilter);
+        collector.addToMetricsFile(file, includeBQHistogram, dupeFilter, adapterFilter, mapqFilter, pairFilter);
     }
 }
