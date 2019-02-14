@@ -248,6 +248,10 @@ public class ReadStructure {
         return res;
     }
 
+    public boolean hasSampleBarcode() {
+        return !sampleBarcodes.isEmpty();
+    }
+
     /** Represents a subset of ReadDescriptors in the containing ReadStructure, they ARE NOT necessarily contiguous
      *  in the containing ReadStructure but they ARE in the order they appear in the containing ReadStructure */
     public class Substructure implements Iterable<ReadDescriptor> {
