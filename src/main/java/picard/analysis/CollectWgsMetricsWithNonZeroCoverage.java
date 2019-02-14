@@ -113,10 +113,6 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         }
     }
 
-    public static void main(final String[] args) {
-        new CollectWgsMetrics().instanceMainWithExit(args);
-    }
-
     @Override
     protected SamReader getSamReader() {
         if (this.samReader == null) {

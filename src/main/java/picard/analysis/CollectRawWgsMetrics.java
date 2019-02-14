@@ -166,5 +166,4 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
                 unfilteredBaseQHistogram,
                 sampleSize);
     }
-
 }

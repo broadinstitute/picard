@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static picard.cmdline.CommandLineProgramTest.CHR_M_REFERENCE;
+
 public class CollectSamErrorMetricsTest {
     private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("CollectSamErrorMetricsTest", null);
     private static final String TEST_DIR = "testdata/picard/sam/BamErrorMetrics";
@@ -251,7 +253,7 @@ public class CollectSamErrorMetricsTest {
 
     @Test(dataProvider = "OneCovariateErrorMetricsDataProvider")
     public void testOneCovariateErrorMetrics(final String errorSubscript, final File samFile, final int priorQ, BaseErrorMetric expectedMetric) {
-        final File referenceFile = new File(TEST_DIR, "chrM.reference.fasta");
+        final File referenceFile = CHR_M_REFERENCE;
         final File vcf = new File(TEST_DIR, "NIST.selected.vcf");
 
         final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "test");
@@ -332,7 +334,7 @@ public class CollectSamErrorMetricsTest {
     public void testTooManyDirectives() {
         final File input = new File(TEST_DIR, "simpleSamWithBaseErrors1.sam");
 
-        final File referenceFile = new File(TEST_DIR, "chrM.reference.fasta");
+        final File referenceFile = CHR_M_REFERENCE;
         final File vcf = new File(TEST_DIR, "NIST.selected.vcf");
 
         final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "test");

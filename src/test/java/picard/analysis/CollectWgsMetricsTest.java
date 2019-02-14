@@ -24,26 +24,22 @@
 
 package picard.analysis;
 
-import htsjdk.samtools.SAMException;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
-import htsjdk.variant.vcf.VCF3Codec;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
+import picard.util.TestNGUtil;
 import picard.vcf.VcfTestUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Random;
 
 /**
@@ -55,18 +51,18 @@ import java.util.Random;
 
 public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
-    private final static File REF_DICT_DIR = new File("testdata/picard/sam/CollectGcBiasMetrics/");
-    private final static File TEST_DIR = new File("testdata/picard/sam/");
+    private static final File TEST_DIR = new File("testdata/picard/sam/");
+    private static final File REF_DICT_DIR = new File(TEST_DIR,"CollectGcBiasMetrics/");
     private final File referenceDict = new File(REF_DICT_DIR, "MSmallHeader.dict");
     private File tempSamFile;
     private File outfile;
 
-    private final static int READ_PAIR_DISTANCE = 99;
-    private final static String SAMPLE = "TestSample1";
-    private final static String READ_GROUP_ID = "TestReadGroup1";
-    private final static String PLATFORM = "ILLUMINA";
-    private final static String LIBRARY = "TestLibrary1";
-    private final static int NUM_READS = 40000;
+    private static final int READ_PAIR_DISTANCE = 99;
+    private static final String SAMPLE = "TestSample1";
+    private static final String READ_GROUP_ID = "TestReadGroup1";
+    private static final String PLATFORM = "ILLUMINA";
+    private static final String LIBRARY = "TestLibrary1";
+    private static final int NUM_READS = 40000;
 
     public String getCommandLineProgramName() {
         return CollectWgsMetrics.class.getSimpleName();
@@ -74,7 +70,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
     @DataProvider(name = "wgsDataProvider")
     public Object[][] wgsDataProvider() {
-        final String referenceFile = "testdata/picard/quality/chrM.reference.fasta";
+        final String referenceFile = CHR_M_REFERENCE.getAbsolutePath();
 
         return new Object[][] {
                 {tempSamFile, outfile, referenceFile, "false"},
@@ -97,16 +93,18 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> output = new MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>>();
-        output.read(new FileReader(outfile));
-
-        for (final CollectWgsMetrics.WgsMetrics metrics : output.getMetrics()) {
+        final MetricsFile<WgsMetrics, Comparable<?>> output = new MetricsFile<WgsMetrics, Comparable<?>>();
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+        for (final WgsMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.MEAN_COVERAGE, 13.985155, .02);
             Assert.assertEquals(metrics.PCT_EXC_OVERLAP, 0.0);  // 52 of 606 bases
             Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.399906, .02);    // 114 of 606 bases
             Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.0);    // 202 of 606 bases
             Assert.assertEquals(metrics.SD_COVERAGE, 57.364434, .02);
             Assert.assertEquals(metrics.MEDIAN_COVERAGE, 0.0);
+            Assert.assertEquals(metrics.PCT_EXC_ADAPTER, 0.0);
             Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.0);
             Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.0);
             Assert.assertEquals(metrics.PCT_EXC_CAPPED, 0.519542, .001);
@@ -179,13 +177,14 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         }
 
         //Write SAM file
-        final SAMFileWriter writer = new SAMFileWriterFactory()
-                .setCreateIndex(true).makeBAMWriter(header, false, tempSamFileUnsorted);
 
-        for (final SAMRecord record : setBuilder) {
-            writer.addAlignment(record);
+        try(SAMFileWriter writer = new SAMFileWriterFactory()
+                .setCreateIndex(true).makeBAMWriter(header, false, tempSamFileUnsorted)){
+
+            for (final SAMRecord record : setBuilder) {
+                writer.addAlignment(record);
+            }
         }
-        writer.close();
 
         //sort the temp file
         final SortSam sorter = new SortSam();
@@ -227,11 +226,13 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> output = new MetricsFile<>();
-        output.read(new FileReader(outfile));
-
-        for (final CollectWgsMetrics.WgsMetrics metrics : output.getMetrics()) {
+        final MetricsFile<WgsMetrics, Comparable<?>> output = new MetricsFile<>();
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+        for (final WgsMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.GENOME_TERRITORY, 404);
+            Assert.assertEquals(metrics.PCT_EXC_ADAPTER, 0D);
             Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.271403);
             Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.182149);
             Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.091075);
@@ -267,13 +268,12 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         setBuilder.getSamReader();
 
         // Write SAM file
-        final SAMFileWriter writer = new SAMFileWriterFactory()
-                .setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, tempSamFile);
-
-        for (final SAMRecord record : setBuilder) {
-            writer.addAlignment(record);
+        try (SAMFileWriter writer = new SAMFileWriterFactory()
+                .setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, tempSamFile)){
+            for (final SAMRecord record : setBuilder) {
+                writer.addAlignment(record);
+            }
         }
-        writer.close();
 
         // create output files for tests
         final File outfile = File.createTempFile("testWgsMetrics", ".txt");
@@ -289,9 +289,11 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> output = new MetricsFile<>();
-        output.read(new FileReader(outfile));
-        final CollectWgsMetrics.WgsMetrics metrics = output.getMetrics().get(0);
+        final MetricsFile<WgsMetrics, Integer> output = new MetricsFile<>();
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+        final WgsMetrics metrics = output.getMetrics().get(0);
 
         final Histogram<Integer> highQualityDepthHistogram = output.getAllHistograms().get(0);
         final Histogram<Integer> baseQHistogram = output.getAllHistograms().get(1);
@@ -303,7 +305,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "wgsAlgorithm")
     public void testPoorQualityBases(final String useFastAlgorithm) throws IOException {
-        final File reference = new File("testdata/picard/quality/chrM.reference.fasta");
+        final File reference = CHR_M_REFERENCE;
         final File testSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectWgsMetrics", ".bam");
 
         /**
@@ -331,13 +333,12 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
             setBuilder.addPair("PoorBQRead:" + i, 0, 1, 30, false, false, "10M", "10M", false, true, 10);
         }
 
-        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile);
 
-        for (final SAMRecord record : setBuilder) {
-            writer.addAlignment(record);
+        try (SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile)) {
+            for (final SAMRecord record : setBuilder) {
+                writer.addAlignment(record);
+            }
         }
-
-        writer.close();
 
         final File outfile = File.createTempFile("testExcludedBases-metrics", ".txt");
         outfile.deleteOnExit();
@@ -353,10 +354,11 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> output = new MetricsFile<>();
-        output.read(new FileReader(outfile));
-
-        final CollectWgsMetrics.WgsMetrics metrics = output.getMetrics().get(0);
+        final MetricsFile<WgsMetrics, Integer> output = new MetricsFile<>();
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+        final WgsMetrics metrics = output.getMetrics().get(0);
 
         Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.5);
         Assert.assertEquals(metrics.PCT_EXC_CAPPED, 0.0);
@@ -364,7 +366,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "wgsAlgorithm")
     public void testGiantDeletion(final String useFastAlgorithm) throws IOException {
-        final File reference = new File("testdata/picard/quality/chrM.reference.fasta");
+        final File reference = CHR_M_REFERENCE;
         final File testSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectWgsMetrics", ".bam");
 
         final SAMRecordSetBuilder setBuilder = CollectWgsMetricsTestUtils.createTestSAMBuilder(reference, READ_GROUP_ID, SAMPLE, PLATFORM, LIBRARY);
@@ -373,14 +375,11 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
             setBuilder.addPair("Read:" + i, 0, 1, 30, false, false, "5M10000D5M", "1000D10M", false, true, 40);
         }
 
-        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile);
-
-        for (final SAMRecord record : setBuilder) {
-            writer.addAlignment(record);
+        try (SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile)) {
+            for (final SAMRecord record : setBuilder) {
+                writer.addAlignment(record);
+            }
         }
-
-        writer.close();
-
         final File outfile = File.createTempFile("testGiantDeletion", ".txt");
         outfile.deleteOnExit();
 
@@ -395,10 +394,11 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> output = new MetricsFile<>();
-        output.read(new FileReader(outfile));
-
-        final CollectWgsMetrics.WgsMetrics metrics = output.getMetrics().get(0);
+        final MetricsFile<WgsMetrics, Integer> output = new MetricsFile<>();
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+        final WgsMetrics metrics = output.getMetrics().get(0);
 
         Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.0);
         Assert.assertEquals(metrics.PCT_EXC_CAPPED, 0.0);

@@ -36,8 +36,8 @@ public class WgsMetricsTest {
         return intervals;
     }
 
-    private CollectWgsMetrics.WgsMetrics emptyMetrics() {
-        return new CollectWgsMetrics.WgsMetrics(
+    private WgsMetrics emptyMetrics() {
+        return new WgsMetrics(
                 buildIntervalList(-1, -1),
                 emptyDepthHistogram(), emptyDepthHistogram(),
                 0, 0, 0, 0, 0, 0, 0, 1000000,
@@ -45,7 +45,7 @@ public class WgsMetricsTest {
         );
     }
 
-    private CollectWgsMetrics.WgsMetrics singleDepthMetrics(final int depth, final int countScale, final int start) {
+    private WgsMetrics singleDepthMetrics(final int depth, final int countScale, final int start) {
         final int count = 100000 * countScale;
         final int totalExcluded = (10 + 20 + 30 + 40 + 50 + 60) * countScale;
         return new CollectWgsMetrics.WgsMetrics(
@@ -60,7 +60,7 @@ public class WgsMetricsTest {
         );
     }
 
-    private CollectWgsMetrics.WgsMetrics twoSiteDepthMetrics(final int depth1, final int countScale1,
+    private WgsMetrics twoSiteDepthMetrics(final int depth1, final int countScale1,
                                                              final int depth2, final int countScale2,
                                                              final int start) {
         final int count1 = 100000 * countScale1;
@@ -81,9 +81,9 @@ public class WgsMetricsTest {
     }
 
     @Test(dataProvider = "testWgsMetricsMergeDataProvider")
-    public void testWgsMetricsMerge(final CollectWgsMetrics.WgsMetrics left,
-                                    final CollectWgsMetrics.WgsMetrics right,
-                                    final CollectWgsMetrics.WgsMetrics expected) {
+    public void testWgsMetricsMerge(final WgsMetrics left,
+                                    final WgsMetrics right,
+                                    final WgsMetrics expected) {
         left.merge(right);
         left.calculateDerivedFields();
         Assert.assertTrue(left.equals(expected));

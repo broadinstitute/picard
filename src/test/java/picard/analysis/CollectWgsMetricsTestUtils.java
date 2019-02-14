@@ -35,6 +35,7 @@ import htsjdk.samtools.util.AbstractLocusIterator;
 import htsjdk.samtools.util.EdgeReadIterator;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import picard.cmdline.CommandLineProgramTest;
 import picard.filter.CountingDuplicateFilter;
 import picard.filter.CountingFilter;
 import picard.filter.CountingMapQFilter;
@@ -51,7 +52,7 @@ import java.util.stream.IntStream;
  * Contains util methods for CollectWgsMetricsTest, CollectWgsMetricsWithNonZeroCoverageTest
  */
 
-public class CollectWgsMetricsTestUtils {
+public class CollectWgsMetricsTestUtils extends CommandLineProgramTest{
 
     private static final String sqHeaderLN20 = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:20\n";
     private static final String s1 = "3851612\t16\tchrM\t1\t255\t3M2D10M\t*\t0\t0\tACCTACGTTCAAT\tDDDDDDDDDDDDD\n";
@@ -97,7 +98,7 @@ public class CollectWgsMetricsTestUtils {
      */
     private static void createTestSAM(String testSamName) throws IOException {
         final File testDir = new File("testdata/picard/analysis/directed/CollectHsMetrics/");
-        final File reference = new File("testdata/picard/quality/chrM.reference.fasta");
+        final File reference = CommandLineProgramTest.CHR_M_REFERENCE;
         final String readGroupId = "TestReadGroup";
         final String sample = "TestSample";
         final String platform = "Illumina";
@@ -212,5 +213,10 @@ public class CollectWgsMetricsTestUtils {
     // call main (from IDE for example) to createTestSAM(), which creates a test SAM file
     public static void main(String[] args) {
         try { createTestSAM("TestSam"); } catch(IOException e) { ; }
+    }
+
+    @Override
+    public String getCommandLineProgramName() {
+        return CollectWgsMetrics.class.getName();
     }
 }

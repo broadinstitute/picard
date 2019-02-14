@@ -300,12 +300,11 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
 
     public void runGcTest(final File input) throws IOException {
         final File outfile = File.createTempFile("test", "");
-        final String referenceFile = "testdata/picard/quality/chrM.reference.fasta";
         outfile.deleteOnExit();
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
-                "REFERENCE_SEQUENCE=" + referenceFile,
+                "REFERENCE_SEQUENCE=" + CHR_M_REFERENCE.getAbsolutePath(),
                 "METRIC_ACCUMULATION_LEVEL=" + MetricAccumulationLevel.ALL_READS.name(),
                 "PROGRAM=null",
                 "PROGRAM=" + CollectMultipleMetrics.Program.CollectAlignmentSummaryMetrics.name(),
@@ -346,7 +345,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
     private final static String library2 = "TestLibrary2";
     private final static String library3 = "TestLibrary3";
     private final static File TEST_DIR = new File("testdata/picard/sam/CollectGcBiasMetrics/");
-    private final File dict = new File("testdata/picard/quality/chrM.reference.dict");
+    private final File dict = CHR_M_DICT;
     private File tempSamFile;
     private final SAMRecordSetBuilder setBuilder1 =
             new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);

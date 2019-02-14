@@ -79,7 +79,7 @@ public class MathUtilTest {
     private void assertEquals(final double [] actual, final double [] expected) {
         Assert.assertEquals(actual.length,expected.length,"Arrays do not have equal lengths");
 
-        for(int i=0;i<actual.length;++i){
+        for(int i=0;i<actual.length;++i) {
             Assert.assertEquals(actual[i], expected[i],"Array differ at position " +i);
         }
     }
@@ -96,5 +96,4 @@ public class MathUtilTest {
                 new Object[] {15.0, 0.0, 0.0}
         };
     }
-
 }

@@ -48,7 +48,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
     }
 
     /** Read back the first metrics record in an hs metrics file. */
-    HsMetrics readMetrics(final File f) {
+    private HsMetrics readMetrics(final File f) {
         try {
             final MetricsFile<HsMetrics, Comparable<?>> mFile = new MetricsFile<HsMetrics, Comparable<?>>();
             mFile.read(new FileReader(f));
@@ -60,7 +60,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
     }
 
     /** Writes the contents of a SAMRecordSetBuilder out to a file. */
-    File writeBam(final SAMRecordSetBuilder builder, final File f) {
+    private File writeBam(final SAMRecordSetBuilder builder, final File f) {
         try (final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(builder.getHeader(), false, f)) {
             builder.forEach(out::addAlignment);
         }
