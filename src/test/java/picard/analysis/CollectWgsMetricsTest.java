@@ -403,4 +403,35 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.0);
         Assert.assertEquals(metrics.PCT_EXC_CAPPED, 0.0);
     }
+
+    @Test(dataProvider = "wgsAlgorithm")
+    public void testAdapterReads(final String useFastAlgorithm) throws IOException {
+        final File metricsTestDir = new File(TEST_DIR.getParentFile(), "metrics");
+        final File input = new File(metricsTestDir, "AlignedAdapterReads.sam");
+        final File outfile = File.createTempFile("test", ".wgs_metrics");
+        outfile.deleteOnExit();
+        final File ref = CHR_M_REFERENCE;
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "SAMPLE_SIZE=" + 10,
+                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "USE_FAST_ALGORITHM=" + useFastAlgorithm
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<WgsMetrics, Comparable<?>> output = new MetricsFile<>();
+
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+        for (final WgsMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.GENOME_TERRITORY, 16571);
+            Assert.assertEquals(metrics.PCT_EXC_TOTAL, 1D);
+            TestNGUtil.compareDoubleWithAccuracy(metrics.PCT_EXC_ADAPTER, 102 / (102 + 82D), 0.00001);
+            TestNGUtil.compareDoubleWithAccuracy(metrics.PCT_EXC_MAPQ, 82 / (102 + 82D), 0.00001);
+            Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.0);
+            Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.0);
+        }
+    }
 }

@@ -98,6 +98,6 @@ public class CollectRrbsMetricsTest extends CommandLineProgramTest {
 
     @Override
     public String getCommandLineProgramName() {
-        return CollectRrbsMetrics.class.getName();
+        return CollectRrbsMetrics.class.getSimpleName();
     }
 }
