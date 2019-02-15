@@ -45,14 +45,13 @@ import java.util.Random;
 /**
  * Tests for methods in CollectWgsMetrics
  *
- *
  * @author Kylee Bergin
  */
 
 public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
     private static final File TEST_DIR = new File("testdata/picard/sam/");
-    private static final File REF_DICT_DIR = new File(TEST_DIR,"CollectGcBiasMetrics/");
+    private static final File REF_DICT_DIR = new File(TEST_DIR, "CollectGcBiasMetrics/");
     private final File referenceDict = new File(REF_DICT_DIR, "MSmallHeader.dict");
     private File tempSamFile;
     private File outfile;
@@ -72,7 +71,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
     public Object[][] wgsDataProvider() {
         final String referenceFile = CHR_M_REFERENCE.getAbsolutePath();
 
-        return new Object[][] {
+        return new Object[][]{
                 {tempSamFile, outfile, referenceFile, "false"},
                 {tempSamFile, outfile, referenceFile, "true"},
         };
@@ -80,12 +79,12 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "wgsDataProvider")
     public void testMetricsFromWGS(final File input, final File outfile, final String referenceFile,
-            final String useFastAlgorithm) throws IOException {
+                                   final String useFastAlgorithm) throws IOException {
         outfile.deleteOnExit();
         final int sampleSize = 1000;
 
-        final String[] args = new String[] {
-                "INPUT="  + input.getAbsolutePath(),
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + referenceFile,
                 "SAMPLE_SIZE=" + sampleSize,
@@ -93,7 +92,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<WgsMetrics, Comparable<?>> output = new MetricsFile<WgsMetrics, Comparable<?>>();
+        final MetricsFile<WgsMetrics, Comparable<?>> output = new MetricsFile<>();
         try (FileReader reader = new FileReader(outfile)) {
             output.read(reader);
         }
@@ -178,8 +177,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         //Write SAM file
 
-        try(SAMFileWriter writer = new SAMFileWriterFactory()
-                .setCreateIndex(true).makeBAMWriter(header, false, tempSamFileUnsorted)){
+        try (SAMFileWriter writer = new SAMFileWriterFactory()
+                .setCreateIndex(true).makeBAMWriter(header, false, tempSamFileUnsorted)) {
 
             for (final SAMRecord record : setBuilder) {
                 writer.addAlignment(record);
@@ -203,11 +202,12 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
     @DataProvider(name = "wgsAlgorithm")
     public Object[][] wgsAlgorithm() {
-        return new Object[][] {
+        return new Object[][]{
                 {"false"},
                 {"true"},
         };
     }
+
     @Test(dataProvider = "wgsAlgorithm")
     public void testLargeIntervals(final String useFastAlgorithm) throws IOException {
         final File input = new File(TEST_DIR, "forMetrics.sam");
@@ -216,8 +216,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final File ref = new File(TEST_DIR, "merger.fasta");
         final File intervals = new File(TEST_DIR, "largeIntervals.interval_list");
         final int sampleSize = 1000;
-        final String[] args = new String[] {
-                "INPUT="  + input.getAbsolutePath(),
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
                 "INTERVALS=" + intervals.getAbsolutePath(),
@@ -256,7 +256,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         expectedSingletonCoverage += 2 * 5; // 5 bases for each mate are good (see AAA!!!AA!! below).
         setBuilder.addPair("poorQualityReads", 1, 2, 20, false, false, "10M", "10M", true, false, -1);
 
-        for(int i = 1; i < 5; i++) {
+        for (int i = 1; i < 5; i++) {
             setBuilder.addPair("deepStack-" + i, 2, 2, 20, false, false, "10M", "10M", true, false, 30);
         }
 
@@ -269,7 +269,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         // Write SAM file
         try (SAMFileWriter writer = new SAMFileWriterFactory()
-                .setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, tempSamFile)){
+                .setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, tempSamFile)) {
             for (final SAMRecord record : setBuilder) {
                 writer.addAlignment(record);
             }
@@ -279,8 +279,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final File outfile = File.createTempFile("testWgsMetrics", ".txt");
         outfile.deleteOnExit();
 
-        final String[] args = new String[] {
-                "INPUT="  + tempSamFile.getAbsolutePath(),
+        final String[] args = new String[]{
+                "INPUT=" + tempSamFile.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
                 "INCLUDE_BQ_HISTOGRAM=true",
@@ -300,7 +300,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals((long) highQualityDepthHistogram.getSumOfValues(), metrics.GENOME_TERRITORY);
         Assert.assertEquals((long) highQualityDepthHistogram.get(1).getValue(), expectedSingletonCoverage);
-        Assert.assertEquals((long) highQualityDepthHistogram.get(3).getValue(), 2*10);
+        Assert.assertEquals((long) highQualityDepthHistogram.get(3).getValue(), 2 * 10);
     }
 
     @Test(dataProvider = "wgsAlgorithm")
@@ -325,14 +325,13 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         final SAMRecordSetBuilder setBuilder = CollectWgsMetricsTestUtils.createTestSAMBuilder(reference, READ_GROUP_ID, SAMPLE, PLATFORM, LIBRARY);
         setBuilder.setReadLength(10);
-        for (int i = 0; i < 3; i++){
+        for (int i = 0; i < 3; i++) {
             setBuilder.addPair("GreatBQRead:" + i, 0, 1, 30, false, false, "10M", "10M", false, true, 40);
         }
 
-        for (int i = 0; i < 3; i++){
+        for (int i = 0; i < 3; i++) {
             setBuilder.addPair("PoorBQRead:" + i, 0, 1, 30, false, false, "10M", "10M", false, true, 10);
         }
-
 
         try (SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile)) {
             for (final SAMRecord record : setBuilder) {
@@ -343,8 +342,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final File outfile = File.createTempFile("testExcludedBases-metrics", ".txt");
         outfile.deleteOnExit();
 
-        final String[] args = new String[] {
-                "INPUT="  + testSamFile.getAbsolutePath(),
+        final String[] args = new String[]{
+                "INPUT=" + testSamFile.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
                 "INCLUDE_BQ_HISTOGRAM=true",
@@ -371,7 +370,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         final SAMRecordSetBuilder setBuilder = CollectWgsMetricsTestUtils.createTestSAMBuilder(reference, READ_GROUP_ID, SAMPLE, PLATFORM, LIBRARY);
         setBuilder.setReadLength(10);
-        for (int i = 0; i < 3; i++){
+        for (int i = 0; i < 3; i++) {
             setBuilder.addPair("Read:" + i, 0, 1, 30, false, false, "5M10000D5M", "1000D10M", false, true, 40);
         }
 
@@ -383,8 +382,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final File outfile = File.createTempFile("testGiantDeletion", ".txt");
         outfile.deleteOnExit();
 
-        final String[] args = new String[] {
-                "INPUT="  + testSamFile.getAbsolutePath(),
+        final String[] args = new String[]{
+                "INPUT=" + testSamFile.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
                 "INCLUDE_BQ_HISTOGRAM=true",
@@ -410,12 +409,11 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final File input = new File(metricsTestDir, "AlignedAdapterReads.sam");
         final File outfile = File.createTempFile("test", ".wgs_metrics");
         outfile.deleteOnExit();
-        final File ref = CHR_M_REFERENCE;
-        final String[] args = new String[]{
+        final String[] args = {
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "SAMPLE_SIZE=" + 10,
-                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + CHR_M_REFERENCE.getAbsolutePath(),
                 "USE_FAST_ALGORITHM=" + useFastAlgorithm
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);

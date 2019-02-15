@@ -101,19 +101,17 @@ public class AdapterUtility {
 
      public boolean isAdapter(final SAMRecord record) {
 
+        // If the read mapped with mapping quality > 0 we do not consider it an adapter read.
         if (!record.getReadUnmappedFlag() && record.getMappingQuality() != 0) {
             return false;
         }
-        // If the read is unmapped (or mapping quality 0) see if it's adapter sequence
+
+        // if the read is mapped and is aligned to the reverse strand, it needs to be
+        // rev-comp'ed before calling isAdapterSequence.
+        final boolean revComp = !record.getReadUnmappedFlag() &&
+                record.getReadNegativeStrandFlag();
 
         final byte[] readBases = record.getReadBases();
-        final boolean revComp = !record.getReadUnmappedFlag() &&
-                record.getMappingQuality() == 0 &&
-                record.getReadNegativeStrandFlag();
-        if (!(record instanceof BAMRecord)) {
-            StringUtil.toUpperCase(readBases);
-        }
-
         return isAdapterSequence(readBases, revComp);
     }
 
@@ -123,7 +121,7 @@ public class AdapterUtility {
      * true if the read matches an adapter sequence with MAX_ADAPTER_ERRORS mismsatches or fewer.
      *
      * @param read the basecalls for the read in the order and orientation the machine read them
-     * @param  revCompRead When aligned reads are checked for being adapter, this specificied if the original
+     * @param  revCompRead When aligned reads are checked for being adapter, this specified if the original
      *                     read had ben rev-comped during alignment.
      * @return true if the read matches an adapter and false otherwise
      */
@@ -135,12 +133,14 @@ public class AdapterUtility {
 
             for (int i = 0; i < adapter.length; ++i) {
                 final byte base = revCompRead ? SequenceUtil.complement(read[read.length - i - 1]) : read[i];
-                if (base != adapter[i] && ++errors > MAX_ADAPTER_ERRORS) {
+                if (!SequenceUtil.basesEqual(base, adapter[i]) && ++errors > MAX_ADAPTER_ERRORS) {
                     break;
                 }
             }
 
-            if (errors <= MAX_ADAPTER_ERRORS) return true;
+            if (errors <= MAX_ADAPTER_ERRORS) {
+                return true;
+            }
         }
 
         return false;

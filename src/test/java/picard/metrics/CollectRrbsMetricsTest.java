@@ -33,7 +33,6 @@ import org.testng.annotations.Test;
 import picard.analysis.CollectRrbsMetrics;
 import picard.analysis.RrbsSummaryMetrics;
 import picard.cmdline.CommandLineProgramTest;
-import picard.cmdline.PicardCommandLineTest;
 
 import java.io.File;
 import java.io.FileReader;
@@ -89,7 +88,7 @@ public class CollectRrbsMetricsTest extends CommandLineProgramTest {
             argList.add("SEQUENCE_NAMES=" + sequence);
         }
 
-        Assert.assertEquals(runPicardCommandLine(argList),0);
+        Assert.assertEquals(runPicardCommandLine(argList), 0);
 
         final MetricsFile<RrbsSummaryMetrics, ?> retVal = new MetricsFile<RrbsSummaryMetrics, Integer>();
         retVal.read(new FileReader(prefix + ".rrbs_summary_metrics"));

@@ -52,7 +52,7 @@ import java.util.stream.IntStream;
  * Contains util methods for CollectWgsMetricsTest, CollectWgsMetricsWithNonZeroCoverageTest
  */
 
-public class CollectWgsMetricsTestUtils extends CommandLineProgramTest{
+public class CollectWgsMetricsTestUtils{
 
     private static final String sqHeaderLN20 = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:20\n";
     private static final String s1 = "3851612\t16\tchrM\t1\t255\t3M2D10M\t*\t0\t0\tACCTACGTTCAAT\tDDDDDDDDDDDDD\n";
@@ -96,7 +96,7 @@ public class CollectWgsMetricsTestUtils extends CommandLineProgramTest{
     /**
      * Template code for creating a custom SAM file for testing. Modify to suit your needs.
      */
-    private static void createTestSAM(String testSamName) throws IOException {
+    private static void createTestSAM(final String testSamName) throws IOException {
         final File testDir = new File("testdata/picard/analysis/directed/CollectHsMetrics/");
         final File reference = CommandLineProgramTest.CHR_M_REFERENCE;
         final String readGroupId = "TestReadGroup";
@@ -123,7 +123,7 @@ public class CollectWgsMetricsTestUtils extends CommandLineProgramTest{
         return new IntervalList(new SAMFileHeader());
     }
 
-    static AbstractLocusIterator createReadEndsIterator(String exampleSam){
+    static AbstractLocusIterator createReadEndsIterator(final String exampleSam){
         final List<SamRecordFilter> filters = new ArrayList<>();
         final CountingFilter dupeFilter = new CountingDuplicateFilter();
         final CountingFilter mapqFilter = new CountingMapQFilter(0);
@@ -138,12 +138,12 @@ public class CollectWgsMetricsTestUtils extends CommandLineProgramTest{
         return iterator;
     }
 
-    static SamReader createSamReader(String samExample) {
+    static SamReader createSamReader(final String samExample) {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(samExample.getBytes());
         return SamReaderFactory.makeDefault().open(SamInputResource.of(inputStream));
     }
 
-    static ReferenceSequenceFileWalker getReferenceSequenceFileWalker(String referenceString){
+    static ReferenceSequenceFileWalker getReferenceSequenceFileWalker(final String referenceString){
         ReferenceSequenceFile referenceSequenceFile = createReferenceSequenceFile(referenceString);
         return new ReferenceSequenceFileWalker(referenceSequenceFile);
     }
@@ -153,7 +153,7 @@ public class CollectWgsMetricsTestUtils extends CommandLineProgramTest{
         return getReferenceSequenceFileWalker(referenceString);
     }
 
-    static ReferenceSequenceFile createReferenceSequenceFile(String referenceString) {
+    static ReferenceSequenceFile createReferenceSequenceFile(final String referenceString) {
         final SAMSequenceRecord record = new SAMSequenceRecord("ref", referenceString.length());
         final SAMSequenceDictionary dictionary = new SAMSequenceDictionary();
         dictionary.addSequence(record);
@@ -185,7 +185,7 @@ public class CollectWgsMetricsTestUtils extends CommandLineProgramTest{
             }
 
             @Override
-            public ReferenceSequence getSequence(String contig) {
+            public ReferenceSequence getSequence(final String contig) {
                 if (contig.equals(record.getSequenceName())) {
                     return new ReferenceSequence(record.getSequenceName(), 0, referenceString.getBytes());
                 } else {
@@ -194,7 +194,7 @@ public class CollectWgsMetricsTestUtils extends CommandLineProgramTest{
             }
 
             @Override
-            public ReferenceSequence getSubsequenceAt(String contig, long start, long stop) {
+            public ReferenceSequence getSubsequenceAt(final String contig, long start, long stop) {
                 return null;
             }
 
@@ -213,10 +213,5 @@ public class CollectWgsMetricsTestUtils extends CommandLineProgramTest{
     // call main (from IDE for example) to createTestSAM(), which creates a test SAM file
     public static void main(String[] args) {
         try { createTestSAM("TestSam"); } catch(IOException e) { ; }
-    }
-
-    @Override
-    public String getCommandLineProgramName() {
-        return CollectWgsMetrics.class.getName();
     }
 }

@@ -29,27 +29,15 @@ import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.CoordMath;
-import htsjdk.samtools.util.FormatUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.QualityUtil;
-import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.OverlapDetector;
-import htsjdk.samtools.util.RuntimeIOException;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
 import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
+import picard.analysis.TheoreticalSensitivity;
 import picard.filter.CountingAdapterFilter;
 import picard.filter.CountingMapQFilter;
 import picard.metrics.MultilevelMetrics;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordMultiLevelCollector;
-import picard.analysis.TheoreticalSensitivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -535,6 +523,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             ///////////////////////////////////////////////////////////////////
             // MapQ 0 adapter reads can be ignored beyond this point
+            // but first, make sure we count the (aligned) adapters.
             ///////////////////////////////////////////////////////////////////
             if (this.adapterFilter.filterOut(record)) return;
 
@@ -551,9 +540,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 metrics.PCT_EXC_OVERLAP += numOverlappingBasesToClip;
 
                 // If clipping resulted in the read becoming unmapped (because all bases were clipped), return here
-                if (rec.getReadUnmappedFlag()) return;
-            }
-            else {
+                if (rec.getReadUnmappedFlag()) {
+                    return;
+                }
+            } else {
                 rec = record;
             }
 

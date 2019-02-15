@@ -28,7 +28,7 @@ import htsjdk.samtools.SAMRecord;
 import picard.analysis.AdapterUtility;
 
 /**
- * Counting filter that discards reads are alined with MQ==0 and whose 5' ends look like adapter
+ * Counting filter that discards reads are unaligned or aligned with MQ==0 and whose 5' ends look like adapter
  * Sequence
  */
 public class CountingAdapterFilter extends CountingFilter {

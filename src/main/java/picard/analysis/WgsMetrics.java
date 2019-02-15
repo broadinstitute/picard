@@ -39,7 +39,7 @@ public class WgsMetrics extends MergeableMetricBase {
     @MergingIsManual
     protected IntervalList intervals;
 
-    /** Count of sites with a given depth of coverage. Excludes bases with quality below MINIMUM_BASE_QUALITY (default 20) */
+    /** Count of sites with a given depth of coverage. Excludes bases with quality below MINIMUM_BASE_QUALITY*/
     @MergingIsManual
     protected final Histogram<Integer> highQualityDepthHistogram;
 
@@ -140,7 +140,7 @@ public class WgsMetrics extends MergeableMetricBase {
     /** The fraction of aligned bases that were filtered out because they were in reads with mapping quality 0 and the looked like adapter reads. */
     @NoMergingIsDerived
     public double PCT_EXC_ADAPTER;
-    /** The fraction of aligned bases that were filtered out because they were in reads with low mapping quality (default is < 20). */
+    /** The fraction of aligned bases that were filtered out because they were in reads with low mapping quality (lower than MIN_MAPPING_QUALITY). */
     @NoMergingIsDerived
     public double PCT_EXC_MAPQ;
     /** The fraction of aligned bases that were filtered out because they were in reads marked as duplicates. */
@@ -149,13 +149,13 @@ public class WgsMetrics extends MergeableMetricBase {
     /** The fraction of aligned bases that were filtered out because they were in reads without a mapped mate pair. */
     @NoMergingIsDerived
     public double PCT_EXC_UNPAIRED;
-    /** The fraction of aligned bases that were filtered out because they were of low base quality (default is < 20). */
+    /** The fraction of aligned bases that were filtered out because they were of low base quality (lower than MIN_BASE_QUALITY). */
     @NoMergingIsDerived
     public double PCT_EXC_BASEQ;
     /** The fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads. */
     @NoMergingIsDerived
     public double PCT_EXC_OVERLAP;
-    /** The fraction of aligned bases that were filtered out because they would have raised coverage above the capped value (default cap = 250x). */
+    /** The fraction of aligned bases that were filtered out because they would have raised coverage above COVERAGE_CAP. */
     @NoMergingIsDerived
     public double PCT_EXC_CAPPED;
     /** The total fraction of aligned bases excluded due to all filters. */

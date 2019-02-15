@@ -35,8 +35,6 @@ import htsjdk.samtools.util.Log;
 import picard.filter.CountingFilter;
 import picard.filter.CountingPairedFilter;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.Inherited;
 import java.util.Arrays;
 import java.util.stream.LongStream;
 

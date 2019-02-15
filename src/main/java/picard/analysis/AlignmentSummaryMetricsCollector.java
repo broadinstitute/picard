@@ -230,20 +230,11 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     metrics.PF_READS++;
                     if (isNoiseRead(record)) metrics.PF_NOISE_READS++;
 
-                    if (record.getReadUnmappedFlag() || record.getMappingQuality() == 0) {
-                        // If the read is unmapped (or mapping quality 0) see if it's adapter sequence
-                        final byte[] readBases = record.getReadBases();
-                        final boolean revComp = !record.getReadUnmappedFlag() &&
-                                record.getMappingQuality() == 0 &&
-                                record.getReadNegativeStrandFlag();
-                        if (!(record instanceof BAMRecord)) {
-                            StringUtil.toUpperCase(readBases);
-                        }
-
-                        if (adapterUtility.isAdapterSequence(readBases, revComp)) {
-                            this.adapterReads++;
-                        }
+                    // See if the read is an adapter sequence
+                    if (adapterUtility.isAdapter(record)) {
+                        this.adapterReads++;
                     }
+
                     if (!record.getReadUnmappedFlag() && doRefMetrics) {
                         metrics.PF_READS_ALIGNED++;
                         if (record.getReadPairedFlag() && !record.getProperPairFlag()) metrics.PF_READS_IMPROPER_PAIRS++;
