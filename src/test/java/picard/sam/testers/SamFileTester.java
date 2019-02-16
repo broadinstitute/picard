@@ -1,19 +1,18 @@
 package picard.sam.testers;
 
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordSetBuilder;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.*;
+import htsjdk.samtools.reference.FastaReferenceWriter;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -350,12 +349,22 @@ public abstract class SamFileTester extends CommandLineProgramTest {
      * Sets up the basic command line arguments for input and output and runs instanceMain.
      */
     public void runTest() {
+        runTest(".sam");
+    }
+
+    /**
+     * Sets up the basic command line arguments for input and output and runs instanceMain.
+     */
+    public void runTest(final String inputExtension) {
         try {
-            final File input = createInputFile();
+            final File input = createInputFile(inputExtension);
 
             output = new File(outputDir, "output.sam");
             args.add("INPUT=" + input.getAbsoluteFile());
             args.add("OUTPUT=" + output.getAbsoluteFile());
+            if(inputExtension.equals(".cram")){
+                args.add("REFERENCE_SEQUENCE=input.fasta");
+            }
             Assert.assertEquals(runPicardCommandLine(args), 0);
             test();
         } catch (IOException ex) {
@@ -364,10 +373,25 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         }
     }
 
-    private File createInputFile() {
+    private File createInputFile(final String extension) throws IOException {
         // Create the input file
-        final File input = new File(outputDir, "input.sam");
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(samRecordSetBuilder.getHeader(), true, input);
+        final File input = new File(outputDir, "input" + extension);
+
+        final SAMFileWriterFactory samFileWriterFactory = new SAMFileWriterFactory();
+
+        final SAMFileWriter writer;
+        if(extension.equals(".cram")) {
+            final Path fasta = IOUtil.getPath("Testinput.fasta");
+            IOUtil.deleteOnExit(fasta);
+            IOUtil.deleteOnExit(ReferenceSequenceFileFactory.getFastaIndexFileName(fasta));
+            IOUtil.deleteOnExit(ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(fasta));
+
+            samRecordSetBuilder.writeRandomReference(fasta);
+            writer = samFileWriterFactory.makeWriter(samRecordSetBuilder.getHeader(), true, input, fasta.toFile());
+        } else {
+            writer = samFileWriterFactory.makeWriter(samRecordSetBuilder.getHeader(), true, input, null);
+        }
+
         samRecordSetBuilder.getRecords().forEach(writer::addAlignment);
         writer.close();
         return input;

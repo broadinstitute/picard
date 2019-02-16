@@ -554,19 +554,28 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.addMappedPair(2, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
         tester.runTest();
     }
-    
-    @Test
-    public void testBulkFragmentsNoDuplicates() {
-        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
-        tester.getSamRecordSetBuilder().setReadLength(100);
-        for(int position = 1; position <= 10000; position += 1) {
-            tester.addMappedFragment(0, position, false, "100M", DEFAULT_BASE_QUALITY);
-        }
-        tester.runTest();
+
+
+    @DataProvider
+    public Object[][] extensions(){
+        return new Object[][]{{".sam"},{".bam"},{".cram"}};
     }
 
-    @Test
-    public void testBulkFragmentsWithDuplicates() {
+    @Test(dataProvider = "extensions")
+    public void testBulkFragmentsNoDuplicates(final String extension) {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(100);
+
+        for(int position = 1; position <= 10000; position += 1) {
+            tester.addMappedFragment(0, position, false, "100M", DEFAULT_BASE_QUALITY);
+        }
+        tester.runTest(extension);
+    }
+
+
+
+    @Test(dataProvider = "extensions")
+    public void testBulkFragmentsWithDuplicates(final String extension) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(100);
         for(int position = 1; position <= 10000; position += 1) {
@@ -576,7 +585,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
             tester.addMappedFragment(0, position, true, "100M", DEFAULT_BASE_QUALITY);
             tester.addMappedFragment(0, position, true, "100M", DEFAULT_BASE_QUALITY);
         }
-        tester.runTest();
+        tester.runTest(extension);
     }
 
     @Test
