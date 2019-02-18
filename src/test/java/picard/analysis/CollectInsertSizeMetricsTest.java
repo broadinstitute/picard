@@ -271,7 +271,7 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
 
         new File(testSamFile.getAbsolutePath().replace(".bam$",".bai")).deleteOnExit();
 
-        final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true, 100);
+        final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true);
         setBuilder.setReadLength(10);
 
         final int insertBy = 3; // the # of bases to increase the insert by in the records below.

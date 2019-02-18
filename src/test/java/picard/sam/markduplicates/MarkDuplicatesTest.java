@@ -210,8 +210,8 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     @Test
     public void testWithBarcodeFragmentDuplicate() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
-        tester.addMappedFragment(2, 41212324, false, "50M", DEFAULT_BASE_QUALITY);
-        tester.addMappedFragment(2, 41212324, true, "50M", DEFAULT_BASE_QUALITY);
+        tester.addMappedFragment(2, 1212324, false, "50M", DEFAULT_BASE_QUALITY);
+        tester.addMappedFragment(2, 1212324, true, "50M", DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
             record.setAttribute(barcodeTag, "GACT");
@@ -223,8 +223,8 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     public void addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate, final String cigar,
                                   final int defaultQualityScore) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
-        tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMatePair("RUNID:2:2:15993:13362", 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:1:1:15993:13361", 2, 1212324, 1212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:2:2:15993:13362", 2, 1212324, 1212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
             record.setAttribute(barcodeTag, "Barcode1");
@@ -238,8 +238,8 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     public void testWithBarcodeDuplicate() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(68);
-        tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMatePair("RUNID:2:2:15993:13362", 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:1:1:15993:13361", 2, 1212324, 1212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:2:2:15993:13362", 2, 1212324, 1212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
             record.setAttribute(barcodeTag, "ATGC");
@@ -257,9 +257,9 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         final String readNameThree = "RUNID:3:3:15993:13362";
 
         // first two reads have the same barcode, third read has a different barcode
-        tester.addMatePair(readNameOne, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMatePair(readNameTwo, 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY); // same barcode as the first
-        tester.addMatePair(readNameThree, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readNameOne, 2, 1212324, 1212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readNameTwo, 2, 1212324, 1212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY); // same barcode as the first
+        tester.addMatePair(readNameThree, 2, 1212324, 1212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
 
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
@@ -283,9 +283,9 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         final String readNameThree = "RUNID:3:3:15993:13362";
 
         // first two reads have the same barcode (all three), third read has a different barcode for the second end
-        tester.addMatePair(readNameOne, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.addMatePair(readNameTwo, 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY); // same barcode as the first
-        tester.addMatePair(readNameThree, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readNameOne, 2, 1212324, 1212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readNameTwo, 2, 1212324, 1212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY); // same barcode as the first
+        tester.addMatePair(readNameThree, 2, 1212324, 1212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
 
         final String barcodeTag = "BC";
         final String readOneBarcodeTag = "BX"; // want the same tag as the second end, since this is allowed

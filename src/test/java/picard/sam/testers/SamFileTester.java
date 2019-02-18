@@ -1,9 +1,6 @@
 package picard.sam.testers;
 
-import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 import htsjdk.samtools.*;
-import htsjdk.samtools.reference.FastaReferenceWriter;
-import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
@@ -32,23 +29,19 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     private boolean deleteOnExit = true;
     private final ArrayList<String> args = new ArrayList<>();
 
-    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy, final SAMFileHeader.SortOrder sortOrder, boolean recordsNeedSorting) {
+    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final SAMFileHeader.SortOrder sortOrder, boolean recordsNeedSorting) {
         this.deleteOnExit = deleteOnExit;
-        this.samRecordSetBuilder = new SAMRecordSetBuilder(recordsNeedSorting, sortOrder, true, defaultChromosomeLength, duplicateScoringStrategy);
+        this.samRecordSetBuilder = new SAMRecordSetBuilder(recordsNeedSorting, true, SAMRecordSetBuilder.makeDefaultHeader(sortOrder, defaultChromosomeLength));
         samRecordSetBuilder.setReadLength(readLength);
         setOutputDir();
     }
 
-    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy, final SAMFileHeader.SortOrder sortOrder) {
-        this(readLength, deleteOnExit, defaultChromosomeLength, duplicateScoringStrategy, SAMFileHeader.SortOrder.coordinate, true);
-    }
-
-    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy) {
-        this(readLength, deleteOnExit, defaultChromosomeLength, duplicateScoringStrategy, SAMFileHeader.SortOrder.coordinate);
+    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final SAMFileHeader.SortOrder sortOrder) {
+        this(readLength, deleteOnExit, defaultChromosomeLength, sortOrder, true);
     }
 
     public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength) {
-        this(readLength, deleteOnExit, defaultChromosomeLength, SAMRecordSetBuilder.DEFAULT_DUPLICATE_SCORING_STRATEGY);
+        this(readLength, deleteOnExit, defaultChromosomeLength, SAMFileHeader.SortOrder.coordinate);
     }
 
     public SamFileTester(final int readLength, final boolean deleteOnExit) {
@@ -81,7 +74,6 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     public void setOutput(final File output) {
         this.output = output;
     }
-
 
     public void addArg(final String arg) {
         args.add(arg);
@@ -323,6 +315,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                 record1Unmapped, record2Unmapped, isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2,
                 firstOnly, record1NonPrimary, record2NonPrimary, defaultQuality, null);
     }
+
     public void addMatePair(final String readName,
                             final int referenceSequenceIndex,
                             final int alignmentStart1,
@@ -362,7 +355,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
             output = new File(outputDir, "output.sam");
             args.add("INPUT=" + input.getAbsoluteFile());
             args.add("OUTPUT=" + output.getAbsoluteFile());
-            if(inputExtension.equals(".cram")){
+            if (inputExtension.equals(".cram")) {
                 args.add("REFERENCE_SEQUENCE=input.fasta");
             }
             Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -380,7 +373,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         final SAMFileWriterFactory samFileWriterFactory = new SAMFileWriterFactory();
 
         final SAMFileWriter writer;
-        if(extension.equals(".cram")) {
+        if (extension.equals(".cram")) {
             final Path fasta = IOUtil.getPath("Testinput.fasta");
             IOUtil.deleteOnExit(fasta);
             IOUtil.deleteOnExit(ReferenceSequenceFileFactory.getFastaIndexFileName(fasta));
@@ -401,6 +394,8 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         return samRecordSetBuilder.getSamReader();
     }
 
-    public SAMRecordSetBuilder getSamRecordSetBuilder() { return samRecordSetBuilder; }
+    public SAMRecordSetBuilder getSamRecordSetBuilder() {
+        return samRecordSetBuilder;
+    }
 
 }

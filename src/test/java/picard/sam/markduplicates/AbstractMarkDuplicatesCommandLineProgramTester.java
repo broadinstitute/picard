@@ -24,17 +24,12 @@
 
 package picard.sam.markduplicates;
 
+import com.oracle.tools.packager.IOUtils;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordSetBuilder;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.FormatUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
 import picard.sam.DuplicationMetrics;
@@ -46,7 +41,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import java.io.IOException;
 
 /**
  * This class is an extension of SamFileTester used to test AbstractMarkDuplicatesCommandLineProgram's with SAM files generated on the fly.
@@ -58,13 +52,14 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     final DuplicationMetrics expectedMetrics;
 
     boolean testOpticalDuplicateDTTag = false;
+    public static final ScoringStrategy DEFAULT_DUPLICATE_SCORING_STRATEGY = ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH;
 
     public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder) {
         this(duplicateScoringStrategy, sortOrder, true);
     }
 
     public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder, boolean recordNeedSorting) {
-        super(50, true, SAMRecordSetBuilder.DEFAULT_CHROMOSOME_LENGTH, duplicateScoringStrategy, sortOrder, recordNeedSorting);
+        super(50, true, SAMRecordSetBuilder.DEFAULT_CHROMOSOME_LENGTH, sortOrder, recordNeedSorting);
 
         expectedMetrics = new DuplicationMetrics();
         expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES = 0;
@@ -80,7 +75,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     }
 
     public AbstractMarkDuplicatesCommandLineProgramTester() {
-        this(SAMRecordSetBuilder.DEFAULT_DUPLICATE_SCORING_STRATEGY);
+        this(DEFAULT_DUPLICATE_SCORING_STRATEGY);
     }
 
     @Override
@@ -209,7 +204,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
             }
             return metricsOutput;
         } finally {
-            IOUtil.recursiveDelete(getOutputDir().toPath());
+            IOUtils.deleteRecursive(getOutputDir());
         }
     }
 
