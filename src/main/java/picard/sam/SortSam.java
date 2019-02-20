@@ -53,8 +53,8 @@ import java.io.File;
  * <p> For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME)
  * field using the reference sequence dictionary tag labeled SQ.
  * Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).
- * Subsequent to this sorting scheme, alignments are listed arbitrarily.</p> For queryname-sorted alignments, all
- * alignments are grouped using the queryname field followed by record strand orientation flag, primary record flag, and secondary
+ * Subsequent to this sorting scheme, alignments are listed arbitrarily.</p> For queryname-sorted alignments,'the tool
+ * orders records deterministically by queryname field followed by record strand orientation flag, primary record flag, and secondary
  * alignment flag. (See {@link htsjdk.samtools.SAMRecordQueryNameComparator#compare(SAMRecord, SAMRecord)}} for details)
  *
  * <h3> Inputs</h3>
