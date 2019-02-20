@@ -53,7 +53,7 @@ import java.io.File;
  * <p> For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME)
  * field using the reference sequence dictionary tag labeled SQ.
  * Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).
- * Subsequent to this sorting scheme, alignments are listed arbitrarily.</p> For queryname-sorted alignments,'the tool
+ * Subsequent to this sorting scheme, alignments are listed arbitrarily.</p> For queryname-sorted alignments, the tool
  * orders records deterministically by queryname field followed by record strand orientation flag, primary record flag, and secondary
  * alignment flag. (See {@link htsjdk.samtools.SAMRecordQueryNameComparator#compare(SAMRecord, SAMRecord)}} for details)
  *
@@ -87,8 +87,8 @@ public class SortSam extends CommandLineProgram {
             "<p> For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the " +
             "reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping " +
             "position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.</p>" +
-            "<p>For queryname-sorted alignments, all alignments are grouped using the queryname field but the alignments are not necessarily sorted within these groups.  " +
-            "Reads having the same queryname are derived from the same template.</p>" +
+            "<p> For queryname-sorted alignments, the tool orders records deterministically by queryname field followed by " +
+            "record strand orientation flag, primary record flag, and secondary alignment flag.</p>" +
             "<hr /><hr />" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
