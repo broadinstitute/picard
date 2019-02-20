@@ -403,7 +403,6 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
-
     @Test
     public void testMappedPairAndMappedFragmentAndMatePairSecondUnmapped() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -555,18 +554,19 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
-
     @DataProvider
-    public Object[][] extensions(){
-        return new Object[][]{{".sam"},{".bam"},{".cram"}};
+    public Object[][] extensions() {
+        return new Object[][]{{".sam"}, {".bam"}, {".cram"}};
     }
 
     @Test(dataProvider = "extensions")
     public void testBulkFragmentsNoDuplicates(final String extension) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        ModifyTesterForCramTests(tester);
+
         tester.getSamRecordSetBuilder().setReadLength(100);
 
-        for(int position = 1; position <= 10000; position += 1) {
+        for (int position = 1; position <= 10000; position += 1) {
             tester.addMappedFragment(0, position, false, "100M", DEFAULT_BASE_QUALITY);
         }
         tester.runTest(extension);
@@ -575,15 +575,45 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
     @Test(dataProvider = "extensions")
     public void testBulkFragmentsWithDuplicates(final String extension) {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        ModifyTesterForCramTests(tester);
+
         tester.getSamRecordSetBuilder().setReadLength(100);
-        for(int position = 1; position <= 10000; position += 1) {
-            tester.addMappedFragment(0, position, false, "100M", DEFAULT_BASE_QUALITY);
-            tester.addMappedFragment(0, position, true, "100M", DEFAULT_BASE_QUALITY);
-            tester.addMappedFragment(0, position, true, "100M", DEFAULT_BASE_QUALITY);
-            tester.addMappedFragment(0, position, true, "100M", DEFAULT_BASE_QUALITY);
-            tester.addMappedFragment(0, position, true, "100M", DEFAULT_BASE_QUALITY);
+        for (int position = 1; position <= 10000; position += 1) {
+            tester.addMappedFragment(0, position, false, "100M", DEFAULT_BASE_QUALITY + 1);
+            tester.addMappedFragment(0, position, true, "99M1I", DEFAULT_BASE_QUALITY);
+            tester.addMappedFragment(0, position, true, "99M1I", DEFAULT_BASE_QUALITY);
+            tester.addMappedFragment(0, position, true, "99M1I", DEFAULT_BASE_QUALITY);
+            tester.addMappedFragment(0, position, true, "99M1I", DEFAULT_BASE_QUALITY);
         }
         tester.runTest(extension);
+    }
+
+    @Test(dataProvider = "extensions")
+    public void testBulkPairsWithDuplicates(final String extension) {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        ModifyTesterForCramTests(tester);
+
+        tester.getSamRecordSetBuilder().setReadLength(100);
+        for (int position1 = 1; position1 <= 100; position1 += 1) {
+            for (int position2 = 1; position2 <= 100; position2 += 1) {
+                tester.addMappedPair(0, position1, position2, false, false, "100M", "100M", false, DEFAULT_BASE_QUALITY + 1);
+                tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
+                tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
+                tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
+                tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
+                tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
+
+            }
+        }
+        tester.runTest(extension);
+    }
+
+    private static void ModifyTesterForCramTests(final AbstractMarkDuplicatesCommandLineProgramTester tester) {
+        final SAMFileHeader header = tester.getSamRecordSetBuilder().getHeader();
+        final SAMFileHeader.SortOrder sortOrder = header.getSortOrder();
+        final SAMFileHeader newHeader = SAMRecordSetBuilder.makeDefaultHeader(sortOrder, 100000);
+        header.getReadGroups().forEach(newHeader::addReadGroup);
+        tester.getSamRecordSetBuilder().setHeader(newHeader);
     }
 
     @Test

@@ -29,7 +29,9 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     private boolean deleteOnExit = true;
     private final ArrayList<String> args = new ArrayList<>();
 
-    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final SAMFileHeader.SortOrder sortOrder, boolean recordsNeedSorting) {
+    private Map<SAMFileHeader, Path> fastaFiles = new HashMap<>();
+
+    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy, final SAMFileHeader.SortOrder sortOrder, boolean recordsNeedSorting) {
         this.deleteOnExit = deleteOnExit;
         this.samRecordSetBuilder = new SAMRecordSetBuilder(recordsNeedSorting, true, SAMRecordSetBuilder.makeDefaultHeader(sortOrder, defaultChromosomeLength));
         samRecordSetBuilder.setReadLength(readLength);
@@ -345,6 +347,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         runTest(".sam");
     }
 
+
     /**
      * Sets up the basic command line arguments for input and output and runs instanceMain.
      */
@@ -374,12 +377,24 @@ public abstract class SamFileTester extends CommandLineProgramTest {
 
         final SAMFileWriter writer;
         if (extension.equals(".cram")) {
-            final Path fasta = IOUtil.getPath("Testinput.fasta");
-            IOUtil.deleteOnExit(fasta);
-            IOUtil.deleteOnExit(ReferenceSequenceFileFactory.getFastaIndexFileName(fasta));
-            IOUtil.deleteOnExit(ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(fasta));
+            final Path fasta = fastaFiles.computeIfAbsent(samRecordSetBuilder.getHeader(), h -> {
 
-            samRecordSetBuilder.writeRandomReference(fasta);
+                final Path fastaDir = IOUtil.createTempDir("SamFileTester", "").toPath();
+                IOUtil.deleteOnExit(fastaDir);
+                final Path newFasta = fastaDir.resolve("input.fasta");
+                IOUtil.deleteOnExit(newFasta);
+                IOUtil.deleteOnExit(ReferenceSequenceFileFactory.getFastaIndexFileName(newFasta));
+                IOUtil.deleteOnExit(ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(newFasta));
+
+                try {
+                    samRecordSetBuilder.writeRandomReference(newFasta);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException("failed to create fasta file");
+                }
+                return newFasta;
+            });
+
             writer = samFileWriterFactory.makeWriter(samRecordSetBuilder.getHeader(), true, input, fasta.toFile());
         } else {
             writer = samFileWriterFactory.makeWriter(samRecordSetBuilder.getHeader(), true, input, null);
