@@ -54,8 +54,8 @@ import java.io.File;
  * field using the reference sequence dictionary tag labeled SQ.
  * Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).
  * Subsequent to this sorting scheme, alignments are listed arbitrarily.</p> For queryname-sorted alignments, all
- * alignments are grouped using the queryname field but the alignments are not necessarily sorted within these groups.
- * Reads having the same queryname are derived from the same template.
+ * alignments are grouped using the queryname field followed by record strand orientation flag, primary record flag, and secondary
+ * alignment flag. (See {@link htsjdk.samtools.SAMRecordQueryNameComparator#compare(SAMRecord, SAMRecord)}} for details)
  *
  * <h3> Inputs</h3>
  * <ul>
