@@ -26,6 +26,7 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.cram.build.CramIO;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -387,6 +388,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         checker.setAllowDuplicateReads(ALLOW_DUPLICATE_READS);
         checker.setValidationStringency(VALIDATION_STRINGENCY);
+        checker.setReferenceFasta(REFERENCE_SEQUENCE);
 
         final List<String> extensions = new ArrayList<>();
 
@@ -790,4 +792,5 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
         }
     }
+
 }

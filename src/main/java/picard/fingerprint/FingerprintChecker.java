@@ -74,7 +74,14 @@ public class FingerprintChecker {
         this.validationStringency = validationStringency;
     }
 
+    public File getReferenceFasta() { return referenceFasta;}
+
+    public void setReferenceFasta(final File referenceFasta) {
+        this.referenceFasta = referenceFasta;
+    }
+
     private ValidationStringency validationStringency = ValidationStringency.DEFAULT_STRINGENCY;
+    private File referenceFasta;
 
     private boolean allowDuplicateReads = false;
     private double pLossofHet = 0;
@@ -394,6 +401,7 @@ public class FingerprintChecker {
     public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final IntervalList loci) {
         final SamReader in = SamReaderFactory.makeDefault()
                 .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
+                .referenceSequence(referenceFasta)
                 .open(samFile);
 
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
@@ -631,7 +639,7 @@ public class FingerprintChecker {
         for (final Path p : files) {
             executorCompletionService.submit(() -> {
 
-                if (CheckFingerprint.isBamOrSam(p)) {
+                if (CheckFingerprint.isBamOrSamOrCram(p)) {
                     retval.putAll(fingerprintSamFile(p, intervals));
                 } else {
                     retval.putAll(fingerprintVcf(p));

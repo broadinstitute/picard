@@ -28,6 +28,7 @@ import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.cram.build.CramIO;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -247,7 +248,7 @@ public class CheckFingerprint extends CommandLineProgram {
         List<FingerprintResults> results;
 
         String observedSampleAlias = null;
-        if (isBamOrSam(inputPath)) {
+        if (isBamOrSamOrCram(inputPath)) {
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), SAMSequenceDictionaryExtractor.extractDictionary(genotypesPath), true);
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), checker.getHeader().getSequenceDictionary(), true);
 
@@ -387,11 +388,11 @@ public class CheckFingerprint extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
 
         try {
-            final boolean isBamOrSamFile = isBamOrSam(IOUtil.getPath(INPUT));
-            if (!isBamOrSamFile && IGNORE_READ_GROUPS) {
+            final boolean isBamOrSamOrCramFile = isBamOrSamOrCram(IOUtil.getPath(INPUT));
+            if (!isBamOrSamOrCramFile && IGNORE_READ_GROUPS) {
                 return new String[]{"The parameter IGNORE_READ_GROUPS can only be used with BAM/SAM inputs."};
             }
-            if (isBamOrSamFile && OBSERVED_SAMPLE_ALIAS != null) {
+            if (isBamOrSamOrCramFile && OBSERVED_SAMPLE_ALIAS != null) {
                 return new String[]{"The parameter OBSERVED_SAMPLE_ALIAS can only be used with a VCF input."};
             }
         } catch (IOException e) {
@@ -400,7 +401,7 @@ public class CheckFingerprint extends CommandLineProgram {
         return super.customCommandLineValidation();
     }
 
-    static boolean isBamOrSam(final Path p) {
-        return (p.toUri().getRawPath().endsWith(BamFileIoUtils.BAM_FILE_EXTENSION) || p.toUri().getRawPath().endsWith(IOUtil.SAM_FILE_EXTENSION));
+    static boolean isBamOrSamOrCram(final Path p) {
+        return (p.toUri().getRawPath().endsWith(BamFileIoUtils.BAM_FILE_EXTENSION) || p.toUri().getRawPath().endsWith(IOUtil.SAM_FILE_EXTENSION) || p.toUri().getRawPath().endsWith(CramIO.CRAM_FILE_EXTENSION));
     }
 }
