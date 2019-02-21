@@ -394,6 +394,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         extensions.add(BamFileIoUtils.BAM_FILE_EXTENSION);
         extensions.add(IOUtil.SAM_FILE_EXTENSION);
+        extensions.add(CramIO.CRAM_FILE_EXTENSION);
         extensions.addAll(Arrays.asList(IOUtil.VCF_EXTENSIONS));
 
         final List<Path> inputPaths = IOUtil.getPaths(INPUT);
