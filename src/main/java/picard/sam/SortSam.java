@@ -55,7 +55,8 @@ import java.io.File;
  * Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).
  * Subsequent to this sorting scheme, alignments are listed arbitrarily.</p> For queryname-sorted alignments, the tool
  * orders records deterministically by queryname field followed by record strand orientation flag, primary record flag, and secondary
- * alignment flag. (See {@link htsjdk.samtools.SAMRecordQueryNameComparator#compare(SAMRecord, SAMRecord)}} for details)
+ * alignment flag. (See {@link htsjdk.samtools.SAMRecordQueryNameComparator#compare(SAMRecord, SAMRecord)}} for details).
+ * This ordering may change in the future.
  *
  * <h3> Inputs</h3>
  * <ul>
@@ -88,7 +89,7 @@ public class SortSam extends CommandLineProgram {
             "reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping " +
             "position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.</p>" +
             "<p> For queryname-sorted alignments, the tool orders records deterministically by queryname field followed by " +
-            "record strand orientation flag, primary record flag, and secondary alignment flag.</p>" +
+            "record strand orientation flag, primary record flag, and secondary alignment flag. This ordering may change in future versions. </p>" +
             "<hr /><hr />" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
