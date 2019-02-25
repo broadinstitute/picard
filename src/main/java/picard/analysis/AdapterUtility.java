@@ -95,7 +95,7 @@ public class AdapterUtility {
     /**
      * Checks the first ADAPTER_MATCH_LENGTH bases of the read against known adapter sequences and returns
      * true if the read matches an adapter sequence with MAX_ADAPTER_ERRORS mismsatches or fewer.
-     *
+     * <p>
      * Only unmapped reads and reads with MQ=0 are considers eligible for being adapter
      */
 
