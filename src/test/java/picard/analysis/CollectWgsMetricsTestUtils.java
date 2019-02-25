@@ -84,7 +84,7 @@ public class CollectWgsMetricsTestUtils{
         readGroupRecord.setPlatformUnit(readGroupId);
         header.addReadGroup(readGroupRecord);
 
-        final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, true, SAMRecordSetBuilder.makeDefaultHeader(SAMFileHeader.SortOrder.coordinate,100,100));
+        final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true, 100);
         setBuilder.setReadGroup(readGroupRecord);
         setBuilder.setUseNmFlag(true);
         setBuilder.setHeader(header);

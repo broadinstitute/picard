@@ -29,14 +29,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
-import htsjdk.samtools.util.AsciiWriter;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.Md5CalculatingOutputStream;
-import htsjdk.samtools.util.RuntimeIOException;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
@@ -281,7 +274,12 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                 bases[i] = StringUtil.toUpperCase(bases[i]);
             }
 
-        ret.setAttribute(SAMSequenceRecord.MD5_TAG, md5Hash(bases));
+        try {
+            //TODO: remove this when rev'ing htsjdk
+            ret.setAttribute(SAMSequenceRecord.MD5_TAG, SequenceUtil.calculateMD5String(bases));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
         if (GENOME_ASSEMBLY != null) {
             ret.setAttribute(SAMSequenceRecord.ASSEMBLY_TAG, GENOME_ASSEMBLY);
         }
@@ -290,17 +288,6 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                 ret.setAttribute(SAMSequenceRecord.SPECIES_TAG, SPECIES);
             }
         return ret;
-    }
-
-    private String md5Hash(final byte[] bytes) {
-        md5.reset();
-        md5.update(bytes);
-        String s = new BigInteger(1, md5.digest()).toString(16);
-        if (s.length() != 32) {
-            final String zeros = "00000000000000000000000000000000";
-            s = zeros.substring(0, 32 - s.length()) + s;
-        }
-        return s;
     }
 
     private SortingCollection<String> makeSortingCollection() {

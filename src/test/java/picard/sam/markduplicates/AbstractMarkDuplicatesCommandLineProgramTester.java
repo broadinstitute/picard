@@ -52,14 +52,13 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     final DuplicationMetrics expectedMetrics;
 
     boolean testOpticalDuplicateDTTag = false;
-    public static final ScoringStrategy DEFAULT_DUPLICATE_SCORING_STRATEGY = ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH;
 
     public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder) {
         this(duplicateScoringStrategy, sortOrder, true);
     }
 
     public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder, boolean recordNeedSorting) {
-        super(50, true, SAMRecordSetBuilder.DEFAULT_CHROMOSOME_LENGTH, sortOrder, recordNeedSorting);
+        super(50, true, SAMRecordSetBuilder.DEFAULT_CHROMOSOME_LENGTH, duplicateScoringStrategy, sortOrder, recordNeedSorting);
 
         expectedMetrics = new DuplicationMetrics();
         expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES = 0;
@@ -75,7 +74,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     }
 
     public AbstractMarkDuplicatesCommandLineProgramTester() {
-        this(DEFAULT_DUPLICATE_SCORING_STRATEGY);
+        this(SAMRecordSetBuilder.DEFAULT_DUPLICATE_SCORING_STRATEGY);
     }
 
     @Override
