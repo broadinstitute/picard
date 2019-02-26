@@ -88,6 +88,8 @@ dependencies {
     }
     compile 'com.google.guava:guava:15.0'
     compile 'org.apache.commons:commons-math3:3.5'
+    compile 'org.apache.commons:commons-collections4:4.3'
+    compile 'commons-lang:commons-lang:2.6'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     compile 'org.broadinstitute:barclay:2.0.0'
     compileOnly googleNio
