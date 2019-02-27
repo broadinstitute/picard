@@ -125,7 +125,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
      * Regular expression defined in the sam spec. Any alternative contig should match this regular expression 
      * TODO: replace the pattern with a constant : see https://github.com/samtools/htsjdk/pull/956/files
      */
-    private static final Pattern ALTERNATIVE_CONTIG_NAME_PATTERN = Pattern.compile("[0-9A-Za-z][0-9A-Za-z\\*\\+@\\|\\-]*");
+    private static final Pattern ALTERNATIVE_CONTIG_NAME_PATTERN = Pattern.compile("[0-9A-Za-z][0-9A-Za-z*+.@_|-]*");
     
     /**  
      * 'AN' attribute in the dictionary
