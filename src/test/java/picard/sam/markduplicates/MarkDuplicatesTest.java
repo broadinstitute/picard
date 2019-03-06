@@ -139,7 +139,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
             }
 
         } finally {
-            TestUtil.recursiveDelete(outputDir);
+            IOUtil.recursiveDelete(outputDir.toPath());
         }
     }
 
@@ -195,7 +195,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         markDuplicates.PROGRAM_RECORD_ID = null;
         Assert.assertEquals(markDuplicates.doWork(), 0);
         Assert.assertEquals(markDuplicates.numOpticalDuplicates(), expectedNumOpticalDuplicates);
-        TestUtil.recursiveDelete(outputDir);
+        IOUtil.recursiveDelete(outputDir.toPath());
 
     }
 

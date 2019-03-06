@@ -29,6 +29,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import picard.PicardException;
@@ -118,7 +119,7 @@ public class MarkDuplicatesTagRepresentativeReadIndexTester extends AbstractMark
             Assert.assertEquals(observedMetrics.ESTIMATED_LIBRARY_SIZE, expectedMetrics.ESTIMATED_LIBRARY_SIZE, "ESTIMATED_LIBRARY_SIZE does not match expected");
             Assert.assertEquals(observedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, expectedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, "SECONDARY_OR_SUPPLEMENTARY_RDS does not match expected");
         } finally {
-            TestUtil.recursiveDelete(getOutputDir());
+            IOUtil.recursiveDelete(getOutputDir().toPath());
         }
     }
 

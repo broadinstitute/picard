@@ -26,14 +26,17 @@ package picard.sam.markduplicates;
 
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.TestUtil;
+import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import picard.cmdline.CommandLineProgram;
 import picard.sam.DuplicationMetrics;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class is an extension of AbstractMarkDuplicatesCommandLineProgramTester used to test MarkDuplicatesWithMateCigar with SAM files generated on the fly.
@@ -77,7 +80,7 @@ public class MarkDuplicatesSetSizeHistogramTester extends AbstractMarkDuplicates
 
     @AfterClass
     public void afterTest() {
-        TestUtil.recursiveDelete(getOutputDir());
+        IOUtil.recursiveDelete(getOutputDir().toPath());
     }
 
 }

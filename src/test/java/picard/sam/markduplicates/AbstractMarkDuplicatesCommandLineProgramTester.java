@@ -33,6 +33,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.FormatUtil;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
@@ -202,7 +203,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
             }
             return metricsOutput;
         } finally {
-            TestUtil.recursiveDelete(getOutputDir());
+            IOUtil.recursiveDelete(getOutputDir().toPath());
         }
     }
 

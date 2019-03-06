@@ -260,8 +260,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                 IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
             }
         } finally {
-            TestUtil.recursiveDelete(outputDir.toFile());
-            Files.delete(outputDir);
+            IOUtil.recursiveDelete(outputDir);
         }
     }
 }
