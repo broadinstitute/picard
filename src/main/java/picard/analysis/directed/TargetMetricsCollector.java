@@ -525,7 +525,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             // MapQ 0 adapter reads can be ignored beyond this point
             // but first, make sure we count the (aligned) adapters.
             ///////////////////////////////////////////////////////////////////
-            if (this.adapterFilter.filterOut(record)) return;
+            if (this.adapterFilter.filterOut(record)) {
+                return;
+            }
 
             ///////////////////////////////////////////////////////////////////
             // And lastly, ignore reads falling below the mapq threshold
