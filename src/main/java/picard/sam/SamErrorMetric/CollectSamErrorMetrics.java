@@ -74,7 +74,7 @@ import java.util.stream.Collectors;
                 "<p>" +
                 "The resulting metric file will be named according to a provided prefix and a suffix which is generated " +
                 " automatically according to the error metric. " +
-                "The tool cal collect multiple metrics in a single pass and there should be hardly any " +
+                "The tool can collect multiple metrics in a single pass and there should be hardly any " +
                 "performance loss when specifying multiple metrics at the same time; the default includes a " +
                 "large collection of metrics. \n" +
                 "<p>" +
@@ -230,7 +230,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         final Collection<BaseErrorAggregation> aggregatorList = getAggregatorList();
         // Open up the input resources:
         try (
-                final SamReader sam = SamReaderFactory.makeDefault().open(INPUT);
+                final SamReader sam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
                 final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
                 final PeekableIterator<VariantContext> vcfIterator = new PeekableIterator<>(
                         VCF == null ? Collections.emptyIterator() : new VCFFileReader(VCF, true).iterator())
