@@ -41,7 +41,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
 
     protected abstract AbstractMarkDuplicatesCommandLineProgramTester getTester();
 
-    protected final static int DEFAULT_BASE_QUALITY = 10;
+    protected static final int DEFAULT_BASE_QUALITY = 10;
 
     protected boolean markSecondaryAndSupplementaryRecordsLikeTheCanonical() {
         return false;
@@ -612,8 +612,8 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         ModifyTesterForCramTests(tester);
 
         tester.getSamRecordSetBuilder().setReadLength(100);
-        for (int position1 = 1; position1 <= 100; position1 += 1) {
-            for (int position2 = 1; position2 <= 100; position2 += 1) {
+        for (int position1 = 1; position1 <= 1; position1 += 1) {
+            for (int position2 = 1; position2 <= 1; position2 += 1) {
                 tester.addMappedPair(0, position1, position2, false, false, "100M", "100M", false, DEFAULT_BASE_QUALITY + 1);
                 tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
                 tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
