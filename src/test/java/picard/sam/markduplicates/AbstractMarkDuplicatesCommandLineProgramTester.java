@@ -33,6 +33,7 @@ import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
 import picard.sam.DuplicationMetrics;
+import picard.sam.markduplicates.util.MarkDuplicatesUtil;
 import picard.sam.testers.SamFileTester;
 
 import java.io.File;
@@ -52,6 +53,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     final DuplicationMetrics expectedMetrics;
 
     boolean testOpticalDuplicateDTTag = false;
+    private short minInformativeMappingQ=0;
 
     public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder) {
         this(duplicateScoringStrategy, sortOrder, true);
@@ -78,7 +80,9 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     }
 
     @Override
-    public String getCommandLineProgramName() { return getProgram().getClass().getSimpleName(); }
+    public String getCommandLineProgramName() {
+        return getProgram().getClass().getSimpleName();
+    }
 
     /**
      * Tells MarkDuplicates to record which reads are optical duplicates
@@ -96,6 +100,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     public void updateExpectedDuplicationMetrics() {
 
         final FormatUtil formatter = new FormatUtil();
+        MarkDuplicatesUtil.setMinInformativeMappingQuality(minInformativeMappingQ);
 
         try (final CloseableIterator<SAMRecord> inputRecordIterator = this.getRecordIterator()) {
             while (inputRecordIterator.hasNext()) {
@@ -112,7 +117,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                     // First bring the simple metricsFile up to date
                     if (record.getReadUnmappedFlag()) {
                         ++expectedMetrics.UNMAPPED_READS;
-                    } else if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
+                    } else if (!MarkDuplicatesUtil.pairedForMarkDuplicates(record)) {
                         ++expectedMetrics.UNPAIRED_READS_EXAMINED;
                         if (isDuplicate) {
                             ++expectedMetrics.UNPAIRED_READ_DUPLICATES;
@@ -145,6 +150,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
 
     /**
      * Runs test and returns metrics
+     *
      * @return Duplication metrics
      * @throws IOException
      */
@@ -155,14 +161,14 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
             // Read the output and check the duplicate flag
             int outputRecords = 0;
             final Set<String> sequencingDTErrorsSeen = new HashSet<>();
-            try(final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(fastaFiles.get(samRecordSetBuilder.getHeader())).open(getOutput())) {
+            try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(fastaFiles.get(samRecordSetBuilder.getHeader())).open(getOutput())) {
                 for (final SAMRecord record : reader) {
                     outputRecords++;
                     final String key = samRecordToDuplicatesFlagsKey(record);
                     Assert.assertTrue(this.duplicateFlags.containsKey(key), "DOES NOT CONTAIN KEY: " + key);
                     final boolean value = this.duplicateFlags.get(key);
                     this.duplicateFlags.remove(key);
-                    Assert.assertEquals(record.getDuplicateReadFlag(), value, "Mismatching read: " + record.getSAMString());
+                    Assert.assertEquals(record.getDuplicateReadFlag(), value, "Mismatching Duplicate flag on read: " + record.getSAMString());
                     if (testOpticalDuplicateDTTag && MarkDuplicates.DUPLICATE_TYPE_SEQUENCING.equals(record.getAttribute("DT"))) {
                         sequencingDTErrorsSeen.add(record.getReadName());
                     }
@@ -175,10 +181,9 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
 
             // Check the values written to metrics.txt against our input expectations
             final MetricsFile<DuplicationMetrics, Double> metricsOutput = new MetricsFile<>();
-            try{
+            try {
                 metricsOutput.read(new FileReader(metricsFile));
-            }
-            catch (final FileNotFoundException ex) {
+            } catch (final FileNotFoundException ex) {
                 Assert.fail("Metrics file not found: " + ex.getMessage());
             }
             Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
@@ -203,4 +208,9 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     }
 
     abstract protected CommandLineProgram getProgram();
+
+    public void setMinInformativeMappingQ(final int i) {
+        this.addArg("MIN_INFORMATIVE_MAPPING_Q=" + i);
+        this.minInformativeMappingQ=(short)i;
+    }
 }
