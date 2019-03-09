@@ -1070,8 +1070,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
     @DataProvider(name = "noCallAndSymbolicData")
     public Iterator<Object[]> noCallAndSymbolicData() {
 
-        final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1");
-        final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1");
+        final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1").attribute("TEST_ATTRIBUTE",1).attribute("TEST_ATTRIBUTE2","Hi").attribute("TEST_ATTRIBUTE3",new double[] {1.2,2.1});
+        final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1").attribute("TEST_ATTRIBUTE",1).attribute("TEST_ATTRIBUTE2","Hi").attribute("TEST_ATTRIBUTE3",new double[] {1.2,2.1});
         result_builder.attribute(LiftoverVcf.ORIGINAL_CONTIG, "chr1");
         final GenotypeBuilder genotypeBuilder = new GenotypeBuilder("test1");
         final GenotypeBuilder resultGenotypeBuilder = new GenotypeBuilder("test1");
@@ -1120,6 +1120,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, LiftoverUtils.allelesToStringList(builder.getAlleles()));
         result_builder.attribute(LiftoverUtils.REV_COMPED_ALLELES, true);
 
+
         genotypeBuilder.alleles(CollectionUtil.makeList(T, DEL));
         resultGenotypeBuilder.alleles(CollectionUtil.makeList(A, DEL));
         builder.genotypes(genotypeBuilder.make());
@@ -1163,6 +1164,11 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             source.getAlleles().forEach(a -> resultAlleles.add(a.getDisplayString()));
             Assert.assertEquals(resultAlleles, result.getAttributeAsStringList(LiftoverVcf.ORIGINAL_ALLELES, null));
         }
+        result.getAttributes().entrySet().stream().filter(e->e.getKey().matches("TEST_ATTRIBUTE.*")).forEach(e -> {
+
+            Assert.assertTrue(vc.hasAttribute(e.getKey()));
+            Assert.assertEquals(vc.getAttribute(e.getKey()), e.getValue());
+        });
     }
 
     @Test()

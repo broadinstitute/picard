@@ -130,7 +130,12 @@ public class VcfTestUtils {
 
         Assert.assertEquals(actual.getID(), expected.getID(), "IDs differ for " + expectedString);
         Assert.assertEquals(actual.getFilters(), expected.getFilters(), "Filters differ for " + expectedString);
-        Assert.assertEquals(actual.getAttributes(), expected.getAttributes(), "Attributes differ for " + expectedString);
+
+        Assert.assertEquals(actual.getAttributes().keySet(), expected.getAttributes().keySet(), "Attributes keys differ for " + expectedString);
+        actual.getAttributes().keySet().forEach(key->{
+            Assert.assertEquals(actual.getAttribute(key), expected.getAttribute(key), "Attribute values differ for key " + key + " for " + expectedString);
+        });
+
     }
 
     public static void assertEquals(final GenotypesContext actual, final GenotypesContext expected) {
