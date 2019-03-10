@@ -25,13 +25,13 @@
 package picard.analysis;
 
 import htsjdk.samtools.*;
+import htsjdk.samtools.SamPairUtil.PairOrientation;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CoordMath;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
-import htsjdk.samtools.SamPairUtil.PairOrientation;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordAndReference;
 import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
@@ -230,15 +230,12 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     metrics.PF_READS++;
                     if (isNoiseRead(record)) metrics.PF_NOISE_READS++;
 
-                    if (record.getReadUnmappedFlag()) {
-                        // If the read is unmapped see if it's adapter sequence
-                        final byte[] readBases = record.getReadBases();
-                        if (!(record instanceof BAMRecord)) StringUtil.toUpperCase(readBases);
+                    // See if the read is an adapter sequence
+                    if (adapterUtility.isAdapter(record)) {
+                        this.adapterReads++;
+                    }
 
-                        if (adapterUtility.isAdapterSequence(readBases)) {
-                            this.adapterReads++;
-                        }
-                    } else if(doRefMetrics) {
+                    if (!record.getReadUnmappedFlag() && doRefMetrics) {
                         metrics.PF_READS_ALIGNED++;
                         if (record.getReadPairedFlag() && !record.getProperPairFlag()) metrics.PF_READS_IMPROPER_PAIRS++;
                         if (!record.getReadNegativeStrandFlag()) numPositiveStrand++;

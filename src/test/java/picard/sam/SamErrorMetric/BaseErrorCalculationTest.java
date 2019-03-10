@@ -8,6 +8,7 @@ import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.IOException;
@@ -113,7 +114,7 @@ public class BaseErrorCalculationTest {
 
         try (
                 final ReferenceSequenceFileWalker referenceSequenceFileWalker =
-                        new ReferenceSequenceFileWalker(new File("testdata/picard/sam/BamErrorMetrics/chrM.reference.fasta"))) {
+                        new ReferenceSequenceFileWalker(CommandLineProgramTest.CHR_M_REFERENCE)) {
 
             final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
             builder.getHeader().setSequenceDictionary(referenceSequenceFileWalker.getSequenceDictionary());
@@ -136,7 +137,7 @@ public class BaseErrorCalculationTest {
     public void testOverlappingErrorCalculatorWithManyReads(final File temp) throws IOException {
 
         try (final ReferenceSequenceFileWalker referenceSequenceFileWalker =
-                     new ReferenceSequenceFileWalker(new File("testdata/picard/sam/BamErrorMetrics/chrM.reference.fasta"));
+                     new ReferenceSequenceFileWalker(CommandLineProgramTest.CHR_M_REFERENCE.getAbsoluteFile());
              final SamLocusIterator samLocusIterator = new SamLocusIterator(SamReaderFactory.make().open(temp));
              final SamLocusAndReferenceIterator samLocusAndReferences = new SamLocusAndReferenceIterator(
                      referenceSequenceFileWalker, samLocusIterator)) {

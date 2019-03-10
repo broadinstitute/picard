@@ -99,11 +99,6 @@ public class CollectTargetedPcrMetrics extends CollectTargetedMetrics<TargetedPc
         return CUSTOM_AMPLICON_SET_NAME != null ? CUSTOM_AMPLICON_SET_NAME : CollectTargetedMetrics.renderProbeNameFromFile(AMPLICON_INTERVALS);
     }
 
-    /** Stock main method. */
-    public static void main(final String[] argv) {
-        System.exit(new CollectTargetedPcrMetrics().instanceMain(argv));
-    }
-
     @Override
     protected TargetedPcrMetricsCollector makeCollector(final Set<MetricAccumulationLevel> accumulationLevels,
                                                         final List<SAMReadGroupRecord> samRgRecords,

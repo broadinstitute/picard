@@ -7,9 +7,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import java.util.*;
 
-/**
- * Created by farjoun on 9/10/15.
- */
 public class PicardCommandLineTest {
 
     @Test

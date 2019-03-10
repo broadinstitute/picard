@@ -24,79 +24,79 @@
 
 package picard.metrics;
 
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import picard.analysis.CollectRrbsMetrics;
 import picard.analysis.RrbsSummaryMetrics;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.FileReader;
-import java.lang.Exception;import java.lang.Integer;import java.lang.String;import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author jgentry@broadinstitute.org
  */
 
-public class CollectRrbsMetricsTest {
-	public static final String CHR_M_SAM = "testdata/picard/metrics/chrMReads.sam";
-	public static final String CHR_M_REFERENCE ="testdata/picard/metrics/chrM.reference.fasta";
+public class CollectRrbsMetricsTest extends CommandLineProgramTest {
+    public static final String CHR_M_SAM = "testdata/picard/metrics/chrMReads.sam";
 
-	private File rootTestDir;
+    private File rootTestDir;
 
-	@BeforeTest
-	private void setUp() throws Exception {
-		rootTestDir = File.createTempFile("crmt.", ".tmp");
-		Assert.assertTrue(rootTestDir.delete());
-		Assert.assertTrue(rootTestDir.mkdir());
-	}
+    @BeforeTest
+    private void setUp() throws Exception {
+        rootTestDir = File.createTempFile("crmt.", ".tmp");
+        Assert.assertTrue(rootTestDir.delete());
+        Assert.assertTrue(rootTestDir.mkdir());
+    }
 
-	@AfterTest
-	private void tearDown() {
-		IOUtil.deleteDirectoryTree(rootTestDir);
-	}
+    @AfterTest
+    private void tearDown() {
+        IOUtil.deleteDirectoryTree(rootTestDir);
+    }
 
-	@Test
-	public void chrMReads() throws Exception {
-		final MetricsFile<RrbsSummaryMetrics, ?> metricsFile = getSummaryFile(CHR_M_SAM, CHR_M_REFERENCE, rootTestDir + "/READ_TEST", new ArrayList<String>());
-		final RrbsSummaryMetrics metrics = metricsFile.getMetrics().get(0);
-		Assert.assertEquals(metrics.READS_ALIGNED.intValue(), 5);
-		Assert.assertEquals(metrics.NON_CPG_BASES.intValue(), 15);
-		Assert.assertEquals(metrics.NON_CPG_CONVERTED_BASES.intValue(), 11);
-		Assert.assertEquals(metrics.PCT_NON_CPG_BASES_CONVERTED, 0.733333);
-		Assert.assertEquals(metrics.CPG_BASES_SEEN.intValue(), 5);
-		Assert.assertEquals(metrics.CPG_BASES_CONVERTED.intValue(), 1);
-		Assert.assertEquals(metrics.PCT_CPG_BASES_CONVERTED, 0.2);
-		Assert.assertEquals(metrics.MEAN_CPG_COVERAGE, 1.666667);
-		Assert.assertEquals(metrics.MEDIAN_CPG_COVERAGE.intValue(), 2);
-		Assert.assertEquals(metrics.READS_WITH_NO_CPG.intValue(), 1);
-		Assert.assertEquals(metrics.READS_IGNORED_SHORT.intValue(), 1);
-		Assert.assertEquals(metrics.READS_IGNORED_MISMATCHES.intValue(), 1);
-	}
+    @Test
+    public void chrMReads() throws Exception {
+        final MetricsFile<RrbsSummaryMetrics, ?> metricsFile = getSummaryFile(CHR_M_SAM, CHR_M_REFERENCE.getAbsolutePath(), rootTestDir + "/READ_TEST", new ArrayList<String>());
+        final RrbsSummaryMetrics metrics = metricsFile.getMetrics().get(0);
+        Assert.assertEquals(metrics.READS_ALIGNED.intValue(), 5);
+        Assert.assertEquals(metrics.NON_CPG_BASES.intValue(), 15);
+        Assert.assertEquals(metrics.NON_CPG_CONVERTED_BASES.intValue(), 11);
+        Assert.assertEquals(metrics.PCT_NON_CPG_BASES_CONVERTED, 0.733333);
+        Assert.assertEquals(metrics.CPG_BASES_SEEN.intValue(), 5);
+        Assert.assertEquals(metrics.CPG_BASES_CONVERTED.intValue(), 1);
+        Assert.assertEquals(metrics.PCT_CPG_BASES_CONVERTED, 0.2);
+        Assert.assertEquals(metrics.MEAN_CPG_COVERAGE, 1.666667);
+        Assert.assertEquals(metrics.MEDIAN_CPG_COVERAGE.intValue(), 2);
+        Assert.assertEquals(metrics.READS_WITH_NO_CPG.intValue(), 1);
+        Assert.assertEquals(metrics.READS_IGNORED_SHORT.intValue(), 1);
+        Assert.assertEquals(metrics.READS_IGNORED_MISMATCHES.intValue(), 1);
+    }
 
-	private MetricsFile<RrbsSummaryMetrics, ?> getSummaryFile(final String input, final String reference, final String prefix,
-															  final List<String> sequences) throws Exception {
-		final List<String> argList = new ArrayList<String>();
-		argList.add("INPUT=" + input);
-		argList.add("METRICS_FILE_PREFIX=" + prefix);
-		argList.add("REFERENCE=" + reference);
-		for (final String sequence : sequences) {
-			argList.add("SEQUENCE_NAMES=" + sequence);
-		}
+    private MetricsFile<RrbsSummaryMetrics, ?> getSummaryFile(final String input, final String reference, final String prefix,
+                                                              final List<String> sequences) throws Exception {
+        final List<String> argList = new ArrayList<>();
+        argList.add("INPUT=" + input);
+        argList.add("METRICS_FILE_PREFIX=" + prefix);
+        argList.add("REFERENCE=" + reference);
+        for (final String sequence : sequences) {
+            argList.add("SEQUENCE_NAMES=" + sequence);
+        }
 
-		final String[] args = new String[argList.size()];
-		argList.toArray(args);
+        Assert.assertEquals(runPicardCommandLine(argList), 0);
 
-		Assert.assertEquals(new CollectRrbsMetrics().instanceMain(args), 0);
+        final MetricsFile<RrbsSummaryMetrics, ?> retVal = new MetricsFile<RrbsSummaryMetrics, Integer>();
+        retVal.read(new FileReader(prefix + ".rrbs_summary_metrics"));
+        return retVal;
+    }
 
-		final MetricsFile<RrbsSummaryMetrics, ?> retVal = new MetricsFile<RrbsSummaryMetrics, Integer>();
-		retVal.read(new FileReader(prefix + ".rrbs_summary_metrics"));
-		return retVal;
-	}
-
-
+    @Override
+    public String getCommandLineProgramName() {
+        return CollectRrbsMetrics.class.getSimpleName();
+    }
 }

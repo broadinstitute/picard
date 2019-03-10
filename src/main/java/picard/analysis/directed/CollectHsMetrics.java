@@ -160,11 +160,6 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file input and
         }
     }
 
-    /** Stock main method. */
-    public static void main(final String[] argv) {
-        System.exit(new CollectHsMetrics().instanceMain(argv));
-    }
-
     @Override
     protected HsMetricCollector makeCollector(final Set<MetricAccumulationLevel> accumulationLevels,
                                               final List<SAMReadGroupRecord> samRgRecords,

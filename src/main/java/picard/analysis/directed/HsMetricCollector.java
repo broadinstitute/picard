@@ -95,10 +95,10 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
         //need HSLIBRARY_SIZE
         hsMetrics.HS_PENALTY_10X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 10);
         hsMetrics.HS_PENALTY_20X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 20);
-	    hsMetrics.HS_PENALTY_30X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 30);
-	    hsMetrics.HS_PENALTY_40X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 40);
-	    hsMetrics.HS_PENALTY_50X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 50);
-	    hsMetrics.HS_PENALTY_100X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 100);
+        hsMetrics.HS_PENALTY_30X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 30);
+        hsMetrics.HS_PENALTY_40X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 40);
+        hsMetrics.HS_PENALTY_50X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 50);
+        hsMetrics.HS_PENALTY_100X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 100);
         return hsMetrics;
     }
 
