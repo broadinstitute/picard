@@ -24,6 +24,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -161,7 +162,7 @@ public class SortVcf extends CommandLineProgram {
                         new VCFRecordCodec(outputHeader, VALIDATION_STRINGENCY != ValidationStringency.STRICT),
                         outputHeader.getVCFRecordComparator(),
                         MAX_RECORDS_IN_RAM,
-                        TMP_DIR);
+                        TMP_DIR.stream().map(File::toPath).toArray(Path[]::new));
         int readerCount = 1;
         for (final VCFFileReader reader : readers) {
             log.info("Reading entries from input file " + readerCount);

@@ -88,7 +88,7 @@ public class VcfToIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final IntervalList intervalList = VCFFileReader.fromVcf(INPUT, INCLUDE_FILTERED);
+        final IntervalList intervalList = VCFFileReader.toIntervalList(INPUT.toPath(), INCLUDE_FILTERED);
 
         // Sort and write the output
         intervalList.uniqued().write(OUTPUT);

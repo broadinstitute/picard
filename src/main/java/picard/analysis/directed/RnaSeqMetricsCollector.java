@@ -132,16 +132,16 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             if (rec.getReadFailsVendorQualityCheckFlag()) return;
 
             // NB: we count unmapped reads here
-            if (!rec.getNotPrimaryAlignmentFlag()) this.metrics.PF_BASES += rec.getReadLength();
+            if (!rec.isSecondaryAlignment()) this.metrics.PF_BASES += rec.getReadLength();
 
             // NB: we count secondary mapped reads here
-            if (!rec.getReadUnmappedFlag() && !rec.getNotPrimaryAlignmentFlag() && ignoredSequenceIndices.contains(rec.getReferenceIndex())) {
+            if (!rec.getReadUnmappedFlag() && !rec.isSecondaryAlignment() && ignoredSequenceIndices.contains(rec.getReferenceIndex())) {
                 ++this.metrics.IGNORED_READS;
                 return;
             }
 
             // We can now ignore secondary or unmapped reads
-            if (rec.getNotPrimaryAlignmentFlag() || rec.getReadUnmappedFlag()) return;
+            if (rec.isSecondaryAlignment() || rec.getReadUnmappedFlag()) return;
 
             // Grab information about the alignment and overlapping genes etc.
             final Interval readInterval = new Interval(rec.getReferenceName(), rec.getAlignmentStart(), rec.getAlignmentEnd());

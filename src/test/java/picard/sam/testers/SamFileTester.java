@@ -125,7 +125,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         }
         nameBuilder.append("-")
                 .append(record.getReadPairedFlag())
-                .append("-").append(record.getNotPrimaryAlignmentFlag())
+                .append("-").append(record.isSecondaryAlignment())
                 .append("-");
 
         if (record.getReadPairedFlag()) {

@@ -386,7 +386,7 @@ public class RevertSam extends CommandLineProgram {
             rec.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
 
             rec.setInferredInsertSize(0);
-            rec.setNotPrimaryAlignmentFlag(false);
+            rec.setSecondaryAlignment(false);
             rec.setProperPairFlag(false);
             rec.setReadUnmappedFlag(true);
 

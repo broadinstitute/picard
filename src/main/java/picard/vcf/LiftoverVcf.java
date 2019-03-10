@@ -48,6 +48,7 @@ import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 import picard.util.LiftoverUtils;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -352,7 +353,7 @@ public class LiftoverVcf extends CommandLineProgram {
                 new VCFRecordCodec(outHeader, ALLOW_MISSING_FIELDS_IN_HEADER || VALIDATION_STRINGENCY != ValidationStringency.STRICT),
                 outHeader.getVCFRecordComparator(),
                 MAX_RECORDS_IN_RAM,
-                TMP_DIR);
+                TMP_DIR.stream().map(File::toPath).toArray(Path[]::new));
 
         ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
 

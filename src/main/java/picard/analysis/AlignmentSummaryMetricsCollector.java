@@ -178,7 +178,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
             }
 
             public void addRecord(final SAMRecord record, final ReferenceSequence ref) {
-                if (record.getNotPrimaryAlignmentFlag()) {
+                if (record.isSecondaryAlignment()) {
                     // only want 1 count per read so skip non primary alignments
                     return;
                 }

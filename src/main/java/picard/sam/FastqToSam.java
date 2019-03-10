@@ -381,7 +381,7 @@ public class FastqToSam extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(LOG);
         for ( ; freader.hasNext()  ; readCount++) {
             final FastqRecord frec = freader.next();
-            final SAMRecord srec = createSamRecord(writer.getFileHeader(), SequenceUtil.getSamReadNameFromFastqHeader(frec.getReadHeader()) , frec, false) ;
+            final SAMRecord srec = createSamRecord(writer.getFileHeader(), SequenceUtil.getSamReadNameFromFastqHeader(frec.getReadName()) , frec, false) ;
             srec.setReadPairedFlag(false);
             writer.addAlignment(srec);
             progress.record(srec);
@@ -398,8 +398,8 @@ public class FastqToSam extends CommandLineProgram {
             final FastqRecord frec1 = freader1.next();
             final FastqRecord frec2 = freader2.next();
 
-            final String frec1Name = SequenceUtil.getSamReadNameFromFastqHeader(frec1.getReadHeader());
-            final String frec2Name = SequenceUtil.getSamReadNameFromFastqHeader(frec2.getReadHeader());
+            final String frec1Name = SequenceUtil.getSamReadNameFromFastqHeader(frec1.getReadName());
+            final String frec2Name = SequenceUtil.getSamReadNameFromFastqHeader(frec2.getReadName());
             final String baseName = getBaseName(frec1Name, frec2Name, freader1, freader2);
 
             final SAMRecord srec1 = createSamRecord(writer.getFileHeader(), baseName, frec1, true) ;
@@ -438,7 +438,7 @@ public class FastqToSam extends CommandLineProgram {
             final int uQual = qual & 0xff;
             if (uQual < MIN_Q || uQual > MAX_Q) {
                 throw new PicardException("Base quality " + uQual + " is not in the range " + MIN_Q + ".." +
-                MAX_Q + " for read " + frec.getReadHeader());
+                MAX_Q + " for read " + frec.getReadName());
             }
         }
         srec.setBaseQualities(quals);

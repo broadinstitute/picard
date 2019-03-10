@@ -25,7 +25,6 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.*;
-import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.util.*;
@@ -558,7 +557,7 @@ public class FingerprintChecker {
                 final Snp snp = this.haplotypes.getSnp(info.getSequenceName(), info.getPosition());
 
                 // randomly select locusMaxReads elements from the list
-                final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = randomSublist(info.getRecordAndPositions(), locusMaxReads);
+                final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = randomSublist(info.getRecordAndOffsets(), locusMaxReads);
 
                 for (final SamLocusIterator.RecordAndOffset rec : recordAndOffsetList) {
                     final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();

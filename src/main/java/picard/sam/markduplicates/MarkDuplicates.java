@@ -37,6 +37,7 @@ import picard.sam.markduplicates.util.*;
 import picard.sam.util.RepresentativeReadIndexer;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -524,13 +525,13 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 pairCodec,
                 new ReadEndsMDComparator(useBarcodes),
                 maxInMemory,
-                TMP_DIR);
+                TMP_DIR.stream().map(File::toPath).toArray(Path[]::new));
 
         this.fragSort = SortingCollection.newInstance(ReadEndsForMarkDuplicates.class,
                 fragCodec,
                 new ReadEndsMDComparator(useBarcodes),
                 maxInMemory,
-                TMP_DIR);
+                TMP_DIR.stream().map(File::toPath).toArray(Path[]::new));
 
         final SamHeaderAndIterator headerAndIterator = openInputs(true);
         final SAMFileHeader.SortOrder assumedSortOrder = headerAndIterator.header.getSortOrder();
@@ -744,7 +745,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     representativeIndexCodec,
                     Comparator.comparing(read -> read.readIndexInFile),
                     maxInMemory,
-                    TMP_DIR);
+                    TMP_DIR.stream().map(File::toPath).toArray(Path[]::new));
         }
 
         ReadEndsForMarkDuplicates firstOfNextChunk = null;

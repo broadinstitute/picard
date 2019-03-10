@@ -55,6 +55,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
 import java.util.*;
 
 import static java.lang.Math.pow;
@@ -452,13 +453,13 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                     new PairedReadCodec(),
                     new PairedReadComparator(),
                     MAX_RECORDS_IN_RAM,
-                    TMP_DIR);
+                    TMP_DIR.stream().map(File::toPath).toArray(Path[]::new));
         } else {
             sorter = SortingCollection.newInstance(PairedReadSequence.class,
                     new PairedReadWithBarcodesCodec(),
                     new PairedReadComparator(),
                     MAX_RECORDS_IN_RAM,
-                    TMP_DIR);
+                    TMP_DIR.stream().map(File::toPath).toArray(Path[]::new));
         }
 
         // Loop through the input files and pick out the read sequences etc.

@@ -184,7 +184,7 @@ public class HaplotypeMap {
                 throw new IllegalStateException("Haplotype map file must contain header: " + file.getAbsolutePath());
             }
 
-            final SAMFileHeader header = new SAMTextHeaderCodec().decode(new StringLineReader(builder.toString()), "BufferedReader");
+            final SAMFileHeader header = new SAMTextHeaderCodec().decode(BufferedLineReader.fromString(builder.toString()), "BufferedReader");
 
             initialize(header);
             // Then read in the file

@@ -447,7 +447,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 acc.seenUnaligned = true;
             } else {
                 ++acc.numAlignments;
-                if (!rec.getNotPrimaryAlignmentFlag()) {
+                if (!rec.isSecondaryAlignment()) {
                     Assert.assertNull(acc.primaryAlignmentSequence, readName);
                     acc.primaryAlignmentSequence = rec.getReferenceName();
                 }
@@ -601,7 +601,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         for (final SAMRecord rec : mergedReader) {
             if (rec.getFirstOfPairFlag()) ++numFirst;
             if (rec.getSecondOfPairFlag()) ++numSecond;
-            if (!rec.getNotPrimaryAlignmentFlag()  && !rec.getReadUnmappedFlag()) {
+            if (!rec.isSecondaryAlignment()  && !rec.getReadUnmappedFlag()) {
                 final Integer hitIndex = rec.getIntegerAttribute(SAMTag.HI.name());
                 final int newHitIndex = (hitIndex == null? -1: hitIndex);
                 if (primaryHitIndex == null) primaryHitIndex = newHitIndex;
@@ -636,7 +636,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         rec.setReadBases(unmappedRec.getReadBases());
         rec.setBaseQualities(unmappedRec.getBaseQualities());
         rec.setMappingQuality(hitSpec.mapq);
-        if (!hitSpec.primary) rec.setNotPrimaryAlignmentFlag(true);
+        if (!hitSpec.primary) rec.setSecondaryAlignment(true);
         final Cigar cigar = new Cigar();
         final int readLength = rec.getReadLength();
         if (hitSpec.filtered) {
@@ -861,7 +861,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         int primaryMapq = 0;
         for (final SAMRecord rec : mergedReader) {
             ++numReads;
-            if (!rec.getNotPrimaryAlignmentFlag()  && !rec.getReadUnmappedFlag()) {
+            if (!rec.isSecondaryAlignment()  && !rec.getReadUnmappedFlag()) {
                 final Integer hitIndex = rec.getIntegerAttribute(SAMTag.HI.name());
                 final int newHitIndex = (hitIndex == null? -1: hitIndex);
                 Assert.assertNull(primaryHitIndex);
@@ -1026,7 +1026,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final SamReader mergedReader = SamReaderFactory.makeDefault().open(output);
         boolean seenPrimary = false;
         for (final SAMRecord rec : mergedReader) {
-            if (!rec.getNotPrimaryAlignmentFlag()) {
+            if (!rec.isSecondaryAlignment()) {
                 seenPrimary = true;
                 final Integer oneOfTheBest = rec.getIntegerAttribute(ONE_OF_THE_BEST_TAG);
                 Assert.assertEquals(oneOfTheBest, new Integer(1), "Read not marked as one of the best is primary: " + rec);
@@ -1262,7 +1262,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             if (rec.getFirstOfPairFlag()) ++numFirstRecords;
             else if (rec.getSecondOfPairFlag()) ++ numSecondRecords;
             else Assert.fail("unpossible!");
-            if (!rec.getReadUnmappedFlag() && !rec.getNotPrimaryAlignmentFlag()) {
+            if (!rec.getReadUnmappedFlag() && !rec.isSecondaryAlignment()) {
                 if (rec.getFirstOfPairFlag()) {
                     Assert.assertEquals(firstPrimaryMapq, -1);
                     firstPrimaryMapq = rec.getMappingQuality();
@@ -1270,7 +1270,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                     Assert.assertEquals(secondPrimaryMapq, -1);
                     secondPrimaryMapq = rec.getMappingQuality();
                 }
-            } else if (rec.getNotPrimaryAlignmentFlag()) {
+            } else if (rec.isSecondaryAlignment()) {
                 Assert.assertTrue(rec.getMateUnmappedFlag());
             }
         }
@@ -1543,7 +1543,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             if (rec.getFirstOfPairFlag()) ++numFirstRecords;
             else if (rec.getSecondOfPairFlag()) ++ numSecondRecords;
             else Assert.fail("unpossible!");
-            if (!rec.getReadUnmappedFlag() && !rec.getNotPrimaryAlignmentFlag()) {
+            if (!rec.getReadUnmappedFlag() && !rec.isSecondaryAlignment()) {
                 if (rec.getFirstOfPairFlag()) {
                     Assert.assertEquals(firstPrimaryAlignmentStart, -1);
                     firstPrimarySequence = rec.getReferenceName();
@@ -1553,7 +1553,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                     secondPrimarySequence = rec.getReferenceName();
                     secondPrimaryAlignmentStart = rec.getAlignmentStart();
                 }
-            } else if (rec.getNotPrimaryAlignmentFlag()) {
+            } else if (rec.isSecondaryAlignment()) {
                 Assert.assertTrue(rec.getMateUnmappedFlag());
             }
         }

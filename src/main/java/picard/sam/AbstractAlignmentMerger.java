@@ -613,7 +613,7 @@ public abstract class AbstractAlignmentMerger {
      * Add record if it is primary or optionally secondary.
      */
     private void addIfNotFiltered(final Sink out, final SAMRecord rec) {
-        if (includeSecondaryAlignments || !rec.getNotPrimaryAlignmentFlag()) {
+        if (includeSecondaryAlignments || !rec.isSecondaryAlignment()) {
             out.add(rec);
             if (this.progress.record(rec) && crossSpeciesReads > 0) {
                 log.info(String.format("%d Reads have been unmapped due to being suspected of being Cross-species contamination.", crossSpeciesReads));
@@ -818,7 +818,7 @@ public abstract class AbstractAlignmentMerger {
 
         rec.setAlignmentStart(alignment.getAlignmentStart());
         rec.setReadNegativeStrandFlag(alignment.getReadNegativeStrandFlag());
-        rec.setNotPrimaryAlignmentFlag(alignment.getNotPrimaryAlignmentFlag());
+        rec.setSecondaryAlignment(alignment.isSecondaryAlignment());
         rec.setSupplementaryAlignmentFlag(alignment.getSupplementaryAlignmentFlag());
         if (!alignment.getReadUnmappedFlag()) {
             // only aligned reads should have cigar and mapping quality set

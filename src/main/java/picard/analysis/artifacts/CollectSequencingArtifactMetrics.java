@@ -216,7 +216,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
         // set record-level filters
         final List<SamRecordFilter> filters = new ArrayList<>();
         if (!INCLUDE_NON_PF_READS) filters.add(new FailsVendorReadQualityFilter());
-        filters.add(new NotPrimaryAlignmentFilter());
+        filters.add(new SecondaryAlignmentFilter());
         if (!INCLUDE_DUPLICATES) filters.add(new DuplicateReadFilter());
         filters.add(new AlignedFilter(true)); // discard unmapped reads
         filters.add(new MappingQualityFilter(MINIMUM_MAPPING_QUALITY));

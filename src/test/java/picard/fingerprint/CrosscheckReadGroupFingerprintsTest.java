@@ -180,6 +180,7 @@ public class CrosscheckReadGroupFingerprintsTest {
 
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType, final boolean expectAllMatch) throws IOException, NoSuchFieldException {
 
+        @SuppressWarnings("deprecation")
         final CrosscheckReadGroupFingerprints crossChecker = new CrosscheckReadGroupFingerprints();
         Assert.assertEquals(crossChecker.instanceMain(args), expectedRetVal);
 
@@ -233,6 +234,7 @@ public class CrosscheckReadGroupFingerprintsTest {
 
     private void doMatrixTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final boolean expectAllMatch) throws IOException {
 
+        @SuppressWarnings("deprecation")
         final CrosscheckReadGroupFingerprints crossChecker = new CrosscheckReadGroupFingerprints();
         Assert.assertEquals(crossChecker.instanceMain(args), expectedRetVal);
         Assert.assertTrue(metrics.canRead());
@@ -292,6 +294,7 @@ public class CrosscheckReadGroupFingerprintsTest {
                 extraParameter
         };
 
+        @SuppressWarnings("deprecation")
         final CrosscheckReadGroupFingerprints crossChecker = new CrosscheckReadGroupFingerprints();
 
         Assert.assertEquals(crossChecker.instanceMain(args), 1);

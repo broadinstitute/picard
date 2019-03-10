@@ -138,7 +138,7 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
         }
 
         public void acceptRecord(final SAMRecord rec, final ReferenceSequence ref) {
-            if (!this.includeSecondaryAlignments    && rec.getNotPrimaryAlignmentFlag()) return;
+            if (!this.includeSecondaryAlignments    && rec.isSecondaryAlignment()) return;
             if (!this.includeSupplementalAlignments && rec.getSupplementaryAlignmentFlag()) return;
 
             final int length = rec.getReadLength();

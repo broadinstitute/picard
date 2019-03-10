@@ -35,6 +35,7 @@ import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -374,7 +375,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
                     codecPrototype.clone(),
                     outputRecordComparator,
                     maxRecordsInRam,
-                    tmpDirs);
+                    tmpDirs.stream().map(File::toPath).toArray(Path[]::new));
         }
 
         /**

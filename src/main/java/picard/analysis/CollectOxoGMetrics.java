@@ -30,8 +30,8 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.DuplicateReadFilter;
 import htsjdk.samtools.filter.InsertSizeFilter;
-import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
@@ -281,7 +281,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
         iterator.setIncludeNonPfReads(INCLUDE_NON_PF_READS);
 
         final List<SamRecordFilter> filters = new ArrayList<>();
-        filters.add(new NotPrimaryAlignmentFilter());
+        filters.add(new SecondaryAlignmentFilter());
         filters.add(new DuplicateReadFilter());
         if (MINIMUM_INSERT_SIZE > 0 || MAXIMUM_INSERT_SIZE > 0) {
             filters.add(new InsertSizeFilter(MINIMUM_INSERT_SIZE, MAXIMUM_INSERT_SIZE));

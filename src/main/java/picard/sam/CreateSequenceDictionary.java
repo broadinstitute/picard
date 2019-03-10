@@ -314,7 +314,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                 new StringCodec(),
                 String::compareTo,
                 (int) Math.min(maxNamesInRam, Integer.MAX_VALUE),
-                tmpDir
+                tmpDir.toPath()
         );
     }
 

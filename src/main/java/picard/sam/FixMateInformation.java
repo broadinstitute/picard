@@ -54,9 +54,11 @@ import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <h3>Summary</h3>
@@ -195,7 +197,7 @@ public class FixMateInformation extends CommandLineProgram {
                         new BAMRecordCodec(header),
                         new SAMRecordQueryNameComparator(),
                         MAX_RECORDS_IN_RAM,
-                        TMP_DIR);
+                        TMP_DIR.stream().map(File::toPath).toArray(Path[]::new));
                 while (tmp.hasNext()) {
                     sorter.add(tmp.next());
 

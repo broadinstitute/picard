@@ -146,7 +146,7 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
                 "TRUNCATE_NAMES_AT_WHITESPACE=true"
         };
         Assert.assertEquals(runPicardCommandLine(argv), 0);
-        final SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(outputDict);
+        final SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(outputDict.toPath());
         Assert.assertNotNull(dict, "dictionary is null");
        
         // check chr1

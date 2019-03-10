@@ -99,7 +99,7 @@ public class GatherVcfs extends CommandLineProgram {
      */
     private boolean areAllBlockCompressed(final List<File> input) {
         for (final File f : input) {
-            if (VCFFileReader.isBCF(f) || !AbstractFeatureReader.hasBlockCompressedExtension(f)) {
+            if (VCFFileReader.isBCF(f) || !IOUtil.hasBlockCompressedExtension(f)) {
                 return false;
             }
         }

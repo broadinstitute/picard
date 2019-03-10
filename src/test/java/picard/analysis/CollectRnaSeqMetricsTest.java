@@ -328,7 +328,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         builder.addFrag("frag_duplicate", sequenceIndex, 150, false).setDuplicateReadFlag(true);
 
         // These reads should be ignored.
-        builder.addFrag("frag_secondary", sequenceIndex, 150, false).setNotPrimaryAlignmentFlag(true);
+        builder.addFrag("frag_secondary", sequenceIndex, 150, false).setSecondaryAlignment(true);
         builder.addFrag("frag_supplementary", sequenceIndex, 150, false).setSupplementaryAlignmentFlag(true);
         builder.addFrag("frag_qc_failure", sequenceIndex, 150, false).setReadFailsVendorQualityCheckFlag(true);
 

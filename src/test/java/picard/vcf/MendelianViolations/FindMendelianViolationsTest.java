@@ -142,7 +142,7 @@ public class FindMendelianViolationsTest {
 
         int results = 0;
         final Pattern pattern = Pattern.compile(".*"+regex+".*");
-        try (final LineIteratorImpl li = new LineIteratorImpl(new AsciiLineReader(IOUtil.openFileForReading(file)))) {
+        try (final LineIteratorImpl li = new LineIteratorImpl(AsciiLineReader.from(IOUtil.openFileForReading(file)))) {
 
             while (li.hasNext()) {
                 final String line = li.next();

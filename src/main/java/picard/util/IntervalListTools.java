@@ -535,7 +535,7 @@ public class IntervalListTools extends CommandLineProgram {
         VCF(IOUtil.VCF_EXTENSIONS) {
             @Override
             protected IntervalList getIntervalListInternal(final File vcf, final boolean includeFiltered) {
-                return VCFFileReader.fromVcf(vcf, includeFiltered);
+                return VCFFileReader.toIntervalList(vcf.toPath(), includeFiltered);
             }
         },
         INTERVAL_LIST(IOUtil.INTERVAL_LIST_FILE_EXTENSION) {

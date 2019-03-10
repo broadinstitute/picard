@@ -213,8 +213,8 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     private static final Log log = Log.getInstance(IlluminaBasecallsToFastq.class);
     private final FastqWriterFactory fastqWriterFactory = new FastqWriterFactory();
     private ReadNameEncoder readNameEncoder;
-    private static final Comparator<FastqRecordsForCluster> queryNameComparator = (r1, r2) -> SAMRecordQueryNameComparator.compareReadNames(r1.templateRecords[0].getReadHeader(),
-            r2.templateRecords[0].getReadHeader());
+    private static final Comparator<FastqRecordsForCluster> queryNameComparator = (r1, r2) -> SAMRecordQueryNameComparator.compareReadNames(r1.templateRecords[0].getReadName(),
+            r2.templateRecords[0].getReadName());
 
     @Override
     protected int doWork() {
