@@ -146,7 +146,8 @@ public class BedToIntervalList extends CommandLineProgram {
                     throw new PicardException(String.format("Start on sequence '%s' was less than one: %d", sequenceName, start));
                 } else if (sequenceRecord.getSequenceLength() < start) {
                     throw new PicardException(String.format("Start on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), start));
-                } else if (end < 1) {
+                } else if ((end == 0 && start != 1 ) //special case for 0-length interval at the start of a contig
+                        || end < 0 ) {
                     throw new PicardException(String.format("End on sequence '%s' was less than one: %d", sequenceName, end));
                 } else if (sequenceRecord.getSequenceLength() < end) {
                     throw new PicardException(String.format("End on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), end));
