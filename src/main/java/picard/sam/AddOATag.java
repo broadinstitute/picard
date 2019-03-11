@@ -78,7 +78,7 @@ public class AddOATag extends CommandLineProgram {
     @Override
     protected int doWork() {
         try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(IOUtil.getPath(INPUT));
-             final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, IOUtil.getPath(OUTPUT), REFERENCE_SEQUENCE.toPath())) {
+             final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, IOUtil.getPath(OUTPUT), IOUtil.toPath(REFERENCE_SEQUENCE))) {
                 writer.setProgressLogger(
                         new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
 
