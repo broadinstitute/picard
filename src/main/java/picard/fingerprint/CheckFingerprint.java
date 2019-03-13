@@ -245,6 +245,7 @@ public class CheckFingerprint extends CommandLineProgram {
         IOUtil.assertFileIsWritable(outputSummaryMetricsFile);
 
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
+        checker.setReferenceFasta(REFERENCE_SEQUENCE);
         List<FingerprintResults> results;
 
         String observedSampleAlias = null;
