@@ -80,7 +80,7 @@ public class SplitVcfs extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         final ProgressLogger progress = new ProgressLogger(log, 10000);
 
-        final VCFFileReader fileReader = new VCFFileReader(INPUT);
+        final VCFFileReader fileReader = new VCFFileReader(INPUT, false);
         final VCFHeader fileHeader = fileReader.getFileHeader();
 
         final SAMSequenceDictionary sequenceDictionary =

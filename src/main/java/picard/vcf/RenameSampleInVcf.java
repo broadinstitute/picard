@@ -115,7 +115,7 @@ public class RenameSampleInVcf extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final VCFFileReader in = new VCFFileReader(INPUT);
+        final VCFFileReader in = new VCFFileReader(INPUT, false);
         final VCFHeader header = in.getFileHeader();
 
         if (header.getGenotypeSamples().size() > 1) {
