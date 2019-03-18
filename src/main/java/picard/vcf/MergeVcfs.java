@@ -123,7 +123,7 @@ public class MergeVcfs extends CommandLineProgram {
 			" <p>You can either directly specify the list of files by specifying <code>INPUT</code> multiple times, or provide a list" + 
 			"     in a file with name ending in \".list\" to <code>INPUT</code>.</p>" + 
 			" <h3>Outputs</h3>" + 
-			" <p>A VCF sorted (i) according to the dictionary and (ii) by coordiante.</p>" + 
+			" <p>A VCF sorted (i) according to the dictionary and (ii) by coordinate.</p>" +
 			" <h3>Usage examples</h3>" + 
 			" <h4>Example 1:</h4>" + 
 			" <p>We combine several variant files in different formats, where at least one of them contains the contig list in its header.</p>" + 
