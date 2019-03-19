@@ -349,8 +349,7 @@ public class IntervalListTools extends CommandLineProgram {
             IntervalList act(final List<IntervalList> list, final List<IntervalList> unused){
                 return IntervalList.concatenate(list);
             }
-        }
-        ;
+        };
 
         final String helpdoc;
         final boolean takesSecondInput;
