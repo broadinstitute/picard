@@ -219,7 +219,7 @@ public class IntervalListTools extends CommandLineProgram {
                     "       O=new.interval_list" +
                     " </pre>" +
                     "" +
-                    " <h4>4. Count bases in input1.interval_list:</h4>" +
+                    " <h4>5. Count bases in input1.interval_list:</h4>" +
                     " <pre>" +
                     " java -jar picard.jar IntervalListTools \\\n" +
                     "       ACTION=COUNT \\\n" +
