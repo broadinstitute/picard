@@ -41,6 +41,7 @@ import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -219,6 +220,13 @@ public class IntervalListTools extends CommandLineProgram {
                     "       O=new.interval_list" +
                     " </pre>" +
                     "" +
+                    " <h4>4. Count bases and intervals in input1.interval_list:</h4>" +
+                    " <pre>" +
+                    " java -jar picard.jar IntervalListTools \\\n" +
+                    "       ACTION=COUNT \\\n" +
+                    "       I=input1.interval_list" +
+                    " </pre>" +
+                    "" +
                     "";
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
@@ -335,7 +343,14 @@ public class IntervalListTools extends CommandLineProgram {
             IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
                 return IntervalList.overlaps(list1, list2);
             }
-        };
+        },
+        COUNT("Count number of unique bases in INPUT.  This action behaves identically to CONCAT and is provided as an intuitive convenience.",false) {
+            @Override
+            IntervalList act(final List<IntervalList> list, final List<IntervalList> unused){
+                return IntervalList.concatenate(list);
+            }
+        }
+        ;
 
         final String helpdoc;
         final boolean takesSecondInput;
