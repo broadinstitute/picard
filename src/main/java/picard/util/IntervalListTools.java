@@ -41,7 +41,6 @@ import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -220,11 +219,12 @@ public class IntervalListTools extends CommandLineProgram {
                     "       O=new.interval_list" +
                     " </pre>" +
                     "" +
-                    " <h4>4. Count bases and intervals in input1.interval_list:</h4>" +
+                    " <h4>4. Count bases in input1.interval_list:</h4>" +
                     " <pre>" +
                     " java -jar picard.jar IntervalListTools \\\n" +
                     "       ACTION=COUNT \\\n" +
-                    "       I=input1.interval_list" +
+                    "       I=input1.interval_list \\\n" +
+                    "       OUTPUT_VALUE=BASES" +
                     " </pre>" +
                     "" +
                     "";
