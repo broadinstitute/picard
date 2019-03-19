@@ -102,7 +102,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
                 {IntervalListTools.Action.SUBTRACT, 60, 2},
                 {IntervalListTools.Action.SYMDIFF, 61, 3},
                 {IntervalListTools.Action.OVERLAPS, 150, 2},
-                {IntervalListTools.Action.COUNT,341,4}
+                {IntervalListTools.Action.COUNT, 341, 4}
         };
     }
 
