@@ -24,6 +24,7 @@
 
 package picard.util;
 
+import com.google.common.io.CountingOutputStream;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
@@ -41,6 +42,9 @@ import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -219,14 +223,6 @@ public class IntervalListTools extends CommandLineProgram {
                     "       O=new.interval_list" +
                     " </pre>" +
                     "" +
-                    " <h4>5. Count bases in input1.interval_list:</h4>" +
-                    " <pre>" +
-                    " java -jar picard.jar IntervalListTools \\\n" +
-                    "       ACTION=COUNT \\\n" +
-                    "       I=input1.interval_list \\\n" +
-                    "       OUTPUT_VALUE=BASES" +
-                    " </pre>" +
-                    "" +
                     "";
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
@@ -279,26 +275,25 @@ public class IntervalListTools extends CommandLineProgram {
             "by any of the input intervals. Will merge abutting intervals first. Output will be sorted.", optional = true)
     public boolean INVERT = false;
 
-    @Argument(doc = "What value (if anything) to output to stdout (for scripting)")
-    public Output OUTPUT_VALUE = Output.NONE;
+    @Argument(doc = "What value to output to COUNT_OUTPUT file (for scripting)")
+    public Output OUTPUT_VALUE = Output.BASES;
+
+    @Argument(doc = "File to which to print count of bases or intervals in final output interval list.", optional = true)
+    public File COUNT_OUTPUT;
 
     enum Output {
-        NONE() {
-            void output(long totalBaseCount, long intervalCount) {
-            }
-        },
         BASES {
-            void output(long totalBaseCount, long intervalCount) {
-                System.out.println(totalBaseCount);
+            void output(long totalBaseCount, long intervalCount, PrintWriter writer) {
+                writer.println(totalBaseCount);
             }
         },
         INTERVALS {
-            void output(long totalBaseCount, long intervalCount) {
-                System.out.println(intervalCount);
+            void output(long totalBaseCount, long intervalCount, PrintWriter writer) {
+                writer.println(intervalCount);
             }
         };
 
-        abstract void output(long totalBaseCount, long intervalCount);
+        abstract void output(long totalBaseCount, long intervalCount, PrintWriter writer);
     }
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
@@ -342,12 +337,6 @@ public class IntervalListTools extends CommandLineProgram {
             @Override
             IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
                 return IntervalList.overlaps(list1, list2);
-            }
-        },
-        COUNT("Count number of unique bases or intervals in INPUT.  This action behaves identically to CONCAT and is provided as an intuitively named convenience.",false) {
-            @Override
-            IntervalList act(final List<IntervalList> list, final List<IntervalList> unused){
-                return IntervalList.concatenate(list);
             }
         };
 
@@ -472,7 +461,16 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
-        OUTPUT_VALUE.output(totalBaseCount, intervalCount);
+        if (COUNT_OUTPUT != null) {
+            try {
+                final PrintWriter countWriter = new PrintWriter(new FileWriter(COUNT_OUTPUT));
+                OUTPUT_VALUE.output(totalBaseCount, intervalCount,countWriter);
+                countWriter.close();
+            }
+            catch (final IOException e) {
+                throw new PicardException("There was a problem writing count to "+COUNT_OUTPUT.getAbsolutePath());
+            }
+        }
         return 0;
     }
 
