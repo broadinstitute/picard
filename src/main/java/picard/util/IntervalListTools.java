@@ -24,7 +24,6 @@
 
 package picard.util;
 
-import com.google.common.io.CountingOutputStream;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
