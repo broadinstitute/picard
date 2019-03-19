@@ -344,7 +344,7 @@ public class IntervalListTools extends CommandLineProgram {
                 return IntervalList.overlaps(list1, list2);
             }
         },
-        COUNT("Count number of unique bases in INPUT.  This action behaves identically to CONCAT and is provided as an intuitive convenience.",false) {
+        COUNT("Count number of unique bases or intervals in INPUT.  This action behaves identically to CONCAT and is provided as an intuitively named convenience.",false) {
             @Override
             IntervalList act(final List<IntervalList> list, final List<IntervalList> unused){
                 return IntervalList.concatenate(list);
