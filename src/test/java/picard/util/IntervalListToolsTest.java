@@ -69,12 +69,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             intervalListTools.OUTPUT_VALUE = output_value;
             intervalListTools.COUNT_OUTPUT = null;
             String[] errors = intervalListTools.customCommandLineValidation();
-            if (output_value == IntervalListTools.Output.NONE) {
-                Assert.assertNull(errors);
-            }
-            else {
-                Assert.assertTrue(errors.length == 1);
-            }
+            Assert.assertNull(errors);
 
             intervalListTools.COUNT_OUTPUT = new File("fakefile");
             errors = intervalListTools.customCommandLineValidation();
@@ -249,7 +244,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             args.add("OUTPUT_VALUE=" + outputValue);
         }
 
-        args.add("COUNT_OUTPUT="+countOutput);
+        args.add("COUNT_OUTPUT=" + countOutput);
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 

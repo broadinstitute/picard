@@ -271,30 +271,33 @@ public class IntervalListTools extends CommandLineProgram {
             "by any of the input intervals. Will merge abutting intervals first. Output will be sorted.", optional = true)
     public boolean INVERT = false;
 
-    @Argument(doc = "What value to output to COUNT_OUTPUT file (for scripting)")
+    @Argument(doc = "What value to output to COUNT_OUTPUT file or stdout (for scripting).  If COUNT_OUTPUT is provided, this parameter must not be NONE.")
     public Output OUTPUT_VALUE = Output.NONE;
 
-    @Argument(doc = "File to which to print count of bases or intervals in final output interval list.  When this parameter is set OUTPUT_VALUE must be set to a value other than NONE.", optional = true)
+    @Argument(doc = "File to which to print count of bases or intervals in final output interval list.  When not set, value indicated by OUTPUT_VALUE will be printed to stdout.  " +
+            "If this parameter is set, OUTPUT_VALUE must not be NONE.", optional = true)
     public File COUNT_OUTPUT;
 
     enum Output {
         NONE {
-            void output(final long totalBaseCount, final long intervalCount, final PrintStream writer){
-
+            void output(final long totalBaseCount, final long intervalCount, final PrintStream stream){
+                if (stream != System.out) {
+                    throw new PicardException("Asked to output NONE with COUNT_OUTPUT set.");
+                }
             }
         },
         BASES {
-            void output(final long totalBaseCount, final long intervalCount, final PrintStream writer) {
-                writer.println(totalBaseCount);
+            void output(final long totalBaseCount, final long intervalCount, final PrintStream stream) {
+                stream.println(totalBaseCount);
             }
         },
         INTERVALS {
-            void output(final long totalBaseCount, final long intervalCount, final PrintStream writer) {
-                writer.println(intervalCount);
+            void output(final long totalBaseCount, final long intervalCount, final PrintStream stream) {
+                stream.println(intervalCount);
             }
         };
 
-        abstract void output(final long totalBaseCount, final long intervalCount, final PrintStream writer);
+        abstract void output(final long totalBaseCount, final long intervalCount, final PrintStream stream);
     }
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
@@ -464,15 +467,14 @@ public class IntervalListTools extends CommandLineProgram {
         LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
         if (COUNT_OUTPUT != null) {
             IOUtil.assertFileIsWritable(COUNT_OUTPUT);
-            try (final PrintStream countWriter = new PrintStream(COUNT_OUTPUT)){
-                OUTPUT_VALUE.output(totalBaseCount, intervalCount,countWriter);
+            try (final PrintStream countStream = new PrintStream(COUNT_OUTPUT)) {
+                OUTPUT_VALUE.output(totalBaseCount, intervalCount, countStream);
             }
             catch (final IOException e) {
                 throw new PicardException("There was a problem writing count to " + COUNT_OUTPUT.getAbsolutePath());
             }
-        }
-        else {
-            OUTPUT_VALUE.output(totalBaseCount,intervalCount,System.out);
+        } else {
+            OUTPUT_VALUE.output(totalBaseCount, intervalCount, System.out);
         }
         return 0;
     }
@@ -507,9 +509,6 @@ public class IntervalListTools extends CommandLineProgram {
         }
         if (COUNT_OUTPUT != null && OUTPUT_VALUE == Output.NONE) {
             errorMsgs.add("COUNT_OUTPUT was provided but OUTPUT_VALUE is set to NONE.");
-        }
-        if (COUNT_OUTPUT == null && OUTPUT_VALUE != Output.NONE) {
-            errorMsgs.add("OUTPUT_VALUE is set to " + OUTPUT_VALUE + " but COUNT_OUTPUT was not provided.");
         }
 
         return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
