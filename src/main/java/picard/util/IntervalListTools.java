@@ -473,7 +473,7 @@ public class IntervalListTools extends CommandLineProgram {
                 countWriter.close();
             }
             catch (final IOException e) {
-                throw new PicardException("There was a problem writing count to "+COUNT_OUTPUT.getAbsolutePath());
+                throw new PicardException("There was a problem writing count to " + COUNT_OUTPUT.getAbsolutePath());
             }
         }
         return 0;
