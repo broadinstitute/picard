@@ -35,6 +35,8 @@ public class CrosscheckFingerprintsTest {
     private final File NA12892_r2_sam = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r2.sam");
 
     private File NA12891_r1, NA12891_r2, NA12891_named_NA12892_r1, NA12892_r1, NA12892_r2;
+    private File NA12891_r1_cram, NA12891_r2_cram, NA12891_named_NA12892_r1_cram, NA12892_r1_cram, NA12892_r2_cram;
+    private final File reference = new File(TEST_DATA_DIR,"reference.fasta");
 
     private final int NA12891_r1_RGs = 27;
     private final int NA12891_r2_RGs = 26;
@@ -54,6 +56,7 @@ public class CrosscheckFingerprintsTest {
     private static File  NA12892_and_NA123891_part2_vcf;
     private static File  NA12892_and_NA123891_part3_vcf;
 
+
     private static final Map<CrosscheckMetric.DataType, List<String>> lookupMap = new HashMap<>(4);
     
     @BeforeClass
@@ -63,6 +66,12 @@ public class CrosscheckFingerprintsTest {
         NA12891_named_NA12892_r1 = SamTestUtils.createIndexedBam(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam);
         NA12892_r1 = SamTestUtils.createIndexedBam(NA12892_r1_sam, NA12892_r1_sam);
         NA12892_r2 = SamTestUtils.createIndexedBam(NA12892_r2_sam, NA12892_r2_sam);
+
+        NA12891_r1_cram = SamTestUtils.createIndexedCram(NA12891_r1_sam, NA12891_r1_sam,reference);
+        NA12891_r2_cram = SamTestUtils.createIndexedCram(NA12891_r2_sam, NA12891_r2_sam,reference);
+        NA12891_named_NA12892_r1_cram = SamTestUtils.createIndexedCram(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam,reference);
+        NA12892_r1_cram = SamTestUtils.createIndexedCram(NA12892_r1_sam, NA12892_r1_sam,reference);
+        NA12892_r2_cram = SamTestUtils.createIndexedCram(NA12892_r2_sam, NA12892_r2_sam,reference);
 
         lookupMap.put(CrosscheckMetric.DataType.FILE, new ArrayList<>());
         lookupMap.get(CrosscheckMetric.DataType.FILE).addAll(Arrays.asList("LEFT_FILE", "RIGHT_FILE"));

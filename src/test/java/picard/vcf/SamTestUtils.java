@@ -7,6 +7,7 @@ import htsjdk.samtools.SamReaderFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class SamTestUtils {
     /**
@@ -23,6 +24,22 @@ public class SamTestUtils {
 
         final SamReader in = SamReaderFactory.makeDefault().open(samFile);
         SAMFileWriter out = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(in.getFileHeader(), true, output);
+
+        in.iterator().stream().forEach(out::addAlignment);
+        out.close();
+        in.close();
+
+        return output;
+    }
+
+    public static File createIndexedCram(final File samFile, final File tempFilePrefix, final File referenceFasta) throws IOException {
+        final File output = File.createTempFile(tempFilePrefix.getAbsolutePath(), ".cram");
+        output.deleteOnExit();
+        final File indexFile = new File(output.getAbsolutePath() + ".crai");
+        indexFile.deleteOnExit();
+
+        final SamReader in = SamReaderFactory.makeDefault().open(samFile);
+        SAMFileWriter out = new SAMFileWriterFactory().setCreateIndex(true).makeCRAMWriter(in.getFileHeader(), true, output,referenceFasta);
 
         in.iterator().stream().forEach(out::addAlignment);
         out.close();
