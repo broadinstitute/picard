@@ -507,7 +507,7 @@ public class IntervalListTools extends CommandLineProgram {
         if ((SECOND_INPUT != null && !SECOND_INPUT.isEmpty()) && !ACTION.takesSecondInput) {
             errorMsgs.add("SECOND_INPUT was provided but action " + ACTION + " doesn't take a second input.");
         }
-        if(COUNT_OUTPUT != null && OUTPUT_VALUE == Output.NONE) {
+        if (COUNT_OUTPUT != null && OUTPUT_VALUE == Output.NONE) {
             errorMsgs.add("COUNT_OUTPUT was provided but OUTPUT_VALUE is set to NONE.");
         }
         if(COUNT_OUTPUT == null && OUTPUT_VALUE != Output.NONE) {
