@@ -61,6 +61,32 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         Assert.assertTrue(errors.length == 1);
     }
 
+    @Test
+    public void testCountOutputValidation() {
+        final IntervalListTools intervalListTools = new IntervalListTools();
+
+        for(IntervalListTools.Output output_value : IntervalListTools.Output.values()) {
+            intervalListTools.OUTPUT_VALUE = output_value;
+            intervalListTools.COUNT_OUTPUT = null;
+            String[] errors = intervalListTools.customCommandLineValidation();
+            if (output_value == IntervalListTools.Output.NONE) {
+                Assert.assertNull(errors);
+            }
+            else {
+                Assert.assertTrue(errors.length == 1);
+            }
+
+            intervalListTools.COUNT_OUTPUT = new File("fakefile");
+            errors = intervalListTools.customCommandLineValidation();
+            if (output_value == IntervalListTools.Output.NONE) {
+                Assert.assertTrue(errors.length == 1);
+            }
+            else {
+                Assert.assertNull(errors);
+            }
+        }
+    }
+
     @Override
     public String getCommandLineProgramName() {
         return IntervalListTools.class.getSimpleName();
@@ -108,7 +134,6 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
-        Assert.assertEquals(testerCountOutput(action,null),bases,"unexpected number of bases written to count_output file.");
         Assert.assertEquals(testerCountOutput(action,IntervalListTools.Output.BASES),bases, "unexpected number of bases written to count_output file.");
         Assert.assertEquals(testerCountOutput(action,IntervalListTools.Output.INTERVALS),intervals,"unexpected number of intervals written to count_output file.");
     }
@@ -133,7 +158,6 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
-        Assert.assertEquals(testerCountOutput(action, null, true, false), bases, "unexpected number of bases written to count_output file.");
         Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.BASES, true, false), bases, "unexpected number of bases written to count_output file.");
         Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.INTERVALS, true, false), intervals, "unexpected number of intervals written to count_output file.");
     }
@@ -156,7 +180,6 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
-        Assert.assertEquals(testerCountOutput(action, null, false, true), bases, "unexpected number of bases written to count_output file.");
         Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.BASES, false, true), bases, "unexpected number of bases written to count_output file.");
         Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.INTERVALS, false, true), intervals, "unexpected number of intervals written to count_output file.");
     }

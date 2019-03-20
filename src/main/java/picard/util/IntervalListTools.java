@@ -275,24 +275,29 @@ public class IntervalListTools extends CommandLineProgram {
     public boolean INVERT = false;
 
     @Argument(doc = "What value to output to COUNT_OUTPUT file (for scripting)")
-    public Output OUTPUT_VALUE = Output.BASES;
+    public Output OUTPUT_VALUE = Output.NONE;
 
-    @Argument(doc = "File to which to print count of bases or intervals in final output interval list.", optional = true)
+    @Argument(doc = "File to which to print count of bases or intervals in final output interval list.  When this parameter is set OUTPUT_VALUE must be set to a value other than NONE.", optional = true)
     public File COUNT_OUTPUT;
 
     enum Output {
+        NONE {
+            void output(final long totalBaseCount, final long intervalCount, final PrintWriter writer){
+
+            }
+        },
         BASES {
-            void output(long totalBaseCount, long intervalCount, PrintWriter writer) {
+            void output(final long totalBaseCount, final long intervalCount, final PrintWriter writer) {
                 writer.println(totalBaseCount);
             }
         },
         INTERVALS {
-            void output(long totalBaseCount, long intervalCount, PrintWriter writer) {
+            void output(final long totalBaseCount, final long intervalCount, final PrintWriter writer) {
                 writer.println(intervalCount);
             }
         };
 
-        abstract void output(long totalBaseCount, long intervalCount, PrintWriter writer);
+        abstract void output(final long totalBaseCount, final long intervalCount, final PrintWriter writer);
     }
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
@@ -461,6 +466,7 @@ public class IntervalListTools extends CommandLineProgram {
 
         LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
         if (COUNT_OUTPUT != null) {
+            IOUtil.assertFileIsWritable(COUNT_OUTPUT);
             try {
                 final PrintWriter countWriter = new PrintWriter(new FileWriter(COUNT_OUTPUT));
                 OUTPUT_VALUE.output(totalBaseCount, intervalCount,countWriter);
@@ -500,6 +506,12 @@ public class IntervalListTools extends CommandLineProgram {
         }
         if ((SECOND_INPUT != null && !SECOND_INPUT.isEmpty()) && !ACTION.takesSecondInput) {
             errorMsgs.add("SECOND_INPUT was provided but action " + ACTION + " doesn't take a second input.");
+        }
+        if(COUNT_OUTPUT != null && OUTPUT_VALUE == Output.NONE) {
+            errorMsgs.add("COUNT_OUTPUT was provided but OUTPUT_VALUE is set to NONE.");
+        }
+        if(COUNT_OUTPUT == null && OUTPUT_VALUE != Output.NONE) {
+            errorMsgs.add("OUTPUT_VALUE is set to "+OUTPUT_VALUE+" but COUNT_OUTPUT was not provided.");
         }
 
         return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
