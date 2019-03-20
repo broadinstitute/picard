@@ -511,7 +511,7 @@ public class IntervalListTools extends CommandLineProgram {
             errorMsgs.add("COUNT_OUTPUT was provided but OUTPUT_VALUE is set to NONE.");
         }
         if (COUNT_OUTPUT == null && OUTPUT_VALUE != Output.NONE) {
-            errorMsgs.add("OUTPUT_VALUE is set to "+OUTPUT_VALUE+" but COUNT_OUTPUT was not provided.");
+            errorMsgs.add("OUTPUT_VALUE is set to " + OUTPUT_VALUE + " but COUNT_OUTPUT was not provided.");
         }
 
         return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
