@@ -40,10 +40,7 @@ import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -282,22 +279,22 @@ public class IntervalListTools extends CommandLineProgram {
 
     enum Output {
         NONE {
-            void output(final long totalBaseCount, final long intervalCount, final PrintWriter writer){
+            void output(final long totalBaseCount, final long intervalCount, final PrintStream writer){
 
             }
         },
         BASES {
-            void output(final long totalBaseCount, final long intervalCount, final PrintWriter writer) {
+            void output(final long totalBaseCount, final long intervalCount, final PrintStream writer) {
                 writer.println(totalBaseCount);
             }
         },
         INTERVALS {
-            void output(final long totalBaseCount, final long intervalCount, final PrintWriter writer) {
+            void output(final long totalBaseCount, final long intervalCount, final PrintStream writer) {
                 writer.println(intervalCount);
             }
         };
 
-        abstract void output(final long totalBaseCount, final long intervalCount, final PrintWriter writer);
+        abstract void output(final long totalBaseCount, final long intervalCount, final PrintStream writer);
     }
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
@@ -467,14 +464,15 @@ public class IntervalListTools extends CommandLineProgram {
         LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
         if (COUNT_OUTPUT != null) {
             IOUtil.assertFileIsWritable(COUNT_OUTPUT);
-            try {
-                final PrintWriter countWriter = new PrintWriter(new FileWriter(COUNT_OUTPUT));
+            try (final PrintStream countWriter = new PrintStream(COUNT_OUTPUT)){
                 OUTPUT_VALUE.output(totalBaseCount, intervalCount,countWriter);
-                countWriter.close();
             }
             catch (final IOException e) {
                 throw new PicardException("There was a problem writing count to "+COUNT_OUTPUT.getAbsolutePath());
             }
+        }
+        else {
+            OUTPUT_VALUE.output(totalBaseCount,intervalCount,System.out);
         }
         return 0;
     }
