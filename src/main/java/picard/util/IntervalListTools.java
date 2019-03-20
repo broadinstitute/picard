@@ -510,7 +510,7 @@ public class IntervalListTools extends CommandLineProgram {
         if (COUNT_OUTPUT != null && OUTPUT_VALUE == Output.NONE) {
             errorMsgs.add("COUNT_OUTPUT was provided but OUTPUT_VALUE is set to NONE.");
         }
-        if(COUNT_OUTPUT == null && OUTPUT_VALUE != Output.NONE) {
+        if (COUNT_OUTPUT == null && OUTPUT_VALUE != Output.NONE) {
             errorMsgs.add("OUTPUT_VALUE is set to "+OUTPUT_VALUE+" but COUNT_OUTPUT was not provided.");
         }
 
