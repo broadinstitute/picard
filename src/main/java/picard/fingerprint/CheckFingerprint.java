@@ -403,6 +403,8 @@ public class CheckFingerprint extends CommandLineProgram {
     }
 
     static boolean isBamOrSamOrCram(final Path p) {
-        return (p.toUri().getRawPath().endsWith(BamFileIoUtils.BAM_FILE_EXTENSION) || p.toUri().getRawPath().endsWith(IOUtil.SAM_FILE_EXTENSION) || p.toUri().getRawPath().endsWith(CramIO.CRAM_FILE_EXTENSION));
+        return (p.toUri().getRawPath().endsWith(SamReader.Type.BAM_TYPE.fileExtension()) ||
+                p.toUri().getRawPath().endsWith(SamReader.Type.SAM_TYPE.fileExtension()) ||
+                p.toUri().getRawPath().endsWith(SamReader.Type.CRAM_TYPE.fileExtension()));
     }
 }

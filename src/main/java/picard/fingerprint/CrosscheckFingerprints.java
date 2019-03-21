@@ -25,8 +25,7 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.BamFileIoUtils;
-import htsjdk.samtools.cram.build.CramIO;
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -392,9 +391,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         final List<String> extensions = new ArrayList<>();
 
-        extensions.add(BamFileIoUtils.BAM_FILE_EXTENSION);
-        extensions.add(IOUtil.SAM_FILE_EXTENSION);
-        extensions.add(CramIO.CRAM_FILE_EXTENSION);
+        extensions.add(SamReader.Type.BAM_TYPE.fileExtension());
+        extensions.add(SamReader.Type.SAM_TYPE.fileExtension());
+        extensions.add(SamReader.Type.CRAM_TYPE.fileExtension());
         extensions.addAll(Arrays.asList(IOUtil.VCF_EXTENSIONS));
 
         final List<Path> inputPaths = IOUtil.getPaths(INPUT);

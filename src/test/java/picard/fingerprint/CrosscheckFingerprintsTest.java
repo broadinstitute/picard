@@ -1,5 +1,6 @@
 package picard.fingerprint;
 
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.cram.build.CramIO;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
@@ -62,21 +63,20 @@ public class CrosscheckFingerprintsTest {
     private static File  NA12892_and_NA123891_part2_vcf;
     private static File  NA12892_and_NA123891_part3_vcf;
 
-
     private static final Map<CrosscheckMetric.DataType, List<String>> lookupMap = new HashMap<>(4);
     
     @BeforeClass
     public void setup() throws IOException {
-        NA12891_r1 = SamTestUtils.createIndexedBam(NA12891_r1_sam, NA12891_r1_sam);
-        NA12891_r2 = SamTestUtils.createIndexedBam(NA12891_r2_sam, NA12891_r2_sam);
-        NA12891_named_NA12892_r1 = SamTestUtils.createIndexedBam(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam);
-        NA12892_r1 = SamTestUtils.createIndexedBam(NA12892_r1_sam, NA12892_r1_sam);
-        NA12892_r2 = SamTestUtils.createIndexedBam(NA12892_r2_sam, NA12892_r2_sam);
+        NA12891_r1 = SamTestUtils.createIndexedBamOrCram(NA12891_r1_sam, NA12891_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12891_r2 = SamTestUtils.createIndexedBamOrCram(NA12891_r2_sam, NA12891_r2_sam, SamReader.Type.BAM_TYPE);
+        NA12891_named_NA12892_r1 = SamTestUtils.createIndexedBamOrCram(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12892_r1 = SamTestUtils.createIndexedBamOrCram(NA12892_r1_sam, NA12892_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12892_r2 = SamTestUtils.createIndexedBamOrCram(NA12892_r2_sam, NA12892_r2_sam, SamReader.Type.BAM_TYPE);
 
-        NA12891_r1_cram = SamTestUtils.createIndexedCram(NA12891_r1_sam_shifted_for_cram, NA12891_r1_sam_shifted_for_cram,referenceForCrams);
-        NA12891_r2_cram = SamTestUtils.createIndexedCram(NA12891_r2_sam_shifted_for_cram, NA12891_r2_sam_shifted_for_cram,referenceForCrams);
-        NA12892_r1_cram = SamTestUtils.createIndexedCram(NA12892_r1_sam_shifted_for_cram, NA12892_r1_sam_shifted_for_cram,referenceForCrams);
-        NA12892_r2_cram = SamTestUtils.createIndexedCram(NA12892_r2_sam_shifted_for_cram, NA12892_r2_sam_shifted_for_cram,referenceForCrams);
+        NA12891_r1_cram = SamTestUtils.createIndexedBamOrCram(NA12891_r1_sam_shifted_for_cram, NA12891_r1_sam_shifted_for_cram, SamReader.Type.CRAM_TYPE, referenceForCrams);
+        NA12891_r2_cram = SamTestUtils.createIndexedBamOrCram(NA12891_r2_sam_shifted_for_cram, NA12891_r2_sam_shifted_for_cram, SamReader.Type.CRAM_TYPE, referenceForCrams);
+        NA12892_r1_cram = SamTestUtils.createIndexedBamOrCram(NA12892_r1_sam_shifted_for_cram, NA12892_r1_sam_shifted_for_cram, SamReader.Type.CRAM_TYPE, referenceForCrams);
+        NA12892_r2_cram = SamTestUtils.createIndexedBamOrCram(NA12892_r2_sam_shifted_for_cram, NA12892_r2_sam_shifted_for_cram, SamReader.Type.CRAM_TYPE, referenceForCrams);
 
         lookupMap.put(CrosscheckMetric.DataType.FILE, new ArrayList<>());
         lookupMap.get(CrosscheckMetric.DataType.FILE).addAll(Arrays.asList("LEFT_FILE", "RIGHT_FILE"));
