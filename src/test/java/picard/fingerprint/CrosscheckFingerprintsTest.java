@@ -1,5 +1,6 @@
 package picard.fingerprint;
 
+import htsjdk.samtools.cram.build.CramIO;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
@@ -24,19 +25,24 @@ public class CrosscheckFingerprintsTest {
 
     private final File TEST_DATA_DIR = new File("testdata/picard/fingerprint/");
     private final File HAPLOTYPE_MAP = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+    private final File HAPLOTYPE_MAP_FOR_CRAMS = new File(TEST_DATA_DIR,"Homo_sapiens_assembly19.haplotype_database.subset.shifted.for.crams.txt");
 
     private final File NA12891_r1_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam");
     private final File NA12891_r2_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r2.sam");
+    private final File NA12891_r1_sam_shifted_for_cram = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.shifted.for.crams.r1.sam");
+    private final File NA12891_r2_sam_shifted_for_cram = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.shifted.for.crams.r2.sam");
 
     //this is a copy of a previous one, but with a different sample name
     private final File NA12891_named_NA12892_r1_sam = new File(TEST_DATA_DIR, "NA12891_named_NA12892.over.fingerprints.r1.sam");
 
     private final File NA12892_r1_sam = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r1.sam");
     private final File NA12892_r2_sam = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r2.sam");
+    private final File NA12892_r1_sam_shifted_for_cram = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.shifted.for.crams.r1.sam");
+    private final File NA12892_r2_sam_shifted_for_cram = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.shifted.for.crams.r2.sam");
 
     private File NA12891_r1, NA12891_r2, NA12891_named_NA12892_r1, NA12892_r1, NA12892_r2;
-    private File NA12891_r1_cram, NA12891_r2_cram, NA12891_named_NA12892_r1_cram, NA12892_r1_cram, NA12892_r2_cram;
-    private final File reference = new File(TEST_DATA_DIR,"reference.fasta");
+    private File NA12891_r1_cram, NA12891_r2_cram, NA12892_r1_cram, NA12892_r2_cram;
+    private final File referenceForCrams = new File(TEST_DATA_DIR,"reference.shifted.for.crams.fasta");
 
     private final int NA12891_r1_RGs = 27;
     private final int NA12891_r2_RGs = 26;
@@ -67,11 +73,10 @@ public class CrosscheckFingerprintsTest {
         NA12892_r1 = SamTestUtils.createIndexedBam(NA12892_r1_sam, NA12892_r1_sam);
         NA12892_r2 = SamTestUtils.createIndexedBam(NA12892_r2_sam, NA12892_r2_sam);
 
-        NA12891_r1_cram = SamTestUtils.createIndexedCram(NA12891_r1_sam, NA12891_r1_sam,reference);
-        NA12891_r2_cram = SamTestUtils.createIndexedCram(NA12891_r2_sam, NA12891_r2_sam,reference);
-        NA12891_named_NA12892_r1_cram = SamTestUtils.createIndexedCram(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam,reference);
-        NA12892_r1_cram = SamTestUtils.createIndexedCram(NA12892_r1_sam, NA12892_r1_sam,reference);
-        NA12892_r2_cram = SamTestUtils.createIndexedCram(NA12892_r2_sam, NA12892_r2_sam,reference);
+        NA12891_r1_cram = SamTestUtils.createIndexedCram(NA12891_r1_sam_shifted_for_cram, NA12891_r1_sam_shifted_for_cram,referenceForCrams);
+        NA12891_r2_cram = SamTestUtils.createIndexedCram(NA12891_r2_sam_shifted_for_cram, NA12891_r2_sam_shifted_for_cram,referenceForCrams);
+        NA12892_r1_cram = SamTestUtils.createIndexedCram(NA12892_r1_sam_shifted_for_cram, NA12892_r1_sam_shifted_for_cram,referenceForCrams);
+        NA12892_r2_cram = SamTestUtils.createIndexedCram(NA12892_r2_sam_shifted_for_cram, NA12892_r2_sam_shifted_for_cram,referenceForCrams);
 
         lookupMap.put(CrosscheckMetric.DataType.FILE, new ArrayList<>());
         lookupMap.get(CrosscheckMetric.DataType.FILE).addAll(Arrays.asList("LEFT_FILE", "RIGHT_FILE"));
@@ -106,7 +111,7 @@ public class CrosscheckFingerprintsTest {
     }
 
     @DataProvider(name = "bamFilesRGs")
-    public Object[][] bamFilesRGs() {
+    public Object[][] bamAnCramFilesRGs() {
         return new Object[][] {
                 {NA12891_r1, NA12891_r2, false, 0, (NA12891_r1_RGs + NA12891_r2_RGs) * (NA12891_r1_RGs + NA12891_r2_RGs )},
                 {NA12891_r1, NA12892_r1, false, 0, (NA12891_r1_RGs + NA12892_r1_RGs) * (NA12891_r1_RGs + NA12892_r1_RGs )},
@@ -119,7 +124,19 @@ public class CrosscheckFingerprintsTest {
                 {NA12891_r1, NA12892_r2, true,  1, (NA12891_r1_RGs + NA12892_r2_RGs) * (NA12891_r1_RGs + NA12892_r2_RGs )},
                 {NA12892_r1, NA12892_r2, true,  0, (NA12892_r1_RGs + NA12892_r2_RGs) * (NA12892_r1_RGs + NA12892_r2_RGs )},
                 {NA12892_r2, NA12891_r2, true,  1, (NA12892_r2_RGs + NA12891_r2_RGs) * (NA12892_r2_RGs + NA12891_r2_RGs )},
-                {NA12892_r2, NA12891_r1, true,  1, (NA12892_r2_RGs + NA12891_r1_RGs) * (NA12892_r2_RGs + NA12891_r1_RGs )}
+                {NA12892_r2, NA12891_r1, true,  1, (NA12892_r2_RGs + NA12891_r1_RGs) * (NA12892_r2_RGs + NA12891_r1_RGs )},
+                {NA12891_r1_cram, NA12891_r2_cram, false, 0, (NA12891_r1_RGs + NA12891_r2_RGs) * (NA12891_r1_RGs + NA12891_r2_RGs )},
+                {NA12891_r1_cram, NA12892_r1_cram, false, 0, (NA12891_r1_RGs + NA12892_r1_RGs) * (NA12891_r1_RGs + NA12892_r1_RGs )},
+                {NA12891_r1_cram, NA12892_r2_cram, false, 0, (NA12891_r1_RGs + NA12892_r2_RGs) * (NA12891_r1_RGs + NA12892_r2_RGs )},
+                {NA12892_r1_cram, NA12892_r2_cram, false, 0, (NA12892_r1_RGs + NA12892_r2_RGs) * (NA12892_r1_RGs + NA12892_r2_RGs )},
+                {NA12892_r2_cram, NA12891_r2_cram, false, 0, (NA12892_r2_RGs + NA12891_r2_RGs) * (NA12892_r2_RGs + NA12891_r2_RGs )},
+                {NA12892_r2_cram, NA12891_r1_cram, false, 0, (NA12892_r2_RGs + NA12891_r1_RGs) * (NA12892_r2_RGs + NA12891_r1_RGs )},
+                {NA12891_r1_cram, NA12891_r2_cram, true,  0, (NA12891_r1_RGs + NA12891_r2_RGs) * (NA12891_r1_RGs + NA12891_r2_RGs )},
+                {NA12891_r1_cram, NA12892_r1_cram, true,  1, (NA12891_r1_RGs + NA12892_r1_RGs) * (NA12891_r1_RGs + NA12892_r1_RGs )},
+                {NA12891_r1_cram, NA12892_r2_cram, true,  1, (NA12891_r1_RGs + NA12892_r2_RGs) * (NA12891_r1_RGs + NA12892_r2_RGs )},
+                {NA12892_r1_cram, NA12892_r2_cram, true,  0, (NA12892_r1_RGs + NA12892_r2_RGs) * (NA12892_r1_RGs + NA12892_r2_RGs )},
+                {NA12892_r2_cram, NA12891_r2_cram, true,  1, (NA12892_r2_RGs + NA12891_r2_RGs) * (NA12892_r2_RGs + NA12891_r2_RGs )},
+                {NA12892_r2_cram, NA12891_r1_cram, true,  1, (NA12892_r2_RGs + NA12891_r1_RGs) * (NA12892_r2_RGs + NA12891_r1_RGs )}
         };
     }
 
@@ -129,16 +146,22 @@ public class CrosscheckFingerprintsTest {
         File metrics = File.createTempFile("Fingerprinting", "NA1291.RG.crosscheck_metrics");
         metrics.deleteOnExit();
 
-        final String[] args = new String[]{
-                "INPUT=" + file1.getAbsolutePath(),
+        final List<String> args = new ArrayList<>(Arrays.asList("INPUT=" + file1.getAbsolutePath(),
                 "INPUT=" + file2.getAbsolutePath(),
                 "OUTPUT=" + metrics.getAbsolutePath(),
-                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP,
                 "LOD_THRESHOLD=" + -2.0,
-                "EXPECT_ALL_GROUPS_TO_MATCH=" + expectAllMatch
-        };
+                "EXPECT_ALL_GROUPS_TO_MATCH=" + expectAllMatch)
+        );
 
-        doTest(args, metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
+        if (file1.getName().endsWith(CramIO.CRAM_FILE_EXTENSION)) {
+            args.add("R="+referenceForCrams);
+            args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_FOR_CRAMS);
+        } else {
+            args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
+        }
+
+
+        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
 
     @DataProvider(name = "bamFilesLBs")

@@ -793,5 +793,4 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
         }
     }
-
 }
