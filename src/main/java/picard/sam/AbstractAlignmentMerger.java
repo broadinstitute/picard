@@ -669,7 +669,7 @@ public abstract class AbstractAlignmentMerger {
             crossSpeciesReads++;
 
             if (unmappingReadsStrategy.isPopulatePaTag()) {
-                unaligned.setAttribute("PA", encodeMappingInformation(aligned));
+                unaligned.setAttribute("OA", encodeMappingInformation(aligned));
             }
 
             if (unmappingReadsStrategy.isResetMappingInformation()) {
@@ -699,7 +699,7 @@ public abstract class AbstractAlignmentMerger {
      * @param rec SAMRecord whose alignment information will be encoded
      * @return String encoding rec's alignment information according to SA tag in the SAM spec
      */
-    static public String encodeMappingInformation(final SAMRecord rec) {
+    public static String encodeMappingInformation(final SAMRecord rec) {
         return String.join(",",
                 rec.getContig(),
                 ((Integer) rec.getAlignmentStart()).toString(),
@@ -709,7 +709,7 @@ public abstract class AbstractAlignmentMerger {
     }
 
     //returns the toString() of its input or an empty string if null.
-    static private String getStringOfNullable(final Object obj) {
+    private static String getStringOfNullable(final Object obj) {
         return Optional.ofNullable(obj)
                 .map(Object::toString)
                 .orElse("");

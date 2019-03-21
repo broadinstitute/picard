@@ -26,6 +26,7 @@ package picard.sam;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
+import htsjdk.tribble.annotation.Strand;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -98,7 +99,7 @@ public class AddOATag extends CommandLineProgram {
     }
 
     // Take an interval list file and convert it to an overlap detector, can add left and right padding
-    static OverlapDetector<Interval> getOverlapDetectorFromIntervalListFile(File intervalList, int lhsBuffer, int rhsBuffer) {
+    static OverlapDetector<Interval> getOverlapDetectorFromIntervalListFile(final File intervalList, final int lhsBuffer, final int rhsBuffer) {
         if (intervalList == null) {
             return null;
         }
@@ -116,12 +117,12 @@ public class AddOATag extends CommandLineProgram {
         }
         final String oaValue;
         if (rec.getReadUnmappedFlag()) {
-            oaValue = String.format("*,0,%s,*,255,;", rec.getReadNegativeStrandFlag() ? "-" : "+");
+            oaValue = String.format("*,0,%s,*,255,;", rec.getReadNegativeStrandFlag() ? Strand.NEGATIVE : Strand.POSITIVE);
         } else {
             oaValue = String.format("%s,%s,%s,%s,%s,%s;",
                     rec.getReferenceName(),
                     rec.getAlignmentStart(),
-                    rec.getReadNegativeStrandFlag() ? "-" : "+",
+                    rec.getReadNegativeStrandFlag() ? Strand.NEGATIVE : Strand.POSITIVE,
                     rec.getCigarString(),
                     rec.getMappingQuality(),
                     Optional.ofNullable(rec.getAttribute(SAMTag.NM.name())).orElse(""));

@@ -23,27 +23,12 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.ReservedTagConstants;
-import htsjdk.samtools.SAMException;
-import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.*;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.fastq.FastqConstants.FastqExtensions;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
-import htsjdk.samtools.util.FastqQualityFormat;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Iso8601Date;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.QualityEncodingDetector;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.SolexaQualityConverter;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -113,11 +98,11 @@ import java.util.List;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class FastqToSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY = 
-    		"Converts a FASTQ file to an unaligned BAM or SAM file";
-    static final String USAGE_DETAILS = 
-    		"<p>Output read records will contain the original base calls and quality scores will be " +
-    		"translated depending on the base quality score encoding: FastqSanger, FastqSolexa and FastqIllumina.</p>" +
+    static final String USAGE_SUMMARY =
+            "Converts a FASTQ file to an unaligned BAM or SAM file";
+    static final String USAGE_DETAILS =
+            "<p>Output read records will contain the original base calls and quality scores will be " +
+                    "translated depending on the base quality score encoding: FastqSanger, FastqSolexa and FastqIllumina.</p>" +
         "<p>There are also arguments to provide values for SAM header and read attributes that are not present in FASTQ " +
         "(e.g see RG or SM below).</p>" + 
         "<h3>Inputs</h3>" +
@@ -155,7 +140,17 @@ public class FastqToSam extends CommandLineProgram {
     @Argument(shortName="F2", doc="Input fastq file (optionally gzipped) for the second read of paired end data.", optional=true)
     public File FASTQ2;
     
-    @Argument(doc="Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz", optional=true)
+    @Argument(doc="Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz." +
+            "The files should be named:\n" +
+            "    <prefix>_001.<extension>, <prefix>_002.<extension>, ..., <prefix>_XYZ.<extension>\n" +
+            " The base files should be:\n" +
+            "    <prefix>_001.<extension>\n" +
+            " An example would be:\n" +
+            "    RUNNAME_S8_L005_R1_001.fastq\n" +
+            "    RUNNAME_S8_L005_R1_002.fastq\n" +
+            "    RUNNAME_S8_L005_R1_003.fastq\n" +
+            "    RUNNAME_S8_L005_R1_004.fastq\n" +
+            "RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.", optional=true)
     public boolean USE_SEQUENTIAL_FASTQS = false;
 
     @Argument(shortName="V", doc="A value describing how the quality values are encoded in the input FASTQ file.  " +
