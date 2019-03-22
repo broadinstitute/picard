@@ -24,12 +24,12 @@
 
 package picard.sam.markduplicates;
 
-import com.oracle.tools.packager.IOUtils;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.FormatUtil;
+import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
 import picard.sam.DuplicationMetrics;
@@ -198,7 +198,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
             }
             return metricsOutput;
         } finally {
-            IOUtils.deleteRecursive(getOutputDir());
+            IOUtil.recursiveDelete(getOutputDir().toPath());
         }
     }
 
