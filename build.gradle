@@ -65,7 +65,7 @@ def ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage) {
 ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage)
 
 final htsjdkVersion = System.getProperty('htsjdk.version', '2.19.0')
-:
+
 // We use a custom shaded build of the NIO library to avoid a regression in the authentication layer.
 // GATK does the same, see https://github.com/broadinstitute/gatk/issues/3591
 final googleNio = 'org.broadinstitute:google-cloud-nio-GATK4-custom-patch:0.20.4-alpha-GCS-RETRY-FIX:shaded'

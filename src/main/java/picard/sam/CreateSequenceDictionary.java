@@ -272,14 +272,10 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         final byte[] bases = refSeq.getBases();
         for (int i = 0; i < bases.length; ++i) {
                 bases[i] = StringUtil.toUpperCase(bases[i]);
-            }
-
-        try {
-            //TODO: remove this when rev'ing htsjdk
-            ret.setAttribute(SAMSequenceRecord.MD5_TAG, SequenceUtil.calculateMD5String(bases));
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
         }
+
+        ret.setAttribute(SAMSequenceRecord.MD5_TAG, SequenceUtil.calculateMD5String(bases));
+
         if (GENOME_ASSEMBLY != null) {
             ret.setAttribute(SAMSequenceRecord.ASSEMBLY_TAG, GENOME_ASSEMBLY);
         }
