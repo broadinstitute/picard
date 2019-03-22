@@ -366,6 +366,9 @@ public class IntervalListTools extends CommandLineProgram {
         // Check inputs
         IOUtil.assertFilesAreReadable(INPUT);
         IOUtil.assertFilesAreReadable(SECOND_INPUT);
+        if (COUNT_OUTPUT != null) {
+            IOUtil.assertFileIsWritable(COUNT_OUTPUT);
+        }
 
         // Read in the interval lists and apply any padding
         final List<IntervalList> lists = openIntervalLists(INPUT);
@@ -466,7 +469,6 @@ public class IntervalListTools extends CommandLineProgram {
 
         LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
         if (COUNT_OUTPUT != null) {
-            IOUtil.assertFileIsWritable(COUNT_OUTPUT);
             try (final PrintStream countStream = new PrintStream(COUNT_OUTPUT)) {
                 OUTPUT_VALUE.output(totalBaseCount, intervalCount, countStream);
             }
