@@ -389,7 +389,7 @@ public class CheckFingerprint extends CommandLineProgram {
         try {
             final boolean isBamOrSamOrCramFile = isBamOrSamOrCram(IOUtil.getPath(INPUT));
             if (!isBamOrSamOrCramFile && IGNORE_READ_GROUPS) {
-                return new String[]{"The parameter IGNORE_READ_GROUPS can only be used with BAM/SAM inputs."};
+                return new String[]{"The parameter IGNORE_READ_GROUPS can only be used with BAM/SAM/CRAM inputs."};
             }
             if (isBamOrSamOrCramFile && OBSERVED_SAMPLE_ALIAS != null) {
                 return new String[]{"The parameter OBSERVED_SAMPLE_ALIAS can only be used with a VCF input."};

@@ -14,11 +14,10 @@ public class SamTestUtils {
      * Useful test method.  Creates a (temporary) indexed BAM or CRAM so that we can store a sam in the testdata set.
      *
      * @param samFile the sam file to convert to bam and index
+     * @param type the type of file to be created
+     * @param referenceFasta reference to be used if creating CRAM
      * @return File a (temporary) bam or cram file (index file is created in same path).
      */
-    public static File createIndexedBamOrCram(final File samFile, final File tempFilePrefix, final SamReader.Type type) throws IOException {
-        return createIndexedBamOrCram(samFile, tempFilePrefix, type, null);
-    }
 
     public static File createIndexedBamOrCram(final File samFile, final File tempFilePrefix, final SamReader.Type type, final File referenceFasta) throws IOException {
         if (type != SamReader.Type.BAM_TYPE && type != SamReader.Type.CRAM_TYPE) {
@@ -42,5 +41,9 @@ public class SamTestUtils {
         in.close();
 
         return output;
+    }
+
+    public static File createIndexedBamOrCram(final File samFile, final File tempFilePrefix, final SamReader.Type type) throws IOException {
+        return createIndexedBamOrCram(samFile, tempFilePrefix, type, null);
     }
 }

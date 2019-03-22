@@ -1,7 +1,6 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.SamReader;
-import htsjdk.samtools.cram.build.CramIO;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
@@ -111,7 +110,7 @@ public class CrosscheckFingerprintsTest {
     }
 
     @DataProvider(name = "bamFilesRGs")
-    public Object[][] bamAnCramFilesRGs() {
+    public Object[][] bamAndCramFilesRGs() {
         return new Object[][] {
                 {NA12891_r1, NA12891_r2, false, 0, (NA12891_r1_RGs + NA12891_r2_RGs) * (NA12891_r1_RGs + NA12891_r2_RGs )},
                 {NA12891_r1, NA12892_r1, false, 0, (NA12891_r1_RGs + NA12892_r1_RGs) * (NA12891_r1_RGs + NA12892_r1_RGs )},
@@ -153,7 +152,7 @@ public class CrosscheckFingerprintsTest {
                 "EXPECT_ALL_GROUPS_TO_MATCH=" + expectAllMatch)
         );
 
-        if (file1.getName().endsWith(CramIO.CRAM_FILE_EXTENSION)) {
+        if (file1.getName().endsWith(SamReader.Type.CRAM_TYPE.fileExtension())) {
             args.add("R="+referenceForCrams);
             args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_FOR_CRAMS);
         } else {

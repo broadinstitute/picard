@@ -339,7 +339,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             return new String[]{"GENOTYPING_ERROR_RATE must be greater than zero. Found " + GENOTYPING_ERROR_RATE};
         }
 
-        //check for reference provided if using crams as input
+        //check that reference is provided if using crams as input
         if (REFERENCE_SEQUENCE == null) {
             final List<String> allInputs = new ArrayList<>(INPUT);
             allInputs.addAll(SECOND_INPUT);
