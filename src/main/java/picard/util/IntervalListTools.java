@@ -40,7 +40,7 @@ import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
-import java.io.File;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -271,26 +271,33 @@ public class IntervalListTools extends CommandLineProgram {
             "by any of the input intervals. Will merge abutting intervals first. Output will be sorted.", optional = true)
     public boolean INVERT = false;
 
-    @Argument(doc = "What value (if anything) to output to stdout (for scripting)")
+    @Argument(doc = "What value to output to COUNT_OUTPUT file or stdout (for scripting).  If COUNT_OUTPUT is provided, this parameter must not be NONE.")
     public Output OUTPUT_VALUE = Output.NONE;
 
+    @Argument(doc = "File to which to print count of bases or intervals in final output interval list.  When not set, value indicated by OUTPUT_VALUE will be printed to stdout.  " +
+            "If this parameter is set, OUTPUT_VALUE must not be NONE.", optional = true)
+    public File COUNT_OUTPUT;
+
     enum Output {
-        NONE() {
-            void output(long totalBaseCount, long intervalCount) {
+        NONE {
+            void output(final long totalBaseCount, final long intervalCount, final PrintStream stream){
+                if (stream != System.out) {
+                    throw new PicardException("Asked to output NONE with COUNT_OUTPUT set.");
+                }
             }
         },
         BASES {
-            void output(long totalBaseCount, long intervalCount) {
-                System.out.println(totalBaseCount);
+            void output(final long totalBaseCount, final long intervalCount, final PrintStream stream) {
+                stream.println(totalBaseCount);
             }
         },
         INTERVALS {
-            void output(long totalBaseCount, long intervalCount) {
-                System.out.println(intervalCount);
+            void output(final long totalBaseCount, final long intervalCount, final PrintStream stream) {
+                stream.println(intervalCount);
             }
         };
 
-        abstract void output(long totalBaseCount, long intervalCount);
+        abstract void output(final long totalBaseCount, final long intervalCount, final PrintStream stream);
     }
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
@@ -359,6 +366,9 @@ public class IntervalListTools extends CommandLineProgram {
         // Check inputs
         IOUtil.assertFilesAreReadable(INPUT);
         IOUtil.assertFilesAreReadable(SECOND_INPUT);
+        if (COUNT_OUTPUT != null) {
+            IOUtil.assertFileIsWritable(COUNT_OUTPUT);
+        }
 
         // Read in the interval lists and apply any padding
         final List<IntervalList> lists = openIntervalLists(INPUT);
@@ -458,7 +468,16 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
-        OUTPUT_VALUE.output(totalBaseCount, intervalCount);
+        if (COUNT_OUTPUT != null) {
+            try (final PrintStream countStream = new PrintStream(COUNT_OUTPUT)) {
+                OUTPUT_VALUE.output(totalBaseCount, intervalCount, countStream);
+            }
+            catch (final IOException e) {
+                throw new PicardException("There was a problem writing count to " + COUNT_OUTPUT.getAbsolutePath());
+            }
+        } else {
+            OUTPUT_VALUE.output(totalBaseCount, intervalCount, System.out);
+        }
         return 0;
     }
 
@@ -489,6 +508,9 @@ public class IntervalListTools extends CommandLineProgram {
         }
         if ((SECOND_INPUT != null && !SECOND_INPUT.isEmpty()) && !ACTION.takesSecondInput) {
             errorMsgs.add("SECOND_INPUT was provided but action " + ACTION + " doesn't take a second input.");
+        }
+        if (COUNT_OUTPUT != null && OUTPUT_VALUE == Output.NONE) {
+            errorMsgs.add("COUNT_OUTPUT was provided but OUTPUT_VALUE is set to NONE.");
         }
 
         return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
