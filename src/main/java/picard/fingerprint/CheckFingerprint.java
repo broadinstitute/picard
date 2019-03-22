@@ -24,11 +24,9 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.cram.build.CramIO;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -399,6 +397,11 @@ public class CheckFingerprint extends CommandLineProgram {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        if (REFERENCE_SEQUENCE == null && INPUT.endsWith(SamReader.Type.CRAM_TYPE.fileExtension())) {
+            return new String[]{"REFERENCE must be provided when using CRAM as input."};
+        }
+
         return super.customCommandLineValidation();
     }
 

@@ -164,6 +164,30 @@ public class CrosscheckFingerprintsTest {
         doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
 
+    @DataProvider(name = "cramsWithNoReference")
+    public Object[][] cramsWithNoReference() {
+        return new Object[][] {
+                {NA12891_r1_cram, NA12891_r2_cram},
+                {NA12891_r1_cram, NA12891_r2},
+                {NA12891_r1, NA12891_r2_cram}
+        };
+    }
+
+    @Test(dataProvider = "cramsWithNoReference")
+    public void testCramsWithNoReference(final File file1, final File file2) throws  IOException {
+        File metrics = File.createTempFile("Fingerprinting", "NA1291.RG.crosscheck_metrics");
+        metrics.deleteOnExit();
+
+        final String[] args = {"INPUT="+file1.getAbsolutePath(),
+                "SECOND_INPUT="+file2.getAbsolutePath(),
+                "OUTPUT=" + metrics.getAbsolutePath(),
+                "LOD_THRESHOLD=" + -2.0,
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_FOR_CRAMS
+        };
+        final CrosscheckFingerprints crossChecker = new CrosscheckFingerprints();
+        Assert.assertEquals(crossChecker.instanceMain(args), 1);
+    }
+
     @DataProvider(name = "bamFilesLBs")
     public Object[][] bamFilesLBs() {
 
