@@ -24,6 +24,8 @@
 
 package picard.sam;
 
+import htsjdk.samtools.Defaults;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -34,63 +36,47 @@ import java.util.List;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-public class SamFileConverterTest {
+public class SamFormatConverterTest {
 
-    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/SamFileConverterTest");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/SamFormatConverterTest");
     private static final File unmappedSam = new File(TEST_DATA_DIR, "unmapped.sam");
     private static final File unmappedBam = new File(TEST_DATA_DIR, "unmapped.bam");
     private static final File unmappedCram = new File(TEST_DATA_DIR, "unmapped.cram");
 
-    @Test
-    public void testSAMToBAM() {
-        convertFile(unmappedSam, unmappedBam, ".bam");
+    private static final File ESSENTIALLY_EMPTY_REFERENCE_TO_USE_WITH_UNMAPPED_CRAM = new File(TEST_DATA_DIR, "basicallyEmpty.fasta");
+
+    @DataProvider
+    public Object[][] conversionCases() {
+        return new Object[][]{
+                {unmappedSam, unmappedBam, ".bam"},
+                {unmappedSam, unmappedCram, ".cram"},
+                {unmappedBam, unmappedCram, ".cram"},
+                {unmappedBam, unmappedSam, ".sam"},
+                {unmappedCram, unmappedBam, ".bam"},
+                {unmappedCram, unmappedSam, ".sam"},
+
+        };
     }
 
-    @Test
-    public void testSAMToCRAM() {
-        convertFile(unmappedSam, unmappedCram, ".cram");
-    }
-
-    @Test
-    public void testBAMToCRAM() {
-        convertFile(unmappedBam, unmappedCram, ".cram");
-    }
-
-    @Test
-    public void testBAMToSAM() {
-        convertFile(unmappedBam, unmappedSam, ".sam");
-    }
-
-    @Test
-    public void testCRAMToBAM() {
-        convertFile(unmappedCram, unmappedBam, ".bam");
-    }
-
-    @Test
-    public void testCRAMToSAM() {
-        convertFile(unmappedCram, unmappedSam, ".sam");
+    @Test(dataProvider = "conversionCases")
+    public void testConvert(File input, File expected, String extension) throws IOException {
+        convertFile(input, expected, extension);
     }
 
 
-    private void convertFile(final File inputFile, final File fileToCompare, final String extension) {
-        final SamFormatConverter samFormatConverter = new SamFormatConverter();
-        final List<File> samFiles = new ArrayList<File>();
+    private void convertFile(final File inputFile, final File fileToCompare, final String extension) throws IOException {
+        final List<File> samFiles = new ArrayList<>();
         final ValidateSamFile validateSamFile = new ValidateSamFile();
         final CompareSAMs compareSAMs = new CompareSAMs();
 
-        samFormatConverter.INPUT = inputFile;
-        try {
-            samFormatConverter.OUTPUT = File.createTempFile("SamFileConverterTest." + inputFile.getName(), extension);
-            samFormatConverter.OUTPUT.deleteOnExit();
-        } catch (final IOException e) {
-            e.printStackTrace();
-        }
-        samFormatConverter.doWork();
+        final File output = File.createTempFile("SamFormatConverterTest." + inputFile.getName(), extension);
+        output.deleteOnExit();
+        SamFormatConverter.convert(inputFile, output, ESSENTIALLY_EMPTY_REFERENCE_TO_USE_WITH_UNMAPPED_CRAM, Defaults.CREATE_INDEX);
 
-        validateSamFile.INPUT = samFormatConverter.OUTPUT;
+        validateSamFile.INPUT = output;
         assertEquals(validateSamFile.doWork(), 0);
 
-        samFiles.add(samFormatConverter.OUTPUT);
+        samFiles.add(output);
         samFiles.add(fileToCompare);
 
         compareSAMs.samFiles = samFiles;

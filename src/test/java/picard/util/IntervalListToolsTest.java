@@ -262,7 +262,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @AfterTest
     void deleteTempDirs() {
-        dirsToDelete.forEach(TestUtil::recursiveDelete);
+        dirsToDelete.forEach(file -> IOUtil.recursiveDelete(file.toPath()));
     }
 
     @Test(dataProvider = "testScatterTestcases")
