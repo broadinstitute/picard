@@ -159,10 +159,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                 for (final SAMRecord record : reader) {
                     outputRecords++;
                     final String key = samRecordToDuplicatesFlagsKey(record);
-                    if (!this.duplicateFlags.containsKey(key)) {
-                        System.err.println("DOES NOT CONTAIN KEY: " + key);
-                    }
-                    Assert.assertTrue(this.duplicateFlags.containsKey(key));
+                    Assert.assertTrue(this.duplicateFlags.containsKey(key), "DOES NOT CONTAIN KEY: " + key);
                     final boolean value = this.duplicateFlags.get(key);
                     this.duplicateFlags.remove(key);
                     Assert.assertEquals(record.getDuplicateReadFlag(), value, "Mismatching read: " + record.getSAMString());
@@ -171,8 +168,6 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                     }
                     Assert.assertEquals(record.getDuplicateReadFlag(), value);
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
 
             // Ensure the program output the same number of records as were read in

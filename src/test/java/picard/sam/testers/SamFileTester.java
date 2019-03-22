@@ -363,7 +363,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
             output = new File(outputDir, "output.sam");
             args.add("INPUT=" + input.getAbsoluteFile());
             args.add("OUTPUT=" + output.getAbsoluteFile());
-            if(inputExtension.equals(".cram")){
+            if (inputExtension.equals(".cram")) {
                 args.add("REFERENCE_SEQUENCE=" + fastaFiles.get(samRecordSetBuilder.getHeader()));
             }
             Assert.assertEquals(runPicardCommandLine(args), 0);
