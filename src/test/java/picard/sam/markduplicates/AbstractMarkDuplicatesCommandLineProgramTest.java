@@ -630,7 +630,6 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         final SAMFileHeader header = tester.getSamRecordSetBuilder().getHeader();
         final SAMFileHeader.SortOrder sortOrder = header.getSortOrder();
         final SAMFileHeader newHeader = SAMRecordSetBuilder.makeDefaultHeader(sortOrder, 100000,true);
-        header.getReadGroups().forEach(newHeader::addReadGroup);
         tester.getSamRecordSetBuilder().setHeader(newHeader);
     }
 
