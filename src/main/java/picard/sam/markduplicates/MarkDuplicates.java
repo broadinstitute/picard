@@ -1029,8 +1029,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 compareDifference = lhs.getY() - rhs.getY();
             }
 
-            // The following is arbitrary (especially given the dependence above on the hash) and is only
-            // there for completeness. Other implementations may chose to forgo this tiebreak if they do have
+            // The following is arbitrary and is only included for completeness.
+            // Other implementations may chose to forgo this tiebreak if they do not have
             // access to the index-in-file of the records (e.g. SPARK implmentations)
 
             if (compareDifference == 0) {
