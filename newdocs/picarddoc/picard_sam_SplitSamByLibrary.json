@@ -98,7 +98,7 @@
       "type": "File",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "/Users/npetrill/picard/.",
+      "defaultValue": "/home/jcarey/workspace/picard/.",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",

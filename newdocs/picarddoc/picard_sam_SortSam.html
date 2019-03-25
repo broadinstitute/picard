@@ -410,9 +410,10 @@
  <p> For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME)
  field using the reference sequence dictionary tag labeled SQ.
  Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).
- Subsequent to this sorting scheme, alignments are listed arbitrarily.</p> For queryname-sorted alignments, all
- alignments are grouped using the queryname field but the alignments are not necessarily sorted within these groups.
- Reads having the same queryname are derived from the same template.
+ Subsequent to this sorting scheme, alignments are listed arbitrarily.</p> For queryname-sorted alignments, the tool
+ orders records deterministically by queryname field followed by record strand orientation flag, primary record flag, and secondary
+ alignment flag. (See htsjdk.samtools.SAMRecordQueryNameComparator#compare(SAMRecord, SAMRecord)} for details).
+ This ordering may change in the future.
 
  <h3> Inputs</h3>
  <ul>
@@ -795,7 +796,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.18.26-SNAPSHOT built at 11-57-2019 03:57:23.
+        <p class="version">Picard version 2.19.0-SNAPSHOT built at 25-21-2019 05:21:10.
         </p>
 
 	</div>

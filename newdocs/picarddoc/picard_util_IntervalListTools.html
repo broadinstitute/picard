@@ -534,6 +534,13 @@
 					<td>One or more lines of comment to add to the header of the output file (as @CO lines in the SAM header).</td>
 				</tr>
 				<tr>
+					<td><a href="#--COUNT_OUTPUT">--COUNT_OUTPUT</a><br />
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>File to which to print count of bases or intervals in final output interval list.  When not set, value indicated by OUTPUT_VALUE will be printed to stdout.  If this parameter is set, OUTPUT_VALUE must not be NONE.</td>
+				</tr>
+				<tr>
 					<td><a href="#--INCLUDE_FILTERED">--INCLUDE_FILTERED</a><br />
 					</td>
 					<!--<td>boolean</td> -->
@@ -560,7 +567,7 @@
 					</td>
 					<!--<td>Output</td> -->
 					<td>NONE</td>
-					<td>What value (if anything) to output to stdout (for scripting)</td>
+					<td>What value to output to COUNT_OUTPUT file or stdout (for scripting).  If COUNT_OUTPUT is provided, this parameter must not be NONE.</td>
 				</tr>
 				<tr>
 					<td><a href="#--PADDING">--PADDING</a><br />
@@ -778,6 +785,18 @@
 			&nbsp;<span class="label label-warning">∞ ] ]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--COUNT_OUTPUT">--COUNT_OUTPUT </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>File to which to print count of bases or intervals in final output interval list.  When not set, value indicated by OUTPUT_VALUE will be printed to stdout.  If this parameter is set, OUTPUT_VALUE must not be NONE.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CREATE_INDEX">--CREATE_INDEX </a>
 			 / <small>NA</small>
 		</h3>
@@ -881,7 +900,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>What value (if anything) to output to stdout (for scripting)</b><br />
+			<b>What value to output to COUNT_OUTPUT file or stdout (for scripting).  If COUNT_OUTPUT is provided, this parameter must not be NONE.</b><br />
 			
 		</p>
 			<p>
@@ -1136,7 +1155,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.18.26-SNAPSHOT built at 11-57-2019 03:57:23.
+        <p class="version">Picard version 2.19.0-SNAPSHOT built at 25-21-2019 05:21:10.
         </p>
 
 	</div>
