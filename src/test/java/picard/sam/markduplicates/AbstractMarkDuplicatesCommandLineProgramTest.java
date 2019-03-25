@@ -598,10 +598,10 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.getSamRecordSetBuilder().setReadLength(100);
         for (int position = 1; position <= 10000; position += 1) {
             tester.addMappedFragment(0, position, false, "100M", DEFAULT_BASE_QUALITY + 1);
-            tester.addMappedFragment(0, position, true, "99M1I", DEFAULT_BASE_QUALITY);
-            tester.addMappedFragment(0, position, true, "99M1I", DEFAULT_BASE_QUALITY);
-            tester.addMappedFragment(0, position, true, "99M1I", DEFAULT_BASE_QUALITY);
-            tester.addMappedFragment(0, position, true, "99M1I", DEFAULT_BASE_QUALITY);
+            tester.addMappedFragment(0, position, true, "50M1I1D49M", DEFAULT_BASE_QUALITY);
+            tester.addMappedFragment(0, position, true, "50M1I1D49M", DEFAULT_BASE_QUALITY);
+            tester.addMappedFragment(0, position, true, "50M1I1D49M", DEFAULT_BASE_QUALITY);
+            tester.addMappedFragment(0, position, true, "50M1I1D49M", DEFAULT_BASE_QUALITY);
         }
         tester.runTest(extension);
     }
@@ -612,15 +612,14 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         ModifyTesterForCramTests(tester);
 
         tester.getSamRecordSetBuilder().setReadLength(100);
-        for (int position1 = 1; position1 <= 1; position1 += 1) {
-            for (int position2 = 1; position2 <= 1; position2 += 1) {
+        for (int position1 = 1; position1 <= 10; position1 += 1) {
+            for (int position2 = 200; position2 <= 230; position2 += 1) {
                 tester.addMappedPair(0, position1, position2, false, false, "100M", "100M", false, DEFAULT_BASE_QUALITY + 1);
-                tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
-                tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
-                tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
-                tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
-                tester.addMappedPair(0, position1, position2, true, true, "99M1I", "99M1I", false, DEFAULT_BASE_QUALITY);
-
+                tester.addMappedPair(0, position1, position2, true, true, "50M1I1D49M", "50M1I1D49M", false, DEFAULT_BASE_QUALITY);
+                tester.addMappedPair(0, position1, position2, true, true, "50M1I1D49M", "50M1I1D49M", false, DEFAULT_BASE_QUALITY);
+                tester.addMappedPair(0, position1, position2, true, true, "50M1I1D49M", "50M1I1D49M", false, DEFAULT_BASE_QUALITY);
+                tester.addMappedPair(0, position1, position2, true, true, "50M1I1D49M", "50M1I1D49M", false, DEFAULT_BASE_QUALITY);
+                tester.addMappedPair(0, position1, position2, true, true, "50M1I1D49M", "50M1I1D49M", false, DEFAULT_BASE_QUALITY);
             }
         }
         tester.runTest(extension);
