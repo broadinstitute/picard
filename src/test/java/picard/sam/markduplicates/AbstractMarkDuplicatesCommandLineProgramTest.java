@@ -394,7 +394,6 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
-    // TODO: fails on MarkDuplicatesWithMateCigar
     @Test
     public void testMappedPairAndMatePairFirstOppositeStrandSecondUnmapped() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
