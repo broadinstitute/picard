@@ -56,7 +56,18 @@ public class CompareSAMsTest extends CommandLineProgramTest {
                 { "unmapped_first.sam", "unmapped_first.sam", true },
                 { "genomic_sorted.sam", "genomic_sorted_sam_v1.6.sam", false },
                 { "unsorted.sam", "unsorted.sam", true },
-                { "unsorted.sam", "unsorted2.sam", false}
+                { "unsorted.sam", "unsorted2.sam", false},
+                {"dup_first.sam", "dup_second.sam", true},
+                {"dup_first.sam", "dup_third.sam", false},
+                {"dup_first.sam", "dup_fourth.sam", false},
+                {"dup_first.sam", "dup_fifth.sam", false},
+                {"dup_first.sam", "dup_second.sam", "DUPLICATE_STRINGENCY=STRICT", false},
+                {"dup_first_queryname.sam", "dup_second_queryname.sam", true},
+                {"dup_first_queryname.sam", "dup_third_queryname.sam", false},
+                {"dup_first_queryname.sam", "dup_fourth_queryname.sam", false},
+                {"dup_first_queryname.sam", "dup_fifth_queryname.sam", false},
+                {"dup_first_queryname.sam", "dup_second_queryname.sam", false}
+
         };
     }
 
