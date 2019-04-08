@@ -49,7 +49,6 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
     public long read1IndexInFile = -1;
     public long read2IndexInFile = -1;
     public int duplicateSetSize = -1;
-    public String key = null;
 
     public ReadEndsForMarkDuplicates() {}
 
@@ -66,15 +65,12 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
         this.x = read.x;
         this.y = read.y;
 
-
         this.orientationForOpticalDuplicates = read.orientationForOpticalDuplicates;
 
         this.score = read.score;
 
         this.read1IndexInFile = read.read1IndexInFile;
         this.read2IndexInFile = read.read2IndexInFile;
-
-        this.key = read.key;
     }
 
     @Override
