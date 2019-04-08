@@ -128,7 +128,7 @@ public class FindMendelianViolationsTest {
         Assert.assertEquals(grepMv(violationsFAKE, Haploid_Other.name()), mv.NUM_HAPLOID_OTHER);
         Assert.assertEquals(grepMv(violationsFAKE, Other.name()), mv.NUM_OTHER);
 
-        TestUtil.recursiveDelete(directoryForViolations);
+        IOUtil.recursiveDelete(directoryForViolations.toPath());
     }
 
     /** returns the number of lines in the file that contain a regular expression (decorated with "MV=" and
