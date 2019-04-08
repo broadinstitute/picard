@@ -29,6 +29,11 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class CompareSAMsTest extends CommandLineProgramTest {
     private static final File TEST_FILES_DIR = new File("testdata/picard/sam/CompareSAMs");
@@ -39,51 +44,66 @@ public class CompareSAMsTest extends CommandLineProgramTest {
 
     @DataProvider(name="compareSams")
     public Object[][] compareSamsTestData() {
+        final ArrayList<String> lenientArgs = new ArrayList<>(Arrays.asList("LENIENT_DUP=true", "MQ0_MATCH=true"));
         return new Object[][] {
-                { "genomic_sorted.sam", "unsorted.sam", false },
-                { "genomic_sorted.sam", "chr21.sam", false },
-                { "genomic_sorted.sam", "bigger_seq_dict.sam", false },
-                { "bigger_seq_dict.sam", "bigger_seq_dict.sam", true },
-                { "genomic_sorted.sam", "genomic_sorted.sam", true },
-                { "genomic_sorted.sam", "has_non_primary.sam", true },
-                { "genomic_sorted_5.sam", "genomic_sorted_5_plus.sam", false },
-                { "group_same_coord.sam", "group_same_coord_diff_order.sam", false },
-                { "genomic_sorted_same_position.sam", "genomic_sorted_same_position.sam", true },
-                { "group_same_coord.sam", "diff_coords.sam", false },
-                { "genomic_sorted.sam", "unmapped_first.sam", false },
-                { "genomic_sorted.sam", "unmapped_second.sam", false },
-                { "unmapped_first.sam", "unmapped_second.sam", false },
-                { "unmapped_first.sam", "unmapped_first.sam", true },
-                { "genomic_sorted.sam", "genomic_sorted_sam_v1.6.sam", false },
-                { "unsorted.sam", "unsorted.sam", true },
-                { "unsorted.sam", "unsorted2.sam", false},
-                {"dup_first.sam", "dup_second.sam", true},
-                {"dup_first.sam", "dup_third.sam", false},
-                {"dup_first.sam", "dup_fourth.sam", false},
-                {"dup_first.sam", "dup_fifth.sam", false},
-                {"dup_first.sam", "dup_second.sam", "DUPLICATE_STRINGENCY=STRICT", false},
-                {"dup_first_queryname.sam", "dup_second_queryname.sam", true},
-                {"dup_first_queryname.sam", "dup_third_queryname.sam", false},
-                {"dup_first_queryname.sam", "dup_fourth_queryname.sam", false},
-                {"dup_first_queryname.sam", "dup_fifth_queryname.sam", false},
-                {"dup_first_queryname.sam", "dup_second_queryname.sam", false}
-
+                { "genomic_sorted.sam", "unsorted.sam", null, false },
+                { "genomic_sorted.sam", "chr21.sam", null, false },
+                { "genomic_sorted.sam", "bigger_seq_dict.sam", null, false },
+                { "bigger_seq_dict.sam", "bigger_seq_dict.sam", null, true },
+                { "genomic_sorted.sam", "genomic_sorted.sam", null, true },
+                { "genomic_sorted.sam", "has_non_primary.sam", null, true },
+                { "genomic_sorted_5.sam", "genomic_sorted_5_plus.sam", null, false },
+                { "group_same_coord.sam", "group_same_coord_diff_order.sam", null, false },
+                { "genomic_sorted_same_position.sam", "genomic_sorted_same_position.sam", null, true },
+                { "group_same_coord.sam", "diff_coords.sam", null, false },
+                { "genomic_sorted.sam", "unmapped_first.sam", null, false },
+                { "genomic_sorted.sam", "unmapped_second.sam", null, false },
+                { "unmapped_first.sam", "unmapped_second.sam", null, false },
+                { "unmapped_first.sam", "unmapped_first.sam", null, true },
+                { "genomic_sorted.sam", "genomic_sorted_sam_v1.6.sam", null, false },
+                { "unsorted.sam", "unsorted.sam", null, true },
+                { "unsorted.sam", "unsorted2.sam", null, false},
+                {"dup1.sam", "dup2.sam", lenientArgs, true},
+                {"dup1.sam", "dup3.sam", lenientArgs, false},
+                {"dup1.sam", "dup4.sam", lenientArgs, false},
+                {"dup1.sam", "dup5.sam", lenientArgs, false},
+                {"dup1.sam", "dup2.sam", null, false},
+                {"dup1_queryname.sam", "dup2_queryname.sam", lenientArgs, true},
+                {"dup1_queryname.sam", "dup3_queryname.sam", lenientArgs, false},
+                {"dup1_queryname.sam", "dup4_queryname.sam", lenientArgs, false},
+                {"dup1_queryname.sam", "dup5_queryname.sam", lenientArgs, false},
+                {"dup1_queryname.sam", "dup2_queryname.sam", null, false}
         };
     }
 
-    @Test(dataProvider="compareSams")
-    public void testCompareSAMs(final String f1, final String f2, final boolean areEqual) {
-        final String[] samFiles = {
-                new File(TEST_FILES_DIR, f1).getAbsolutePath(),
-                new File(TEST_FILES_DIR, f2).getAbsolutePath()
-        };
-        Assert.assertEquals(runPicardCommandLine(samFiles) == 0, areEqual);
+    @Test(dataProvider = "compareSams")
+    public void testComparisons(final String f1, final String f2, final ArrayList<String> args, final boolean areEqual) throws IOException {
+        final Path tmpOutput = Files.createTempFile("compareSam", ".tsv");
+        final String in1 = new File(TEST_FILES_DIR, f1).getAbsolutePath();
+        final String in2 = new File(TEST_FILES_DIR, f2).getAbsolutePath();
+        ArrayList<String> commandArgs = new ArrayList<>(
+                Arrays.asList(
+                        "I=" + in1,
+                        "I=" + in2,
+                        "O=" + tmpOutput
+                )
+        );
+        if (args != null) {
+            commandArgs.addAll(args);
+        }
+        Assert.assertEquals(runPicardCommandLine(commandArgs) == 0, areEqual);
 
-        final String[] samFilesReversed = {
-                new File(TEST_FILES_DIR, f2).getAbsolutePath(),
-                new File(TEST_FILES_DIR, f1).getAbsolutePath()
-        };
-        Assert.assertEquals(runPicardCommandLine(samFilesReversed) == 0, areEqual);
+        //swap order of input files
+        commandArgs = new ArrayList<>(
+                Arrays.asList(
+                        "I=" + in2,
+                        "I=" + in1,
+                        "O=" + tmpOutput
+                )
+        );
+        if (args != null) {
+            commandArgs.addAll(args);
+        }
+        Assert.assertEquals(runPicardCommandLine(commandArgs) == 0, areEqual);
     }
-
 }
