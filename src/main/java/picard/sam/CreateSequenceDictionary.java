@@ -23,6 +23,7 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceDictionaryCodec;
 import htsjdk.samtools.SAMSequenceRecord;
@@ -120,14 +121,8 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     public File ALT_NAMES = null;
 
     private final MessageDigest md5;
-    
-    /** 
-     * Regular expression defined in the sam spec. Any alternative contig should match this regular expression 
-     * TODO: replace the pattern with a constant : see https://github.com/samtools/htsjdk/pull/956/files
-     */
-    private static final Pattern ALTERNATIVE_CONTIG_NAME_PATTERN = Pattern.compile("[0-9A-Za-z][0-9A-Za-z\\*\\+@\\|\\-]*");
-    
-    /**  
+
+    /**
      * 'AN' attribute in the dictionary
      * TODO: replace "AN" with a constant : see https://github.com/samtools/htsjdk/pull/956/files
      */
@@ -344,22 +339,22 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                 final String altName = line.substring(tab + 1);
                 // check for empty values
                 if (StringUtil.isBlank(contigName)) {
-                    throw new IOException("empty contig in  " + line);
+                    throw new IOException("empty contig in " + line);
                 }
                 if (StringUtil.isBlank(altName)) {
-                    throw new IOException("empty alternative name in  " + line);
+                    throw new IOException("empty alternative name in " + line);
                 }
                 if (altName.equals(contigName)) {
                     continue;
                 }
-                if (!ALTERNATIVE_CONTIG_NAME_PATTERN.matcher(altName).matches()) {
-                    throw new IOException("alternative name in  " + line +
-                            " doesn't match the regular expression : " +
-                            ALTERNATIVE_CONTIG_NAME_PATTERN.pattern());
+                try {
+                    SAMSequenceRecord.validateSequenceName(altName);
+                } catch (final SAMException exception) {
+                    throw new IOException("Illegal alternative reference sequence name in " + line, exception);
                 }
                 // check alias not previously defined as contig
                 if (aliasesByContig.containsKey(altName)) {
-                    throw new IOException("alternate name  " + altName +
+                    throw new IOException("alternate name " + altName +
                             " previously defined as a contig in " + line);
                 }
                 // check contig not previously defined as alias
@@ -367,7 +362,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                         // not an error if defined twice for same contig
                         filter(K -> !K.equals(contigName)). 
                         anyMatch(K -> aliasesByContig.get(K).contains(contigName))) {
-                            throw new IOException("contig  " + contigName +
+                            throw new IOException("contig " + contigName +
                                 " previously defined as an alternate name in " + line);
                 }
                 // add alias

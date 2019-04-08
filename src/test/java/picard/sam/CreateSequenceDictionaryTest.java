@@ -23,14 +23,13 @@
  */
 package picard.sam;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
-import picard.cmdline.CommandLineProgramTest;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -46,10 +45,12 @@ import java.util.stream.Collectors;
  * @author alecw@broadinstitute.org
  */
 public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
-    public static File TEST_DATA_DIR = new File("testdata/picard");
-    public static File BASIC_FASTA = new File(TEST_DATA_DIR + "/sam", "basic.fasta");
-    public static File EQUIVALENCE_TEST_FASTA = new File(TEST_DATA_DIR + "/reference", "test.fasta");
-    public static File DUPLICATE_FASTA = new File(TEST_DATA_DIR + "/sam", "duplicate_sequence_names.fasta");
+    private static File TEST_DATA_DIR = new File("testdata/picard");
+    private static File BASIC_FASTA = new File(TEST_DATA_DIR + "/sam", "basic.fasta");
+    private static File SPECIAL_FASTA = new File(TEST_DATA_DIR + "/sam", "special.fasta");
+    private static File SPECIAL_ALT = new File(TEST_DATA_DIR + "/sam", "special.alt");
+    private static File EQUIVALENCE_TEST_FASTA = new File(TEST_DATA_DIR + "/reference", "test.fasta");
+    private static File DUPLICATE_FASTA = new File(TEST_DATA_DIR + "/sam", "duplicate_sequence_names.fasta");
 
     public String getCommandLineProgramName() {
         return CreateSequenceDictionary.class.getSimpleName();
@@ -69,7 +70,7 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void testDefaultOutputFile() throws Exception {
+    public void testDefaultOutputFile()  {
         final File expectedDict = new File(TEST_DATA_DIR + "/sam", "basic.dict");
         expectedDict.deleteOnExit();
         Assert.assertFalse(expectedDict.exists());
@@ -153,7 +154,7 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         SAMSequenceRecord ssr = dict.getSequence("chr1");
         Assert.assertNotNull(ssr, "chr1 missing in dictionary");
         String an = ssr.getAttribute("AN");
-        Assert.assertNotNull(ssr, "AN Missing");
+        Assert.assertNotNull(an, "AN Missing");
         Set<String> anSet = new HashSet<>(Arrays.asList(an.split("[,]")));
         Assert.assertTrue(anSet.contains("1"));
         Assert.assertTrue(anSet.contains("01"));
@@ -171,4 +172,41 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         Assert.assertNull(ssr, "chrM present in dictionary");
     }
 
+    @Test
+    public void testPunctuationInReferenceNames() {
+        final File expectedDict = new File(TEST_DATA_DIR + "/sam", "special.dict");
+        expectedDict.deleteOnExit();
+        Assert.assertFalse(expectedDict.exists());
+
+        final String[] argv = {
+                "REFERENCE=" + SPECIAL_FASTA,
+                "AN=" + SPECIAL_ALT,
+                "TRUNCATE_NAMES_AT_WHITESPACE=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
+        Assert.assertTrue(expectedDict.exists());
+
+        final SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(expectedDict);
+        Assert.assertNotNull(dict, "dictionary is null");
+
+        // check chr1.01
+        {
+            final SAMSequenceRecord ssr = dict.getSequence("chr1.01");
+            Assert.assertNotNull(ssr, "chr1 missing in dictionary");
+            final String an = ssr.getAttribute("AN");
+            Assert.assertNotNull(an, "AN Missing");
+            final Set<String> anSet = new HashSet<>(Arrays.asList(an.split("[,]")));
+            Assert.assertTrue(anSet.contains("1.01"));
+        }
+
+        // check chr2/hello
+        {
+            final SAMSequenceRecord ssr = dict.getSequence("chr2/hello");
+            Assert.assertNotNull(ssr, "chr2/hello missing in dictionary");
+            final String an = ssr.getAttribute("AN");
+            Assert.assertNotNull(an, "AN Missing");
+            final Set<String> anSet = new HashSet<>(Arrays.asList(an.split("[,]")));
+            Assert.assertTrue(anSet.contains("2/hello"));
+        }
+    }
 }
