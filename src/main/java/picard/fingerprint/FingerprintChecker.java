@@ -639,7 +639,7 @@ public class FingerprintChecker {
         for (final Path p : files) {
             executorCompletionService.submit(() -> {
 
-                if (CheckFingerprint.isBamOrSamOrCram(p)) {
+                if (CheckFingerprint.fileContainsReads(p)) {
                     retval.putAll(fingerprintSamFile(p, intervals));
                 } else {
                     retval.putAll(fingerprintVcf(p));

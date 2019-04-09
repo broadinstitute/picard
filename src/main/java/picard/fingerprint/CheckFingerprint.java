@@ -247,7 +247,7 @@ public class CheckFingerprint extends CommandLineProgram {
         List<FingerprintResults> results;
 
         String observedSampleAlias = null;
-        if (isBamOrSamOrCram(inputPath)) {
+        if (fileContainsReads(inputPath)) {
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), SAMSequenceDictionaryExtractor.extractDictionary(genotypesPath), true);
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), checker.getHeader().getSequenceDictionary(), true);
 
@@ -387,11 +387,11 @@ public class CheckFingerprint extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
 
         try {
-            final boolean isBamOrSamOrCramFile = isBamOrSamOrCram(IOUtil.getPath(INPUT));
-            if (!isBamOrSamOrCramFile && IGNORE_READ_GROUPS) {
+            final boolean fileContainsReads = fileContainsReads(IOUtil.getPath(INPUT));
+            if (!fileContainsReads && IGNORE_READ_GROUPS) {
                 return new String[]{"The parameter IGNORE_READ_GROUPS can only be used with BAM/SAM/CRAM inputs."};
             }
-            if (isBamOrSamOrCramFile && OBSERVED_SAMPLE_ALIAS != null) {
+            if (fileContainsReads && OBSERVED_SAMPLE_ALIAS != null) {
                 return new String[]{"The parameter OBSERVED_SAMPLE_ALIAS can only be used with a VCF input."};
             }
         } catch (IOException e) {
@@ -405,7 +405,7 @@ public class CheckFingerprint extends CommandLineProgram {
         return super.customCommandLineValidation();
     }
 
-    static boolean isBamOrSamOrCram(final Path p) {
+    static boolean fileContainsReads(final Path p) {
         return (p.toUri().getRawPath().endsWith(SamReader.Type.BAM_TYPE.fileExtension()) ||
                 p.toUri().getRawPath().endsWith(SamReader.Type.SAM_TYPE.fileExtension()) ||
                 p.toUri().getRawPath().endsWith(SamReader.Type.CRAM_TYPE.fileExtension()));

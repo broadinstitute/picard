@@ -21,20 +21,20 @@ public class SamTestUtils {
 
     public static File createIndexedBamOrCram(final File samFile, final File tempFilePrefix, final SamReader.Type type, final File referenceFasta) throws IOException {
         if (type != SamReader.Type.BAM_TYPE && type != SamReader.Type.CRAM_TYPE) {
-            throw new PicardException("Cannot create indexed file of type "+type);
+            throw new PicardException("Cannot create indexed file of type " + type);
         }
 
         if (type == SamReader.Type.CRAM_TYPE && referenceFasta == null) {
             throw new PicardException("Cannot create indexed CRAM file without reference");
         }
 
-        final File output = File.createTempFile(tempFilePrefix.getAbsolutePath(), "."+type.fileExtension());
+        final File output = File.createTempFile(tempFilePrefix.getAbsolutePath(), "." + type.fileExtension());
         output.deleteOnExit();
-        final File indexFile = new File(output.getAbsolutePath() + "."+type.indexExtension());
+        final File indexFile = new File(output.getAbsolutePath() + "." + type.indexExtension());
         indexFile.deleteOnExit();
 
         final SamReader in = SamReaderFactory.makeDefault().open(samFile);
-        SAMFileWriter out = new SAMFileWriterFactory().setCreateIndex(true).makeWriter(in.getFileHeader(), true, output,referenceFasta);
+        SAMFileWriter out = new SAMFileWriterFactory().setCreateIndex(true).makeWriter(in.getFileHeader(), true, output, referenceFasta);
 
         in.iterator().stream().forEach(out::addAlignment);
         out.close();
