@@ -43,8 +43,7 @@ public class GatherBamFilesTest extends CommandLineProgramTest {
         // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
         final CompareSAMs compareSAMs = new CompareSAMs();
         compareSAMs.samFiles = Arrays.asList(ORIG_BAM, outputFile);
-        compareSAMs.doWork();
-        Assert.assertTrue(compareSAMs.areEqual());
+        Assert.assertEquals(compareSAMs.doWork(), 0);
     }
 
     @Test
@@ -62,6 +61,6 @@ public class GatherBamFilesTest extends CommandLineProgramTest {
         final CompareSAMs compareSAMs = new CompareSAMs();
         compareSAMs.samFiles = Arrays.asList(ORIG_BAM, SPLIT_BAMS.get(0));
         compareSAMs.doWork();
-        Assert.assertFalse(compareSAMs.areEqual());
+        Assert.assertEquals(compareSAMs.doWork(), 1);
     }
 }
