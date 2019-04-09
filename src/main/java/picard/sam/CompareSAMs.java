@@ -26,10 +26,11 @@ package picard.sam;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.RuntimeIOException;
+import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import org.broadinstitute.barclay.argparser.PositionalArguments;
+import picard.cmdline.StandardOptionDefinitions;
 import picard.sam.util.SamComparison;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
@@ -51,19 +52,67 @@ import java.util.List;
 public class CompareSAMs extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Compare two input \".sam\" or \".bam\" files.  ";
     static final String USAGE_DETAILS = "This tool initially compares the headers of SAM or BAM files. " +
-            " If the file headers are comparable, the tool will examine and compare readUnmapped flag, reference name, " +
-            "start position and strand between the SAMRecords. The tool summarizes information on the number of read " +
-            "pairs that match or mismatch, and of reads that are missing or unmapped (stratified by direction: " +
-            "forward or reverse)." +
-            "<h4>Usage example:</h4>" +
+            " If the file headers are comparable, the tool Can perform either a naive comparison for which " +
+            "each alignment must be identical, or a more sophisticated check of \"equivalence\", where mapping quality" +
+            "0 reads are allowed to have different alignments, and duplicate marks are allowed to differ to account for " +
+            "ambiguities in selecting the representative read of a duplicate set.  Results of comparison are summarised in " +
+            " an output metrics file." +
+            "<h3>Usage example:</h3>" +
+            "<h4>CompareSAMs for exact matching:</h4>" +
             "<pre>" +
             "java -jar picard.jar CompareSAMs \\<br />" +
-            "      file_1.bam \\<br />" +
-            "      file_2.bam" +
+            "      I=file_1.bam \\<br />" +
+            "      I=file_2.bam \\<br />" +
+            "      O=comparison.tsv" +
             "</pre>" +
+            "\n" +
+            "<h4>CompareSAMs for \"equivalence\":</h4>" +
+            "java -jar picard.jar CompareSAMs \\<br />" +
+            "      I=file_1.bam \\<br />" +
+            "      I=file_2.bam \\<br />" +
+            "      MQ0_MATCH=true \\<br />" +
+            "      LENIENT_DUP=true \\<br />" +
+            "      O=comparison.tsv" +
+            "</pre>" +
+            "\n" +
+            "<h4>CompareSAMs for \"equivalence\", allow name of species in header to differ:</h4>" +
+            "java -jar picard.jar CompareSAMs \\<br />" +
+            "      I=file_1.bam \\<br />" +
+            "      I=file_2.bam \\<br />" +
+            "      MQ0_MATCH=true \\<br />" +
+            "      LENIENT_DUP=true \\<br />" +
+            "      IGNORE_SPECIES=true \\<br />" +
+            "      O=comparison.tsv" +
             "<hr />";
-    @PositionalArguments(minElements = 2, maxElements = 2)
-    public List<File> samFiles;
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+            doc = "Exactly two input .sam or .bam files to compare to one another.", minElements = 2, maxElements = 2)
+    public List<File> INPUT;
+
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+            doc = "Output file to write comparison results to.")
+    public File OUTPUT;
+
+    @Argument(doc = "Allow species name field in header lines to differ.")
+    boolean IGNORE_SPECIES;
+
+    @Argument(doc = "Allow assembly name field in header lines to differ.")
+    boolean IGNORE_ASSEMBLY;
+
+    @Argument(doc = "Allow UR field in header lines to differ.")
+    boolean IGNORE_UR;
+
+    @Argument(doc = "Allow M5 field in header lines to differ.")
+    boolean IGNORE_M5;
+
+    @Argument(doc = "Allow Program Record lines in header to differ.")
+    boolean IGNORE_PG;
+
+    @Argument(doc = "Perform lenient checking of duplicate marks.  In this mode , will reduce the number of mismatches by allowing the choice of the representative read in each duplicate set" +
+            " to differ bewteen the input files, as long as the duplicate sets agree.")
+    boolean LENIENT_DUP;
+
+    @Argument(doc = "Count reads which have mapping quality below 3 in both files but are mapped to different locations as matches.  By default we count such reads as mismatching.")
+    boolean MQ0_MATCH;
 
     /**
      * Do the work after command line has been parsed. RuntimeException may be
@@ -75,11 +124,12 @@ public class CompareSAMs extends CommandLineProgram {
     protected int doWork() {
         final SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE);
 
-        try (final SamReader samReader1 = samReaderFactory.open(samFiles.get(0));
-             final SamReader samReader2 = samReaderFactory.open(samFiles.get(1)))
+        try (final SamReader samReader1 = samReaderFactory.open(INPUT.get(0));
+             final SamReader samReader2 = samReaderFactory.open(INPUT.get(1)))
         {
-            final SamComparison comparison = new SamComparison(samReader1, samReader2);
-            comparison.printReport();
+            final SamComparison comparison = new SamComparison(samReader1, samReader2, IGNORE_SPECIES, IGNORE_ASSEMBLY,
+                    IGNORE_UR, IGNORE_M5, IGNORE_PG, LENIENT_DUP, MQ0_MATCH, INPUT.get(0).getAbsolutePath(), INPUT.get(1).getAbsolutePath());
+            comparison.writeReport(OUTPUT, getDefaultHeaders());
             if (comparison.areEqual()) {
                 System.out.println("SAM files match.");
             } else {

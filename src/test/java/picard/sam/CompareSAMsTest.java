@@ -23,12 +23,14 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -92,6 +94,8 @@ public class CompareSAMsTest extends CommandLineProgramTest {
             commandArgs.addAll(args);
         }
         Assert.assertEquals(runPicardCommandLine(commandArgs) == 0, areEqual);
+        final MetricsFile<SamComparisonMetric, Comparable<?>> metricsOutput = new MetricsFile<>();
+        metricsOutput.read(new FileReader(tmpOutput.toFile()));
 
         //swap order of input files
         commandArgs = new ArrayList<>(
@@ -105,5 +109,12 @@ public class CompareSAMsTest extends CommandLineProgramTest {
             commandArgs.addAll(args);
         }
         Assert.assertEquals(runPicardCommandLine(commandArgs) == 0, areEqual);
+        metricsOutput.read(new FileReader(tmpOutput.toFile()));
+
+        Assert.assertEquals(metricsOutput.getMetrics().get(0).leftFile, in1);
+        Assert.assertEquals(metricsOutput.getMetrics().get(0).rightFile, in2);
+
+        Assert.assertEquals(metricsOutput.getMetrics().get(1).leftFile, in2);
+        Assert.assertEquals(metricsOutput.getMetrics().get(1).rightFile, in1);
     }
 }
