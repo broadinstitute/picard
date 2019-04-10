@@ -67,7 +67,10 @@ public class SamComparisonTest {
                 {"dup1_queryname.sam", "dup3_queryname.sam", true, false, 13, 1, 0, 0, 0, 0, 0, 4, false},
                 {"dup1_queryname.sam", "dup4_queryname.sam", true, false, 14, 0, 0, 0, 0, 0, 0, 2, false},
                 {"dup1_queryname.sam", "dup5_queryname.sam", true, false, 14, 0, 0, 0, 0, 0, 0, 4, false},
-                {"dup1_queryname.sam", "dup2_queryname.sam", false, false, 14, 0, 0, 0, 0, 0, 0, 4, false}
+                {"dup1_queryname.sam", "dup2_queryname.sam", false, false, 14, 0, 0, 0, 0, 0, 0, 4, false},
+                {"genomic_sorted.sam", "mq0_2.sam", false, true, 1, 1, 0, 0, 0, 0, 0, 0, false},
+                {"mq0_1.sam", "mq0_2.sam", false, true, 2, 0, 0, 0, 0, 0, 0, 0, true},
+                {"mq0_1.sam", "mq0_2.sam", false, false, 1, 1, 0, 0, 0, 0, 0, 0, false}
         };
     }
 

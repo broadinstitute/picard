@@ -74,7 +74,10 @@ public class CompareSAMsTest extends CommandLineProgramTest {
                 {"dup1_queryname.sam", "dup3_queryname.sam", lenientArgs, false},
                 {"dup1_queryname.sam", "dup4_queryname.sam", lenientArgs, false},
                 {"dup1_queryname.sam", "dup5_queryname.sam", lenientArgs, false},
-                {"dup1_queryname.sam", "dup2_queryname.sam", null, false}
+                {"dup1_queryname.sam", "dup2_queryname.sam", null, false},
+                {"genomic_sorted.sam", "mq0_2.sam", lenientArgs, false},
+                {"mq0_1.sam", "mq0_2.sam", lenientArgs, true},
+                {"mq0_1.sam", "mq0_2.sam", null, false}
         };
     }
 
