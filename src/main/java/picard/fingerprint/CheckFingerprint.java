@@ -24,7 +24,6 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -244,10 +243,11 @@ public class CheckFingerprint extends CommandLineProgram {
         IOUtil.assertFileIsWritable(outputSummaryMetricsFile);
 
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
+        checker.setReferenceFasta(REFERENCE_SEQUENCE);
         List<FingerprintResults> results;
 
         String observedSampleAlias = null;
-        if (isBamOrSam(inputPath)) {
+        if (fileContainsReads(inputPath)) {
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), SAMSequenceDictionaryExtractor.extractDictionary(genotypesPath), true);
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), checker.getHeader().getSequenceDictionary(), true);
 
@@ -387,20 +387,27 @@ public class CheckFingerprint extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
 
         try {
-            final boolean isBamOrSamFile = isBamOrSam(IOUtil.getPath(INPUT));
-            if (!isBamOrSamFile && IGNORE_READ_GROUPS) {
-                return new String[]{"The parameter IGNORE_READ_GROUPS can only be used with BAM/SAM inputs."};
+            final boolean fileContainsReads = fileContainsReads(IOUtil.getPath(INPUT));
+            if (!fileContainsReads && IGNORE_READ_GROUPS) {
+                return new String[]{"The parameter IGNORE_READ_GROUPS can only be used with BAM/SAM/CRAM inputs."};
             }
-            if (isBamOrSamFile && OBSERVED_SAMPLE_ALIAS != null) {
+            if (fileContainsReads && OBSERVED_SAMPLE_ALIAS != null) {
                 return new String[]{"The parameter OBSERVED_SAMPLE_ALIAS can only be used with a VCF input."};
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        if (REFERENCE_SEQUENCE == null && INPUT.endsWith(SamReader.Type.CRAM_TYPE.fileExtension())) {
+            return new String[]{"REFERENCE must be provided when using CRAM as input."};
+        }
+
         return super.customCommandLineValidation();
     }
 
-    static boolean isBamOrSam(final Path p) {
-        return (p.toUri().getRawPath().endsWith(BamFileIoUtils.BAM_FILE_EXTENSION) || p.toUri().getRawPath().endsWith(IOUtil.SAM_FILE_EXTENSION));
+    static boolean fileContainsReads(final Path p) {
+        return (p.toUri().getRawPath().endsWith(SamReader.Type.BAM_TYPE.fileExtension()) ||
+                p.toUri().getRawPath().endsWith(SamReader.Type.SAM_TYPE.fileExtension()) ||
+                p.toUri().getRawPath().endsWith(SamReader.Type.CRAM_TYPE.fileExtension()));
     }
 }

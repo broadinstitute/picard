@@ -1,5 +1,6 @@
 package picard.fingerprint;
 
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.*;
@@ -42,11 +43,11 @@ public class CrosscheckReadGroupFingerprintsTest {
 
     @BeforeClass
     public void setup() throws IOException {
-        NA12891_r1 = SamTestUtils.createIndexedBam(NA12891_r1_sam, NA12891_r1_sam);
-        NA12891_r2 = SamTestUtils.createIndexedBam(NA12891_r2_sam, NA12891_r2_sam);
-        NA12891_named_NA12892_r1 = SamTestUtils.createIndexedBam(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam);
-        NA12892_r1 = SamTestUtils.createIndexedBam(NA12892_r1_sam, NA12892_r1_sam);
-        NA12892_r2 = SamTestUtils.createIndexedBam(NA12892_r2_sam, NA12892_r2_sam);
+        NA12891_r1 = SamTestUtils.createIndexedBamOrCram(NA12891_r1_sam, NA12891_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12891_r2 = SamTestUtils.createIndexedBamOrCram(NA12891_r2_sam, NA12891_r2_sam, SamReader.Type.BAM_TYPE);
+        NA12891_named_NA12892_r1 = SamTestUtils.createIndexedBamOrCram(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12892_r1 = SamTestUtils.createIndexedBamOrCram(NA12892_r1_sam, NA12892_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12892_r2 = SamTestUtils.createIndexedBamOrCram(NA12892_r2_sam, NA12892_r2_sam, SamReader.Type.BAM_TYPE);
 
         lookupMap.put(CrosscheckMetric.DataType.FILE, new ArrayList<>(Arrays.asList("LEFT_FILE", "RIGHT_FILE")));
 

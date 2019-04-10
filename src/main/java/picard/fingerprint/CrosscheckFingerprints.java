@@ -25,7 +25,7 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -144,11 +144,11 @@ import static picard.fingerprint.CrosscheckFingerprints.CrosscheckMode.CHECK_SAM
         summary =
                 "Checks that all data in the set of input files appear to come from the same " +
                         "individual. Can be used to cross-check readgroups, libraries, samples, or files. " +
-                        "Operates on bams/sams and vcfs (including gvcfs). " +
+                        "Operates on bams/sams/crams and vcfs (including gvcfs). " +
                         "\n" +
                         "<h3>Summary</h3>\n" +
                         "Checks if all the genetic data within a set of files appear to come from the same individual. " +
-                        "It quickly determines whether a group's genotype matches that of an input SAM/BAM/VCF by selective sampling, " +
+                        "It quickly determines whether a group's genotype matches that of an input SAM/BAM/CRAM/VCF by selective sampling, " +
                         "and has been designed to work well for low-depth SAM/BAMs (as well as high depth ones and VCFs.) " +
                         "The tool collects fingerprints (essentially, genotype information from different parts of the genome) " +
                         "at the finest level available in the data (readgroup for SAM files " +
@@ -338,6 +338,18 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         if (GENOTYPING_ERROR_RATE <= 0 ) {
             return new String[]{"GENOTYPING_ERROR_RATE must be greater than zero. Found " + GENOTYPING_ERROR_RATE};
         }
+
+        //check that reference is provided if using crams as input
+        if (REFERENCE_SEQUENCE == null) {
+            final List<String> allInputs = new ArrayList<>(INPUT);
+            allInputs.addAll(SECOND_INPUT);
+            for (final String input : allInputs) {
+                if (input.endsWith(SamReader.Type.CRAM_TYPE.fileExtension())) {
+                    return new String[]{"REFERENCE must be provided when using CRAM as input."};
+                }
+            }
+        }
+
         return super.customCommandLineValidation();
     }
 
@@ -387,11 +399,13 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         checker.setAllowDuplicateReads(ALLOW_DUPLICATE_READS);
         checker.setValidationStringency(VALIDATION_STRINGENCY);
+        checker.setReferenceFasta(REFERENCE_SEQUENCE);
 
         final List<String> extensions = new ArrayList<>();
 
-        extensions.add(BamFileIoUtils.BAM_FILE_EXTENSION);
-        extensions.add(IOUtil.SAM_FILE_EXTENSION);
+        extensions.add(SamReader.Type.BAM_TYPE.fileExtension());
+        extensions.add(SamReader.Type.SAM_TYPE.fileExtension());
+        extensions.add(SamReader.Type.CRAM_TYPE.fileExtension());
         extensions.addAll(Arrays.asList(IOUtil.VCF_EXTENSIONS));
 
         final List<Path> inputPaths = IOUtil.getPaths(INPUT);
