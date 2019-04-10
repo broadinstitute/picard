@@ -206,12 +206,6 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
                 {NA12891_r1_shifted_bam, NA12892_r2_shifted_bam, NA12891_r1_cram, NA12892_r2_cram},
                 {NA12892_r1_shifted_bam, NA12892_r2_shifted_bam, NA12892_r1_cram, NA12892_r2_cram},
                 {NA12892_r2_shifted_bam, NA12891_r2_shifted_bam, NA12892_r2_cram, NA12891_r2_cram},
-                {NA12892_r2_shifted_bam, NA12891_r1_shifted_bam, NA12892_r2_cram, NA12891_r1_cram},
-                {NA12891_r1_shifted_bam, NA12891_r2_shifted_bam, NA12891_r1_cram, NA12891_r2_cram},
-                {NA12891_r1_shifted_bam, NA12892_r1_shifted_bam, NA12891_r1_cram, NA12892_r1_cram},
-                {NA12891_r1_shifted_bam, NA12892_r2_shifted_bam, NA12891_r1_cram, NA12892_r2_cram},
-                {NA12892_r1_shifted_bam, NA12892_r2_shifted_bam, NA12892_r1_cram, NA12892_r2_cram},
-                {NA12892_r2_shifted_bam, NA12891_r2_shifted_bam, NA12892_r2_cram, NA12891_r2_cram},
                 {NA12892_r2_shifted_bam, NA12891_r1_shifted_bam, NA12892_r2_cram, NA12891_r1_cram}
         };
     }
