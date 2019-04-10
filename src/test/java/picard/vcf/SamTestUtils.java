@@ -32,11 +32,11 @@ public class SamTestUtils {
         final File indexFile; //SamReaderFactor uses diffefent conventions for naming Bam indexes and Cram indexes, need to handle each case separately
         if (type == SamReader.Type.BAM_TYPE) {
             final String fileBase = output.getAbsolutePath().substring(0, output.getAbsolutePath().lastIndexOf('.'));
-            indexFile = new File(fileBase + BAMIndex.BAMIndexSuffix);
+            indexFile = new File(fileBase + BAMIndex.BAI_INDEX_SUFFIX);
             indexFile.deleteOnExit();
 
         } else if (type == SamReader.Type.CRAM_TYPE) {
-            indexFile = IOUtil.addExtension(Paths.get(output.getAbsolutePath()), BAMIndex.BAMIndexSuffix).toFile();
+            indexFile = IOUtil.addExtension(Paths.get(output.getAbsolutePath()), BAMIndex.BAI_INDEX_SUFFIX).toFile();
             indexFile.deleteOnExit();
 
         }
