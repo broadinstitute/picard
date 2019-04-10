@@ -41,11 +41,6 @@ public class SamTestUtils {
 
         }
 
-        final SamReader in = SamReaderFactory.makeDefault().open(samFile);
-        SAMFileWriter out = new SAMFileWriterFactory().setCreateIndex(true).makeWriter(in.getFileHeader(), true, output, referenceFasta);
-
-        in.iterator().stream().forEach(out::addAlignment);
-        out.close();
         try (final SamReader in = SamReaderFactory.makeDefault().open(samFile);
              final SAMFileWriter out = new SAMFileWriterFactory().setCreateIndex(true).makeWriter(in.getFileHeader(), true, output, referenceFasta);) {
             in.iterator().stream().forEach(out::addAlignment);
