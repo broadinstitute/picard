@@ -8,21 +8,23 @@ import picard.cmdline.ClassFinder;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 public class MetricBaseTest {
 
     @DataProvider(name = "testMetricClasses")
-    public java.util.Iterator<Object[]> getMetricClasses() {
+    public Iterator<Object[]> getMetricClasses() {
         final ClassFinder classFinder = new ClassFinder();
 
         classFinder.find("picard", MetricBase.class);
-        return classFinder.getClasses().stream().map(c -> new Object[]{c}).iterator();
+        return classFinder.getClasses().stream()
+                .map(c -> new Object[]{c})
+                .iterator();
     }
 
     @Test(dataProvider = "testMetricClasses")
     public void testUniqueFields(final Class metricClass) {
-
         final Set<String> metricFields = new HashSet<>();
 
         for (final Field f : metricClass.getFields()) {
