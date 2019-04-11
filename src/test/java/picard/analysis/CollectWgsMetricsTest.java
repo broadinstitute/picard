@@ -277,7 +277,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final CollectWgsMetrics.WgsMetrics defaultMetrics = defaultMetricsFile.getMetrics().get(0);
         final CollectWgsMetrics.WgsMetrics fastMetrics = fastMetricsFile.getMetrics().get(0);
 
-        Assert.assertEquals(defaultMetrics.MEAN_COVERAGE, fastMetrics.MEAN_COVERAGE);
+        Assert.assertEquals(defaultMetrics, fastMetrics);
     }
 
     @Test(dataProvider = "wgsAlgorithm")

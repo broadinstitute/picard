@@ -7,5 +7,5 @@
 @SQ	SN:chr6	LN:101	UR:merger.fasta	M5:7be2f5e7ee39e60a6c3b5b6a41178c6d
 @SQ	SN:chr7	LN:404	UR:merger.fasta	M5:da488fc432cdaf2c20c96da473a7b630
 @SQ	SN:chr8	LN:202	UR:merger.fasta	M5:d339678efce576d5546e88b49a487b63
-chr7	1	200	+	.
-chr7    201       404     +       .
+chr7	1	20	+	.
+chr7	60	200	+	.
