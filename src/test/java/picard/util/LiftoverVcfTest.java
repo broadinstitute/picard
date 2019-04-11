@@ -279,7 +279,9 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         //try to open with / without index
         try (final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, !disableSort)) {
-            // nothing
+            try (final CloseableIterator<VariantContext> iter = liftReader.iterator()) {
+                Assert.assertEquals(iter.stream().count(), 5L);
+                }
             }
         }
     
