@@ -239,6 +239,47 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         }
     }
 
+    @Test
+    public void testFastAlgorithmWithDisjointIntervals() throws IOException {
+        final File input = new File(TEST_DIR, "forMetrics.sam");
+        final File defaultMetricsTable = File.createTempFile("default", ".wgs_metrics");
+        final File fastMetricsTable = File.createTempFile("fast", ".wgs_metrics");
+        final File ref = new File(TEST_DIR, "merger.fasta");
+        final File intervals = new File(TEST_DIR, "disjoint.interval_list");
+        final int sampleSize = 1000;
+        final String[] defaultArgs = new String[] {
+                "INPUT="  + input.getAbsolutePath(),
+                "OUTPUT=" + defaultMetricsTable.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "INTERVALS=" + intervals.getAbsolutePath(),
+                "SAMPLE_SIZE=" + sampleSize,
+                "USE_FAST_ALGORITHM=" + false
+        };
+
+        final String[] fastArgs = new String[] {
+                "INPUT="  + input.getAbsolutePath(),
+                "OUTPUT=" + fastMetricsTable.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "INTERVALS=" + intervals.getAbsolutePath(),
+                "SAMPLE_SIZE=" + sampleSize,
+                "USE_FAST_ALGORITHM=" + true
+        };
+
+        Assert.assertEquals(runPicardCommandLine(defaultArgs), 0);
+        Assert.assertEquals(runPicardCommandLine(fastArgs), 0);
+
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> defaultMetricsFile = new MetricsFile<>();
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> fastMetricsFile = new MetricsFile<>();
+
+        defaultMetricsFile.read(new FileReader(defaultMetricsTable));
+        fastMetricsFile.read(new FileReader(fastMetricsTable));
+
+        final CollectWgsMetrics.WgsMetrics defaultMetrics = defaultMetricsFile.getMetrics().get(0);
+        final CollectWgsMetrics.WgsMetrics fastMetrics = fastMetricsFile.getMetrics().get(0);
+
+        Assert.assertEquals(defaultMetrics.MEAN_COVERAGE, fastMetrics.MEAN_COVERAGE);
+    }
+
     @Test(dataProvider = "wgsAlgorithm")
     public void testExclusions(final String useFastAlgorithm) throws IOException {
         final File reference = new File("testdata/picard/sam/merger.fasta");
