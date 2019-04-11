@@ -1,40 +1,32 @@
 package picard.metrics;
 
+import htsjdk.samtools.metrics.MetricBase;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import picard.analysis.CollectRawWgsMetrics;
-import picard.analysis.CollectWgsMetricsWithNonZeroCoverage;
-import picard.analysis.directed.HsMetrics;
-import picard.analysis.directed.TargetMetrics;
-import picard.analysis.directed.TargetedPcrMetrics;
+import picard.cmdline.ClassFinder;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
-
 public class MetricBaseTest {
 
-    @DataProvider(name= "testMetricClasses")
-    public Object[][] getMetricClasses(){
-        return new Object[][]{
-                {TargetedPcrMetrics.class},
-                {HsMetrics.class},
-                {TargetMetrics.class},
-                {CollectRawWgsMetrics.RawWgsMetrics.class},
-                {CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage.class}
-            };
-        }
+    @DataProvider(name = "testMetricClasses")
+    public java.util.Iterator<Object[]> getMetricClasses() {
+        final ClassFinder classFinder = new ClassFinder();
+
+        classFinder.find("picard", MetricBase.class);
+        return classFinder.getClasses().stream().map(c -> new Object[]{c}).iterator();
+    }
 
     @Test(dataProvider = "testMetricClasses")
-    public void testUniqueFields(Class metricClass) {
+    public void testUniqueFields(final Class metricClass) {
 
-        Set<String> metricFields = new HashSet<>();
+        final Set<String> metricFields = new HashSet<>();
 
         for (final Field f : metricClass.getFields()) {
-            Assert.assertTrue(metricFields.add(f.getName()), f.getName() + " has a naming collision");
+            Assert.assertFalse(!metricFields.add(f.getName()), metricClass + " has a naming collision in field " + f.getName());
         }
     }
 }
-
