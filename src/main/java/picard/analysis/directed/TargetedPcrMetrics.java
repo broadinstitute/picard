@@ -32,9 +32,6 @@ public class TargetedPcrMetrics extends TargetMetricsBase {
     /**  The name of the amplicon set used in this metrics collection run */
     public String CUSTOM_AMPLICON_SET;
 
-    /** The number of bases in the reference genome used for alignment */
-    public long GENOME_SIZE;
-
     /** The number of unique bases covered by the intervals of all amplicons in the amplicon set */
     public long AMPLICON_TERRITORY;
 
@@ -47,12 +44,6 @@ public class TargetedPcrMetrics extends TargetMetricsBase {
 
     /** The number of PF_BASES_ALIGNED that mapped neither on or near an amplicon. */
     public long OFF_AMPLICON_BASES;
-
-    /** The number of PF_BASES_ALIGNED that mapped to a targeted region of the genome. */
-    public long ON_TARGET_BASES;
-
-    /** The number of bases from PF_SELECTED_UNIQUE_PAIRS that mapped to a targeted region of the genome. */
-    public long ON_TARGET_FROM_PAIR_BASES;
 
     /** The fraction of PF_BASES_ALIGNED that mapped to or near an amplicon, (ON_AMPLICON_BASES +
      * NEAR_AMPLICON_BASES)/PF_BASES_ALIGNED. */
@@ -70,15 +61,6 @@ public class TargetedPcrMetrics extends TargetMetricsBase {
 
     /** The mean read coverage of all amplicon regions in the experiment. */
     public double MEAN_AMPLICON_COVERAGE;
-
-    /** The mean read coverage of all target regions in an experiment. */
-    public double MEAN_TARGET_COVERAGE;
-
-    /** The median coverage of reads that mapped to target regions of an experiment. */
-    public double MEDIAN_TARGET_COVERAGE;
-
-    /** The maximum coverage of reads that mapped to target regions of an experiment. */
-    public long MAX_TARGET_COVERAGE;
 
     /** The fold by which the amplicon region has been amplified above genomic background. */
     public double FOLD_ENRICHMENT;
