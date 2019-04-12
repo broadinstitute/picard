@@ -98,11 +98,6 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
 
     private final Log log = Log.getInstance(QualityScoreDistribution.class);
 
-    /** Required main method. */
-    public static void main(final String[] args) {
-        System.exit(new QualityScoreDistribution().instanceMain(args));
-    }
-
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);

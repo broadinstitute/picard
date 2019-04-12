@@ -104,11 +104,6 @@ public class BedToIntervalList extends CommandLineProgram {
 
     final Log LOG = Log.getInstance(getClass());
 
-    // Stock main method
-    public static void main(final String[] args) {
-        new BedToIntervalList().instanceMainWithExit(args);
-    }
-
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);

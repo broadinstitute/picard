@@ -112,10 +112,6 @@ public class SplitSamByLibrary extends CommandLineProgram {
 
     public static final int NO_LIBRARIES_SPECIFIED_IN_HEADER = 2;
 
-    public static void main(String[] args) {
-        System.exit(new SplitSamByLibrary().instanceMain(args));
-    }
-
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);

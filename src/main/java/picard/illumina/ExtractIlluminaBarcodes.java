@@ -479,10 +479,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         return messages.toArray(new String[messages.size()]);
     }
 
-    public static void main(final String[] argv) {
-        new ExtractIlluminaBarcodes().instanceMainWithExit(argv);
-    }
-
     private void parseBarcodeFile(final ArrayList<String> messages) {
         try (final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE)) {
             final String sequenceColumn = barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)

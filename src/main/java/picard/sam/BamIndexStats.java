@@ -69,11 +69,6 @@ public class BamIndexStats extends CommandLineProgram {
             doc="A BAM file to process.")
     public File INPUT;
 
-    /** Stock main method for a command line program. */
-    public static void main(final String[] argv) {
-        System.exit(new BamIndexStats().instanceMain(argv));
-    }
-
     /**
      * Main method for the program.  Checks that input file is present and
      * readable, then iterates through the index printing meta data to stdout.

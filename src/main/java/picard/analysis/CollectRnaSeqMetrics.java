@@ -139,11 +139,6 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
      */
     private String plotSubtitle = "";
 
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        new CollectRnaSeqMetrics().instanceMainWithExit(argv);
-    }
-
     @Override
     protected String[] customCommandLineValidation() {
         // No ribosomal intervals file and rRNA fragment percentage = 0

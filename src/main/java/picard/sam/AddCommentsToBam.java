@@ -50,8 +50,6 @@ public class AddCommentsToBam extends CommandLineProgram {
     @Argument(shortName = "C", doc = "Comments to add to the BAM file")
     public List<String> COMMENT;
 
-    public static void main(final String[] args) { new AddCommentsToBam().instanceMainWithExit(args); }
-
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);

@@ -179,11 +179,6 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         }
     }
 
-    /** Stock main method. */
-    public static void main(final String[] args) {
-        new CollectHiSeqXPfFailMetrics().instanceMainWithExit(args);
-    }
-
     @Override
     protected int doWork() {
 

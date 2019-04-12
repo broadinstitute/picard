@@ -240,13 +240,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     /**
-     * Stock main method.
-     */
-    public static void main(final String[] args) {
-        new MarkDuplicates().instanceMainWithExit(args);
-    }
-
-    /**
      * Main work method.  Reads the BAM file once and collects sorted information about
      * the 5' ends of both ends of each read (or just one end in the case of pairs).
      * Then makes a pass through those determining duplicates before re-reading the

@@ -69,10 +69,6 @@ public class SortVcf extends CommandLineProgram {
     private final List<VCFFileReader> inputReaders = new ArrayList<VCFFileReader>();
     private final List<VCFHeader> inputHeaders = new ArrayList<VCFHeader>();
 
-    public static void main(final String[] args) {
-        new SortVcf().instanceMainWithExit(args);
-    }
-
     // Overrides the option default, including in the help message. Option remains settable on commandline.
     public SortVcf() {
         this.CREATE_INDEX = true;

@@ -65,10 +65,6 @@ public class CompareSAMs extends CommandLineProgram {
     @PositionalArguments(minElements = 2, maxElements = 2)
     public List<File> samFiles;
 
-    public static void main(String[] argv) {
-        new CompareSAMs().instanceMainWithExit(argv);
-    }
-
     /**
      * Do the work after command line has been parsed. RuntimeException may be
      * thrown by this method, and are reported appropriately.

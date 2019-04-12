@@ -102,11 +102,6 @@ public class FifoBuffer extends CommandLineProgram {
         this(System.in, System.out);
     }
 
-    // Stock main method
-    public static void main(final String[] args) {
-        new FifoBuffer().instanceMainWithExit(args);
-    }
-
     @Override
     protected int doWork() {
         final CircularByteBuffer fifo = new CircularByteBuffer(BUFFER_SIZE);

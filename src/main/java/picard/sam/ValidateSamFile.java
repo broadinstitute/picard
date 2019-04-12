@@ -164,10 +164,6 @@ public class ValidateSamFile extends CommandLineProgram {
             "large amounts of memory to run, so this flag allows you to forego that check.")
     public boolean SKIP_MATE_VALIDATION = false;
 
-    public static void main(final String[] args) {
-        System.exit(new ValidateSamFile().instanceMain(args));
-    }
-
     /**
      * Return types for doWork()
      */

@@ -110,11 +110,6 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     // Calculates InsertSizeMetrics for all METRIC_ACCUMULATION_LEVELs provided
     private InsertSizeMetricsCollector multiCollector;
 
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        new CollectInsertSizeMetrics().instanceMainWithExit(argv);
-    }
-
     /**
      * Put any custom command-line validation in an override of this method.
      * clp is initialized at this point and can be used to print usage and access argv.

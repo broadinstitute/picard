@@ -80,16 +80,12 @@ public class VcfFormatConverter extends CommandLineProgram {
     @Argument(doc="The BCF or VCF output file name.", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-	@Argument(doc="Fail if an index is not available for the input VCF/BCF")
-	public Boolean REQUIRE_INDEX = true;
+    @Argument(doc = "Fail if an index is not available for the input VCF/BCF")
+    public Boolean REQUIRE_INDEX = true;
 
-    public static void main(final String[] argv) {
-        new VcfFormatConverter().instanceMainWithExit(argv);
+    public VcfFormatConverter() {
+        this.CREATE_INDEX = true;
     }
-
-	public VcfFormatConverter() {
-		this.CREATE_INDEX = true;
-	}
 
     @Override
     protected int doWork() {
@@ -98,12 +94,12 @@ public class VcfFormatConverter extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-	    final VCFFileReader reader = new VCFFileReader(INPUT, REQUIRE_INDEX);
-	    final VCFHeader header = new VCFHeader(reader.getFileHeader());
-	    final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
-	    if (CREATE_INDEX && sequenceDictionary == null) {
-		    throw new PicardException("A sequence dictionary must be available in the input file when creating indexed output.");
-	    }
+        final VCFFileReader reader = new VCFFileReader(INPUT, REQUIRE_INDEX);
+        final VCFHeader header = new VCFHeader(reader.getFileHeader());
+        final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
+        if (CREATE_INDEX && sequenceDictionary == null) {
+            throw new PicardException("A sequence dictionary must be available in the input file when creating indexed output.");
+        }
 
         final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
                 .setOutputFile(OUTPUT)
@@ -114,16 +110,16 @@ public class VcfFormatConverter extends CommandLineProgram {
             builder.unsetOption(Options.INDEX_ON_THE_FLY);
         final VariantContextWriter writer = builder.build();
         writer.writeHeader(header);
-	    final CloseableIterator<VariantContext> iterator = reader.iterator();
+        final CloseableIterator<VariantContext> iterator = reader.iterator();
 
-	    while (iterator.hasNext()) {
-		    final VariantContext context = iterator.next();
+        while (iterator.hasNext()) {
+            final VariantContext context = iterator.next();
             writer.add(context);
             progress.record(context.getContig(), context.getStart());
         }
 
-	    CloserUtil.close(iterator);
-	    CloserUtil.close(reader);
+        CloserUtil.close(iterator);
+        CloserUtil.close(reader);
         writer.close();
 
         return 0;
