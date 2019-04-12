@@ -25,7 +25,6 @@
 package picard.util;
 
 import org.apache.commons.math3.random.RandomDataGenerator;
-import org.apache.commons.math3.random.RandomGenerator;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -379,6 +378,17 @@ final public class MathUtil {
             result += arr[i];
         }
         return result;
+    }
+
+    /**
+     * returns a long array containing the rounded values of the input array
+     */
+    public static long[] round(final double... input) {
+        final long[] out = new long[input.length];
+        for (int i = 0; i < input.length; i++) {
+            out[i] = Math.round(input[i]);
+        }
+        return out;
     }
 
     public static final LogMath LOG_2_MATH = new LogMath(2);

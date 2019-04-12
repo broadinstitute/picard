@@ -24,6 +24,7 @@
 
 package picard.fingerprint;
 
+import htsjdk.tribble.util.MathUtils;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -33,9 +34,18 @@ import picard.PicardException;
 import picard.util.MathUtil;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static picard.fingerprint.HaplotypeProbabilities.Genotype.HET_ALLELE12;
+import static picard.fingerprint.HaplotypeProbabilities.Genotype.HOM_ALLELE1;
+import static picard.fingerprint.HaplotypeProbabilities.Genotype.HOM_ALLELE2;
 
 /**
  * class to represent a genetic fingerprint as a set of HaplotypeProbabilities
@@ -99,47 +109,48 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
         double[] expectedRatios = new double[] {0, 0, 0};
 
 
-        for (HaplotypeProbabilities haplotypeProbabilities : this.values()) {
+        for (final HaplotypeProbabilities haplotypeProbabilities : this.values()) {
             genotypeCounts = MathUtil.sum(genotypeCounts, haplotypeProbabilities.getPosteriorProbabilities());
             expectedRatios = MathUtil.sum(expectedRatios, haplotypeProbabilities.getPriorProbablities());
         }
-        final long[] actualGenotypeCounts = new long[3];
-        for (int i = 0; i < HaplotypeProbabilities.Genotype.values().length; i++) {
-            // TODO: it would be more accurate to not round the genotype counts, but commons doesn't have a
-            // TODO: chi-squared statistic method with double[], double[] signature....(can be remedied)
-            actualGenotypeCounts[i] = Math.round(genotypeCounts[i]);
-        }
-        double[] hetVsHomexpectedRatios = new double[]{expectedRatios[0] + expectedRatios[2], expectedRatios[1]};
-        double[] homRefVsVarexpectedRatios = new double[]{expectedRatios[0], expectedRatios[2]};
+        final long[] roundedGenotypeCounts = MathUtil.round(genotypeCounts);
 
-        double[] hetVsHomCounts = new double[]{actualGenotypeCounts[0] + actualGenotypeCounts[2], actualGenotypeCounts[1]};
-        double[] homRefVsVarCounts = new double[]{genotypeCounts[0], genotypeCounts[2]};
+        final double[] hetVsHomExpect = new double[]{expectedRatios[HOM_ALLELE1.v] + expectedRatios[HOM_ALLELE2.v], expectedRatios[HET_ALLELE12.v]};
+        final double[] hetVsHomCounts = new double[]{genotypeCounts[HOM_ALLELE1.v] + genotypeCounts[HOM_ALLELE2.v], genotypeCounts[HET_ALLELE12.v]};
 
-        long[] actualHomRefVsVarCounts = new long[]{Math.round(homRefVsVarCounts[0]), Math.round(homRefVsVarCounts[1])};
-        long[] actualHetVsHomCounts = new long[]{Math.round(hetVsHomCounts[0]), Math.round(hetVsHomCounts[1])};
+        final double[] homAllele1VsAllele2Expect = new double[]{expectedRatios[HOM_ALLELE1.v], expectedRatios[HOM_ALLELE2.v]};
+        final double[] homAllele1VsAllele2Counts = new double[]{genotypeCounts[HOM_ALLELE1.v], genotypeCounts[HOM_ALLELE2.v]};
+
+        final long[] roundedHomRefVsVarCounts = MathUtil.round(homAllele1VsAllele2Counts);
+        final long[] roundedHetVsHomCounts = MathUtil.round(hetVsHomCounts);
 
         // calculate p-value
-        ChiSquareTest chiSquareTest = new ChiSquareTest();
-        final double chiSquaredTest = chiSquareTest.chiSquareTest(expectedRatios, actualGenotypeCounts);
+        final ChiSquareTest chiSquareTest = new ChiSquareTest();
+        final double chiSquaredTest = chiSquareTest.chiSquareTest(expectedRatios, roundedGenotypeCounts);
         // calculate LOD (cross-entropy)
         final double crossEntropy = -MathUtil.klDivergance(genotypeCounts, expectedRatios);
 
         // calculate p-value
-        final double hetsChiSquaredTest = chiSquareTest.chiSquareTest(hetVsHomexpectedRatios, actualHetVsHomCounts);
+        final double hetsChiSquaredTest = chiSquareTest.chiSquareTest(hetVsHomExpect, roundedHetVsHomCounts);
+
         // calculate LOD (cross-entropy)
-        final double hetsCrossEntropy = -MathUtil.klDivergance(hetVsHomexpectedRatios, hetVsHomCounts);
+        final double hetsCrossEntropy = -MathUtil.klDivergance(hetVsHomCounts, hetVsHomExpect);
 
         // calculate p-value
-        final double homsChiSquaredTest = chiSquareTest.chiSquareTest(homRefVsVarexpectedRatios, actualHomRefVsVarCounts);
+        final double homsChiSquaredTest = chiSquareTest.chiSquareTest(homAllele1VsAllele2Expect, roundedHomRefVsVarCounts);
+
         // calculate LOD (cross-entropy)
-        final double homsCrossEntropy = -MathUtil.klDivergance(homRefVsVarexpectedRatios, homRefVsVarCounts);
+        final double homsCrossEntropy = -MathUtil.klDivergance(homAllele1VsAllele2Counts, homAllele1VsAllele2Expect);
 
         final double lodSelfCheck = FingerprintChecker.calculateMatchResults(this, this).getLOD();
 
         final double[] randomizationTrials = new double[NUMBER_OF_SAMPLING];
-        RandomGenerator rg = new MersenneTwister(RANDOM_SEED);
+        final RandomGenerator rg = new MersenneTwister(RANDOM_SEED);
+
+        MathUtils.RunningStat runningStat= new MathUtils.RunningStat();
+
         for (int i = 0; i < NUMBER_OF_SAMPLING; i++) {
-            randomizationTrials[i] = FingerprintChecker.calculateMatchResults(this, randomizeFingerprint(rg)).getLOD();
+            runningStat.push(FingerprintChecker.calculateMatchResults(this, randomizeFingerprint(rg)).getLOD());
         }
 
         FingerprintMetrics fingerprintMetrics = new FingerprintMetrics();
@@ -150,9 +161,9 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
         fingerprintMetrics.HAPLOTYPES = values().size();
         fingerprintMetrics.HAPLOTYPES_WITH_EVIDENCE = values().stream().filter(HaplotypeProbabilities::hasEvidence).count();
         fingerprintMetrics.DEFINITE_GENOTYPES = values().stream().filter(h -> h.getLodMostProbableGenotype() > GENOTYPE_LOD_THRESHOLD).count();
-        fingerprintMetrics.NUM_HOM_REF = actualGenotypeCounts[0];
-        fingerprintMetrics.NUM_HET = actualGenotypeCounts[1];
-        fingerprintMetrics.NUM_HOM_VAR = actualGenotypeCounts[2];
+        fingerprintMetrics.NUM_HOM_ALLELE1 = roundedGenotypeCounts[0];
+        fingerprintMetrics.NUM_HET = roundedGenotypeCounts[1];
+        fingerprintMetrics.NUM_HOM_ALLELE2 = roundedGenotypeCounts[2];
         fingerprintMetrics.CHI_SQUARED_PVALUE = chiSquaredTest;
         fingerprintMetrics.LOG10_CHI_SQUARED_PVALUE = Math.log10(chiSquaredTest);
         fingerprintMetrics.CROSS_ENTROPY_LOD = crossEntropy;
@@ -168,15 +179,14 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
         return fingerprintMetrics;
     }
 
-    /** Creates a new fingerprint from the current one by randomizing the genotypes
+    /** Creates a new fingerprint from the current one by randomizing the probabilities within each haplotype
      *
      * @return
      */
-
     private Fingerprint randomizeFingerprint(final RandomGenerator rg) {
         final Fingerprint retVal = new Fingerprint(null, null, null);
 
-        RandomDataGenerator rng = new RandomDataGenerator(rg);
+        final RandomDataGenerator rng = new RandomDataGenerator(rg);
         for (Map.Entry<HaplotypeBlock, HaplotypeProbabilities> entry : entrySet()) {
             final HaplotypeProbabilities haplotypeProbabilities = entry.getValue();
             final HaplotypeProbabilitiesFromGenotypeLikelihoods permutedHaplotypeProbabilities = new HaplotypeProbabilitiesFromGenotypeLikelihoods(entry.getKey());
