@@ -24,14 +24,8 @@
 
 package picard.fingerprint;
 
-import htsjdk.tribble.util.MathUtils;
-import org.apache.commons.math3.random.MersenneTwister;
-import org.apache.commons.math3.random.RandomDataGenerator;
-import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import picard.PicardException;
-import picard.util.MathUtil;
 
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -43,10 +37,6 @@ import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static picard.fingerprint.HaplotypeProbabilities.Genotype.HET_ALLELE12;
-import static picard.fingerprint.HaplotypeProbabilities.Genotype.HOM_ALLELE1;
-import static picard.fingerprint.HaplotypeProbabilities.Genotype.HOM_ALLELE2;
-
 /**
  * class to represent a genetic fingerprint as a set of HaplotypeProbabilities
  * objects that give the relative probabilities of each of the possible haplotypes
@@ -55,9 +45,6 @@ import static picard.fingerprint.HaplotypeProbabilities.Genotype.HOM_ALLELE2;
  * @author Tim Fennell
  */
 public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities> {
-    private static final double GENOTYPE_LOD_THRESHOLD = 3;
-    private static final int NUMBER_OF_SAMPLING = 100;
-    private static final int RANDOM_SEED = 42;
     private final String sample;
     private final Path source;
     private final String info;
@@ -101,104 +88,6 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
             }
         }
     }
-
-    public FingerprintMetrics getFingerprintMetrics() {
-
-        //get expectation of counts and expected fractions
-        double[] genotypeCounts = new double[] {0, 0, 0};
-        double[] expectedRatios = new double[] {0, 0, 0};
-
-
-        for (final HaplotypeProbabilities haplotypeProbabilities : this.values()) {
-            genotypeCounts = MathUtil.sum(genotypeCounts, haplotypeProbabilities.getPosteriorProbabilities());
-            expectedRatios = MathUtil.sum(expectedRatios, haplotypeProbabilities.getPriorProbablities());
-        }
-        final long[] roundedGenotypeCounts = MathUtil.round(genotypeCounts);
-
-        final double[] hetVsHomExpect = new double[]{expectedRatios[HOM_ALLELE1.v] + expectedRatios[HOM_ALLELE2.v], expectedRatios[HET_ALLELE12.v]};
-        final double[] hetVsHomCounts = new double[]{genotypeCounts[HOM_ALLELE1.v] + genotypeCounts[HOM_ALLELE2.v], genotypeCounts[HET_ALLELE12.v]};
-
-        final double[] homAllele1VsAllele2Expect = new double[]{expectedRatios[HOM_ALLELE1.v], expectedRatios[HOM_ALLELE2.v]};
-        final double[] homAllele1VsAllele2Counts = new double[]{genotypeCounts[HOM_ALLELE1.v], genotypeCounts[HOM_ALLELE2.v]};
-
-        final long[] roundedHomRefVsVarCounts = MathUtil.round(homAllele1VsAllele2Counts);
-        final long[] roundedHetVsHomCounts = MathUtil.round(hetVsHomCounts);
-
-        // calculate p-value
-        final ChiSquareTest chiSquareTest = new ChiSquareTest();
-        final double chiSquaredTest = chiSquareTest.chiSquareTest(expectedRatios, roundedGenotypeCounts);
-        // calculate LOD (cross-entropy)
-        final double crossEntropy = -MathUtil.klDivergance(genotypeCounts, expectedRatios);
-
-        // calculate p-value
-        final double hetsChiSquaredTest = chiSquareTest.chiSquareTest(hetVsHomExpect, roundedHetVsHomCounts);
-
-        // calculate LOD (cross-entropy)
-        final double hetsCrossEntropy = -MathUtil.klDivergance(hetVsHomCounts, hetVsHomExpect);
-
-        // calculate p-value
-        final double homsChiSquaredTest = chiSquareTest.chiSquareTest(homAllele1VsAllele2Expect, roundedHomRefVsVarCounts);
-
-        // calculate LOD (cross-entropy)
-        final double homsCrossEntropy = -MathUtil.klDivergance(homAllele1VsAllele2Counts, homAllele1VsAllele2Expect);
-
-        final double lodSelfCheck = FingerprintChecker.calculateMatchResults(this, this).getLOD();
-
-        final double[] randomizationTrials = new double[NUMBER_OF_SAMPLING];
-        final RandomGenerator rg = new MersenneTwister(RANDOM_SEED);
-
-        MathUtils.RunningStat runningStat= new MathUtils.RunningStat();
-
-        for (int i = 0; i < NUMBER_OF_SAMPLING; i++) {
-            runningStat.push(FingerprintChecker.calculateMatchResults(this, randomizeFingerprint(rg)).getLOD());
-        }
-
-        FingerprintMetrics fingerprintMetrics = new FingerprintMetrics();
-
-        fingerprintMetrics.SAMPLE_ALIAS = sample;
-        fingerprintMetrics.SOURCE = source.toUri().toString();
-        fingerprintMetrics.INFO = info;
-        fingerprintMetrics.HAPLOTYPES = values().size();
-        fingerprintMetrics.HAPLOTYPES_WITH_EVIDENCE = values().stream().filter(HaplotypeProbabilities::hasEvidence).count();
-        fingerprintMetrics.DEFINITE_GENOTYPES = values().stream().filter(h -> h.getLodMostProbableGenotype() > GENOTYPE_LOD_THRESHOLD).count();
-        fingerprintMetrics.NUM_HOM_ALLELE1 = roundedGenotypeCounts[0];
-        fingerprintMetrics.NUM_HET = roundedGenotypeCounts[1];
-        fingerprintMetrics.NUM_HOM_ALLELE2 = roundedGenotypeCounts[2];
-        fingerprintMetrics.CHI_SQUARED_PVALUE = chiSquaredTest;
-        fingerprintMetrics.LOG10_CHI_SQUARED_PVALUE = Math.log10(chiSquaredTest);
-        fingerprintMetrics.CROSS_ENTROPY_LOD = crossEntropy;
-        fingerprintMetrics.HET_CHI_SQUARED_PVALUE = hetsChiSquaredTest;
-        fingerprintMetrics.HET_LOG10_CHI_SQUARED_PVALUE = Math.log10(hetsChiSquaredTest);
-        fingerprintMetrics.HET_CROSS_ENTROPY_LOD = hetsCrossEntropy;
-        fingerprintMetrics.HOM_CHI_SQUARED_PVALUE = homsChiSquaredTest;
-        fingerprintMetrics.HOM_LOG10_CHI_SQUARED_PVALUE = Math.log10(homsChiSquaredTest);
-        fingerprintMetrics.HOM_CROSS_ENTROPY_LOD = homsCrossEntropy;
-        fingerprintMetrics.LOD_SELF_CHECK = lodSelfCheck;
-        fingerprintMetrics.DISCRIMINATORY_POWER = lodSelfCheck - MathUtil.mean(randomizationTrials);
-
-        return fingerprintMetrics;
-    }
-
-    /** Creates a new fingerprint from the current one by randomizing the probabilities within each haplotype
-     *
-     * @return
-     */
-    private Fingerprint randomizeFingerprint(final RandomGenerator rg) {
-        final Fingerprint retVal = new Fingerprint(null, null, null);
-
-        final RandomDataGenerator rng = new RandomDataGenerator(rg);
-        for (Map.Entry<HaplotypeBlock, HaplotypeProbabilities> entry : entrySet()) {
-            final HaplotypeProbabilities haplotypeProbabilities = entry.getValue();
-            final HaplotypeProbabilitiesFromGenotypeLikelihoods permutedHaplotypeProbabilities = new HaplotypeProbabilitiesFromGenotypeLikelihoods(entry.getKey());
-            permutedHaplotypeProbabilities.addToLogLikelihoods(
-                    haplotypeProbabilities.getRepresentativeSnp(),
-                    haplotypeProbabilities.getRepresentativeSnp().getAlleles(),
-                    MathUtil.permute(haplotypeProbabilities.getLogLikelihoods(), rng));
-            retVal.add(permutedHaplotypeProbabilities);
-        }
-        return retVal;
-    }
-
 
     /**
      * Attempts to filter out haplotypes that may have suspect genotyping by removing haplotypes that reach

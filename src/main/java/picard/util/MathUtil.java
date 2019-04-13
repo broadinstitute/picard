@@ -413,7 +413,10 @@ final public class MathUtil {
     public static double klDivergance(double [] measured, double [] distribution){
         assert measured.length == distribution.length;
 
-        return -sum(multiply(measured, NATURAL_LOG_MATH.getLogValue(divide(distribution, measured))));
+        final double[] normalizedMeasured = pNormalizeVector(measured);
+        final double[] normalizedDistribution = pNormalizeVector(distribution);
+
+        return -sum(multiply(normalizedMeasured, NATURAL_LOG_MATH.getLogValue(divide(normalizedDistribution, normalizedMeasured))));
     }
 
     /**
@@ -489,7 +492,6 @@ final public class MathUtil {
         public double product(final double... logValues) {
             return MathUtil.sum(logValues);
         }
-
 
     }
 }
