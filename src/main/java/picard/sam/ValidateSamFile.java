@@ -25,7 +25,11 @@
 package picard.sam;
 
 import htsjdk.samtools.BamIndexValidator.IndexValidationStringency;
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMValidationError;
+import htsjdk.samtools.SamFileValidator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
@@ -42,9 +46,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * <p>This tool reports on the validity of a SAM or BAM file relative to the SAM format
