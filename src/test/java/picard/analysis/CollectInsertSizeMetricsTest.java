@@ -266,7 +266,7 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
 
     @Test
     public void testWidthOfMetrics() throws IOException {
-        final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam", TEST_DATA_DIR);
+        final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam");
         testSamFile.deleteOnExit();
 
         new File(testSamFile.getAbsolutePath().replace(".bam$",".bai")).deleteOnExit();
