@@ -87,6 +87,7 @@ import java.util.stream.Collectors;
         oneLineSummary = "Program to collect error metrics on bases stratified in various ways.",
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
+@DocumentedFeature
 public class CollectSamErrorMetrics extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
