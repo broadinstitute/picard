@@ -23,12 +23,27 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.SAMException;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.fastq.FastqConstants.FastqExtensions;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.FastqQualityFormat;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Iso8601Date;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.QualityEncodingDetector;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.SolexaQualityConverter;
+import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -89,7 +104,7 @@ import java.util.List;
  *      F2=reverse_reads.fastq \
  *      O=unaligned_read_pairs.bam \
  *      SM=sample001 \
- *      RG=rg0013 
+ *      RG=rg0013
  * </pre>
  */
 @CommandLineProgramProperties(
@@ -104,34 +119,34 @@ public class FastqToSam extends CommandLineProgram {
             "<p>Output read records will contain the original base calls and quality scores will be " +
                     "translated depending on the base quality score encoding: FastqSanger, FastqSolexa and FastqIllumina.</p>" +
         "<p>There are also arguments to provide values for SAM header and read attributes that are not present in FASTQ " +
-        "(e.g see RG or SM below).</p>" + 
+        "(e.g see RG or SM below).</p>" +
         "<h3>Inputs</h3>" +
         "<p>One FASTQ file name for single-end or two for pair-end sequencing input data. " +
         "These files might be in gzip compressed format (when file name is ending with \".gz\").</p>" +
-        "<p>Alternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name " + 
+        "<p>Alternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name " +
         "(see USE_SEQUENCIAL_FASTQ for details below).</p>" +
         "<p>By default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly " +
         "using the QUALITY_FORMAT argument.</p>" +
         "<h3>Output</h3>" +
         "<p>A single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.</p>" +
         "<h3>Usage examples</h3>" +
-        "<h4>Example 1:</h4>" + 
-        "<p>Single-end sequencing FASTQ file conversion. All reads are annotated " + 
-        "as belonging to the \"rg0013\" read group that in turn is part of the sample \"sample001\".</p>" + 
+        "<h4>Example 1:</h4>" +
+        "<p>Single-end sequencing FASTQ file conversion. All reads are annotated " +
+        "as belonging to the \"rg0013\" read group that in turn is part of the sample \"sample001\".</p>" +
         "<pre>java -jar picard.jar FastqToSam \\\n" +
         "        F1=input_reads.fastq \\\n" +
-        "        O=unaligned_reads.bam \\\n" + 
-        "        SM=sample001 \\\n" + 
+        "        O=unaligned_reads.bam \\\n" +
+        "        SM=sample001 \\\n" +
         "        RG=rg0013</pre>" +
-        "<h4>Example 2:</h4>" + 
-        "<p>Similar to example 1 above, but for paired-end sequencing.</p>" + 
+        "<h4>Example 2:</h4>" +
+        "<p>Similar to example 1 above, but for paired-end sequencing.</p>" +
         "<pre>java -jar picard.jar FastqToSam \\\n" +
-        "       F1=forward_reads.fastq \\\n" + 
+        "       F1=forward_reads.fastq \\\n" +
         "       F2=reverse_reads.fastq \\\n" +
-        "       O=unaligned_read_pairs.bam \\\n" + 
-        "       SM=sample001 \\\n" + 
+        "       O=unaligned_read_pairs.bam \\\n" +
+        "       SM=sample001 \\\n" +
         "       RG=rg0013</pre><hr />";
-    
+
     private static final Log LOG = Log.getInstance(FastqToSam.class);
 
     @Argument(shortName="F1", doc="Input fastq file (optionally gzipped) for single end data, or first read in paired end data.")
@@ -139,7 +154,7 @@ public class FastqToSam extends CommandLineProgram {
 
     @Argument(shortName="F2", doc="Input fastq file (optionally gzipped) for the second read of paired end data.", optional=true)
     public File FASTQ2;
-    
+
     @Argument(doc="Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz." +
             "The files should be named:\n" +
             "    <prefix>_001.<extension>, <prefix>_002.<extension>, ..., <prefix>_XYZ.<extension>\n" +
@@ -189,7 +204,7 @@ public class FastqToSam extends CommandLineProgram {
     public String PLATFORM_MODEL;
 
     @Argument(doc="Comment(s) to include in the merged output file's header.", optional=true, shortName="CO")
-    public List<String> COMMENT = new ArrayList<String>();
+    public List<String> COMMENT = new ArrayList<>();
 
     @Argument(shortName = "DS", doc = "Inserted into the read group header", optional = true)
     public String DESCRIPTION;
@@ -264,7 +279,7 @@ public class FastqToSam extends CommandLineProgram {
      * where `baseFastq` is the first in that list.
      */
     protected static List<File> getSequentialFileList(final File baseFastq) {
-        final List<File> files = new ArrayList<File>();
+        final List<File> files = new ArrayList<>();
         files.add(baseFastq);
 
         // Find the correct extension used in the base FASTQ
@@ -280,7 +295,7 @@ public class FastqToSam extends CommandLineProgram {
         if (null == fastqExtensions) {
             throw new PicardException(String.format("Could not parse the FASTQ extension (expected '_001' + '%s'): %s", FastqExtensions.values().toString(), baseFastq));
         }
-        
+
         // Find all the files
         for (int idx = 2; true; idx++) {
             String fastq = baseFastq.getAbsolutePath();
@@ -292,7 +307,7 @@ public class FastqToSam extends CommandLineProgram {
             }
             files.add(new File(fastq));
         }
-        
+
         return files;
     }
 
@@ -311,10 +326,10 @@ public class FastqToSam extends CommandLineProgram {
         QUALITY_FORMAT = FastqToSam.determineQualityFormat(fileToFastqReader(FASTQ),
                 (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2),
                 QUALITY_FORMAT);
-        
+
         // Lists for sequential files, but also used when not sequential
-        final List<FastqReader> readers1 = new ArrayList<FastqReader>();
-        final List<FastqReader> readers2 = new ArrayList<FastqReader>();
+        final List<FastqReader> readers1 = new ArrayList<>();
+        final List<FastqReader> readers2 = new ArrayList<>();
 
         if (USE_SEQUENTIAL_FASTQS) {
             // Get all the files
@@ -490,7 +505,7 @@ public class FastqToSam extends CommandLineProgram {
      * <li> Paired reads must either have the exact same read names or they must contain at least one "/"
      * <li> and the First pair read name must end with "/1" and second pair read name ends with "/2"
      * <li> The baseName (read name part before the /) must be the same for both read names
-     * <li> If the read names are exactly the same but end in "/2" or "/1" then an exception will be thrown 
+     * <li> If the read names are exactly the same but end in "/2" or "/1" then an exception will be thrown
      * </ul>
      */
     String getBaseName(final String readName1, final String readName2, final FastqReader freader1, final FastqReader freader2) {
@@ -510,7 +525,7 @@ public class FastqToSam extends CommandLineProgram {
         final boolean num2Blank = StringUtil.isBlank(num2);
         if (num1Blank || num2Blank) {
             if(!num1Blank) throw new PicardException(error(freader1,"Pair 1 number is missing (" +readName1+ "). Both pair numbers must be present or neither."));       //num1 != blank and num2   == blank
-            else if(!num2Blank) throw new PicardException(error(freader2, "Pair 2 number is missing (" +readName2+ "). Both pair numbers must be present or neither.")); //num1 == blank and num =2 != blank 
+            else if(!num2Blank) throw new PicardException(error(freader2, "Pair 2 number is missing (" +readName2+ "). Both pair numbers must be present or neither.")); //num1 == blank and num =2 != blank
         } else {
             if (!num1.equals("1")) throw new PicardException(error(freader1,"Pair 1 number must be 1 ("+readName1+")"));
             if (!num2.equals("2")) throw new PicardException(error(freader2,"Pair 2 number must be 2 ("+readName2+")"));
@@ -531,7 +546,7 @@ public class FastqToSam extends CommandLineProgram {
             result[1] = null;
         } else {
             result[1] = readName.substring(idx+1, readName.length()); // should be a 1 or 2
-            
+
             if(!result[1].equals("1") && !result[1].equals("2")) {    //if not a 1 or 2 then names must be identical
                 result[0] = readName;
                 result[1] = null;
