@@ -340,7 +340,7 @@ public class MergeBamAlignment extends CommandLineProgram {
         }
 
         final SamAlignmentMerger merger = new SamAlignmentMerger(UNMAPPED_BAM, OUTPUT,
-                REFERENCE_SEQUENCE, prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE,
+                referenceSequence.getReferenceFile(), prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE,
                 ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
                 ATTRIBUTES_TO_RETAIN, ATTRIBUTES_TO_REMOVE, READ1_TRIM, READ2_TRIM,
                 READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER,
@@ -353,7 +353,7 @@ public class MergeBamAlignment extends CommandLineProgram {
         merger.setAttributesToReverse(ATTRIBUTES_TO_REVERSE);
         merger.setAttributesToReverseComplement(ATTRIBUTES_TO_REVERSE_COMPLEMENT);
         merger.setAddPGTagToReads(pgTagArgumentCollection.ADD_PG_TAG_TO_READS);
-        merger.mergeAlignment(REFERENCE_SEQUENCE);
+        merger.mergeAlignment(referenceSequence.getReferenceFile());
         merger.close();
 
         return 0;

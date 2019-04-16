@@ -70,10 +70,6 @@ public class AddOATag extends CommandLineProgram {
     @Argument(shortName = "L", doc = "If provided, only records that overlap given interval list will have the OA tag added.", optional = true)
     public File INTERVAL_LIST;
 
-    /**
-     * Original Alignment tag key.
-     */
-    public static final String OA = "OA";
     private static final Log log = Log.getInstance(AddOATag.class);
 
     @Override
@@ -127,6 +123,6 @@ public class AddOATag extends CommandLineProgram {
                     rec.getMappingQuality(),
                     Optional.ofNullable(rec.getAttribute(SAMTag.NM.name())).orElse(""));
         }
-        rec.setAttribute(OA, Optional.ofNullable(rec.getAttribute(OA)).orElse("") +  oaValue);
+        rec.setAttribute(SAMTag.OA.name(), Optional.ofNullable(rec.getAttribute(SAMTag.OA.name())).orElse("") +  oaValue);
     }
 }

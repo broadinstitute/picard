@@ -151,19 +151,19 @@ public abstract class AbstractAlignmentMerger {
         // Add tag with information, and remove from standard fields in record
         MOVE_TO_TAG(true, true);
 
-        private final boolean resetMappingInformation, populatePATag;
+        private final boolean resetMappingInformation, populateOATag;
 
-        UnmappingReadStrategy(final boolean resetMappingInformation, final boolean populatePATag) {
+        UnmappingReadStrategy(final boolean resetMappingInformation, final boolean populateOATag) {
             this.resetMappingInformation = resetMappingInformation;
-            this.populatePATag = populatePATag;
+            this.populateOATag = populateOATag;
         }
 
         public boolean isResetMappingInformation() {
             return resetMappingInformation;
         }
 
-        public boolean isPopulatePaTag() {
-            return populatePATag;
+        public boolean isPopulateOaTag() {
+            return populateOATag;
         }
     }
 
@@ -668,21 +668,20 @@ public abstract class AbstractAlignmentMerger {
 
             crossSpeciesReads++;
 
-            if (unmappingReadsStrategy.isPopulatePaTag()) {
-                unaligned.setAttribute("OA", encodeMappingInformation(aligned));
+            if (unmappingReadsStrategy.isPopulateOaTag()) {
+                unaligned.setAttribute(SAMTag.OA.name(), encodeMappingInformation(aligned));
             }
 
             if (unmappingReadsStrategy.isResetMappingInformation()) {
                 unaligned.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
                 unaligned.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
-                unaligned.setCigar(null);
-                unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
                 unaligned.setAttribute(SAMTag.NM.name(), null);
             }
 
             unaligned.setReadUnmappedFlag(true);
-            // Unmapped read cannot have non-zero mapping quality and remain valid
+            // Unmapped read cannot have non-zero mapping quality or non-null cigars and remain valid
             unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
+            unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
 
             // if there already is a comment, add second comment with a | separator:
             Optional<String> optionalComment = Optional.ofNullable(unaligned.getStringAttribute(SAMTag.CO.name()));
