@@ -78,6 +78,16 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
     @Test
     public void testUnmapBacterialContamination() throws IOException {
         final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        final SAMFileHeader header = builder.getHeader();
+        final SAMFileHeader.SortOrder sortOrder = header.getSortOrder();
+        final SAMFileHeader newHeader = SAMRecordSetBuilder.makeDefaultHeader(sortOrder, 100000,true);
+        builder.setHeader(newHeader);
+
+        final File reference = File.createTempFile("reference",".fasta");
+        reference.deleteOnExit();
+
+        builder.writeRandomReference(reference.toPath());
+
         builder.getHeader().setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
         builder.addPair("overlappingpair", 0,500,500, false,false,"20S20M60S","20S20M60M",true,false,45);
