@@ -63,7 +63,7 @@ public class FingerprintMetrics extends MetricBase {
     /* Number of definite minor allele homozygous calls*/
     public long NUM_HOM_ALLELE2;
 
-    /* The Chi-squared pvalue of the counts vector relative to the expected counts, (3x2 table) */
+    /* The Chi-squared pvalue of the observed counts vector relative to the expected counts, (3x2 table) */
     public double CHI_SQUARED_PVALUE;
 
     /* The log10 of the Chi-squared pvalue*/
