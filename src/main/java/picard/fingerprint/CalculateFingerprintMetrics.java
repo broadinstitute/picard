@@ -163,7 +163,7 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
         fingerprintMetrics.DEFINITE_GENOTYPES = fingerprint.values().stream().filter(h -> h.getLodMostProbableGenotype() > GENOTYPE_LOD_THRESHOLD).count();
         fingerprintMetrics.NUM_HOM_ALLELE1 = roundedGenotypeCounts[HOM_ALLELE1.v];
         fingerprintMetrics.NUM_HET = roundedGenotypeCounts[HET_ALLELE12.v];
-        fingerprintMetrics.NUM_HOM_ALLELE2 = roundedGenotypeCounts[2];
+        fingerprintMetrics.NUM_HOM_ALLELE2 = roundedGenotypeCounts[HOM_ALLELE2.v];
 
         // calculate p-value
         final double chiSquaredTest = chiSquareTest.chiSquareTest(expectedRatios, roundedGenotypeCounts);
