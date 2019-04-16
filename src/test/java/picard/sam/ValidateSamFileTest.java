@@ -10,6 +10,7 @@ import java.io.File;
 public class ValidateSamFileTest extends CommandLineProgramTest {
 
     private static final String TEST_DATA_DIR = "testdata/picard/sam/ValidateSamFile/";
+    private static final String INDEX_DATA_DIR = "testdata/picard/indices/";
 
     @Override
     public String getCommandLineProgramName() {
@@ -29,9 +30,24 @@ public class ValidateSamFileTest extends CommandLineProgramTest {
         };
     }
 
+    @DataProvider
+    public Object[][] indexFiles() {
+        return new Object[][] {
+                {"index_test0.bam", ValidateSamFile.ReturnTypes.SUCCESSFUL.value()}, // BAM file with no index attached
+                {"index_test1.bam", ValidateSamFile.ReturnTypes.SUCCESSFUL.value()}, // BAM file with BAI index
+                {"index_test2.bam", ValidateSamFile.ReturnTypes.SUCCESSFUL.value()}  // BAM file with CSI index
+        };
+    }
+
     @Test(dataProvider = "samFiles")
     public void test(final String samFileName, final int exitStatus) {
         final int validateExitStatus = runPicardCommandLine(new String[]{"I=" + new File(TEST_DATA_DIR + samFileName).getAbsolutePath()});
+        Assert.assertEquals(validateExitStatus, exitStatus);
+    }
+
+    @Test(dataProvider = "indexFiles")
+    public void testIndex(final String samFileName, final int exitStatus) {
+        final int validateExitStatus = runPicardCommandLine(new String[]{"I=" + new File(INDEX_DATA_DIR + samFileName).getAbsolutePath()});
         Assert.assertEquals(validateExitStatus, exitStatus);
     }
 }
