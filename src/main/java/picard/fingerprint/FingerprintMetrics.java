@@ -90,7 +90,7 @@ public class FingerprintMetrics extends MetricBase {
     /* The categorical cross entropy of the HOM-Allele1s and HOM_Allele2s relative to the expected counts (big is bad)*/
     public double HOM_CROSS_ENTROPY_LOD;
 
-    /* The fingerprinting LOD score this sample gets when compared to itself*/
+    /* The fingerprinting LOD score this sample gets when compared to itself (big is good)*/
     public double LOD_SELF_CHECK;
 
     /* The difference in fingerprinting LOD between LOD_SELF_CHECK and the LOD score found when
