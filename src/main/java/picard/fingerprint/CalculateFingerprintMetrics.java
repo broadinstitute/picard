@@ -161,7 +161,7 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
         fingerprintMetrics.HAPLOTYPES = fingerprint.values().size();
         fingerprintMetrics.HAPLOTYPES_WITH_EVIDENCE = fingerprint.values().stream().filter(HaplotypeProbabilities::hasEvidence).count();
         fingerprintMetrics.DEFINITE_GENOTYPES = fingerprint.values().stream().filter(h -> h.getLodMostProbableGenotype() > GENOTYPE_LOD_THRESHOLD).count();
-        fingerprintMetrics.NUM_HOM_ALLELE1 = roundedGenotypeCounts[0];
+        fingerprintMetrics.NUM_HOM_ALLELE1 = roundedGenotypeCounts[HOM_ALLELE1.v];
         fingerprintMetrics.NUM_HET = roundedGenotypeCounts[1];
         fingerprintMetrics.NUM_HOM_ALLELE2 = roundedGenotypeCounts[2];
 
