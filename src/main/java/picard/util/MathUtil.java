@@ -65,15 +65,19 @@ final public class MathUtil {
     }
 
     public static double mean(final double[] in) {
-        return mean(in,0, in.length);
+        return mean(in, 0, in.length);
     }
 
-        /** Calculated the standard deviation of an array of doubles. */
+    /**
+     * Calculated the standard deviation of an array of doubles.
+     */
     public static double stddev(final double[] in, final int start, final int length) {
         return stddev(in, start, length, mean(in, start, length));
     }
 
-    /** Calculated the standard deviation of an array of doubles. */
+    /**
+     * Calculated the standard deviation of an array of doubles.
+     */
     public static double stddev(final double[] in, final int start, final int stop, final double mean) {
         double total = 0;
         for (int i = start; i < stop; ++i) {
@@ -83,19 +87,20 @@ final public class MathUtil {
         return Math.sqrt((total / (stop - start)) - (mean * mean));
     }
 
-
-    /** Calculated the standard deviation of an array of doubles. */
+    /**
+     * Calculated the standard deviation of an array of doubles.
+     */
     public static double stddev(final double[] in, final double mean) {
         return stddev(in, 0, in.length, mean);
     }
 
-
-
-        public static int compare(final int v1, final int v2) {
+    public static int compare(final int v1, final int v2) {
         return (v1 < v2 ? -1 : (v1 == v2 ? 0 : 1));
     }
 
-    /** Calculate the median of an array of doubles. Assumes that the input is sorted */
+    /**
+     * Calculate the median of an array of doubles. Assumes that the input is sorted
+     */
     public static double median(final double... in) {
         if (in.length == 0) {
             throw new IllegalArgumentException("Attempting to find the median of an empty array");
@@ -408,9 +413,9 @@ final public class MathUtil {
 
 
     /** Calculate the KL divergence from measured to distribution
-    // https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
-    */
-    public static double klDivergance(double [] measured, double [] distribution){
+     // https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+     */
+    public static double klDivergance(double[] measured, double[] distribution) {
         assert measured.length == distribution.length;
 
         final double[] normalizedMeasured = pNormalizeVector(measured);

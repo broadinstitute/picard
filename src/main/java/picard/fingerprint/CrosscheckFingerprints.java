@@ -90,7 +90,7 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
  * <pre>
  *     java -jar picard.jar CrosscheckFingerprints \
  *          INPUT=sample.with.many.readgroups.bam \
- *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+ *          HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \
  *          LOD_THRESHOLD=-5 \
  *          OUTPUT=sample.crosscheck_metrics
  * </pre>
@@ -101,7 +101,7 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
  *     java -jar picard.jar CrosscheckFingerprints \
  *          INPUT=sample.one.with.many.readgroups.bam \
  *          INPUT=sample.two.with.many.readgroups.bam \
- *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+ *          HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \
  *          LOD_THRESHOLD=-5 \
  *          EXPECT_ALL_GROUPS_TO_MATCH=true \
  *          OUTPUT=sample.crosscheck_metrics
@@ -177,7 +177,7 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
                         "<pre>" +
                         "    java -jar picard.jar CrosscheckFingerprints \\\n" +
                         "          INPUT=sample.with.many.readgroups.bam \\\n" +
-                        "          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n" +
+                        "          HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \\\n" +
                         "          LOD_THRESHOLD=-5 \\\n" +
                         "          OUTPUT=sample.crosscheck_metrics" +
                         " </pre>" +
@@ -187,7 +187,7 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
                         "     java -jar picard.jar CrosscheckFingerprints \\\n" +
                         "           INPUT=sample.one.with.many.readgroups.bam \\\n" +
                         "           INPUT=sample.two.with.many.readgroups.bam \\\n" +
-                        "           HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n" +
+                        "           HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \\\n" +
                         "           LOD_THRESHOLD=-5 \\\n" +
                         "           EXPECT_ALL_GROUPS_TO_MATCH=true \\\n" +
                         "           OUTPUT=sample.crosscheck_metrics" +

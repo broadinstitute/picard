@@ -34,6 +34,9 @@ import picard.analysis.FingerprintingSummaryMetrics;
  * {@link FingerprintingSummaryMetrics} in that it is calculated on a single fingerprint,
  * and attempts to describe how likely that fingerprint is to have arisen from an actual sample
  * as opposed to having artifacts such as contamination, or strong bias towards homozygous genotypes.
+ *
+ * Several tests use "expected" genotype distribution based on the allele frequency stored in the haplotype-database
+ * file that is used, and assuming Hardy-Weinberg equilibrium.
  */
 public class FingerprintMetrics extends MetricBase {
     /* The Sample alias taken from RG header or #CROME line */
@@ -54,7 +57,7 @@ public class FingerprintMetrics extends MetricBase {
     /* Number of haplotypes that had enough evidence to make a definite genotype call */
     public long DEFINITE_GENOTYPES;
 
-    /* Number of major allele homozygous calls*/
+    /* Number of definite major allele homozygous calls*/
     public long NUM_HOM_ALLELE1;
 
     /* Number of definite heterozygous calls*/

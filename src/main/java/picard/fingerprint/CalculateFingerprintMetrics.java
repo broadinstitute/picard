@@ -76,11 +76,16 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
                     "a non-contaminated, diploid human, whose genotypes are modelled by the probabilities given in the " +
                     "HAPLOTYPE_MAP file." +
                     "<p>" +
+                    "Please see the FingerprintMetrics " +
+                    "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#FingerprintMetrics'>definitions</a> " +
+                    "for a complete description of the metrics produced by this tool.</p>" +
+                    "<hr />"+
+                    "<p>" +
                     "<h3>Example</h3>\n" +
                     "<pre>\" +\n" +
                     "java -jar picard.jar CalculateFingerprintMetrics \\\n" +
                     "      INPUT=sample.bam \\\n" +
-                    "      HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n" +
+                    "      HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \\\n" +
                     "      OUTPUT=sample.fingerprint_metrics\n" +
                     " </pre>\n";
 
@@ -89,7 +94,7 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "One or more input files (SAM/BAM/CRAM or VCF).")
     public List<String> INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output files to write.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output file to write (Metrics).")
     public File OUTPUT;
 
     @Argument(shortName = "H", doc = "The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +

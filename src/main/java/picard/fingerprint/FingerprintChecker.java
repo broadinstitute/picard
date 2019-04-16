@@ -97,14 +97,6 @@ public class FingerprintChecker {
     }
 
     /**
-     * Creates a fingerprint checker that will work with the set of haplotyped provided.
-     */
-    public FingerprintChecker(final Fingerprint fingerprint) {
-        this.haplotypes = new HaplotypeMap(fingerprint.keySet());
-    }
-
-
-    /**
      * Sets the minimum base quality for bases used when computing a fingerprint from sequence data.
      */
     public void setMinimumBaseQuality(final int minimumBaseQuality) {
