@@ -570,6 +570,26 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final Map<FingerprintIdDetails, Fingerprint> lhsFingerprintsByGroup = Fingerprint.mergeFingerprintsBy(lhsFingerprints, by);
         final Map<FingerprintIdDetails, Fingerprint> rhsFingerprintsByGroup = Fingerprint.mergeFingerprintsBy(rhsFingerprints, by);
 
+        if (lhsFingerprintsByGroup.size() == 0 || rhsFingerprintsByGroup.size() == 0) {
+            log.error(String.format("%s group requested has no fingerprints.  " +
+                    "It probably has no calls/reads overlapping fingerprinting sites.", lhsFingerprintsByGroup.size() == 0 ? "LEFT" : "RIGHT"));
+            return 1;
+        }
+
+        for (final Map.Entry<FingerprintIdDetails, Fingerprint> pair : lhsFingerprintsByGroup.entrySet()) {
+            if (pair.getValue().size() == 0) {
+                log.error(by.apply(pair.getKey()) + " was not fingerprinted.  It probably has no calls/reads overlapping fingerprinting sites.");
+                return 1;
+            }
+        }
+
+        for (final Map.Entry<FingerprintIdDetails, Fingerprint> pair : rhsFingerprintsByGroup.entrySet()) {
+            if (pair.getValue().size() == 0) {
+                log.error(by.apply(pair.getKey()) + " was not fingerprinted.  It probably has no calls/reads overlapping fingerprinting sites.");
+                return 1;
+            }
+        }
+
         if (MATRIX_OUTPUT != null) {
             crosscheckMatrix = new double[lhsFingerprintsByGroup.size()][];
             for (int row = 0; row < lhsFingerprintsByGroup.size(); row++) {
@@ -652,6 +672,13 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 continue;
             }
 
+            final Fingerprint lhsFP = fingerprints1BySample.get(lhsID);
+            final Fingerprint rhsFP = fingerprints2BySample.get(rhsID);
+            if (lhsFP.size() == 0 || rhsFP.size() == 0) {
+                log.error(String.format("sample %s has no fingerprint from %s group.  Probably there no reads/calls at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
+                unexpectedResults++;
+                continue;
+            }
             final MatchResults results = FingerprintChecker.calculateMatchResults(fingerprints1BySample.get(lhsID), fingerprints2BySample.get(rhsID),
                     GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
             final CrosscheckMetric.FingerprintResult result = getMatchResults(true, results);

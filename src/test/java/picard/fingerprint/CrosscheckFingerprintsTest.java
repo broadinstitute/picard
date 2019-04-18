@@ -27,6 +27,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     private final File TEST_DATA_DIR = new File("testdata/picard/fingerprint/");
     private final File HAPLOTYPE_MAP = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
     private final File HAPLOTYPE_MAP_FOR_CRAMS = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.shifted.for.crams.txt");
+    private final File HAPLOTYPE_MAP_MOVED = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.moved.txt");
 
     private final File NA12891_r1_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam");
     private final File NA12891_r2_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r2.sam");
@@ -63,6 +64,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     private static File  NA12892_and_NA123891_part1_vcf;
     private static File  NA12892_and_NA123891_part2_vcf;
     private static File  NA12892_and_NA123891_part3_vcf;
+    private static File NA12891_no_fp_sites_vcf;
 
     private static final Map<CrosscheckMetric.DataType, List<String>> lookupMap = new HashMap<>(4);
     
@@ -114,6 +116,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         NA12892_and_NA123891_part1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891andNA12892_part1.vcf"), "fingerprint");
         NA12892_and_NA123891_part2_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891andNA12892_part2.vcf"), "fingerprint");
         NA12892_and_NA123891_part3_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891andNA12892_part3.vcf"), "fingerprint");
+        NA12891_no_fp_sites_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891.no.fp.sites.vcf"), "fingerprint");
     }
 
     @Override
@@ -136,18 +139,18 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
                 {NA12892_r1, NA12892_r2, true,  0, (NA12892_r1_RGs + NA12892_r2_RGs) * (NA12892_r1_RGs + NA12892_r2_RGs )},
                 {NA12892_r2, NA12891_r2, true,  1, (NA12892_r2_RGs + NA12891_r2_RGs) * (NA12892_r2_RGs + NA12891_r2_RGs )},
                 {NA12892_r2, NA12891_r1, true, 1, (NA12892_r2_RGs + NA12891_r1_RGs) * (NA12892_r2_RGs + NA12891_r1_RGs)},
-                {NA12891_r1_cram, NA12891_r2_cram, false, 0, (NA12891_r1_RGs + NA12891_r2_RGs) * (NA12891_r1_RGs + NA12891_r2_RGs)},
-                {NA12891_r1_cram, NA12892_r1_cram, false, 0, (NA12891_r1_RGs + NA12892_r1_RGs) * (NA12891_r1_RGs + NA12892_r1_RGs)},
-                {NA12891_r1_cram, NA12892_r2_cram, false, 0, (NA12891_r1_RGs + NA12892_r2_RGs) * (NA12891_r1_RGs + NA12892_r2_RGs)},
-                {NA12892_r1_cram, NA12892_r2_cram, false, 0, (NA12892_r1_RGs + NA12892_r2_RGs) * (NA12892_r1_RGs + NA12892_r2_RGs)},
-                {NA12892_r2_cram, NA12891_r2_cram, false, 0, (NA12892_r2_RGs + NA12891_r2_RGs) * (NA12892_r2_RGs + NA12891_r2_RGs)},
-                {NA12892_r2_cram, NA12891_r1_cram, false, 0, (NA12892_r2_RGs + NA12891_r1_RGs) * (NA12892_r2_RGs + NA12891_r1_RGs)},
-                {NA12891_r1_cram, NA12891_r2_cram, true, 0, (NA12891_r1_RGs + NA12891_r2_RGs) * (NA12891_r1_RGs + NA12891_r2_RGs)},
-                {NA12891_r1_cram, NA12892_r1_cram, true, 1, (NA12891_r1_RGs + NA12892_r1_RGs) * (NA12891_r1_RGs + NA12892_r1_RGs)},
-                {NA12891_r1_cram, NA12892_r2_cram, true, 1, (NA12891_r1_RGs + NA12892_r2_RGs) * (NA12891_r1_RGs + NA12892_r2_RGs)},
-                {NA12892_r1_cram, NA12892_r2_cram, true, 0, (NA12892_r1_RGs + NA12892_r2_RGs) * (NA12892_r1_RGs + NA12892_r2_RGs)},
-                {NA12892_r2_cram, NA12891_r2_cram, true, 1, (NA12892_r2_RGs + NA12891_r2_RGs) * (NA12892_r2_RGs + NA12891_r2_RGs)},
-                {NA12892_r2_cram, NA12891_r1_cram, true, 1, (NA12892_r2_RGs + NA12891_r1_RGs) * (NA12892_r2_RGs + NA12891_r1_RGs)}
+                {NA12891_r1_cram, NA12891_r2_cram, false, 0, (NA12891_r1_RGs - 1 + NA12891_r2_RGs) * (NA12891_r1_RGs - 1 + NA12891_r2_RGs)},
+                {NA12891_r1_cram, NA12892_r1_cram, false, 0, (NA12891_r1_RGs - 1 + NA12892_r1_RGs - 1) * (NA12891_r1_RGs - 1 + NA12892_r1_RGs - 1)},
+                {NA12891_r1_cram, NA12892_r2_cram, false, 0, (NA12891_r1_RGs - 1 + NA12892_r2_RGs - 1) * (NA12891_r1_RGs - 1 + NA12892_r2_RGs - 1)},
+                {NA12892_r1_cram, NA12892_r2_cram, false, 0, (NA12892_r1_RGs - 1 + NA12892_r2_RGs - 1) * (NA12892_r1_RGs - 1 + NA12892_r2_RGs - 1)},
+                {NA12892_r2_cram, NA12891_r2_cram, false, 0, (NA12892_r2_RGs - 1 + NA12891_r2_RGs) * (NA12892_r2_RGs - 1 + NA12891_r2_RGs)},
+                {NA12892_r2_cram, NA12891_r1_cram, false, 0, (NA12892_r2_RGs - 1 + NA12891_r1_RGs - 1) * (NA12892_r2_RGs - 1 + NA12891_r1_RGs - 1)},
+                {NA12891_r1_cram, NA12891_r2_cram, true, 0, (NA12891_r1_RGs - 1 + NA12891_r2_RGs) * (NA12891_r1_RGs - 1 + NA12891_r2_RGs)},
+                {NA12891_r1_cram, NA12892_r1_cram, true, 1, (NA12891_r1_RGs - 1 + NA12892_r1_RGs - 1) * (NA12891_r1_RGs - 1 + NA12892_r1_RGs - 1)},
+                {NA12891_r1_cram, NA12892_r2_cram, true, 1, (NA12891_r1_RGs - 1 + NA12892_r2_RGs - 1) * (NA12891_r1_RGs - 1 + NA12892_r2_RGs - 1)},
+                {NA12892_r1_cram, NA12892_r2_cram, true, 0, (NA12892_r1_RGs - 1 + NA12892_r2_RGs - 1) * (NA12892_r1_RGs - 1 + NA12892_r2_RGs - 1)},
+                {NA12892_r2_cram, NA12891_r2_cram, true, 1, (NA12892_r2_RGs - 1 + NA12891_r2_RGs) * (NA12892_r2_RGs - 1 + NA12891_r2_RGs)},
+                {NA12892_r2_cram, NA12891_r1_cram, true, 1, (NA12892_r2_RGs - 1 + NA12891_r1_RGs - 1) * (NA12892_r2_RGs - 1 + NA12891_r1_RGs - 1)}
         };
     }
 
@@ -232,11 +235,11 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
                 "R=" + referenceForCrams)
         );
 
-        runPicardCommandLine(argsBam);
+        Assert.assertEquals(runPicardCommandLine(argsBam), 0);
         final MetricsFile<CrosscheckMetric, Comparable<?>> metricsOutputBam = new MetricsFile<>();
         metricsOutputBam.read(new FileReader(metricsBam));
 
-        runPicardCommandLine(argsCram);
+        Assert.assertEquals(runPicardCommandLine(argsCram), 0);
         final MetricsFile<CrosscheckMetric, Comparable<?>> metricsOutputCram = new MetricsFile<>();
         metricsOutputCram.read(new FileReader(metricsCram));
 
@@ -714,6 +717,45 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         args.add("CROSSCHECK_BY=FILE");
 
         doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.FILE, ExpectAllMatch);
+    }
+
+    @DataProvider(name = "noFingerprintingSitesData")
+    public Object[][] noFingerprintingSitesVCFData() {
+        return new Object[][]{
+                {NA12891_no_fp_sites_vcf, null, HAPLOTYPE_MAP},
+                {NA12891_no_fp_sites_vcf, NA12891_1_vcf, HAPLOTYPE_MAP},
+                {NA12891_1_vcf, NA12891_no_fp_sites_vcf, HAPLOTYPE_MAP},
+                {NA12891_r1, null, HAPLOTYPE_MAP_MOVED}
+        };
+    }
+
+    @Test(dataProvider = "noFingerprintingSitesData")
+    public void testNoFingerprintingSites(final File input, final File second_input, final File hap_map) throws IOException {
+        File metrics = File.createTempFile("Fingerprinting.bam.comparison", "crosscheck_metrics");
+        metrics.deleteOnExit();
+        final List<String> args = new ArrayList<>(Arrays.asList("INPUT=" + input,
+                "OUTPUT=" + metrics.getAbsolutePath(),
+                "LOD_THRESHOLD=" + -2.0,
+                "HAPLOTYPE_MAP=" + hap_map.getAbsolutePath())
+        );
+
+        if (second_input != null) {
+            args.add("SECOND_INPUT=" + second_input);
+        }
+
+        Assert.assertEquals(runPicardCommandLine(args), 1);
+        args.add("CROSSCHECK_MODE=CHECK_ALL_OTHERS");
+        Assert.assertEquals(runPicardCommandLine(args), 1);
+        args.remove(args.size() - 1);
+
+        for (final CrosscheckMetric.DataType by : CrosscheckMetric.DataType.values()) {
+            args.add("CROSSCHECK_BY=" + by);
+            Assert.assertEquals(runPicardCommandLine(args), 1);
+            args.add("CROSSCHECK_MODE=CHECK_ALL_OTHERS");
+            Assert.assertEquals(runPicardCommandLine(args), 1);
+            args.remove(args.size() - 1);
+            args.remove(args.size() - 1);
+        }
     }
 
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType) throws IOException {
