@@ -275,7 +275,9 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Argument(doc = "List of Sequence Records tags that must be equal (if present) in the reference dictionary and in the aligned file. Mismatching tags will cause an error if in this list, and a warning otherwise.")
     public List<String> MATCHING_DICTIONARY_TAGS = SAMSequenceDictionary.DEFAULT_DICTIONARY_EQUAL_TAG;
 
-    @Argument(doc = "How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) Currently ignored unless UNMAP_CONTAMINANT_READS = true", optional = true)
+    @Argument(doc = "How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) " +
+            "Currently ignored unless UNMAP_CONTAMINANT_READS = true. Note that the DO_NOT_CHANGE strategy will actually reset the cigar and set the mapping quality on unmapped reads since otherwise" +
+            "the result will be an invalid record. To force no change use the DO_NOT_CHANGE_INVALID strategy.", optional = true)
     public AbstractAlignmentMerger.UnmappingReadStrategy UNMAPPED_READ_STRATEGY = AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE;
 
     @Override

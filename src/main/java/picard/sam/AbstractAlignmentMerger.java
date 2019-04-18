@@ -145,17 +145,24 @@ public abstract class AbstractAlignmentMerger {
 
     public enum UnmappingReadStrategy {
         // Leave on record, and copy to tag
-        COPY_TO_TAG(false, true),
-        // Leave on record, but do not create additional tag
-        DO_NOT_CHANGE(false, false),
+        COPY_TO_TAG(false, true, true),
+        // Leave on record (if valid), but do not create additional tag
+        DO_NOT_CHANGE(false, false, true),
+        // Leave on record (even if invalid), but do not create additional tag
+        DO_NOT_CHANGE_INVALID (false, false, false),
         // Add tag with information, and remove from standard fields in record
-        MOVE_TO_TAG(true, true);
+        MOVE_TO_TAG(true, true, true);
 
-        private final boolean resetMappingInformation, populateOATag;
+        private final boolean resetMappingInformation, populateOATag, keepValid;
 
-        UnmappingReadStrategy(final boolean resetMappingInformation, final boolean populateOATag) {
+        UnmappingReadStrategy(final boolean resetMappingInformation, final boolean populateOATag, final boolean keepValid) {
             this.resetMappingInformation = resetMappingInformation;
             this.populateOATag = populateOATag;
+            this.keepValid = keepValid;
+        }
+
+        public boolean isKeepValid() {
+            return keepValid;
         }
 
         public boolean isResetMappingInformation() {
@@ -680,8 +687,10 @@ public abstract class AbstractAlignmentMerger {
 
             unaligned.setReadUnmappedFlag(true);
             // Unmapped read cannot have non-zero mapping quality or non-null cigars and remain valid
-            unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
-            unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+            if (unmappingReadsStrategy.isKeepValid()) {
+                unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
+                unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+            }
 
             // if there already is a comment, add second comment with a | separator:
             Optional<String> optionalComment = Optional.ofNullable(unaligned.getStringAttribute(SAMTag.CO.name()));
