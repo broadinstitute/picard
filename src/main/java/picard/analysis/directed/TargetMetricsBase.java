@@ -64,16 +64,6 @@ public class TargetMetricsBase extends MultilevelMetrics {
     /** The number of PF unique bases that are aligned with mapping score > 0 to the reference genome. */
     public long PF_UQ_BASES_ALIGNED;
 
-    /** The number of PF aligned probed bases that mapped to a baited region of the genome. */
-    public long ON_PROBE_BASES;
-
-    /** The number of PF aligned bases that mapped to within a fixed interval of a probed region, but not on a
-     *  baited region. */
-    public long NEAR_PROBE_BASES;
-
-    /** The number of PF aligned bases that mapped to neither on or near a probe. */
-    public long OFF_PROBE_BASES;
-
     /** The number of PF aligned bases that mapped to a targeted region of the genome. */
     public long ON_TARGET_BASES;
 

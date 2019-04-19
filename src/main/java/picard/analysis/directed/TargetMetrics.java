@@ -35,6 +35,16 @@ public class TargetMetrics extends TargetMetricsBase {
     /** The number of unique bases covered by the intervals of all probes in the probe set */
     public long PROBE_TERRITORY;
 
+    /** The number of PF aligned probed bases that mapped to a baited region of the genome. */
+    public long ON_PROBE_BASES;
+
+    /** The number of PF aligned bases that mapped to within a fixed interval of a probed region, but not on a
+     *  baited region. */
+    public long NEAR_PROBE_BASES;
+
+    /** The number of PF aligned bases that mapped to neither on or near a probe. */
+    public long OFF_PROBE_BASES;
+
     /** The fraction of bases that map on or near a probe (ON_PROBE_BASES + NEAR_PROBE_BASES)/(ON_PROBE_BASES +
      * NEAR_PROBE_BASES + OFF_PROBE_BASES). */
     public double PCT_SELECTED_BASES;

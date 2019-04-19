@@ -80,6 +80,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
                                               final double pctTargetBases1x,
                                               final double pctTargetBases2x,
                                               final long maxTargetCoverage,
+                                              final long pfBases,
                                               final int sampleSize) throws IOException {
 
         final File outfile = File.createTempFile("CollectHsMetrics", ".hs_metrics", TEST_DIR);
@@ -106,6 +107,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.PCT_TARGET_BASES_1X, pctTargetBases1x);
         Assert.assertEquals(metrics.PCT_TARGET_BASES_2X, pctTargetBases2x);
         Assert.assertEquals(metrics.MAX_TARGET_COVERAGE, maxTargetCoverage);
+        Assert.assertEquals(metrics.PF_BASES, pfBases);
     }
 
     @Test
