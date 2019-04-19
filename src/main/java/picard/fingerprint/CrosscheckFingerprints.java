@@ -316,6 +316,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(doc = "When one or more mismatches between groups is detected, exit with this value instead of 0.")
     public int EXIT_CODE_WHEN_MISMATCH = 1;
 
+    @Argument(doc = "When all LOD score are zero, exit with this value instead of 0.")
+    public int EXIT_CODE_WHEN_ALL_LOD_ZERO = 1;
+
     private final Log log = Log.getInstance(CrosscheckFingerprints.class);
 
     private double[][] crosscheckMatrix = null;
@@ -436,7 +439,12 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     throw new IllegalArgumentException("Unpossible!");
             }
         }
-
+        //check if all LODs are 0
+        if (metrics.stream().filter(m -> m.LOD_SCORE != 0).count() == 0) {
+            log.error("No non-zero results found. This is likely an error. " +
+                    "Probable cause: there are probably no reads or calls at fingerprinting sites ");
+            return EXIT_CODE_WHEN_ALL_LOD_ZERO;
+        }
         final MetricsFile<CrosscheckMetric, ?> metricsFile = getMetricsFile();
         metricsFile.addAllMetrics(metrics);
         if (OUTPUT != null) {
@@ -570,23 +578,15 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final Map<FingerprintIdDetails, Fingerprint> lhsFingerprintsByGroup = Fingerprint.mergeFingerprintsBy(lhsFingerprints, by);
         final Map<FingerprintIdDetails, Fingerprint> rhsFingerprintsByGroup = Fingerprint.mergeFingerprintsBy(rhsFingerprints, by);
 
-        if (lhsFingerprintsByGroup.size() == 0 || rhsFingerprintsByGroup.size() == 0) {
-            log.error(String.format("%s group requested has no fingerprints.  " +
-                    "It probably has no calls/reads overlapping fingerprinting sites.", lhsFingerprintsByGroup.size() == 0 ? "LEFT" : "RIGHT"));
-            return 1;
-        }
-
         for (final Map.Entry<FingerprintIdDetails, Fingerprint> pair : lhsFingerprintsByGroup.entrySet()) {
             if (pair.getValue().size() == 0) {
-                log.error(by.apply(pair.getKey()) + " was not fingerprinted.  It probably has no calls/reads overlapping fingerprinting sites.");
-                return 1;
+                log.error(by.apply(pair.getKey()) + " was not fingerprinted in LEFT group.  It probably has no calls/reads overlapping fingerprinting sites.");
             }
         }
 
         for (final Map.Entry<FingerprintIdDetails, Fingerprint> pair : rhsFingerprintsByGroup.entrySet()) {
             if (pair.getValue().size() == 0) {
-                log.error(by.apply(pair.getKey()) + " was not fingerprinted.  It probably has no calls/reads overlapping fingerprinting sites.");
-                return 1;
+                log.warn(by.apply(pair.getKey()) + " was not fingerprinted in RIGHT group.  It probably has no calls/reads overlapping fingerprinting sites.");
             }
         }
 
@@ -663,23 +663,29 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         samples.addAll(sampleToDetail2.keySet());
 
         for (final String sample : samples) {
-            final FingerprintIdDetails lhsID = sampleToDetail1.get(sample);
-            final FingerprintIdDetails rhsID = sampleToDetail2.get(sample);
+            FingerprintIdDetails lhsID = sampleToDetail1.get(sample);
+            FingerprintIdDetails rhsID = sampleToDetail2.get(sample);
 
-            if (lhsID == null || rhsID == null) {
-                log.error(String.format("sample %s is missing from %s group", sample, lhsID == null ? "LEFT" : "RIGHT"));
-                unexpectedResults++;
-                continue;
+            Fingerprint lhsFP = fingerprints1BySample.get(lhsID);
+            Fingerprint rhsFP = fingerprints2BySample.get(rhsID);
+            if (lhsFP == null) {
+                log.warn(String.format("sample %s from LEFT group was not fingerprinted.  Probably there are no reads/calls at fingerprinting sites.", sample));
+                lhsFP = new Fingerprint(sample, null, null);
+                lhsID = new FingerprintIdDetails();
+                lhsID.sample = sample;
+                lhsID.group = sample;
             }
-
-            final Fingerprint lhsFP = fingerprints1BySample.get(lhsID);
-            final Fingerprint rhsFP = fingerprints2BySample.get(rhsID);
+            if (rhsFP == null) {
+                log.warn(String.format("sample %s from RIGHT group was not fingerprinted.  Probably there are no reads/calls at fingerprinting sites.", sample));
+                rhsFP = new Fingerprint(sample, null, null);
+                rhsID = new FingerprintIdDetails();
+                rhsID.sample = sample;
+                rhsID.group = sample;
+            }
             if (lhsFP.size() == 0 || rhsFP.size() == 0) {
-                log.error(String.format("sample %s has no fingerprint from %s group.  Probably there no reads/calls at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
-                unexpectedResults++;
-                continue;
+                log.warn(String.format("sample %s from %s group was not fingerprinted.  Probably there are no reads/calls at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
             }
-            final MatchResults results = FingerprintChecker.calculateMatchResults(fingerprints1BySample.get(lhsID), fingerprints2BySample.get(rhsID),
+            final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFP, rhsFP,
                     GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
             final CrosscheckMetric.FingerprintResult result = getMatchResults(true, results);
 

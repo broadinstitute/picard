@@ -45,7 +45,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static htsjdk.samtools.SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES;
 
@@ -167,12 +166,19 @@ public class FingerprintChecker {
 
         final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
 
+        Map<String, Fingerprint> fingerprints;
         if (reader.isQueryable()) {
-            return loadFingerprintsFromQueriableReader(reader, specificSample, fingerprintFile);
+            fingerprints = loadFingerprintsFromQueriableReader(reader, specificSample, fingerprintFile);
         } else {
             log.warn("Couldn't find index for file " + fingerprintFile + " going to read through it all.");
-            return loadFingerprintsFromVariantContexts(reader, specificSample, fingerprintFile);
+            fingerprints = loadFingerprintsFromVariantContexts(reader, specificSample, fingerprintFile);
         }
+        //add an entry for each sample which was not fingerprinted
+        for (final String sample : reader.getFileHeader().getGenotypeSamples()) {
+            fingerprints.computeIfAbsent(sample, s -> new Fingerprint(s, fingerprintFile, null));
+        }
+
+        return fingerprints;
     }
 
     /**
@@ -436,6 +442,9 @@ public class FingerprintChecker {
                     id.platformUnit);
             fingerprintsByReadGroup.put(id, fingerprint);
 
+            for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
+                fingerprint.add(new HaplotypeProbabilitiesFromSequence(h));
+            }
         }
 
         // Set of read/template names from which we have already sampled a base and a qual. Since we assume
@@ -443,10 +452,6 @@ public class FingerprintChecker {
         // read or read-pair because they would not be independent!
         final Set<String> usedReadNames = new HashSet<>(10000);
 
-        /*List of readgroups for which reads are found in the file.  We will remove readgroups with no reads
-         * from fingerprintsByReadGroup
-         */
-        final Set<FingerprintIdDetails> readGroupsFound = new HashSet<>();
         // Now go through the data at each locus and figure stuff out!
         for (final SamLocusIterator.LocusInfo info : iterator) {
 
@@ -460,7 +465,6 @@ public class FingerprintChecker {
 
             for (final SamLocusIterator.RecordAndOffset rec : info.getRecordAndOffsets()) {
                 final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
-                readGroupsFound.add(fingerprintIdDetailsMap.get(rg));
                 final FingerprintIdDetails details;
                 if (rg == null || !fingerprintIdDetailsMap.containsKey(rg)) {
                     final FingerprintIdDetails unknownFPDetails = createUnknownFP(samFile, rec.getRecord());
@@ -469,6 +473,9 @@ public class FingerprintChecker {
                     final Fingerprint fp = new Fingerprint(unknownFPDetails.sample, samFile, unknownFPDetails.platformUnit);
                     fingerprintsByReadGroup.put(unknownFPDetails, fp);
 
+                    for (final HaplotypeBlock h : this.haplotypes.getHaplotypes()) {
+                        fp.add(new HaplotypeProbabilitiesFromSequence(h));
+                    }
                 }
 
                 if (fingerprintIdDetailsMap.containsKey(rg)) {
@@ -476,8 +483,7 @@ public class FingerprintChecker {
 
                     final String readName = rec.getRecord().getReadName();
                     if (!usedReadNames.contains(readName)) {
-                        final Fingerprint fp = fingerprintsByReadGroup.get(details);
-                        final HaplotypeProbabilitiesFromSequence probs = (HaplotypeProbabilitiesFromSequence) fp.computeIfAbsent(haplotypeBlock, h -> new HaplotypeProbabilitiesFromSequence(h));
+                        final HaplotypeProbabilitiesFromSequence probs = (HaplotypeProbabilitiesFromSequence) fingerprintsByReadGroup.get(details).get(haplotypeBlock);
                         final byte base = StringUtil.toUpperCase(rec.getReadBase());
                         final byte qual = rec.getBaseQuality();
 
@@ -493,9 +499,7 @@ public class FingerprintChecker {
             }
         }
 
-        final Map<FingerprintIdDetails, Fingerprint> filteredFingerprintsByReadGroup = fingerprintsByReadGroup.entrySet().stream().
-                filter(e -> readGroupsFound.contains(e.getKey())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        return filteredFingerprintsByReadGroup;
+        return fingerprintsByReadGroup;
     }
 
     private FingerprintIdDetails createUnknownFP(final Path samFile, final SAMRecord rec) {
