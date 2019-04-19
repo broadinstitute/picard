@@ -668,20 +668,12 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
             Fingerprint lhsFP = fingerprints1BySample.get(lhsID);
             Fingerprint rhsFP = fingerprints2BySample.get(rhsID);
-            if (lhsFP == null) {
-                log.warn(String.format("sample %s from LEFT group was not fingerprinted.  Probably there are no reads/calls at fingerprinting sites.", sample));
-                lhsFP = new Fingerprint(sample, null, null);
-                lhsID = new FingerprintIdDetails();
-                lhsID.sample = sample;
-                lhsID.group = sample;
+            if (lhsID == null || rhsID == null) {
+                log.error(String.format("sample %s is missing from %s group", sample, lhsID == null ? "LEFT" : "RIGHT"));
+                unexpectedResults++;
+                continue;
             }
-            if (rhsFP == null) {
-                log.warn(String.format("sample %s from RIGHT group was not fingerprinted.  Probably there are no reads/calls at fingerprinting sites.", sample));
-                rhsFP = new Fingerprint(sample, null, null);
-                rhsID = new FingerprintIdDetails();
-                rhsID.sample = sample;
-                rhsID.group = sample;
-            }
+
             if (lhsFP.size() == 0 || rhsFP.size() == 0) {
                 log.warn(String.format("sample %s from %s group was not fingerprinted.  Probably there are no reads/calls at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
             }

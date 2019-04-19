@@ -42,6 +42,8 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     private final File NA12892_r1_sam_shifted_for_cram = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.shifted.for.crams.r1.sam");
     private final File NA12892_r2_sam_shifted_for_cram = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.shifted.for.crams.r2.sam");
 
+    private final File NA12891_r1_one_rg_no_fingerprint_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.one.rg.no.fingerprint.sam");
+
     private File NA12891_r1, NA12891_r2, NA12891_named_NA12892_r1, NA12892_r1, NA12892_r2;
     private File NA12891_r1_cram, NA12891_r2_cram, NA12892_r1_cram, NA12892_r2_cram;
     private File NA12891_r1_shifted_bam, NA12891_r2_shifted_bam, NA12892_r1_shifted_bam, NA12892_r2_shifted_bam;
@@ -760,22 +762,26 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     @DataProvider(name = "someGroupNoFingerprintingSitesData")
     public Object[][] someGroupNoFingerprintingSitesData() {
         return new Object[][]{
-                {NA12891_no_fp_sites_and_NA12892_vcf, NA12892_and_NA123891_vcf, HAPLOTYPE_MAP, 0, 2}
+                {NA12891_no_fp_sites_and_NA12892_vcf, NA12892_and_NA123891_vcf, HAPLOTYPE_MAP, 0, 2, CrosscheckMetric.DataType.SAMPLE},
+                {NA12891_r1_one_rg_no_fingerprint_sam, null, HAPLOTYPE_MAP, 0, NA12891_r1_RGs * NA12891_r1_RGs, CrosscheckMetric.DataType.READGROUP}
         };
     }
 
     @Test(dataProvider = "someGroupNoFingerprintingSitesData")
-    public void testSomeGroupNoFingerprintingSites(final File input, final File second_input, final File hap_map, final int exptectRetVal, final int expectedNMetrics) throws IOException {
+    public void testSomeGroupNoFingerprintingSites(final File input, final File second_input, final File hap_map, final int exptectRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType dataType) throws IOException {
         File metrics = File.createTempFile("Fingerprinting.comparison", "crosscheck_metrics");
         metrics.deleteOnExit();
         final List<String> args = new ArrayList<>(Arrays.asList("INPUT=" + input,
-                "SECOND_INPUT=" + second_input,
                 "OUTPUT=" + metrics.getAbsolutePath(),
                 "LOD_THRESHOLD=" + -1.0,
                 "HAPLOTYPE_MAP=" + hap_map.getAbsolutePath())
         );
 
-        doTest(args.toArray(new String[args.size()]), metrics, exptectRetVal, expectedNMetrics, CrosscheckMetric.DataType.SAMPLE, true);
+        if (second_input != null) {
+            args.add("SECOND_INPUT=" + second_input);
+        }
+
+        doTest(args.toArray(new String[args.size()]), metrics, exptectRetVal, expectedNMetrics, dataType, true);
     }
 
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType) throws IOException {
