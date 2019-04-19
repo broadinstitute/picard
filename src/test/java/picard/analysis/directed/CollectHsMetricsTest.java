@@ -25,7 +25,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         return CollectHsMetrics.class.getSimpleName();
     }
 
-    @DataProvider(name = "collectHsMetricsDataProvider", parallel = true)
+    @DataProvider(name = "collectHsMetricsDataProvider")
     public Object[][] targetedIntervalDataProvider() {
         final String referenceFile = TEST_DIR + "/chrM.fasta";
         final String intervals = TEST_DIR + "/chrM.interval_list";
