@@ -39,7 +39,7 @@ public class TargetMetrics extends TargetMetricsBase {
     public long ON_PROBE_BASES;
 
     /** The number of PF aligned bases that mapped to within a fixed interval of a probed region, but not on a
-     *  baited region. */
+     *  probed region. */
     public long NEAR_PROBE_BASES;
 
     /** The number of PF aligned bases that mapped to neither on or near a probe. */
