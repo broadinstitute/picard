@@ -580,7 +580,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         for (final Map.Entry<FingerprintIdDetails, Fingerprint> pair : lhsFingerprintsByGroup.entrySet()) {
             if (pair.getValue().size() == 0) {
-                log.error(by.apply(pair.getKey()) + " was not fingerprinted in LEFT group.  It probably has no calls/reads overlapping fingerprinting sites.");
+                log.warn(by.apply(pair.getKey()) + " was not fingerprinted in LEFT group.  It probably has no calls/reads overlapping fingerprinting sites.");
             }
         }
 
@@ -675,7 +675,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
 
             if (lhsFP.size() == 0 || rhsFP.size() == 0) {
-                log.warn(String.format("sample %s from %s group was not fingerprinted.  Probably there are no reads/calls at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
+                log.error(String.format("sample %s from %s group was not fingerprinted.  Probably there are no reads/calls at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
+                unexpectedResults++;
             }
             final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFP, rhsFP,
                     GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);

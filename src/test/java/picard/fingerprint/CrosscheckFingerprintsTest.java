@@ -762,7 +762,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     @DataProvider(name = "someGroupNoFingerprintingSitesData")
     public Object[][] someGroupNoFingerprintingSitesData() {
         return new Object[][]{
-                {NA12891_no_fp_sites_and_NA12892_vcf, NA12892_and_NA123891_vcf, HAPLOTYPE_MAP, 0, 2, CrosscheckMetric.DataType.SAMPLE},
+                {NA12891_no_fp_sites_and_NA12892_vcf, NA12892_and_NA123891_vcf, HAPLOTYPE_MAP, 1, 2, CrosscheckMetric.DataType.SAMPLE},
                 {NA12891_r1_one_rg_no_fingerprint_sam, null, HAPLOTYPE_MAP, 0, NA12891_r1_RGs * NA12891_r1_RGs, CrosscheckMetric.DataType.READGROUP}
         };
     }
