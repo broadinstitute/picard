@@ -34,15 +34,15 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         return new Object[][] {
                 // two reads, each has 100 bases. bases in one read are medium quality (20), in the other read poor quality (10).
                 // test that we exclude half of the bases
-                {TEST_DIR + "/lowbaseq.sam",    intervals, 1, 10, true,  2, 200, 0.5, 0.0, 0.50, 0.0,  1, 0, 1000},
+                {TEST_DIR + "/lowbaseq.sam",    intervals, 1, 10, true,  2, 200, 0.5, 0.0, 0.50, 0.0,  1, 200, 1000},
                 // test that read 2 (with mapping quality 1) is filtered out with minimum mapping quality 2
-                {TEST_DIR + "/lowmapq.sam",     intervals, 2, 0, true,  2, 202, 0,   0.0, 0.505, 0.0,   1, 0, 1000},
+                {TEST_DIR + "/lowmapq.sam",     intervals, 2, 0, true,  2, 202, 0,   0.0, 0.505, 0.0,   1, 202, 1000},
                 // test that we clip overlapping bases
-                {TEST_DIR + "/overlapping.sam", intervals, 0, 0, true,  2, 202, 0,   0.5, 0.505, 0, 1, 0, 1000},
+                {TEST_DIR + "/overlapping.sam", intervals, 0, 0, true,  2, 202, 0,   0.5, 0.505, 0, 1, 202, 1000},
                 // test that we do not clip overlapping bases
-                {TEST_DIR + "/overlapping.sam", intervals, 0, 0, false, 2, 202, 0,   0.0, 0.505, 0.505, 2, 0, 1000},
+                {TEST_DIR + "/overlapping.sam", intervals, 0, 0, false, 2, 202, 0,   0.0, 0.505, 0.505, 2, 202, 1000},
                 // A read 10 base pairs long. two intervals: one maps identically to the read, other does not overlap at all
-                {TEST_DIR + "/single-short-read.sam", twoSmallIntervals, 20, 20, true, 1, 10, 0.0, 0.0, 0.5, 0.0, 1, 0, 1000 }
+                {TEST_DIR + "/single-short-read.sam", twoSmallIntervals, 20, 20, true, 1, 10, 0.0, 0.0, 0.5, 0.0, 1, 10, 1000 }
 
         };
     }
