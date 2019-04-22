@@ -678,6 +678,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 log.error(String.format("sample %s from %s group was not fingerprinted.  Probably there are no reads/calls at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
                 unexpectedResults++;
             }
+
             final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFP, rhsFP,
                     GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
             final CrosscheckMetric.FingerprintResult result = getMatchResults(true, results);
@@ -686,6 +687,10 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 metrics.add(getMatchDetails(result, results, lhsID, rhsID, CrosscheckMetric.DataType.SAMPLE));
             }
             if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
+            if (results.getLOD() == 0) {
+                log.error("LOD score of zero found when checking sample fingerprints.  Probably there are no reads/calls at fingerprinting sites for one of the samples");
+                unexpectedResults++;
+            }
         }
         return unexpectedResults;
     }
