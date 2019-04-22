@@ -736,7 +736,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
                 {Arrays.asList(NA12891_1_vcf), Arrays.asList(NA12892_and_NA123891_vcf), 0, 2, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
                 //sample in second input included in input but no calls at fingerprinting sites, print all comparisons, return 0
                 {Arrays.asList(NA12891_no_fp_sites_and_NA12892_vcf), Arrays.asList(NA12892_and_NA123891_vcf), 0, 4, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
-                //only sample in input has no calls at fingerprinting sites, do not write out comparisons, return EXIT_CODE_WHEN_ALL_LOD_ZERO
+                //only sample in input has no calls at fingerprinting sites, do not write out comparisons, return EXIT_CODE_WHEN_NO_VALID_CHECKS
                 {Arrays.asList(NA12891_no_fp_sites_vcf), Arrays.asList(NA12892_and_NA123891_vcf), 1, 0, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, true},
                 // sample in second input missing from input, print only 1 comparison, return EXIT_CODE_WHEN_MISMATCH
                 {Arrays.asList(NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 1, 1, CrosscheckFingerprints.CrosscheckMode.CHECK_SAME_SAMPLE, null, true},
@@ -748,11 +748,11 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
                 {Arrays.asList(NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 0, 2, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
                 //sample in second input included in input but no calls at fingerprinting sites, print all comparisons, return 0
                 {Arrays.asList(NA12891_r1_no_fingerprint_sam, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 0, 4, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
-                //only sample in input has no calls at fingerprinting sites, do not write out comparisons, return EXIT_CODE_WHEN_ALL_LOD_ZERO
+                //only sample in input has no calls at fingerprinting sites, do not write out comparisons, return EXIT_CODE_WHEN_NO_VALID_CHECKS
                 {Arrays.asList(NA12891_r1_no_fingerprint_sam), Arrays.asList(NA12891_r2, NA12892_r2), 1, 0, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, true},
                 //one read group in input has no observations at fingerprinting sites, write all comparisons, return 0
                 {Arrays.asList(NA12891_r1_one_rg_no_fingerprint_sam), null, 0, NA12891_r1_RGs * NA12891_r1_RGs, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.READGROUP, true},
-                //no read groups in input have observations at fingerprinting sites, do not write comparisons, return EXIT_CODE_WHEN_ALL_LOD_ZERO
+                //no read groups in input have observations at fingerprinting sites, do not write comparisons, return EXIT_CODE_WHEN_NO_VALID_CHECKS
                 {Arrays.asList(NA12891_r1_no_fingerprint), null, 1, 0, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.READGROUP, true}
         };
     }

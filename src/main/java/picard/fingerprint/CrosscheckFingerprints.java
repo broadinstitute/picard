@@ -85,6 +85,12 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
  * <li>{@link #MATRIX_OUTPUT} is disabled.</li>
  * </il>
  * <br/>
+ * In some cases, the groups collected may not have any observations (calls for a vcf, reads for a bam) at fingerprinting sites, or a sample in INPUT may be missing from the SECOND_INPUT.
+ * These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample
+ * not found in the other, or contains a sample with no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH.
+ * In all other running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is logged.  As long as there is at least
+ * one comparisons where both sides have observations at fingerprinting sites, the tool will return zero.  However, if all comparisons have at least one side with no observations
+ * at fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS.
  * <h3>Examples</h3>
  * <h4>Check that all the readgroups from a sample match each other:</h4>
  * <pre>
@@ -170,6 +176,15 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
                         " - aggregation of data happens at the SAMPLE level \n" +
                         " - each samples from INPUT will only be compared to that same sample in SECOND_INPUT. \n" +
                         " - MATRIX_OUTPUT is disabled. " +
+                        "\n" +
+                        "In some cases, the groups collected may not have any observations (calls for a vcf, reads for a bam) at fingerprinting sites, or " +
+                        "a sample in INPUT may be missing from the SECOND_INPUT. These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode " +
+                        "with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample not found in the other, or contains a sample with " +
+                        "no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH. In all other " +
+                        "running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is " +
+                        "logged.  As long as there is at least one comparisons where both sides have observations at fingerprinting sites, the tool will " +
+                        "return zero.  However, if all comparisons have at least one side with no observations at fingerprinting sites, an error will be " +
+                        "logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS." +
                         "\n" +
                         "<hr/>" +
                         "<h3>Examples</h3>" +
@@ -317,7 +332,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     public int EXIT_CODE_WHEN_MISMATCH = 1;
 
     @Argument(doc = "When all LOD score are zero, exit with this value instead of 0.")
-    public int EXIT_CODE_WHEN_ALL_LOD_ZERO = 1;
+    public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 1;
 
     private final Log log = Log.getInstance(CrosscheckFingerprints.class);
 
@@ -443,7 +458,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         if (metrics.stream().filter(m -> m.LOD_SCORE != 0).count() == 0) {
             log.error("No non-zero results found. This is likely an error. " +
                     "Probable cause: there are probably no reads or calls at fingerprinting sites ");
-            return EXIT_CODE_WHEN_ALL_LOD_ZERO;
+            return EXIT_CODE_WHEN_NO_VALID_CHECKS;
         }
         final MetricsFile<CrosscheckMetric, ?> metricsFile = getMetricsFile();
         metricsFile.addAllMetrics(metrics);
