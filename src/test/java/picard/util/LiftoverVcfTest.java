@@ -248,6 +248,46 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         }
     }
 
+    @DataProvider(name = "dataTestSort")
+    public Object[][] dataTestVcfSorted() {
+        return new Object[][]{
+                {false},
+                {true}
+        };
+    }
+
+    @Test(dataProvider = "dataTestSort")
+    public void testVcfSorted(final boolean disableSort) {
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
+        final File input = new File(TEST_DATA_PATH, "testLiftoverBiallelicIndels.vcf");
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "CREATE_INDEX=" + (!disableSort),
+                "DISABLE_SORT=" + disableSort
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        //try to open with / without index
+        try (final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, !disableSort)) {
+            try (final CloseableIterator<VariantContext> iter = liftReader.iterator()) {
+                Assert.assertEquals(iter.stream().count(), 5L);
+                }
+            }
+        }
+    
+
+    
+    
     @DataProvider
     Iterator<Object[]> testWriteVcfData() {
 
