@@ -27,8 +27,8 @@ package picard.analysis.directed;
 import picard.metrics.MultilevelMetrics;
 
 /**
- * TargetMetrics, are metrics to measure how well we hit specific targets (or baits) when using a targeted sequencing process like hybrid selection
- * or Targeted PCR Techniques (TSCA).  TargetMetrics at the moment are the metrics that are shared by both HybridSelection and TargetedPcrMetrics.
+ * A base class for Metrics for targeted panels. Metrics for library construction protocols based on
+ * PCR amplicons/probes and Hybrid Selection baits are derived from this class.
  */
 public class PanelMetricsBase extends MultilevelMetrics {
     /** The number of unique bases covered by the intervals of all targets that should be covered */
