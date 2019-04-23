@@ -10,6 +10,8 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
@@ -279,7 +281,9 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         //try to open with / without index
         try (final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, !disableSort)) {
-            try (final CloseableIterator<VariantContext> iter = liftReader.iterator()) {
+        	final VCFHeader header = liftReader.getFileHeader();
+        	Assert.assertNotNull(header.getOtherHeaderLine("reference"));
+        	try (final CloseableIterator<VariantContext> iter = liftReader.iterator()) {
                 Assert.assertEquals(iter.stream().count(), 5L);
                 }
             }

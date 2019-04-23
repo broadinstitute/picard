@@ -317,7 +317,14 @@ public class LiftoverVcf extends CommandLineProgram {
         // Setup the outputs
         ////////////////////////////////////////////////////////////////////////
         final VCFHeader inHeader = in.getFileHeader();
-        final VCFHeader outHeader = new VCFHeader(inHeader);
+        // build VCF header, remove the old '##reference=file://...'
+        final VCFHeader outHeader = new VCFHeader(
+            inHeader.getMetaDataInInputOrder()
+                .stream()
+                .filter(M->!M.getKey().equals("reference"))
+                .collect(Collectors.toCollection(LinkedHashSet::new)),
+		    inHeader.getSampleNamesInOrder()
+	        );
         outHeader.setSequenceDictionary(walker.getSequenceDictionary());
         if (WRITE_ORIGINAL_POSITION) {
             for (final VCFInfoHeaderLine line : ATTRS) outHeader.addMetaDataLine(line);
@@ -331,7 +338,8 @@ public class LiftoverVcf extends CommandLineProgram {
         outHeader.addMetaDataLine(new VCFInfoHeaderLine(LiftoverUtils.REV_COMPED_ALLELES, 0, VCFHeaderLineType.Flag,
                 "The REF and the ALT alleles have been reverse complemented in liftover since the mapping from the " +
                         "previous reference to the current one was on the negative strand."));
-
+        outHeader.addMetaDataLine(new VCFHeaderLine("reference", REFERENCE_SEQUENCE.toURI().toString()));
+        
         this.acceptedRecords = new VariantContextWriterBuilder()
             .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
             .modifyOption(Options.INDEX_ON_THE_FLY,!DISABLE_SORT)
