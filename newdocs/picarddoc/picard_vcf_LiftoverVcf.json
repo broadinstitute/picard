@@ -77,6 +77,21 @@
       "options": []
     },
     {
+      "summary": "Output VCF file will be written on the fly but it won\u0027t be sorted and indexed.",
+      "name": "--DISABLE_SORT",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Google Genomics API client_secrets.json file path.",
       "name": "--GA4GH_CLIENT_SECRETS",
       "synonyms": "NA",
