@@ -323,8 +323,8 @@ public class LiftoverVcf extends CommandLineProgram {
                 .stream()
                 .filter(M->!M.getKey().equals("reference"))
                 .collect(Collectors.toCollection(LinkedHashSet::new)),
-		    inHeader.getSampleNamesInOrder()
-	        );
+            inHeader.getSampleNamesInOrder()
+            );
         outHeader.setSequenceDictionary(walker.getSequenceDictionary());
         if (WRITE_ORIGINAL_POSITION) {
             for (final VCFInfoHeaderLine line : ATTRS) outHeader.addMetaDataLine(line);
