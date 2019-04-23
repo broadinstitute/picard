@@ -678,11 +678,11 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         samples.addAll(sampleToDetail2.keySet());
 
         for (final String sample : samples) {
-            FingerprintIdDetails lhsID = sampleToDetail1.get(sample);
-            FingerprintIdDetails rhsID = sampleToDetail2.get(sample);
+            final FingerprintIdDetails lhsID = sampleToDetail1.get(sample);
+            final FingerprintIdDetails rhsID = sampleToDetail2.get(sample);
 
-            Fingerprint lhsFP = fingerprints1BySample.get(lhsID);
-            Fingerprint rhsFP = fingerprints2BySample.get(rhsID);
+            final Fingerprint lhsFP = fingerprints1BySample.get(lhsID);
+            final Fingerprint rhsFP = fingerprints2BySample.get(rhsID);
             if (lhsID == null || rhsID == null) {
                 log.error(String.format("sample %s is missing from %s group", sample, lhsID == null ? "LEFT" : "RIGHT"));
                 unexpectedResults++;
