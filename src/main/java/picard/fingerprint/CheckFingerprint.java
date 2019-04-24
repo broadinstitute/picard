@@ -223,9 +223,7 @@ public class CheckFingerprint extends CommandLineProgram {
             outputDetailMetricsFile = DETAIL_OUTPUT;
             outputSummaryMetricsFile = SUMMARY_OUTPUT;
         } else {
-            if (!OUTPUT.endsWith(".")) {
-                OUTPUT += ".";
-            }
+            OUTPUT += ".";
             outputDetailMetricsFile = new File(OUTPUT + FINGERPRINT_DETAIL_FILE_SUFFIX);
             outputSummaryMetricsFile = new File(OUTPUT + FINGERPRINT_SUMMARY_FILE_SUFFIX);
         }
