@@ -278,12 +278,16 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-
+        //check input/header
+        try (final VCFFileReader inputReader = new VCFFileReader(input, false)) {
+                final VCFHeader header = inputReader.getFileHeader();
+                Assert.assertNull(header.getOtherHeaderLine("reference"));
+                }
         //try to open with / without index
         try (final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, !disableSort)) {
-        	final VCFHeader header = liftReader.getFileHeader();
-        	Assert.assertNotNull(header.getOtherHeaderLine("reference"));
-        	try (final CloseableIterator<VariantContext> iter = liftReader.iterator()) {
+                final VCFHeader header = liftReader.getFileHeader();
+                Assert.assertNotNull(header.getOtherHeaderLine("reference"));
+                try (final CloseableIterator<VariantContext> iter = liftReader.iterator()) {
                 Assert.assertEquals(iter.stream().count(), 5L);
                 }
             }
