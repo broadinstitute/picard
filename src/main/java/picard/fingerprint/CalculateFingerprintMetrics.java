@@ -181,7 +181,7 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
         // calculate p-value
         final double hetsChiSquaredTest = chiSquareTest.chiSquareTest(hetVsHomExpect, roundedHetVsHomCounts);
         fingerprintMetrics.HET_CHI_SQUARED_PVALUE = hetsChiSquaredTest;
-        fingerprintMetrics.HET_LOG10_CHI_SQUARED_PVALUE = Math.log10(hetsChiSquaredTest);
+        fingerprintMetrics.LOG10_HET_CHI_SQUARED_PVALUE = Math.log10(hetsChiSquaredTest);
 
         // calculate LOD (cross-entropy)
         fingerprintMetrics.HET_CROSS_ENTROPY_LOD = MathUtil.klDivergance(hetVsHomCounts, hetVsHomExpect);
@@ -189,7 +189,7 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
         // calculate p-value
         final double homsChiSquaredTest = chiSquareTest.chiSquareTest(homAllele1VsAllele2Expect, roundedHomRefVsVarCounts);
         fingerprintMetrics.HOM_CHI_SQUARED_PVALUE = homsChiSquaredTest;
-        fingerprintMetrics.HOM_LOG10_CHI_SQUARED_PVALUE = Math.log10(homsChiSquaredTest);
+        fingerprintMetrics.LOG10_HOM_CHI_SQUARED_PVALUE = Math.log10(homsChiSquaredTest);
 
         // calculate LOD (cross-entropy)
         fingerprintMetrics.HOM_CROSS_ENTROPY_LOD = MathUtil.klDivergance(homAllele1VsAllele2Counts, homAllele1VsAllele2Expect);;

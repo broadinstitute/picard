@@ -67,10 +67,10 @@ public class CalculateFingerprintMetricsTest extends CommandLineProgramTest {
             Assert.assertTrue(metric.HAPLOTYPES > 4);
             Assert.assertTrue(metric.HAPLOTYPES_WITH_EVIDENCE > 0);
             Assert.assertTrue(metric.HET_CHI_SQUARED_PVALUE > 0.05);
-            Assert.assertTrue(metric.HET_LOG10_CHI_SQUARED_PVALUE > -2);
+            Assert.assertTrue(metric.LOG10_HET_CHI_SQUARED_PVALUE > -2);
             Assert.assertTrue(metric.HET_CROSS_ENTROPY_LOD < 1);
             Assert.assertTrue(metric.HOM_CHI_SQUARED_PVALUE > 0.05);
-            Assert.assertTrue(metric.HOM_LOG10_CHI_SQUARED_PVALUE > -2);
+            Assert.assertTrue(metric.LOG10_HOM_CHI_SQUARED_PVALUE > -2);
             Assert.assertTrue(metric.HOM_CROSS_ENTROPY_LOD < 1);
             Assert.assertTrue(metric.NUM_HET >= 0);
             Assert.assertTrue(metric.NUM_HOM_ALLELE1 >= 0);

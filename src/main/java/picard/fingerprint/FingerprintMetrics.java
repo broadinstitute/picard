@@ -79,7 +79,7 @@ public class FingerprintMetrics extends MetricBase {
     public double HET_CHI_SQUARED_PVALUE;
 
     /* The log10 of the Chi-squared pvalue for the number of HETs and HOMs */
-    public double HET_LOG10_CHI_SQUARED_PVALUE;
+    public double LOG10_HET_CHI_SQUARED_PVALUE;
 
     /* The categorical cross entropy of the counts of HETs and HOMs relative to the expected counts (big is bad) */
     public double HET_CROSS_ENTROPY_LOD;
@@ -88,7 +88,7 @@ public class FingerprintMetrics extends MetricBase {
     public double HOM_CHI_SQUARED_PVALUE;
 
     /* The log10 of the Chi-squared pvalue for the number of HOM-Allele1s and HOM_Allele2s */
-    public double HOM_LOG10_CHI_SQUARED_PVALUE;
+    public double LOG10_HOM_CHI_SQUARED_PVALUE;
 
     /* The categorical cross entropy of the HOM-Allele1s and HOM_Allele2s relative to the expected counts (big is bad)*/
     public double HOM_CROSS_ENTROPY_LOD;
