@@ -140,35 +140,40 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
 
         final RandomGenerator rg = new MersenneTwister(RANDOM_SEED);
         //get expectation of counts and expected fractions
-        double[] genotypeCounts = new double[] {0, 0, 0};
-        double[] expectedRatios = new double[] {0, 0, 0};
+        double[] genotypeCounts = fingerprint.values().stream()
+                .map(HaplotypeProbabilities::getPosteriorProbabilities)
+                .reduce(MathUtil::sum).orElseGet(() -> new double[]{0, 0, 0});
 
-        for (final HaplotypeProbabilities haplotypeProbabilities : fingerprint.values()) {
-            genotypeCounts = MathUtil.sum(genotypeCounts, haplotypeProbabilities.getPosteriorProbabilities());
-            expectedRatios = MathUtil.sum(expectedRatios, haplotypeProbabilities.getPriorProbablities());
-        }
+        double[] expectedRatios = fingerprint.values().stream()
+                .map(HaplotypeProbabilities::getPriorProbablities)
+                .reduce(MathUtil::sum).orElseGet(() -> new double[]{0, 0, 0});
 
-        final double[] hetVsHomExpect = new double[]{expectedRatios[HOM_ALLELE1.v] + expectedRatios[HOM_ALLELE2.v], expectedRatios[HET_ALLELE12.v]};
-        final double[] hetVsHomCounts = new double[]{genotypeCounts[HOM_ALLELE1.v] + genotypeCounts[HOM_ALLELE2.v], genotypeCounts[HET_ALLELE12.v]};
+        final double[] homVsHetExpect = new double[]{expectedRatios[HOM_ALLELE1.v] + expectedRatios[HOM_ALLELE2.v], expectedRatios[HET_ALLELE12.v]};
+        final double[] homVsHetCounts = new double[]{genotypeCounts[HOM_ALLELE1.v] + genotypeCounts[HOM_ALLELE2.v], genotypeCounts[HET_ALLELE12.v]};
 
         final double[] homAllele1VsAllele2Expect = new double[]{expectedRatios[HOM_ALLELE1.v], expectedRatios[HOM_ALLELE2.v]};
         final double[] homAllele1VsAllele2Counts = new double[]{genotypeCounts[HOM_ALLELE1.v], genotypeCounts[HOM_ALLELE2.v]};
 
-        final long[] roundedHomRefVsVarCounts = MathUtil.round(homAllele1VsAllele2Counts);
-        final long[] roundedHetVsHomCounts = MathUtil.round(hetVsHomCounts);
+        final long[] roundedHom1vsHom2Counts = MathUtil.round(homAllele1VsAllele2Counts);
+        final long[] roundedHetVsHomCounts = MathUtil.round(homVsHetCounts);
         final long[] roundedGenotypeCounts = MathUtil.round(genotypeCounts);
 
         final FingerprintMetrics fingerprintMetrics = new FingerprintMetrics();
 
         fingerprintMetrics.SAMPLE_ALIAS = fingerprint.getSample();
-        fingerprintMetrics.SOURCE = Optional.ofNullable(fingerprint.getSource()).map(p->p.toUri().toString()).orElse("");
+        fingerprintMetrics.SOURCE = Optional.ofNullable(fingerprint.getSource()).map(p -> p.toUri().toString()).orElse("");
         fingerprintMetrics.INFO = fingerprint.getInfo();
         fingerprintMetrics.HAPLOTYPES = fingerprint.values().size();
         fingerprintMetrics.HAPLOTYPES_WITH_EVIDENCE = fingerprint.values().stream().filter(HaplotypeProbabilities::hasEvidence).count();
-        fingerprintMetrics.DEFINITE_GENOTYPES = fingerprint.values().stream().filter(h -> h.getLodMostProbableGenotype() > GENOTYPE_LOD_THRESHOLD).count();
+        fingerprintMetrics.DEFINITE_GENOTYPES = fingerprint.values().stream().filter(h -> h.getLodMostProbableGenotype() >= GENOTYPE_LOD_THRESHOLD).count();
         fingerprintMetrics.NUM_HOM_ALLELE1 = roundedGenotypeCounts[HOM_ALLELE1.v];
-        fingerprintMetrics.NUM_HET = roundedGenotypeCounts[HET_ALLELE12.v];
         fingerprintMetrics.NUM_HOM_ALLELE2 = roundedGenotypeCounts[HOM_ALLELE2.v];
+        fingerprintMetrics.NUM_HOM_ANY = roundedHetVsHomCounts[1];
+        fingerprintMetrics.NUM_HET = roundedGenotypeCounts[HET_ALLELE12.v];
+
+        fingerprintMetrics.EXPECTED_HOM_ALLELE1 = expectedRatios[HOM_ALLELE1.v];
+        fingerprintMetrics.EXPECTED_HOM_ALLELE2 = expectedRatios[HOM_ALLELE2.v];
+        fingerprintMetrics.EXPECTED_HET = expectedRatios[HET_ALLELE12.v];
 
         // calculate p-value
         final double chiSquaredTest = chiSquareTest.chiSquareTest(expectedRatios, roundedGenotypeCounts);
@@ -179,15 +184,15 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
         fingerprintMetrics.CROSS_ENTROPY_LOD = MathUtil.klDivergance(genotypeCounts, expectedRatios);
 
         // calculate p-value
-        final double hetsChiSquaredTest = chiSquareTest.chiSquareTest(hetVsHomExpect, roundedHetVsHomCounts);
+        final double hetsChiSquaredTest = chiSquareTest.chiSquareTest(homVsHetExpect, roundedHetVsHomCounts);
         fingerprintMetrics.HET_CHI_SQUARED_PVALUE = hetsChiSquaredTest;
         fingerprintMetrics.LOG10_HET_CHI_SQUARED_PVALUE = Math.log10(hetsChiSquaredTest);
 
         // calculate LOD (cross-entropy)
-        fingerprintMetrics.HET_CROSS_ENTROPY_LOD = MathUtil.klDivergance(hetVsHomCounts, hetVsHomExpect);
+        fingerprintMetrics.HET_CROSS_ENTROPY_LOD = MathUtil.klDivergance(homVsHetCounts, homVsHetExpect);
 
         // calculate p-value
-        final double homsChiSquaredTest = chiSquareTest.chiSquareTest(homAllele1VsAllele2Expect, roundedHomRefVsVarCounts);
+        final double homsChiSquaredTest = chiSquareTest.chiSquareTest(homAllele1VsAllele2Expect, roundedHom1vsHom2Counts);
         fingerprintMetrics.HOM_CHI_SQUARED_PVALUE = homsChiSquaredTest;
         fingerprintMetrics.LOG10_HOM_CHI_SQUARED_PVALUE = Math.log10(homsChiSquaredTest);
 
