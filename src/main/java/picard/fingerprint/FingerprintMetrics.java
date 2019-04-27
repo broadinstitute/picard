@@ -68,7 +68,7 @@ public class FingerprintMetrics extends MetricBase {
     /** Number of  minor allele homozygous calls*/
     public long NUM_HOM_ALLELE2;
 
-    /** Number of definite homozygous calls of either allele */
+    /** Number of homozygous calls of either allele (might not be the sum of {@link #NUM_HOM_ALLELE1} and {@link #NUM_HOM_ALLELE1} due to rounding*/
     public long NUM_HOM_ANY;
 
     /** Number of heterozygous calls*/

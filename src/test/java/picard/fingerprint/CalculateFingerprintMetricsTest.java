@@ -75,6 +75,9 @@ public class CalculateFingerprintMetricsTest extends CommandLineProgramTest {
             Assert.assertTrue(metric.NUM_HET >= 0);
             Assert.assertTrue(metric.NUM_HOM_ALLELE1 >= 0);
             Assert.assertTrue(metric.NUM_HOM_ALLELE2 >= 0);
+            Assert.assertTrue(metric.EXPECTED_HET >= 0);
+            Assert.assertTrue(metric.EXPECTED_HOM_ALLELE1>= 0);
+            Assert.assertTrue(metric.EXPECTED_HOM_ALLELE2 >= 0);
             Assert.assertTrue(metric.DISCRIMINATORY_POWER > 0);
         }
     }
