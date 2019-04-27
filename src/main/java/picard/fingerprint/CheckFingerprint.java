@@ -82,7 +82,7 @@ import java.util.List;
  *     java -jar picard.jar CheckFingerprint \
  *          INPUT=sample.bam \
  *          GENOTYPES=sample_genotypes.vcf \
- *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+ *          HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \
  *          OUTPUT=sample_fingerprinting
  * </pre>
  * <br/>
@@ -147,7 +147,7 @@ public class CheckFingerprint extends CommandLineProgram {
                     "    java -jar picard.jar CheckFingerprint \\\n " +
                     "         INPUT=sample.bam \\\n " +
                     "         GENOTYPES=sample_genotypes.vcf \\\n " +
-                    "         HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n " +
+                    "         HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \\\n " +
                     "         OUTPUT=sample_fingerprinting " +
                     "</pre> " +
                     "<br/> " +
