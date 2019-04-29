@@ -1,4 +1,4 @@
-@HD	VN:1.5
+@HD	VN:1.6	SO:coordinate
 @SQ	SN:1	LN:1001	M5:af506819d4b9357827ce128b6c83a816	UR:file:reference.shifted.for.crams.fasta
 @SQ	SN:3	LN:2001	M5:bfecd72141fd7c10b33f04958736baef	UR:file:reference.shifted.for.crams.fasta
 @SQ	SN:4	LN:1001	M5:ac7d9a3274b2f1fa8eac3f01b3ff9b43	UR:file:reference.shifted.for.crams.fasta
