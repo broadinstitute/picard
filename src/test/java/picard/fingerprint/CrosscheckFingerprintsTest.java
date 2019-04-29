@@ -44,7 +44,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     private final File NA12891_r1_one_rg_no_fingerprint_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.one.rg.no.fingerprint.sam");
     private final File NA12891_r1_no_fingerprint_sam = new File(TEST_DATA_DIR, "NA12891.not.over.fingerprints.r1.sam");
 
-    private File NA12891_r1, NA12891_r2, NA12891_named_NA12892_r1, NA12892_r1, NA12892_r2, NA12891_r1_no_fingerprint;
+    private File NA12891_r1, NA12891_r2, NA12891_named_NA12892_r1, NA12892_r1, NA12892_r2, NA12891_r1_no_fingerprint, NA12891_r1_one_rg_no_fingerprint;
     private File NA12891_r1_cram, NA12891_r2_cram, NA12892_r1_cram, NA12892_r2_cram;
     private File NA12891_r1_shifted_bam, NA12891_r2_shifted_bam, NA12892_r1_shifted_bam, NA12892_r2_shifted_bam;
     private final File referenceForCrams = new File(TEST_DATA_DIR, "reference.shifted.for.crams.fasta");
@@ -90,6 +90,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         NA12892_r2_shifted_bam = SamTestUtils.createIndexedBamOrCram(NA12892_r2_sam_shifted_for_cram, NA12892_r2_sam_shifted_for_cram, SamReader.Type.BAM_TYPE);
 
         NA12891_r1_no_fingerprint = SamTestUtils.createIndexedBamOrCram(NA12891_r1_no_fingerprint_sam, NA12891_r1_no_fingerprint_sam, SamReader.Type.BAM_TYPE);
+        NA12891_r1_one_rg_no_fingerprint = SamTestUtils.createIndexedBamOrCram(NA12891_r1_one_rg_no_fingerprint_sam, NA12891_r1_one_rg_no_fingerprint_sam, SamReader.Type.BAM_TYPE);
 
         lookupMap.put(CrosscheckMetric.DataType.FILE, new ArrayList<>());
         lookupMap.get(CrosscheckMetric.DataType.FILE).addAll(Arrays.asList("LEFT_FILE", "RIGHT_FILE"));
@@ -727,33 +728,59 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
     @DataProvider(name = "missingOrNoFingerprintingSitesData")
     public Object[][] missingOrNoFingerprintingSitesData() {
+        final File NA12891_1_vcf_unindexed = new File(TEST_DATA_DIR, "NA12891.vcf");
+        final File NA12892_and_NA123891_vcf_unindexed = new File(TEST_DATA_DIR, "NA12891andNA12892.vcf");
+        final File NA12891_no_fp_sites_and_NA12892_vcf_unindexed = new File(TEST_DATA_DIR, "NA12891.no.fp.sites.and.NA12892.vcf");
+        final File NA12891_no_fp_sites_vcf_unindexed = new File(TEST_DATA_DIR, "NA12891.no.fp.sites.vcf");
         return new Object[][]{
                 // sample in second input missing from input, print only 1 comparison, return EXIT_CODE_WHEN_MISMATCH
                 {Arrays.asList(NA12891_1_vcf), Arrays.asList(NA12892_and_NA123891_vcf), 1, 1, CrosscheckFingerprints.CrosscheckMode.CHECK_SAME_SAMPLE, null, true},
+                //same as above with unindexed input
+                {Arrays.asList(NA12891_1_vcf_unindexed), Arrays.asList(NA12892_and_NA123891_vcf_unindexed), 1, 1, CrosscheckFingerprints.CrosscheckMode.CHECK_SAME_SAMPLE, null, true},
                 //sample in second input included in input but no calls at fingerprinting sites, print 2 comparisons, return EXIT_CODE_WHEN_MISMATCH
                 {Arrays.asList(NA12891_no_fp_sites_and_NA12892_vcf), Arrays.asList(NA12892_and_NA123891_vcf), 1, 2, CrosscheckFingerprints.CrosscheckMode.CHECK_SAME_SAMPLE, null, true},
+                //same as above with unindexed input
+                {Arrays.asList(NA12891_no_fp_sites_and_NA12892_vcf_unindexed), Arrays.asList(NA12892_and_NA123891_vcf_unindexed), 1, 2, CrosscheckFingerprints.CrosscheckMode.CHECK_SAME_SAMPLE, null, true},
                 // sample in second input missing from input, print all comparisons, return 0
                 {Arrays.asList(NA12891_1_vcf), Arrays.asList(NA12892_and_NA123891_vcf), 0, 2, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
+                //same as above with unindexed input
+                {Arrays.asList(NA12891_1_vcf_unindexed), Arrays.asList(NA12892_and_NA123891_vcf_unindexed), 0, 2, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
                 //sample in second input included in input but no calls at fingerprinting sites, print all comparisons, return 0
                 {Arrays.asList(NA12891_no_fp_sites_and_NA12892_vcf), Arrays.asList(NA12892_and_NA123891_vcf), 0, 4, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
+                //same as above with unindexed input
+                {Arrays.asList(NA12891_no_fp_sites_and_NA12892_vcf_unindexed), Arrays.asList(NA12892_and_NA123891_vcf_unindexed), 0, 4, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
                 //only sample in input has no calls at fingerprinting sites, do not write out comparisons, return EXIT_CODE_WHEN_NO_VALID_CHECKS
                 {Arrays.asList(NA12891_no_fp_sites_vcf), Arrays.asList(NA12892_and_NA123891_vcf), 1, 0, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, true},
+                //same as above with unindexed input
+                {Arrays.asList(NA12891_no_fp_sites_vcf_unindexed), Arrays.asList(NA12892_and_NA123891_vcf_unindexed), 1, 0, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, true},
                 // sample in second input missing from input, print only 1 comparison, return EXIT_CODE_WHEN_MISMATCH
                 {Arrays.asList(NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 1, 1, CrosscheckFingerprints.CrosscheckMode.CHECK_SAME_SAMPLE, null, true},
+                //same as above with unindexed input
+                {Arrays.asList(NA12892_r1_sam), Arrays.asList(NA12891_r2_sam, NA12892_r2_sam), 1, 1, CrosscheckFingerprints.CrosscheckMode.CHECK_SAME_SAMPLE, null, true},
                 //sample in second input included in input but no calls at fingerprinting sites, print 2 comparisons, return EXIT_CODE_WHEN_MISMATCH
-                {Arrays.asList(NA12891_r1_no_fingerprint_sam, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 1, 2, CrosscheckFingerprints.CrosscheckMode.CHECK_SAME_SAMPLE, null, true},
-                //same as above, but with indexed bam
                 {Arrays.asList(NA12891_r1_no_fingerprint, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 1, 2, CrosscheckFingerprints.CrosscheckMode.CHECK_SAME_SAMPLE, null, true},
+                //same as above with unindexed input
+                {Arrays.asList(NA12891_r1_no_fingerprint_sam, NA12892_r1_sam), Arrays.asList(NA12891_r2_sam, NA12892_r2_sam), 1, 2, CrosscheckFingerprints.CrosscheckMode.CHECK_SAME_SAMPLE, null, true},
                 // sample in second input missing from input, print all comparisons, return 0
                 {Arrays.asList(NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 0, 2, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
+                //same as above with unindexed input
+                {Arrays.asList(NA12892_r1_sam), Arrays.asList(NA12891_r2_sam, NA12892_r2_sam), 0, 2, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
                 //sample in second input included in input but no calls at fingerprinting sites, print all comparisons, return 0
-                {Arrays.asList(NA12891_r1_no_fingerprint_sam, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 0, 4, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
+                {Arrays.asList(NA12891_r1_no_fingerprint, NA12892_r1), Arrays.asList(NA12891_r2, NA12892_r2), 0, 4, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
+                //same as above with unindexed input
+                {Arrays.asList(NA12891_r1_no_fingerprint_sam, NA12892_r1_sam), Arrays.asList(NA12891_r2_sam, NA12892_r2_sam), 0, 4, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, false},
                 //only sample in input has no calls at fingerprinting sites, do not write out comparisons, return EXIT_CODE_WHEN_NO_VALID_CHECKS
-                {Arrays.asList(NA12891_r1_no_fingerprint_sam), Arrays.asList(NA12891_r2, NA12892_r2), 1, 0, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, true},
+                {Arrays.asList(NA12891_r1_no_fingerprint), Arrays.asList(NA12891_r2, NA12892_r2), 1, 0, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, true},
+                //same as above with unindexed input
+                {Arrays.asList(NA12891_r1_no_fingerprint_sam), Arrays.asList(NA12891_r2_sam, NA12892_r2_sam), 1, 0, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.SAMPLE, true},
                 //one read group in input has no observations at fingerprinting sites, write all comparisons, return 0
+                {Arrays.asList(NA12891_r1_one_rg_no_fingerprint), null, 0, NA12891_r1_RGs * NA12891_r1_RGs, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.READGROUP, true},
+                //same as above with unindexed input
                 {Arrays.asList(NA12891_r1_one_rg_no_fingerprint_sam), null, 0, NA12891_r1_RGs * NA12891_r1_RGs, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.READGROUP, true},
                 //no read groups in input have observations at fingerprinting sites, do not write comparisons, return EXIT_CODE_WHEN_NO_VALID_CHECKS
-                {Arrays.asList(NA12891_r1_no_fingerprint), null, 1, 0, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.READGROUP, true}
+                {Arrays.asList(NA12891_r1_no_fingerprint), null, 1, 0, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.READGROUP, true},
+                //same as above with unindexed input
+                {Arrays.asList(NA12891_r1_no_fingerprint_sam), null, 1, 0, CrosscheckFingerprints.CrosscheckMode.CHECK_ALL_OTHERS, CrosscheckMetric.DataType.READGROUP, true}
         };
     }
 
