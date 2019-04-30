@@ -817,7 +817,6 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
             second_input.forEach(f -> args.add("INPUT=" + f));
             doTest(args.toArray(new String[args.size()]), metrics, exptectRetVal, expectedNMetrics, dataType, expectAllMatch);
         }
-
     }
 
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType) throws IOException {
