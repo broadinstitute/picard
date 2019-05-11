@@ -282,12 +282,6 @@ public class SelectBarcodes extends CommandLineProgram {
         }
     }
 
-//    static BitSet union(final BitSet set, final int node) {
-//        BitSet ret = BitSet.valueOf(set.toLongArray());
-//        ret.set(node);
-//        return ret;
-//    }
-
     static BitSet union(final BitSet lhs, final BitSet rhs) {
         BitSet ret = BitSet.valueOf(lhs.toLongArray());
         ret.or(rhs);
