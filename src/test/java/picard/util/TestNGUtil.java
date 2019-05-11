@@ -1,15 +1,19 @@
 package picard.util;
 
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.testng.collections.Sets;
+import picard.cmdline.ClassFinder;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
-
-import org.testng.Assert;
-import org.testng.collections.Sets;
-import picard.cmdline.ClassFinder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import static java.lang.Math.abs;
 
@@ -97,10 +101,10 @@ public class TestNGUtil {
     }
 
     public static void assertEquals(final byte[] actual, final byte[] expected) {
-        Assert.assertEquals(actual.length,expected.length,"Arrays do not have equal lengths");
+        Assert.assertEquals(actual.length, expected.length, "Arrays do not have equal lengths");
 
-        for(int i=0;i<actual.length;++i){
-            Assert.assertEquals(actual[i], expected[i],"Array differ at position " +i);
+        for (int i = 0; i < actual.length; ++i) {
+            Assert.assertEquals(actual[i], expected[i], "Array differ at position " + i);
         }
     }
 

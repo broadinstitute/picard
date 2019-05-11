@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2018 The Broad Institute
+ * Copyright (c) 2019 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@ import htsjdk.samtools.util.SequenceUtil;
 import java.util.Arrays;
 
 /**
- * Created by farjoun on 2/15/18.
+ * Algorithms for calculating various edit distances.
  */
 public class StringDistanceUtils {
 
@@ -123,12 +123,6 @@ public class StringDistanceUtils {
         return levenshteinDistance(barcodeBases, maskedReadBases, 10);
     }
 
-//    public static int levenshteinDistance(final byte[] barcodeBases, final byte[] readBases, final byte[] readQualities, final int minimumBaseQuality) {
-//        final byte[] maskedReadBases = getBytesMasked(readBases, readQualities, minimumBaseQuality);
-//
-//        return Stringlevenshtein(barcodeBases, maskedReadBases, 10);
-//    }
-
     /**
      * +++lifted from Commons Lang Text +++
      * <p>
@@ -140,7 +134,7 @@ public class StringDistanceUtils {
      * threshold + 1
      * <p>
      * This implementation only computes the distance if it's less than or
-     * equal to the threshold value, returning -1 if it's greater. The
+     * equal to the threshold value, returning threshold + 1 if it's greater. The
      * advantage is performance: unbounded distance is O(nm), but a bound of
      * k allows us to reduce it to O(km) time by only computing a diagonal
      * stripe of width 2k + 1 of the cost table. It is also possible to use
@@ -191,7 +185,7 @@ public class StringDistanceUtils {
             return 0;
         }
 
-        // it's easier to ignore indels in the begining than in the end...so we copy and reverse the arrays
+        // it's easier to ignore indels in the beginning than in the end...so we copy and reverse the arrays
         final byte[] barcodeRev = Arrays.copyOf(barcode, barcode.length);
         final byte[] readRev = Arrays.copyOf(read, read.length);
 
