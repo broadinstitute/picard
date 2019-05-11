@@ -2,8 +2,10 @@ package picard.cmdline;
 
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.BetaFeature;
 import org.broadinstitute.barclay.argparser.CommandLineProgramGroup;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.ExperimentalFeature;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -55,7 +57,6 @@ import java.util.stream.Collectors;
  */
 public class PicardCommandLine {
     private static final Log log = Log.getInstance(PicardCommandLine.class);
-    
     private static String initializeColor(final String color) {
         if (CommandLineDefaults.COLOR_STATUS) return color;
         else return "";
@@ -75,6 +76,10 @@ public class PicardCommandLine {
 
     /** The name of this unified command line program **/
     private final static String COMMAND_LINE_NAME = PicardCommandLine.class.getSimpleName();
+
+    /** Prefixes for class that annotated by @ExperimentalFeature and @BetaFeature **/
+    private final static String BETA_PREFIX = "**BETA FEATURE - WORK IN PROGRESS** ";
+    private final static String EXPERIMENTAL_PREFIX = "**EXPERIMENTAL FEATURE - USE AT YOUR OWN RISK** ";
 
     /** The packages we wish to include in our command line **/
     protected static List<String> getPackageList() {
@@ -257,11 +262,14 @@ public class PicardCommandLine {
                     throw new RuntimeException(String.format("Unexpected error: did not find the CommandLineProgramProperties annotation for '%s'", clazz.getSimpleName()));
                 }
                 if (!commandListOnly) {
-                    if (clazz.getSimpleName().length() >= 45) {
-                        builder.append(String.format("%s    %s    %s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.oneLineSummary(), KNRM));
-                    } else {
-                        builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.oneLineSummary(), KNRM));
-                    }
+                    builder.append(String.format(
+                            clazz.getSimpleName().length() >= 45
+                                ? "%s    %s    %s%s%s%s%s\n"
+                                : "%s    %-45s%s%s%s%s%s\n",
+                            KGRN, clazz.getSimpleName(),
+                            KRED, getToolSummaryPrefix(clazz),
+                            KCYN, property.oneLineSummary(),
+                            KNRM));
                 }
                 else {
                     builder.append(clazz.getSimpleName() + "\n");
@@ -276,6 +284,18 @@ public class PicardCommandLine {
         else {
             System.err.print(builder.toString());
         }
+    }
+
+    private static String getToolSummaryPrefix(Class<?> clazz) {
+        if (clazz.getAnnotation(ExperimentalFeature.class) != null) {
+            return EXPERIMENTAL_PREFIX;
+        }
+
+        if (clazz.getAnnotation(BetaFeature.class) != null) {
+            return BETA_PREFIX;
+        }
+
+        return "";
     }
 
     /** similarity floor for matching in printUnknown **/

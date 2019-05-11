@@ -13,6 +13,7 @@ import org.testng.Assert;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -271,7 +272,8 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                             final boolean firstOnly,
                             final boolean record1NonPrimary,
                             final boolean record2NonPrimary,
-                            final int defaultQuality) {
+                            final int defaultQuality,
+                            final String umi) {
         final List<SAMRecord> samRecordList = samRecordSetBuilder.addPair(readName, referenceSequenceIndex1, referenceSequenceIndex2, alignmentStart1, alignmentStart2,
                 record1Unmapped, record2Unmapped, cigar1, cigar2, strand1, strand2, record1NonPrimary, record2NonPrimary, defaultQuality);
 
@@ -281,6 +283,11 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         if (this.noMateCigars) {
             record1.setAttribute("MC", null);
             record2.setAttribute("MC", null);
+        }
+
+        if (umi != null) {
+            record1.setAttribute("RX", umi);
+            record2.setAttribute("RX", umi);
         }
 
         if (firstOnly) {
@@ -296,6 +303,27 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         this.duplicateFlags.put(key2, isDuplicate2);
     }
 
+    public void addMatePair(final String readName,
+                            final int referenceSequenceIndex1,
+                            final int referenceSequenceIndex2,
+                            final int alignmentStart1,
+                            final int alignmentStart2,
+                            final boolean record1Unmapped,
+                            final boolean record2Unmapped,
+                            final boolean isDuplicate1,
+                            final boolean isDuplicate2,
+                            final String cigar1,
+                            final String cigar2,
+                            final boolean strand1,
+                            final boolean strand2,
+                            final boolean firstOnly,
+                            final boolean record1NonPrimary,
+                            final boolean record2NonPrimary,
+                            final int defaultQuality) {
+        addMatePair(readName, referenceSequenceIndex1, referenceSequenceIndex2, alignmentStart1, alignmentStart2,
+                record1Unmapped, record2Unmapped, isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2,
+                firstOnly, record1NonPrimary, record2NonPrimary, defaultQuality, null);
+    }
     public void addMatePair(final String readName,
                             final int referenceSequenceIndex,
                             final int alignmentStart1,
@@ -316,19 +344,24 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                 isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2, firstOnly, record1NonPrimary, record2NonPrimary, defaultQuality);
     }
 
-    protected abstract void test();
+    protected abstract void test() throws IOException;
 
     /**
      * Sets up the basic command line arguments for input and output and runs instanceMain.
      */
     public void runTest() {
-        final File input = createInputFile();
+        try {
+            final File input = createInputFile();
 
-        output = new File(outputDir, "output.sam");
-        args.add("INPUT=" + input.getAbsoluteFile());
-        args.add("OUTPUT=" + output.getAbsoluteFile());
-        Assert.assertEquals(runPicardCommandLine(args), 0);
-        test();
+            output = new File(outputDir, "output.sam");
+            args.add("INPUT=" + input.getAbsoluteFile());
+            args.add("OUTPUT=" + output.getAbsoluteFile());
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+            test();
+        } catch (IOException ex) {
+            // Rethrows as unchecked exception to avoid having to change existing tests
+            throw new RuntimeException(ex);
+        }
     }
 
     private File createInputFile() {

@@ -45,6 +45,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.QualityEncodingDetector;
+import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.SortingCollection;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -58,6 +59,7 @@ import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.util.TabbedTextFileWithHeaderParser;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -179,7 +181,7 @@ public class RevertSam extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME, doc = "True to restore original qualities from the OQ field to the QUAL field if available.")
     public boolean RESTORE_ORIGINAL_QUALITIES = true;
 
-    @Argument(doc = "Remove duplicate read flags from all reads.  Note that if this is true and REMOVE_ALIGNMENT_INFORMATION==false, " +
+    @Argument(doc = "Remove duplicate read flags from all reads.  Note that if this is false and REMOVE_ALIGNMENT_INFORMATION==true, " +
             " the output may have the unusual but sometimes desirable trait of having unmapped reads that are marked as duplicates.")
     public boolean REMOVE_DUPLICATE_INFORMATION = true;
 
@@ -426,16 +428,23 @@ public class RevertSam extends CommandLineProgram {
                 SAMRecord firstRecord = null, secondRecord = null, unpairedRecord = null;
                 for (final SAMRecord rec : recs) {
                     if (!rec.getReadPairedFlag()) {
-                        if (unpairedRecord == null) unpairedRecord = rec;
+                        if (unpairedRecord == null) {
+                            unpairedRecord = rec;
+                        }
                         ++unpaired;
-                    }
-                    if (rec.getFirstOfPairFlag()) {
-                        if (firstRecord == null) firstRecord = rec;
-                        ++firsts;
-                    }
-                    if (rec.getSecondOfPairFlag()) {
-                        if (secondRecord == null) secondRecord = rec;
-                        ++seconds;
+                    } else {
+                        if (rec.getFirstOfPairFlag()) {
+                            if (firstRecord == null) {
+                                firstRecord = rec;
+                            }
+                            ++firsts;
+                        }
+                        if (rec.getSecondOfPairFlag()) {
+                            if (secondRecord == null) {
+                                secondRecord = rec;
+                            }
+                            ++seconds;
+                        }
                     }
                 }
 
@@ -589,9 +598,10 @@ public class RevertSam extends CommandLineProgram {
 
         final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<>();
 
+        final SamReaderFactory readerFactory =
+                SamReaderFactory.makeDefault().referenceSequence(referenceSequence).validationStringency(validationStringency);
         // Figure out the quality score encoding scheme for each read group.
         for (final SAMReadGroupRecord rg : inHeader.getReadGroups()) {
-            final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceSequence).validationStringency(validationStringency).open(input);
             final SamRecordFilter filter = new SamRecordFilter() {
                 public boolean filterOut(final SAMRecord rec) {
                     return !rec.getReadGroup().getId().equals(rg.getId());
@@ -601,9 +611,19 @@ public class RevertSam extends CommandLineProgram {
                     throw new UnsupportedOperationException();
                 }
             };
-            readGroupToFormat.put(rg, QualityEncodingDetector.detect(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, new FilteringSamIterator(reader.iterator(), filter), restoreOriginalQualities));
-            CloserUtil.close(reader);
+            try (final SamReader reader = readerFactory.open(input)) {
+                final FilteringSamIterator filterIterator = new FilteringSamIterator(reader.iterator(), filter);
+                if (filterIterator.hasNext()) {
+                    readGroupToFormat.put(rg, QualityEncodingDetector.detect(
+                            QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, filterIterator, restoreOriginalQualities));
+                } else {
+                    log.warn("Skipping read group " + rg.getReadGroupId() + " with no reads");
+                }
+            } catch (IOException e) {
+                throw new RuntimeIOException(e);
+            }
         }
+
         for (final SAMReadGroupRecord r : readGroupToFormat.keySet()) {
             log.info("Detected quality format for " + r.getReadGroupId() + ": " + readGroupToFormat.get(r));
         }
@@ -828,16 +848,9 @@ public class RevertSam extends CommandLineProgram {
         }
 
         static boolean isOutputMapHeaderValid(final List<String> columnLabels) {
-            if (columnLabels.size() < 2) {
-                return false;
-            }
-            if (!"READ_GROUP_ID".equals(columnLabels.get(0))) {
-                return false;
-            }
-            if (!"OUTPUT".equals(columnLabels.get(1))) {
-                return false;
-            }
-            return true;
+            return columnLabels.size() >= 2 &&
+                    "READ_GROUP_ID".equals(columnLabels.get(0)) &&
+                    "OUTPUT".equals(columnLabels.get(1));
         }
     }
 }

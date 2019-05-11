@@ -131,7 +131,7 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public long READS_ALIGNED_IN_PAIRS;
 
     /**
-     * The fraction of reads whose mate pair was also aligned to the reference.
+     * The fraction of aligned reads whose mate pair was also aligned to the reference.
      * READS_ALIGNED_IN_PAIRS / PF_READS_ALIGNED
      */
     public double PCT_READS_ALIGNED_IN_PAIRS;
@@ -165,8 +165,8 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public double PCT_CHIMERAS;
 
     /**
-     * The fraction of PF reads that are unaligned and match to a known adapter sequence right from the
-     * start of the read.
+     * The fraction of PF reads that are unaligned or aligned with MQ0 and match to a known adapter sequence right from the
+     * start of the read (indication of adapter-dimer pairs).
      */
     public double PCT_ADAPTER;
 

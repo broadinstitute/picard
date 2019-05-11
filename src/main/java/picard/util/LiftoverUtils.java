@@ -37,7 +37,6 @@ import picard.vcf.LiftoverVcf;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
 public class LiftoverUtils {
 
     /**
@@ -52,20 +51,22 @@ public class LiftoverUtils {
     public static final Collection<String> DEFAULT_TAGS_TO_REVERSE = Arrays.asList("AF");
     public static final Collection<String> DEFAULT_TAGS_TO_DROP = Arrays.asList("MAX_AF");
 
-
     public static final Log log = Log.getInstance(LiftoverUtils.class);
+
     /**
      * This will take an input VariantContext and lift to the provided interval.
      * If this interval is in the opposite orientation, all alleles and genotypes will be reverse complemented
      * and indels will be left-aligned.  Currently this is only able to invert biallelic indels, and null will be
      * returned for any unsupported VC.
-     * @param source The VariantContext to lift
-     * @param target The target interval
-     * @param refSeq The reference sequence, which should match the target interval
+     *
+     * @param source                The VariantContext to lift
+     * @param target                The target interval
+     * @param refSeq                The reference sequence, which should match the target interval
      * @param writeOriginalPosition If true, INFO field annotations will be added to store the original position and contig
+     * @param writeOriginalAlleles  If true, an INFO field annotation will be added to store the original alleles in order.  This can be useful in the case of more complex liftovers, like reverse complements, left aligned indels or swapped REF/ALT
      * @return The lifted VariantContext.  This will be null if the input VariantContext could not be lifted.
      */
-    public static VariantContext liftVariant(final VariantContext source, final Interval target, final ReferenceSequence refSeq, final boolean writeOriginalPosition){
+    public static VariantContext liftVariant(final VariantContext source, final Interval target, final ReferenceSequence refSeq, final boolean writeOriginalPosition, final boolean writeOriginalAlleles) {
         if (target == null) {
             return null;
         }
@@ -83,7 +84,16 @@ public class LiftoverUtils {
 
         builder.filters(source.getFilters());
         builder.log10PError(source.getLog10PError());
-        builder.attributes(source.getAttributes());
+
+        // If any of the source alleles is symbolic, do not populate the END tag (protecting things like <NON_REF> from
+        // getting screwed up in reverse-complemented variants
+        if (source.hasAttribute(VCFConstants.END_KEY) && builder.getAlleles().stream().noneMatch(Allele::isSymbolic)) {
+            // TODO: add start() and stop() methods to the builder in htsjdk and use stop() here.
+            builder.attribute(VCFConstants.END_KEY, builder.make().getEnd());
+        } else {
+            builder.rmAttribute(VCFConstants.END_KEY);
+        }
+
         // make sure that the variant isn't mistakenly set as "SwappedAlleles"
         builder.rmAttribute(SWAPPED_ALLELES);
         if (target.isNegativeStrand()) {
@@ -100,10 +110,28 @@ public class LiftoverUtils {
             builder.attribute(LiftoverVcf.ORIGINAL_START, source.getStart());
         }
 
+        if (writeOriginalAlleles && !source.getAlleles().equals(builder.getAlleles())) {
+            builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, allelesToStringList(source.getAlleles()));
+        }
+
         return builder.make();
     }
 
-    protected static VariantContextBuilder liftSimpleVariantContext(VariantContext source, Interval target){
+    /**
+     * This is a utility method that will convert a list of alleles into a list of base strings.  Reference status
+     * is ignored when creating these strings (i.e. 'A', not 'A*').  These strings should be sufficient
+     * to recreate an Allele using Allele.create()
+     *
+     * @param alleles The list of alleles
+     * @return A list of strings representing the bases of the input alleles.
+     */
+    protected static List<String> allelesToStringList(final List<Allele> alleles) {
+        final List<String> ret = new ArrayList<>();
+        alleles.forEach(a -> ret.add(a.isNoCall() ? Allele.NO_CALL_STRING : a.getDisplayString()));
+        return ret;
+    }
+
+    protected static VariantContextBuilder liftSimpleVariantContext(VariantContext source, Interval target) {
         if (target == null || source.getReference().length() != target.length()) {
             return null;
         }
@@ -117,23 +145,21 @@ public class LiftoverUtils {
         return builder;
     }
 
-    protected static VariantContextBuilder reverseComplementVariantContext(final VariantContext source, final Interval target, final ReferenceSequence refSeq){
+    protected static VariantContextBuilder reverseComplementVariantContext(final VariantContext source, final Interval target, final ReferenceSequence refSeq) {
         if (target.isPositiveStrand()) {
             throw new IllegalArgumentException("This should only be called for negative strand liftovers");
         }
 
-        // not currently supported
-        if (source.isIndel() && !source.isBiallelic()) {
-            return null;
-        }
-
         final List<Allele> origAlleles = new ArrayList<>(source.getAlleles());
         final VariantContextBuilder vcb = new VariantContextBuilder(source);
+
+        vcb.rmAttribute(VCFConstants.END_KEY);
         vcb.chr(target.getContig());
 
         // By convention, indels are left aligned and include the base prior to that indel.
         // When reverse complementing, will be necessary to include this additional base.
-        // This check prevents the presumably rare situation in which the indel occurs on the first position of the sequence
+        // This check prevents the extremely rare situation in which the indel occurs on the
+        // first base of the sequence
         final boolean addToStart = source.isIndel() && target.getStart() > 1;
 
         final int start = target.getStart() - (addToStart ? 1 : 0);
@@ -144,7 +170,7 @@ public class LiftoverUtils {
 
         vcb.alleles(reverseComplementAlleles(origAlleles, target, refSeq, source.isIndel(), addToStart));
 
-        if (source.isIndel()) {
+        if (!source.isSNP()) {
             // check that the reverse complemented bases match the new reference
             if (!referenceAlleleMatchesReferenceForIndel(vcb.getAlleles(), refSeq, start, stop)) {
                 return null;
@@ -157,22 +183,21 @@ public class LiftoverUtils {
         return vcb;
     }
 
-    private static List<Allele> reverseComplementAlleles(final List<Allele> originalAlleles, final Interval target, final ReferenceSequence refSeq, final boolean isBiAllelicIndel, final boolean addToStart){
+    private static List<Allele> reverseComplementAlleles(final List<Allele> originalAlleles, final Interval target, final ReferenceSequence refSeq, final boolean isIndel, final boolean addToStart) {
         final List<Allele> alleles = new ArrayList<>();
 
         for (final Allele oldAllele : originalAlleles) {
-            alleles.add(LiftoverUtils.reverseComplement(oldAllele, target, refSeq, isBiAllelicIndel, addToStart));
+            alleles.add(LiftoverUtils.reverseComplement(oldAllele, target, refSeq, isIndel, addToStart));
         }
 
         return alleles;
     }
 
-    private static Allele reverseComplement(final Allele oldAllele, final Interval target, final ReferenceSequence referenceSequence, final boolean isBiAllelicIndel, final boolean addToStart){
+    private static Allele reverseComplement(final Allele oldAllele, final Interval target, final ReferenceSequence referenceSequence, final boolean isIndel, final boolean addToStart) {
 
         if (oldAllele.isSymbolic() || oldAllele.isNoCall()) {
             return oldAllele;
-        }
-        else if (isBiAllelicIndel) {
+        } else if (isIndel) {
             // target.getStart is 1-based, reference bases are 0-based
             final StringBuilder alleleBuilder = new StringBuilder(target.getEnd() - target.getStart() + 1);
 
@@ -227,15 +252,15 @@ public class LiftoverUtils {
     /**
      * method to swap the reference and alt alleles of a bi-allelic, SNP
      *
-     * @param vc the {@link VariantContext} (bi-allelic SNP) that needs to have it's REF and ALT alleles swapped.
+     * @param vc                   the {@link VariantContext} (bi-allelic SNP) that needs to have it's REF and ALT alleles swapped.
      * @param annotationsToReverse INFO field annotations (of double value) that will be reversed (x->1-x)
-     * @param annotationsToDrop INFO field annotations that will be dropped from the result since they are invalid when REF and ALT are swapped
+     * @param annotationsToDrop    INFO field annotations that will be dropped from the result since they are invalid when REF and ALT are swapped
      * @return a new {@link VariantContext} with alleles swapped, INFO fields modified and in the genotypes, GT, AD and PL corrected appropriately
      */
     public static VariantContext swapRefAlt(final VariantContext vc, final Collection<String> annotationsToReverse, final Collection<String> annotationsToDrop) {
 
-        if (!vc.isBiallelic() || !vc.isSNP() ) {
-            throw new IllegalArgumentException("swapRefAlt can only process biallelic, SNPS, found " + vc.toString() );
+        if (!vc.isBiallelic() || !vc.isSNP()) {
+            throw new IllegalArgumentException("swapRefAlt can only process biallelic, SNPS, found " + vc.toString());
         }
 
         final VariantContextBuilder swappedBuilder = new VariantContextBuilder(vc);
@@ -287,7 +312,7 @@ public class LiftoverUtils {
         for (final String key : vc.getAttributes().keySet()) {
             if (annotationsToDrop.contains(key)) {
                 swappedBuilder.rmAttribute(key);
-            } else if (annotationsToReverse.contains(key) && !vc.getAttributeAsString(key, "").equals( VCFConstants.MISSING_VALUE_v4)) {
+            } else if (annotationsToReverse.contains(key) && !vc.getAttributeAsString(key, "").equals(VCFConstants.MISSING_VALUE_v4)) {
                 final double attributeToReverse = vc.getAttributeAsDouble(key, -1);
 
                 if (attributeToReverse < 0 || attributeToReverse > 1) {
@@ -304,10 +329,10 @@ public class LiftoverUtils {
     /**
      * Checks whether the reference allele in the provided variant context actually matches the reference sequence
      *
-     * @param alleles list of alleles from which to find the reference allele
+     * @param alleles           list of alleles from which to find the reference allele
      * @param referenceSequence the ref sequence
-     * @param start the start position of the actual indel
-     * @param end   the end position of the actual indel
+     * @param start             the start position of the actual indel
+     * @param end               the end position of the actual indel
      * @return true if they match, false otherwise
      */
     protected static boolean referenceAlleleMatchesReferenceForIndel(final List<Allele> alleles,
@@ -320,13 +345,12 @@ public class LiftoverUtils {
     }
 
     /**
-     *    Normalizes and left aligns a {@link VariantContextBuilder}.
-     *    Note: this will modify the start/stop and alleles of this builder.
-     *    Also note: if the reference allele does not match the reference sequence, this method will throw an exception
+     * Normalizes and left aligns a {@link VariantContextBuilder}.
+     * Note: this will modify the start/stop and alleles of this builder.
+     * Also note: if the reference allele does not match the reference sequence, this method will throw an exception
      *
-     *    Based on Adrian Tan, Gonçalo R. Abecasis and Hyun Min Kang. (2015)
-     *    Unified Representation of Genetic Variants. Bioinformatics.
-     *
+     * Based on Adrian Tan, Gon&ccedil;alo R. Abecasis and Hyun Min Kang. (2015)
+     * Unified Representation of Genetic Variants. Bioinformatics.
      */
     protected static void leftAlignVariant(final VariantContextBuilder builder, final int start, final int end, final List<Allele> alleles, final ReferenceSequence referenceSequence) {
 
@@ -368,7 +392,7 @@ public class LiftoverUtils {
                 for (final Allele allele : alleleBasesMap.keySet()) {
                     // the first -1 for zero-base (getBases) versus 1-based (variant position)
                     // another   -1 to get the base prior to the location of the start of the allele
-                    final byte extraBase =  (theStart > 1) ?
+                    final byte extraBase = (theStart > 1) ?
                             referenceSequence.getBases()[theStart - 2] :
                             referenceSequence.getBases()[theEnd];
 
@@ -404,7 +428,9 @@ public class LiftoverUtils {
                 .collect(Collectors.toMap(Map.Entry::getKey, me -> Allele.create(me.getValue(), me.getKey().isReference())));
 
         //retain original order:
-        List<Allele> fixedAlleles = alleles.stream().map(fixedAlleleMap::get).collect(Collectors.toList());
+        List<Allele> fixedAlleles = alleles.stream()
+                .map(fixedAlleleMap::get)
+                .collect(Collectors.toList());
 
         builder.alleles(fixedAlleles);
     }

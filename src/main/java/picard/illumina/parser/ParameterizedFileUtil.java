@@ -207,4 +207,8 @@ public abstract class ParameterizedFileUtil {
     public boolean checkTileCount() {
         return true;
     }
+
+    public static String makeBarcodeRegex(int lane) {
+        return makeLaneTileRegex("_barcode.txt(\\.gz|\\.bz2)?", lane);
+    }
 }

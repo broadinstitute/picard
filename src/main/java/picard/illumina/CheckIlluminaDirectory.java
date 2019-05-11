@@ -23,6 +23,9 @@ import picard.illumina.parser.readers.CbclReader;
 import picard.illumina.parser.readers.LocsFileReader;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -54,7 +57,8 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             "and are reasonably sized for every tile and cycle.  Reasonably sized means non-zero sized for files that exist per tile and " +
             "equal size for binary files that exist per cycle or per tile. If DATA_TYPES {Position, BaseCalls, QualityScores, PF," +
             " or Barcodes} are not specified, then the default data types used by IlluminaBasecallsToSam are used.  " +
-            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.</p>" +
+            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed. If there are errors, " +
+            "the number of errors is written in a file called 'errors.count' in the working directory</p>" +
             "" +
             "<h4>Usage example:</h4> " +
             "<pre>" +
@@ -161,42 +165,41 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
                 //check s.locs
                 final File locsFile = new File(BASECALLS_DIR.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
-                final LocsFileReader locsFileReader = new LocsFileReader(locsFile);
                 final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
-                while (locsFileReader.hasNext()) {
-                    locs.add(locsFileReader.next());
-                }
-
                 final Map<Integer, File> filterFileMap = new HashMap<>();
+                try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
+                    while (locsFileReader.hasNext()) {
+                        locs.add(locsFileReader.next());
+                    }
+                }
                 for (final File filterFile : filterFiles) {
                     filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
                 }
+                try (CbclReader reader = new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(),
+                        tiles.get(0), locs, outputMapping.getOutputCycles(), true)) {
+                    reader.getAllTiles().forEach((key, value) -> {
+                        //we are looking for cycles with compressed data count of 2 bytes (standard gzip header size)
+                        String emptyCycleString = value.stream()
+                                .filter(cycle -> cycle.getCompressedBlockSize() <= 2)
+                                .map(BaseBclReader.TileData::getTileNum)
+                                .map(Object::toString)
+                                .collect(Collectors.joining(", "));
 
-                final CbclReader reader = new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(),
-                        tiles.get(0), locs, outputMapping.getOutputCycles(), true);
-                reader.getAllTiles().forEach((key, value) -> {
-                    //we are looking for cycles with compressed data count of 2 bytes (standard gzip header size)
-                    String emptyCycleString = value.stream()
-                            .filter(cycle -> cycle.getCompressedBlockSize() <= 2)
-                            .map(BaseBclReader.TileData::getTileNum)
-                            .map(Object::toString)
-                            .collect(Collectors.joining(", "));
+                        if (emptyCycleString.length() > 0) {
+                            log.warn("The following tiles have no data for cycle " + key);
+                            log.warn(emptyCycleString);
+                        }
 
-                    if (emptyCycleString.length() > 0) {
-                        log.warn("The following tiles have no data for cycle " + key);
-                        log.warn(emptyCycleString);
-                    }
+                        final List<File> fileForCycle = reader.getFilesForCycle(key);
+                        final long totalFilesSize = fileForCycle.stream().mapToLong(file -> file.length() - reader.getHeaderSize()).sum();
+                        final long expectedFileSize = value.stream().mapToLong(BaseBclReader.TileData::getCompressedBlockSize).sum();
 
-                    final List<File> fileForCycle = reader.getFilesForCycle(key);
-                    final long totalFilesSize = fileForCycle.stream().mapToLong(file -> file.length() - reader.getHeaderSize()).sum();
-                    final long expectedFileSize = value.stream().mapToLong(BaseBclReader.TileData::getCompressedBlockSize).sum();
-
-                    if (expectedFileSize != totalFilesSize) {
-                        throw new PicardException(String.format("File %s is not the expected size of %d instead it is %d",
-                                fileForCycle, expectedFileSize, totalFilesSize));
-                    }
-                });
-
+                        if (expectedFileSize != totalFilesSize) {
+                            throw new PicardException(String.format("File %s is not the expected size of %d instead it is %d",
+                                    fileForCycle, expectedFileSize, totalFilesSize));
+                        }
+                    });
+                }
             } else {
                 IlluminaFileUtil fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
                 final List<Integer> expectedTiles = fileUtil.getExpectedTiles();
@@ -230,7 +233,12 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         if (totalFailures == 0) {
             log.info("SUCCEEDED!  All required files are present and non-empty.");
         } else {
-            status = totalFailures;
+            status = 1;
+            try {
+                Files.write(Paths.get("./errors.count"), Integer.toString(totalFailures).getBytes());
+            } catch (IOException e) {
+                log.error("Unable to write number of errors to file", e);
+            }
             log.info("FAILED! There were " + totalFailures + " in the following lanes: " + StringUtil
                     .join(", ", failingLanes));
         }

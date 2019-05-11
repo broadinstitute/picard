@@ -1,4 +1,5 @@
 ##fileformat=VCFv4.2
+##FILTER=<ID=MissingFilter,Description="Missing description: this FILTER line was added by Picard's FixVCFHeader">
 ##FILTER=<ID=PASS,Description="All filters passed">
 ##FILTER=<ID=Uncertain,Description="Uncertain genotype due to reason in filter INFO field">
 ##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">

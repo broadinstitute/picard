@@ -31,7 +31,9 @@ import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.*;
-import htsjdk.variant.variantcontext.*;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -49,6 +51,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <h3>Summary</h3>
@@ -155,11 +158,21 @@ public class LiftoverVcf extends CommandLineProgram {
     @Argument(doc = "Write the original contig/position for lifted variants to the INFO field.", optional = true)
     public boolean WRITE_ORIGINAL_POSITION = false;
 
+    // Option on whether or not to write the original alleles of the variant to the INFO field
+    @Argument(doc = "Write the original alleles for lifted variants to the INFO field.  If the alleles are identical, this attribute will be omitted.", optional = true)
+    public boolean WRITE_ORIGINAL_ALLELES = false;
+
     @Argument(doc = "The minimum percent match required for a variant to be lifted.", optional = true)
     public double LIFTOVER_MIN_MATCH = 1.0;
 
     @Argument(doc = "Allow INFO and FORMAT in the records that are not found in the header", optional = true)
     public boolean ALLOW_MISSING_FIELDS_IN_HEADER = false;
+
+
+    @Argument(doc = "If the REF allele of the lifted site does not match the target genome, that variant is normally rejected. " +
+            "For bi-allelic SNPs, if this is set to true and the ALT allele equals the new REF allele, the REF and ALT alleles will be swapped.  This can rescue " +
+            "some variants; however, do this carefully as some annotations may become invalid, such as any that are alelle-specifc.  See also TAGS_TO_REVERSE and TAGS_TO_DROP.", optional = true)
+    public boolean RECOVER_SWAPPED_REF_ALT = false;
 
     @Argument(doc = "INFO field annotations that behave like an Allele Frequency and should be transformed with x->1-x " +
             "when swapping reference with variant alleles.", optional = true)
@@ -168,13 +181,16 @@ public class LiftoverVcf extends CommandLineProgram {
     @Argument(doc = "INFO field annotations that should be deleted when swapping reference with variant alleles.", optional = true)
     public Collection<String> TAGS_TO_DROP = new ArrayList<>(LiftoverUtils.DEFAULT_TAGS_TO_DROP);
 
+    @Argument(doc = "Output VCF file will be written on the fly but it won't be sorted and indexed.", optional = true)
+    public boolean DISABLE_SORT = false;
+
     // When a contig used in the chain is not in the reference, exit with this value instead of 0.
     public static int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE = 1;
 
     /**
      * Filter name to use when a target cannot be lifted over.
      */
-    public static final String FILTER_CANNOT_LIFTOVER_INDEL = "ReverseComplementedIndel";
+    public static final String FILTER_CANNOT_LIFTOVER_REV_COMP = "CannotLiftOver";
 
     /**
      * Filter name to use when a target cannot be lifted over.
@@ -196,7 +212,7 @@ public class LiftoverVcf extends CommandLineProgram {
      * Filters to be added to the REJECT file.
      */
     private static final List<VCFFilterHeaderLine> FILTERS = CollectionUtil.makeList(
-            new VCFFilterHeaderLine(FILTER_CANNOT_LIFTOVER_INDEL, "Indel falls into a reverse complemented region in the target genome."),
+            new VCFFilterHeaderLine(FILTER_CANNOT_LIFTOVER_REV_COMP, "Liftover of a variant that needed reverse-complementing failed for unknown reasons."),
             new VCFFilterHeaderLine(FILTER_NO_TARGET, "Variant could not be lifted between genome builds."),
             new VCFFilterHeaderLine(FILTER_MISMATCHING_REF_ALLELE, "Reference allele does not match reference genome sequence after liftover."),
             new VCFFilterHeaderLine(FILTER_INDEL_STRADDLES_TWO_INTERVALS, "Reference allele in Indel is straddling multiple intervals in the chain, and so the results are not well defined.")
@@ -213,26 +229,40 @@ public class LiftoverVcf extends CommandLineProgram {
     public static final String ORIGINAL_START = "OriginalStart";
 
     /**
+     * Attribute used to store the list of original alleles (including REF), in the original order prior to liftover.
+     */
+    public static final String ORIGINAL_ALLELES = "OriginalAlleles";
+
+    /**
      * Attribute used to store the position of the failed variant on the target contig prior to finding out that alleles do not match.
      */
     public static final String ATTEMPTED_LOCUS = "AttemptedLocus";
+
+    /**
+     * Attribute used to store the position of the failed variant on the target contig prior to finding out that alleles do not match.
+     */
+    public static final String ATTEMPTED_ALLELES = "AttemptedAlleles";
 
     /**
      * Metadata to be added to the Passing file.
      */
     private static final List<VCFInfoHeaderLine> ATTRS = CollectionUtil.makeList(
             new VCFInfoHeaderLine(ORIGINAL_CONTIG, 1, VCFHeaderLineType.String, "The name of the source contig/chromosome prior to liftover."),
-            new VCFInfoHeaderLine(ORIGINAL_START, 1, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover.")
-            );
+            new VCFInfoHeaderLine(ORIGINAL_START, 1, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover."),
+            new VCFInfoHeaderLine(ORIGINAL_ALLELES, VCFHeaderLineCount.R, VCFHeaderLineType.String, "A list of the original alleles (including REF) of the variant prior to liftover.  If the alleles were not changed during liftover, this attribute will be omitted.")
+    );
 
-    private VariantContextWriter rejects;
+    private VariantContextWriter rejectedRecords;
+    /** the output VariantContextWriter */
+    private VariantContextWriter acceptedRecords;
     private final Log log = Log.getInstance(LiftoverVcf.class);
+    /** the Variant sorter, may be null if DISABLE_SORT = true */
     private SortingCollection<VariantContext> sorter;
 
-    private long failedLiftover = 0, failedAlleleCheck = 0;
-    private Map<String, Long> rejectsByContig = new TreeMap<>();
-    private Map<String, Long> liftedByDestContig = new TreeMap<>();
-    private Map<String, Long> liftedBySourceContig = new TreeMap<>();
+    private long failedLiftover = 0, failedAlleleCheck = 0, totalTrackedAsSwapRefAlt = 0;
+    private final Map<String, Long> rejectsByContig = new TreeMap<>();
+    private final Map<String, Long> liftedByDestContig = new TreeMap<>();
+    private final Map<String, Long> liftedBySourceContig = new TreeMap<>();
 
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
@@ -257,6 +287,11 @@ public class LiftoverVcf extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(REJECT);
 
+        
+        if (CREATE_INDEX && DISABLE_SORT) {
+            log.error("CREATE_INDEX=true and DISABLE_SORT=true are mutually exclusive.");
+            return 1;
+        }
         ////////////////////////////////////////////////////////////////////////
         // Setup the inputs
         ////////////////////////////////////////////////////////////////////////
@@ -268,6 +303,11 @@ public class LiftoverVcf extends CommandLineProgram {
         log.info("Loading up the target reference genome.");
         final ReferenceSequenceFileWalker walker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
         final Map<String, ReferenceSequence> refSeqs = new HashMap<>();
+        // check if sequence dictionary exists
+        if (walker.getSequenceDictionary() == null) {
+            log.error("Reference " + REFERENCE_SEQUENCE.getAbsolutePath() + " must have an associated Dictionary .dict file in the same directory.");
+            return 1;
+        }
         for (final SAMSequenceRecord rec : walker.getSequenceDictionary().getSequences()) {
             refSeqs.put(rec.getSequenceName(), walker.get(rec.getSequenceIndex()));
         }
@@ -277,7 +317,14 @@ public class LiftoverVcf extends CommandLineProgram {
         // Setup the outputs
         ////////////////////////////////////////////////////////////////////////
         final VCFHeader inHeader = in.getFileHeader();
-        final VCFHeader outHeader = new VCFHeader(inHeader);
+        // build VCF header, remove the old '##reference=file://...'
+        final VCFHeader outHeader = new VCFHeader(
+            inHeader.getMetaDataInInputOrder()
+                .stream()
+                .filter(M->!M.getKey().equals("reference"))
+                .collect(Collectors.toCollection(LinkedHashSet::new)),
+            inHeader.getSampleNamesInOrder()
+            );
         outHeader.setSequenceDictionary(walker.getSequenceDictionary());
         if (WRITE_ORIGINAL_POSITION) {
             for (final VCFInfoHeaderLine line : ATTRS) outHeader.addMetaDataLine(line);
@@ -291,36 +338,51 @@ public class LiftoverVcf extends CommandLineProgram {
         outHeader.addMetaDataLine(new VCFInfoHeaderLine(LiftoverUtils.REV_COMPED_ALLELES, 0, VCFHeaderLineType.Flag,
                 "The REF and the ALT alleles have been reverse complemented in liftover since the mapping from the " +
                         "previous reference to the current one was on the negative strand."));
+        outHeader.addMetaDataLine(new VCFHeaderLine("reference", REFERENCE_SEQUENCE.toURI().toString()));
+        
+        this.acceptedRecords = new VariantContextWriterBuilder()
+            .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
+            .modifyOption(Options.INDEX_ON_THE_FLY,!DISABLE_SORT)
+            .setOutputFile(OUTPUT)
+            .setReferenceDictionary(walker.getSequenceDictionary())
+            .build();
+        
+        this.acceptedRecords.writeHeader(outHeader);
 
-        final VariantContextWriter out = new VariantContextWriterBuilder()
-                .setOption(Options.INDEX_ON_THE_FLY)
-                .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
-                .setOutputFile(OUTPUT).setReferenceDictionary(walker.getSequenceDictionary()).build();
-        out.writeHeader(outHeader);
-
-        rejects = new VariantContextWriterBuilder().setOutputFile(REJECT)
+        rejectedRecords = new VariantContextWriterBuilder().setOutputFile(REJECT)
                 .unsetOption(Options.INDEX_ON_THE_FLY)
                 .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
                 .build();
         final VCFHeader rejectHeader = new VCFHeader(in.getFileHeader());
-        for (final VCFFilterHeaderLine line : FILTERS) rejectHeader.addMetaDataLine(line);
+        for (final VCFFilterHeaderLine line : FILTERS) {
+            rejectHeader.addMetaDataLine(line);
+        }
 
-        rejectHeader.addMetaDataLine(new VCFInfoHeaderLine(ATTEMPTED_LOCUS,1, VCFHeaderLineType.String, "The locus of the variant in the TARGET prior to failing due to mismatching alleles."));
+        rejectHeader.addMetaDataLine(new VCFInfoHeaderLine(ATTEMPTED_LOCUS, 1, VCFHeaderLineType.String, "The locus of the variant in the TARGET prior to failing due to reference allele mismatching to the target reference."));
+        rejectHeader.addMetaDataLine(new VCFInfoHeaderLine(ATTEMPTED_ALLELES, 1, VCFHeaderLineType.String, "The alleles of the variant in the TARGET prior to failing due to reference allele mismatching to the target reference."));
 
-        rejects.writeHeader(rejectHeader);
+        rejectedRecords.writeHeader(rejectHeader);
 
         ////////////////////////////////////////////////////////////////////////
         // Read the input VCF, lift the records over and write to the sorting
         // collection.
         ////////////////////////////////////////////////////////////////////////
         long total = 0;
-        log.info("Lifting variants over and sorting (not yet writing the output file.)");
-
-        sorter = SortingCollection.newInstance(VariantContext.class,
-                new VCFRecordCodec(outHeader, ALLOW_MISSING_FIELDS_IN_HEADER || VALIDATION_STRINGENCY != ValidationStringency.STRICT),
-                outHeader.getVCFRecordComparator(),
-                MAX_RECORDS_IN_RAM,
-                TMP_DIR);
+        
+        if (DISABLE_SORT) {
+            log.info("Lifting variants over and writing the output file. Variants will not be sorted.");
+            
+            sorter = null;
+            }
+        else {
+            log.info("Lifting variants over and sorting (not yet writing the output file.)");
+    
+            sorter = SortingCollection.newInstance(VariantContext.class,
+                    new VCFRecordCodec(outHeader, ALLOW_MISSING_FIELDS_IN_HEADER || VALIDATION_STRINGENCY != ValidationStringency.STRICT),
+                    outHeader.getVCFRecordComparator(),
+                    MAX_RECORDS_IN_RAM,
+                    TMP_DIR);
+            }
 
         ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
 
@@ -348,11 +410,7 @@ public class LiftoverVcf extends CommandLineProgram {
 
             final ReferenceSequence refSeq;
 
-            // if the target is null OR (the target is reverse complemented AND the variant is a non-biallelic indel or mixed), then we cannot lift it over
-            if (target.isNegativeStrand() && (ctx.isMixed() || ctx.isIndel() && !ctx.isBiallelic())) {
-                rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_INDEL);
-
-            } else if (!refSeqs.containsKey(target.getContig())) {
+            if (!refSeqs.containsKey(target.getContig())) {
                 rejectVariant(ctx, FILTER_NO_TARGET);
 
                 final String missingContigMessage = "Encountered a contig, " + target.getContig() + " that is not part of the target reference.";
@@ -365,10 +423,10 @@ public class LiftoverVcf extends CommandLineProgram {
             } else {
                 refSeq = refSeqs.get(target.getContig());
 
-                final VariantContext liftedVC = LiftoverUtils.liftVariant(ctx, target, refSeq, WRITE_ORIGINAL_POSITION);
+                final VariantContext liftedVC = LiftoverUtils.liftVariant(ctx, target, refSeq, WRITE_ORIGINAL_POSITION, WRITE_ORIGINAL_ALLELES);
                 // the liftedVC can be null if the liftover fails because of a problem with reverse complementing
                 if (liftedVC == null) {
-                    rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_INDEL);
+                    rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_REV_COMP);
                 } else {
                     tryToAddVariant(liftedVC, refSeq, ctx);
                 }
@@ -404,34 +462,43 @@ public class LiftoverVcf extends CommandLineProgram {
             log.info("no successfully lifted variants");
         }
 
-        rejects.close();
+        if (RECOVER_SWAPPED_REF_ALT) {
+            log.info(totalTrackedAsSwapRefAlt, " variants were lifted by swapping REF/ALT alleles.");
+        } else {
+            log.warn(totalTrackedAsSwapRefAlt, " variants with a swapped REF/ALT were identified, but were not recovered.  See RECOVER_SWAPPED_REF_ALT and associated caveats.");
+        }
+
+        rejectedRecords.close();
         in.close();
 
-        ////////////////////////////////////////////////////////////////////////
-        // Write the sorted outputs to the final output file
-        ////////////////////////////////////////////////////////////////////////
-        sorter.doneAdding();
-        progress = new ProgressLogger(log, 1000000, "written");
-        log.info("Writing out sorted records to final VCF.");
-
-        for (final VariantContext ctx : sorter) {
-            out.add(ctx);
-            progress.record(ctx.getContig(), ctx.getStart());
+        if (!DISABLE_SORT) { 
+            ////////////////////////////////////////////////////////////////////////
+            // Write the sorted outputs to the final output file
+            ////////////////////////////////////////////////////////////////////////
+            sorter.doneAdding();
+            progress = new ProgressLogger(log, 1000000, "written");
+            log.info("Writing out sorted records to final VCF.");
+    
+            for (final VariantContext ctx : sorter) {
+                this.acceptedRecords.add(ctx);
+                progress.record(ctx.getContig(), ctx.getStart());
+            }
+    
+            sorter.cleanup();
         }
-        out.close();
 
-        sorter.cleanup();
-
+        this.acceptedRecords.close();
+        
         return 0;
     }
 
     private void rejectVariant(final VariantContext ctx, final String reason) {
-        rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
+        rejectedRecords.add(new VariantContextBuilder(ctx).filter(reason).make());
         failedLiftover++;
         trackLiftedVariantContig(rejectsByContig, ctx.getContig());
     }
 
-    private void trackLiftedVariantContig(Map<String, Long> map, String contig) {
+    private void trackLiftedVariantContig(final Map<String, Long> map, final String contig) {
         Long val = map.get(contig);
         if (val == null) {
             val = 0L;
@@ -440,13 +507,22 @@ public class LiftoverVcf extends CommandLineProgram {
         map.put(contig, ++val);
     }
 
+    private void addAndTrack(final VariantContext toAdd, final VariantContext source) {
+        trackLiftedVariantContig(liftedBySourceContig, source.getContig());
+        trackLiftedVariantContig(liftedByDestContig, toAdd.getContig());
+        if (!DISABLE_SORT) { //we're sorting the variants
+            sorter.add(toAdd);
+        } else {
+            this.acceptedRecords.add(toAdd);
+        }
+    }
+
     /**
      *  utility function to attempt to add a variant. Checks that the reference allele still matches the reference (which may have changed)
      *
      * @param vc new {@link VariantContext}
      * @param refSeq {@link ReferenceSequence} of new reference
      * @param source the original {@link VariantContext} to use for putting the original location information into vc
-     * @return true if successful, false if failed due to mismatching reference allele.
      */
     private void tryToAddVariant(final VariantContext vc, final ReferenceSequence refSeq, final VariantContext source) {
         if (!refSeq.getName().equals(vc.getContig())) {
@@ -462,10 +538,14 @@ public class LiftoverVcf extends CommandLineProgram {
 
                 if (!refString.equalsIgnoreCase(allele.getBaseString())) {
                     // consider that the ref and the alt may have been swapped in a simple biallelic SNP
-                    if (vc.isBiallelic() && vc.isSNP() &&
-                            refString.equalsIgnoreCase(vc.getAlternateAllele(0).getBaseString())) {
-                        sorter.add(LiftoverUtils.swapRefAlt(vc, TAGS_TO_REVERSE, TAGS_TO_DROP));
-                        return;
+                    if (vc.isBiallelic() && vc.isSNP() && refString.equalsIgnoreCase(vc.getAlternateAllele(0).getBaseString())) {
+                        if (RECOVER_SWAPPED_REF_ALT) {
+                            totalTrackedAsSwapRefAlt++;
+                            addAndTrack(LiftoverUtils.swapRefAlt(vc, TAGS_TO_REVERSE, TAGS_TO_DROP), source);
+                            return;
+                        } else {
+                            totalTrackedAsSwapRefAlt++;
+                        }
                     }
                     mismatchesReference = true;
                 }
@@ -474,16 +554,15 @@ public class LiftoverVcf extends CommandLineProgram {
         }
 
         if (mismatchesReference) {
-            rejects.add(new VariantContextBuilder(source)
+            rejectedRecords.add(new VariantContextBuilder(source)
                     .filter(FILTER_MISMATCHING_REF_ALLELE)
                     .attribute(ATTEMPTED_LOCUS, String.format("%s:%d-%d", vc.getContig(), vc.getStart(), vc.getEnd()))
+                    .attribute(ATTEMPTED_ALLELES, vc.getReference().toString() + "->" + String.join(",", vc.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.toList())))
                     .make());
             failedAlleleCheck++;
             trackLiftedVariantContig(rejectsByContig, source.getContig());
         } else {
-            trackLiftedVariantContig(liftedBySourceContig, source.getContig());
-            trackLiftedVariantContig(liftedByDestContig, vc.getContig());
-            sorter.add(vc);
+            addAndTrack(vc, source);
         }
     }
 }

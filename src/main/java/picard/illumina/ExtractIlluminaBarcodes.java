@@ -52,14 +52,21 @@ import picard.illumina.parser.readers.LocsFileReader;
 import picard.util.IlluminaUtil;
 import picard.util.StringDistanceUtils;
 import picard.util.TabbedTextFileWithHeaderParser;
+import picard.util.ThreadPoolExecutorUtil;
 import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.text.NumberFormat;
-import java.util.*;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -87,13 +94,21 @@ import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
 @DocumentedFeature
 public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
-    /** Column header for the first barcode sequence (preferred). */
+    /**
+     * Column header for the first barcode sequence (preferred).
+     */
     public static final String BARCODE_SEQUENCE_COLUMN = "barcode_sequence";
-    /** Column header for the first barcode sequence. */
+    /**
+     * Column header for the first barcode sequence.
+     */
     public static final String BARCODE_SEQUENCE_1_COLUMN = "barcode_sequence_1";
-    /** Column header for the barcode name. */
+    /**
+     * Column header for the barcode name.
+     */
     public static final String BARCODE_NAME_COLUMN = "barcode_name";
-    /** Column header for the library name. */
+    /**
+     * Column header for the library name.
+     */
     public static final String LIBRARY_NAME_COLUMN = "library_name";
 
     static final String USAGE_SUMMARY = "Tool determines the barcode for each read in an Illumina lane.  ";
@@ -105,7 +120,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             "sample (B) and not molecular barcodes (M).</p>" +
             "" +
             "<p>Barcodes can be provided in the form of a list (BARCODE_FILE) or a string representing the barcode (BARCODE).  " +
-            "The BARCODE_FILE contains multiple fields including '" + BARCODE_SEQUENCE_COLUMN + "' (or '"+ BARCODE_SEQUENCE_1_COLUMN + "'), " +
+            "The BARCODE_FILE contains multiple fields including '" + BARCODE_SEQUENCE_COLUMN + "' (or '" + BARCODE_SEQUENCE_1_COLUMN + "'), " +
             "'barcode_sequence_2' (optional), '" + BARCODE_NAME_COLUMN + "', and '" + LIBRARY_NAME_COLUMN + "'. " +
             "In contrast, the BARCODE argument is used for runs with reads containing a single " +
             "barcode (nonmultiplexed) and can be added directly as a string of text e.g. BARCODE=CAATAGCG.</p>" +
@@ -161,8 +176,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     public List<String> BARCODE = new ArrayList<>();
 
     @Argument(doc = "Tab-delimited file of barcode sequences, barcode name and, optionally, library name.  " +
-            "Barcodes must be unique and all the same length.  Column headers must be '" + BARCODE_SEQUENCE_COLUMN + "' (or '"+ BARCODE_SEQUENCE_1_COLUMN + "'), " +
-            "'barcode_sequence_2' (optional), '" + BARCODE_NAME_COLUMN + "', and '" + LIBRARY_NAME_COLUMN + "'." , mutex = {"BARCODE"})
+            "Barcodes must be unique and all the same length.  Column headers must be '" + BARCODE_SEQUENCE_COLUMN + "' (or '" + BARCODE_SEQUENCE_1_COLUMN + "'), " +
+            "'barcode_sequence_2' (optional), '" + BARCODE_NAME_COLUMN + "', and '" + LIBRARY_NAME_COLUMN + "'.", mutex = {"BARCODE"})
     public File BARCODE_FILE;
 
     @Argument(doc = "Per-barcode and per-lane metrics written to this file.", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME)
@@ -317,26 +332,12 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 extractors.add(extractor);
             }
         }
-        try {
-            for (final PerTileBarcodeExtractor extractor : extractors) {
-                pool.submit(extractor);
-            }
-            pool.shutdown();
-            // Wait a while for existing tasks to terminate
-            if (!pool.awaitTermination(6, TimeUnit.HOURS)) {
-                LOG.error("Barcode extractor thread pool timeout exceeded... shutting down.");
-                pool.shutdownNow(); // Cancel any still-executing tasks
-                // Wait a while for tasks to respond to being cancelled
-                if (!pool.awaitTermination(60, TimeUnit.SECONDS))
-                    LOG.error("Pool did not terminate");
-                return 1;
-            }
-        } catch (final Throwable e) {
-            // (Re-)Cancel if current thread also interrupted
-            LOG.error(e, "Parent thread encountered problem submitting extractors to thread pool or awaiting shutdown of threadpool.  Attempting to kill threadpool.");
-            pool.shutdownNow();
-            return 2;
+
+        for (final PerTileBarcodeExtractor extractor : extractors) {
+            pool.submit(extractor);
         }
+        pool.shutdown();
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Per tile extractor executor", pool, Duration.ofMinutes(5));
 
         LOG.info("Processed " + extractors.size() + " tiles.");
         for (final PerTileBarcodeExtractor extractor : extractors) {
@@ -371,9 +372,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     public static void finalizeMetrics(final Map<String, BarcodeMetric> barcodeToMetrics,
                                        final BarcodeMetric noMatchMetric) {
         // Finish metrics tallying.
-        int totalReads = noMatchMetric.READS;
-        int totalPfReads = noMatchMetric.PF_READS;
-        int totalPfReadsAssigned = 0;
+        long totalReads = noMatchMetric.READS;
+        long totalPfReads = noMatchMetric.PF_READS;
+        long totalPfReadsAssigned = 0;
         for (final BarcodeMetric barcodeMetric : barcodeToMetrics.values()) {
             totalReads += barcodeMetric.READS;
             totalPfReads += barcodeMetric.PF_READS;
@@ -485,39 +486,45 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     }
 
     private void parseBarcodeFile(final ArrayList<String> messages) {
-        final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE);
-        final String sequenceColumn = barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)
+        try (final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE)) {
+            final String sequenceColumn = barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)
                 ? BARCODE_SEQUENCE_COLUMN : barcodesParser.hasColumn(BARCODE_SEQUENCE_1_COLUMN)
                 ? BARCODE_SEQUENCE_1_COLUMN : null;
-        if (sequenceColumn == null) {
-            messages.add(BARCODE_FILE + " does not have " + BARCODE_SEQUENCE_COLUMN + " or " +
-                    BARCODE_SEQUENCE_1_COLUMN + " column header");
-            return;
-        }
-        final boolean hasBarcodeName = barcodesParser.hasColumn(BARCODE_NAME_COLUMN);
-        final boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
-        final int numBarcodes = readStructure.sampleBarcodes.length();
-        final Set<String> barcodes = new HashSet<>();
-        for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
-            final String[] bcStrings = new String[numBarcodes];
-            int barcodeNum = 1;
-            for (final ReadDescriptor rd : readStructure.descriptors) {
-                if (rd.type != ReadType.Barcode) continue;
-                final String header = barcodeNum == 1 ? sequenceColumn : "barcode_sequence_" + String.valueOf(barcodeNum);
-                bcStrings[barcodeNum - 1] = row.getField(header);
-                barcodeNum++;
+            if (sequenceColumn == null) {
+                messages.add(BARCODE_FILE + " does not have " + BARCODE_SEQUENCE_COLUMN + " or " +
+                        BARCODE_SEQUENCE_1_COLUMN + " column header");
+                return;
             }
-            final String bcStr = IlluminaUtil.barcodeSeqsToString(bcStrings);
-            if (barcodes.contains(bcStr)) {
-                messages.add("Barcode " + bcStr + " specified more than once in " + BARCODE_FILE);
+            final boolean hasBarcodeName = barcodesParser.hasColumn(BARCODE_NAME_COLUMN);
+            final boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
+            final int numBarcodes = readStructure.sampleBarcodes.length();
+            final Set<String> barcodes = new HashSet<>();
+            for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
+                final String[] bcStrings = new String[numBarcodes];
+                int barcodeNum = 0;
+                for (final ReadDescriptor rd : readStructure.descriptors) {
+                    if (rd.type != ReadType.Barcode) continue;
+                    final String header = barcodeNum == 0 ? sequenceColumn : "barcode_sequence_" + (1 + barcodeNum);
+                    final String field = row.getField(header);
+                    if (field == null) {
+                        messages.add(String.format("Null barcode in column %s of row: %s", header, row.getCurrentLine()));
+                        bcStrings[barcodeNum] = "";
+                    } else {
+                        bcStrings[barcodeNum] = field;
+                    }
+                    ++barcodeNum;
+                }
+                final String bcStr = IlluminaUtil.barcodeSeqsToString(bcStrings);
+                if (barcodes.contains(bcStr)) {
+                    messages.add("Barcode " + bcStr + " specified more than once in " + BARCODE_FILE);
+                }
+                barcodes.add(bcStr);
+                final String barcodeName = (hasBarcodeName ? row.getField(BARCODE_NAME_COLUMN) : "");
+                final String libraryName = (hasLibraryName ? row.getField(LIBRARY_NAME_COLUMN) : "");
+                final BarcodeMetric metric = new BarcodeMetric(barcodeName, libraryName, bcStr, bcStrings);
+                barcodeToMetrics.put(StringUtil.join("", bcStrings), metric);
             }
-            barcodes.add(bcStr);
-            final String barcodeName = (hasBarcodeName ? row.getField(BARCODE_NAME_COLUMN) : "");
-            final String libraryName = (hasLibraryName ? row.getField(LIBRARY_NAME_COLUMN) : "");
-            final BarcodeMetric metric = new BarcodeMetric(barcodeName, libraryName, bcStr, bcStrings);
-            barcodeToMetrics.put(StringUtil.join("", bcStrings), metric);
         }
-        barcodesParser.close();
     }
 
     /**
@@ -544,27 +551,27 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         /**
          * The total number of reads matching the barcode.
          */
-        public int READS = 0;
+        public long READS = 0;
         /**
          * The number of PF reads matching this barcode (always less than or equal to READS).
          */
-        public int PF_READS = 0;
+        public long PF_READS = 0;
         /**
          * The number of all reads matching this barcode that matched with 0 errors or no-calls.
          */
-        public int PERFECT_MATCHES = 0;
+        public long PERFECT_MATCHES = 0;
         /**
          * The number of PF reads matching this barcode that matched with 0 errors or no-calls.
          */
-        public int PF_PERFECT_MATCHES = 0;
+        public long PF_PERFECT_MATCHES = 0;
         /**
          * The number of all reads matching this barcode that matched with 1 error or no-call.
          */
-        public int ONE_MISMATCH_MATCHES = 0;
+        public long ONE_MISMATCH_MATCHES = 0;
         /**
          * The number of PF reads matching this barcode that matched with 1 error or no-call.
          */
-        public int PF_ONE_MISMATCH_MATCHES = 0;
+        public long PF_ONE_MISMATCH_MATCHES = 0;
         /**
          * The fraction of all reads in the lane that matched to this barcode.
          */

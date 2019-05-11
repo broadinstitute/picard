@@ -42,7 +42,7 @@ public class BamToBfqTest {
 
             Assert.assertEquals(Files.readAllBytes(output.toPath()), Files.readAllBytes(expectedBFQ.toPath()));
         } finally {
-            TestUtil.recursiveDelete(analysisDir);
+            IOUtil.recursiveDelete(analysisDir.toPath());
         }
     }
 }

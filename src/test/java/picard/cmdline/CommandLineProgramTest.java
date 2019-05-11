@@ -1,5 +1,6 @@
 package picard.cmdline;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,6 +10,11 @@ import java.util.Map;
  * Utility class for CommandLine Program testing.
  */
 public abstract class CommandLineProgramTest {
+
+    public static final File REFERENCE_TEST_DIR = new File("testdata/picard/reference");
+    public static final File CHR_M_REFERENCE = new File(REFERENCE_TEST_DIR,"chrM.reference.fasta");
+    public static final File CHR_M_DICT = new File(REFERENCE_TEST_DIR,"chrM.reference.dict");
+
     public abstract String getCommandLineProgramName();
 
     /**

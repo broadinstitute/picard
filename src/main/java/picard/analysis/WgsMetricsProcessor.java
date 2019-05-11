@@ -46,12 +46,14 @@ public interface WgsMetricsProcessor {
      * @param file               MetricsFile for result of collector's work
      * @param includeBQHistogram include base quality histogram
      * @param dupeFilter         counting filter for duplicate reads
+     * @param adapterFilter      counting filter for adapter reads
      * @param mapqFilter         counting filter for mapping quality
      * @param pairFilter         counting filter for reads without a mapped mate pair
      */
-    void addToMetricsFile(final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> file,
+    void addToMetricsFile(final MetricsFile<WgsMetrics, Integer> file,
             final boolean includeBQHistogram,
             final CountingFilter dupeFilter,
+            final CountingFilter adapterFilter,
             final CountingFilter mapqFilter,
             final CountingPairedFilter pairFilter);
 }

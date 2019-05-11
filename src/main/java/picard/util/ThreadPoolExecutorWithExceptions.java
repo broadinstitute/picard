@@ -14,6 +14,8 @@ import java.util.concurrent.TimeUnit;
  * while executing
  */
 public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
+    public Throwable exception = null;
+
     /**
      * Creates a fixed size thread pool executor that will rethrow exceptions from submitted jobs.
      *
@@ -40,7 +42,16 @@ public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
             }
         }
         if (t != null) {
+            exception = t;
             throw new PicardException(t.getMessage(), t);
         }
+    }
+
+    @Override
+    protected void beforeExecute(Thread t, Runnable r) {
+        super.beforeExecute(t, r);
+        t.setUncaughtExceptionHandler((t1, e) -> {
+            throw new PicardException("Uncaught exception in thread: " + t1.getName() + " : " + e.getMessage(), e);
+        });
     }
 }

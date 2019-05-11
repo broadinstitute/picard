@@ -364,17 +364,17 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
                 tryPollingTheToMarkQueue(true, null);
             }
 
-            /** Since we have no more records to read in, and no more records that need duplicate marking run, we
-             * update our coordinate to past the end of the reference
+            /* Since we have no more records to read in, and no more records that need duplicate marking run, we
+              update our coordinate to past the end of the reference
              */
             referenceIndex = header.getSequenceDictionary().getSequences().size();
 
-            /** Now we recurse, so that we can flush from the outputBuffer until it is empty, then return null when
+            /* Now we recurse, so that we can flush from the outputBuffer until it is empty, then return null when
              * all of the input, queue, and buffer are empty */
             return markDuplicatesAndGetTheNextAvailable();
         }
 
-        /** We need to retrieve more records from the input iterator and duplicate mark, until we can return one that
+        /* We need to retrieve more records from the input iterator and duplicate mark, until we can return one that
          *  has been through duplicate marking.
          */
         while (backingIterator.hasNext()) {
@@ -390,7 +390,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
             // remove duplicate information
             record.setDuplicateReadFlag(false);
 
-            /** Check for pairs that have both ends mapped and missing mate cigar. */
+            /* Check for pairs that have both ends mapped and missing mate cigar. */
             if (ignoreDueToMissingMateCigar(samRecordWithOrdinal)) {
                 continue;
             }
@@ -420,7 +420,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
                 // check that the minimumDistance was not too small
                 checkForMinimumDistanceFailure(readEnds);
 
-                /**
+                /*
                  * If we can do some duplicate marking, lets do it!
                  * IMPORTANT: this does not flush the to-mark-queue, so the minimum distance needs to be set for us to infer
                  * which records will never be supplemented (i.e. are non-duplicate).

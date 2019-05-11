@@ -60,7 +60,7 @@ public class CollectIndependentReplicatesMetricTest {
 
     @AfterTest
     public void tearDown() {
-        TestUtil.recursiveDelete(bamOutDir);
+        IOUtil.recursiveDelete(bamOutDir.toPath());
     }
 
     @DataProvider(name = "simpleTests")

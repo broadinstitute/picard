@@ -41,11 +41,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class defines the individual test cases to run. The actual running of the test is done
@@ -143,7 +139,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
             }
 
         } finally {
-            TestUtil.recursiveDelete(outputDir);
+            IOUtil.recursiveDelete(outputDir.toPath());
         }
     }
 
@@ -199,7 +195,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         markDuplicates.PROGRAM_RECORD_ID = null;
         Assert.assertEquals(markDuplicates.doWork(), 0);
         Assert.assertEquals(markDuplicates.numOpticalDuplicates(), expectedNumOpticalDuplicates);
-        TestUtil.recursiveDelete(outputDir);
+        IOUtil.recursiveDelete(outputDir.toPath());
 
     }
 
@@ -218,7 +214,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addMappedFragment(2, 41212324, true, "50M", DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
-            record.setAttribute(barcodeTag, "Barcode1");
+            record.setAttribute(barcodeTag, "GACT");
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
         tester.runTest();
@@ -234,6 +230,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
             record.setAttribute(barcodeTag, "Barcode1");
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.addArg("ALLOW_NON_DNA_UMI=" + true);
         tester.runTest();
     }
 
@@ -245,7 +242,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addMatePair("RUNID:2:2:15993:13362", 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
-            record.setAttribute(barcodeTag, "Barcode1");
+            record.setAttribute(barcodeTag, "ATGC");
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
         tester.runTest();
@@ -267,10 +264,10 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         final String barcodeTag = "BC";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
             if (record.getReadName().equals(readNameOne) || record.getReadName().equals(readNameTwo)) {
-                record.setAttribute(barcodeTag, "Barcode1");
+                record.setAttribute(barcodeTag, "AAAA");
             }
             else if (record.getReadName().equals(readNameThree)) {
-                record.setAttribute(barcodeTag, "Barcode2");
+                record.setAttribute(barcodeTag, "CCCC");
             }
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
@@ -294,15 +291,15 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         final String readOneBarcodeTag = "BX"; // want the same tag as the second end, since this is allowed
         final String readTwoBarcodeTag = "BX";
         for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
-            record.setAttribute(barcodeTag, "Barcode1"); // same barcode
+            record.setAttribute(barcodeTag, "ATC"); // same barcode
             if (record.getFirstOfPairFlag()) { // always the same value for the first end
-                record.setAttribute(readOneBarcodeTag, "readOne1");
+                record.setAttribute(readOneBarcodeTag, "ACA");
             }
             else { // second end
                 if (record.getReadName().equals(readNameOne) || record.getReadName().equals(readNameTwo)) {
-                    record.setAttribute(readTwoBarcodeTag, "readTwo1");
+                    record.setAttribute(readTwoBarcodeTag, "GTC");
                 } else if (record.getReadName().equals(readNameThree)) {
-                    record.setAttribute(readTwoBarcodeTag, "readTwo2");
+                    record.setAttribute(readTwoBarcodeTag, "CGA");
                 }
             }
         }
@@ -310,6 +307,73 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addArg("READ_ONE_BARCODE_TAG=" + readOneBarcodeTag);
         tester.addArg("READ_TWO_BARCODE_TAG=" + readTwoBarcodeTag);
 
+        tester.runTest();
+    }
+
+    @DataProvider(name = "testDuplexUmiDataProvider")
+    private Object[][] testDuplexUmiDataProvider() {
+        return new Object[][]{
+                {
+                        // Test case where UMIs are not duplex, but are the same.
+                        false,                                // Use duplex UMI (true), or single stranded UMI (false)
+                        Arrays.asList("ATC", "ATC"),          // UMIs
+                        Arrays.asList(4, 4),                  // First of pair alignment start
+                        Arrays.asList(10, 10),                // Second of pair alignment start
+                        Arrays.asList(false, true),           // Is duplicate
+                        Arrays.asList(false, false),          // Negative Strand Flag of first in pair
+                        Arrays.asList(true, true),            // Negative Strand Flag of second in pair
+                },{
+                        // Test case where UMIs are not duplex, but are different.  None of the reads should be duplicates.
+                        false,                                // Use duplex UMI (true), or single stranded UMI (false)
+                        Arrays.asList("ATC", "GCG"),          // UMIs
+                        Arrays.asList(4, 4),                  // First of pair alignment start
+                        Arrays.asList(10, 10),                // Second of pair alignment start
+                        Arrays.asList(false, false),          // Is duplicate
+                        Arrays.asList(false, false),          // Negative Strand Flag of first in pair
+                        Arrays.asList(true, true),            // Negative Strand Flag of second in pair
+                },
+                {
+                        // Two fragments, one top and bottom strand that are duplicates of each other.
+                        true,                                // Use duplex UMI (true), or single stranded UMI (false)
+                        Arrays.asList("AAA-GGG", "GGG-AAA"), // UMIs
+                        Arrays.asList(4, 10),                // First of pair alignment start
+                        Arrays.asList(10, 4),                // Second of pair alignment start
+                        Arrays.asList(false, true),          // Is duplicate
+                        Arrays.asList(false, true),          // Negative Strand Flag of first in pair
+                        Arrays.asList(true, false),          // Negative Strand Flag of second in pair
+                },
+                {
+                        // Two fragments, one top and bottom strand that are not duplicates of each other but may
+                        // naively appear to be duplicates because they have the same UMI (but not the same
+                        // top strand normalized UMI).
+                        true,                                // Use duplex UMI (true), or single stranded UMI (false)
+                        Arrays.asList("AAA-GGG", "AAA-GGG"), // UMIs
+                        Arrays.asList(4, 10),                // First of pair alignment start
+                        Arrays.asList(10, 4),                // Second of pair alignment start
+                        Arrays.asList(false, false),         // Is duplicate
+                        Arrays.asList(false, true),          // Negative Strand Flag of first in pair
+                        Arrays.asList(true, false),          // Negative Strand Flag of second in pair
+                },
+
+        };
+    }
+
+    @Test(dataProvider = "testDuplexUmiDataProvider")
+    public void testWithUMIs(final boolean duplexUmi, final List<String> UMIs, final List<Integer> alignmentStart1,
+                             final List<Integer> alignmentStart2, final List<Boolean> isDuplicate,
+                             final List<Boolean> isFirstNegativeStrand, final List<Boolean> isSecondNegativeStrand) {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(10);
+
+        for (int k = 0; k < UMIs.size();k++) {
+            tester.addMatePair("RUNID" + k, 2, 2, alignmentStart1.get(k), alignmentStart2.get(k), false, false, isDuplicate.get(k), isDuplicate.get(k),
+                    "10M", "10M", isFirstNegativeStrand.get(k), isSecondNegativeStrand.get(k),
+                    false, false, false, DEFAULT_BASE_QUALITY, UMIs.get(k));
+        }
+        final String barcodeTag = "RX";
+
+        tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.addArg("DUPLEX_UMI=" + duplexUmi);
         tester.runTest();
     }
 }

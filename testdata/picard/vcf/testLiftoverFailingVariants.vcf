@@ -1,8 +1,0 @@
-##fileformat=VCFv4.1
-##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">
-##INFO=<ID=FLIPPED_AF,Number=A,Type=Float,Description="Flipped Allele Frequency, for testing">
-##INFO=<ID=MAX_AF,Number=A,Type=Float,Description="Maximal Allele Frequency">
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
-chr1	1	.	C	T	100	PASS	AF=0.2;MAX_AF=1.0;FLIPPED_AF=0.8
-chr1	61	.	A	T	100	PASS	AF=0.0;MAX_AF=0.1;FLIPPED_AF=1.0
-chr1	201	.	TT	T	100	PASS	AF=1.0;MAX_AF=0.0

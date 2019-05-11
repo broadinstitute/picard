@@ -1,5 +1,6 @@
 package picard.fingerprint;
 
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.*;
@@ -42,11 +43,11 @@ public class CrosscheckReadGroupFingerprintsTest {
 
     @BeforeClass
     public void setup() throws IOException {
-        NA12891_r1 = SamTestUtils.createIndexedBam(NA12891_r1_sam, NA12891_r1_sam);
-        NA12891_r2 = SamTestUtils.createIndexedBam(NA12891_r2_sam, NA12891_r2_sam);
-        NA12891_named_NA12892_r1 = SamTestUtils.createIndexedBam(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam);
-        NA12892_r1 = SamTestUtils.createIndexedBam(NA12892_r1_sam, NA12892_r1_sam);
-        NA12892_r2 = SamTestUtils.createIndexedBam(NA12892_r2_sam, NA12892_r2_sam);
+        NA12891_r1 = SamTestUtils.createIndexedBamOrCram(NA12891_r1_sam, NA12891_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12891_r2 = SamTestUtils.createIndexedBamOrCram(NA12891_r2_sam, NA12891_r2_sam, SamReader.Type.BAM_TYPE);
+        NA12891_named_NA12892_r1 = SamTestUtils.createIndexedBamOrCram(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12892_r1 = SamTestUtils.createIndexedBamOrCram(NA12892_r1_sam, NA12892_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12892_r2 = SamTestUtils.createIndexedBamOrCram(NA12892_r2_sam, NA12892_r2_sam, SamReader.Type.BAM_TYPE);
 
         lookupMap.put(CrosscheckMetric.DataType.FILE, new ArrayList<>(Arrays.asList("LEFT_FILE", "RIGHT_FILE")));
 
@@ -68,18 +69,18 @@ public class CrosscheckReadGroupFingerprintsTest {
     @DataProvider(name = "bamFilesRGs")
     public Object[][] bamFilesRGs() {
         return new Object[][]{
-                {NA12891_r1, NA12891_r2, false, 0, (NA12891_r1_RGs + NA12891_r2_RGs) + 1},
-                {NA12891_r1, NA12892_r1, false, 0, (NA12891_r1_RGs + NA12892_r1_RGs) + 1},
-                {NA12891_r1, NA12892_r2, false, 0, (NA12891_r1_RGs + NA12892_r2_RGs) + 1},
-                {NA12892_r1, NA12892_r2, false, 0, (NA12892_r1_RGs + NA12892_r2_RGs) + 1},
-                {NA12892_r2, NA12891_r2, false, 0, (NA12892_r2_RGs + NA12891_r2_RGs) + 1},
-                {NA12892_r2, NA12891_r1, false, 0, (NA12892_r2_RGs + NA12891_r1_RGs) + 1},
-                {NA12891_r1, NA12891_r2, true, 0, (NA12891_r1_RGs + NA12891_r2_RGs) + 1},
-                {NA12891_r1, NA12892_r1, true, 1, (NA12891_r1_RGs + NA12892_r1_RGs) + 1},
-                {NA12891_r1, NA12892_r2, true, 1, (NA12891_r1_RGs + NA12892_r2_RGs) + 1},
-                {NA12892_r1, NA12892_r2, true, 0, (NA12892_r1_RGs + NA12892_r2_RGs) + 1},
-                {NA12892_r2, NA12891_r2, true, 1, (NA12892_r2_RGs + NA12891_r2_RGs) + 1},
-                {NA12892_r2, NA12891_r1, true, 1, (NA12892_r2_RGs + NA12891_r1_RGs) + 1}
+                {NA12891_r1, NA12891_r2, false, 0, NA12891_r1_RGs + NA12891_r2_RGs },
+                {NA12891_r1, NA12892_r1, false, 0, NA12891_r1_RGs + NA12892_r1_RGs },
+                {NA12891_r1, NA12892_r2, false, 0, NA12891_r1_RGs + NA12892_r2_RGs },
+                {NA12892_r1, NA12892_r2, false, 0, NA12892_r1_RGs + NA12892_r2_RGs },
+                {NA12892_r2, NA12891_r2, false, 0, NA12892_r2_RGs + NA12891_r2_RGs },
+                {NA12892_r2, NA12891_r1, false, 0, NA12892_r2_RGs + NA12891_r1_RGs },
+                {NA12891_r1, NA12891_r2, true, 0, NA12891_r1_RGs + NA12891_r2_RGs },
+                {NA12891_r1, NA12892_r1, true, 1, NA12891_r1_RGs + NA12892_r1_RGs },
+                {NA12891_r1, NA12892_r2, true, 1, NA12891_r1_RGs + NA12892_r2_RGs },
+                {NA12892_r1, NA12892_r2, true, 0, NA12892_r1_RGs + NA12892_r2_RGs },
+                {NA12892_r2, NA12891_r2, true, 1, NA12892_r2_RGs + NA12891_r2_RGs },
+                {NA12892_r2, NA12891_r1, true, 1, NA12892_r2_RGs + NA12891_r1_RGs}
         };
     }
 
@@ -98,7 +99,7 @@ public class CrosscheckReadGroupFingerprintsTest {
                 "EXPECT_ALL_GROUPS_TO_MATCH=" + expectAllMatch
         };
 
-        doTest(args, metrics, expectedRetVal, expectedNMetrics * (expectedNMetrics - 1) / 2, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
+        doTest(args, metrics, expectedRetVal, expectedNMetrics * expectedNMetrics , CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
 
     @DataProvider(name = "bamFilesLBs")

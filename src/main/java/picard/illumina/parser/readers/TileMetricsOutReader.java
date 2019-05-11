@@ -14,7 +14,7 @@ import java.util.NoSuchElementException;
  * is essentially a struct.
  *
  * File Format:
- * byte 0 (unsigned byte) = The version number which MUST be 2 or an exception will be thrown
+ * byte 0 (unsigned byte) = The version number which must agree with the constructor parameter or an exception will be thrown
  * byte 1 (unsigned byte) = The record size which must be 10 or an exception will be thrown
  * bytes 3 + (current_record * 10) to (current_record * 10 + 10) (TileMetrics Record) = The actual records each of size 10 that
  *          get converted into IlluminaPhasingMetrics objects
@@ -45,12 +45,12 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
 
         final int actualVersion = UnsignedTypeUtil.uByteToInt(header.get());
         if (actualVersion != version.version) {
-            throw new PicardException("TileMetricsOutReader expects the version number to be " + version.version + ".  Actual Version in Header( " + actualVersion + ")");
+            throw new PicardException("TileMetricsOutReader expects the version number to be " + version.version + ".  Actual Version in Header(" + actualVersion + ")");
         }
 
         final int actualRecordSize = UnsignedTypeUtil.uByteToInt(header.get());
         if (version.recordSize != actualRecordSize) {
-            throw new PicardException("TileMetricsOutReader expects the record size to be " + version.recordSize + ".  Actual Record Size in Header( " + actualRecordSize + ")");
+            throw new PicardException("TileMetricsOutReader expects the record size to be " + version.recordSize + ".  Actual Record Size in Header(" + actualRecordSize + ")");
         }
         if (version == TileMetricsVersion.THREE) {
             this.density = UnsignedTypeUtil.uIntToFloat(header.getInt());
@@ -82,7 +82,6 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
     public static class IlluminaTileMetrics {
         private final IlluminaLaneTileCode laneTileCode;
         private final float metricValue;
-        private float metricValue2;
         private byte type;
 
         public IlluminaTileMetrics(final ByteBuffer bb, TileMetricsVersion version) {
@@ -91,7 +90,6 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
                 //need to dump 9 bytes
                 this.type = bb.get();
                 this.metricValue = bb.getFloat();
-                this.metricValue2 = bb.getFloat();
             } else {
                 this.laneTileCode = new IlluminaLaneTileCode(UnsignedTypeUtil.uShortToInt(bb.getShort()), UnsignedTypeUtil.uShortToInt(bb.getShort()),
                         UnsignedTypeUtil.uShortToInt(bb.getShort()));
@@ -133,7 +131,7 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
                 return false;
             }
         }
-        
+
         @Override
         public int hashCode() {
             return String.format("%s:%s:%s:%s", laneTileCode.getLaneNumber(), laneTileCode.getTileNumber(), laneTileCode.getMetricCode(), metricValue).hashCode(); // Slow but adequate.
