@@ -3,25 +3,38 @@ package picard.illumina;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.OtherProgramGroup;
+import picard.util.StringDistanceUtils;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Created by farjoun on 8/21/18.
+ * Program to choose barcodes from a list of candidates and a distance requirement
  */
 @CommandLineProgramProperties(
-        summary = "blah",
-        oneLineSummary = "blah",
+        summary = "...",
+        oneLineSummary = "Program to choose barcodes from a list of candidates and a distance requirement",
         programGroup = OtherProgramGroup.class
 )
 @DocumentedFeature
@@ -42,7 +55,10 @@ public class SelectBarcodes extends CommandLineProgram {
     @Argument
     public boolean ALSO_COMPARE_REVCOMP = false;
 
-    static final List<String> mustHaveBarcodes = new ArrayList<>();
+    @Argument(optional = true)
+    public File DISTANCES = null;
+
+    private static final List<String> mustHaveBarcodes = new ArrayList<>();
     static final List<String> barcodes = new ArrayList<>();
 
     private final List<BitSet> adjacencyMatrix = new ArrayList<>();
@@ -88,7 +104,7 @@ public class SelectBarcodes extends CommandLineProgram {
     private void calculateAjacencyMatrix() {
 
         final List<String> filteredBarcodes = barcodes.stream().filter(b -> {
-                    if (mustHaveBarcodes.stream().anyMatch(m -> !areFarEnoughHamming(b, m))) {
+                    if (mustHaveBarcodes.stream().anyMatch(m -> !areFarEnough(b, m))) {
                         LOG.info(String.format("rejecting barcode: %s, it's too close to a MUST_HAVE barcode.",
                                 b));
                         return false;
@@ -100,45 +116,44 @@ public class SelectBarcodes extends CommandLineProgram {
         barcodes.clear();
         barcodes.addAll(filteredBarcodes);
 
-        try (final PrintWriter writer = new PrintWriter("distances.txt")) {
+        for (int ii = 0; ii < barcodes.size(); ii++) {
+            final BitSet ajacency = new BitSet(barcodes.size());
 
-            for (int ii = 0; ii < barcodes.size(); ii++) {
-                final BitSet ajacency = new BitSet(barcodes.size());
-
-                for (int jj = 0; jj < barcodes.size(); jj++) {
-                    ajacency.set(jj, areFarEnoughLevenshtein(barcodes.get(ii), barcodes.get(jj)));
-                    writer.append(ajacency.get(jj) ? "1" : "0").append(String.valueOf('\t'));
-                }
-                writer.append('\n');
-                adjacencyMatrix.add(ii, ajacency);
+            for (int jj = 0; jj < barcodes.size(); jj++) {
+                ajacency.set(jj, areFarEnough(barcodes.get(ii), barcodes.get(jj)));
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+
+            adjacencyMatrix.add(ii, ajacency);
+        }
+
+        if (DISTANCES != null) {
+            try (final PrintWriter writer = new PrintWriter(DISTANCES)) {
+
+                for (final BitSet ajacency : adjacencyMatrix) {
+
+                    for (int jj = 0; jj < barcodes.size(); jj++) {
+                        writer.append(ajacency.get(jj) ? "1" : "0").append(String.valueOf('\t'));
+                    }
+                    writer.append('\n');
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    static int hamming(final String lhs, final String rhs, final boolean ALSO_COMPARE_REVCOMP) {
-        return ALSO_COMPARE_REVCOMP ? Math.min(picard.util.SequenceUtil.calculateEditDistance(lhs, rhs),
-                picard.util.SequenceUtil.calculateEditDistance(lhs, SequenceUtil.reverseComplement(rhs))) :
-                picard.util.SequenceUtil.calculateEditDistance(lhs, rhs);
-
+    static int levenshtein(final String lhs, final String rhs, final boolean ALSO_COMPARE_REVCOMP, final int farEnough) {
+        final int dist = StringDistanceUtils.levenshteinDistance(lhs.getBytes(), rhs.getBytes(), farEnough);
+        if (!ALSO_COMPARE_REVCOMP){
+            return dist;
+        }
+        final int revCompDist = StringDistanceUtils.levenshteinDistance(SequenceUtil.reverseComplement(lhs).getBytes(), rhs.getBytes(), farEnough);
+        return Math.min(dist, revCompDist);
     }
 
-    static int levenshtein(final String lhs, final String rhs, final boolean ALSO_COMPARE_REVCOMP) {
-        return ALSO_COMPARE_REVCOMP ? Math.min(StringUtils.getLevenshteinDistance(lhs, rhs),
-                StringUtils.getLevenshteinDistance(lhs, SequenceUtil.reverseComplement(rhs))) :
-                StringUtils.getLevenshteinDistance(lhs, rhs);
 
-    }
-
-    private boolean areFarEnoughHamming(final String lhs, final String rhs) {
-
-        return hamming(lhs, rhs, ALSO_COMPARE_REVCOMP) >= FAR_ENOUGH;
-    }
-
-    private boolean areFarEnoughLevenshtein(final String lhs, final String rhs) {
-
-        return levenshtein(lhs, rhs, ALSO_COMPARE_REVCOMP) >= FAR_ENOUGH;
+    private boolean areFarEnough(final String lhs, final String rhs) {
+        return levenshtein(lhs, rhs, ALSO_COMPARE_REVCOMP, FAR_ENOUGH) >= FAR_ENOUGH;
     }
 
     private void openBarcodes() {

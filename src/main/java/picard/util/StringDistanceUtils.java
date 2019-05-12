@@ -41,18 +41,7 @@ public class StringDistanceUtils {
         int numMismatches = 0;
 
         for (int j = 0; j < barcodeBytes.length; j++) {
-            for (int i = 0; (i < barcodeBytes[j].length && readSubsequence[j].length > i); ++i) {
-                if (SequenceUtil.isNoCall(readSubsequence[j][i])) {
-                    continue;
-                }
-                if (!SequenceUtil.basesEqual(barcodeBytes[j][i], readSubsequence[j][i])) {
-                    ++numMismatches;
-                    continue;
-                }
-                if (qualities != null && qualities[j][i] < minimumBaseQuality) {
-                    ++numMismatches;
-                }
-            }
+            numMismatches += hammingDistance(barcodeBytes[j], readSubsequence[j], qualities[j], minimumBaseQuality);
         }
 
         return numMismatches;
@@ -61,9 +50,27 @@ public class StringDistanceUtils {
     /**
      * Compare barcode sequence to bases from read
      *
-     * @return how many bases did not match
+     * @return how many bases did not match.
      */
-    public static int countMismatchesWithIndelEvents(final byte[][] barcodeBytes, final byte[][] readSubsequence, final byte[][] qualities, final int minimumBaseQuality) {
+    public static int countMismatchesLevenshtein(final byte[][] barcodeBytes, final byte[][] readSubsequence, final byte[][] qualities, final int minimumBaseQuality) {
+        int numMismatches = 0;
+
+        for (int j = 0; j < barcodeBytes.length; j++) {
+            numMismatches += levenshteinDistance(barcodeBytes[j], readSubsequence[j], barcodeBytes.length);
+        }
+
+        return numMismatches;
+    }
+
+    /**
+     * Compare barcode sequence to bases from read
+     *
+     *  Based on https://www.pnas.org/content/115/27/E6217 FREE stands for "Filled/truncated Right End Edit"
+     *
+     *
+     * @return how many bases did not match. Doesn't include "forced" gaps (at the end due to a gap in the middle)
+     */
+    public static int countMismatchesWithUnforcedIndels(final byte[][] barcodeBytes, final byte[][] readSubsequence, final byte[][] qualities, final int minimumBaseQuality) {
         int numMismatches = 0;
 
         for (int j = 0; j < barcodeBytes.length; j++) {

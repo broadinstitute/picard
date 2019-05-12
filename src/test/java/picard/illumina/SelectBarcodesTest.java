@@ -144,13 +144,11 @@ public class SelectBarcodesTest {
 
     @Test
     public void testDistance() {
-        Assert.assertEquals(SelectBarcodes.hamming("AATACCAT", "ATGAATTA", true), 4);
-        Assert.assertEquals(SelectBarcodes.levenshtein("AATACCAT", "ATGAATTA", true), 3);
+        Assert.assertEquals(SelectBarcodes.levenshtein("AATACCAT", "ATGAATTA", true, 6), 3);
     }
 
     @Test
     public void testDistance2() {
-        Assert.assertEquals(SelectBarcodes.hamming("CACTTCAT", "ATGAATTA", true), 2);
-        Assert.assertEquals(SelectBarcodes.levenshtein("CACTTCAT", "ATGAATTA", true), 2);
+        Assert.assertEquals(SelectBarcodes.levenshtein("CACTTCAT", "ATGAATTA", true,6), 2);
     }
 }

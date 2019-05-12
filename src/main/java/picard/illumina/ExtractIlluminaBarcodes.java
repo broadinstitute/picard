@@ -50,7 +50,6 @@ import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.illumina.parser.readers.LocsFileReader;
 import picard.util.IlluminaUtil;
-import picard.util.StringDistanceUtils;
 import picard.util.TabbedTextFileWithHeaderParser;
 import picard.util.ThreadPoolExecutorUtil;
 import picard.util.ThreadPoolExecutorWithExceptions;
@@ -61,6 +60,7 @@ import java.text.NumberFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -862,16 +862,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             int numMismatchesInSecondBestBarcode = totalBarcodeReadBases + 1;
 
             for (final BarcodeMetric barcodeMetric : metrics.values()) {
-                final int numMismatches;
-                switch (distanceMode){
-                    case HAMMING:
-                        numMismatches = StringDistanceUtils.countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
-                        break;
-                    case FREE:
-                        numMismatches = StringDistanceUtils.countMismatchesWithIndelEvents(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
-                        break;
+                final int numMismatches = distanceMode.countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
 
-                }
                 if (numMismatches < numMismatchesInBestBarcode) {
                     if (bestBarcodeMetric != null) {
                         numMismatchesInSecondBestBarcode = numMismatchesInBestBarcode;
