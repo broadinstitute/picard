@@ -24,7 +24,6 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -83,7 +82,7 @@ import java.util.List;
  *     java -jar picard.jar CheckFingerprint \
  *          INPUT=sample.bam \
  *          GENOTYPES=sample_genotypes.vcf \
- *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+ *          HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \
  *          OUTPUT=sample_fingerprinting
  * </pre>
  * <br/>
@@ -148,7 +147,7 @@ public class CheckFingerprint extends CommandLineProgram {
                     "    java -jar picard.jar CheckFingerprint \\\n " +
                     "         INPUT=sample.bam \\\n " +
                     "         GENOTYPES=sample_genotypes.vcf \\\n " +
-                    "         HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n " +
+                    "         HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \\\n " +
                     "         OUTPUT=sample_fingerprinting " +
                     "</pre> " +
                     "<br/> " +
@@ -224,7 +223,9 @@ public class CheckFingerprint extends CommandLineProgram {
             outputDetailMetricsFile = DETAIL_OUTPUT;
             outputSummaryMetricsFile = SUMMARY_OUTPUT;
         } else {
-            if (!OUTPUT.endsWith(".")) OUTPUT = OUTPUT + ".";
+            if (!OUTPUT.endsWith(".")) {
+                OUTPUT += ".";
+            }
             outputDetailMetricsFile = new File(OUTPUT + FINGERPRINT_DETAIL_FILE_SUFFIX);
             outputSummaryMetricsFile = new File(OUTPUT + FINGERPRINT_SUMMARY_FILE_SUFFIX);
         }
@@ -242,11 +243,11 @@ public class CheckFingerprint extends CommandLineProgram {
         IOUtil.assertFileIsWritable(outputSummaryMetricsFile);
 
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
+        checker.setReferenceFasta(REFERENCE_SEQUENCE);
         List<FingerprintResults> results;
 
         String observedSampleAlias = null;
-        final boolean isBamOrSamFile = isBamOrSam(inputPath);
-        if (isBamOrSamFile) {
+        if (fileContainsReads(inputPath)) {
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), SAMSequenceDictionaryExtractor.extractDictionary(genotypesPath), true);
             SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), checker.getHeader().getSequenceDictionary(), true);
 
@@ -311,6 +312,7 @@ public class CheckFingerprint extends CommandLineProgram {
         final MetricsFile<FingerprintingSummaryMetrics, ?> summaryFile = getMetricsFile();
         final MetricsFile<FingerprintingDetailMetrics, ?> detailsFile = getMetricsFile();
 
+        boolean allZeroLod = true;
         for (final FingerprintResults fpr : results) {
             final MatchResults mr = fpr.getMatchResults().first();
 
@@ -365,10 +367,19 @@ public class CheckFingerprint extends CommandLineProgram {
 
             summaryFile.addMetric(metrics);
             log.info("Read Group: " + metrics.READ_GROUP + " / " + observedSampleAlias + " vs. " + metrics.SAMPLE + ": LOD = " + metrics.LOD_EXPECTED_SAMPLE);
+
+            allZeroLod &= metrics.LOD_EXPECTED_SAMPLE == 0;
         }
 
         summaryFile.write(outputSummaryMetricsFile);
         detailsFile.write(outputDetailMetricsFile);
+
+        if (allZeroLod) {
+            log.error("No non-zero results found. This is likely an error. " +
+                    "Probable cause: EXPECTED_SAMPLE (if provided) or the sample name from INPUT (if EXPECTED_SAMPLE isn't provided)" +
+                    "isn't a sample in GENOTYPES file.");
+            return 1;
+        }
 
         return 0;
     }
@@ -376,24 +387,27 @@ public class CheckFingerprint extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
 
         try {
-            final boolean isBamOrSamFile = isBamOrSam(IOUtil.getPath(INPUT));
-            if (!isBamOrSamFile && IGNORE_READ_GROUPS) {
-                return new String[]{"The parameter IGNORE_READ_GROUPS can only be used with BAM/SAM inputs."};
+            final boolean fileContainsReads = fileContainsReads(IOUtil.getPath(INPUT));
+            if (!fileContainsReads && IGNORE_READ_GROUPS) {
+                return new String[]{"The parameter IGNORE_READ_GROUPS can only be used with BAM/SAM/CRAM inputs."};
             }
-            if (isBamOrSamFile && OBSERVED_SAMPLE_ALIAS != null) {
+            if (fileContainsReads && OBSERVED_SAMPLE_ALIAS != null) {
                 return new String[]{"The parameter OBSERVED_SAMPLE_ALIAS can only be used with a VCF input."};
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        if (REFERENCE_SEQUENCE == null && INPUT.endsWith(SamReader.Type.CRAM_TYPE.fileExtension())) {
+            return new String[]{"REFERENCE must be provided when using CRAM as input."};
+        }
+
         return super.customCommandLineValidation();
     }
 
-    static boolean isBamOrSam(final File f) {
-        return isBamOrSam(f.toPath());
-    }
-
-    static boolean isBamOrSam(final Path p) {
-        return (p.toUri().getRawPath().endsWith(BamFileIoUtils.BAM_FILE_EXTENSION) || p.toUri().getRawPath().endsWith(IOUtil.SAM_FILE_EXTENSION));
+    static boolean fileContainsReads(final Path p) {
+        return (p.toUri().getRawPath().endsWith(SamReader.Type.BAM_TYPE.fileExtension()) ||
+                p.toUri().getRawPath().endsWith(SamReader.Type.SAM_TYPE.fileExtension()) ||
+                p.toUri().getRawPath().endsWith(SamReader.Type.CRAM_TYPE.fileExtension()));
     }
 }

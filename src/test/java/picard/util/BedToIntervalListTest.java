@@ -62,7 +62,11 @@ public class BedToIntervalListTest {
                 {"overlapping.bed"},
                 {"extended.bed"},
                 {"one_base_interval.bed"},
-                {"zero_base_interval.bed"}
+                {"zero_base_interval.bed"},
+                {"first_base_in_contig.bed"},
+                {"zero_length_interval_at_first_position_in_contig.bed"},
+                {"last_base_in_contig.bed"},
+                {"multi_contig.bed"}
         };
     }
 

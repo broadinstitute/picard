@@ -652,6 +652,17 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
+    @Test
+    public void testOpticalDuplicateBehaviorNullRegex() {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(68);
+        tester.setExpectedOpticalDuplicate(0);
+        tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:1:1:16020:13352", 2, 41212324, 41212319, false, false, true, true, "33S35M", "28S40M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addArg("READ_NAME_REGEX=null");
+        tester.runTest();
+    }
+
     @DataProvider(name = "secondarySupplementaryData")
     public Object[][] secondarySupplementaryData() {
         return new Object[][] {

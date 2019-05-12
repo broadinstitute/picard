@@ -25,16 +25,14 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
@@ -50,7 +48,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static picard.fingerprint.CrosscheckFingerprints.CrosscheckMode.CHECK_SAME_SAMPLE;
+import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
 
 /**
  * Checks that all data in the set of input files appear to come from the same
@@ -92,7 +90,7 @@ import static picard.fingerprint.CrosscheckFingerprints.CrosscheckMode.CHECK_SAM
  * <pre>
  *     java -jar picard.jar CrosscheckFingerprints \
  *          INPUT=sample.with.many.readgroups.bam \
- *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+ *          HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \
  *          LOD_THRESHOLD=-5 \
  *          OUTPUT=sample.crosscheck_metrics
  * </pre>
@@ -103,7 +101,7 @@ import static picard.fingerprint.CrosscheckFingerprints.CrosscheckMode.CHECK_SAM
  *     java -jar picard.jar CrosscheckFingerprints \
  *          INPUT=sample.one.with.many.readgroups.bam \
  *          INPUT=sample.two.with.many.readgroups.bam \
- *          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \
+ *          HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \
  *          LOD_THRESHOLD=-5 \
  *          EXPECT_ALL_GROUPS_TO_MATCH=true \
  *          OUTPUT=sample.crosscheck_metrics
@@ -144,11 +142,11 @@ import static picard.fingerprint.CrosscheckFingerprints.CrosscheckMode.CHECK_SAM
         summary =
                 "Checks that all data in the set of input files appear to come from the same " +
                         "individual. Can be used to cross-check readgroups, libraries, samples, or files. " +
-                        "Operates on bams/sams and vcfs (including gvcfs). " +
+                        "Operates on bams/sams/crams and vcfs (including gvcfs). " +
                         "\n" +
                         "<h3>Summary</h3>\n" +
                         "Checks if all the genetic data within a set of files appear to come from the same individual. " +
-                        "It quickly determines whether a group's genotype matches that of an input SAM/BAM/VCF by selective sampling, " +
+                        "It quickly determines whether a group's genotype matches that of an input SAM/BAM/CRAM/VCF by selective sampling, " +
                         "and has been designed to work well for low-depth SAM/BAMs (as well as high depth ones and VCFs.) " +
                         "The tool collects fingerprints (essentially, genotype information from different parts of the genome) " +
                         "at the finest level available in the data (readgroup for SAM files " +
@@ -179,7 +177,7 @@ import static picard.fingerprint.CrosscheckFingerprints.CrosscheckMode.CHECK_SAM
                         "<pre>" +
                         "    java -jar picard.jar CrosscheckFingerprints \\\n" +
                         "          INPUT=sample.with.many.readgroups.bam \\\n" +
-                        "          HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n" +
+                        "          HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \\\n" +
                         "          LOD_THRESHOLD=-5 \\\n" +
                         "          OUTPUT=sample.crosscheck_metrics" +
                         " </pre>" +
@@ -189,7 +187,7 @@ import static picard.fingerprint.CrosscheckFingerprints.CrosscheckMode.CHECK_SAM
                         "     java -jar picard.jar CrosscheckFingerprints \\\n" +
                         "           INPUT=sample.one.with.many.readgroups.bam \\\n" +
                         "           INPUT=sample.two.with.many.readgroups.bam \\\n" +
-                        "           HAPLOTYPE_DATABASE=fingerprinting_haplotype_database.txt \\\n" +
+                        "           HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \\\n" +
                         "           LOD_THRESHOLD=-5 \\\n" +
                         "           EXPECT_ALL_GROUPS_TO_MATCH=true \\\n" +
                         "           OUTPUT=sample.crosscheck_metrics" +
@@ -255,7 +253,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     public File SECOND_INPUT_SAMPLE_MAP;
 
     @Argument(doc = "An argument that controls how crosschecking with both INPUT and SECOND_INPUT should occur. ")
-    public CrosscheckMode CROSSCHECK_MODE = CHECK_SAME_SAMPLE;
+    public Fingerprint.CrosscheckMode CROSSCHECK_MODE = CHECK_SAME_SAMPLE;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
             doc = "Optional output file to write metrics to. Default is to write to stdout.")
@@ -338,25 +336,19 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         if (GENOTYPING_ERROR_RATE <= 0 ) {
             return new String[]{"GENOTYPING_ERROR_RATE must be greater than zero. Found " + GENOTYPING_ERROR_RATE};
         }
-        return super.customCommandLineValidation();
-    }
 
-    enum CrosscheckMode implements CommandLineParser.ClpEnum {
-        CHECK_SAME_SAMPLE {
-            @Override
-            public String getHelpDoc() {
-                return "In this mode, each sample in INPUT will only be checked against a single corresponding sample in SECOND_INPUT. " +
-                        "If a corresponding sample cannot be found, the program will proceed, but report the missing samples" +
-                        " and return the value specified in EXIT_CODE_WHEN_MISMATCH. The corresponding samples are those that equal each other, after possible renaming " +
-                        "via INPUT_SAMPLE_MAP and SECOND_INPUT_SAMPLE_MAP. In this mode CROSSCHECK_BY must be SAMPLE.";
-            }
-        },
-        CHECK_ALL_OTHERS {
-            @Override
-            public String getHelpDoc() {
-                return "In this mode, each sample in INPUT will be checked against all the samples in SECOND_INPUT.";
+        //check that reference is provided if using crams as input
+        if (REFERENCE_SEQUENCE == null) {
+            final List<String> allInputs = new ArrayList<>(INPUT);
+            allInputs.addAll(SECOND_INPUT);
+            for (final String input : allInputs) {
+                if (input.endsWith(SamReader.Type.CRAM_TYPE.fileExtension())) {
+                    return new String[]{"REFERENCE must be provided when using CRAM as input."};
+                }
             }
         }
+
+        return super.customCommandLineValidation();
     }
 
     @Override
@@ -374,8 +366,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
         }
 
-        if (!SECOND_INPUT.isEmpty() && CROSSCHECK_MODE == CrosscheckMode.CHECK_ALL_OTHERS) {
-            log.info("SECOND_INPUT is not empty, and CROSSCHECK_MODE==CHECK_ALL_OTHERS. Will only compare fingerprints from INPUT against all the fingerprints in SECOND_INPUT.");
+        if (!SECOND_INPUT.isEmpty() && CROSSCHECK_MODE == Fingerprint.CrosscheckMode.CHECK_ALL_OTHERS) {
+            log.info("SECOND_INPUT is not empty, and CROSSCHECK_MODE==CHECK_ALL_OTHERS. Will compare fingerprints from INPUT against all the fingerprints in SECOND_INPUT.");
         }
 
         if (MATRIX_OUTPUT != null) IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
@@ -387,11 +379,13 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         checker.setAllowDuplicateReads(ALLOW_DUPLICATE_READS);
         checker.setValidationStringency(VALIDATION_STRINGENCY);
+        checker.setReferenceFasta(REFERENCE_SEQUENCE);
 
         final List<String> extensions = new ArrayList<>();
 
-        extensions.add(BamFileIoUtils.BAM_FILE_EXTENSION);
-        extensions.add(IOUtil.SAM_FILE_EXTENSION);
+        extensions.add(SamReader.Type.BAM_TYPE.fileExtension());
+        extensions.add(SamReader.Type.SAM_TYPE.fileExtension());
+        extensions.add(SamReader.Type.CRAM_TYPE.fileExtension());
         extensions.addAll(Arrays.asList(IOUtil.VCF_EXTENSIONS));
 
         final List<Path> inputPaths = IOUtil.getPaths(INPUT);
@@ -420,7 +414,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         if (SECOND_INPUT.isEmpty()) {
             log.info("Cross-checking all " + CROSSCHECK_BY + " against each other");
-            numUnexpected = crossCheckGrouped(fpMap, fpMap, metrics, getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
+            numUnexpected = crossCheckGrouped(fpMap, fpMap, metrics, Fingerprint.getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
         } else {
             log.info("Fingerprinting " + unrolledFiles2.size() + " SECOND_INPUT files.");
 
@@ -436,7 +430,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     break;
                 case CHECK_ALL_OTHERS:
                     log.info("Checking each " + CROSSCHECK_BY + " in INPUT with each " + CROSSCHECK_BY + " in SECOND_INPUT.");
-                    numUnexpected = crossCheckGrouped(fpMap, fpMap2, metrics, getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
+                    numUnexpected = crossCheckGrouped(fpMap, fpMap2, metrics, Fingerprint.getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
                     break;
                 default:
                     throw new IllegalArgumentException("Unpossible!");
@@ -466,8 +460,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     /** Inspects the contents of sampleMapFile building a map of Sample->Sample.
      * Checks for sanity, and then replaces in the fpMap,
-     * @param fpMap
-     * @param sampleMapFile
+     * @param fpMap A fingerprint map from a FingerprintIdDetails to a fingerprint
+     * @param sampleMapFile a file contining two columns, sample name to be mapped, and mapped sample name.
+     *
      */
     private void remapFingerprints(final Map<FingerprintIdDetails, Fingerprint> fpMap, final File sampleMapFile, final String inputFieldName) {
         final Map<String, String> sampleMap = new HashMap<>();
@@ -562,66 +557,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
     }
 
-    public static Function<FingerprintIdDetails, String> getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType CROSSCHECK_BY) {
-        final Function<FingerprintIdDetails, String> groupByTemp;
-        switch (CROSSCHECK_BY) {
-            case READGROUP:
-                groupByTemp = details -> details.platformUnit;
-                break;
-            case LIBRARY:
-                groupByTemp = details -> details.sample + "::" + details.library;
-                break;
-            case FILE:
-                groupByTemp = details -> details.file + "::" + details.sample;
-                break;
-            case SAMPLE:
-                groupByTemp = details -> details.sample;
-                break;
-            default:
-                throw new PicardException("unpossible");
-        }
-
-        // if the groupBy string is null (e.g. a vcf file has no read group info) then the hashcode is
-        // used intending to be unique per object (ignoring possible collisions)
-        return key -> {
-            final String temp = groupByTemp.apply(key);
-            return temp == null ? Integer.toString(key.hashCode()) : temp;
-        };
-    }
-
-    public static Map<FingerprintIdDetails, Fingerprint> mergeFingerprintsBy(
-            final Map<FingerprintIdDetails, Fingerprint> fingerprints,
-            final Function<FingerprintIdDetails, String> by) {
-
-        // collect the various entries according to the grouping "by"
-
-        final Map<String, List<Map.Entry<FingerprintIdDetails, Fingerprint>>> collection =
-                fingerprints.entrySet()
-                        .stream()
-                        .collect(Collectors.groupingBy(entry -> by.apply(entry.getKey())));
-
-        return collection.entrySet().stream()
-                .collect(Collectors.toMap(
-                        entry -> {
-                            // merge the keys (unequal values are eliminated by merge).
-
-                            final FingerprintIdDetails finalId = new FingerprintIdDetails();
-                            entry.getValue().forEach(id -> finalId.merge(id.getKey()));
-                            finalId.group = entry.getKey();
-                            return finalId;
-
-                        }, entry -> {
-                            // merge the values by merging the fingerprints.
-
-                            final FingerprintIdDetails firstDetail = entry.getValue().get(0).getKey();
-                            //use the "by" function to determine the "info" part of the fingerprint
-                            final Fingerprint sampleFp = new Fingerprint(firstDetail.sample, null, by.apply(firstDetail));
-                            entry.getValue().stream().map(Map.Entry::getValue).collect(Collectors.toSet()).forEach(sampleFp::merge);
-                            return sampleFp;
-
-                        }));
-    }
-
     /**
      * Method that crosschecks fingerprints from one list of fingerprints against those in another
      * putting the results in a List of CrosscheckMetics.
@@ -632,8 +567,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                                   final Function<FingerprintIdDetails, String> by,
                                   final CrosscheckMetric.DataType type) {
 
-        final Map<FingerprintIdDetails, Fingerprint> lhsFingerprintsByGroup = mergeFingerprintsBy(lhsFingerprints, by);
-        final Map<FingerprintIdDetails, Fingerprint> rhsFingerprintsByGroup = mergeFingerprintsBy(rhsFingerprints, by);
+        final Map<FingerprintIdDetails, Fingerprint> lhsFingerprintsByGroup = Fingerprint.mergeFingerprintsBy(lhsFingerprints, by);
+        final Map<FingerprintIdDetails, Fingerprint> rhsFingerprintsByGroup = Fingerprint.mergeFingerprintsBy(rhsFingerprints, by);
 
         if (MATRIX_OUTPUT != null) {
             crosscheckMatrix = new double[lhsFingerprintsByGroup.size()][];
@@ -697,8 +632,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                                           final List<CrosscheckMetric> metrics) {
         int unexpectedResults = 0;
 
-        final Map<FingerprintIdDetails, Fingerprint> fingerprints1BySample = mergeFingerprintsBy(fingerprints1, getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
-        final Map<FingerprintIdDetails, Fingerprint> fingerprints2BySample = mergeFingerprintsBy(fingerprints2, getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
+        final Map<FingerprintIdDetails, Fingerprint> fingerprints1BySample = Fingerprint.mergeFingerprintsBy(fingerprints1, Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
+        final Map<FingerprintIdDetails, Fingerprint> fingerprints2BySample = Fingerprint.mergeFingerprintsBy(fingerprints2, Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
 
         final Map<String, FingerprintIdDetails> sampleToDetail1 = fingerprints1BySample.keySet().stream().collect(Collectors.toMap(id -> id.group, id -> id));
         final Map<String, FingerprintIdDetails> sampleToDetail2 = fingerprints2BySample.keySet().stream().collect(Collectors.toMap(id -> id.group, id -> id));

@@ -244,6 +244,11 @@ public class TheoreticalSensitivity {
      * @return Theoretical sensitivity for the given arguments at a constant depth.
      */
     public static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram, final double logOddsThreshold, final int sampleSize, final double alleleFraction, final long randomSeed) {
+        // If the depth is 0 at a particular locus, the sensitivity is trivially 0.0.
+        if (depth == 0) {
+            return 0.0;
+        }
+
         final RouletteWheel qualityRW = new RouletteWheel(trimDistribution(normalizeHistogram(qualityHistogram)));
         final Random randomNumberGenerator = new Random(randomSeed);
         final RandomGenerator rg = new Well19937c(randomSeed);
@@ -350,14 +355,23 @@ public class TheoreticalSensitivity {
     /**
      * Removes trailing zeros in a distribution.  The purpose of this function is to prevent other
      * functions from evaluating in regions where the distribution has zero probability.
+     * If the array consists of only zeros or is empty, an empty array is returned.
+     *
      * @param distribution Distribution of base qualities
      * @return Distribution of base qualities removing any trailing zeros
      */
-     static double[] trimDistribution(final double[] distribution) {
-         int endOfDistribution = distribution.length - 1;
-         while(distribution[endOfDistribution] == 0) {
-             endOfDistribution--;
-         }
+    static double[] trimDistribution(final double[] distribution) {
+        int endOfDistribution = distribution.length;
+        if (distribution.length == 0) {
+            return distribution;
+        }
+
+        // Locate last element in array that is non-zero if it exists.
+        // If there are no non-zero elements, endOfDistribution should be 0.
+        while (distribution[endOfDistribution - 1] == 0) {
+            endOfDistribution--;
+            if (endOfDistribution == 0) break;
+        }
 
         // Remove trailing zeros and return.
         return Arrays.copyOfRange(distribution, 0, endOfDistribution);

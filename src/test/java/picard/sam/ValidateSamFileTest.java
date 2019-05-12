@@ -21,8 +21,10 @@ public class ValidateSamFileTest extends CommandLineProgramTest {
         return new Object[][] {
                 {"nofile", ValidateSamFile.ReturnTypes.FAILED.value()},
                 {"good/sorted-pair.sam", ValidateSamFile.ReturnTypes.SUCCESSFUL.value()},
+                {"good/sorted-pair-v1.6.sam", ValidateSamFile.ReturnTypes.SUCCESSFUL.value()},
                 {"bad/unpaired-mate.sam", ValidateSamFile.ReturnTypes.ERRORS.value()},
                 {"bad/missing-rg-info.sam", ValidateSamFile.ReturnTypes.ERRORS_WARNINGS.value()},
+                {"bad/missing-rg-info-v1.6.sam", ValidateSamFile.ReturnTypes.ERRORS_WARNINGS.value()},
                 {"bad/sorted-pair-missing-rg.sam", ValidateSamFile.ReturnTypes.WARNINGS.value()}
         };
     }

@@ -9,6 +9,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import picard.sam.CleanSam;
@@ -58,7 +59,7 @@ public class CleanSamTester extends SamFileTester {
 
             Assert.assertTrue(validated, "ValidateSamFile failed");
         } finally {
-            TestUtil.recursiveDelete(getOutputDir());
+            IOUtil.recursiveDelete(getOutputDir().toPath());
         }
     }
 }

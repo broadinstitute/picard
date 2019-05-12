@@ -124,25 +124,14 @@ public class BedToIntervalList extends CommandLineProgram {
             header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
             final IntervalList intervalList = new IntervalList(header);
 
-            /**
-             * NB: BED is zero-based, but a BEDCodec by default (since it is returns tribble Features) has an offset of one,
-             * so it returns 1-based starts.  Ugh.  Set to zero.
-             */
-            final FeatureReader<BEDFeature> bedReader = AbstractFeatureReader.getFeatureReader(INPUT.getAbsolutePath(), new BEDCodec(BEDCodec.StartOffset.ZERO), false);
+            final FeatureReader<BEDFeature> bedReader = AbstractFeatureReader.getFeatureReader(INPUT.getAbsolutePath(), new BEDCodec(), false);
             final CloseableTribbleIterator<BEDFeature> iterator = bedReader.iterator();
             final ProgressLogger progressLogger = new ProgressLogger(LOG, (int) 1e6);
 
             while (iterator.hasNext()) {
                 final BEDFeature bedFeature = iterator.next();
                 final String sequenceName = bedFeature.getContig();
-                /**
-                 * NB: BED is zero-based, so we need to add one here to make it one-based.  Please observe we set the start
-                 * offset to zero when creating the BEDCodec.
-                 */
-                final int start = bedFeature.getStart() + 1;
-                /**
-                 * NB: BED is 0-based OPEN (which, for the end is equivalent to 1-based closed).
-                 */
+                final int start = bedFeature.getStart();
                 final int end = bedFeature.getEnd();
                 // NB: do not use an empty name within an interval
                 String name = bedFeature.getName();
@@ -157,7 +146,8 @@ public class BedToIntervalList extends CommandLineProgram {
                     throw new PicardException(String.format("Start on sequence '%s' was less than one: %d", sequenceName, start));
                 } else if (sequenceRecord.getSequenceLength() < start) {
                     throw new PicardException(String.format("Start on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), start));
-                } else if (end < 1) {
+                } else if ((end == 0 && start != 1 ) //special case for 0-length interval at the start of a contig
+                        || end < 0 ) {
                     throw new PicardException(String.format("End on sequence '%s' was less than one: %d", sequenceName, end));
                 } else if (sequenceRecord.getSequenceLength() < end) {
                     throw new PicardException(String.format("End on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), end));

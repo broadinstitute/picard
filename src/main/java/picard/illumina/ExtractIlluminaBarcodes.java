@@ -60,6 +60,7 @@ import java.text.NumberFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -191,7 +192,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Argument(doc = "Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.")
     public int MAX_NO_CALLS = 2;
 
-    @Argument(shortName = "Q", doc = "Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match.")
+    @Argument(shortName = "Q", doc = "Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even if the bases match.")
     public int MINIMUM_BASE_QUALITY = 0;
 
     @Argument(doc = "The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
@@ -205,6 +206,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
             "the number available on the machine less NUM_PROCESSORS.")
     public int NUM_PROCESSORS = 1;
+
+    @Argument()
+    public DistanceMetric DISTANCE_MODE = DistanceMetric.HAMMING;
 
     private static final Log LOG = Log.getInstance(ExtractIlluminaBarcodes.class);
 
@@ -305,7 +309,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                         MIN_MISMATCH_DELTA,
                         cbcls,
                         locs,
-                        filterFiles
+                        filterFiles,
+                        DISTANCE_MODE
                 );
                 extractors.add(extractor);
             }
@@ -321,7 +326,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                         MINIMUM_BASE_QUALITY,
                         MAX_NO_CALLS,
                         MAX_MISMATCHES,
-                        MIN_MISMATCH_DELTA
+                        MIN_MISMATCH_DELTA,
+                        DISTANCE_MODE
                 );
                 extractors.add(extractor);
             }
@@ -477,10 +483,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             return null;
         }
         return messages.toArray(new String[messages.size()]);
-    }
-
-    public static void main(final String[] argv) {
-        new ExtractIlluminaBarcodes().instanceMainWithExit(argv);
     }
 
     private void parseBarcodeFile(final ArrayList<String> messages) {
@@ -671,6 +673,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         private List<AbstractIlluminaPositionFileReader.PositionInfo> locs = null;
         private File[] filterFiles = null;
         private IlluminaDataProviderFactory factory = null;
+        private final DistanceMetric distanceMode;
 
         public PerTileBarcodeExtractor(
                 final int tile,
@@ -684,7 +687,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 final int minMismatchDelta,
                 final List<File> cbcls,
                 final List<AbstractIlluminaPositionFileReader.PositionInfo> locs,
-                final File[] filterFiles) {
+                final File[] filterFiles,
+                final DistanceMetric distanceMode) {
             this.tile = tile;
             this.barcodeFile = barcodeFile;
             this.usingQualityScores = minimumBaseQuality > 0;
@@ -702,6 +706,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             this.factory = factory;
             this.filterFiles = filterFiles;
             this.outputReadStructure = factory.getOutputReadStructure();
+            this.distanceMode = distanceMode;
         }
 
         /**
@@ -739,7 +744,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 final int minimumBaseQuality,
                 final int maxNoCalls,
                 final int maxMismatches,
-                final int minMismatchDelta
+                final int minMismatchDelta,
+                final DistanceMetric distanceMode
         ) {
             this.tile = tile;
             this.barcodeFile = barcodeFile;
@@ -753,9 +759,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 this.metrics.put(key, BarcodeMetric.copy(barcodeToMetrics.get(key)));
             }
             this.noMatch = BarcodeMetric.copy(noMatchMetric);
-            this.provider = factory.makeDataProvider(Arrays.asList(tile));
+            this.provider = factory.makeDataProvider(Collections.singletonList(tile));
             this.outputReadStructure = factory.getOutputReadStructure();
-
+            this.distanceMode = distanceMode;
         }
 
         // These methods return the results of the extraction
@@ -774,7 +780,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         /**
          * run method which extracts barcodes and accumulates metrics for an entire tile
          */
-        synchronized public void run() {
+        public synchronized void run() {
             try {
                 //delayed instantiation for new provider
                 if (this.provider == null) {
@@ -803,7 +809,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                     final boolean passingFilter = cluster.isPf();
                     final BarcodeMatch match = findBestBarcodeAndUpdateMetrics(barcodeSubsequences, qualityScores,
                             passingFilter, metrics, noMatch, maxNoCalls, maxMismatches,
-                            minMismatchDelta, minimumBaseQuality);
+                            minMismatchDelta, minimumBaseQuality, distanceMode);
 
                     final String yOrN = (match.matched ? "Y" : "N");
 
@@ -839,7 +845,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                                                                    final int maxNoCalls,
                                                                    final int maxMismatches,
                                                                    final int minMismatchDelta,
-                                                                   final int minimumBaseQuality) {
+                                                                   final int minimumBaseQuality,
+                                                                   final DistanceMetric distanceMode) {
             BarcodeMetric bestBarcodeMetric = null;
             int totalBarcodeReadBases = 0;
             int numNoCalls = 0; // NoCalls are calculated for all the barcodes combined
@@ -855,7 +862,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             int numMismatchesInSecondBestBarcode = totalBarcodeReadBases + 1;
 
             for (final BarcodeMetric barcodeMetric : metrics.values()) {
-                final int numMismatches = countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
+                final int numMismatches = distanceMode.countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
+
                 if (numMismatches < numMismatchesInBestBarcode) {
                     if (bestBarcodeMetric != null) {
                         numMismatchesInSecondBestBarcode = numMismatchesInBestBarcode;
@@ -914,30 +922,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             return match;
         }
 
-        /**
-         * Compare barcode sequence to bases from read
-         *
-         * @return how many bases did not match
-         */
-        private static int countMismatches(final byte[][] barcodeBytes, final byte[][] readSubsequence, final byte[][] qualities, final int minimumBaseQuality) {
-            int numMismatches = 0;
 
-            for (int j = 0; j < barcodeBytes.length; j++) {
-                for (int i = 0; (i < barcodeBytes[j].length && readSubsequence[j].length > i); ++i) {
-                    if (SequenceUtil.isNoCall(readSubsequence[j][i])) {
-                        continue;
-                    }
-                    if (!SequenceUtil.basesEqual(barcodeBytes[j][i], readSubsequence[j][i])) {
-                        ++numMismatches;
-                        continue;
-                    }
-                    if (qualities != null && qualities[j][i] < minimumBaseQuality) {
-                        ++numMismatches;
-                    }
-                }
-            }
-
-            return numMismatches;
-        }
-    }
+}
 }

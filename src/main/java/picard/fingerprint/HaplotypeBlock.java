@@ -39,8 +39,8 @@ import java.util.Map;
  */
 public class HaplotypeBlock implements Comparable<HaplotypeBlock> {
     private final double maf;
-    private final Map<String,Snp> snpsByName     = new HashMap<String,Snp>();
-    private final double[] haplotypeFrequencies  = new double[3];
+    private final Map<String, Snp> snpsByName   = new HashMap<>();
+    private final double[] haplotypeFrequencies = new double[3];
 
     private Snp firstSnp;
     private String chrom;

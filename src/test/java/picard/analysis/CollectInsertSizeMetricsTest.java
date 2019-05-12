@@ -23,7 +23,10 @@
  */
 package picard.analysis;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -67,8 +70,8 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
 
         for (final InsertSizeMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.PAIR_ORIENTATION.name(), "FR");
-            if (metrics.LIBRARY==null) {  // SAMPLE or ALL_READS level
-                Assert.assertEquals((int)metrics.MEDIAN_INSERT_SIZE, 41);
+            if (metrics.LIBRARY == null) {  // SAMPLE or ALL_READS level
+                Assert.assertEquals((int) metrics.MEDIAN_INSERT_SIZE, 41);
                 Assert.assertEquals((int)metrics.MODE_INSERT_SIZE, 41);
                 Assert.assertEquals(metrics.MIN_INSERT_SIZE, 36);
                 Assert.assertEquals(metrics.MAX_INSERT_SIZE, 45);
@@ -262,9 +265,11 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void testWdithOfMetrics() throws IOException {
-        final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam", TEST_DATA_DIR);
+    public void testWidthOfMetrics() throws IOException {
+        final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam");
         testSamFile.deleteOnExit();
+
+        new File(testSamFile.getAbsolutePath().replace(".bam$",".bai")).deleteOnExit();
 
         final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true, 100);
         setBuilder.setReadLength(10);

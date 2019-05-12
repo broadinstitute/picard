@@ -1,4 +1,4 @@
-FROM broadinstitute/java-baseimage
+FROM openjdk:8 
 MAINTAINER Broad Institute DSDE <dsde-engineering@broadinstitute.org>
 
 ARG build_command=shadowJar
@@ -8,6 +8,7 @@ ARG jar_name=picard.jar
 RUN apt-get update && \
     apt-get --no-install-recommends install -y --force-yes \
         git \
+        r-base \
         ant && \
     apt-get clean autoclean && \
     apt-get autoremove -y

@@ -24,6 +24,8 @@
 
 package picard.analysis;
 
+import htsjdk.samtools.BAMRecord;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
@@ -93,25 +95,65 @@ public class AdapterUtility {
     /**
      * Checks the first ADAPTER_MATCH_LENGTH bases of the read against known adapter sequences and returns
      * true if the read matches an adapter sequence with MAX_ADAPTER_ERRORS mismsatches or fewer.
+     * <p>
+     * Only unmapped reads and reads with MQ=0 are considers eligible for being adapter
+     */
+
+     public boolean isAdapter(final SAMRecord record) {
+
+        // If the read mapped with mapping quality > 0 we do not consider it an adapter read.
+        if (!record.getReadUnmappedFlag() && record.getMappingQuality() != 0) {
+            return false;
+        }
+
+        // if the read is mapped and is aligned to the reverse strand, it needs to be
+        // rev-comp'ed before calling isAdapterSequence.
+        final boolean revComp = !record.getReadUnmappedFlag() &&
+                record.getReadNegativeStrandFlag();
+
+        final byte[] readBases = record.getReadBases();
+        return isAdapterSequence(readBases, revComp);
+    }
+
+
+    /**
+     * Checks the first ADAPTER_MATCH_LENGTH bases of the read against known adapter sequences and returns
+     * true if the read matches an adapter sequence with MAX_ADAPTER_ERRORS mismsatches or fewer.
      *
      * @param read the basecalls for the read in the order and orientation the machine read them
+     * @param  revCompRead When aligned reads are checked for being adapter, this specified if the original
+     *                     read had ben rev-comped during alignment.
      * @return true if the read matches an adapter and false otherwise
      */
-    public boolean isAdapterSequence(final byte[] read) {
+    public boolean isAdapterSequence(final byte[] read, boolean revCompRead) {
         if (read.length < ADAPTER_MATCH_LENGTH) return false;
 
         for (final byte[] adapter : adapterKmers) {
             int errors = 0;
 
-            for (int i=0; i<adapter.length; ++i) {
-                if (read[i] != adapter[i] && ++errors > MAX_ADAPTER_ERRORS) {
+            for (int i = 0; i < adapter.length; ++i) {
+                final byte base = revCompRead ? SequenceUtil.complement(read[read.length - i - 1]) : read[i];
+                if (!SequenceUtil.basesEqual(base, adapter[i]) && ++errors > MAX_ADAPTER_ERRORS) {
                     break;
                 }
             }
 
-            if (errors <= MAX_ADAPTER_ERRORS) return true;
+            if (errors <= MAX_ADAPTER_ERRORS) {
+                return true;
+            }
         }
 
         return false;
+    }
+
+    /**
+     * Checks the first ADAPTER_MATCH_LENGTH bases of the read against known adapter sequences and returns
+     * true if the read matches an adapter sequence with MAX_ADAPTER_ERRORS mismsatches or fewer.
+     *
+     * @param read the basecalls for the read in the order and orientation the machine read them
+     * @return true if the read matches an adapter and false otherwise
+     */
+    public boolean isAdapterSequence(final byte[] read) {
+        return isAdapterSequence(read, false);
     }
 }

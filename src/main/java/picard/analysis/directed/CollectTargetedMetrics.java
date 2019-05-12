@@ -93,6 +93,9 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     @Argument(doc = "True if we are to clip overlapping reads, false otherwise.", optional=true)
     public boolean CLIP_OVERLAPPING_READS = false;
 
+    @Argument(doc= "If true count inserted bases as on target and deleted bases as covered by a read.")
+    public boolean INCLUDE_INDELS = false;
+
     @Argument(shortName = "covMax", doc = "Parameter to set a max coverage limit for Theoretical Sensitivity calculations. Default is 200.", optional = true)
     public int COVERAGE_CAP = 200;
 

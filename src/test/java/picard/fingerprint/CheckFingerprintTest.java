@@ -92,6 +92,31 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testMismatchingSamples() {
+        String[] args = new String[]{
+                "I=" + NA12891_r1_sam,
+                "O=" + TEST_OUTPUT,
+                "G=" + TEST_GENOTYPES_VCF1,
+                "H=" + SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 1);
+    }
+
+    @Test
+    public void testMismatchingSamples2() {
+        String[] args = new String[]{
+                "I=" + TEST_INPUT_VCF1,
+                "O=" + TEST_OUTPUT,
+                "G=" + TEST_GENOTYPES_VCF1,
+                "EXPECTED_SAMPLE_ALIAS=TEST123",
+                "H=" + SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 1);
+    }
+
+    @Test
     public void testSummaryAndDetailOutputs() {
         String[] args = new String[]{
                 "I=" + TEST_INPUT_VCF1,
@@ -173,36 +198,36 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     @DataProvider(name = "samsToFingerprint")
     Object[][] samsToFingerprint() {
         return new Object[][]{
-                {NA12891_r1_sam, na12891_fp},
-                {NA12892_r1_sam, na12891_fp},
+                {NA12891_r1_sam, na12891_fp, 0},
+                {NA12892_r1_sam, na12891_fp, 1},
         };
     }
 
     @DataProvider(name = "vcfsToFingerprint")
     Object[][] vcfsToFingerprint() {
         return new Object[][]{
-                {NA12891_named_NA12892_vcf, na12892_fp},
-                {NA12892_1_vcf, na12892_fp},
+                {NA12891_named_NA12892_vcf, na12892_fp, 0},
+                {NA12892_1_vcf, na12892_fp, 0},
         };
     }
 
     @Test(dataProvider = "samsToFingerprint")
-    void testCheckFingerprintSam(File file, File genotypes) throws IOException {
-        tester(false, file, genotypes);
+    void testCheckFingerprintSam(final File file, final File genotypes, final int expectedRetVal) throws IOException {
+        tester(false, file, genotypes, expectedRetVal);
 
     }
 
     @Test(dataProvider = "vcfsToFingerprint")
-    void testCheckFingerprintVcf(File file, File genotypes) throws IOException {
-        tester(false, file, genotypes);
+    void testCheckFingerprintVcf(final File file, final File genotypes, final int expectedRetVal) throws IOException {
+        tester(false, file, genotypes, expectedRetVal);
     }
 
     @Test(dataProvider = "samsToFingerprint")
-    void testCheckFingerprintNoRg(File file, File genotypes) throws IOException {
-        tester(true, file, genotypes);
+    void testCheckFingerprintNoRg(final File file, final File genotypes, final int expectedRetVal) throws IOException {
+        tester(true, file, genotypes, expectedRetVal);
     }
 
-    private File tester(boolean ignoreRG, File file, File genotypes) throws IOException {
+    private File tester(boolean ignoreRG, final File file, final File genotypes, final int expectedRetVal) throws IOException {
         final List<String> args = new ArrayList<>();
         final File outputSummary = File.createTempFile("fingerprint", "summary_metrics");
         outputSummary.deleteOnExit();
@@ -216,7 +241,7 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         args.add("SUMMARY_OUTPUT=" + outputSummary.getAbsolutePath());
         args.add("DETAIL_OUTPUT=" + outputDetail.getAbsolutePath());
 
-        Assert.assertEquals(runPicardCommandLine(args), 0);
+        Assert.assertEquals(runPicardCommandLine(args), expectedRetVal);
 
         Assert.assertTrue(outputSummary.exists(), "Expected output file " + outputSummary.getAbsolutePath() + " to exist.");
         Assert.assertTrue(outputDetail.exists(), "Expected output file " + outputDetail.getAbsolutePath() + " to exist.");
