@@ -240,13 +240,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     /**
-     * Stock main method.
-     */
-    public static void main(final String[] args) {
-        new MarkDuplicates().instanceMainWithExit(args);
-    }
-
-    /**
      * Main work method.  Reads the BAM file once and collects sorted information about
      * the 5' ends of both ends of each read (or just one end in the case of pairs).
      * Then makes a pass through those determining duplicates before re-reading the
@@ -913,7 +906,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     // We expect end.read2IndexInFile==read1IndexInFile when we are in queryname sorted files, as the read-pairs
                     // will be sorted together and nextIndexIfNeeded() will only pull one index from opticalDuplicateIndexes.
                     // This means that in queryname sorted order we will only pull from the sorting collection once,
-                    // where as we would pull twice for coordinate sorted files. 
+                    // where as we would pull twice for coordinate sorted files.
                     if (end.read2IndexInFile != end.read1IndexInFile) {
                         this.opticalDuplicateIndexes.add(end.read2IndexInFile);
                     }
@@ -1036,8 +1029,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 compareDifference = lhs.getY() - rhs.getY();
             }
 
-            // The following is arbitrary (especially given the dependence above on the hash) and is only
-            // there for completeness. Other implementations may chose to forgo this tiebreak if they do have
+            // The following is arbitrary and is only included for completeness.
+            // Other implementations may chose to forgo this tiebreak if they do not have
             // access to the index-in-file of the records (e.g. SPARK implmentations)
 
             if (compareDifference == 0) {
