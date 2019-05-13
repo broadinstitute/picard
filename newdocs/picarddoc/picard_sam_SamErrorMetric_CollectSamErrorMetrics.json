@@ -1,0 +1,529 @@
+{
+  "summary": "Program to collect error metrics on bases stratified in various ways.",
+  "arguments": [
+    {
+      "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
+      "name": "--COMPRESSION_LEVEL",
+      "synonyms": "NA",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "5",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "name": "--CREATE_INDEX",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Whether to create an MD5 digest for any BAM or FASTQ files created.  ",
+      "name": "--CREATE_MD5_FILE",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Errors to collect in the form of \"ERROR(:STRATIFIER)*\". To see the values available for ERROR and STRATIFIER look at the documentation for the arguments ERROR_VALUE and STRATIFIER_VALUE.",
+      "name": "--ERROR_METRICS",
+      "synonyms": "NA",
+      "type": "List[String]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[ERROR, ERROR:BASE_QUALITY, ERROR:INSERT_LENGTH, ERROR:GC_CONTENT, ERROR:READ_DIRECTION, ERROR:PAIR_ORIENTATION, ERROR:HOMOPOLYMER, ERROR:BINNED_HOMOPOLYMER, ERROR:CYCLE, ERROR:READ_ORDINALITY, ERROR:READ_ORDINALITY:CYCLE, ERROR:READ_ORDINALITY:HOMOPOLYMER, ERROR:READ_ORDINALITY:GC_CONTENT, ERROR:READ_ORDINALITY:PRE_DINUC, ERROR:MAPPING_QUALITY, ERROR:READ_GROUP, ERROR:MISMATCHES_IN_READ, ERROR:ONE_BASE_PADDED_CONTEXT, OVERLAPPING_ERROR, OVERLAPPING_ERROR:BASE_QUALITY, OVERLAPPING_ERROR:INSERT_LENGTH, OVERLAPPING_ERROR:READ_ORDINALITY, OVERLAPPING_ERROR:READ_ORDINALITY:CYCLE, OVERLAPPING_ERROR:READ_ORDINALITY:HOMOPOLYMER, OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "A fake argument used to show the options of ERROR (in ERROR_METRICS).",
+      "name": "--ERROR_VALUE",
+      "synonyms": "NA",
+      "type": "ErrorType",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": [
+        {
+          "summary": "",
+          "name": "ERROR"
+        },
+        {
+          "summary": "",
+          "name": "OVERLAPPING_ERROR"
+        }
+      ]
+    },
+    {
+      "summary": "Google Genomics API client_secrets.json file path.",
+      "name": "--GA4GH_CLIENT_SECRETS",
+      "synonyms": "NA",
+      "type": "String",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "client_secrets.json",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Input SAM or BAM file.",
+      "name": "--INPUT",
+      "synonyms": "-I",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will intersect inputs if multiple are given. ",
+      "name": "--INTERVALS",
+      "synonyms": "-L",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Shortest homopolymer which is considered long.  Used by the BINNED_HOMOPOLYMER stratifier.",
+      "name": "--LONG_HOMOPOLYMER",
+      "synonyms": "-LH",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "6",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Maximum number of loci to process (or unlimited if 0).",
+      "name": "--MAX_LOCI",
+      "synonyms": "-MAX",
+      "type": "long",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "0",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.",
+      "name": "--MAX_RECORDS_IN_RAM",
+      "synonyms": "NA",
+      "type": "Integer",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "500000",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Minimum base quality to include base.",
+      "name": "--MIN_BASE_Q",
+      "synonyms": "-BQ",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "20",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Minimum mapping quality to include read.",
+      "name": "--MIN_MAPPING_Q",
+      "synonyms": "-MQ",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "20",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Base name for output files. Actual file names will be generated from the basename and suffixes from the ERROR and STRATIFIER by adding a \u0027.\u0027 and then error_by_stratifier[_and_stratifier]* where \u0027error\u0027 is ERROR\u0027s extension, and \u0027stratifier\u0027 is STRATIFIER\u0027s suffix. For example, an ERROR_METRIC of ERROR:BASE_QUALITY:GC_CONTENT will produce an extension \u0027.error_by_base_quality_and_gc\u0027. The suffixes can be found in the documentation for ERROR_VALUE and SUFFIX_VALUE.",
+      "name": "--OUTPUT",
+      "synonyms": "-O",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "The prior error, in phred-scale (used for calculating empirical error rates).",
+      "name": "--PRIOR_Q",
+      "synonyms": "-PE",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "30",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "The probability of selecting a locus for analysis (for downsampling).",
+      "name": "--PROBABILITY",
+      "synonyms": "-P",
+      "type": "double",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "1.0",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Whether to suppress job-summary info on System.err.",
+      "name": "--QUIET",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Reference sequence file.",
+      "name": "--REFERENCE_SEQUENCE",
+      "synonyms": "-R",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "A fake argument used to show the options of STRATIFIER (in ERROR_METRICS).",
+      "name": "--STRATIFIER_VALUE",
+      "synonyms": "NA",
+      "type": "Stratifier",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": [
+        {
+          "summary": "",
+          "name": "ALL"
+        },
+        {
+          "summary": "",
+          "name": "GC_CONTENT"
+        },
+        {
+          "summary": "",
+          "name": "READ_ORDINALITY"
+        },
+        {
+          "summary": "",
+          "name": "READ_BASE"
+        },
+        {
+          "summary": "",
+          "name": "READ_DIRECTION"
+        },
+        {
+          "summary": "",
+          "name": "PAIR_ORIENTATION"
+        },
+        {
+          "summary": "",
+          "name": "PAIR_PROPERNESS"
+        },
+        {
+          "summary": "",
+          "name": "REFERENCE_BASE"
+        },
+        {
+          "summary": "",
+          "name": "PRE_DINUC"
+        },
+        {
+          "summary": "",
+          "name": "POST_DINUC"
+        },
+        {
+          "summary": "",
+          "name": "HOMOPOLYMER_LENGTH"
+        },
+        {
+          "summary": "",
+          "name": "HOMOPOLYMER"
+        },
+        {
+          "summary": "",
+          "name": "BINNED_HOMOPOLYMER"
+        },
+        {
+          "summary": "",
+          "name": "FLOWCELL_TILE"
+        },
+        {
+          "summary": "",
+          "name": "READ_GROUP"
+        },
+        {
+          "summary": "",
+          "name": "CYCLE"
+        },
+        {
+          "summary": "",
+          "name": "BINNED_CYCLE"
+        },
+        {
+          "summary": "",
+          "name": "SOFT_CLIPS"
+        },
+        {
+          "summary": "",
+          "name": "INSERT_LENGTH"
+        },
+        {
+          "summary": "",
+          "name": "BASE_QUALITY"
+        },
+        {
+          "summary": "",
+          "name": "MAPPING_QUALITY"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCHES_IN_READ"
+        },
+        {
+          "summary": "",
+          "name": "ONE_BASE_PADDED_CONTEXT"
+        },
+        {
+          "summary": "",
+          "name": "TWO_BASE_PADDED_CONTEXT"
+        },
+        {
+          "summary": "",
+          "name": "CONSENSUS"
+        },
+        {
+          "summary": "",
+          "name": "NS_IN_READ"
+        }
+      ]
+    },
+    {
+      "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
+      "name": "--TMP_DIR",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Use the JDK Deflater instead of the Intel Deflater for writing compressed output",
+      "name": "--USE_JDK_DEFLATER",
+      "synonyms": "-use_jdk_deflater",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Use the JDK Inflater instead of the Intel Inflater for reading compressed input",
+      "name": "--USE_JDK_INFLATER",
+      "synonyms": "-use_jdk_inflater",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Validation stringency for all SAM files read by this program.  Setting stringency to SILENT can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) do not otherwise need to be decoded.",
+      "name": "--VALIDATION_STRINGENCY",
+      "synonyms": "NA",
+      "type": "ValidationStringency",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "STRICT",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": [
+        {
+          "summary": "",
+          "name": "STRICT"
+        },
+        {
+          "summary": "",
+          "name": "LENIENT"
+        },
+        {
+          "summary": "",
+          "name": "SILENT"
+        }
+      ]
+    },
+    {
+      "summary": "VCF of known variation for sample. program will skip over polymorphic sites in this VCF and avoid collecting data on these loci.",
+      "name": "--VCF",
+      "synonyms": "-V",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "Control verbosity of logging.",
+      "name": "--VERBOSITY",
+      "synonyms": "NA",
+      "type": "LogLevel",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "INFO",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": [
+        {
+          "summary": "",
+          "name": "ERROR"
+        },
+        {
+          "summary": "",
+          "name": "WARNING"
+        },
+        {
+          "summary": "",
+          "name": "INFO"
+        },
+        {
+          "summary": "",
+          "name": "DEBUG"
+        }
+      ]
+    }
+  ],
+  "description": "Program to collect error metrics on bases stratified in various ways.",
+  "name": "CollectSamErrorMetrics",
+  "group": "Diagnostics and Quality Control",
+  "beta": false,
+  "experimental": false
+}
