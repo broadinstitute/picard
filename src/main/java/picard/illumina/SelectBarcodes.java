@@ -17,15 +17,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,6 +46,15 @@ public class SelectBarcodes extends CommandLineProgram {
 
     @Argument
     public boolean ALSO_COMPARE_REVCOMP = false;
+
+    @Argument
+    public boolean ALLOW_REVCOMP = false;
+
+    @Argument
+    public boolean ALLOW_REV = false;
+
+    @Argument
+    public boolean ALLOW_COMP = false;
 
     @Argument(optional = true)
     public File DISTANCES = null;
@@ -151,8 +152,27 @@ public class SelectBarcodes extends CommandLineProgram {
         return Math.min(dist, revCompDist);
     }
 
-
     private boolean areFarEnough(final String lhs, final String rhs) {
+        if (!ALLOW_REV) {
+            final byte[] rev = rhs.getBytes();
+            SequenceUtil.reverse(rev, 0, rev.length);
+            if (lhs.equals(Arrays.toString(rev))) {
+                return false;
+            }
+        }
+
+        if (!ALLOW_COMP) {
+            final byte[] comp = SequenceUtil.reverseComplement(rhs).getBytes();
+            SequenceUtil.reverse(comp, 0, comp.length);
+            if (lhs.equals(Arrays.toString(comp))) {
+                return false;
+            }
+        }
+
+        if (!ALLOW_REVCOMP && lhs.equals(SequenceUtil.reverseComplement(rhs))) {
+            return false;
+        }
+
         return levenshtein(lhs, rhs, ALSO_COMPARE_REVCOMP, FAR_ENOUGH) >= FAR_ENOUGH;
     }
 
