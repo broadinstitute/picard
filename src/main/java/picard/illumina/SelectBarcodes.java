@@ -73,6 +73,8 @@ public class SelectBarcodes extends CommandLineProgram {
     private static Map<Integer, BitSet> Diffs = new HashMap<>();
     private static int recursionLevel;
 
+
+
     @Override
     public int doWork() {
         output = OUTPUT;
@@ -105,9 +107,14 @@ public class SelectBarcodes extends CommandLineProgram {
     private void calculateAjacencyMatrix() {
 
         final List<String> filteredBarcodes = barcodes.stream().filter(b -> {
-                    if (mustHaveBarcodes.stream().anyMatch(m -> !areFarEnough(b, m))) {
-                        LOG.info(String.format("rejecting barcode: %s, it's too close to a MUST_HAVE barcode.",
-                                b));
+                    final Optional<String> firstClose = mustHaveBarcodes
+                            .stream()
+                            .filter(m -> !areFarEnough(b, m))
+                            .findAny();
+                    if (firstClose.isPresent()) {
+
+                        LOG.info(String.format("rejecting barcode: %s, it's too close to a MUST_HAVE barcode: %s.",
+                                b, firstClose.get()));
                         return false;
                     }
                     return true;
@@ -118,13 +125,13 @@ public class SelectBarcodes extends CommandLineProgram {
         barcodes.addAll(filteredBarcodes);
 
         for (int ii = 0; ii < barcodes.size(); ii++) {
-            final BitSet ajacency = new BitSet(barcodes.size());
+            final BitSet adjacency = new BitSet(barcodes.size());
 
             for (int jj = 0; jj < barcodes.size(); jj++) {
-                ajacency.set(jj, areFarEnough(barcodes.get(ii), barcodes.get(jj)));
+                adjacency.set(jj, areFarEnough(barcodes.get(ii), barcodes.get(jj)));
             }
 
-            adjacencyMatrix.add(ii, ajacency);
+            adjacencyMatrix.add(ii, adjacency);
         }
 
         if (DISTANCES != null) {
@@ -145,7 +152,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
     static int levenshtein(final String lhs, final String rhs, final boolean ALSO_COMPARE_REVCOMP, final int farEnough) {
         final int dist = StringDistanceUtils.levenshteinDistance(lhs.getBytes(), rhs.getBytes(), farEnough);
-        if (!ALSO_COMPARE_REVCOMP){
+        if (!ALSO_COMPARE_REVCOMP) {
             return dist;
         }
         final int revCompDist = StringDistanceUtils.levenshteinDistance(SequenceUtil.reverseComplement(lhs).getBytes(), rhs.getBytes(), farEnough);
@@ -182,6 +189,9 @@ public class SelectBarcodes extends CommandLineProgram {
 
         BARCODES_MUST_HAVE.forEach(b -> readBarcodesFile(b, mustHaveBarcodes));
         BARCODES_CHOOSE_FROM.forEach(b -> readBarcodesFile(b, barcodes));
+
+        //shuffle input barcodes to prevent bias
+        Collections.shuffle(barcodes, new Random(51));
     }
 
     private void readBarcodesFile(final File f, final List<String> addTo) {
@@ -198,6 +208,14 @@ public class SelectBarcodes extends CommandLineProgram {
         }
     }
 
+
+    /** implements BronKerbosch2 https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
+     * to find the maximal clique in the graph defined by the edges in {@code graph}. The
+     * original algorithm is defined recursively, but here the recursion has been unfolded explicitly
+     * to avoid the overhead and to reuse objects.
+     *
+     * @param graph the input bit-sets defining the edges between barcodes that are compatible
+     */
     static void find_cliques(List<BitSet> graph) {
 
         final Integer[] degeneracyOrder = getDegeneracyOrder(graph);
@@ -310,7 +328,7 @@ public class SelectBarcodes extends CommandLineProgram {
             try (PrintWriter writer = new PrintWriter(output)) {
 
                 mustHaveBarcodes.forEach(b -> writer.println(-1 + "\t" + b));
-                bestClique.stream().forEach(i -> writer.println(Integer.toString(i) + "\t" + barcodes.get(i)));
+                bestClique.stream().forEach(i -> writer.println(i + "\t" + barcodes.get(i)));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
