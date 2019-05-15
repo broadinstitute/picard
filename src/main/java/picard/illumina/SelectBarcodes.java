@@ -62,7 +62,7 @@ public class SelectBarcodes extends CommandLineProgram {
     private static final List<String> mustHaveBarcodes = new ArrayList<>();
     static final List<String> barcodes = new ArrayList<>();
 
-    private final List<BitSet> adjacencyMatrix = new ArrayList<>();
+    private final Map<Integer, BitSet> adjacencyMatrix = new HashMap<>();
 
     static File output = null;
     private static Log LOG = Log.getInstance(SelectBarcodes.class);
@@ -131,16 +131,17 @@ public class SelectBarcodes extends CommandLineProgram {
                 adjacency.set(jj, areFarEnough(barcodes.get(ii), barcodes.get(jj)));
             }
 
-            adjacencyMatrix.add(ii, adjacency);
+            adjacencyMatrix.put(ii, adjacency);
         }
 
         if (DISTANCES != null) {
             try (final PrintWriter writer = new PrintWriter(DISTANCES)) {
 
-                for (final BitSet ajacency : adjacencyMatrix) {
+                for (int ii = 0; ii < barcodes.size(); ii++) {
+                    final BitSet adjacency = new BitSet(barcodes.size());
 
                     for (int jj = 0; jj < barcodes.size(); jj++) {
-                        writer.append(ajacency.get(jj) ? "1" : "0").append(String.valueOf('\t'));
+                        writer.append(adjacency.get(jj) ? "1" : "0").append(String.valueOf('\t'));
                     }
                     writer.append('\n');
                 }
@@ -216,7 +217,7 @@ public class SelectBarcodes extends CommandLineProgram {
      *
      * @param graph the input bit-sets defining the edges between barcodes that are compatible
      */
-    static void find_cliques(List<BitSet> graph) {
+    static void find_cliques(Map<Integer, BitSet> graph) {
 
         final Integer[] degeneracyOrder = getDegeneracyOrder(graph);
         recursionLevel = 0;
@@ -353,7 +354,7 @@ public class SelectBarcodes extends CommandLineProgram {
         return ret;
     }
 
-    private static Integer[] getDegeneracyOrder(final List<BitSet> graph) {
+    private static Integer[] getDegeneracyOrder(final Map<Integer, BitSet> graph) {
         List<Integer> ordering = new ArrayList<>();
         Set<Integer> ordering_set = new HashSet<>();
 
