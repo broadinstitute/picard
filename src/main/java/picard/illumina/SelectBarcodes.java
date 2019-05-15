@@ -67,10 +67,10 @@ public class SelectBarcodes extends CommandLineProgram {
     static File output = null;
     private static Log LOG = Log.getInstance(SelectBarcodes.class);
 
-    private static Map<Integer, BitSet> Ps = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
-    private static Map<Integer, BitSet> Xs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
-    private static Map<Integer, BitSet> Rs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
-    private static Map<Integer, BitSet> Diffs = new HashMap<>();
+    private static final Map<Integer, BitSet> Ps = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
+    private static final Map<Integer, BitSet> Xs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
+    private static final Map<Integer, BitSet> Rs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
+    private static final Map<Integer, BitSet> Diffs = new HashMap<>();
     private static int recursionLevel;
 
 
@@ -266,6 +266,7 @@ public class SelectBarcodes extends CommandLineProgram {
                 // or if there is no way we could find a larger clique, stop trying
                 if (p.isEmpty() || p.cardinality() + r.cardinality() <= bestCliqueSize) {
 
+                    Diffs.remove(recursionLevel);
                     registerClique(r, best_clique);
                     bestCliqueSize = best_clique.cardinality();
                     recursionLevel--;
