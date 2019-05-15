@@ -82,9 +82,9 @@ public class SelectBarcodes extends CommandLineProgram {
         //open files make lists of barcodes
         openBarcodes();
         LOG.info("Opened Barcode files.");
-        // calculate distance matrix and ajacency matrix
+        // calculate distance matrix and adjacency matrix
 
-        calculateAjacencyMatrix();
+        calculateAdjacencyMatrix();
         LOG.info("Calculated distances");
 
         LOG.info("there are " + mustHaveBarcodes.size() + " MUST_HAVE barcodes.");
@@ -104,7 +104,7 @@ public class SelectBarcodes extends CommandLineProgram {
         return 0;
     }
 
-    private void calculateAjacencyMatrix() {
+    private void calculateAdjacencyMatrix() {
 
         final List<String> filteredBarcodes = barcodes.stream().filter(b -> {
                     final Optional<String> firstClose = mustHaveBarcodes
@@ -191,7 +191,7 @@ public class SelectBarcodes extends CommandLineProgram {
         BARCODES_CHOOSE_FROM.forEach(b -> readBarcodesFile(b, barcodes));
 
         //shuffle input barcodes to prevent bias
-        Collections.shuffle(barcodes, new Random(51));
+//        Collections.shuffle(barcodes, new Random(51));
     }
 
     private void readBarcodesFile(final File f, final List<String> addTo) {
