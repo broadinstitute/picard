@@ -30,8 +30,8 @@ public class StringDistanceUtilsTest {
                 {"very large distances are not measured well",
                         "so this should return the threshold plus 1", 6},
                 {"-ELLO", "ELLO-", 1},
-                {"ATGTAGCACG","ACTGACTGCA", 3}
-
+                {"ATGTAGCACG","ACTGACTGCA", 3},
+                {"GACAGATC","GACAGACA", 1}
         };
     }
     @DataProvider
@@ -48,7 +48,6 @@ public class StringDistanceUtilsTest {
                 {"CGCCTTCC","C.CCCTCC",1},
                 {"AATCGCTG","A.CCGCTG",1},
                 {"TCTGCAAGGCCAGAAG","T.TGCAAGGCCAGAAG",0},
-                {"GACAGATC","GACAGACA",2}
         };
     }
     @DataProvider
