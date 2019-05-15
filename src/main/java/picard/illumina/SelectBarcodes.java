@@ -141,8 +141,8 @@ public class SelectBarcodes extends CommandLineProgram {
                 for (int ii = 0; ii < barcodes.size(); ii++) {
                     final BitSet adjacency = adjacencyMatrix.get(ii);
 
+                    writer.append(barcodes.get(ii)).append('\t');
                     for (int jj = 0; jj < barcodes.size(); jj++) {
-                        writer.append(barcodes.get(ii)).append('\t');
                         writer.append(adjacency.get(jj) ? "1" : "0").append('\t');
                     }
                     writer.append('\n');
