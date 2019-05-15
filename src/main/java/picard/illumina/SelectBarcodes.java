@@ -136,12 +136,14 @@ public class SelectBarcodes extends CommandLineProgram {
 
         if (DISTANCES != null) {
             try (final PrintWriter writer = new PrintWriter(DISTANCES)) {
-
+                writer.append("BARCODE\t");
+                writer.println(String.join("\t", barcodes));
                 for (int ii = 0; ii < barcodes.size(); ii++) {
-                    final BitSet adjacency = new BitSet(barcodes.size());
+                    final BitSet adjacency = adjacencyMatrix.get(ii);
 
                     for (int jj = 0; jj < barcodes.size(); jj++) {
-                        writer.append(adjacency.get(jj) ? "1" : "0").append(String.valueOf('\t'));
+                        writer.append(barcodes.get(ii)).append('\t');
+                        writer.append(adjacency.get(jj) ? "1" : "0").append('\t');
                     }
                     writer.append('\n');
                 }
@@ -200,7 +202,7 @@ public class SelectBarcodes extends CommandLineProgram {
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.trim().equals("")) continue;
-                if (!addTo.contains(line) && !addTo.contains(SequenceUtil.reverseComplement(line))) {
+                if (!addTo.contains(line)) {
                     addTo.add(line);
                 }
             }
