@@ -4,7 +4,6 @@ import htsjdk.samtools.util.CollectionUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import org.testng.collections.CollectionUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
