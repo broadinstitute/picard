@@ -113,6 +113,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
         LOG.info("there are " + mustHaveBarcodes.size() + " MUST_HAVE barcodes.");
         LOG.info("there are " + barcodes.size() + " other barcodes to choose from (after possibly rejecting some).");
+        LOG.info("there are " + seedBarcodes.size() + " seed barcodes");
 
         try (final PrintWriter writer = new PrintWriter("all.barcodes.txt")) {
             mustHaveBarcodes.forEach(writer::println);
@@ -123,7 +124,6 @@ public class SelectBarcodes extends CommandLineProgram {
         }
 
         final BitSet R = new BitSet();
-        final BitSet P = new BitSet();
         final BitSet nodeSubset = new BitSet();
 
         // add each group nodes from the seeds and
@@ -132,7 +132,6 @@ public class SelectBarcodes extends CommandLineProgram {
             LOG.info("Adding " + seedAdjacencyMatrix.get(i).cardinality() + " nodes from seed " + i);
             nodeSubset.or(seedAdjacencyMatrix.get(i));
 
-            final Map<Integer, BitSet> subGraph = subsetGraph(adjacencyMatrix, nodeSubset);
             final BitSet seedSolution = find_cliques(subsetGraph(adjacencyMatrix, nodeSubset), R);
             R.or(seedSolution);
         }
