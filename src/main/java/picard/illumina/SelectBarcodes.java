@@ -202,7 +202,7 @@ public class SelectBarcodes extends CommandLineProgram {
             final BitSet adjacency = new BitSet(barcodes.size());
 
             for (int jj = 0; jj < barcodes.size(); jj++) {
-                adjacency.set(jj, levenshtein(seedBarcodes.get(ii), barcodes.get(jj), DISTANCE_TO_SEEDS) <= DISTANCE_TO_SEEDS );
+                adjacency.set(jj, levenshtein(seedBarcodes.get(ii), barcodes.get(jj), DISTANCE_TO_SEEDS + 1) <= DISTANCE_TO_SEEDS);
             }
 
             seedAdjacencyMatrix.put(ii, adjacency);
