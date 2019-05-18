@@ -203,6 +203,7 @@ public class SelectBarcodes extends CommandLineProgram {
             }
 
             seedAdjacencyMatrix.put(ii, adjacency);
+            LOG.info("Seed " + ii + " has " + adjacency.cardinality() + " barcodes near it.");
         }
     }
 
@@ -242,6 +243,8 @@ public class SelectBarcodes extends CommandLineProgram {
 
         BARCODES_MUST_HAVE.forEach(b -> readBarcodesFile(b, mustHaveBarcodes));
         BARCODES_CHOOSE_FROM.forEach(b -> readBarcodesFile(b, barcodes));
+
+        readBarcodesFile(SEED_BARCODES, seedBarcodes);
 
         //shuffle input barcodes to prevent bias
         Collections.shuffle(barcodes, new Random(51));
