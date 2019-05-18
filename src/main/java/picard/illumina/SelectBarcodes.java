@@ -450,18 +450,18 @@ public class SelectBarcodes extends CommandLineProgram {
     }
 
     private static Integer[] getDegeneracyOrder(final Map<Integer, BitSet> graph) {
-        List<Integer> ordering = new ArrayList<>();
-        Set<Integer> ordering_set = new HashSet<>();
+        final List<Integer> ordering = new ArrayList<>();
+        final Set<Integer> ordering_set = new HashSet<>();
 
         // a map from the vertices to their cardinality
-        Map<Integer, Integer> degrees = new CollectionUtil.DefaultingMap<>(0);
+        final Map<Integer, Integer> degrees = new CollectionUtil.DefaultingMap<>(0);
 
         // a map form a given degeneracy to the list of vertices with that degeneracy
         @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
         Map<Integer, List<Integer>> degen = new CollectionUtil.DefaultingMap<>(i -> new ArrayList<>(), true);
         int max_deg = -1;
         for (int v = 0; v < graph.size(); v++) {
-            int deg = graph.get(v).cardinality();
+            final int deg = graph.get(v).cardinality();
             degen.get(deg).add(v);
             degrees.put(v, deg);
             if (deg > max_deg) {
