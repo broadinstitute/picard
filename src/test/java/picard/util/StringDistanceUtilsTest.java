@@ -31,7 +31,9 @@ public class StringDistanceUtilsTest {
                         "so this should return the threshold plus 1", 6},
                 {"-ELLO", "ELLO-", 1},
                 {"ATGTAGCACG","ACTGACTGCA", 3},
-                {"GACAGATC","GACAGACA", 1}
+                {"GACAGATC","GACAGACA", 1},
+                {"GTCAGTCA","ACTGACGA", 5}
+
         };
     }
     @DataProvider
