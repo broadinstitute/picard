@@ -49,8 +49,11 @@ public class SelectBarcodes extends CommandLineProgram {
     @Argument
     public List<File> BARCODES_CHOOSE_FROM;
 
-    @Argument
+    @Argument(optional = true)
     public File SEED_BARCODES;
+
+    @Argument()
+    public Integer DISTANCE_TO_SEEDS = 2;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
@@ -199,7 +202,7 @@ public class SelectBarcodes extends CommandLineProgram {
             final BitSet adjacency = new BitSet(barcodes.size());
 
             for (int jj = 0; jj < barcodes.size(); jj++) {
-                adjacency.set(jj, areFarEnough(seedBarcodes.get(ii), barcodes.get(jj)));
+                adjacency.set(jj, levenshtein(seedBarcodes.get(ii), barcodes.get(jj), DISTANCE_TO_SEEDS) >= DISTANCE_TO_SEEDS );
             }
 
             seedAdjacencyMatrix.put(ii, adjacency);
@@ -244,8 +247,9 @@ public class SelectBarcodes extends CommandLineProgram {
         BARCODES_MUST_HAVE.forEach(b -> readBarcodesFile(b, mustHaveBarcodes));
         BARCODES_CHOOSE_FROM.forEach(b -> readBarcodesFile(b, barcodes));
 
-        readBarcodesFile(SEED_BARCODES, seedBarcodes);
-
+        if(SEED_BARCODES != null) {
+            readBarcodesFile(SEED_BARCODES, seedBarcodes);
+        }
         //shuffle input barcodes to prevent bias
         Collections.shuffle(barcodes, new Random(51));
     }
