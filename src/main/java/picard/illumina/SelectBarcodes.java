@@ -460,7 +460,7 @@ public class SelectBarcodes extends CommandLineProgram {
         @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
         Map<Integer, List<Integer>> degen = new CollectionUtil.DefaultingMap<>(i -> new ArrayList<>(), true);
         int max_deg = -1;
-        for (int v = 0; v < graph.size(); v++) {
+        for (int v : graph.keySet()) {
             final int deg = graph.get(v).cardinality();
             degen.get(deg).add(v);
             degrees.put(v, deg);
