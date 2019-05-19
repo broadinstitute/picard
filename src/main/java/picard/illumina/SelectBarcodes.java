@@ -372,7 +372,7 @@ public class SelectBarcodes extends CommandLineProgram {
                     continue;
                 }
 
-                if ( Diffs.size() < recursionLevel) {
+                if (!Diffs.containsKey(recursionLevel))  {
                     BitSet finalP = p;
 
                     // 9 choosing a pivot
@@ -561,7 +561,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
         @Override
         public TYPE get(int index) {
-            while (index > this.size()) {
+            while (index >= this.size()) {
                 add(generator.make(this.size()));
             }
             return super.get(index);
