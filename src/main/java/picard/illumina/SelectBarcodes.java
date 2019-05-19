@@ -117,6 +117,9 @@ public class SelectBarcodes extends CommandLineProgram {
 
         // add each group nodes from the seeds and
         // call BronKerbosch2 saving best selections to disk.
+
+        //TODO: start with seed with smallest set and each iteration
+        //TODO: pick the seed that adds the fewest new barcodes.
         for (int i = 0; i < seedBarcodes.size(); i++) {
             LOG.info("Adding " + seedAdjacencyMatrix.get(i).cardinality() + " nodes from seed " + i);
             nodeSubset.or(seedAdjacencyMatrix.get(i));
