@@ -83,7 +83,8 @@ public class SelectBarcodesTest {
     }
 
     @Test
-    public void test() throws IOException {
+    public void testGraph() throws IOException {
+        //graph is based on example in https://en.wikipedia.org/wiki/Clique_problem
         final Map<Integer, BitSet> ajacencyMatrix = new HashMap<>();
 
         BitSet zero = new BitSet();
@@ -139,6 +140,78 @@ public class SelectBarcodesTest {
             e.printStackTrace();
         }
         Assert.assertEquals(result, CollectionUtil.makeList("1\tone", "2\ttwo", "5\tfive"));
+    }
+
+    @Test
+    public void testGraph2() throws IOException {
+        //test based on the C(7,4) graph in https://en.wikipedia.org/wiki/Clique_problem
+        final Map<Integer, BitSet> ajacencyMatrix = new HashMap<>();
+
+        BitSet zero = new BitSet();
+        zero.set(1);
+        zero.set(2);
+        zero.set(4);
+        ajacencyMatrix.put(0, zero);
+
+        BitSet one = new BitSet();
+        one.set(0);
+        one.set(4);
+        one.set(3);
+        ajacencyMatrix.put(1, one);
+
+        BitSet two = new BitSet();
+        two.set(0);
+        two.set(3);
+        two.set(5);
+        two.set(6);
+        ajacencyMatrix.put(2, two);
+
+        BitSet three = new BitSet();
+        three.set(2);
+        three.set(1);
+        three.set(5);
+        three.set(6);
+        ajacencyMatrix.put(3, three);
+
+        BitSet four = new BitSet();
+        four.set(0);
+        four.set(1);
+        four.set(5);
+        four.set(6);
+        ajacencyMatrix.put(4, four);
+
+        BitSet five = new BitSet();
+        five.set(4);
+        five.set(6);
+        five.set(2);
+        five.set(3);
+        ajacencyMatrix.put(5, five);
+
+        BitSet six = new BitSet();
+        six.set(5);
+        six.set(3);
+        six.set(2);
+        six.set(4);
+        ajacencyMatrix.put(6, six);
+
+        SelectBarcodes.barcodes.clear();
+        SelectBarcodes.barcodes.addAll(CollectionUtil.makeList("zero", "one", "two", "three", "four", "five", "six"));
+
+        SelectBarcodes.output = File.createTempFile("testing", "txt");
+        SelectBarcodes.output.deleteOnExit();
+        SelectBarcodes.find_cliques(ajacencyMatrix, new BitSet());
+
+        List<String> result = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(SelectBarcodes.output))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                result.add(line);
+            }
+        } catch (
+                IOException e) {
+            e.printStackTrace();
+        }
+        Assert.assertEquals(result, CollectionUtil.makeList("2\ttwo","3\tthree", "5\tfive","6\tsix"));
     }
 
     @Test
