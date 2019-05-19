@@ -399,14 +399,14 @@ public class SelectBarcodes extends CommandLineProgram {
                     final BitSet pOrX = union(p, x);
 
                     //IntStream doesn't have min(Comparator) so this needs to be written explicitly
-                    final int u = pOrX.stream().reduce((a, b) ->
+                    final int pivot = pOrX.stream().reduce((a, b) ->
                             intersectionCardinality(finalP, graph.get(a)) <=
                                     intersectionCardinality(finalP, graph.get(b)) ?
                                     a : b)
                             .getAsInt();
 
                     //10
-                    Diffs.put(recursionLevel, difference(p, graph.get(u)));
+                    Diffs.put(recursionLevel, difference(p, graph.get(pivot)));
                 }
 
                 final int vv = Diffs.get(recursionLevel).nextSetBit(0);
@@ -482,9 +482,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
         final Map<Integer, BitSet> retVal = new HashMap<>();
 
-        mask.stream().forEach(i -> {
-            retVal.put(i, intersection(graph.get(i), mask));
-        });
+        mask.stream().forEach(i -> retVal.put(i, intersection(graph.get(i), mask)));
 
         return retVal;
     }
@@ -501,9 +499,20 @@ public class SelectBarcodes extends CommandLineProgram {
         return ret;
     }
 
-    /** calculates the cardinality of the intersection without creating new objects */
-    static long intersectionCardinality(final BitSet lhs, final BitSet rhs) {
-        return lhs.stream().filter(rhs::get).count();
+    /** calculates the cardinality of the intersection without creating new objects.
+     * This is the bottleneck 50% of the time is currently spend in nextSetBit
+     *
+     * */
+    static int intersectionCardinality(final BitSet lhs, final BitSet rhs) {
+        int lastSetBit = -1;
+        int retVal = 0;
+
+        while ((lastSetBit = lhs.nextSetBit(lastSetBit + 1)) != -1) {
+            if (rhs.get(lastSetBit)) {
+                retVal++;
+            }
+        }
+        return retVal;
     }
 
     // subtract rhs from lhs. i.e. lhs \ rhs
