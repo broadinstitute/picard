@@ -84,49 +84,49 @@ public class SelectBarcodesTest {
 
     @Test
     public void test() throws IOException {
-        final List<BitSet> ajacencyMatrix = new ArrayList<>();
+        final Map<Integer, BitSet> ajacencyMatrix = new HashMap<>();
 
         BitSet zero = new BitSet();
-        ajacencyMatrix.add(zero);
+        ajacencyMatrix.put(0, zero);
 
         BitSet one = new BitSet();
         one.set(2);
         one.set(5);
-        ajacencyMatrix.add(one);
+        ajacencyMatrix.put(1, one);
 
         BitSet two = new BitSet();
         two.set(1);
         two.set(5);
         two.set(3);
-        ajacencyMatrix.add(two);
+        ajacencyMatrix.put(2, two);
 
         BitSet three = new BitSet();
         three.set(2);
         three.set(4);
-        ajacencyMatrix.add(three);
+        ajacencyMatrix.put(3, three);
 
         BitSet four = new BitSet();
         four.set(3);
         four.set(5);
         four.set(6);
-        ajacencyMatrix.add(four);
+        ajacencyMatrix.put(4, four);
 
         BitSet five = new BitSet();
         five.set(1);
         five.set(2);
         five.set(4);
-        ajacencyMatrix.add(five);
+        ajacencyMatrix.put(5, five);
 
         BitSet six = new BitSet();
         six.set(4);
-        ajacencyMatrix.add(six);
+        ajacencyMatrix.put(6, six);
 
         SelectBarcodes.barcodes.clear();
         SelectBarcodes.barcodes.addAll(CollectionUtil.makeList("zero", "one", "two", "three", "four", "five", "six"));
 
         SelectBarcodes.output = File.createTempFile("testing", "txt");
         SelectBarcodes.output.deleteOnExit();
-        SelectBarcodes.find_cliques(ajacencyMatrix);
+        SelectBarcodes.find_cliques(ajacencyMatrix, new BitSet());
 
         List<String> result = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(SelectBarcodes.output))) {
@@ -143,11 +143,11 @@ public class SelectBarcodesTest {
 
     @Test
     public void testDistance() {
-        Assert.assertEquals(SelectBarcodes.levenshtein("AATACCAT", "ATGAATTA", true, 6), 3);
+        Assert.assertEquals(SelectBarcodes.levenshtein("AATACCAT", "ATGAATTA",  6), 3);
     }
 
     @Test
     public void testDistance2() {
-        Assert.assertEquals(SelectBarcodes.levenshtein("CACTTCAT", "ATGAATTA", true,6), 2);
+        Assert.assertEquals(SelectBarcodes.levenshtein("CACTTCAT", "ATGAATTA",  6), 2);
     }
 }

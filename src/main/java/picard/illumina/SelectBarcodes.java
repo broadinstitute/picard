@@ -11,26 +11,9 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.OtherProgramGroup;
 import picard.util.StringDistanceUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.io.*;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Program to choose barcodes from a list of candidates and a distance requirement
@@ -77,7 +60,7 @@ public class SelectBarcodes extends CommandLineProgram {
     public File DISTANCES = null;
 
     private static final List<String> mustHaveBarcodes = new ArrayList<>();
-    private static final List<String> barcodes = new ArrayList<>();
+    static final List<String> barcodes = new ArrayList<>();
     private final List<String> seedBarcodes = new ArrayList<>();
 
     private final Map<Integer, BitSet> adjacencyMatrix = new HashMap<>();
@@ -100,7 +83,6 @@ public class SelectBarcodes extends CommandLineProgram {
     private static int recursionLevel;
 
 
-
     @Override
     public int doWork() {
         output = OUTPUT;
@@ -108,7 +90,7 @@ public class SelectBarcodes extends CommandLineProgram {
         //open files make lists of barcodes
         openBarcodes();
 
-        LOG.info("Opened Barcode files.");
+        LOG.info("Opened Barcode files. ");
         // calculate distance matrix and adjacency matrix
 
         calculateAdjacencyMatrix();
@@ -127,6 +109,8 @@ public class SelectBarcodes extends CommandLineProgram {
         }
 
         final BitSet R = new BitSet();
+        final BitSet X = new BitSet();
+
         final BitSet nodeSubset = new BitSet();
 
         // add each group nodes from the seeds and
@@ -136,15 +120,19 @@ public class SelectBarcodes extends CommandLineProgram {
             nodeSubset.or(seedAdjacencyMatrix.get(i));
 
             final BitSet seedSolution = find_cliques(subsetGraph(adjacencyMatrix, nodeSubset), R);
+            // add new solution to the required nodes
             R.or(seedSolution);
+
+            // add other nodes to excluded nodes
+            X.or(difference(seedSolution, nodeSubset));
         }
         // finally, add all remaining nodes
 
-        LOG.info("Adding " + (adjacencyMatrix.size()-nodeSubset.cardinality()) + " remaining nodes.");
+        LOG.info("Adding " + (adjacencyMatrix.size() - nodeSubset.cardinality()) + " remaining nodes.");
 
         final BitSet solution = find_cliques(adjacencyMatrix, R);
 
-        LOG.info("final solution has cardinality " + solution.cardinality());
+        LOG.info("final solution has cardinality " + solution.cardinality() + mustHaveBarcodes.size());
 
         return 0;
     }
@@ -197,7 +185,6 @@ public class SelectBarcodes extends CommandLineProgram {
             }
         }
 
-
         for (int ii = 0; ii < seedBarcodes.size(); ii++) {
             final BitSet adjacency = new BitSet(barcodes.size());
 
@@ -236,7 +223,7 @@ public class SelectBarcodes extends CommandLineProgram {
         }
 
         return levenshtein(lhs, rhs, FAR_ENOUGH) >= FAR_ENOUGH &&
-                (!COMPARE_REVCOMP || levenshtein(lhs, SequenceUtil.reverseComplement(rhs), FAR_ENOUGH) >= FAR_ENOUGH );
+                (!COMPARE_REVCOMP || levenshtein(lhs, SequenceUtil.reverseComplement(rhs), FAR_ENOUGH) >= FAR_ENOUGH);
     }
 
     //returns the number of SEED barcodes that were placed into "barcodes"
@@ -245,11 +232,15 @@ public class SelectBarcodes extends CommandLineProgram {
         mustHaveBarcodes.clear();
 
         BARCODES_MUST_HAVE.forEach(b -> readBarcodesFile(b, mustHaveBarcodes));
+        LOG.info("There are " + mustHaveBarcodes.size() + " required barcodes.");
         BARCODES_CHOOSE_FROM.forEach(b -> readBarcodesFile(b, barcodes));
+        LOG.info("There are " + barcodes.size() + " (original) barcodes to chose from.");
 
-        if(SEED_BARCODES != null) {
+        if (SEED_BARCODES != null) {
             readBarcodesFile(SEED_BARCODES, seedBarcodes);
+            LOG.info("There are " + seedBarcodes.size() + " seed barcodes.");
         }
+
         //shuffle input barcodes to prevent bias
         Collections.shuffle(barcodes, new Random(51));
     }
@@ -269,66 +260,91 @@ public class SelectBarcodes extends CommandLineProgram {
     }
 
 
-    /** implements BronKerbosch3 https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
+    /**
+     * implements BronKerbosch3 https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
      * to find the maximal clique in the graph defined by the edges in {@code graph}. The
      * original algorithm is defined recursively, but here the recursion has been unfolded explicitly
      * to avoid the recursion overhead and to reuse objects.
+     * <p>
+     * BronKerbosch3(G):
+     * 1       P = V(G)
+     * 2       R = X = empty
+     * 3       for each vertex v in a degeneracy ordering of G:
+     * 4           BronKerbosch2({v}, P ⋂ N(v), X ⋂ N(v))
+     * 5           P := P \ {v}
+     * 6           X := X ⋃ {v}
+     * <p>
+     * <p>
+     * BronKerbosch2(R,P,X):
+     * 7       if P and X are both empty:
+     * 8           report R as a maximal clique
+     * 9       choose a pivot vertex u in P ⋃ X
+     * 10      for each vertex v in P \ N(u):
+     * 11          BronKerbosch2(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
+     * 12          P := P \ {v}
+     * 13          X := X ⋃ {v}
      *
-     *      BronKerbosch3(G):
-     *        P = V(G)
-     *        R = X = empty
-     *        for each vertex v in a degeneracy ordering of G:
-     *            BronKerbosch2({v}, P ⋂ N(v), X ⋂ N(v))
-     *            P := P \ {v}
-     *            X := X ⋃ {v}
-     *
-     *
-     *      BronKerbosch2(R,P,X):
-     *        if P and X are both empty:
-     *            report R as a maximal clique
-     *        choose a pivot vertex u in P ⋃ X
-     *        for each vertex v in P \ N(u):
-     *            BronKerbosch2(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
-     *            P := P \ {v}
-     *            X := X ⋃ {v}
-     *
+     * in the code below comments refer to line numbers in this pseudo-code
      *
      * @param graph the input bit-sets defining the edges between barcodes that are compatible
      */
-    static BitSet find_cliques(Map<Integer, BitSet> graph, BitSet required) {
+    static BitSet find_cliques(final Map<Integer, BitSet> graph, final BitSet required) {
 
-        final Integer[] degeneracyOrder = getDegeneracyOrder(graph);
-        recursionLevel = 0;
+        final BitSet excluded = new BitSet();
+        // any node that isn't a neighbor of all the required nodes should be removed from consideration
+        graph.keySet().stream()
+                .filter(i -> intersection(graph.get(i), required).cardinality() != required.cardinality())
+                .forEach(excluded::set);
 
+
+        final BitSet presentInGraph = new BitSet();
+        graph.keySet().forEach(presentInGraph::set);
+
+        final Integer[] degeneracyOrder = getDegeneracyOrder(subsetGraph(graph, difference(presentInGraph, excluded)));
 
         final BitSet best_clique = new BitSet();
         int bestCliqueSize = 0;
 
+        //1
+        final BitSet pTop = new BitSet();
+        graph.keySet().forEach(pTop::set);
+
+        //2 (modified to allow input of required nodes)
+        final BitSet rTop = new BitSet();
+        rTop.clear();
+        rTop.or(required);
+
+        //2 (modified to allow input of required nodes, which, in turn causes some node to be excluded)
+        final BitSet xTop = new BitSet();
+        xTop.clear();
+        xTop.or(excluded);
+
+        //3
         for (final Integer v : degeneracyOrder) {
             recursionLevel = 0;
 
-            BitSet r, p, x;
+            LOG.info("examining node " + v);
 
-            r = Rs.get(recursionLevel);
+            //4 {v}
+            BitSet r = Rs.get(recursionLevel);
             r.clear();
-            r.or(required);
-
-            x = Xs.get(recursionLevel);
-            x.clear();
-
-            // any node that isn't a neighbor of all the required nodes should be removed from consideration
-            graph.keySet().stream()
-                    .filter(i -> intersection(graph.get(i), required).cardinality() != required.cardinality())
-                    .forEach(x::set);
-
-            if (r.get(v) || x.get(v)) continue;
-
+            r.or(rTop);
             r.set(v);
 
-            p = Ps.get(recursionLevel);
-            LOG.info("examining node " + v);
+            //4 P ⋂ N(v)
+            BitSet p = Ps.get(recursionLevel);
             p.clear();
-            p.or(graph.get(v));
+            p.or(pTop);
+            p.and(graph.get(v));
+
+            // 4 X ⋂ N(v)
+            BitSet x = Xs.get(recursionLevel);
+            x.clear();
+            x.or(xTop);
+            x.and(graph.get(v));
+
+            // if v is in either R or X there's no need to look at it
+            if (r.get(v) || x.get(v)) continue;
 
             while (recursionLevel >= 0) {
 
@@ -340,6 +356,8 @@ public class SelectBarcodes extends CommandLineProgram {
 
                 // if there are no more pivots to chose from, we have reached a (locally) maximal clique.
                 // or if there is no way we could find a larger clique, stop trying
+
+                // 7
                 if (p.isEmpty() || p.cardinality() + r.cardinality() <= bestCliqueSize) {
 
                     Diffs.remove(recursionLevel);
@@ -351,12 +369,16 @@ public class SelectBarcodes extends CommandLineProgram {
                 }
 
                 if (!Diffs.containsKey(recursionLevel)) {
-                    final BitSet finalP = p;
+                    BitSet finalP = p;
 
-                    final int u = Stream.concat(p.stream().boxed(), x.stream().boxed())
-                            .max(Comparator.comparingInt(o -> intersection(finalP, graph.get(o)).cardinality()))
-                            .orElse(-1); //should never happen
+                    // 9 choosing a pivot
+                    final BitSet pOrX = union(p, x);
+                    final int[] cardinalities = pOrX.stream().map(o -> intersection(finalP, graph.get(o)).cardinality()).toArray();
+                    final int maxCardIndex = argMax(cardinalities);
 
+                    final int u = pOrX.stream().skip(maxCardIndex).findFirst().getAsInt();
+
+                    //10
                     Diffs.put(recursionLevel, difference(p, graph.get(u)));
                 }
 
@@ -375,30 +397,39 @@ public class SelectBarcodes extends CommandLineProgram {
 
                 final BitSet recNeighs = graph.get(vv);
 
+                //preparations for recursive call 11
                 recursionLevel++;
 
                 final BitSet lowerR = Rs.get(recursionLevel);
                 lowerR.clear();
+                // 11 R ⋃ {v}
                 lowerR.or(r);
                 lowerR.set(vv);
 
                 final BitSet lowerX = Xs.get(recursionLevel);
                 lowerX.clear();
+                // 11 X ⋂ N(v)
                 lowerX.or(x);
                 lowerX.and(recNeighs);
 
                 final BitSet lowerP = Ps.get(recursionLevel);
                 lowerP.clear();
+                // 11 P ⋂ N(v)
                 lowerP.or(p);
                 lowerP.and(recNeighs);
 
+                // p and x are still connected to the previous recursion level
+                // 12
                 p.clear(vv);
+                // 13
                 x.set(vv);
 
             }
 
-            p.clear(v);
-            x.set(v);
+            // 5
+            pTop.clear(v);
+            // 6
+            xTop.set(v);
         }
         return best_clique;
     }
@@ -407,7 +438,7 @@ public class SelectBarcodes extends CommandLineProgram {
         if (r.cardinality() > bestClique.cardinality()) {
             bestClique.clear();
             bestClique.or(r);
-            System.out.println("best.cardinality()=" + (bestClique.cardinality() + mustHaveBarcodes.size()));
+            LOG.info("best cardinality (so far) is " + (bestClique.cardinality() + mustHaveBarcodes.size()));
 
             output.delete();
             try (PrintWriter writer = new PrintWriter(output)) {
@@ -420,12 +451,12 @@ public class SelectBarcodes extends CommandLineProgram {
         }
     }
 
-    static Map<Integer,BitSet> subsetGraph(final Map<Integer,BitSet> graph, final BitSet mask){
+    static Map<Integer, BitSet> subsetGraph(final Map<Integer, BitSet> graph, final BitSet mask) {
 
         final Map<Integer, BitSet> retVal = new HashMap<>();
 
-        mask.stream().forEach(i-> {
-            retVal.put(i, intersection(graph.get(i),mask));
+        mask.stream().forEach(i -> {
+            retVal.put(i, intersection(graph.get(i), mask));
         });
 
         return retVal;
@@ -501,5 +532,17 @@ public class SelectBarcodes extends CommandLineProgram {
         }
         Collections.reverse(ordering);
         return ordering.toArray(new Integer[0]);
+    }
+
+    private static int argMax(final int[] input){
+        int max = input[0];
+        int maxIdx = 0;
+        for(int i = 1; i < input.length; i++) {
+            if(input[i] > max) {
+                max = input[i];
+                maxIdx = i;
+            }
+        }
+        return maxIdx;
     }
 }
