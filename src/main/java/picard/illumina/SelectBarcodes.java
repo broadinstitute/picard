@@ -1,5 +1,6 @@
 package picard.illumina;
 
+import htsjdk.samtools.cram.common.IntHashMap;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
@@ -70,13 +71,13 @@ public class SelectBarcodes extends CommandLineProgram {
     private static Log LOG = Log.getInstance(SelectBarcodes.class);
 
     // The P verticies are the "Potential" verticies, verticies that may be chosen
-    private static final Map<Integer, BitSet> Ps = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
+    private static final List<BitSet> Ps = new DefaultingArrayList<>(i->new BitSet());
 
     // The X verticies are the "eXcluded" verticies, those that should not be examined
-    private static final Map<Integer, BitSet> Xs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
+    private static final List<BitSet> Xs = new DefaultingArrayList<>(i->new BitSet());
 
     // the R verticies are the "Required" verticies, those that must be part of the clique
-    private static final Map<Integer, BitSet> Rs = new CollectionUtil.DefaultingMap<>((i) -> new BitSet(), true);
+    private static final List<BitSet> Rs = new DefaultingArrayList<>(i->new BitSet());
 
     // this is a temporary variable holding the difference between P and the neighbors of the "pivot" vertex
     private static final Map<Integer, BitSet> Diffs = new HashMap<>();
@@ -283,7 +284,7 @@ public class SelectBarcodes extends CommandLineProgram {
      * 11          BronKerbosch2(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
      * 12          P := P \ {v}
      * 13          X := X ⋃ {v}
-     *
+     * <p>
      * in the code below comments refer to line numbers in this pseudo-code
      *
      * @param graph the input bit-sets defining the edges between barcodes that are compatible
@@ -344,7 +345,7 @@ public class SelectBarcodes extends CommandLineProgram {
             BitSet x = Xs.get(recursionLevel);
             x.clear();
             x.or(xTop);
-            if (x.get(v)){
+            if (x.get(v)) {
                 continue;
             }
             x.and(graph.get(v));
@@ -371,7 +372,7 @@ public class SelectBarcodes extends CommandLineProgram {
                     continue;
                 }
 
-                if (!Diffs.containsKey(recursionLevel)) {
+                if ( Diffs.size() < recursionLevel) {
                     BitSet finalP = p;
 
                     // 9 choosing a pivot
@@ -537,15 +538,46 @@ public class SelectBarcodes extends CommandLineProgram {
         return ordering.toArray(new Integer[0]);
     }
 
-    private static int argMax(final int[] input){
+    private static int argMax(final int[] input) {
         int max = input[0];
         int maxIdx = 0;
-        for(int i = 1; i < input.length; i++) {
-            if(input[i] > max) {
+        for (int i = 1; i < input.length; i++) {
+            if (input[i] > max) {
                 max = input[i];
                 maxIdx = i;
             }
         }
         return maxIdx;
+    }
+
+    private static  class DefaultingArrayList<TYPE> extends ArrayList<TYPE> {
+
+        final private CollectionUtil.DefaultingMap.Factory<TYPE, Integer> generator;
+
+        public DefaultingArrayList(CollectionUtil.DefaultingMap.Factory<TYPE, Integer> defaultGenerator) {
+            super();
+            this.generator = defaultGenerator;
+        }
+
+        @Override
+        public TYPE get(int index) {
+            while (index > this.size()) {
+                add(generator.make(this.size()));
+            }
+            return super.get(index);
+        }
+
+        @Override
+        public TYPE set(int index, TYPE o) {
+            while (index - 1 > this.size()) {
+                add(generator.make(this.size()));
+            }
+            if (index > this.size()) {
+                add(index, o);
+                return super.get(index);
+            } else {
+                return super.set(index, o);
+            }
+        }
     }
 }
