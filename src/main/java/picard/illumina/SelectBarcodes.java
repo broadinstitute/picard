@@ -140,7 +140,7 @@ public class SelectBarcodes extends CommandLineProgram {
             final Pair<Integer, Integer> smallestNewSet = smallestNewSetMaybe.get();
 
             LOG.info("Adding " + smallestNewSet.getLeft() + " nodes from seed " + smallestNewSet.getRight());
-            nodeSubset.or(seedAdjacencyMatrix.get(smallestNewSet));
+            nodeSubset.or(seedAdjacencyMatrix.get(smallestNewSet.getRight()));
 
             final BitSet seedSolution = find_cliques(subsetGraph(adjacencyMatrix, nodeSubset), R);
             // add new solution to the required nodes
