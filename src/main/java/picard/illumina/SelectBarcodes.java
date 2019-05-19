@@ -1,6 +1,6 @@
 package picard.illumina;
 
-import htsjdk.samtools.cram.common.IntHashMap;
+
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
@@ -72,13 +72,13 @@ public class SelectBarcodes extends CommandLineProgram {
     private static Log LOG = Log.getInstance(SelectBarcodes.class);
 
     // The P verticies are the "Potential" verticies, verticies that may be chosen
-    private static final List<BitSet> Ps = new DefaultingArrayList<>(i->new BitSet());
+    private static final List<BitSet> Ps = new DefaultingArrayList<>(i -> new BitSet());
 
     // The X verticies are the "eXcluded" verticies, those that should not be examined
-    private static final List<BitSet> Xs = new DefaultingArrayList<>(i->new BitSet());
+    private static final List<BitSet> Xs = new DefaultingArrayList<>(i -> new BitSet());
 
     // the R verticies are the "Required" verticies, those that must be part of the clique
-    private static final List<BitSet> Rs = new DefaultingArrayList<>(i->new BitSet());
+    private static final List<BitSet> Rs = new DefaultingArrayList<>(i -> new BitSet());
 
     // this is a temporary variable holding the difference between P and the neighbors of the "pivot" vertex
     private static final Map<Integer, BitSet> Diffs = new HashMap<>();
@@ -120,9 +120,27 @@ public class SelectBarcodes extends CommandLineProgram {
 
         //TODO: start with seed with smallest set and each iteration
         //TODO: pick the seed that adds the fewest new barcodes.
-        for (int i = 0; i < seedBarcodes.size(); i++) {
-            LOG.info("Adding " + seedAdjacencyMatrix.get(i).cardinality() + " nodes from seed " + i);
-            nodeSubset.or(seedAdjacencyMatrix.get(i));
+        while (true) {
+
+            final Optional<Pair<Integer, Integer>> smallestNewSetMaybe = seedAdjacencyMatrix.entrySet()
+                    .stream()
+                    .map(e -> {
+                        final int index = e.getKey();
+                        final BitSet adjacency = e.getValue();
+                        final int newElements = difference(adjacency, nodeSubset).cardinality();
+                        return new Pair<>(newElements, index);
+                    })
+                    .filter(p -> p.getLeft() > 0)
+                    .min(Comparator.comparingInt(Pair::getLeft));
+
+
+            if (!smallestNewSetMaybe.isPresent()) {
+                break;
+            }
+            final Pair<Integer, Integer> smallestNewSet = smallestNewSetMaybe.get();
+
+            LOG.info("Adding " + smallestNewSet.getLeft() + " nodes from seed " + smallestNewSet.getRight());
+            nodeSubset.or(seedAdjacencyMatrix.get(smallestNewSet));
 
             final BitSet seedSolution = find_cliques(subsetGraph(adjacencyMatrix, nodeSubset), R);
             // add new solution to the required nodes
@@ -376,13 +394,13 @@ public class SelectBarcodes extends CommandLineProgram {
                     continue;
                 }
 
-                if (!Diffs.containsKey(recursionLevel))  {
+                if (!Diffs.containsKey(recursionLevel)) {
                     final BitSet finalP = p;
 
                     // 9 choosing a pivot whose neighborhood has the largest intersection with p
                     final BitSet pOrX = union(p, x);
                     final int u = pOrX.stream()
-                            .mapToObj(o-> new Pair<>(o, intersection(finalP, graph.get(o)).cardinality()))
+                            .mapToObj(o -> new Pair<>(o, intersection(finalP, graph.get(o)).cardinality()))
                             .max(Comparator.comparingInt(Pair::getRight))
                             .get()
                             .getLeft();
@@ -556,7 +574,7 @@ public class SelectBarcodes extends CommandLineProgram {
         return maxIdx;
     }
 
-    private static  class DefaultingArrayList<TYPE> extends ArrayList<TYPE> {
+    private static class DefaultingArrayList<TYPE> extends ArrayList<TYPE> {
 
         final private CollectionUtil.DefaultingMap.Factory<TYPE, Integer> generator;
 
