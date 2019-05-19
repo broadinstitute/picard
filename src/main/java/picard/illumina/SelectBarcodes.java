@@ -118,8 +118,6 @@ public class SelectBarcodes extends CommandLineProgram {
         // add each group nodes from the seeds and
         // call BronKerbosch2 saving best selections to disk.
 
-        //TODO: start with seed with smallest set and each iteration
-        //TODO: pick the seed that adds the fewest new barcodes.
         while (true) {
 
             final Optional<Pair<Integer, Integer>> smallestNewSetMaybe = seedAdjacencyMatrix.entrySet()
@@ -316,7 +314,7 @@ public class SelectBarcodes extends CommandLineProgram {
         final BitSet excluded = new BitSet();
         // any node that isn't a neighbor of all the required nodes should be removed from consideration
         graph.keySet().stream()
-                .filter(i -> intersection(graph.get(i), required).cardinality() != required.cardinality())
+                .filter(i -> intersectionCardinality(graph.get(i), required) != required.cardinality())
                 .forEach(excluded::set);
 
 
@@ -399,11 +397,13 @@ public class SelectBarcodes extends CommandLineProgram {
 
                     // 9 choosing a pivot whose neighborhood has the largest intersection with p
                     final BitSet pOrX = union(p, x);
-                    final int u = pOrX.stream()
-                            .mapToObj(o -> new Pair<>(o, intersection(finalP, graph.get(o)).cardinality()))
-                            .max(Comparator.comparingInt(Pair::getRight))
-                            .get()
-                            .getLeft();
+
+                    //IntStream doesn't have min(Comparator) so this needs to be written explicitly
+                    final int u = pOrX.stream().reduce((a, b) ->
+                            intersectionCardinality(finalP, graph.get(a)) <=
+                                    intersectionCardinality(finalP, graph.get(b)) ?
+                                    a : b)
+                            .getAsInt();
 
                     //10
                     Diffs.put(recursionLevel, difference(p, graph.get(u)));
@@ -499,6 +499,11 @@ public class SelectBarcodes extends CommandLineProgram {
         BitSet ret = BitSet.valueOf(lhs.toLongArray());
         ret.and(rhs);
         return ret;
+    }
+
+    /** calculates the cardinality of the intersection without creating new objects */
+    static long intersectionCardinality(final BitSet lhs, final BitSet rhs) {
+        return lhs.stream().filter(rhs::get).count();
     }
 
     // subtract rhs from lhs. i.e. lhs \ rhs
