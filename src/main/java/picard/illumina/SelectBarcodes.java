@@ -10,6 +10,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.OtherProgramGroup;
+import picard.sam.util.Pair;
 import picard.util.StringDistanceUtils;
 
 import java.io.*;
@@ -377,10 +378,11 @@ public class SelectBarcodes extends CommandLineProgram {
 
                     // 9 choosing a pivot
                     final BitSet pOrX = union(p, x);
-                    final int[] cardinalities = pOrX.stream().map(o -> intersection(finalP, graph.get(o)).cardinality()).toArray();
-                    final int maxCardIndex = argMax(cardinalities);
-
-                    final int u = pOrX.stream().skip(maxCardIndex).findFirst().getAsInt();
+                    int u = pOrX.stream()
+                            .mapToObj(o-> new Pair<>(o, intersection(finalP, graph.get(o)).cardinality()))
+                            .max(Comparator.comparingInt(Pair::getRight))
+                            .get()
+                            .getLeft();
 
                     //10
                     Diffs.put(recursionLevel, difference(p, graph.get(u)));
