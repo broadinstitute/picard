@@ -126,7 +126,7 @@ public class SelectBarcodes extends CommandLineProgram {
             R.or(seedSolution);
 
             // add other nodes to excluded nodes
-            X.or(difference(seedSolution, nodeSubset));
+            X.or(difference(nodeSubset, seedSolution));
         }
         // finally, add all remaining nodes
 
@@ -374,11 +374,11 @@ public class SelectBarcodes extends CommandLineProgram {
                 }
 
                 if (!Diffs.containsKey(recursionLevel))  {
-                    BitSet finalP = p;
+                    final BitSet finalP = p;
 
-                    // 9 choosing a pivot
+                    // 9 choosing a pivot whose neighborhood has the largest intersection with p
                     final BitSet pOrX = union(p, x);
-                    int u = pOrX.stream()
+                    final int u = pOrX.stream()
                             .mapToObj(o-> new Pair<>(o, intersection(finalP, graph.get(o)).cardinality()))
                             .max(Comparator.comparingInt(Pair::getRight))
                             .get()
@@ -457,7 +457,7 @@ public class SelectBarcodes extends CommandLineProgram {
         }
     }
 
-    static Map<Integer, BitSet> subsetGraph(final Map<Integer, BitSet> graph, final BitSet mask) {
+    private static Map<Integer, BitSet> subsetGraph(final Map<Integer, BitSet> graph, final BitSet mask) {
 
         final Map<Integer, BitSet> retVal = new HashMap<>();
 
@@ -480,6 +480,7 @@ public class SelectBarcodes extends CommandLineProgram {
         return ret;
     }
 
+    // subtract rhs from lhs. i.e. lhs \ rhs
     static BitSet difference(final BitSet lhs, final BitSet rhs) {
         BitSet ret = BitSet.valueOf(lhs.toLongArray());
         ret.andNot(rhs);
@@ -556,13 +557,13 @@ public class SelectBarcodes extends CommandLineProgram {
 
         final private CollectionUtil.DefaultingMap.Factory<TYPE, Integer> generator;
 
-        public DefaultingArrayList(CollectionUtil.DefaultingMap.Factory<TYPE, Integer> defaultGenerator) {
+        public DefaultingArrayList(final CollectionUtil.DefaultingMap.Factory<TYPE, Integer> defaultGenerator) {
             super();
             this.generator = defaultGenerator;
         }
 
         @Override
-        public TYPE get(int index) {
+        public TYPE get(final int index) {
             while (index >= this.size()) {
                 add(generator.make(this.size()));
             }
@@ -570,7 +571,7 @@ public class SelectBarcodes extends CommandLineProgram {
         }
 
         @Override
-        public TYPE set(int index, TYPE o) {
+        public TYPE set(final int index, final TYPE o) {
             while (index - 1 > this.size()) {
                 add(generator.make(this.size()));
             }
