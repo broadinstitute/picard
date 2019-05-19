@@ -329,6 +329,9 @@ public class SelectBarcodes extends CommandLineProgram {
             BitSet r = Rs.get(recursionLevel);
             r.clear();
             r.or(rTop);
+            if (r.get(v)) {
+                continue;
+            }
             r.set(v);
 
             //4 P ⋂ N(v)
@@ -341,10 +344,10 @@ public class SelectBarcodes extends CommandLineProgram {
             BitSet x = Xs.get(recursionLevel);
             x.clear();
             x.or(xTop);
+            if (x.get(v)){
+                continue;
+            }
             x.and(graph.get(v));
-
-            // if v is in either R or X there's no need to look at it
-            if (r.get(v) || x.get(v)) continue;
 
             while (recursionLevel >= 0) {
 

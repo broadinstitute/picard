@@ -143,11 +143,18 @@ public class SelectBarcodesTest {
 
     @Test
     public void testDistance() {
-        Assert.assertEquals(SelectBarcodes.levenshtein("AATACCAT", "ATGAATTA",  6), 3);
+        // ATGGTATT
+        // |||.|||.
+        // ATGAATTA
+        Assert.assertEquals(SelectBarcodes.levenshtein("ATGGTATT", "ATGAATTA",  6), 2);
     }
 
     @Test
     public void testDistance2() {
-        Assert.assertEquals(SelectBarcodes.levenshtein("CACTTCAT", "ATGAATTA",  6), 2);
+
+        // ATGAAGTG
+        // |||||.|.
+        // ATGAATTA
+        Assert.assertEquals(SelectBarcodes.levenshtein("ATGAAGTG", "ATGAATTA",  6), 2);
     }
 }
