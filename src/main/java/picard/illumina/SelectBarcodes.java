@@ -7,7 +7,6 @@ import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.OtherProgramGroup;
@@ -16,7 +15,6 @@ import picard.util.StringDistanceUtils;
 
 import java.io.*;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -415,9 +413,6 @@ public class SelectBarcodes extends CommandLineProgram {
                             argMax = nextSetBit;
                         }
                     }
-//                    if (!graph.containsKey(argMax)){
-//                        throw new PicardException("Graph doesn't contain node " + argMax);
-//                    }
 
                     //10
                     Diffs.put(recursionLevel, difference(p, graph[argMax]));
