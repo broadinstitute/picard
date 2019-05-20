@@ -186,7 +186,7 @@ public class SelectBarcodes extends CommandLineProgram {
                             .findAny();
                     if (firstClose.isPresent()) {
 
-                        LOG.info(String.format("rejecting barcode: %s, it's too close to a MUST_HAVE barcode: %s.",
+                        LOG.debug(String.format("rejecting barcode: %s, it's too close to a MUST_HAVE barcode: %s.",
                                 b, firstClose.get()));
                         return false;
                     }
@@ -196,8 +196,8 @@ public class SelectBarcodes extends CommandLineProgram {
 
         barcodes.clear();
         barcodes.addAll(filteredBarcodes);
-
-        adjacencyMatrix=new BitSet[barcodes.size()];
+        LOG.info("After removing barcodes that were too close to MUST_HAVE barcodes, there are " + filteredBarcodes.size() + " remaining.");
+        adjacencyMatrix = new BitSet[barcodes.size()];
 
         for (int ii = 0; ii < barcodes.size(); ii++) {
             final BitSet adjacency = new BitSet(barcodes.size());
@@ -586,7 +586,12 @@ public class SelectBarcodes extends CommandLineProgram {
             degen.get(deg).add(v);
             degrees.put(v, deg);
         });
-        int max_deg = degrees.values().stream().mapToInt(i->i).max().getAsInt();
+
+        if (degrees.isEmpty()){
+            return new Integer[0];
+        }
+        // degrees isn't empty, so get will succeed.
+        int max_deg = degrees.values().stream().reduce(Math::max).get();
         outter:
         while (true) {
             int i = 0;
