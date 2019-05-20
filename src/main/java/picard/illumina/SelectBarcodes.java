@@ -182,6 +182,8 @@ public class SelectBarcodes extends CommandLineProgram {
         barcodes.clear();
         barcodes.addAll(filteredBarcodes);
 
+        adjacencyMatrix=new BitSet[barcodes.size()];
+
         for (int ii = 0; ii < barcodes.size(); ii++) {
             final BitSet adjacency = new BitSet(barcodes.size());
 
