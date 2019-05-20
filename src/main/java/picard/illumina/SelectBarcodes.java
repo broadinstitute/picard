@@ -395,18 +395,24 @@ public class SelectBarcodes extends CommandLineProgram {
                 if (!Diffs.containsKey(recursionLevel)) {
                     final BitSet finalP = p;
 
-                    // 9 choosing a pivot whose neighborhood has the largest intersection with p
+                    // 9 choosing a pivot whose neighborhood has the largest intersection with p (so that
+                    // when its neighborhood is removed from p's the remainder will be smallest)
                     final BitSet pOrX = union(p, x);
 
-                    //IntStream doesn't have min(Comparator) so this needs to be written explicitly
-                    final int pivot = pOrX.stream().reduce((a, b) ->
-                            intersectionCardinality(finalP, graph.get(a)) <=
-                                    intersectionCardinality(finalP, graph.get(b)) ?
-                                    a : b)
-                            .getAsInt();
+                    int nextSetBit = -1;
+                    int maxCardinality = -1;
+                    int argMax = -1;
+
+                    while ((nextSetBit = pOrX.nextSetBit(nextSetBit + 1)) != -1) {
+                        final int cardinality = intersectionCardinality(finalP, graph.get(nextSetBit));
+                        if (cardinality > maxCardinality) {
+                            maxCardinality = cardinality;
+                            argMax = nextSetBit;
+                        }
+                    }
 
                     //10
-                    Diffs.put(recursionLevel, difference(p, graph.get(pivot)));
+                    Diffs.put(recursionLevel, difference(p, graph.get(argMax)));
                 }
 
                 final int vv = Diffs.get(recursionLevel).nextSetBit(0);
