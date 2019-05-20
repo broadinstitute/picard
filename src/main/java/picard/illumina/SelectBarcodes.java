@@ -7,6 +7,7 @@ import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.OtherProgramGroup;
@@ -15,7 +16,9 @@ import picard.util.StringDistanceUtils;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Program to choose barcodes from a list of candidates and a distance requirement
@@ -28,6 +31,9 @@ import java.util.stream.Collectors;
 @DocumentedFeature
 public class SelectBarcodes extends CommandLineProgram {
 
+    // do not modify this!
+
+    private static final BitSet EMPTY = new BitSet();
     @Argument
     public List<File> BARCODES_MUST_HAVE;
 
@@ -65,7 +71,7 @@ public class SelectBarcodes extends CommandLineProgram {
     static final List<String> barcodes = new ArrayList<>();
     private final List<String> seedBarcodes = new ArrayList<>();
 
-    private final Map<Integer, BitSet> adjacencyMatrix = new HashMap<>();
+    private BitSet[] adjacencyMatrix;
     private final Map<Integer, BitSet> seedAdjacencyMatrix = new HashMap<>();
 
     static File output = null;
@@ -149,7 +155,7 @@ public class SelectBarcodes extends CommandLineProgram {
         }
         // finally, add all remaining nodes
 
-        LOG.info("Adding " + (adjacencyMatrix.size() - nodeSubset.cardinality()) + " remaining nodes.");
+        LOG.info("Adding " + (adjacencyMatrix.length - nodeSubset.cardinality()) + " remaining nodes.");
 
         final BitSet solution = find_cliques(adjacencyMatrix, R);
 
@@ -185,7 +191,7 @@ public class SelectBarcodes extends CommandLineProgram {
                 adjacency.set(jj, areFarEnough(barcodes.get(ii), barcodes.get(jj)));
             }
 
-            adjacencyMatrix.put(ii, adjacency);
+            adjacencyMatrix[ii] = adjacency;
         }
 
         if (DISTANCES != null) {
@@ -193,7 +199,7 @@ public class SelectBarcodes extends CommandLineProgram {
                 writer.append("BARCODE\t");
                 writer.println(String.join("\t", barcodes));
                 for (int ii = 0; ii < barcodes.size(); ii++) {
-                    final BitSet adjacency = adjacencyMatrix.get(ii);
+                    final BitSet adjacency = adjacencyMatrix[ii];
 
                     writer.append(barcodes.get(ii)).append('\t');
                     for (int jj = 0; jj < barcodes.size(); jj++) {
@@ -309,17 +315,16 @@ public class SelectBarcodes extends CommandLineProgram {
      *
      * @param graph the input bit-sets defining the edges between barcodes that are compatible
      */
-    static BitSet find_cliques(final Map<Integer, BitSet> graph, final BitSet required) {
+    static BitSet find_cliques(final BitSet[] graph, final BitSet required) {
 
         final BitSet excluded = new BitSet();
         // any node that isn't a neighbor of all the required nodes should be removed from consideration
-        graph.keySet().stream()
-                .filter(i -> intersectionCardinality(graph.get(i), required) != required.cardinality())
+        IntStream.range(0, graph.length)
+                .filter(i -> intersectionCardinality(graph[i], required) != required.cardinality())
                 .forEach(excluded::set);
 
 
-        final BitSet presentInGraph = new BitSet();
-        graph.keySet().forEach(presentInGraph::set);
+        final BitSet presentInGraph = presentInGraph(graph);
 
         final Integer[] degeneracyOrder = getDegeneracyOrder(subsetGraph(graph, difference(presentInGraph, excluded)));
 
@@ -328,7 +333,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
         //1
         final BitSet pTop = new BitSet();
-        graph.keySet().forEach(pTop::set);
+        presentInGraph(graph).stream().forEach(pTop::set);
 
         //2 (modified to allow input of required nodes)
         final BitSet rTop = new BitSet();
@@ -359,7 +364,7 @@ public class SelectBarcodes extends CommandLineProgram {
             BitSet p = Ps.get(recursionLevel);
             p.clear();
             p.or(pTop);
-            p.and(graph.get(v));
+            p.and(graph[v]);
 
             // 4 X ⋂ N(v)
             BitSet x = Xs.get(recursionLevel);
@@ -368,7 +373,7 @@ public class SelectBarcodes extends CommandLineProgram {
             if (x.get(v)) {
                 continue;
             }
-            x.and(graph.get(v));
+            x.and(graph[v]);
 
             while (recursionLevel >= 0) {
 
@@ -404,15 +409,18 @@ public class SelectBarcodes extends CommandLineProgram {
                     int argMax = -1;
 
                     while ((nextSetBit = pOrX.nextSetBit(nextSetBit + 1)) != -1) {
-                        final int cardinality = intersectionCardinality(finalP, graph.get(nextSetBit));
+                        final int cardinality = intersectionCardinality(finalP, graph[nextSetBit]);
                         if (cardinality > maxCardinality) {
                             maxCardinality = cardinality;
                             argMax = nextSetBit;
                         }
                     }
+//                    if (!graph.containsKey(argMax)){
+//                        throw new PicardException("Graph doesn't contain node " + argMax);
+//                    }
 
                     //10
-                    Diffs.put(recursionLevel, difference(p, graph.get(argMax)));
+                    Diffs.put(recursionLevel, difference(p, graph[argMax]));
                 }
 
                 final int vv = Diffs.get(recursionLevel).nextSetBit(0);
@@ -428,7 +436,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
                 Diffs.get(recursionLevel).clear(vv);
 
-                final BitSet recNeighs = graph.get(vv);
+                final BitSet recNeighs = graph[vv];
 
                 //preparations for recursive call 11
                 recursionLevel++;
@@ -467,6 +475,15 @@ public class SelectBarcodes extends CommandLineProgram {
         return best_clique;
     }
 
+
+    private static BitSet presentInGraph(final BitSet[] graph) {
+        final BitSet presentInGraph = new BitSet();
+        IntStream.range(0, graph.length)
+                .filter(i->!graph[i].isEmpty())
+                .forEach(presentInGraph::set);
+        return presentInGraph;
+    }
+
     private static void registerClique(final BitSet r, final BitSet bestClique) {
         if (r.cardinality() > bestClique.cardinality()) {
             bestClique.clear();
@@ -484,12 +501,17 @@ public class SelectBarcodes extends CommandLineProgram {
         }
     }
 
-    private static Map<Integer, BitSet> subsetGraph(final Map<Integer, BitSet> graph, final BitSet mask) {
+    private static BitSet[] subsetGraph(final BitSet[] graph, final BitSet mask) {
 
-        final Map<Integer, BitSet> retVal = new HashMap<>();
+        final BitSet[] retVal = new BitSet[graph.length];
 
-        mask.stream().forEach(i -> retVal.put(i, intersection(graph.get(i), mask)));
-
+        for (int i = 0; i < graph.length; i++) {
+            if (mask.get(i)) {
+                retVal[i] = intersection(graph[i], mask);
+            } else {
+                retVal[i] = EMPTY;
+            }
+        }
         return retVal;
     }
 
@@ -506,15 +528,25 @@ public class SelectBarcodes extends CommandLineProgram {
     }
 
     /** calculates the cardinality of the intersection without creating new objects.
-     * This is the bottleneck 50% of the time is currently spend in nextSetBit
+     * This is the bottleneck...much of the time is currently spend in nextSetBit
      *
      * */
     static int intersectionCardinality(final BitSet lhs, final BitSet rhs) {
         int lastSetBit = -1;
         int retVal = 0;
 
-        while ((lastSetBit = lhs.nextSetBit(lastSetBit + 1)) != -1) {
-            if (rhs.get(lastSetBit)) {
+        //chose the smaller set for the main iteration
+        final BitSet a, b;
+        if (lhs.cardinality() <= rhs.cardinality()) {
+            a = lhs;
+            b = rhs;
+        } else {
+            b = lhs;
+            a = rhs;
+        }
+
+        while ((lastSetBit = a.nextSetBit(lastSetBit + 1)) != -1) {
+            if (b.get(lastSetBit)) {
                 retVal++;
             }
         }
@@ -523,12 +555,13 @@ public class SelectBarcodes extends CommandLineProgram {
 
     // subtract rhs from lhs. i.e. lhs \ rhs
     static BitSet difference(final BitSet lhs, final BitSet rhs) {
-        BitSet ret = BitSet.valueOf(lhs.toLongArray());
+        BitSet ret = new BitSet();
+        ret.or(lhs);
         ret.andNot(rhs);
         return ret;
     }
 
-    private static Integer[] getDegeneracyOrder(final Map<Integer, BitSet> graph) {
+    private static Integer[] getDegeneracyOrder(final BitSet[] graph) {
         final List<Integer> ordering = new ArrayList<>();
         final Set<Integer> ordering_set = new HashSet<>();
 
@@ -538,15 +571,13 @@ public class SelectBarcodes extends CommandLineProgram {
         // a map form a given degeneracy to the list of vertices with that degeneracy
         @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
         Map<Integer, List<Integer>> degen = new CollectionUtil.DefaultingMap<>(i -> new ArrayList<>(), true);
-        int max_deg = -1;
-        for (int v : graph.keySet()) {
-            final int deg = graph.get(v).cardinality();
+
+        presentInGraph(graph).stream().forEachOrdered(v->{
+            final int deg = graph[v].cardinality();
             degen.get(deg).add(v);
             degrees.put(v, deg);
-            if (deg > max_deg) {
-                max_deg = deg;
-            }
-        }
+        });
+        int max_deg = degrees.values().stream().mapToInt(i->i).max().getAsInt();
         outter:
         while (true) {
             int i = 0;
@@ -566,7 +597,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
             ordering.add(v);
             ordering_set.add(v);
-            graph.get(v).stream().forEach(w -> {
+            graph[v].stream().forEach(w -> {
 
                 if (!ordering_set.contains(w)) {
                     final int deg = degrees.get(w);
