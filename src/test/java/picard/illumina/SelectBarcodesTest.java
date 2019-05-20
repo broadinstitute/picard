@@ -62,6 +62,13 @@ public class SelectBarcodesTest {
         testGeneric(lhs, rhs, expected, SelectBarcodes::intersection);
     }
 
+
+    @Test(dataProvider = "testIntersectionData")
+    public void testIntersectionCardinality(final BitSet lhs, final BitSet rhs, final BitSet expected) {
+        Assert.assertEquals(SelectBarcodes.intersectionCardinality(lhs, rhs), expected.cardinality());
+    }
+
+
     @DataProvider
     public Object[][] testUnionData() {
         return genericTestMaker((a, b) -> a | b);

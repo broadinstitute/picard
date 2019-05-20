@@ -1,6 +1,5 @@
 package picard.illumina;
 
-
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
@@ -13,8 +12,24 @@ import picard.cmdline.programgroups.OtherProgramGroup;
 import picard.sam.util.Pair;
 import picard.util.StringDistanceUtils;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -533,17 +548,16 @@ public class SelectBarcodes extends CommandLineProgram {
      *
      * */
     static int intersectionCardinality(final BitSet lhs, final BitSet rhs) {
-        int lhsNext = -1;
+        int lhsNext;
         int retVal = 0;
+        int rhsNext = 0;
 
-        int rhsNext;
-
-        while ((lhsNext = lhs.nextSetBit(lhsNext + 1)) != -1) {
-            rhsNext = rhs.nextSetBit(lhsNext);
+        while ((lhsNext = lhs.nextSetBit(rhsNext)) != -1 &&
+                (rhsNext = rhs.nextSetBit(lhsNext)) != -1){
             if (rhsNext == lhsNext) {
                 retVal++;
+                rhsNext++;
             }
-            lhsNext = rhsNext - 1;
         }
         return retVal;
     }
