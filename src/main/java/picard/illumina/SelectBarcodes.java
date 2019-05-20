@@ -85,7 +85,7 @@ public class SelectBarcodes extends CommandLineProgram {
     private static final List<BitSet> Rs = new DefaultingArrayList<>(i -> new BitSet());
 
     // this is a temporary variable holding the difference between P and the neighbors of the "pivot" vertex
-    private static final Map<Integer, BitSet> Diffs = new HashMap<>();
+    private static final List<BitSet> Diffs = new DefaultingArrayList<>(i -> new BitSet());
     private static int recursionLevel;
 
 
@@ -316,6 +316,7 @@ public class SelectBarcodes extends CommandLineProgram {
      * @param graph the input bit-sets defining the edges between barcodes that are compatible
      */
     static BitSet find_cliques(final BitSet[] graph, final BitSet required) {
+        final BitSet pOrX = new BitSet();
 
         final BitSet excluded = new BitSet();
         // any node that isn't a neighbor of all the required nodes should be removed from consideration
@@ -389,7 +390,7 @@ public class SelectBarcodes extends CommandLineProgram {
                 // 7
                 if (p.isEmpty() || p.cardinality() + r.cardinality() <= bestCliqueSize) {
 
-                    Diffs.remove(recursionLevel);
+                    Diffs.get(recursionLevel).clear();
                     registerClique(r, best_clique);
                     bestCliqueSize = best_clique.cardinality();
                     recursionLevel--;
@@ -397,12 +398,14 @@ public class SelectBarcodes extends CommandLineProgram {
                     continue;
                 }
 
-                if (!Diffs.containsKey(recursionLevel)) {
+                if (Diffs.get(recursionLevel).isEmpty()) {
                     final BitSet finalP = p;
 
                     // 9 choosing a pivot whose neighborhood has the largest intersection with p (so that
                     // when its neighborhood is removed from p's the remainder will be smallest)
-                    final BitSet pOrX = union(p, x);
+                    pOrX.clear();
+                    pOrX.or(p);
+                    pOrX.or(x);
 
                     int nextSetBit = -1;
                     int maxCardinality = -1;
@@ -416,13 +419,14 @@ public class SelectBarcodes extends CommandLineProgram {
                         }
                     }
 
-                    //10
-                    Diffs.put(recursionLevel, difference(p, graph[argMax]));
+                    //10 p \ graph[argMax]
+
+                    Diffs.get(recursionLevel).or(p);
+                    Diffs.get(recursionLevel).andNot(graph[argMax]);
                 }
 
                 final int vv = Diffs.get(recursionLevel).nextSetBit(0);
                 if (vv == -1) {
-                    Diffs.remove(recursionLevel);
                     p.clear();
                     x.clear();
                     r.clear();
@@ -529,23 +533,17 @@ public class SelectBarcodes extends CommandLineProgram {
      *
      * */
     static int intersectionCardinality(final BitSet lhs, final BitSet rhs) {
-        int lastSetBit = -1;
+        int lhsNext = -1;
         int retVal = 0;
 
-        //chose the smaller set for the main iteration
-        final BitSet a, b;
-        if (lhs.cardinality() <= rhs.cardinality()) {
-            a = lhs;
-            b = rhs;
-        } else {
-            b = lhs;
-            a = rhs;
-        }
+        int rhsNext;
 
-        while ((lastSetBit = a.nextSetBit(lastSetBit + 1)) != -1) {
-            if (b.get(lastSetBit)) {
+        while ((lhsNext = lhs.nextSetBit(lhsNext + 1)) != -1) {
+            rhsNext = rhs.nextSetBit(lhsNext);
+            if (rhsNext == lhsNext) {
                 retVal++;
             }
+            lhsNext = rhsNext - 1;
         }
         return retVal;
     }
