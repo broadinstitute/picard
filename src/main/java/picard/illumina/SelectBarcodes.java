@@ -9,27 +9,10 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.OtherProgramGroup;
-import picard.sam.util.Pair;
 import picard.util.StringDistanceUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.io.*;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -139,27 +122,23 @@ public class SelectBarcodes extends CommandLineProgram {
 
         while (true) {
 
-            final Optional<Pair<Integer, Integer>> smallestNewSetMaybe = seedAdjacencyMatrix.entrySet()
+            seedAdjacencyMatrix.values().forEach(adjacency -> {
+                adjacency.andNot(X);
+                adjacency.andNot(nodeSubset);
+            });
+
+            final Integer smallestNewSet = seedAdjacencyMatrix.keySet()
                     .stream()
-                    .map(e -> {
-                        final int index = e.getKey();
-                        final BitSet adjacency = e.getValue();
-                        //remove eXcluded nodes from seedAdjacency
-                        adjacency.andNot(X);
-                        final int newPossibleElements = difference(adjacency, nodeSubset).cardinality();
-                        return new Pair<>(newPossibleElements, index);
-                    })
-                    .filter(p -> p.getLeft() > 0)
-                    .min(Comparator.comparingInt(Pair::getLeft));
+                    .filter(i -> !seedAdjacencyMatrix.get(i).isEmpty())
+                    .min(Comparator.comparingInt(i -> seedAdjacencyMatrix.get(i).cardinality()))
+                    .orElse(-1);
 
-
-            if (!smallestNewSetMaybe.isPresent()) {
+            if (smallestNewSet == -1) {
                 break;
             }
-            final Pair<Integer, Integer> smallestNewSet = smallestNewSetMaybe.get();
 
-            LOG.info("Adding " + smallestNewSet.getLeft() + " nodes from seed " + smallestNewSet.getRight());
-            nodeSubset.or(seedAdjacencyMatrix.get(smallestNewSet.getRight()));
+            LOG.info("Adding " + seedAdjacencyMatrix.get(smallestNewSet).cardinality() + " nodes from seed " + smallestNewSet);
+            nodeSubset.or(seedAdjacencyMatrix.get(smallestNewSet));
 
             final BitSet seedSolution = find_cliques(subsetGraph(adjacencyMatrix, nodeSubset), R);
             // add new solution to the required nodes
@@ -497,7 +476,7 @@ public class SelectBarcodes extends CommandLineProgram {
     private static BitSet presentInGraph(final BitSet[] graph) {
         final BitSet presentInGraph = new BitSet();
         IntStream.range(0, graph.length)
-                .filter(i->!graph[i].isEmpty())
+                .filter(i -> !graph[i].isEmpty())
                 .forEach(presentInGraph::set);
         return presentInGraph;
     }
@@ -545,17 +524,17 @@ public class SelectBarcodes extends CommandLineProgram {
         return ret;
     }
 
-    /** calculates the cardinality of the intersection without creating new objects.
+    /**
+     * calculates the cardinality of the intersection without creating new objects.
      * This is the bottleneck...much of the time is currently spend in nextSetBit
-     *
-     * */
+     */
     static int intersectionCardinality(final BitSet lhs, final BitSet rhs) {
         int lhsNext;
         int retVal = 0;
         int rhsNext = 0;
 
         while ((lhsNext = lhs.nextSetBit(rhsNext)) != -1 &&
-                (rhsNext = rhs.nextSetBit(lhsNext)) != -1){
+                (rhsNext = rhs.nextSetBit(lhsNext)) != -1) {
             if (rhsNext == lhsNext) {
                 retVal++;
                 rhsNext++;
@@ -583,13 +562,13 @@ public class SelectBarcodes extends CommandLineProgram {
         @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
         Map<Integer, List<Integer>> degen = new CollectionUtil.DefaultingMap<>(i -> new ArrayList<>(), true);
 
-        presentInGraph(graph).stream().forEachOrdered(v->{
+        presentInGraph(graph).stream().forEachOrdered(v -> {
             final int deg = graph[v].cardinality();
             degen.get(deg).add(v);
             degrees.put(v, deg);
         });
 
-        if (degrees.isEmpty()){
+        if (degrees.isEmpty()) {
             return new Integer[0];
         }
         // degrees isn't empty, so get will succeed.
