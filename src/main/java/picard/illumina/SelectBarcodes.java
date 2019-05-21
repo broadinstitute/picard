@@ -303,9 +303,9 @@ public class SelectBarcodes extends CommandLineProgram {
      * 8           report R as a maximal clique
      * 9       choose a pivot vertex u in P ⋃ X
      * 10      for each vertex v in P \ N(u):
-     * 11          BronKerbosch2(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
-     * 12          P := P \ {v}
-     * 13          X := X ⋃ {v}
+     * 11          BronKerbosch2(R ⋃ {vv}, P ⋂ N(vv), X ⋂ N(vv))
+     * 12          P := P \ {vv}
+     * 13          X := X ⋃ {vv}
      * <p>
      * in the code below comments refer to line numbers in this pseudo-code
      *
@@ -342,6 +342,7 @@ public class SelectBarcodes extends CommandLineProgram {
         xTop.clear();
         xTop.or(excluded);
 
+        LOG.info(String.format("Looking for Maximal clique with |R|=%d, |P|=%d, |X|=%d", rTop.cardinality(), pTop.cardinality(), xTop.cardinality()));
         //3
         for (final Integer v : degeneracyOrder) {
             recursionLevel = 0;
@@ -361,7 +362,7 @@ public class SelectBarcodes extends CommandLineProgram {
             p.clear();
             p.or(pTop);
             p.and(graph[v]);
-            LOG.info("examining node " + v + " with " + p.cardinality() + "nodes in P.");
+            LOG.info(String.format("examining node %d with |P|=%d", v, p.cardinality()));
 
             // 4 X ⋂ N(v)
             BitSet x = Xs.get(recursionLevel);
@@ -395,7 +396,6 @@ public class SelectBarcodes extends CommandLineProgram {
                 }
 
                 if (Diffs.get(recursionLevel).isEmpty()) {
-                    final BitSet finalP = p;
 
                     // 9 choosing a pivot whose neighborhood has the largest intersection with p (so that
                     // when its neighborhood is removed from p's the remainder will be smallest)
@@ -405,20 +405,21 @@ public class SelectBarcodes extends CommandLineProgram {
 
                     int nextSetBit = -1;
                     int maxCardinality = -1;
-                    int argMax = -1;
+                    int u = -1;
 
+                    //9 chose a pivod vertex u in P ⋃ X
                     while ((nextSetBit = pOrX.nextSetBit(nextSetBit + 1)) != -1) {
-                        final int cardinality = intersectionCardinality(finalP, graph[nextSetBit]);
+                        final int cardinality = intersectionCardinality(p, graph[nextSetBit]);
                         if (cardinality > maxCardinality) {
                             maxCardinality = cardinality;
-                            argMax = nextSetBit;
+                            u = nextSetBit;
                         }
                     }
 
-                    //10 p \ graph[argMax]
+                    //10 p \ graph[u]
 
                     Diffs.get(recursionLevel).or(p);
-                    Diffs.get(recursionLevel).andNot(graph[argMax]);
+                    Diffs.get(recursionLevel).andNot(graph[u]);
                 }
 
                 final int vv = Diffs.get(recursionLevel).nextSetBit(0);
