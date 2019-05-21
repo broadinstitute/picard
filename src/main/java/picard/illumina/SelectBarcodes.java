@@ -346,7 +346,6 @@ public class SelectBarcodes extends CommandLineProgram {
         for (final Integer v : degeneracyOrder) {
             recursionLevel = 0;
 
-            LOG.info("examining node " + v);
 
             //4 {v}
             BitSet r = Rs.get(recursionLevel);
@@ -362,6 +361,7 @@ public class SelectBarcodes extends CommandLineProgram {
             p.clear();
             p.or(pTop);
             p.and(graph[v]);
+            LOG.info("examining node " + v + " with " + p.cardinality() + "nodes in P.");
 
             // 4 X ⋂ N(v)
             BitSet x = Xs.get(recursionLevel);
@@ -534,12 +534,12 @@ public class SelectBarcodes extends CommandLineProgram {
         int rhsNext = 0;
 
         while ((lhsNext = lhs.nextSetBit(rhsNext)) != -1 &&
-                (rhsNext = rhs.nextSetBit(lhsNext)) != -1) {
-            if (rhsNext == lhsNext) {
-                retVal++;
-                rhsNext++;
-            }
+                (rhsNext = rhs.nextSetBit(lhsNext)) != -1 &&
+                rhsNext != lhsNext) {
+            retVal++;
+            rhsNext++;
         }
+
         return retVal;
     }
 
