@@ -317,23 +317,17 @@ public class SelectBarcodes extends CommandLineProgram {
         final BitSet excluded = new BitSet();
         // any node that isn't a neighbor of all the required nodes should be removed from consideration
         IntStream.range(0, graph.length)
-                .filter(i -> intersectionCardinality(graph[i], required) != required.cardinality())
+                .filter(i -> required.stream().anyMatch(r->!graph[i].get(r)))
                 .forEach(excluded::set);
 
-
         final BitSet presentInGraph = presentInGraph(graph);
-        final BitSet inPlay = difference(presentInGraph, excluded);
+        //1
+        final BitSet pTop = difference(presentInGraph, excluded);
 
-        final Integer[] degeneracyOrder = getDegeneracyOrder(subsetGraph(graph, inPlay));
-
-        LOG.info(String.format("%d nodes in play, first nodes to examine %s", inPlay.cardinality(), Arrays.toString(Arrays.copyOfRange(degeneracyOrder, 0, 5))));
+        final Integer[] degeneracyOrder = getDegeneracyOrder(subsetGraph(graph, pTop));
 
         final BitSet best_clique = new BitSet();
         int bestCliqueSize = 0;
-
-        //1
-        final BitSet pTop = new BitSet();
-        presentInGraph(graph).stream().forEach(pTop::set);
 
         //2 (modified to allow input of required nodes)
         final BitSet rTop = new BitSet();
@@ -345,7 +339,8 @@ public class SelectBarcodes extends CommandLineProgram {
         xTop.clear();
         xTop.or(excluded);
 
-        LOG.info(String.format("Looking for Maximal clique with |R|=%d, |P|=%d, |X|=%d", rTop.cardinality(), pTop.cardinality(), xTop.cardinality()));
+        LOG.info(String.format("Looking for Maximal clique with |R|=%d, |P|=%d, |X|=%d, first nodes to examine %s",
+                rTop.cardinality(), pTop.cardinality(), xTop.cardinality(), Arrays.toString(Arrays.copyOfRange(degeneracyOrder, 0, 5))));
         //3
         for (final Integer v : degeneracyOrder) {
             recursionLevel = 0;
