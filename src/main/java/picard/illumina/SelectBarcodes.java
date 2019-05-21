@@ -533,10 +533,11 @@ public class SelectBarcodes extends CommandLineProgram {
         int rhsNext = 0;
 
         while ((lhsNext = lhs.nextSetBit(rhsNext)) != -1 &&
-                (rhsNext = rhs.nextSetBit(lhsNext)) != -1 &&
-                rhsNext != lhsNext) {
-            retVal++;
-            rhsNext++;
+                (rhsNext = rhs.nextSetBit(lhsNext)) != -1) {
+            if (rhsNext != lhsNext) {
+                retVal++;
+                rhsNext++;
+            }
         }
 
         return retVal;
