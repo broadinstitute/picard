@@ -322,8 +322,11 @@ public class SelectBarcodes extends CommandLineProgram {
 
 
         final BitSet presentInGraph = presentInGraph(graph);
+        final BitSet inPlay = difference(presentInGraph, excluded);
 
-        final Integer[] degeneracyOrder = getDegeneracyOrder(subsetGraph(graph, difference(presentInGraph, excluded)));
+        final Integer[] degeneracyOrder = getDegeneracyOrder(subsetGraph(graph, inPlay));
+
+        LOG.info(String.format("%d nodes in play, first nodes to examine %s", inPlay.cardinality(), Arrays.toString(Arrays.copyOfRange(degeneracyOrder, 0, 5))));
 
         final BitSet best_clique = new BitSet();
         int bestCliqueSize = 0;
@@ -559,7 +562,7 @@ public class SelectBarcodes extends CommandLineProgram {
         // a map from the vertices to their cardinality
         final Map<Integer, Integer> degrees = new CollectionUtil.DefaultingMap<>(0);
 
-        // a map form a given degeneracy to the list of vertices with that degeneracy
+        // a map from a given degeneracy to the list of vertices with that degeneracy
         @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
         Map<Integer, List<Integer>> degen = new CollectionUtil.DefaultingMap<>(i -> new ArrayList<>(), true);
 
