@@ -144,8 +144,10 @@ public class SelectBarcodes extends CommandLineProgram {
                     .map(e -> {
                         final int index = e.getKey();
                         final BitSet adjacency = e.getValue();
-                        final int newElements = difference(adjacency, nodeSubset).cardinality();
-                        return new Pair<>(newElements, index);
+                        //remove eXcluded nodes from seedAdjacency
+                        adjacency.andNot(X);
+                        final int newPossibleElements = difference(adjacency, nodeSubset).cardinality();
+                        return new Pair<>(newPossibleElements, index);
                     })
                     .filter(p -> p.getLeft() > 0)
                     .min(Comparator.comparingInt(Pair::getLeft));
