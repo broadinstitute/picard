@@ -49,6 +49,9 @@ public class SelectBarcodes extends CommandLineProgram {
     public int FAR_ENOUGH = 3;
 
     @Argument
+    public int MIN_CLIQUE_SIZE = 1;
+
+    @Argument
     public boolean COMPARE_REVCOMP = false;
 
     @Argument
@@ -140,7 +143,7 @@ public class SelectBarcodes extends CommandLineProgram {
             LOG.info("Adding " + seedAdjacencyMatrix.get(smallestNewSet).cardinality() + " nodes from seed " + smallestNewSet);
             nodeSubset.or(seedAdjacencyMatrix.get(smallestNewSet));
 
-            final BitSet seedSolution = find_cliques(subsetGraph(adjacencyMatrix, nodeSubset), R);
+            final BitSet seedSolution = find_cliques(subsetGraph(adjacencyMatrix, nodeSubset), R,MIN_CLIQUE_SIZE - R.cardinality());
             // add new solution to the required nodes
             R.or(seedSolution);
 
@@ -151,7 +154,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
         LOG.info("Adding " + (adjacencyMatrix.length - nodeSubset.cardinality()) + " remaining nodes.");
 
-        final BitSet solution = find_cliques(adjacencyMatrix, R);
+        final BitSet solution = find_cliques(adjacencyMatrix, R, MIN_CLIQUE_SIZE - R.cardinality());
 
         LOG.info("final solution has cardinality " + solution.cardinality() + mustHaveBarcodes.size());
 
@@ -311,7 +314,7 @@ public class SelectBarcodes extends CommandLineProgram {
      *
      * @param graph the input bit-sets defining the edges between barcodes that are compatible
      */
-    static BitSet find_cliques(final BitSet[] graph, final BitSet required) {
+    static BitSet find_cliques(final BitSet[] graph, final BitSet required, final int minSize) {
         final BitSet pOrX = new BitSet();
 
         final BitSet excluded = new BitSet();
@@ -324,7 +327,12 @@ public class SelectBarcodes extends CommandLineProgram {
         //1
         final BitSet pTop = difference(difference(presentInGraph, excluded), required);
 
-        final Integer[] degeneracyOrder = getDegeneracyOrder(subsetGraph(graph, pTop));
+        final Integer[] nodesInDegeneracyOrder = getDegeneracyOrder(subsetGraph(graph, pTop));
+        final Map<Integer, Integer> degeneracyOrder = new HashMap<>();
+
+        for (int i = 0; i < nodesInDegeneracyOrder.length; i++) {
+            degeneracyOrder.put(nodesInDegeneracyOrder[i], i);
+        }
 
         final BitSet best_clique = new BitSet();
         int bestCliqueSize = 0;
@@ -340,11 +348,10 @@ public class SelectBarcodes extends CommandLineProgram {
         xTop.or(excluded);
 
         LOG.info(String.format("Looking for Maximal clique with |R|=%d, |P|=%d, |X|=%d, first nodes to examine %s",
-                rTop.cardinality(), pTop.cardinality(), xTop.cardinality(), Arrays.toString(Arrays.copyOfRange(degeneracyOrder, 0, 5))));
+                rTop.cardinality(), pTop.cardinality(), xTop.cardinality(), Arrays.toString(Arrays.copyOfRange(nodesInDegeneracyOrder, 0, 5))));
         //3
-        for (final Integer v : degeneracyOrder) {
+        for (final Integer v : nodesInDegeneracyOrder) {
             recursionLevel = 0;
-
 
             //4 {v}
             BitSet r = Rs.get(recursionLevel);
@@ -383,7 +390,7 @@ public class SelectBarcodes extends CommandLineProgram {
                 // or if there is no way we could find a larger clique, stop trying
 
                 // 7
-                if (p.isEmpty() || p.cardinality() + r.cardinality() <= bestCliqueSize) {
+                if (p.isEmpty() || p.cardinality() + r.cardinality() <= Math.max(bestCliqueSize, minSize)){
 
                     Diffs.get(recursionLevel).clear();
                     registerClique(r, best_clique);
@@ -405,7 +412,7 @@ public class SelectBarcodes extends CommandLineProgram {
                     int maxCardinality = -1;
                     int u = -1;
 
-                    //9 chose a pivod vertex u in P ⋃ X
+                    //9 chose a pivot vertex u in P ⋃ X
                     while ((nextSetBit = pOrX.nextSetBit(nextSetBit + 1)) != -1) {
                         final int cardinality = intersectionCardinality(p, graph[nextSetBit]);
                         if (cardinality > maxCardinality) {
@@ -420,7 +427,16 @@ public class SelectBarcodes extends CommandLineProgram {
                     Diffs.get(recursionLevel).andNot(graph[u]);
                 }
 
-                final int vv = Diffs.get(recursionLevel).nextSetBit(0);
+                // MODIFICATION OF STANDARD ALGORITHEM:
+                // ITERATE HERE IN THE ORDER OF THE DEGENERACY AS WELL
+
+                final int vv = Diffs
+                        .get(recursionLevel)
+                        .stream()
+                        .boxed()
+                        .min(Comparator.comparingInt(degeneracyOrder::get))
+                        .orElse(-1);
+
                 if (vv == -1) {
                     p.clear();
                     x.clear();
