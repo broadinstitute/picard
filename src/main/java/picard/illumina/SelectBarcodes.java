@@ -322,7 +322,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
         final BitSet presentInGraph = presentInGraph(graph);
         //1
-        final BitSet pTop = difference(presentInGraph, excluded);
+        final BitSet pTop = difference(difference(presentInGraph, excluded), required);
 
         final Integer[] degeneracyOrder = getDegeneracyOrder(subsetGraph(graph, pTop));
 
