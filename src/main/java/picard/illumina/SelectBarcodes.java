@@ -76,13 +76,13 @@ public class SelectBarcodes extends CommandLineProgram {
     static File output = null;
     private static Log LOG = Log.getInstance(SelectBarcodes.class);
 
-    // The P verticies are the "Potential" verticies, verticies that may be chosen
+    // The P vertices are the "Potential" vertices, vertices that may be chosen
     private static final List<BitSet> Ps = new DefaultingArrayList<>(i -> new BitSet());
 
-    // The X verticies are the "eXcluded" verticies, those that should not be examined
+    // The X vertices are the "eXcluded" vertices, those that should not be examined
     private static final List<BitSet> Xs = new DefaultingArrayList<>(i -> new BitSet());
 
-    // the R verticies are the "Required" verticies, those that must be part of the clique
+    // the R vertices are the "Required" vertices, those that must be part of the clique
     private static final List<BitSet> Rs = new DefaultingArrayList<>(i -> new BitSet());
 
     // this is a temporary variable holding the difference between P and the neighbors of the "pivot" vertex
@@ -126,7 +126,7 @@ public class SelectBarcodes extends CommandLineProgram {
         while (true) {
 
             seedAdjacencyMatrix.values().forEach(adjacency -> {
-                adjacency.andNot(X);
+//                adjacency.andNot(X);
                 adjacency.andNot(nodeSubset);
             });
 
@@ -143,18 +143,18 @@ public class SelectBarcodes extends CommandLineProgram {
             LOG.info("Adding " + seedAdjacencyMatrix.get(smallestNewSet).cardinality() + " nodes from seed " + smallestNewSet);
             nodeSubset.or(seedAdjacencyMatrix.get(smallestNewSet));
 
-            final BitSet seedSolution = find_cliques(subsetGraph(adjacencyMatrix, nodeSubset), R,MIN_CLIQUE_SIZE - R.cardinality());
+            final BitSet seedSolution = find_cliques(subsetGraph(adjacencyMatrix, nodeSubset), R);
             // add new solution to the required nodes
             R.or(seedSolution);
 
-            // add other nodes to excluded nodes
-            X.or(difference(nodeSubset, seedSolution));
+//             add other nodes to excluded nodes
+//            X.or(difference(nodeSubset, seedSolution));
         }
         // finally, add all remaining nodes
 
         LOG.info("Adding " + (adjacencyMatrix.length - nodeSubset.cardinality()) + " remaining nodes.");
 
-        final BitSet solution = find_cliques(adjacencyMatrix, R, MIN_CLIQUE_SIZE - R.cardinality());
+        final BitSet solution = find_cliques(adjacencyMatrix, R);
 
         LOG.info("final solution has cardinality " + (solution.cardinality() + mustHaveBarcodes.size()));
 
@@ -314,7 +314,7 @@ public class SelectBarcodes extends CommandLineProgram {
      *
      * @param graph the input bit-sets defining the edges between barcodes that are compatible
      */
-    static BitSet find_cliques(final BitSet[] graph, final BitSet required, final int minSize) {
+    static BitSet find_cliques(final BitSet[] graph, final BitSet required) {
         final BitSet pOrX = new BitSet();
 
         final BitSet excluded = new BitSet();
@@ -349,6 +349,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
         LOG.info(String.format("Looking for Maximal clique with |R|=%d, |P|=%d, |X|=%d, first nodes to examine %s",
                 rTop.cardinality(), pTop.cardinality(), xTop.cardinality(), Arrays.toString(Arrays.copyOfRange(nodesInDegeneracyOrder, 0, 5))));
+
         //3
         for (final Integer v : nodesInDegeneracyOrder) {
             recursionLevel = 0;
@@ -390,7 +391,7 @@ public class SelectBarcodes extends CommandLineProgram {
                 // or if there is no way we could find a larger clique, stop trying
 
                 // 7
-                if (p.isEmpty() || p.cardinality() + r.cardinality() <= Math.max(bestCliqueSize, minSize)){
+                if (p.isEmpty() || p.cardinality() + r.cardinality() <= bestCliqueSize){
 
                     Diffs.get(recursionLevel).clear();
                     registerClique(r, best_clique);
