@@ -116,7 +116,7 @@ public class SelectBarcodes extends CommandLineProgram {
         }
 
         final BitSet R = new BitSet();
-        final BitSet X = new BitSet();
+//        final BitSet X = new BitSet();
 
         final BitSet nodeSubset = new BitSet();
 
@@ -127,6 +127,11 @@ public class SelectBarcodes extends CommandLineProgram {
 
             seedAdjacencyMatrix.values().forEach(adjacency -> {
 //                adjacency.andNot(X);
+
+                //subset the seed subset to those that are compatible with the current required nodes
+                R.stream().forEach(r->adjacency.and(adjacencyMatrix[r]));
+                //subset the seed subsets to those elements that haven't already been added
+
                 adjacency.andNot(nodeSubset);
             });
 
