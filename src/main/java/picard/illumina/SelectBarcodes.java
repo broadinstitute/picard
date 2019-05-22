@@ -156,7 +156,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
         final BitSet solution = find_cliques(adjacencyMatrix, R, MIN_CLIQUE_SIZE - R.cardinality());
 
-        LOG.info("final solution has cardinality " + solution.cardinality() + mustHaveBarcodes.size());
+        LOG.info("final solution has cardinality " + (solution.cardinality() + mustHaveBarcodes.size()));
 
         return 0;
     }
