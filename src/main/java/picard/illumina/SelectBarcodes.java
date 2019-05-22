@@ -148,10 +148,14 @@ public class SelectBarcodes extends CommandLineProgram {
             LOG.info("Adding " + seedAdjacencyMatrix.get(smallestNewSet).cardinality() + " nodes from seed " + smallestNewSet);
             nodeSubset.or(seedAdjacencyMatrix.get(smallestNewSet));
 
-            final BitSet seedSolution = find_cliques(subsetGraph(adjacencyMatrix, nodeSubset), R);
-            // add new solution to the required nodes
-            R.or(seedSolution);
+            // only find a new clique if there are enough nodes to pick from
+            // to avoid resulting in a greedy algorithm, if possible
 
+            if (difference(nodeSubset, R).cardinality() > 20) {
+                final BitSet seedSolution = find_cliques(subsetGraph(adjacencyMatrix, nodeSubset), R);
+                // add new solution to the required nodes
+                R.or(seedSolution);
+            }
 //             add other nodes to excluded nodes
 //            X.or(difference(nodeSubset, seedSolution));
         }
@@ -373,7 +377,7 @@ public class SelectBarcodes extends CommandLineProgram {
             p.clear();
             p.or(pTop);
             p.and(graph[v]);
-            LOG.info(String.format("examining node %d with |P|=%d", v, p.cardinality()));
+            LOG.debug(String.format("examining node %d with |P|=%d", v, p.cardinality()));
 
             // 4 X ⋂ N(v)
             BitSet x = Xs.get(recursionLevel);
