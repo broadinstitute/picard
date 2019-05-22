@@ -550,7 +550,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
         while ((lhsNext = lhs.nextSetBit(rhsNext)) != -1 &&
                 (rhsNext = rhs.nextSetBit(lhsNext)) != -1) {
-            if (rhsNext != lhsNext) {
+            if (rhsNext == lhsNext) {
                 retVal++;
                 rhsNext++;
             }
