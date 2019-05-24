@@ -195,7 +195,7 @@ public class LiftoverUtils {
 
     private static Allele reverseComplement(final Allele oldAllele, final Interval target, final ReferenceSequence referenceSequence, final boolean isIndel, final boolean addToStart) {
 
-        if (oldAllele.isSymbolic() || oldAllele.isNoCall()) {
+        if (oldAllele.isSymbolic() || oldAllele.isNoCall() || oldAllele.equals(Allele.SPAN_DEL)) {
             return oldAllele;
         } else if (isIndel) {
             // target.getStart is 1-based, reference bases are 0-based
@@ -362,7 +362,9 @@ public class LiftoverUtils {
         boolean changesInAlleles = true;
 
         final Map<Allele, byte[]> alleleBasesMap = new HashMap<>();
-        alleles.forEach(a -> alleleBasesMap.put(a, a.getBases()));
+
+        // Put each allele into the alleleBasesMap unless it is a spanning deletion
+        alleles.stream().filter(a->!a.equals(Allele.SPAN_DEL)).forEach(a -> alleleBasesMap.put(a, a.getBases()));
 
         int theStart = start;
         int theEnd = end;
@@ -426,6 +428,9 @@ public class LiftoverUtils {
 
         final Map<Allele, Allele> fixedAlleleMap = alleleBasesMap.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, me -> Allele.create(me.getValue(), me.getKey().isReference())));
+
+        // A fixed spanning deletion it itself a spanning deletion
+        fixedAlleleMap.put(Allele.SPAN_DEL, Allele.SPAN_DEL);
 
         //retain original order:
         List<Allele> fixedAlleles = alleles.stream()

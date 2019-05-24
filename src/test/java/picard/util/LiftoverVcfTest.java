@@ -11,6 +11,7 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFConstants;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -396,6 +397,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Allele ACGT = Allele.create("ACGT", false);
         final Allele AACG = Allele.create("AACG", false);
 
+        final Allele spanningDeletion = Allele.create(Allele.SPAN_DEL_STRING, false);
+
         final List<Object[]> tests = new ArrayList<>();
 
         final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1");
@@ -578,6 +581,42 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.genotypes(genotypeBuilder.make());
         result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), REFERENCE, result_builder.make()});
+
+        // insertion at end of section, with a spanning deletion
+        // a test that converts the initial C to a AC which requires
+        // code in LiftOver::extendOneBase(., false)
+        //
+        // improperly aligned with spanning deletion
+        // TTTT(G)->TTTTG(G) -> C/CC
+
+        start = CHAIN_SIZE - 4;
+        stop = CHAIN_SIZE - 1;
+
+        // Note that the spanning deletion prevents the indel from being left aligned.
+        builder.source("test13").start(start).stop(stop).alleles(CollectionUtil.makeList(Allele.create("TTTT", true), Allele.create("TTTTG"), spanningDeletion));
+        result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, Allele.create("CC"), spanningDeletion));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
+        tests.add(new Object[]{builder.make(), REFERENCE, result_builder.make()});
+
+        // non-simple deletion with spanning deletion
+        //  ACGT(T)*/A(T) -> AACG(T)*/A(T)
+        //       position of 13 ^ in result
+        start = CHAIN_SIZE - 13;
+        stop = start + 3;
+
+        builder.source("test14").start(start).stop(stop).alleles(CollectionUtil.makeList(RefACGT, A, spanningDeletion));
+        result_builder.start(CHAIN_SIZE - stop).stop(CHAIN_SIZE - start).alleles(CollectionUtil.makeList(RefAACG, A, spanningDeletion));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
+        tests.add(new Object[]{builder.make(), REFERENCE, result_builder.make()});
+        
+        builder.noGenotypes();
+        result_builder.noGenotypes();
 
         return tests.iterator();
     }
