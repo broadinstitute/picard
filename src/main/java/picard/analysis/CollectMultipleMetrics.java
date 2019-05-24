@@ -49,6 +49,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Class that is designed to instantiate and execute multiple metrics programs that extend
@@ -501,8 +502,13 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                     "MINIMUM_INSERT_SIZE and MAXIMUM_INSERT_SIZE will be ignored in CollectSequencingArtifactMetrics.")
     public boolean INCLUDE_UNPAIRED = false;
 
-    @Argument
-    public List<String> EXTRA_ARGUMENTS = null;
+    @Argument(doc="extra arguments to the various tools can be specified using the following format:" +
+            "<PROGRAM>::<ARGUMENT_AND_VALUE> where <PROGRAM> is one of the programs specified in PROGRAM, " +
+            "and <ARGUMENT_AND_VALUE> are the argument and value that you'd like to specify as you would on the commandline." +
+            "For example, to change the HISTOGRAM_WIDTH in CollectInsertSizeMetrics to 200 using the legacy parser, use:\n " +
+            "EXTRA_ARGUMENT=CollectInsertSizeMetrics::HISTOGRAM_WIDTH=200\n " +
+            "Note that the following arguments cannot be modified on a per-program level: INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, and STOP_AFTER")
+    public List<String> EXTRA_ARGUMENT = null;
 
     /**
      * Contents of PROGRAM set is transferred to this set during command-line validation, so that an outside
@@ -543,7 +549,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             OUTPUT = OUTPUT.substring(0, OUTPUT.length() - 1);
         }
 
-        final Map<ProgramInterface, List<String>> additionalArguments = processAdditionalArguments(EXTRA_ARGUMENTS);
+        final Map<ProgramInterface, List<String>> additionalArguments = processAdditionalArguments(EXTRA_ARGUMENT);
 
         final List<SinglePassSamProgram> programs = new ArrayList<>();
         for (final ProgramInterface program : programsToRun) {
@@ -572,11 +578,19 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
             if (additionalArguments.containsKey(program)) {
                 final CommandLineParser commandLineParser = getCommandLineParser(instance);
-                commandLineParser.parseArguments(System.err, additionalArguments.get(program).toArray(new String[0]));
+                final boolean success = commandLineParser.parseArguments(System.err, additionalArguments.get(program).toArray(new String[0]));
+                if (!success) {
+                    throw new IllegalArgumentException("Failed to parse arguments for " + program);
+                }
+                additionalArguments.remove(program);
             }
 
             instance.setDefaultHeaders(getDefaultHeaders());
             programs.add(instance);
+        }
+        if(!additionalArguments.isEmpty()){
+            throw new IllegalArgumentException("EXTRA_ARGUMENT values were provided, but appropriate program wasn't requested:" +
+                    additionalArguments.entrySet().stream().map(e->e.getKey().toString()+"::"+e.getValue().toString()).collect(Collectors.joining()));
         }
         SinglePassSamProgram.makeItSo(INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, STOP_AFTER, programs);
 
@@ -589,7 +603,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         for (String str : arguments) {
             final Matcher matcher = pattern.matcher(str);
             if (!matcher.matches()) {
-                throw new IllegalArgumentException("couldn't understand ADDITIONAL_ARGUMENT " + str + " it doesn't conform to the regular expression given by " + pattern.pattern());
+                throw new IllegalArgumentException("couldn't understand EXTRA_ARGUMENT " + str + " it doesn't conform to the regular expression given by " + pattern.pattern());
             }
             final String programName = matcher.group("program");
             final ProgramInterface program;
