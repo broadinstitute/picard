@@ -51,11 +51,18 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 "METRIC_ACCUMULATION_LEVEL=" + MetricAccumulationLevel.ALL_READS.name(),
                 "PROGRAM=null",
                 "PROGRAM=" + CollectMultipleMetrics.Program.CollectAlignmentSummaryMetrics.name(),
-                "PROGRAM=" + CollectMultipleMetrics.Program.CollectInsertSizeMetrics.name()
+                "PROGRAM=" + CollectMultipleMetrics.Program.CollectInsertSizeMetrics.name(),
+                "EXTRA_ARGUMENTS=CollectInsertSizeMetrics::HISTOGRAM_WIDTH=58"
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<InsertSizeMetrics, Comparable<?>> outputISM = new MetricsFile<>();
+        outputISM.read(new FileReader(outfile + ".insert_size_metrics"));
+        for (final InsertSizeMetrics metrics : outputISM.getMetrics()) {
+            Assert.assertEquals(metrics.MEAN_INSERT_SIZE, 40);
+        }
+
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile + ".alignment_summary_metrics"));
 
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
