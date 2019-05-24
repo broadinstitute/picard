@@ -48,14 +48,15 @@ jacoco {
 }
 
 final requiredJavaVersion = "8"
-final buildPrerequisitesMessage = "See https://github.com/broadinstitute/picard/blob/master/README.md#building-picard for information on how to build picard"
+final buildPrerequisitesMessage = "See https://github.com/broadinstitute/picard/blob/master/README.md#building-picard for information on how to build picard."
 // Ensure that we have the right JDK version, a clone of the git repository
 def ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage) {
     // Make sure we can get a ToolProvider class loader. If not we may have just a JRE, or a JDK from the future.
     if (ToolProvider.getSystemToolClassLoader() == null) {
         throw new GradleException(
-                "The ClassLoader obtained from the Java ToolProvider is null. "
-                + "A Java $requiredJavaVersion JDK must be installed. $buildPrerequisitesMessage")
+                "The ClassLoader obtained from the Java ToolProvider is null. \n"
+                + "A Java $requiredJavaVersion JDK must be installed. $buildPrerequisitesMessage \n"
+		+ "The detected java version was ${JavaVersion.current()} located at: ${System.getProperty('java.home')} ")
     }
     if (!file(".git").isDirectory()) {
         throw new GradleException("The Picard Github repository must be cloned using \"git clone\" to run the build. "
