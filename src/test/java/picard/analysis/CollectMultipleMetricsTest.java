@@ -11,10 +11,12 @@ import htsjdk.samtools.SAMTextHeaderCodec;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.BufferedLineReader;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
 
@@ -23,7 +25,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -114,22 +118,29 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
 
     @DataProvider
     Object[][] extraArgumentValue() {
-        return new Object[][]{
-                new Object[]{"BLAH::HISTOGRAM_WIDTH=58"},
-                new Object[]{"QualityScoreDistribution::HISTOGRAM_WIDTH=58"},
-                new Object[]{"CollectInsertSizeMetrics::BLAH=58"},
-                new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH= 58"},
-                new Object[]{"CollectInsertSizeMetrics:HISTOGRAM_WIDTH=58"},
-                new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH="},
-                new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH=hello"},
-                new Object[]{"CollectInsertSizeMetrics::REFERENCE=whyNot.fasta"},
-                new Object[]{"CollectInsertSizeMetrics::OUTPUT="},
-                new Object[]{"CollectInsertSizeMetrics::OUTPUT =hi.out"},
-        };
+                List<Object[]> tests = new ArrayList<>();
+
+                //this are actually legal after convertion to non-legacy
+                if (CommandLineProgram.useLegacyParser(getClass())) {
+                    tests.add(new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH= 58"});
+                    tests.add(new Object[]{"CollectInsertSizeMetrics::OUTPUT =hi.out"});
+                }
+
+                tests.add(new Object[]{"BLAH::HISTOGRAM_WIDTH=58"});
+                tests.add(new Object[]{"QualityScoreDistribution::HISTOGRAM_WIDTH=58"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::BLAH=58"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics:HISTOGRAM_WIDTH=58"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH="});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH=hello"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::REFERENCE=whyNot.fasta"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::OUTPUT="});
+
+        return tests.toArray(new Object[0][]);
     }
 
-    @Test(expectedExceptions = {IllegalArgumentException.class, SAMException.class}, dataProvider = "extraArgumentValue")
+    @Test(expectedExceptions = {IllegalArgumentException.class, SAMException.class, CommandLineException.class}, dataProvider = "extraArgumentValue")
     public void testMultipleMetricsFailing(final String extra) throws IOException {
+
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
         final File outfile = File.createTempFile("alignmentMetrics", "");
@@ -480,5 +491,4 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
             setBuilder.addPair(newReadName, 0, start + ID, start + ID + 99);
         }
     }
-
 }

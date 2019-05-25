@@ -1,6 +1,7 @@
 package picard.cmdline;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +33,12 @@ public class CommandLineSyntaxTranslater {
                 if (splitArgPair.length == 1) {   // assume positional arg
                     return Arrays.stream(new String[]{ originalArgPair });
                 } else if (splitArgPair.length == 2) {
+                    //deal with EXTRA_ARGUMENT in CollectMultipleMetrics
+                    if (splitArgPair[0].equals("EXTRA_ARGUMENT")) {
+                        splitArgPair[1] = splitArgPair[1]
+                                .replace("::", "::" + BARCLAY_LONG_OPTION_PREFIX)
+                                .replace(LEGACY_VALUE_SEPARATOR, " ");
+                    }
                     // it doesn't matter whether we use the short short name token ("-") or the long name token
                     // ("--"), so just treat everything as if it were a short name, since the CLP will accept either
                     return Arrays.stream(new String[]{BARCLAY_SHORT_OPTION_PREFIX + splitArgPair[0], splitArgPair[1]});

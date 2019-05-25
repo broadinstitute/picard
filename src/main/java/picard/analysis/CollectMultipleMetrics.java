@@ -599,7 +599,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
     private static Map<ProgramInterface, List<String>> processAdditionalArguments(final List<String> arguments) {
         final Map<ProgramInterface, List<String>> map = new HashMap<>();
-        final Pattern pattern = Pattern.compile("(?<program>.*)::(?<argumentAndValue>.+?)(?<optionalValue> .+)?");
+        final Pattern pattern = Pattern.compile("(?<program>.*)::(?<argumentAndValue>.+?)( +(?<optionalValue>.+))?");
         for (String str : arguments) {
             final Matcher matcher = pattern.matcher(str);
             if (!matcher.matches()) {
