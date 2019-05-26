@@ -400,11 +400,12 @@ public class SelectBarcodes extends CommandLineProgram {
                 // or if there is no way we could find a larger clique, stop trying
 
                 // 7
+                registerClique(r, best_clique);
+
                 if (p.isEmpty() || p.cardinality() + r.cardinality() <= bestCliqueSize){
 
-                    Diffs.get(recursionLevel).clear();
-                    registerClique(r, best_clique);
                     bestCliqueSize = best_clique.cardinality();
+                    Diffs.get(recursionLevel).clear();
                     recursionLevel--;
 
                     continue;
