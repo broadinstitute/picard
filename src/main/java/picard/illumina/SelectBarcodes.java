@@ -49,9 +49,6 @@ public class SelectBarcodes extends CommandLineProgram {
     public int FAR_ENOUGH = 3;
 
     @Argument
-    public int MIN_CLIQUE_SIZE = 1;
-
-    @Argument
     public boolean COMPARE_REVCOMP = false;
 
     @Argument
@@ -116,7 +113,6 @@ public class SelectBarcodes extends CommandLineProgram {
         }
 
         final BitSet R = new BitSet();
-//        final BitSet X = new BitSet();
 
         final BitSet nodeSubset = new BitSet();
 
@@ -126,7 +122,6 @@ public class SelectBarcodes extends CommandLineProgram {
         while (true) {
 
             seedAdjacencyMatrix.values().forEach(adjacency -> {
-//                adjacency.andNot(X);
 
                 //subset the seed subset to those that are compatible with the current required nodes
                 R.stream().forEach(r->adjacency.and(adjacencyMatrix[r]));
@@ -134,6 +129,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
                 adjacency.andNot(nodeSubset);
             });
+
 
             final Integer smallestNewSet = seedAdjacencyMatrix.keySet()
                     .stream()
@@ -144,6 +140,10 @@ public class SelectBarcodes extends CommandLineProgram {
             if (smallestNewSet == -1) {
                 break;
             }
+
+            //subset nodeSubset to the union of R and the nodes that are compatible with r
+            R.stream().forEach(r ->
+                nodeSubset.and(union(adjacencyMatrix[r], R)));
 
             LOG.info("Adding " + seedAdjacencyMatrix.get(smallestNewSet).cardinality() + " nodes from seed " + smallestNewSet);
             nodeSubset.or(seedAdjacencyMatrix.get(smallestNewSet));
@@ -156,12 +156,10 @@ public class SelectBarcodes extends CommandLineProgram {
                 // add new solution to the required nodes
                 R.or(seedSolution);
             }
-//             add other nodes to excluded nodes
-//            X.or(difference(nodeSubset, seedSolution));
         }
-        // finally, add all remaining nodes
+        // finally, adding all remaining nodes
 
-        LOG.info("Adding " + (adjacencyMatrix.length - nodeSubset.cardinality()) + " remaining nodes.");
+        LOG.info("Adding all remaining nodes.");
 
         final BitSet solution = find_cliques(adjacencyMatrix, R);
 
@@ -261,7 +259,6 @@ public class SelectBarcodes extends CommandLineProgram {
                 (!COMPARE_REVCOMP || levenshtein(lhs, SequenceUtil.reverseComplement(rhs), FAR_ENOUGH) >= FAR_ENOUGH);
     }
 
-    //returns the number of SEED barcodes that were placed into "barcodes"
     private void openBarcodes() {
         barcodes.clear();
         mustHaveBarcodes.clear();
@@ -400,12 +397,12 @@ public class SelectBarcodes extends CommandLineProgram {
                 // or if there is no way we could find a larger clique, stop trying
 
                 // 7
-                registerClique(r, best_clique);
-
                 if (p.isEmpty() || p.cardinality() + r.cardinality() <= bestCliqueSize){
 
-                    bestCliqueSize = best_clique.cardinality();
                     Diffs.get(recursionLevel).clear();
+                    if (registerClique(r, best_clique)) {
+                        bestCliqueSize = best_clique.cardinality();
+                    }
                     recursionLevel--;
 
                     continue;
@@ -507,7 +504,7 @@ public class SelectBarcodes extends CommandLineProgram {
         return presentInGraph;
     }
 
-    private static void registerClique(final BitSet r, final BitSet bestClique) {
+    private static boolean registerClique(final BitSet r, final BitSet bestClique) {
         if (r.cardinality() > bestClique.cardinality()) {
             bestClique.clear();
             bestClique.or(r);
@@ -521,7 +518,9 @@ public class SelectBarcodes extends CommandLineProgram {
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
+            return true;
         }
+        return false;
     }
 
     private static BitSet[] subsetGraph(final BitSet[] graph, final BitSet mask) {
