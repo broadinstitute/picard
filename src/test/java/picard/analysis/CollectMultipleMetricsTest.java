@@ -60,7 +60,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 "PROGRAM=null",
                 "PROGRAM=" + CollectMultipleMetrics.Program.CollectAlignmentSummaryMetrics.name(),
                 "PROGRAM=" + CollectMultipleMetrics.Program.CollectInsertSizeMetrics.name(),
-                "EXTRA_ARGUMENT=CollectInsertSizeMetrics::HISTOGRAM_WIDTH=58"
+                "EXTRA_ARGUMENT=CollectInsertSizeMetrics::HISTOGRAM_WIDTH= 58"
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -120,9 +120,8 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
     Object[][] extraArgumentValue() {
                 List<Object[]> tests = new ArrayList<>();
 
-                //this are actually legal after convertion to non-legacy
+                // this is actually legal after convertion to non-legacy
                 if (CommandLineProgram.useLegacyParser(getClass())) {
-                    tests.add(new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH= 58"});
                     tests.add(new Object[]{"CollectInsertSizeMetrics::OUTPUT =hi.out"});
                 }
 
@@ -130,6 +129,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 tests.add(new Object[]{"QualityScoreDistribution::HISTOGRAM_WIDTH=58"});
                 tests.add(new Object[]{"CollectInsertSizeMetrics::BLAH=58"});
                 tests.add(new Object[]{"CollectInsertSizeMetrics:HISTOGRAM_WIDTH=58"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH=5a8"});
                 tests.add(new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH="});
                 tests.add(new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH=hello"});
                 tests.add(new Object[]{"CollectInsertSizeMetrics::REFERENCE=whyNot.fasta"});
