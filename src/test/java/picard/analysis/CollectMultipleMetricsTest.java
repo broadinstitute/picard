@@ -67,7 +67,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         final MetricsFile<InsertSizeMetrics, Comparable<?>> outputISM = new MetricsFile<>();
         outputISM.read(new FileReader(outfile + ".insert_size_metrics"));
         for (final InsertSizeMetrics metrics : outputISM.getMetrics()) {
-            Assert.assertEquals(metrics.MEAN_INSERT_SIZE, 40);
+            Assert.assertEquals(metrics.MEAN_INSERT_SIZE, 40D);
         }
 
         final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
