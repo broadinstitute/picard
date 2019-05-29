@@ -3,6 +3,7 @@ package picard.illumina;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
+import org.apache.commons.io.output.NullOutputStream;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -124,7 +125,7 @@ public class SelectBarcodes extends CommandLineProgram {
             seedAdjacencyMatrix.values().forEach(adjacency -> {
 
                 //subset the seed subset to those that are compatible with the current required nodes
-                R.stream().forEach(r->adjacency.and(adjacencyMatrix[r]));
+                R.stream().forEach(r -> adjacency.and(adjacencyMatrix[r]));
                 //subset the seed subsets to those elements that haven't already been added
 
                 adjacency.andNot(nodeSubset);
@@ -143,7 +144,7 @@ public class SelectBarcodes extends CommandLineProgram {
 
             //subset nodeSubset to the union of R and the nodes that are compatible with r
             R.stream().forEach(r ->
-                nodeSubset.and(union(adjacencyMatrix[r], R)));
+                    nodeSubset.and(union(adjacencyMatrix[r], R)));
 
             LOG.info("Adding " + seedAdjacencyMatrix.get(smallestNewSet).cardinality() + " nodes from seed " + smallestNewSet);
             nodeSubset.or(seedAdjacencyMatrix.get(smallestNewSet));
@@ -173,7 +174,7 @@ public class SelectBarcodes extends CommandLineProgram {
         final List<String> filteredBarcodes = barcodes.stream().filter(b -> {
                     final Optional<String> firstClose = mustHaveBarcodes
                             .stream()
-                            .filter(m -> !areFarEnough(b, m))
+                            .filter(m -> effectiveDistance(b, m) < FAR_ENOUGH)
                             .findAny();
                     if (firstClose.isPresent()) {
 
@@ -190,32 +191,25 @@ public class SelectBarcodes extends CommandLineProgram {
         LOG.info("After removing barcodes that were too close to MUST_HAVE barcodes, there are " + filteredBarcodes.size() + " remaining.");
         adjacencyMatrix = new BitSet[barcodes.size()];
 
-        for (int ii = 0; ii < barcodes.size(); ii++) {
-            final BitSet adjacency = new BitSet(barcodes.size());
+        try (PrintWriter writer = DISTANCES != null ? new PrintWriter(DISTANCES) : new PrintWriter(new NullOutputStream())) {
+            writer.append("BARCODE\t");
+            writer.println(String.join("\t", barcodes));
+            for (int ii = 0; ii < barcodes.size(); ii++) {
+                final BitSet adjacency = new BitSet(barcodes.size());
+                writer.append(barcodes.get(ii)).append('\t');
 
-            for (int jj = 0; jj < barcodes.size(); jj++) {
-                adjacency.set(jj, areFarEnough(barcodes.get(ii), barcodes.get(jj)));
-            }
+                for (int jj = 0; jj < barcodes.size(); jj++) {
 
-            adjacencyMatrix[ii] = adjacency;
-        }
-
-        if (DISTANCES != null) {
-            try (final PrintWriter writer = new PrintWriter(DISTANCES)) {
-                writer.append("BARCODE\t");
-                writer.println(String.join("\t", barcodes));
-                for (int ii = 0; ii < barcodes.size(); ii++) {
-                    final BitSet adjacency = adjacencyMatrix[ii];
-
-                    writer.append(barcodes.get(ii)).append('\t');
-                    for (int jj = 0; jj < barcodes.size(); jj++) {
-                        writer.append(adjacency.get(jj) ? "1" : "0").append('\t');
-                    }
-                    writer.append('\n');
+                    final int distance = effectiveDistance(barcodes.get(ii), barcodes.get(jj));
+                    adjacency.set(jj, distance >= FAR_ENOUGH);
+                    writer.append(Integer.toString(distance)).append('\t');
                 }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+
+                writer.append('\n');
+                adjacencyMatrix[ii] = adjacency;
             }
+        } catch (FileNotFoundException e) {
+            LOG.error("File " + DISTANCES + "couldn't be opened for writing.", e);
         }
 
         for (int ii = 0; ii < seedBarcodes.size(); ii++) {
@@ -234,12 +228,12 @@ public class SelectBarcodes extends CommandLineProgram {
         return StringDistanceUtils.levenshteinDistance(lhs.getBytes(), rhs.getBytes(), farEnough);
     }
 
-    private boolean areFarEnough(final String lhs, final String rhs) {
+    private int effectiveDistance(final String lhs, final String rhs) {
         if (!ALLOW_REV) {
             final byte[] rev = rhs.getBytes();
             SequenceUtil.reverse(rev, 0, rev.length);
             if (lhs.equals(Arrays.toString(rev))) {
-                return false;
+                return -1;
             }
         }
 
@@ -247,16 +241,20 @@ public class SelectBarcodes extends CommandLineProgram {
             final byte[] comp = SequenceUtil.reverseComplement(rhs).getBytes();
             SequenceUtil.reverse(comp, 0, comp.length);
             if (lhs.equals(Arrays.toString(comp))) {
-                return false;
+                return -2;
             }
         }
 
         if (!ALLOW_REVCOMP && lhs.equals(SequenceUtil.reverseComplement(rhs))) {
-            return false;
+            return -3;
         }
 
-        return levenshtein(lhs, rhs, FAR_ENOUGH) >= FAR_ENOUGH &&
-                (!COMPARE_REVCOMP || levenshtein(lhs, SequenceUtil.reverseComplement(rhs), FAR_ENOUGH) >= FAR_ENOUGH);
+        int dist = levenshtein(lhs, rhs, FAR_ENOUGH);
+        if (!COMPARE_REVCOMP) {
+            return dist;
+        } else {
+            return Math.min(dist, levenshtein(lhs, SequenceUtil.reverseComplement(rhs), FAR_ENOUGH));
+        }
     }
 
     private void openBarcodes() {
@@ -326,7 +324,7 @@ public class SelectBarcodes extends CommandLineProgram {
         final BitSet excluded = new BitSet();
         // any node that isn't a neighbor of all the required nodes should be removed from consideration
         IntStream.range(0, graph.length)
-                .filter(i -> required.stream().anyMatch(r->!graph[i].get(r)))
+                .filter(i -> required.stream().anyMatch(r -> !graph[i].get(r)))
                 .forEach(excluded::set);
 
         final BitSet presentInGraph = presentInGraph(graph);
@@ -397,7 +395,7 @@ public class SelectBarcodes extends CommandLineProgram {
                 // or if there is no way we could find a larger clique, stop trying
 
                 // 7
-                if (p.isEmpty() || p.cardinality() + r.cardinality() <= bestCliqueSize){
+                if (p.isEmpty() || p.cardinality() + r.cardinality() <= bestCliqueSize) {
 
                     Diffs.get(recursionLevel).clear();
                     if (registerClique(r, best_clique)) {
