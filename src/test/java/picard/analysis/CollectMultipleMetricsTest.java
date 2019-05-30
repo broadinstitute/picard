@@ -60,12 +60,17 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 "PROGRAM=null",
                 "PROGRAM=" + CollectMultipleMetrics.Program.CollectAlignmentSummaryMetrics.name(),
                 "PROGRAM=" + CollectMultipleMetrics.Program.CollectInsertSizeMetrics.name(),
-                "EXTRA_ARGUMENT=CollectInsertSizeMetrics::HISTOGRAM_WIDTH= 58"
+                "EXTRA_ARGUMENT=CollectInsertSizeMetrics::HISTOGRAM_WIDTH= 58",
+                "EXTRA_ARGUMENT=CollectInsertSizeMetrics::METRIC_ACCUMULATION_LEVEL=LIBRARY",
+                "EXTRA_ARGUMENT=CollectInsertSizeMetrics::METRIC_ACCUMULATION_LEVEL=READ_GROUP",
+
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<InsertSizeMetrics, Comparable<?>> outputISM = new MetricsFile<>();
         outputISM.read(new FileReader(outfile + ".insert_size_metrics"));
+        Assert.assertEquals(outputISM.getMetrics().size(), 3);
+
         for (final InsertSizeMetrics metrics : outputISM.getMetrics()) {
             Assert.assertEquals(metrics.MEAN_INSERT_SIZE, 40D);
         }
@@ -120,7 +125,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
     Object[][] extraArgumentValue() {
                 List<Object[]> tests = new ArrayList<>();
 
-                // this is actually legal after convertion to non-legacy
+                // this is actually legal after conversion to the non-legacy parser
                 if (CommandLineProgram.useLegacyParser(getClass())) {
                     tests.add(new Object[]{"CollectInsertSizeMetrics::OUTPUT =hi.out"});
                 }
@@ -138,7 +143,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         return tests.toArray(new Object[0][]);
     }
 
-    @Test(expectedExceptions = {IllegalArgumentException.class, SAMException.class, CommandLineException.class}, dataProvider = "extraArgumentValue")
+    @Test(expectedExceptions = {SAMException.class, CommandLineException.class}, dataProvider = "extraArgumentValue")
     public void testMultipleMetricsFailing(final String extra) throws IOException {
 
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");

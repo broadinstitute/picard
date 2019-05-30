@@ -85,8 +85,8 @@ import java.util.stream.Collectors;
 public abstract class CommandLineProgram {
     // Picard CmdLine properties file resource path, placed at this path by the gradle build script
     private static String PICARD_CMDLINE_PROPERTIES_FILE = "picard/picardCmdLine.properties";
-    public static String PROPERTY_USE_LEGACY_PARSER = "picard.useLegacyParser";
-    public static String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
+    private static String PROPERTY_USE_LEGACY_PARSER = "picard.useLegacyParser";
+    private static String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
     private static Boolean useLegacyParser;
 
     @Argument(doc="One or more directories with space available to be used by this program for temporary storage of working files",

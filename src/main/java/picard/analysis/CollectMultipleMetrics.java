@@ -27,6 +27,7 @@ package picard.analysis;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -504,10 +505,12 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
     @Argument(doc="extra arguments to the various tools can be specified using the following format:" +
             "<PROGRAM>::<ARGUMENT_AND_VALUE> where <PROGRAM> is one of the programs specified in PROGRAM, " +
-            "and <ARGUMENT_AND_VALUE> are the argument and value that you'd like to specify as you would on the commandline." +
-            "For example, to change the HISTOGRAM_WIDTH in CollectInsertSizeMetrics to 200 using the legacy parser, use:\n " +
-            "EXTRA_ARGUMENT=CollectInsertSizeMetrics::HISTOGRAM_WIDTH=200\n " +
-            "Note that the following arguments cannot be modified on a per-program level: INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, and STOP_AFTER", optional = true)
+            "and <ARGUMENT_AND_VALUE> are the argument and value that you'd like to specify as you would on the command line." +
+            "For example, to change the HISTOGRAM_WIDTH in CollectInsertSizeMetrics to 200, use:\n " +
+            "\"EXTRA_ARGUMENT=CollectInsertSizeMetrics::--HISTOGRAM_WIDTH 200\"\n " +
+            "(Quotes are required to avoid the shell from separating this into two arguments.) " +
+            "Note that the following arguments cannot be modified on a per-program level: INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, and STOP_AFTER." +
+            "Providing them in an EXTRA_ARGUMENT will _not_ result in an error, but they will be silently ignored. ", optional = true)
     public List<String> EXTRA_ARGUMENT = null;
 
     /**
@@ -580,7 +583,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 final CommandLineParser commandLineParser = getCommandLineParser(instance);
                 final boolean success = commandLineParser.parseArguments(System.err, additionalArguments.get(program).toArray(new String[0]));
                 if (!success) {
-                    throw new IllegalArgumentException("Failed to parse arguments for " + program);
+                    throw new CommandLineException("Failed to parse arguments ["+ String.join(",", additionalArguments.get(program))+ "] for " + program);
                 }
                 additionalArguments.remove(program);
             }
@@ -589,7 +592,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             programs.add(instance);
         }
         if(!additionalArguments.isEmpty()){
-            throw new IllegalArgumentException("EXTRA_ARGUMENT values were provided, but appropriate program wasn't requested:" +
+            throw new CommandLineException("EXTRA_ARGUMENT values were provided, but corresponding PROGRAM wasn't requested:" +
                     additionalArguments.entrySet().stream().map(e->e.getKey().toString()+"::"+e.getValue().toString()).collect(Collectors.joining()));
         }
         SinglePassSamProgram.makeItSo(INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, STOP_AFTER, programs);
@@ -603,27 +606,25 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         for (String str : arguments) {
             final Matcher matcher = pattern.matcher(str);
             if (!matcher.matches()) {
-                throw new IllegalArgumentException("couldn't understand EXTRA_ARGUMENT " + str + " it doesn't conform to the regular expression given by " + pattern.pattern());
+                throw new CommandLineException("couldn't understand EXTRA_ARGUMENT " + str +
+                        " it doesn't conform to the form '<PROGRAM>::<ARGUMENT_AND_VALUE>'.");
             }
             final String programName = matcher.group("program");
             final ProgramInterface program;
             try {
                 program = Program.valueOf(programName);
             } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Couldn't find program with value " + programName, e);
+                throw new CommandLineException("Couldn't find program with value " + programName, e);
             }
             final String argumentAndValue = matcher.group("argumentAndValue");
 
-
-            map.computeIfAbsent(program, (k)->new ArrayList<>()).add(argumentAndValue);
+            map.computeIfAbsent(program, (k) -> new ArrayList<>()).add(argumentAndValue);
 
             final String optionalValue = matcher.group("optionalValue");
-            if (optionalValue!=null && !optionalValue.equals("")) {
+            if (optionalValue != null && !optionalValue.equals("")) {
                 map.get(program).add(optionalValue);
             }
-
         }
         return map;
     }
-
 }
