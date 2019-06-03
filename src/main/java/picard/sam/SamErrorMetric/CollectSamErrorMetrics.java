@@ -137,7 +137,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     public ReadBaseStratification.Stratifier STRATIFIER_VALUE;
 
     @Argument(shortName = "V", doc = "VCF of known variation for sample. program will skip over polymorphic sites in this VCF and " +
-            "avoid collecting data on these loci.", , optional = true)
+            "avoid collecting data on these loci.", optional = true)
     public File VCF;
 
     @Argument(shortName = "L", doc = "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will intersect inputs if multiple are given. ", optional = true)
