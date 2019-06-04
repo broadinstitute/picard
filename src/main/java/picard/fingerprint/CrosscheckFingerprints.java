@@ -455,7 +455,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
         }
         //check if all LODs are 0
-        if (metrics.stream().filter(m -> m.LOD_SCORE != 0).count() == 0) {
+        if (metrics.stream().noneMatch(m -> m.LOD_SCORE != 0)) {
             log.error("No non-zero results found. This is likely an error. " +
                     "Probable cause: there are no reads or variants at fingerprinting sites ");
             return EXIT_CODE_WHEN_NO_VALID_CHECKS;
@@ -681,13 +681,14 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             final FingerprintIdDetails lhsID = sampleToDetail1.get(sample);
             final FingerprintIdDetails rhsID = sampleToDetail2.get(sample);
 
-            final Fingerprint lhsFP = fingerprints1BySample.get(lhsID);
-            final Fingerprint rhsFP = fingerprints2BySample.get(rhsID);
             if (lhsID == null || rhsID == null) {
                 log.error(String.format("sample %s is missing from %s group", sample, lhsID == null ? "LEFT" : "RIGHT"));
                 unexpectedResults++;
                 continue;
             }
+
+            final Fingerprint lhsFP = fingerprints1BySample.get(lhsID);
+            final Fingerprint rhsFP = fingerprints2BySample.get(rhsID);
 
             if (lhsFP.size() == 0 || rhsFP.size() == 0) {
                 log.error(String.format("sample %s from %s group was not fingerprinted.  Probably there are no reads/variants at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));

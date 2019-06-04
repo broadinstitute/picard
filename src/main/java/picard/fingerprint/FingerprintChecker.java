@@ -166,7 +166,7 @@ public class FingerprintChecker {
 
         final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
 
-        Map<String, Fingerprint> fingerprints;
+        final Map<String, Fingerprint> fingerprints;
         if (reader.isQueryable()) {
             fingerprints = loadFingerprintsFromQueriableReader(reader, specificSample, fingerprintFile);
         } else {
