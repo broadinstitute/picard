@@ -690,7 +690,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
 
             if (lhsFP.size() == 0 || rhsFP.size() == 0) {
-                log.error(String.format("sample %s from %s group was not fingerprinted.  Probably there are no reads/calls at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
+                log.error(String.format("sample %s from %s group was not fingerprinted.  Probably there are no reads/variants at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
                 unexpectedResults++;
             }
 
