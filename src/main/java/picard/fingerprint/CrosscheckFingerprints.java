@@ -331,7 +331,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(doc = "When one or more mismatches between groups is detected, exit with this value instead of 0.")
     public int EXIT_CODE_WHEN_MISMATCH = 1;
 
-    @Argument(doc = "When all LOD score are zero, exit with this value instead of 0.")
+    @Argument(doc = "When all LOD score are zero, exit with this value.")
     public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 1;
 
     private final Log log = Log.getInstance(CrosscheckFingerprints.class);
