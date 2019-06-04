@@ -89,7 +89,7 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
  * These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample
  * not found in the other, or contains a sample with no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH.
  * In all other running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is logged.  As long as there is at least
- * one comparisons where both sides have observations at fingerprinting sites, the tool will return zero.  However, if all comparisons have at least one side with no observations
+ * one comparison where both sides have observations at fingerprinting sites, the tool will return zero.  However, if all comparisons have at least one side with no observations
  * at fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS.
  * <h3>Examples</h3>
  * <h4>Check that all the readgroups from a sample match each other:</h4>
