@@ -457,7 +457,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         //check if all LODs are 0
         if (metrics.stream().filter(m -> m.LOD_SCORE != 0).count() == 0) {
             log.error("No non-zero results found. This is likely an error. " +
-                    "Probable cause: there are probably no reads or calls at fingerprinting sites ");
+                    "Probable cause: there are no reads or variants at fingerprinting sites ");
             return EXIT_CODE_WHEN_NO_VALID_CHECKS;
         }
         final MetricsFile<CrosscheckMetric, ?> metricsFile = getMetricsFile();
