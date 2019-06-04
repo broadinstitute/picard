@@ -703,7 +703,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
             if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
             if (results.getLOD() == 0) {
-                log.error("LOD score of zero found when checking sample fingerprints.  Probably there are no reads/calls at fingerprinting sites for one of the samples");
+                log.error("LOD score of zero found when checking sample fingerprints.  Probably there are no reads/variants at fingerprinting sites for one of the samples");
                 unexpectedResults++;
             }
         }
