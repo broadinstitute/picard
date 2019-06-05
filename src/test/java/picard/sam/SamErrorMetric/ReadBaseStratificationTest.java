@@ -2,6 +2,7 @@ package picard.sam.SamErrorMetric;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -10,6 +11,8 @@ import org.testng.annotations.Test;
 import picard.sam.AbstractAlignmentMerger;
 import picard.sam.util.Pair;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -356,7 +359,7 @@ public class ReadBaseStratificationTest {
         final boolean offSetOOB = offset < 0 || offset >= samRecord.getReadBases().length;
         final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, offSetOOB ? (byte) 'N' : samRecord.getReadBases()[offset]);
 
-        Assert.assertEquals(recordAndOffsetStratifier.stratify(recordAndOffset, locusAndReference), expectedStratum, recordAndOffsetStratifier.getSuffix());
+        Assert.assertEquals(recordAndOffsetStratifier.stratify(recordAndOffset, locusAndReference, CollectSamErrorMetrics.BaseOperation.Match), expectedStratum, recordAndOffsetStratifier.getSuffix());
     }
 
     @DataProvider
@@ -420,7 +423,7 @@ public class ReadBaseStratificationTest {
 
         final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, referenceBase);
 
-        Assert.assertEquals(recordAndOffsetStratifier.stratify(recordAndOffset, locusAndReference), expectedStratum);
+        Assert.assertEquals(recordAndOffsetStratifier.stratify(recordAndOffset, locusAndReference, CollectSamErrorMetrics.BaseOperation.Match), expectedStratum);
     }
 
     @Test()
@@ -442,7 +445,7 @@ public class ReadBaseStratificationTest {
 
         final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refString.getBytes()[2]);
 
-        Assert.assertEquals(ReadBaseStratification.homoPolymerLengthStratifier.stratify(recordAndOffset, locusAndReference), (Integer) 2);
+        Assert.assertEquals(ReadBaseStratification.homoPolymerLengthStratifier.stratify(recordAndOffset, locusAndReference, CollectSamErrorMetrics.BaseOperation.Match), (Integer) 2);
     }
 
     @DataProvider
@@ -494,5 +497,41 @@ public class ReadBaseStratificationTest {
     @Test(dataProvider = "readsForChimericTest")
     public void testChimericStratifier(final SAMRecord sam, final ReadBaseStratification.ProperPaired type) {
         Assert.assertEquals(ReadBaseStratification.ProperPaired.of(sam), type);
+    }
+
+    private SAMRecord createRecordFromCigar(final String cigar) {
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.addFrag("", 0, 100, false, false, "", null, 30);
+        return builder.getRecords().stream().findFirst().get();
+    }
+
+    @DataProvider
+    public Object[][] provideForTestGetIndelElement() {
+        return new Object[][]{
+                {"", 0, CollectSamErrorMetrics.BaseOperation.Insertion, null},
+                {"1M1I", 1, CollectSamErrorMetrics.BaseOperation.Insertion, CigarOperator.I},
+                {"1I", 0, CollectSamErrorMetrics.BaseOperation.Insertion, CigarOperator.I},
+                {"1I1M", 0, CollectSamErrorMetrics.BaseOperation.Insertion, CigarOperator.I},
+                {"1D1M", -1, CollectSamErrorMetrics.BaseOperation.Deletion, CigarOperator.D},
+                {"1S1I1D", 1, CollectSamErrorMetrics.BaseOperation.Insertion, CigarOperator.I},
+                {"1S1D1M1I", 0, CollectSamErrorMetrics.BaseOperation.Deletion, CigarOperator.D},
+                {"2D2I1M", 0, CollectSamErrorMetrics.BaseOperation.Insertion, CigarOperator.I},
+                {"2I2D1M", 1, CollectSamErrorMetrics.BaseOperation.Deletion, CigarOperator.D},
+        };
+    }
+
+    @Test(dataProvider = "provideForTestGetIndelElement")
+    public void testGetIndelElement(final String cigar, final int offset, final CollectSamErrorMetrics.BaseOperation operation, final CigarOperator expected) {
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.addFrag("", 0, 100, false, false, cigar, null, 30);
+        SAMRecord record = builder.getRecords().stream().findFirst().get();
+        SamLocusIterator.RecordAndOffset rao = new SamLocusIterator.RecordAndOffset(record, offset);
+
+        if (expected == null) {
+            Assert.assertNull(ReadBaseStratification.getIndelElement(rao, operation));
+        }
+        else {
+            Assert.assertEquals(ReadBaseStratification.getIndelElement(rao, operation).getOperator(), expected);
+        }
     }
 }

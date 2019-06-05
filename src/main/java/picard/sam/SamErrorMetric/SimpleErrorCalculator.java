@@ -39,13 +39,22 @@ public class SimpleErrorCalculator extends BaseErrorCalculator {
      * The function by which new loci are "shown" to the calculator
      **/
     @Override
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
-        super.addBase(recordAndOffset, locusAndRef);
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, CollectSamErrorMetrics.BaseOperation operation) {
+        super.addBase(recordAndOffset, locusAndRef, operation);
         final byte readBase = recordAndOffset.getReadBase();
         if (!SequenceUtil.isNoCall(readBase) && (readBase != locusAndRef.getReferenceBase())) {
             nMismatchingBases++;
         }
     }
+
+    /**
+     * The function by which new loci are "shown" to the calculator
+     **/
+    @Override
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
+        addBase(recordAndOffset, locusAndRef, CollectSamErrorMetrics.BaseOperation.Match);
+    }
+
 
     /**
      * The suffix that pertains to the implementation of aggregation

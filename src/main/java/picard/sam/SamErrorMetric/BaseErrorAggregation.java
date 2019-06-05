@@ -36,7 +36,6 @@ import java.util.function.Supplier;
  * to put bases into various "bins" and then compute an {@link ErrorMetric} on these bases using a {@link BaseErrorCalculator}.
  *
  */
-
 public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
     private final Supplier<CALCULATOR> simpleAggregatorGenerator;
     private final ReadBaseStratification.RecordAndOffsetStratifier stratifier;
@@ -50,12 +49,17 @@ public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
                 (ignored -> simpleAggregatorGenerator.get(),true);
     }
 
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
-        final Object stratus = stratifier.stratify(recordAndOffset, locusInfo);
+    public Object addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
+        return addBase(recordAndOffset, locusInfo, CollectSamErrorMetrics.BaseOperation.Match);
+    }
+
+    public Object addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation) {
+        final Object stratus = stratifier.stratify(recordAndOffset, locusInfo, operation);
         // this assumes we do not want to aggregate null.
         if (stratus != null) {
-            strataAggregatorMap.get(stratus).addBase(recordAndOffset, locusInfo);
+            strataAggregatorMap.get(stratus).addBase(recordAndOffset, locusInfo, operation);
         }
+        return stratus;
     }
 
     public String getSuffix() {
@@ -74,6 +78,10 @@ public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
             metrics.add(metric);
         }
         return metrics.toArray(new ErrorMetric[0]);
+    }
+
+    public final ReadBaseStratification.RecordAndOffsetStratifier getStratifier() {
+        return stratifier;
     }
 }
 

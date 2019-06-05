@@ -13,10 +13,10 @@ import java.util.function.Supplier;
  * This is used in {@link CollectSamErrorMetrics} to convert an input argument to a {@link BaseErrorAggregation}.
  */
 enum ErrorType implements CommandLineParser.ClpEnum {
-    ERROR(SimpleErrorCalculator::new, "Collects the average error at the bases provided."),
+    ERROR(SimpleErrorCalculator::new, "Collects the average (SNP) error at the bases provided."),
     OVERLAPPING_ERROR(OverlappingReadsErrorCalculator::new, "Only considers bases from the overlapping parts of reads from the same template. " +
-            "For those bases, it calculates the error that can be attributable to pre-sequencing, versus during-sequencing.");
-
+            "For those bases, it calculates the error that can be attributable to pre-sequencing, versus during-sequencing."),
+    INDEL_ERROR(IndelErrorCalculator::new, "Only collects insertion or deletion errors.");
     private final Supplier<? extends BaseCalculator> errorSupplier;
 
     ErrorType(Supplier<? extends BaseCalculator> errorSupplier, final String docString) {

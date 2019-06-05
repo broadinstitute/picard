@@ -64,8 +64,8 @@ public class OverlappingReadsErrorCalculator extends BaseErrorCalculator {
      * The function by which new loci are "shown" to the calculator
      **/
     @Override
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
-        super.addBase(recordAndOffset, locusAndRef);
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, CollectSamErrorMetrics.BaseOperation operation) {
+        super.addBase(recordAndOffset, locusAndRef, operation);
         final byte readBase = recordAndOffset.getReadBase();
         final SAMRecord record = recordAndOffset.getRecord();
 
@@ -102,6 +102,14 @@ public class OverlappingReadsErrorCalculator extends BaseErrorCalculator {
         } else {
             nThreeWaysDisagreement++;
         }
+    }
+
+    /**
+     * The function by which new loci are "shown" to the calculator
+     **/
+    @Override
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
+        addBase(recordAndOffset, locusAndRef, CollectSamErrorMetrics.BaseOperation.Match);
     }
 
     /**
