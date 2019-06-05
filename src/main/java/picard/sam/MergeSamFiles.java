@@ -139,7 +139,7 @@ public class MergeSamFiles extends CommandLineProgram {
         boolean matchedSortOrders = true;
         
         // read interval list if it is defined
-        final List<Interval> intervalList = (INTERVALS == null ? Collections.emptyList() : IntervalList.fromFile(INTERVALS).uniqued().getIntervals() );
+        final List<Interval> intervalList = (INTERVALS == null ? null : IntervalList.fromFile(INTERVALS).uniqued().getIntervals() );
         // map reader->iterator used if INTERVALS is defined
         final Map<SamReader, CloseableIterator<SAMRecord> > samReaderToIterator = new HashMap<>(INPUT.size());
 
