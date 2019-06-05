@@ -5,6 +5,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
 import org.testng.annotations.Test;

@@ -28,15 +28,16 @@ import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReferen
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SamLocusIterator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 import java.util.function.Supplier;
 
 /**
  * An interface and implementations for classes that apply a {@link ReadBaseStratification.RecordAndOffsetStratifier RecordAndOffsetStratifier}
  * to put bases into various "bins" and then compute an {@link ErrorMetric} on these bases using a {@link BaseErrorCalculator}.
- *
  */
-
 public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
     private final Supplier<CALCULATOR> simpleAggregatorGenerator;
     private final ReadBaseStratification.RecordAndOffsetStratifier stratifier;
@@ -46,8 +47,8 @@ public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
                                 final ReadBaseStratification.RecordAndOffsetStratifier stratifier) {
         this.stratifier = stratifier;
         this.simpleAggregatorGenerator = simpleAggregatorGenerator;
-        this.strataAggregatorMap =  new CollectionUtil.DefaultingMap<>
-                (ignored -> simpleAggregatorGenerator.get(),true);
+        this.strataAggregatorMap = new CollectionUtil.DefaultingMap<>
+                (ignored -> simpleAggregatorGenerator.get(), true);
     }
 
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
