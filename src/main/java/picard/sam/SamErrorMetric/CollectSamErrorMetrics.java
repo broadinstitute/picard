@@ -285,7 +285,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             log.info("Really starting iteration now.");
 
             for (final SAMLocusAndReference info : iterator) {
-                
+
                 if (random.nextDouble() > PROBABILITY) {
                     continue;
                 }

@@ -36,7 +36,6 @@ import java.util.function.Supplier;
  * to put bases into various "bins" and then compute an {@link ErrorMetric} on these bases using a {@link BaseErrorCalculator}.
  *
  */
-
 public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
     private final Supplier<CALCULATOR> simpleAggregatorGenerator;
     private final ReadBaseStratification.RecordAndOffsetStratifier stratifier;
