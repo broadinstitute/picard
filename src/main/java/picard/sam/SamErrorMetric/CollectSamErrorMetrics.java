@@ -24,10 +24,8 @@
 
 package picard.sam.SamErrorMetric;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import com.google.common.annotations.VisibleForTesting;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
@@ -90,8 +88,11 @@ import java.util.stream.Collectors;
 )
 @DocumentedFeature
 public class CollectSamErrorMetrics extends CommandLineProgram {
+
+    // =====================================================================
+
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
-    public File INPUT;
+    public String INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Base name for output files. Actual file names will be " +
             "generated from the basename and suffixes from the ERROR and STRATIFIER by adding a '.' and then " +
@@ -128,7 +129,9 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             "OVERLAPPING_ERROR:READ_ORDINALITY",
             "OVERLAPPING_ERROR:READ_ORDINALITY:CYCLE",
             "OVERLAPPING_ERROR:READ_ORDINALITY:HOMOPOLYMER",
-            "OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT");
+            "OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT",
+            "INDEL_ERROR"
+    );
 
     @Argument(doc = "A fake argument used to show the options of ERROR (in ERROR_METRICS).", optional = true)
     public ErrorType ERROR_VALUE;
@@ -138,7 +141,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
     @Argument(shortName = "V", doc = "VCF of known variation for sample. program will skip over polymorphic sites in this VCF and " +
             "avoid collecting data on these loci.")
-    public File VCF;
+    public String VCF;
 
     @Argument(shortName = "L", doc = "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will intersect inputs if multiple are given. ", optional = true)
     public List<File> INTERVALS;
@@ -226,16 +229,15 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         long nSkippedLoci = 0;
         long nProcessedLoci = 0;
 
-        IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFilesAreReadable(INTERVALS);
 
         final Collection<BaseErrorAggregation> aggregatorList = getAggregatorList();
         // Open up the input resources:
         try (
-                final SamReader sam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+                final SamReader sam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(IOUtil.getPath(INPUT));
                 final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
                 final PeekableIterator<VariantContext> vcfIterator = new PeekableIterator<>(
-                        VCF == null ? Collections.emptyIterator() : new VCFFileReader(VCF, true).iterator())
+                        VCF == null ? Collections.emptyIterator() : new VCFFileReader(IOUtil.getPath(VCF), true).iterator())
         ) {
 
             final SAMSequenceDictionary sequenceDictionary = referenceSequenceFileWalker.getSequenceDictionary();
@@ -250,6 +252,9 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             log.info("Getting SamLocusIterator");
 
             final SamLocusIterator samLocusIterator = new SamLocusIterator(sam, regionOfInterest);
+
+            // We want to know about indels:
+            samLocusIterator.setIncludeIndels(true);
 
             // Now go through and compare information at each of these sites
             samLocusIterator.setEmitUncoveredLoci(false);
@@ -294,8 +299,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                     break;
                 }
             }
-
-        } catch (IOException e) {
+        } catch (final IOException e) {
             log.error(e, "A problem occurred:");
             return 1;
         }
@@ -346,12 +350,80 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     }
 
     /**
+     * Map of previously seen deletion records, associated with the locus they have been last seen
+     */
+    private final HashMap<SAMRecord, SamLocusIterator.LocusInfo> previouslySeenDeletions = new HashMap<>();
+
+    /**
+     * Current locus for taking care of deleting deletion records from the above map
+     */
+    private SamLocusIterator.LocusInfo currentLocus = null;
+
+    /**
+     * Checks if the same record has been seen at the previous locus already, thereby determining
+     * whether or not a deletion has already been processed. Note that calling this method will
+     * have the side effect of signaling that the record is processed at this location.
+     *
+     * @param deletionRao The RecordAndOffset to be checked
+     * @param locusInfo   The LocusInfo to determine the current locus
+     * @return True, if the record has been seen at the previous locus. False, if it has not yet been seen.
+     */
+    @VisibleForTesting
+    protected boolean processDeletionLocus(final SamLocusIterator.RecordAndOffset deletionRao, final SamLocusIterator.LocusInfo locusInfo) {
+        if (currentLocus == null) {
+            currentLocus = locusInfo;
+        }
+
+        // Check if we have moved to a new locus
+        else if (!currentLocus.withinDistanceOf(locusInfo, 0)) {
+            // If yes, remove all entries that have not been seen in the previous locus
+            currentLocus = locusInfo;
+            previouslySeenDeletions.entrySet().removeIf(entry -> !entry.getValue().withinDistanceOf(currentLocus, 1));
+        }
+        if (previouslySeenDeletions.containsKey(deletionRao.getRecord())) {
+            previouslySeenDeletions.put(deletionRao.getRecord(), currentLocus);
+            return true;
+        }
+        previouslySeenDeletions.put(deletionRao.getRecord(), currentLocus);
+        return false;
+    }
+
+    /**
+     * Stratifies the current RecordAndOffset. In case isDeletionRecord is true, the record is checked for whether or not
+     * this deletion has already been processed, as it will be populated for each locus in the reference
+     *
+     * @param aggregatorList The aggregators to add the bases to
+     * @param rao            The ReadAndOffset object
+     * @param info           The SAMLocusAndReference object
+     */
+    private void addRecordAndOffset(final Collection<BaseErrorAggregation> aggregatorList, final SamLocusIterator.RecordAndOffset rao, final SAMLocusAndReference info) {
+        // If deletion has been processed already, skip it
+        if (rao.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Deletion && processDeletionLocus(rao, info.getLocus()))
+            return;
+
+        for (final BaseErrorAggregation aggregation : aggregatorList) {
+            aggregation.addBase(rao, info);
+        }
+    }
+
+    /**
      * Iterate over the different records in the locus and add bases to aggregators
      */
     private void addLocusBases(final Collection<BaseErrorAggregation> aggregatorList, final SAMLocusAndReference info) {
-        info.getRecordAndOffsets()
-                .forEach(rao -> aggregatorList
-                        .forEach(l -> l.addBase(rao, info)));
+        // Matching bases
+        for (final SamLocusIterator.RecordAndOffset rao : info.getRecordAndOffsets()) {
+            addRecordAndOffset(aggregatorList, rao, info);
+        }
+
+        // Deleted bases
+        for (final SamLocusIterator.RecordAndOffset deletionRao : info.getLocus().getDeletedInRecord()) {
+            addRecordAndOffset(aggregatorList, deletionRao, info);
+        }
+
+        // Inserted bases
+        for (final SamLocusIterator.RecordAndOffset insertionRao : info.getLocus().getInsertedInRecord()) {
+            addRecordAndOffset(aggregatorList, insertionRao, info);
+        }
     }
 
     /**
@@ -379,7 +451,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     }
 
     /**
-     * Reads Interprets intervals from the input INTERVALS, if there's a file with that name, it opens the file, otherwise
+     * Interprets intervals from the input INTERVALS, if there's a file with that name, it opens the file, otherwise
      * it tries to parse it, checks that their dictionaries all agree with the input SequenceDictionary and returns the
      * intersection of all the lists.
      *
