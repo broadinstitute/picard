@@ -42,6 +42,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -425,7 +426,7 @@ public class ReadBaseStratification {
     }
 
     /**
-     * Stratifies according to the overall mismatches (from NM) that the read has against the reference, NOT
+     * Stratifies according to the overall mismatches (from {@link SAMTag.NM}) that the read has against the reference, NOT
      * including the current base.
      */
     public static class MismatchesInReadStratifier implements RecordAndOffsetStratifier<Integer> {
@@ -473,6 +474,60 @@ public class ReadBaseStratification {
         @Override
         public String getSuffix() {
             return "tile";
+        }
+    }
+
+    /**
+     * Stratifies according to the number of matching cigar operators (from CIGAR string) that the read has.
+     */
+    public static class CigarOperatorsInReadStratifier extends RecordStratifier<Integer> {
+
+        private CigarOperator operator;
+
+        public CigarOperatorsInReadStratifier( final CigarOperator op ) {
+            operator = op;
+        }
+
+        @Override
+        public Integer stratify(final SAMRecord samRecord) {
+            try {
+                return samRecord.getCigar().getCigarElements().stream()
+                        .filter(ce -> ce.getOperator().equals(operator))
+                        .map(CigarElement::getLength)
+                        .mapToInt(Integer::intValue).sum();
+            }
+            catch ( final Exception ex ) {
+                return null;
+            }
+        }
+
+        @Override
+        public String getSuffix() {
+            return "cigar_elements_" + operator.name() + "_in_read";
+        }
+    }
+
+    /**
+     * Stratifies according to the number of indel bases (from CIGAR string) that the read has.
+     */
+    public static class IndelsInReadStratifier extends RecordStratifier<Integer> {
+
+        @Override
+        public Integer stratify(final SAMRecord samRecord) {
+            try {
+                return samRecord.getCigar().getCigarElements().stream()
+                        .filter(ce -> (ce.getOperator().equals(CigarOperator.I) || ce.getOperator().equals(CigarOperator.D)))
+                        .map(CigarElement::getLength)
+                        .mapToInt(Integer::intValue).sum();
+            }
+            catch ( final Exception ex ) {
+                return null;
+            }
+        }
+
+        @Override
+        public String getSuffix() {
+            return "indels_in_read";
         }
     }
 
@@ -640,6 +695,15 @@ public class ReadBaseStratification {
      */
     public static final NsInReadStratifier nsInReadStratifier = new NsInReadStratifier();
 
+    /** Stratify by Insertions in the read cigars.  */
+    public static final CigarOperatorsInReadStratifier insertionsInReadStratifier = new CigarOperatorsInReadStratifier(CigarOperator.I);
+
+    /** Stratify by Deletions in the read cigars.  */
+    public static final CigarOperatorsInReadStratifier deletionsInReadStratifier = new CigarOperatorsInReadStratifier(CigarOperator.D);
+
+    /**  Stratify by Indels in the read cigars.  */
+    public static final IndelsInReadStratifier indelsInReadStratifier = new IndelsInReadStratifier();
+
     /* *************** enums **************/
 
     /**
@@ -678,7 +742,10 @@ public class ReadBaseStratification {
         ONE_BASE_PADDED_CONTEXT(() -> oneBasePaddedContextStratifier, "The current reference base and a one base padded region from the read resulting in a 3-base context."),
         TWO_BASE_PADDED_CONTEXT(() -> twoBasePaddedContextStratifier, "The current reference base and a two base padded region from the read resulting in a 5-base context."),
         CONSENSUS(() -> consensusStratifier, "Whether or not duplicate reads were used to form a consensus read.  This stratifier makes use of the aD, bD, and cD tags for duplex consensus reads.  If the reads are single index consensus, only the cD tags are used."),
-        NS_IN_READ(() -> nsInReadStratifier, "The number of Ns in the read.");
+        NS_IN_READ(() -> nsInReadStratifier, "The number of Ns in the read."),
+        INSERTIONS_IN_READ(() -> insertionsInReadStratifier, "The number of Insertions in the read cigar."),
+        DELETIONS_IN_READ(() -> deletionsInReadStratifier, "The number of Deletions in the read cigar."),
+        INDELS_IN_READ(() -> indelsInReadStratifier, "The number of INDELs in the read cigar.");
 
         private final String docString;
 
