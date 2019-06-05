@@ -24,10 +24,7 @@
 
 package picard.sam.SamErrorMetric;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
@@ -90,6 +87,12 @@ import java.util.stream.Collectors;
 )
 @DocumentedFeature
 public class CollectSamErrorMetrics extends CommandLineProgram {
+
+    private static final int MAX_DIRECTIVES = ReadBaseStratification.Stratifier.values().length + 1;
+    private static final Log log = Log.getInstance(CollectSamErrorMetrics.class);
+
+    // =====================================================================
+
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
 
@@ -162,6 +165,15 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     @Argument(shortName = "P", doc = "The probability of selecting a locus for analysis (for downsampling).", optional = true)
     public double PROBABILITY = 1;
 
+    @Argument(
+            fullName = "progressStepInterval",
+            doc = "The interval between which progress will be displayed.",
+            optional = true
+    )
+    public int progressStepInterval = 100000;
+
+    // =====================================================================
+
     @Override
     protected boolean requiresReference() {
         return true;
@@ -213,15 +225,12 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         }
     }
 
-    private static final int MAX_DIRECTIVES = ReadBaseStratification.Stratifier.values().length + 1;
-    private static final Log log = Log.getInstance(CollectSamErrorMetrics.class);
-
     @Override
     protected int doWork() {
 
         final Random random = new Random(42);
 
-        final ProgressLogger progressLogger = new ProgressLogger(log, 100000);
+        final ProgressLogger progressLogger = new ProgressLogger(log, progressStepInterval);
         long nTotalLoci = 0;
         long nSkippedLoci = 0;
         long nProcessedLoci = 0;
@@ -234,9 +243,13 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         try (
                 final SamReader sam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
                 final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-                final PeekableIterator<VariantContext> vcfIterator = new PeekableIterator<>(
-                        VCF == null ? Collections.emptyIterator() : new VCFFileReader(VCF, true).iterator())
+                final VCFFileReader vcfFileReader = new VCFFileReader(VCF, true)
         ) {
+
+            // Make sure we can query our file:
+            if ( !vcfFileReader.isQueryable() ) {
+                throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!");
+            }
 
             final SAMSequenceDictionary sequenceDictionary = referenceSequenceFileWalker.getSequenceDictionary();
             if (sam.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
@@ -272,14 +285,15 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             log.info("Really starting iteration now.");
 
             for (final SAMLocusAndReference info : iterator) {
+                
                 if (random.nextDouble() > PROBABILITY) {
                     continue;
                 }
                 nTotalLoci++;
 
                 // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
-                if (advanceIteratorAndCheckLocus(vcfIterator, info.getLocus(), sequenceDictionary)) {
-                    log.debug(String.format("Skipping locus from VCF: %s", vcfIterator.peek().toStringWithoutGenotypes()));
+                if ( checkLocus(vcfFileReader, info.getLocus(), sequenceDictionary)) {
+                    log.debug("Locus does not overlap any variants: " + locusToInterval(info.getLocus(), sequenceDictionary));
                     nSkippedLoci++;
                     continue;
                 }
@@ -328,21 +342,58 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     }
 
     /**
-     * Advance the iterator until at or ahead of locus. if there's a variant at the locus return true, otherwise false.
-     * <p>
-     * HAS SIDE EFFECTS!!! draws from vcfIterator!!!
+     * If there's a variant at the locus return true, otherwise false.
      *
-     * @param vcfIterator        a {@link VariantContext} iterator to advance (assumed sorted)
+     * HAS SIDE EFFECTS!!! Queries the vcfFileReader
+     *
+     * @param vcfFileReader      a {@link VCFFileReader} to query for the given locus
      * @param locus              a {@link Locus} at which to examine the variants
      * @param sequenceDictionary a dictionary with which to compare the Locatable to the Locus...
      * @return true if there's a variant over the locus, false otherwise.
      */
-    private static boolean advanceIteratorAndCheckLocus(final PeekableIterator<VariantContext> vcfIterator, final Locus locus, final SAMSequenceDictionary sequenceDictionary) {
-        while (vcfIterator.hasNext() && (vcfIterator.peek().isFiltered() ||
-                CompareVariantContextToLocus(sequenceDictionary, vcfIterator.peek(), locus) < 0)) {
-            vcfIterator.next();
+    private static boolean checkLocus(final VCFFileReader vcfFileReader, final Locus locus, final SAMSequenceDictionary sequenceDictionary) {
+
+        boolean overlaps = false;
+        final Interval queryInterval = locusToInterval(locus, sequenceDictionary);
+
+        if ( queryInterval != null ) {
+
+            try ( final CloseableIterator<VariantContext> vcfIterator = vcfFileReader.query(queryInterval) ) {
+
+                overlaps = true;
+
+                boolean allFiltered = true;
+
+                while ( vcfIterator.hasNext() ) {
+                    final VariantContext vcf = vcfIterator.next();
+                    if ( vcf.isFiltered() ) {
+                        continue;
+                    }
+                    allFiltered = false;
+                }
+
+                if ( allFiltered ) {
+                    overlaps = false;
+                }
+            }
         }
-        return vcfIterator.hasNext() && CompareVariantContextToLocus(sequenceDictionary, vcfIterator.peek(), locus) == 0;
+
+        return overlaps;
+    }
+
+    /**
+     * Converts the given locus into an interval using the given sequenceDictionary.
+     * @param locus The {@link Locus} to convert.
+     * @param sequenceDictionary The {@link SAMSequenceDictionary} to use to convert the given {@code locus}.
+     * @return An {@link Interval} representing the given {@code locus} or {@code null} if it cannot be converted.
+     */
+    private static Interval locusToInterval(final Locus locus, final SAMSequenceDictionary sequenceDictionary) {
+        final SAMSequenceRecord samSequenceRecord = sequenceDictionary.getSequence( locus.getSequenceIndex() );
+        if ( samSequenceRecord == null ) {
+            return null;
+        }
+
+        return new Interval(samSequenceRecord.getSequenceName(), locus.getPosition(), locus.getPosition());
     }
 
     /**
@@ -424,6 +475,8 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * otherwise it will be MIN_INT/MAX_INT
      */
     public static int CompareVariantContextToLocus(final SAMSequenceDictionary dictionary, final VariantContext variantContext, final Locus locus) {
+
+        log.debug( "Comparing variant (" + variantContext.toStringWithoutGenotypes() + ") to locus (" + locus.toString() + ")" );
 
         final int indexDiff = dictionary.getSequenceIndex(variantContext.getContig()) - locus.getSequenceIndex();
         if (indexDiff != 0) {
