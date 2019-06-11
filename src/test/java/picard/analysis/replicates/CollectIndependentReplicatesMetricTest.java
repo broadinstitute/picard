@@ -1,6 +1,7 @@
 package picard.analysis.replicates;
 
 import com.google.common.collect.ImmutableMap;
+import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.TestUtil;
@@ -208,15 +209,20 @@ public class CollectIndependentReplicatesMetricTest {
      *
      */
     private static File convertSamToBam(final String sam) throws IOException {
-        final MergeSamFiles msf = new MergeSamFiles();
-        final File bam = new File(bamOutDir, sam.replaceAll("sam$", "bam"));
-        final int returnCode = msf.instanceMain(
-                new String[]{
-                        "INPUT=" + (new File(testdir, sam).getAbsolutePath()),
-                        "CREATE_INDEX=true",
-                        "OUTPUT=" + bam.getAbsolutePath()});
-        Assert.assertEquals(returnCode, 0);
-
-        return bam;
+        boolean defaultIndexCreation = SAMFileWriterFactory.getDefaultCreateIndexWhileWriting();
+        try {
+            final MergeSamFiles msf = new MergeSamFiles();
+            final File bam = new File(bamOutDir, sam.replaceAll("sam$", "bam"));
+            final int returnCode = msf.instanceMain(
+                    new String[]{
+                            "INPUT=" + (new File(testdir, sam).getAbsolutePath()),
+                            "CREATE_INDEX=true",
+                            "OUTPUT=" + bam.getAbsolutePath()});
+            Assert.assertEquals(returnCode, 0);
+            return bam;
+        } finally {
+            // restore the default to eliminate problems in downstream code caused by setting CREATE_INDEX=true above
+            SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(defaultIndexCreation);
+        }
     }
 }
