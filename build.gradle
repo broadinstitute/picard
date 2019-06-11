@@ -89,6 +89,7 @@ dependencies {
     compile 'org.apache.commons:commons-math3:3.5'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     compile 'org.broadinstitute:barclay:2.0.0'
+    compile 'org.apache.commons:commons-collections4:4.3'
     compileOnly googleNio
 
     // javadoc utilities; compile/test only to prevent redistribution of sdk jars
