@@ -49,11 +49,7 @@ import picard.illumina.parser.ReadType;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.illumina.parser.readers.LocsFileReader;
-import picard.util.IlluminaUtil;
-import picard.util.StringDistanceUtils;
-import picard.util.TabbedTextFileWithHeaderParser;
-import picard.util.ThreadPoolExecutorUtil;
-import picard.util.ThreadPoolExecutorWithExceptions;
+import picard.util.*;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -658,7 +654,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         private final int tile;
         private final File barcodeFile;
         private final Map<String, BarcodeMetric> metrics;
-        private final LRUMap<byte[][], BarcodeMatch> barcodeLookup;
+        private final LRUMap<String, BarcodeMatch> barcodeLookup;
         private final BarcodeMetric noMatch;
         private Exception exception = null;
         private final boolean usingQualityScores;
@@ -696,7 +692,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             for (final String key : barcodeToMetrics.keySet()) {
                 this.metrics.put(key, BarcodeMetric.copy(barcodeToMetrics.get(key)));
             }
-            this.barcodeLookup = new LRUMap<>(this.metrics.size()*10);
+            this.barcodeLookup = new LRUMap<>(this.metrics.size()*1000);
             this.noMatch = BarcodeMetric.copy(noMatchMetric);
             this.cbcls = cbcls;
             this.locs = locs;
@@ -756,7 +752,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             for (final String key : barcodeToMetrics.keySet()) {
                 this.metrics.put(key, BarcodeMetric.copy(barcodeToMetrics.get(key)));
             }
-            this.barcodeLookup = new LRUMap<>(this.metrics.size()*10);
+            this.barcodeLookup = new LRUMap<>(this.metrics.size()*1000);
             this.noMatch = BarcodeMetric.copy(noMatchMetric);
             this.provider = factory.makeDataProvider(Collections.singletonList(tile));
             this.outputReadStructure = factory.getOutputReadStructure();
@@ -797,6 +793,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 final BufferedWriter writer = IOUtil.openFileForBufferedWriting(barcodeFile);
                 final byte[][] barcodeSubsequences = new byte[barcodeIndices.length][];
                 final byte[][] qualityScores = usingQualityScores ? new byte[barcodeIndices.length][] : null;
+                int counter = 0;
+                int counter_step = 0;
+                int computeCounter_step = 0;
                 while (provider.hasNext()) {
                     // Extract the barcode from the cluster and write it to the file for the tile
                     final ClusterData cluster = provider.next();
@@ -806,9 +805,40 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                         if (usingQualityScores) qualityScores[i] = cluster.getRead(barcodeIndices[i]).getQualities();
                     }
                     final boolean passingFilter = cluster.isPf();
-                    final BarcodeMatch match = barcodeLookup.computeIfAbsent(barcodeSubsequences, bs -> findBestBarcodeAndUpdateMetrics(bs, qualityScores,
+                    BarcodeMatch match;
+                    String barcodeString = "";
+                    for (final byte[] bc : barcodeSubsequences) {
+                        barcodeString += StringUtil.bytesToString(bc);
+                    }
+//                    counter++;
+//                    counter_step++;
+//                    boolean lookedup = false;
+//                    synchronized (barcodeLookup) {
+//                        match = barcodeLookup.get(barcodeString);
+//                    }
+//                    if (match == null) {
+//                        computeCounter_step++;
+//                        lookedup = true;
+//                        match = findBestBarcodeAndUpdateMetrics(barcodeSubsequences, qualityScores,
+//                                passingFilter, metrics, noMatch, maxNoCalls, maxMismatches,
+//                                minMismatchDelta, minimumBaseQuality, distanceMode);
+//                        synchronized (barcodeLookup) {
+//                            barcodeLookup.put(barcodeString, match);
+//                        }
+//                    }
+//                    if (counter%100000 == 0) {
+//                        System.out.println("counter=" + counter + " counter_step=" + counter_step + " compute_counter=" + computeCounter_step + " ("+ 100.0*(float)computeCounter_step/(float)counter_step + "%)" +
+//                            "map size=" + barcodeLookup.size());
+//                        counter_step = 0;
+//                        computeCounter_step = 0;
+//                    }
+                    match = barcodeLookup.computeIfAbsent(barcodeString, bs -> findBestBarcodeAndUpdateMetrics(barcodeSubsequences, qualityScores,
                             passingFilter, metrics, noMatch, maxNoCalls, maxMismatches,
                             minMismatchDelta, minimumBaseQuality, distanceMode));
+
+//                    if (lookedup && counter>2200000) {
+//                        System.out.println("barcode " + barcodeString + (match.matched? "" : " did not ") + "match " + match.barcode);
+//                    }
 
                     if (match.matched) {
                         final BarcodeMetric bestBarcodeMetric = metrics.get(match.metricKey);
@@ -860,7 +890,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * @param passingFilter    PF flag for the current read
          * @return perfect barcode string, if there was a match within tolerance, or null if not.
          */
-        public BarcodeMatch findBestBarcodeAndUpdateMetrics(final byte[][] readSubsequences,
+        public synchronized BarcodeMatch findBestBarcodeAndUpdateMetrics(final byte[][] readSubsequences,
                                                                    final byte[][] qualityScores,
                                                                    final boolean passingFilter,
                                                                    final Map<String, BarcodeMetric> metrics,
