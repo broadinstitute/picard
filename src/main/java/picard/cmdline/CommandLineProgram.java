@@ -89,6 +89,12 @@ public abstract class CommandLineProgram {
     private static String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
     private static Boolean useLegacyParser;
 
+    /**
+     * CommandLineProgramProperties oneLineSummary attribute must be shorted than this in order to maintain
+     * reasonable help output formatting.
+     */
+    public static int MAX_ALLOWABLE_ONE_LINE_SUMMARY_LENGTH = 120;
+
     @Argument(doc="One or more directories with space available to be used by this program for temporary storage of working files",
             common=true, optional=true)
     public List<File> TMP_DIR = new ArrayList<>();
