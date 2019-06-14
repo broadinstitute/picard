@@ -42,12 +42,13 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
                 {TEST_DIR + "/overlapping.sam", intervals, 0, 0, true,  2, 202, 0,   0.5, 0.505, 0, 1, 0, 202, 1000},
                 // test that we do not clip overlapping bases
                 {TEST_DIR + "/overlapping.sam", intervals, 0, 0, false, 2, 202, 0,   0.0, 0.505, 0.505, 2, 0, 202, 1000},
-                // A shorter interval that is completely covered by the read.
-                // test that minimum coverage increases from zero when interval is completely covered by the read
-                // test that pct 1x (and 2x if counting overlap) coverage increases when the interval is completely covered by the read
+                // test that we exclude half of the bases (due to poor quality) with an interval that is completely covered
                 {TEST_DIR + "/lowbaseq.sam",    halfIntervals, 1, 10, true,  2, 200, 0.5, 0.0, 1.0, 0.0,  1, 1, 200, 1000},
+                // test that read 2 (with mapping quality 1) is filtered out with minimum mapping quality 2 with an interval that is completely covered
                 {TEST_DIR + "/lowmapq.sam",     halfIntervals, 2, 0, true,  2, 202, 0,   0.0, 1.0, 0.0,   1, 1, 202, 1000},
+                // test that we clip overlapping bases with an interval that is completely covered
                 {TEST_DIR + "/overlapping.sam", halfIntervals, 0, 0, true,  2, 202, 0,   0.5, 1.0, 0, 1, 1, 202, 1000},
+                // test that we do not clip overlapping bases with an interval that is completely covered
                 {TEST_DIR + "/overlapping.sam", halfIntervals, 0, 0, false, 2, 202, 0,   0.0, 1.0, 1.0, 2, 2, 202, 1000},
                 // A read 10 base pairs long. two intervals: one maps identically to the read, other does not overlap at all
                 {TEST_DIR + "/single-short-read.sam", twoSmallIntervals, 20, 20, true, 1, 10, 0.0, 0.0, 0.5, 0.0, 1, 0, 10, 1000 }
