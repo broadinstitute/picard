@@ -61,7 +61,7 @@ public class BamIndexStats extends CommandLineProgram {
             "java -jar picard.jar BamIndexStats \\<br />" +
             "      I=input.bam \\<br />" +
             "      O=output" +
-            "</pre>"   +
+            "</pre>" +
             "<hr />"       ;
     private static final Log log = Log.getInstance(BamIndexStats.class);
 
