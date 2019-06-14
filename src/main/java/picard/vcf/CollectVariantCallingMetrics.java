@@ -80,10 +80,6 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
 
     private final Log log = Log.getInstance(CollectVariantCallingMetrics.class);
 
-    public static void main(final String[] args) {
-        new CollectVariantCallingMetrics().instanceMainWithExit(args);
-    }
-
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);

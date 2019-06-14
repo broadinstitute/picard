@@ -131,11 +131,6 @@ public class MergeSamFiles extends CommandLineProgram {
 
     private static final int PROGRESS_INTERVAL = 1000000;
 
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        System.exit(new MergeSamFiles().instanceMain(argv));
-    }
-
     /** Combines multiple SAM/BAM files into one. */
     @Override
     protected int doWork() {

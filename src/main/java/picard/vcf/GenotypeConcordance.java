@@ -237,10 +237,6 @@ public class GenotypeConcordance extends CommandLineProgram {
     public static final String OUTPUT_VCF_TRUTH_SAMPLE_NAME = "truth";
     public static final String OUTPUT_VCF_CALL_SAMPLE_NAME = "call";
 
-    public static void main(final String[] args) {
-        new GenotypeConcordance().instanceMainWithExit(args);
-    }
-
     @Override
     protected String[] customCommandLineValidation() {
         // Note - If the user specifies to use INTERVALS, the code will fail if the vcfs are not indexed, so we set USE_VCF_INDEX to true and check that the vcfs are indexed.

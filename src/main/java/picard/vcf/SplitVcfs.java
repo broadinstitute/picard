@@ -67,10 +67,6 @@ public class SplitVcfs extends CommandLineProgram {
 
     private final Log log = Log.getInstance(SplitVcfs.class);
 
-    public static void main(final String[] argv) {
-        new SplitVcfs().instanceMainWithExit(argv);
-    }
-
     public SplitVcfs() {
         this.CREATE_INDEX = true;
     }

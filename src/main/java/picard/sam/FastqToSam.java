@@ -250,10 +250,6 @@ public class FastqToSam extends CommandLineProgram {
         return qualityFormat;
     }
 
-    /** Stock main method. */
-    public static void main(final String[] argv) {
-        System.exit(new FastqToSam().instanceMain(argv));
-    }
 
     /**
      * Get a list of FASTQs that are sequentially numbered based on the first (base) fastq.

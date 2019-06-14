@@ -79,10 +79,6 @@ public class ReplaceSamHeader extends CommandLineProgram {
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    public static void main(final String[] argv) {
-        new ReplaceSamHeader().instanceMainWithExit(argv);
-    }
-
     /**
      * Do the work after command line has been parsed.
      * RuntimeException may be thrown by this method, and are reported appropriately.

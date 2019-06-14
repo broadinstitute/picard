@@ -80,11 +80,6 @@ public class BuildBamIndex extends CommandLineProgram {
                     "If INPUT is a URL and OUTPUT is unspecified, defaults to a file in the current directory.", optional = true)
     public File OUTPUT;
 
-    /** Stock main method for a command line program. */
-    public static void main(final String[] argv) {
-        System.exit(new BuildBamIndex().instanceMain(argv));
-    }
-
     /**
      * Main method for the program.  Checks that all input files are present and
      * readable and that the output file can be written to.  Then iterates through

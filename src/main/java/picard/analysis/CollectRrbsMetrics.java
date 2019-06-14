@@ -142,10 +142,6 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
         };
     }
 
-    public static void main(final String[] args) {
-        new CollectRrbsMetrics().instanceMainWithExit(args);
-    }
-
     @Override
     protected int doWork() {
         if (!METRICS_FILE_PREFIX.endsWith(".")) {

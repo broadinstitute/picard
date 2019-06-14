@@ -417,11 +417,6 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         return getReadBarcodeValue(record, READ_TWO_BARCODE_TAG);
     }
 
-    /** Stock main method. */
-    public static void main(final String[] args) {
-        new EstimateLibraryComplexity().instanceMainWithExit(args);
-    }
-
     public EstimateLibraryComplexity() {
         final int sizeInBytes;
         if (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG) {

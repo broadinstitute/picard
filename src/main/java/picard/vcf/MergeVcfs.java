@@ -151,10 +151,6 @@ public class MergeVcfs extends CommandLineProgram {
 
     private final Log log = Log.getInstance(MergeVcfs.class);
 
-    public static void main(final String[] argv) {
-        new MergeVcfs().instanceMainWithExit(argv);
-    }
-
     public MergeVcfs() {
         this.CREATE_INDEX = true;
     }

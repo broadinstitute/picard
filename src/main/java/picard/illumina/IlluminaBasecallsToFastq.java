@@ -388,10 +388,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         return new FastqRecordsWriter(templateWriters, sampleBarcodeWriters, molecularBarcodeWriters);
     }
 
-    public static void main(final String[] args) {
-        new IlluminaBasecallsToFastq().instanceMainWithExit(args);
-    }
-
     /**
      * Container for various FastqWriters, one for each template read, one for each sample barcode read,
      * and one for each molecular barcode read.

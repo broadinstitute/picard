@@ -510,10 +510,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         return new SAMFileWriterWrapper(new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, output));
     }
 
-    public static void main(final String[] args) {
-        System.exit(new IlluminaBasecallsToSam().instanceMain(args));
-    }
-
     /**
      * Put any custom command-line validation in an override of this method.
      * clp is initialized at this point and can be used to print usage and access args.

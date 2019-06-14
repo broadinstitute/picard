@@ -129,10 +129,6 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         }
     }
 
-    public static void main(final String[] argv) {
-        System.exit(new CreateSequenceDictionary().instanceMain(argv));
-    }
-
     /**
      * Read all the sequences from the given reference file, and convert into SAMSequenceRecords
      * @param referenceFile fasta or fasta.gz

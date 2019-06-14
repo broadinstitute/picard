@@ -121,14 +121,6 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     private AlignmentSummaryMetricsCollector collector;
 
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        new CollectAlignmentSummaryMetrics().instanceMainWithExit(argv);
-    }
-
-    /** Silly method that is necessary to give unit test access to call doWork() */
-    protected final int testDoWork() { return doWork(); }
-
     @Override protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
 
