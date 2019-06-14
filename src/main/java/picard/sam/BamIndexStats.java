@@ -62,7 +62,7 @@ public class BamIndexStats extends CommandLineProgram {
             "      I=input.bam \\<br />" +
             "      O=output" +
             "</pre>" +
-            "<hr />"       ;
+            "<hr />";
     private static final Log log = Log.getInstance(BamIndexStats.class);
 
     @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
