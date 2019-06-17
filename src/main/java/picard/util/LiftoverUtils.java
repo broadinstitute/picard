@@ -363,7 +363,8 @@ public class LiftoverUtils {
 
         final Map<Allele, byte[]> alleleBasesMap = new HashMap<>();
 
-        // Put each allele into the alleleBasesMap unless it is a spanning deletion
+        // Put each allele into the alleleBasesMap unless it is a spanning deletion.
+        // Spanning deletions are dealt with as a special case later in fixedAlleleMap.
         alleles.stream().filter(a->!a.equals(Allele.SPAN_DEL)).forEach(a -> alleleBasesMap.put(a, a.getBases()));
 
         int theStart = start;
@@ -429,7 +430,9 @@ public class LiftoverUtils {
         final Map<Allele, Allele> fixedAlleleMap = alleleBasesMap.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, me -> Allele.create(me.getValue(), me.getKey().isReference())));
 
-        // A fixed spanning deletion it itself a spanning deletion
+        // A left aligned spanning deletion is itself a spanning deletion
+        // Since this is not handled by the code above, it must be handled as
+        // a special case here.
         fixedAlleleMap.put(Allele.SPAN_DEL, Allele.SPAN_DEL);
 
         //retain original order:
