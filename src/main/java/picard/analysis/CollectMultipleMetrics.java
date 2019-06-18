@@ -507,10 +507,12 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             "<PROGRAM>::<ARGUMENT_AND_VALUE> where <PROGRAM> is one of the programs specified in PROGRAM, " +
             "and <ARGUMENT_AND_VALUE> are the argument and value that you'd like to specify as you would on the command line." +
             "For example, to change the HISTOGRAM_WIDTH in CollectInsertSizeMetrics to 200, use:\n " +
-            "\"EXTRA_ARGUMENT=CollectInsertSizeMetrics::--HISTOGRAM_WIDTH 200\"\n " +
+            "\"EXTRA_ARGUMENT=CollectInsertSizeMetrics::HISTOGRAM_WIDTH=200\"\n " +
+            "or, in the new parser:" +
+            "--EXTRA_ARGUMENT \"CollectInsertSizeMetrics::--HISTOGRAM_WIDTH 200\"\n " +
             "(Quotes are required to avoid the shell from separating this into two arguments.) " +
             "Note that the following arguments cannot be modified on a per-program level: INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, and STOP_AFTER." +
-            "Providing them in an EXTRA_ARGUMENT will _not_ result in an error, but they will be silently ignored. ", optional = true)
+            "Providing them in an EXTRA_ARGUMENT will _not_ result in an error, but they will be silently ignored. " , optional = true)
     public List<String> EXTRA_ARGUMENT = null;
 
     /**
