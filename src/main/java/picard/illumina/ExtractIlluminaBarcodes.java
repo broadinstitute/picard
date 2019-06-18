@@ -215,6 +215,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     private final NumberFormat tileNumberFormatter = NumberFormat.getNumberInstance();
     private BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
 
+    private BKTree<byte[][]> barcodeTree;
+
     public ExtractIlluminaBarcodes() {
         tileNumberFormatter.setMinimumIntegerDigits(4);
         tileNumberFormatter.setGroupingUsed(false);
@@ -301,7 +303,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                         cbcls,
                         locs,
                         filterFiles,
-                        DISTANCE_MODE
+                        DISTANCE_MODE,
+                        barcodeTree
                 );
                 extractors.add(extractor);
             }
@@ -318,7 +321,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                         MAX_NO_CALLS,
                         MAX_MISMATCHES,
                         MIN_MISMATCH_DELTA,
-                        DISTANCE_MODE
+                        DISTANCE_MODE,
+                        barcodeTree
                 );
                 extractors.add(extractor);
             }
@@ -490,6 +494,16 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             final boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
             final int numBarcodes = readStructure.sampleBarcodes.length();
             final Set<String> barcodes = new HashSet<>();
+            switch (DISTANCE_MODE){
+                case HAMMING:
+                    this.barcodeTree = new BKTree<>((bc1, bc2) -> StringDistanceUtils.countMismatches(bc1, bc2, null, MINIMUM_BASE_QUALITY));
+                    break;
+                case FREE:
+                    this.barcodeTree = new BKTree<>((bc1, bc2) -> StringDistanceUtils.countMismatchesWithIndelEvents(bc1, bc2, null, MINIMUM_BASE_QUALITY));
+                    break;
+                default:
+                    throw new PicardException("distanceMode: " + DISTANCE_MODE + " is not supported.");
+            }
             for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
                 final String[] bcStrings = new String[numBarcodes];
                 int barcodeNum = 0;
@@ -513,7 +527,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 final String barcodeName = (hasBarcodeName ? row.getField(BARCODE_NAME_COLUMN) : "");
                 final String libraryName = (hasLibraryName ? row.getField(LIBRARY_NAME_COLUMN) : "");
                 final BarcodeMetric metric = new BarcodeMetric(barcodeName, libraryName, bcStr, bcStrings);
-                barcodeToMetrics.put(StringUtil.join("", bcStrings), metric);
+                barcodeToMetrics.put(metric.BARCODE_WITHOUT_DELIMITER, metric);
+                barcodeTree.insert(metric.barcodeBytes);
             }
         }
     }
@@ -655,6 +670,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         private final File barcodeFile;
         private final Map<String, BarcodeMetric> metrics;
         private final LRUMap<String, BarcodeMatch> barcodeLookup;
+        private BKTree<byte[][]> barcodeTree;
         private final BarcodeMetric noMatch;
         private Exception exception = null;
         private final boolean usingQualityScores;
@@ -680,7 +696,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 final List<File> cbcls,
                 final List<AbstractIlluminaPositionFileReader.PositionInfo> locs,
                 final File[] filterFiles,
-                final DistanceMetric distanceMode) {
+                final DistanceMetric distanceMode,
+                final BKTree<byte[][]> barcodeTree) {
             this.tile = tile;
             this.barcodeFile = barcodeFile;
             this.usingQualityScores = minimumBaseQuality > 0;
@@ -692,7 +709,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             for (final String key : barcodeToMetrics.keySet()) {
                 this.metrics.put(key, BarcodeMetric.copy(barcodeToMetrics.get(key)));
             }
-            this.barcodeLookup = new LRUMap<>(this.metrics.size()*1000);
+            this.barcodeLookup = new LRUMap<>(this.metrics.size()*100);
             this.noMatch = BarcodeMetric.copy(noMatchMetric);
             this.cbcls = cbcls;
             this.locs = locs;
@@ -700,6 +717,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             this.filterFiles = filterFiles;
             this.outputReadStructure = factory.getOutputReadStructure();
             this.distanceMode = distanceMode;
+            this.barcodeTree = barcodeTree;
         }
 
         /**
@@ -710,7 +728,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             String barcode;
             int mismatches;
             int mismatchesToSecondBest;
-            String metricKey;
 
             public boolean isMatched() {
                 return matched;
@@ -739,8 +756,10 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 final int maxNoCalls,
                 final int maxMismatches,
                 final int minMismatchDelta,
-                final DistanceMetric distanceMode
+                final DistanceMetric distanceMode,
+                final BKTree<byte[][]> barcodeTree
         ) {
+
             this.tile = tile;
             this.barcodeFile = barcodeFile;
             this.usingQualityScores = minimumBaseQuality > 0;
@@ -752,11 +771,12 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             for (final String key : barcodeToMetrics.keySet()) {
                 this.metrics.put(key, BarcodeMetric.copy(barcodeToMetrics.get(key)));
             }
-            this.barcodeLookup = new LRUMap<>(this.metrics.size()*1000);
+            this.barcodeLookup = new LRUMap<>(this.metrics.size()*100);
             this.noMatch = BarcodeMetric.copy(noMatchMetric);
             this.provider = factory.makeDataProvider(Collections.singletonList(tile));
             this.outputReadStructure = factory.getOutputReadStructure();
             this.distanceMode = distanceMode;
+            this.barcodeTree = barcodeTree;
         }
 
         // These methods return the results of the extraction
@@ -810,28 +830,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                     for (final byte[] bc : barcodeSubsequences) {
                         barcodeString += StringUtil.bytesToString(bc);
                     }
-//                    counter++;
-//                    counter_step++;
-//                    boolean lookedup = false;
-//                    synchronized (barcodeLookup) {
-//                        match = barcodeLookup.get(barcodeString);
-//                    }
-//                    if (match == null) {
-//                        computeCounter_step++;
-//                        lookedup = true;
-//                        match = findBestBarcodeAndUpdateMetrics(barcodeSubsequences, qualityScores,
-//                                passingFilter, metrics, noMatch, maxNoCalls, maxMismatches,
-//                                minMismatchDelta, minimumBaseQuality, distanceMode);
-//                        synchronized (barcodeLookup) {
-//                            barcodeLookup.put(barcodeString, match);
-//                        }
-//                    }
-//                    if (counter%100000 == 0) {
-//                        System.out.println("counter=" + counter + " counter_step=" + counter_step + " compute_counter=" + computeCounter_step + " ("+ 100.0*(float)computeCounter_step/(float)counter_step + "%)" +
-//                            "map size=" + barcodeLookup.size());
-//                        counter_step = 0;
-//                        computeCounter_step = 0;
-//                    }
+
                     match = barcodeLookup.computeIfAbsent(barcodeString, bs -> findBestBarcodeAndUpdateMetrics(barcodeSubsequences, qualityScores,
                             passingFilter, metrics, noMatch, maxNoCalls, maxMismatches,
                             minMismatchDelta, minimumBaseQuality, distanceMode));
@@ -841,7 +840,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 //                    }
 
                     if (match.matched) {
-                        final BarcodeMetric bestBarcodeMetric = metrics.get(match.metricKey);
+                        final BarcodeMetric bestBarcodeMetric = metrics.get(match.barcode.toUpperCase());
                         ++bestBarcodeMetric.READS;
                         if (passingFilter) {
                             ++bestBarcodeMetric.PF_READS;
@@ -913,82 +912,90 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             // base is a mismatch.
             int numMismatchesInBestBarcode = totalBarcodeReadBases + 1;
             int numMismatchesInSecondBestBarcode = totalBarcodeReadBases + 1;
-            String bestKey="";
 
-            for (final HashMap.Entry<String, BarcodeMetric> entry : metrics.entrySet()) {
-                final BarcodeMetric barcodeMetric = entry.getValue();
-                int numMismatches=0;
-                switch (distanceMode){
-                    case HAMMING:
-                        numMismatches = StringDistanceUtils.countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
-                        break;
-                    case FREE:
-                        numMismatches = StringDistanceUtils.countMismatchesWithIndelEvents(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
-                        break;
-
-                }
-                if (numMismatches < numMismatchesInBestBarcode) {
-                    if (bestBarcodeMetric != null) {
-                        numMismatchesInSecondBestBarcode = numMismatchesInBestBarcode;
-                    }
-                    numMismatchesInBestBarcode = numMismatches;
-                    bestBarcodeMetric = barcodeMetric;
-                    bestKey = entry.getKey();
-                } else if (numMismatches < numMismatchesInSecondBestBarcode) {
-                    numMismatchesInSecondBestBarcode = numMismatches;
+            // In order to use tree, must have no nocall or base quality masked bases
+            boolean canUseTree = numNoCalls == 0;
+            if (canUseTree && qualityScores != null) {
+                for (final byte[] q : qualityScores) {
+                    canUseTree &= StringDistanceUtils.anySmaller(q, minimumBaseQuality);
                 }
             }
 
             final BarcodeMatch match = new BarcodeMatch();
+            match.matched = numNoCalls <= maxNoCalls;
 
-            match.matched = bestBarcodeMetric != null &&
-                    numNoCalls <= maxNoCalls &&
-                    numMismatchesInBestBarcode <= maxMismatches &&
-                    numMismatchesInSecondBestBarcode - numMismatchesInBestBarcode >= minMismatchDelta;
-
-
-
-            // If we have something that's not a "match" but matches one barcode
-            // slightly, we output that matching barcode in lower case
-            if (numNoCalls + numMismatchesInBestBarcode < totalBarcodeReadBases && bestBarcodeMetric != null) {
-                match.mismatches = numMismatchesInBestBarcode;
-                match.mismatchesToSecondBest = numMismatchesInSecondBestBarcode;
-                match.barcode = bestBarcodeMetric.BARCODE_WITHOUT_DELIMITER.toLowerCase();
+            if (canUseTree) {
+                HashMap<Integer, LinkedList<byte[][]>> matches = barcodeTree.query(readSubsequences, maxMismatches + minMismatchDelta);
+                if (matches.isEmpty()) {
+                    //not matches within required distance were found
+                    match.matched = false;
+                    match.mismatches = maxMismatches + minMismatchDelta + 1;
+                    match.mismatchesToSecondBest = maxMismatches + minMismatchDelta + 1;
+                    match.barcode = "";
+                } else if (matches.size() == 1) {
+                    //we only found matches within a single distance searched the required distance
+                    final HashMap.Entry<Integer,LinkedList<byte[][]>> barcodeMatches = matches.entrySet().iterator().next();
+                    match.matched &= barcodeMatches.getKey() <= maxMismatches && barcodeMatches.getValue().size() == 1;
+                    match.mismatches = barcodeMatches.getKey();
+                    match.mismatchesToSecondBest = barcodeMatches.getValue().size() == 1?  maxMismatches + minMismatchDelta + 1 : barcodeMatches.getKey();
+                    final byte[][] barcode = barcodeMatches.getValue().peek();
+                    match.barcode = match.matched? IlluminaUtil.byteArrayToString(barcode,"") : IlluminaUtil.byteArrayToString(barcode,"").toLowerCase();
+                } else {
+                    //we found matches at multiple distances within the searched distance
+                    final int bestDistance = Collections.min(matches.keySet());
+                    final int secondBestDistance = matches.get(bestDistance).size() > 1? bestDistance : matches.keySet().stream().filter(k -> k!=bestDistance).min(Integer::compare).get();
+                    match.matched &= bestDistance < maxMismatches && (secondBestDistance - bestDistance) >= minMismatchDelta;
+                    match.mismatches = bestDistance;
+                    match.mismatchesToSecondBest = secondBestDistance;
+                    final byte[][] barcode = matches.get(bestDistance).peek();
+                    match.barcode = match.matched? IlluminaUtil.byteArrayToString(barcode,"") : IlluminaUtil.byteArrayToString(barcode,"").toLowerCase();
+                }
             } else {
-                match.mismatches = totalBarcodeReadBases;
-                match.barcode = "";
-            }
+                for (final HashMap.Entry<String, BarcodeMetric> entry : metrics.entrySet()) {
+                    final BarcodeMetric barcodeMetric = entry.getValue();
+                    int numMismatches = 0;
+                    switch (distanceMode) {
+                        case HAMMING:
+                            numMismatches = StringDistanceUtils.countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
+                            break;
+                        case FREE:
+                            numMismatches = StringDistanceUtils.countMismatchesWithIndelEvents(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality);
+                            break;
 
-            if (match.matched) {
-                match.barcode = bestBarcodeMetric.BARCODE_WITHOUT_DELIMITER;
-                match.metricKey = bestKey;
-            }
+                    }
+                    if (numMismatches < numMismatchesInBestBarcode) {
+                        if (bestBarcodeMetric != null) {
+                            numMismatchesInSecondBestBarcode = numMismatchesInBestBarcode;
+                        }
+                        numMismatchesInBestBarcode = numMismatches;
+                        bestBarcodeMetric = barcodeMetric;
+                    } else if (numMismatches < numMismatchesInSecondBestBarcode) {
+                        numMismatchesInSecondBestBarcode = numMismatches;
+                    }
+                }
 
-//            if (matched) {
-//                ++bestBarcodeMetric.READS;
-//                if (passingFilter) {
-//                    ++bestBarcodeMetric.PF_READS;
-//                }
-//                if (numMismatchesInBestBarcode == 0) {
-//                    ++bestBarcodeMetric.PERFECT_MATCHES;
-//                    if (passingFilter) {
-//                        ++bestBarcodeMetric.PF_PERFECT_MATCHES;
-//                    }
-//                } else if (numMismatchesInBestBarcode == 1) {
-//                    ++bestBarcodeMetric.ONE_MISMATCH_MATCHES;
-//                    if (passingFilter) {
-//                        ++bestBarcodeMetric.PF_ONE_MISMATCH_MATCHES;
-//                    }
-//                }
-//
-//                match.matched = true;
-//                match.barcode = bestBarcodeMetric.BARCODE_WITHOUT_DELIMITER;
-//            } else {
-//                ++noMatchBarcodeMetric.READS;
-//                if (passingFilter) {
-//                    ++noMatchBarcodeMetric.PF_READS;
-//                }
-//            }
+
+                match.matched = bestBarcodeMetric != null &&
+                        numNoCalls <= maxNoCalls &&
+                        numMismatchesInBestBarcode <= maxMismatches &&
+                        numMismatchesInSecondBestBarcode - numMismatchesInBestBarcode >= minMismatchDelta;
+
+
+                // If we have something that's not a "match" but matches one barcode
+                // slightly, we output that matching barcode in lower case
+                if (numNoCalls + numMismatchesInBestBarcode < totalBarcodeReadBases && bestBarcodeMetric != null) {
+                    match.mismatches = numMismatchesInBestBarcode;
+                    match.mismatchesToSecondBest = numMismatchesInSecondBestBarcode;
+                    match.barcode = bestBarcodeMetric.BARCODE_WITHOUT_DELIMITER.toLowerCase();
+                } else {
+                    match.mismatches = totalBarcodeReadBases;
+                    match.barcode = "";
+                }
+
+                if (match.matched) {
+                    match.barcode = bestBarcodeMetric.BARCODE_WITHOUT_DELIMITER;
+                }
+            }
 
             return match;
         }

@@ -90,7 +90,7 @@ public class StringDistanceUtils {
         return numMismatches;
     }
 
-    static boolean anySmaller(final byte[] values, final int minValue) {
+    public static boolean anySmaller(final byte[] values, final int minValue) {
         for (int i = 0; i < values.length; i++) {
             if (values[i] < minValue) return true;
         }

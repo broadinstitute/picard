@@ -1,45 +1,72 @@
 package picard.util;
-import picard.util.BKNode;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
+import java.util.function.BiFunction;
 
-public class BKTree implements Serializable {
-    private BKNode root;
+public class BKTree<T> implements Serializable {
+    private T root;
+    private BiFunction<T, T, Integer> distanceMetric;
+    private HashMap<Integer, BKTree<T>> children;
 
-    public BKTree(final String root_string) {
-        root = new BKNode(root_string);
+    public BKTree(final T root_value, final BiFunction<T, T, Integer> metric) {
+        root = root_value;
+        distanceMetric = metric;
+        children = new HashMap<>();
     }
 
-    public BKTree() {}
+    public BKTree(final BiFunction<T, T, Integer> metric) {
+        distanceMetric = metric;
+        children = new HashMap<>();
+    }
 
-    public void insert(final String newString) {
+    public void insert(final T newEntry) {
         if (root != null) {
-            root.insert(newString);
+            final int distance = distanceMetric.apply(newEntry, root);
+            if (children.containsKey(distance)) {
+                children.get(distance).insert(newEntry);
+            } else {
+                children.put(distance, new BKTree<>(newEntry, distanceMetric));
+            }
         }
         else {
-            root = new BKNode(newString);
+            root = newEntry;
         }
     }
 
-    public HashMap<String, Integer> query(final String queryString, final int maxDist) {
-        return root.query(queryString, maxDist);
-    }
+    public HashMap<Integer, LinkedList<T>> query(final T query, final int maxDist) {
+        final HashMap<Integer, LinkedList<T>> ret = new HashMap<>();
 
-    public ArrayList<String> queryBest(final String queryString, final int maxDist) {
-        ArrayList<String> ret = new ArrayList<>();
+        final int distance = distanceMetric.apply(query, root);
+        if (distance <= maxDist) {
+            ret.put(distance, new LinkedList<>(Collections.singletonList(root)));
+        }
 
-        HashMap<String, Integer> queryRet = query(queryString, maxDist);
-        int minDist = maxDist;
-        for (HashMap.Entry entry : queryRet.entrySet()) {
-            if ((Integer)entry.getValue() <= minDist) {
-                minDist = (Integer)entry.getValue();
-                ret.add((String)entry.getKey());
+        final int lowLimit = distance - maxDist;
+        final int highLimit = maxDist + distance;
+
+        for (int i = lowLimit; i<= highLimit; i++) {
+            if (children.containsKey(i)) {
+                final HashMap<Integer, LinkedList<T>> retChildren = children.get(i).query(query, maxDist);
+                for (HashMap.Entry<Integer, LinkedList<T>> entry : retChildren.entrySet()) {
+                    if (ret.containsKey(entry.getKey())) {
+                        ret.get(entry.getKey()).addAll(entry.getValue());
+                    } else {
+                        ret.put(entry.getKey(), entry.getValue());
+                    }
+                }
             }
         }
         return ret;
+    }
+
+    public LinkedList<T> queryBest(final T query, final int maxDist) {
+        HashMap<Integer, LinkedList<T>> queryRet = query(query, maxDist);
+        if (queryRet.isEmpty()) {
+            return new LinkedList<>();
+        }
+
+        int minDist = Collections.min(queryRet.keySet());
+        return queryRet.get(minDist);
     }
 }
