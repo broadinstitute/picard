@@ -26,6 +26,8 @@ package picard.analysis;
 
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.StringUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
@@ -73,7 +75,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
      * Includes a method for determining whether or not a Program explicitly needs a reference sequence (i.e. cannot be null)
      */
 
-    static final String USAGE_SUMMARY = "Collect multiple classes of metrics.  ";
+    static final String USAGE_SUMMARY = "Collect multiple classes of metrics.";
     static final String USAGE_DETAILS = "This 'meta-metrics' tool runs one or more of the metrics collection modules at the same" +
             " time to cut down on the time spent reading in data from input files. Available modules include " +
             "CollectAlignmentSummaryMetrics, CollectInsertSizeMetrics, QualityScoreDistribution,  MeanQualityByCycle, " +
@@ -505,13 +507,13 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
     @Argument(doc="extra arguments to the various tools can be specified using the following format:" +
             "<PROGRAM>::<ARGUMENT_AND_VALUE> where <PROGRAM> is one of the programs specified in PROGRAM, " +
-            "and <ARGUMENT_AND_VALUE> are the argument and value that you'd like to specify as you would on the command line." +
+            "and <ARGUMENT_AND_VALUE> are the argument and value that you'd like to specify as you would on the command line. " +
             "For example, to change the HISTOGRAM_WIDTH in CollectInsertSizeMetrics to 200, use:\n " +
             "\"EXTRA_ARGUMENT=CollectInsertSizeMetrics::HISTOGRAM_WIDTH=200\"\n " +
             "or, in the new parser:" +
             "--EXTRA_ARGUMENT \"CollectInsertSizeMetrics::--HISTOGRAM_WIDTH 200\"\n " +
             "(Quotes are required to avoid the shell from separating this into two arguments.) " +
-            "Note that the following arguments cannot be modified on a per-program level: INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, and STOP_AFTER." +
+            "Note that the following arguments cannot be modified on a per-program level: INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, and STOP_AFTER. " +
             "Providing them in an EXTRA_ARGUMENT will _not_ result in an error, but they will be silently ignored. " , optional = true)
     public List<String> EXTRA_ARGUMENT = null;
 
@@ -593,9 +595,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             instance.setDefaultHeaders(getDefaultHeaders());
             programs.add(instance);
         }
-        if(!additionalArguments.isEmpty()){
+        if (!additionalArguments.isEmpty()) {
             throw new CommandLineException("EXTRA_ARGUMENT values were provided, but corresponding PROGRAM wasn't requested:" +
-                    additionalArguments.entrySet().stream().map(e->e.getKey().toString()+"::"+e.getValue().toString()).collect(Collectors.joining()));
+                    additionalArguments.entrySet().stream().map(e -> e.getKey().toString() + "::" + e.getValue().toString()).collect(Collectors.joining()));
         }
         SinglePassSamProgram.makeItSo(INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, STOP_AFTER, programs);
 
@@ -623,7 +625,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             map.computeIfAbsent(program, (k) -> new ArrayList<>()).add(argumentAndValue);
 
             final String optionalValue = matcher.group("optionalValue");
-            if (optionalValue != null && !optionalValue.equals("")) {
+            if (!StringUtils.isEmpty(optionalValue)) {
                 map.get(program).add(optionalValue);
             }
         }
