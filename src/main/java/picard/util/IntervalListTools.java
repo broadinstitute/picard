@@ -536,8 +536,8 @@ public class IntervalListTools extends CommandLineProgram {
         final ScatterSummary summary = new ScatterSummary();
         for (final IntervalList intervals : scatter) {
             summary.size++;
-            summary.baseCount+=intervals.getBaseCount();
-            summary.intervalCount+=intervals.getIntervals().size();
+            summary.baseCount += intervals.getBaseCount();
+            summary.intervalCount += intervals.getIntervals().size();
             intervals.write(createDirectoryAndGetScatterFile(OUTPUT, SCATTER_COUNT, fileNameFormatter.format(fileIndex++)));
         }
 
