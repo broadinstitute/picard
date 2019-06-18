@@ -383,13 +383,19 @@ public abstract class CommandLineProgram {
      */
     public CommandLineParser getCommandLineParser() {
         if (commandLineParser == null) {
-            commandLineParser = useLegacyParser(getClass()) ?
-                        new LegacyCommandLineArgumentParser(this) :
-                        new CommandLineArgumentParser(this,
-                            Collections.EMPTY_LIST,
-                            new HashSet<>(Collections.singleton(CommandLineParserOptions.APPEND_TO_COLLECTIONS)));
+            commandLineParser = getCommandLineParser(this);
         }
         return commandLineParser;
+    }
+    /**
+     * @return Return a newly minted command line parser for the provided object.
+     */
+    static public CommandLineParser getCommandLineParser(Object o) {
+        return useLegacyParser(o.getClass()) ?
+                        new LegacyCommandLineArgumentParser(o) :
+                        new CommandLineArgumentParser(o,
+                            Collections.EMPTY_LIST,
+                            new HashSet<>(Collections.singleton(CommandLineParserOptions.APPEND_TO_COLLECTIONS)));
     }
 
     /**
