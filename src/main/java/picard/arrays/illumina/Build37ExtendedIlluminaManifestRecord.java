@@ -37,12 +37,43 @@ import java.util.Map;
  */
 public class Build37ExtendedIlluminaManifestRecord extends IlluminaManifestRecord {
     protected enum Flag {
-        ILLUMINA_FLAGGED,   // Illumina flagged
+        /** Flagged by Illumina as a bad assay */
+        ILLUMINA_FLAGGED,
         LIFTOVER_FAILED,
         UNSUPPORTED_GENOME_BUILD,
-        SEQUENCE_MISMATCH,      // mismatch between what the manifest claims is the reference vs. the actual reference.
-        INDEL_SEQ_MISMATCH,     // Unable to reconcile indel situation
-        INDEL_EXTENSION_ERROR,  // extension base conflict.
+
+        /** Probe sequence not found in reference. */
+        PROBE_SEQUENCE_MISMATCH,
+
+        /** Probe sequence is on unexpected strand. */
+        PROBE_SEQUENCE_STRAND_INVALID,
+
+        /** Source sequenc not found in reference. */
+        SOURCE_SEQUENCE_MISMATCH,
+
+        /** Source sequence is invalid (contains invalid character). */
+        SOURCE_SEQUENCE_INVALID,
+
+        /** Source sequence is on unexpected strand. */
+        SOURCE_SEQUENCE_STRAND_INVALID,
+
+        /** Neither insertion nor deletion sequence found in reference. */
+        INDEL_NOT_FOUND,
+
+        /** Both insertion and deletion sequence found in reference. */
+        INDEL_CONFLICT,
+
+        /** @deprecated - but used in existing extended manifest files. */
+        @Deprecated
+        SEQUENCE_MISMATCH,
+
+        /** @deprecated - but used in existing extended manifest files. */
+        @Deprecated
+        INDEL_SEQ_MISMATCH,
+
+        /** @deprecated - but used in existing extended manifest files. */
+        @Deprecated
+        INDEL_EXTENSION_ERROR,
         DUPE,
         PASS,
     }
