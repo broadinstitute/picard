@@ -37,7 +37,8 @@ import java.util.Map;
  */
 public class Build37ExtendedIlluminaManifestRecord extends IlluminaManifestRecord {
     protected enum Flag {
-        ILLUMINA_FLAGGED,   // Illumina flagged
+        /** Flagged by Illumina as a bad assay */
+        ILLUMINA_FLAGGED,
         LIFTOVER_FAILED,
         UNSUPPORTED_GENOME_BUILD,
 
