@@ -47,9 +47,18 @@ public class Build37ExtendedIlluminaManifestRecord extends IlluminaManifestRecor
         SOURCE_SEQUENCE_STRAND_INVALID, // Source sequence is on unexpected strand.
         INDEL_NOT_FOUND,                // Neither Insertion nor Deletion sequence found in reference
         INDEL_CONFLICT,                 // Both insertion and deletion sequence found in reference.
-        SEQUENCE_MISMATCH,              // Deprecated - but used in existing extended manifest files
-        INDEL_SEQ_MISMATCH,             // Deprecated - but used in existing extended manifest files
-        INDEL_EXTENSION_ERROR,          // Deprecated - but used in existing extended manifest files
+
+        // @deprecated - but used in existing extended manifest files.
+        @Deprecated
+        SEQUENCE_MISMATCH,
+
+        // @deprecated - but used in existing extended manifest files.
+        @Deprecated
+        INDEL_SEQ_MISMATCH,
+
+        // @deprecated - but used in existing extended manifest files.
+        @Deprecated
+        INDEL_EXTENSION_ERROR,
         DUPE,
         PASS,
     }
