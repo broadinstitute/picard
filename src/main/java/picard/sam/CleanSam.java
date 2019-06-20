@@ -61,10 +61,6 @@ public class CleanSam extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Where to write cleaned SAM.")
     public File OUTPUT;
 
-    public static void main(final String[] argv) {
-        new CleanSam().instanceMainWithExit(argv);
-    }
-
     /**
      * Do the work after command line has been parsed.
      * RuntimeException may be thrown by this method, and are reported appropriately.

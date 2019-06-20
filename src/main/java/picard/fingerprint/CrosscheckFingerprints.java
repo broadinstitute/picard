@@ -85,6 +85,12 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
  * <li>{@link #MATRIX_OUTPUT} is disabled.</li>
  * </il>
  * <br/>
+ * In some cases, the groups collected may not have any observations (calls for a vcf, reads for a bam) at fingerprinting sites, or a sample in INPUT may be missing from the SECOND_INPUT.
+ * These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample
+ * not found in the other, or contains a sample with no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH.
+ * In all other running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is logged.  As long as there is at least
+ * one comparison where both sides have observations at fingerprinting sites, the tool will return zero.  However, if all comparisons have at least one side with no observations
+ * at fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS.
  * <h3>Examples</h3>
  * <h4>Check that all the readgroups from a sample match each other:</h4>
  * <pre>
@@ -170,6 +176,15 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
                         " - aggregation of data happens at the SAMPLE level \n" +
                         " - each samples from INPUT will only be compared to that same sample in SECOND_INPUT. \n" +
                         " - MATRIX_OUTPUT is disabled. " +
+                        "\n" +
+                        "In some cases, the groups collected may not have any observations (calls for a vcf, reads for a bam) at fingerprinting sites, or " +
+                        "a sample in INPUT may be missing from the SECOND_INPUT. These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode " +
+                        "with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample not found in the other, or contains a sample with " +
+                        "no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH. In all other " +
+                        "running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is " +
+                        "logged.  As long as there is at least one comparison where both sides have observations at fingerprinting sites, the tool will " +
+                        "return zero.  However, if all comparisons have at least one side with no observations at fingerprinting sites, an error will be " +
+                        "logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS." +
                         "\n" +
                         "<hr/>" +
                         "<h3>Examples</h3>" +
@@ -316,6 +331,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(doc = "When one or more mismatches between groups is detected, exit with this value instead of 0.")
     public int EXIT_CODE_WHEN_MISMATCH = 1;
 
+    @Argument(doc = "When all LOD score are zero, exit with this value.")
+    public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 1;
+
     private final Log log = Log.getInstance(CrosscheckFingerprints.class);
 
     private double[][] crosscheckMatrix = null;
@@ -436,7 +454,12 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     throw new IllegalArgumentException("Unpossible!");
             }
         }
-
+        //check if all LODs are 0
+        if (metrics.stream().noneMatch(m -> m.LOD_SCORE != 0)) {
+            log.error("No non-zero results found. This is likely an error. " +
+                    "Probable cause: there are no reads or variants at fingerprinting sites ");
+            return EXIT_CODE_WHEN_NO_VALID_CHECKS;
+        }
         final MetricsFile<CrosscheckMetric, ?> metricsFile = getMetricsFile();
         metricsFile.addAllMetrics(metrics);
         if (OUTPUT != null) {
@@ -570,6 +593,18 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final Map<FingerprintIdDetails, Fingerprint> lhsFingerprintsByGroup = Fingerprint.mergeFingerprintsBy(lhsFingerprints, by);
         final Map<FingerprintIdDetails, Fingerprint> rhsFingerprintsByGroup = Fingerprint.mergeFingerprintsBy(rhsFingerprints, by);
 
+        for (final Map.Entry<FingerprintIdDetails, Fingerprint> pair : lhsFingerprintsByGroup.entrySet()) {
+            if (pair.getValue().size() == 0) {
+                log.warn(by.apply(pair.getKey()) + " was not fingerprinted in LEFT group.  It probably has no calls/reads overlapping fingerprinting sites.");
+            }
+        }
+
+        for (final Map.Entry<FingerprintIdDetails, Fingerprint> pair : rhsFingerprintsByGroup.entrySet()) {
+            if (pair.getValue().size() == 0) {
+                log.warn(by.apply(pair.getKey()) + " was not fingerprinted in RIGHT group.  It probably has no calls/reads overlapping fingerprinting sites.");
+            }
+        }
+
         if (MATRIX_OUTPUT != null) {
             crosscheckMatrix = new double[lhsFingerprintsByGroup.size()][];
             for (int row = 0; row < lhsFingerprintsByGroup.size(); row++) {
@@ -652,7 +687,15 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 continue;
             }
 
-            final MatchResults results = FingerprintChecker.calculateMatchResults(fingerprints1BySample.get(lhsID), fingerprints2BySample.get(rhsID),
+            final Fingerprint lhsFP = fingerprints1BySample.get(lhsID);
+            final Fingerprint rhsFP = fingerprints2BySample.get(rhsID);
+
+            if (lhsFP.size() == 0 || rhsFP.size() == 0) {
+                log.error(String.format("sample %s from %s group was not fingerprinted.  Probably there are no reads/variants at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
+                unexpectedResults++;
+            }
+
+            final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFP, rhsFP,
                     GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
             final CrosscheckMetric.FingerprintResult result = getMatchResults(true, results);
 
@@ -660,6 +703,10 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 metrics.add(getMatchDetails(result, results, lhsID, rhsID, CrosscheckMetric.DataType.SAMPLE));
             }
             if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
+            if (results.getLOD() == 0) {
+                log.error("LOD score of zero found when checking sample fingerprints.  Probably there are no reads/variants at fingerprinting sites for one of the samples");
+                unexpectedResults++;
+            }
         }
         return unexpectedResults;
     }

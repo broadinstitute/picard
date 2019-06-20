@@ -165,10 +165,6 @@ public class SamToFastq extends CommandLineProgram {
 
     private final Log log = Log.getInstance(SamToFastq.class);
 
-    public static void main(final String[] argv) {
-        System.exit(new SamToFastq().instanceMain(argv));
-    }
-
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);

@@ -309,10 +309,6 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
         }
     }
 
-    public static void main(final String[] argv) {
-        new CollectIlluminaBasecallingMetrics().instanceMainWithExit(argv);
-    }
-
     /***
      * This class manages counts of Illumina Basecalling data on a Per Barcode Per Lane basis.  Cluster and PFCluster
      * counts are stored per tile number.

@@ -89,6 +89,12 @@ public abstract class CommandLineProgram {
     private static String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
     private static Boolean useLegacyParser;
 
+    /**
+     * CommandLineProgramProperties oneLineSummary attribute must be shorted than this in order to maintain
+     * reasonable help output formatting.
+     */
+    public static int MAX_ALLOWABLE_ONE_LINE_SUMMARY_LENGTH = 120;
+
     @Argument(doc="One or more directories with space available to be used by this program for temporary storage of working files",
             common=true, optional=true)
     public List<File> TMP_DIR = new ArrayList<>();
@@ -377,13 +383,19 @@ public abstract class CommandLineProgram {
      */
     public CommandLineParser getCommandLineParser() {
         if (commandLineParser == null) {
-            commandLineParser = useLegacyParser(getClass()) ?
-                        new LegacyCommandLineArgumentParser(this) :
-                        new CommandLineArgumentParser(this,
-                            Collections.EMPTY_LIST,
-                            new HashSet<>(Collections.singleton(CommandLineParserOptions.APPEND_TO_COLLECTIONS)));
+            commandLineParser = getCommandLineParser(this);
         }
         return commandLineParser;
+    }
+    /**
+     * @return Return a newly minted command line parser for the provided object.
+     */
+    static public CommandLineParser getCommandLineParser(Object o) {
+        return useLegacyParser(o.getClass()) ?
+                        new LegacyCommandLineArgumentParser(o) :
+                        new CommandLineArgumentParser(o,
+                            Collections.EMPTY_LIST,
+                            new HashSet<>(Collections.singleton(CommandLineParserOptions.APPEND_TO_COLLECTIONS)));
     }
 
     /**

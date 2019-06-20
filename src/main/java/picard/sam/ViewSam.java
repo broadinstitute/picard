@@ -126,10 +126,6 @@ public class ViewSam extends CommandLineProgram {
     @Argument(doc = "An intervals file used to restrict what records are output.", optional = true)
     public File INTERVAL_LIST;
 
-    public static void main(final String[] args) {
-        new ViewSam().instanceMain(args);
-    }
-
     @Override
     protected int doWork() {
         return writeSamText(System.out);

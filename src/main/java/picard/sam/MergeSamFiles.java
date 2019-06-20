@@ -133,7 +133,7 @@ public class MergeSamFiles extends CommandLineProgram {
 
     private static final int PROGRESS_INTERVAL = 1000000;
 
-   /** Combines multiple SAM/BAM files into one. */
+    /** Combines multiple SAM/BAM files into one. */
     @Override
     protected int doWork() {
         boolean matchedSortOrders = true;

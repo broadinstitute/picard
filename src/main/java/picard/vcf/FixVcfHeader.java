@@ -99,11 +99,6 @@ public class FixVcfHeader extends CommandLineProgram {
 
     private final Log log = Log.getInstance(FixVcfHeader.class);
 
-    // Stock main method
-    public static void main(final String[] args) {
-        new FixVcfHeader().instanceMainWithExit(args);
-    }
-
     @Override
     protected String[] customCommandLineValidation() {
         if (HEADER != null && 0 <= CHECK_FIRST_N_RECORDS) return new String[]{"CHECK_FIRST_N_RECORDS should no be specified when HEADER is specified"};

@@ -118,13 +118,11 @@ import static picard.vcf.GenotypeConcordanceStateCodes.*;
         programGroup = VariantEvaluationProgramGroup.class)
 @DocumentedFeature
 public class GenotypeConcordance extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Calculates the concordance between genotype data of one samples in each of two VCFs - one " +
-            " being considered the truth (or reference) the other being the call.  The concordance is broken into separate " +
-            "results sections for SNPs and indels.  Statistics are reported in three different files.";
-            ;
+    static final String USAGE_SUMMARY = "Calculates the concordance between genotype data of one sample in each of two VCFs -" +
+            " truth (or reference) vs. calls.";
     static final String USAGE_DETAILS =
             "<h3>Summary</h3>" +
-            "Calculates the concordance between genotype data of one samples in each of two VCFs - one being considered the truth (or reference) " +
+            "Calculates the concordance between genotype data of one sample in each of two VCFs - one being considered the truth (or reference) " +
             "the other being the call.  The concordance is broken into separate results sections for SNPs and indels.  Summary and detailed statistics " +
             "are reported.\n" +
             "\n" +
@@ -238,10 +236,6 @@ public class GenotypeConcordance extends CommandLineProgram {
     public static final VCFHeaderLine CONTINGENCY_STATE_HEADER_LINE = new VCFInfoHeaderLine(CONTINGENCY_STATE_TAG, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "The genotype concordance contingency state(s)");
     public static final String OUTPUT_VCF_TRUTH_SAMPLE_NAME = "truth";
     public static final String OUTPUT_VCF_CALL_SAMPLE_NAME = "call";
-
-    public static void main(final String[] args) {
-        new GenotypeConcordance().instanceMainWithExit(args);
-    }
 
     @Override
     protected String[] customCommandLineValidation() {

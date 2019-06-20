@@ -112,13 +112,6 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             optional = true)
     public Boolean LINK_LOCS = false;
 
-    /**
-     * Required main method implementation.
-     */
-    public static void main(final String[] argv) {
-        new CheckIlluminaDirectory().instanceMainWithExit(argv);
-    }
-
     @Override
     protected int doWork() {
         final ReadStructure readStructure = new ReadStructure(READ_STRUCTURE);

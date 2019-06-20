@@ -11,9 +11,9 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
@@ -60,26 +60,26 @@ import java.util.List;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class GatherBamFiles extends CommandLineProgram {
-    static final String USAGE_SUMMARY = 
-    		"Concatenate efficiently BAM files that resulted from a scattered parallel analysis";
-    static final String USAGE_DETAILS = 
-    		"<p>This tool performs a rapid \"gather\" or concatenation on BAM files. " + 
-    		"This is often needed in operations that have been run in parallel across genomics regions by scattering " + 
-    		"their execution across computing nodes and cores thus resulting in smaller BAM files.</p><p>This tool does not support SAM files</p>" + 
-    		"<h3>Inputs</h3>" +
-    		"<p>A list of BAM files to combine using the INPUT argument. " +
-    		"These files must be provided in the order that they should be concatenated.</p>" +
-    		"<h3>Output</h3>" +
-    		"<p>A single BAM file. The header is copied from the first input file.</p>" +
-    		"<h3>Usage example:</h3>" +
-    		"<pre>java -jar picard.jar GatherBamFiles \\\n" +
-    		"      I=input1.bam \\\n" +
-    		"      I=input2.bam \\\n" +
-    		"      O=gathered_files.bam</pre>" +
-    		"<h3>Notes</h3>" +
-    		"<p>Operates via copying of the gzip blocks directly for speed but also supports generation of an MD5 " +
-    		"on the output and indexing of the output BAM file.</p>" +
-    		"<hr/>";
+    static final String USAGE_SUMMARY =
+            "Concatenate efficiently BAM files that resulted from a scattered parallel analysis";
+    static final String USAGE_DETAILS =
+            "<p>This tool performs a rapid \"gather\" or concatenation on BAM files. " +
+            "This is often needed in operations that have been run in parallel across genomics regions by scattering " +
+            "their execution across computing nodes and cores thus resulting in smaller BAM files.</p><p>This tool does not support SAM files</p>" +
+            "<h3>Inputs</h3>" +
+            "<p>A list of BAM files to combine using the INPUT argument. " +
+            "These files must be provided in the order that they should be concatenated.</p>" +
+            "<h3>Output</h3>" +
+            "<p>A single BAM file. The header is copied from the first input file.</p>" +
+            "<h3>Usage example:</h3>" +
+            "<pre>java -jar picard.jar GatherBamFiles \\\n" +
+            "      I=input1.bam \\\n" +
+            "      I=input2.bam \\\n" +
+            "      O=gathered_files.bam</pre>" +
+            "<h3>Notes</h3>" +
+            "<p>Operates via copying of the gzip blocks directly for speed but also supports generation of an MD5 " +
+            "on the output and indexing of the output BAM file.</p>" +
+            "<hr/>";
     
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "Two or more BAM files or text files containing lists of BAM files (one per line).")
@@ -89,13 +89,6 @@ public class GatherBamFiles extends CommandLineProgram {
     public File OUTPUT;
 
     private static final Log log = Log.getInstance(GatherBamFiles.class);
-
-    // Stock main method.
-    public static void main(final String[] args) {
-        final GatherBamFiles gatherer = new GatherBamFiles();
-        gatherer.CREATE_INDEX = true;
-        gatherer.instanceMainWithExit(args);
-    }
 
     @Override
     protected int doWork() {

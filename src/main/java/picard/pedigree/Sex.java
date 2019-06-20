@@ -10,7 +10,7 @@ public enum Sex {
     private final int code;
 
     /** Private constructor that takes the pedigree code for sex. */
-    private Sex(final int code) {
+    Sex(final int code) {
         this.code = code;
     }
 

@@ -63,10 +63,6 @@ public class SamFormatConverter extends CommandLineProgram {
     @Argument(doc = "The BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    public static void main(final String[] argv) {
-        new SamFormatConverter().instanceMainWithExit(argv);
-    }
-
     protected int doWork() {
         convert(INPUT, OUTPUT, REFERENCE_SEQUENCE, CREATE_INDEX);
         return 0;
