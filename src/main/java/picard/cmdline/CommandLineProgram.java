@@ -246,11 +246,15 @@ public abstract class CommandLineProgram {
             SAMFileWriterImpl.setDefaultMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         }
 
+        final boolean defaultHTSJDKIndexCreation = SAMFileWriterFactory.getDefaultCreateIndexWhileWriting();
         if (CREATE_INDEX) {
             SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(true);
         }
 
-        SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
+        final boolean defaultMD5Creation = SAMFileWriterFactory.getDefaultCreateMd5File();
+        if (CREATE_MD5_FILE) {
+            SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
+        }
 
         for (final File f : TMP_DIR) {
             // Intentionally not checking the return values, because it may be that the program does not
@@ -300,6 +304,9 @@ public abstract class CommandLineProgram {
         try {
             ret = doWork();
         } finally {
+            // restore the default to eliminate problems in downstream code caused by setting CREATE_INDEX=true above
+            SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(defaultHTSJDKIndexCreation);
+            SAMFileWriterFactory.setDefaultCreateMd5File(defaultMD5Creation);
             try {
                 // Emit the time even if program throws
                 if (!QUIET) {
