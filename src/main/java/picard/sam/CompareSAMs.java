@@ -92,7 +92,7 @@ public class CompareSAMs extends CommandLineProgram {
     public List<File> SAM_FILES;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc = "Output file to write comparison results to.")
+            doc = "Output file to write comparison results to.", optional = true)
     public File OUTPUT;
 
     @ArgumentCollection
@@ -115,7 +115,9 @@ public class CompareSAMs extends CommandLineProgram {
         {
             final SamComparison comparison = new SamComparison(samReader1, samReader2, samComparisonArgumentCollection,
                     SAM_FILES.get(0).getAbsolutePath(), SAM_FILES.get(1).getAbsolutePath());
-            comparison.writeReport(OUTPUT, getDefaultHeaders());
+            if (OUTPUT != null) {
+                comparison.writeReport(OUTPUT, getDefaultHeaders());
+            }
             if (comparison.areEqual()) {
                 System.out.println("SAM files match.");
             } else {
