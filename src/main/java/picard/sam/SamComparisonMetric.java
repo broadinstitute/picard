@@ -1,6 +1,8 @@
 package picard.sam;
 
 import htsjdk.samtools.metrics.MetricBase;
+import picard.PicardException;
+import picard.sam.util.SamComparison;
 
 /**
  * Metric for results of SamComparison.  Used to store results in CompareSAMs.
@@ -72,4 +74,31 @@ public class SamComparisonMetric extends MetricBase {
      * the tool is run with LENIENT_HEADER true or false.
      */
     public boolean areEqual;
+
+    public boolean allVisitedAlignmentsEqual() {
+        return !(missingLeft > 0 || missingRight > 0 || mappingsDiffer > 0 || unmappedLeft > 0 || unmappedRight > 0);
+    }
+
+    public void updateMetric(final SamComparison.AlignmentComparison comp) {
+        switch (comp) {
+            case UNMAPPED_BOTH:
+                ++unmappedBoth;
+                break;
+            case UNMAPPED_LEFT:
+                ++unmappedLeft;
+                break;
+            case UNMAPPED_RIGHT:
+                ++unmappedRight;
+                break;
+            case MAPPINGS_DIFFER:
+                ++mappingsDiffer;
+                break;
+            case MAPPINGS_MATCH:
+                ++mappingsMatch;
+                break;
+            default:
+                // unreachable
+                throw new PicardException("Unhandled comparison type: " + comp);
+        }
+    }
 }

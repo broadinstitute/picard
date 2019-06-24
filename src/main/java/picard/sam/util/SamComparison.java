@@ -42,7 +42,7 @@ public final class SamComparison {
     private SortingCollection<SAMRecord> markDuplicatesCheckLeft;
     private SortingCollection<SAMRecord> markDuplicatesCheckRight;
 
-    private enum AlignmentComparison {
+    public enum AlignmentComparison {
         UNMAPPED_BOTH, UNMAPPED_LEFT, UNMAPPED_RIGHT, MAPPINGS_DIFFER, MAPPINGS_MATCH
     }
 
@@ -89,7 +89,7 @@ public final class SamComparison {
 
     private void setup() {
         if (lenientDup) {
-            /*Setup for duplicate marking checks.  Recs which disagree on duplicate marking will be added to markDuplicatesCheckLeft/Right and then fed to a DuplicateSetIterator to check if
+            /* Setup for duplicate marking checks.  Recs which disagree on duplicate marking will be added to markDuplicatesCheckLeft/Right and then fed to a DuplicateSetIterator to check if
              * differences are due only to choice of representative read within duplicate set.
              */
             final SAMFileHeader leftHeader = reader1.getFileHeader();
@@ -123,37 +123,43 @@ public final class SamComparison {
          * we do not count the read or the read it could be swapped with as having mismatched duplicates.  Note however, that once a swap is allowed, the reads swapped cannot be used for any
          * further swaps.
          */
-        final HashMap<String, HashSet<String>> allowedSwapsMap = new HashMap<>();
+        final HashMap<String, Set<String>> allowedSwapsMap = new HashMap<>();
         for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetLeftIterator)) {
-            final List<SAMRecord> records = duplicateSet.getRecords(false); //do not want to redo duplicate marking, want to keep marks assigned in input files
-            final HashSet<String> duplicateRecordNames = records.stream().filter(SAMRecord::getDuplicateReadFlag).map(SAMRecord::getReadName)
-                    .collect(Collectors.toCollection(HashSet::new));
-            final HashMap<String, HashSet<String>> repSwapsMap = records.stream().filter(r -> !r.getDuplicateReadFlag())
+            // do not want to redo duplicate marking, want to keep marks assigned in input files
+            final List<SAMRecord> records = duplicateSet.getRecords(false);
+            final Set<String> duplicateRecordNames = records.stream().filter(SAMRecord::getDuplicateReadFlag).map(SAMRecord::getReadName)
+                    .collect(Collectors.toSet());
+            final Map<String, Set<String>> repSwapsMap = records.stream().filter(r -> !r.getDuplicateReadFlag())
                     .collect(Collectors.toMap(SAMRecord::getReadName, r -> duplicateRecordNames, (oldV, newV) -> oldV, HashMap::new));
             allowedSwapsMap.putAll(repSwapsMap);
         }
-        final HashSet<String> savedNames = new HashSet<>(); //set of fragments which have been "saved", i.e. will not be counted as having mismatched duplicate marks.
+        // set of fragments which have been "saved", i.e. will not be counted as having mismatched duplicate marks.
+        final HashSet<String> savedNames = new HashSet<>();
         for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetRightIterator)) {
-            final List<SAMRecord> records = duplicateSet.getRecords(false); //do not want to redo duplicate marking, want to keep marking assigned in files
+            // do not want to redo duplicate marking, want to keep marking assigned in files
+            final List<SAMRecord> records = duplicateSet.getRecords(false);
             final List<String> duplicateRecordNames = records.stream().filter(SAMRecord::getDuplicateReadFlag).map(SAMRecord::getReadName)
                     .collect(Collectors.toList());
             final LinkedList<String> repRecordNames = records.stream().filter(r -> !r.getDuplicateReadFlag()).map(SAMRecord::getReadName)
                     .collect(Collectors.toCollection(LinkedList::new));
             for (final String dupName : duplicateRecordNames) {
-                if (savedNames.contains(dupName)) { //This fragment has already been saved and assigned a swap, do not consider
+                if (savedNames.contains(dupName)) {
+                    // This fragment has already been saved and assigned a swap, do not consider
                     continue;
                 }
                 for (final String repName : repRecordNames) {
-                    if (savedNames.contains(repName)) { //This fragment has already been saved and assigned a swap, do not consider
+                    if (savedNames.contains(repName)) {
+                        // This fragment has already been saved and assigned a swap, do not consider
                         continue;
                     }
                     if (allowedSwapsMap.get(dupName) != null && allowedSwapsMap.get(dupName).contains(repName)) {
-                        savedNames.addAll(Arrays.asList(dupName, repName)); //add both to list of read fragments which have been "saved" (and will not be counted as mismatching duplicate marks)
+                        // add both to list of read fragments which have been "saved" (and will not be counted as mismatching duplicate marks)
+                        savedNames.addAll(Arrays.asList(dupName, repName));
                         break;
                     }
                 }
             }
-            //count reads which are not saved
+            // count reads which are not saved
             comparisonMetric.duplicateMarkingsDiffer += records.stream().map(SAMRecord::getReadName).filter(n -> !savedNames.contains(n)).count();
         }
 
@@ -275,7 +281,7 @@ public final class SamComparison {
         // Any elements remaining in rightUnmatched are guaranteed not to be in leftUnmatched.
         comparisonMetric.missingLeft += rightUnmatched.size();
 
-        return allVisitedAlignmentsEqual();
+        return comparisonMetric.allVisitedAlignmentsEqual();
     }
 
     private int compareAlignmentCoordinates(final SAMRecord left, final SAMRecord right) {
@@ -323,7 +329,7 @@ public final class SamComparison {
         if (it2.hasCurrent()) {
             comparisonMetric.missingLeft += countRemaining(it2);
         }
-        return allVisitedAlignmentsEqual();
+        return comparisonMetric.allVisitedAlignmentsEqual();
     }
 
     /**
@@ -344,7 +350,7 @@ public final class SamComparison {
 
         comparisonMetric.missingRight += leftUnmatched.size();
 
-        return allVisitedAlignmentsEqual();
+        return comparisonMetric.allVisitedAlignmentsEqual();
     }
 
     /**
@@ -376,13 +382,6 @@ public final class SamComparison {
             final SAMRecord record = it.getCurrent();
             recordKeyHandler.accept(record, new PrimaryAlignmentKey(record));
         }
-    }
-
-    /**
-     * Check the alignments tallied thus far for any kind of disparity.
-     */
-    private boolean allVisitedAlignmentsEqual() {
-        return !(comparisonMetric.missingLeft > 0 || comparisonMetric.missingRight > 0 || comparisonMetric.mappingsDiffer > 0 || comparisonMetric.unmappedLeft > 0 || comparisonMetric.unmappedRight > 0);
     }
 
     private int countRemaining(final SecondaryOrSupplementarySkippingIterator it) {
@@ -424,26 +423,7 @@ public final class SamComparison {
         }
         catalogDuplicateDifferences(s1, s2);
         final AlignmentComparison comp = compareAlignmentRecords(s1, s2);
-        switch (comp) {
-            case UNMAPPED_BOTH:
-                ++comparisonMetric.unmappedBoth;
-                break;
-            case UNMAPPED_LEFT:
-                ++comparisonMetric.unmappedLeft;
-                break;
-            case UNMAPPED_RIGHT:
-                ++comparisonMetric.unmappedRight;
-                break;
-            case MAPPINGS_DIFFER:
-                ++comparisonMetric.mappingsDiffer;
-                break;
-            case MAPPINGS_MATCH:
-                ++comparisonMetric.mappingsMatch;
-                break;
-            default:
-                // unreachable
-                throw new PicardException("Unhandled comparison type: " + comp);
-        }
+        comparisonMetric.updateMetric(comp);
     }
 
     private void catalogDuplicateDifferences(final SAMRecord s1, final SAMRecord s2) {
