@@ -46,7 +46,7 @@ public class CompareSAMsTest extends CommandLineProgramTest {
 
     @DataProvider(name="compareSams")
     public Object[][] compareSamsTestData() {
-        final ArrayList<String> lenientArgs = new ArrayList<>(Arrays.asList("LENIENT_DUP=true", "MQ0_MATCH=true"));
+        final ArrayList<String> lenientArgs = new ArrayList<>(Arrays.asList("LENIENT_DUP=true", "LENIENT_LOW_MQ_ALIGNMENT=true"));
         return new Object[][] {
                 {"genomic_sorted.sam", "unsorted.sam", null, false},
                 {"genomic_sorted.sam", "chr21.sam", null, false},
@@ -88,8 +88,8 @@ public class CompareSAMsTest extends CommandLineProgramTest {
         final String in2 = new File(TEST_FILES_DIR, f2).getAbsolutePath();
         ArrayList<String> commandArgs = new ArrayList<>(
                 Arrays.asList(
-                        "I=" + in1,
-                        "I=" + in2,
+                        in1,
+                        in2,
                         "O=" + tmpOutput
                 )
         );
@@ -103,8 +103,8 @@ public class CompareSAMsTest extends CommandLineProgramTest {
         //swap order of input files
         commandArgs = new ArrayList<>(
                 Arrays.asList(
-                        "I=" + in2,
-                        "I=" + in1,
+                        in2,
+                        in1,
                         "O=" + tmpOutput
                 )
         );

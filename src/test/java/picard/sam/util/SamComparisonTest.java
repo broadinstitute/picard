@@ -127,8 +127,11 @@ public class SamComparisonTest {
         try (final SamReader samReader1 = SamReaderFactory.makeDefault().open(new File(TEST_FILES_DIR, f1));
              final SamReader samReader2 = SamReaderFactory.makeDefault().open(new File(TEST_FILES_DIR, f2)))
         {
+            final SAMComparisonArgumentCollection argumentCollection = new SAMComparisonArgumentCollection();
+            argumentCollection.LENIENT_DUP = lenientDup;
+            argumentCollection.LENIENT_LOW_MQ_ALIGNMENT = mq0Match;
             final SamComparison samComparison = new SamComparison(samReader1, samReader2,
-                    false, false, false, false, false, lenientDup, mq0Match, null, null);
+                    argumentCollection, null, null);
 
             Assert.assertEquals(areEqual, samComparison.areEqual());
             Assert.assertEquals(expectedMatch, samComparison.getMappingsMatch());

@@ -30,13 +30,12 @@ public final class SamComparison {
 
     private final SamComparisonMetric comparisonMetric;
 
-    private final boolean ignoreSpecies;
-    private final boolean ignoreAssembly;
-    private final boolean ignoreUR;
-    private final boolean ignoreM5;
-    private final boolean ignorePG;
+
+    private final boolean lenientHeader;
     private final boolean lenientDup;
-    private final boolean mq0Match;
+    private final boolean lenientLowMQAlignment;
+    private final boolean lenient255MQAlignment;
+    private final int lowMQThreshold;
     private final String leftName;
     private final String rightName;
 
@@ -51,28 +50,27 @@ public final class SamComparison {
      * Note: the caller must make sure the SamReaders are closed properly.
      */
     public SamComparison(final SamReader reader1, final SamReader reader2) {
-        this(reader1, reader2, false, false, false, false, false, false, false, null, null);
+        this(reader1, reader2, new SAMComparisonArgumentCollection(), null, null);
     }
 
-    public SamComparison(final SamReader reader1, final SamReader reader2, final boolean ignoreSpecies,
-                         final boolean ignoreAssembly, final boolean ignoreUR, final boolean ignoreM5, final boolean ignorePG,
-                         final boolean lenientDup, final boolean mq0Match, final String leftName, final String rightName) {
+    public SamComparison(final SamReader reader1, final SamReader reader2, final SAMComparisonArgumentCollection samComparisonArgumentCollection, final String leftName, final String rightName) {
         this.reader1 = reader1;
         this.reader2 = reader2;
-        this.ignoreSpecies = ignoreSpecies;
-        this.ignoreAssembly = ignoreAssembly;
-        this.ignoreUR = ignoreUR;
-        this.ignoreM5 = ignoreM5;
-        this.ignorePG = ignorePG;
-        this.lenientDup = lenientDup;
-        this.mq0Match = mq0Match;
+        this.lenientHeader = samComparisonArgumentCollection.LENIENT_HEADER;
+        this.lenientDup = samComparisonArgumentCollection.LENIENT_DUP;
+        this.lenientLowMQAlignment = samComparisonArgumentCollection.LENIENT_LOW_MQ_ALIGNMENT;
+        this.lenient255MQAlignment = samComparisonArgumentCollection.LENIENT_255_MQ_ALIGNMENT;
+        this.lowMQThreshold = samComparisonArgumentCollection.LOW_MQ_THRESHOLD;
         this.leftName = leftName;
         this.rightName = rightName;
         comparisonMetric = new SamComparisonMetric();
         setup();
         this.headersAreEqual = compareHeaders();
-        this.alignmentsAreEqual = compareAlignments();
-        this.duplicateMarksAreEqual = compareDuplicateMarks();
+        this.alignmentsAreEqual = compareAlignmentsAndCatalogDuplicateMarkingDifferences();
+        if (lenientDup) {
+            countLenientDuplicateMarkingDifferences();
+        }
+        this.duplicateMarksAreEqual = comparisonMetric.duplicateMarkingsDiffer == 0;
         comparisonMetric.areEqual = areEqual();
     }
 
@@ -91,7 +89,7 @@ public final class SamComparison {
 
     private void setup() {
         if (lenientDup) {
-            /*Setup for duplicate marking checks.  Recs which disagree on duplicate marking will be added to markDuplicatesCheckLeft/Right and the fed to a DuplicateSetIterator to check if
+            /*Setup for duplicate marking checks.  Recs which disagree on duplicate marking will be added to markDuplicatesCheckLeft/Right and then fed to a DuplicateSetIterator to check if
              * differences are due only to choice of representative read within duplicate set.
              */
             final SAMFileHeader leftHeader = reader1.getFileHeader();
@@ -107,56 +105,65 @@ public final class SamComparison {
         comparisonMetric.rightFile = rightName;
     }
 
-    private boolean compareDuplicateMarks() {
-        if (lenientDup) {
-            //count duplicate marking differences allowing swaps within duplicate sets
-            final DuplicateSetIterator duplicateSetLeftIterator = new DuplicateSetIterator(markDuplicatesCheckLeft.iterator(), reader1.getFileHeader(), true);
-            final DuplicateSetIterator duplicateSetRightIterator = new DuplicateSetIterator(markDuplicatesCheckRight.iterator(), reader2.getFileHeader(), true);
-            /* Iterate through duplicateSetIterators.  This will iterate through all reads with differing duplicate markings in left and right files.  Passing through the first
-             * iterator (i.e. left file), for each duplicate set we create a set of duplicate reads that the representative read could "swap" with.  On the pass through the second iterator, for each
-             * duplicate read, we look for the reads it is allowed to swap with in the duplicate set from the first iterator.  If the allowed swap can also be performed in this duplicate set,
-             * we do not count the read or the read it could be swapped with as having mismatched duplicates.  Note however, that once a swap is allowed, the reads swapped cannot be used for any
-             * further swaps.
-             */
-            final HashMap<String, HashSet<String>> allowedSwapsMap = new HashMap<>();
-            for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetLeftIterator)) {
-                final List<SAMRecord> records = duplicateSet.getRecords(false); //do not want to redo duplicate marking, want to keep marks assigned in input files
-                final HashSet<String> duplicateRecordNames = records.stream().filter(SAMRecord::getDuplicateReadFlag).map(SAMRecord::getReadName)
-                        .collect(Collectors.toCollection(HashSet::new));
-                final HashMap<String, HashSet<String>> repSwapsMap = records.stream().filter(r -> !r.getDuplicateReadFlag())
-                        .collect(Collectors.toMap(SAMRecord::getReadName, r -> duplicateRecordNames, (oldV, newV) -> oldV, HashMap::new));
-                allowedSwapsMap.putAll(repSwapsMap);
-            }
-            final HashSet<String> savedNames = new HashSet<>(); //set of fragments which have been "saved", i.e. will not be counted as having mismatched duplicate marks.
-            for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetRightIterator)) {
-                final List<SAMRecord> records = duplicateSet.getRecords(false); //do not want to redo duplicate marking, want to keep marking assigned in files
-                final List<String> duplicateRecordNames = records.stream().filter(SAMRecord::getDuplicateReadFlag).map(SAMRecord::getReadName)
-                        .collect(Collectors.toList());
-                final LinkedList<String> repRecordNames = records.stream().filter(r -> !r.getDuplicateReadFlag()).map(SAMRecord::getReadName)
-                        .collect(Collectors.toCollection(LinkedList::new));
-                for (final String dupName : duplicateRecordNames) {
-                    if (savedNames.contains(dupName)) { //This fragment has already been saved and assigned a swap, do not consider
-                        continue;
-                    }
-                    for (final String repName : repRecordNames) {
-                        if (savedNames.contains(repName)) { //This fragment has already been saved and assigned a swap, do not consider
-                            continue;
-                        }
-                        if (allowedSwapsMap.get(dupName) != null && allowedSwapsMap.get(dupName).contains(repName)) {
-                            savedNames.addAll(Arrays.asList(dupName, repName)); //add both to list of read fragments which have been "saved" (and will not be counted as mismatching duplicate marks)
-                            break;
-                        }
-                    }
-                }
-                //count reads which are not saved
-                comparisonMetric.duplicateMarkingsDiffer += records.stream().map(SAMRecord::getReadName).filter(n -> !savedNames.contains(n)).count();
-            }
+    private void countLenientDuplicateMarkingDifferences() {
+        /* Count duplicate marking differences allowing swaps within duplicate sets.  Should only be used when lenientDup == true.
+           Reads which have different duplicate markings will have been saved in markDuplicatesCheckLeft and markDuplicatesCheckRight
+           in catalogDuplicateDifferences.
+         */
+
+        if (!lenientDup) {
+            throw new PicardException("Should only use countLenientDuplicateMarkingDifferences when in lenient duplicate marking mode.");
         }
 
-        return comparisonMetric.duplicateMarkingsDiffer == 0;
+        final DuplicateSetIterator duplicateSetLeftIterator = new DuplicateSetIterator(markDuplicatesCheckLeft.iterator(), reader1.getFileHeader(), true);
+        final DuplicateSetIterator duplicateSetRightIterator = new DuplicateSetIterator(markDuplicatesCheckRight.iterator(), reader2.getFileHeader(), true);
+        /* Iterate through duplicateSetIterators.  This will iterate through all reads with differing duplicate markings in left and right files.  Passing through the first
+         * iterator (i.e. left file), for each duplicate set we create a set of duplicate reads that the representative read could "swap" with.  On the pass through the second iterator, for each
+         * duplicate read, we look for the reads it is allowed to swap with in the duplicate set from the first iterator.  If the allowed swap can also be performed in this duplicate set,
+         * we do not count the read or the read it could be swapped with as having mismatched duplicates.  Note however, that once a swap is allowed, the reads swapped cannot be used for any
+         * further swaps.
+         */
+        final HashMap<String, HashSet<String>> allowedSwapsMap = new HashMap<>();
+        for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetLeftIterator)) {
+            final List<SAMRecord> records = duplicateSet.getRecords(false); //do not want to redo duplicate marking, want to keep marks assigned in input files
+            final HashSet<String> duplicateRecordNames = records.stream().filter(SAMRecord::getDuplicateReadFlag).map(SAMRecord::getReadName)
+                    .collect(Collectors.toCollection(HashSet::new));
+            final HashMap<String, HashSet<String>> repSwapsMap = records.stream().filter(r -> !r.getDuplicateReadFlag())
+                    .collect(Collectors.toMap(SAMRecord::getReadName, r -> duplicateRecordNames, (oldV, newV) -> oldV, HashMap::new));
+            allowedSwapsMap.putAll(repSwapsMap);
+        }
+        final HashSet<String> savedNames = new HashSet<>(); //set of fragments which have been "saved", i.e. will not be counted as having mismatched duplicate marks.
+        for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetRightIterator)) {
+            final List<SAMRecord> records = duplicateSet.getRecords(false); //do not want to redo duplicate marking, want to keep marking assigned in files
+            final List<String> duplicateRecordNames = records.stream().filter(SAMRecord::getDuplicateReadFlag).map(SAMRecord::getReadName)
+                    .collect(Collectors.toList());
+            final LinkedList<String> repRecordNames = records.stream().filter(r -> !r.getDuplicateReadFlag()).map(SAMRecord::getReadName)
+                    .collect(Collectors.toCollection(LinkedList::new));
+            for (final String dupName : duplicateRecordNames) {
+                if (savedNames.contains(dupName)) { //This fragment has already been saved and assigned a swap, do not consider
+                    continue;
+                }
+                for (final String repName : repRecordNames) {
+                    if (savedNames.contains(repName)) { //This fragment has already been saved and assigned a swap, do not consider
+                        continue;
+                    }
+                    if (allowedSwapsMap.get(dupName) != null && allowedSwapsMap.get(dupName).contains(repName)) {
+                        savedNames.addAll(Arrays.asList(dupName, repName)); //add both to list of read fragments which have been "saved" (and will not be counted as mismatching duplicate marks)
+                        break;
+                    }
+                }
+            }
+            //count reads which are not saved
+            comparisonMetric.duplicateMarkingsDiffer += records.stream().map(SAMRecord::getReadName).filter(n -> !savedNames.contains(n)).count();
+        }
+
     }
 
-    private boolean compareAlignments() {
+    private boolean compareAlignmentsAndCatalogDuplicateMarkingDifferences() {
+        /* Compares alignments of primary sam records.  Eventual comparison of sam records found in both files is performed in tallyAlignments.  tallyAlignments
+         * includes duplicate marking cataloging, which counts all duplicate marking differences when in strict mode, or adds reads which differ in duplicate marking
+         * to sam record iterators to be counted while allowing for swaps later in countLenientDuplicateMarkingDifferences.
+         */
         if (!compareValues(reader1.getFileHeader().getSortOrder(), reader2.getFileHeader().getSortOrder(),
                 "Sort Order")) {
             System.out.println("Cannot compare alignments if sort orders differ.");
@@ -404,11 +411,12 @@ public final class SamComparison {
         return ((s1.getReferenceName().equals(s2.getReferenceName()) &&
                 s1.getAlignmentStart() == s2.getAlignmentStart() &&
                 s1.getReadNegativeStrandFlag() == s1.getReadNegativeStrandFlag()) ||
-                (mq0Match && s1.getMappingQuality() <= 3 && s2.getMappingQuality() <= 3));
+                (lenientLowMQAlignment && s1.getMappingQuality() <= lowMQThreshold && s2.getMappingQuality() <= lowMQThreshold) ||
+                (lenient255MQAlignment && s1.getMappingQuality() == 255 && s2.getMappingQuality() == 255));
     }
 
     /**
-     * Compare the mapping information for two SAMRecords.
+     * Compare the mapping information for two SAMRecords.  Makes comparison of alignments, and also catalogs duplicate marking differences.
      */
     private void tallyAlignmentRecords(final SAMRecord s1, final SAMRecord s2) {
         if (!s1.getReadName().equals(s2.getReadName())) {
@@ -439,6 +447,9 @@ public final class SamComparison {
     }
 
     private void catalogDuplicateDifferences(final SAMRecord s1, final SAMRecord s2) {
+        // if strict, reads with differing duplicate marking are counted by duplicateMarkingsDiffer.
+        // if lenient, reads with differing duplicate marking are added to markDuplicatesCheckLeft/Right
+        // to later be counted while allowing for swaps withing duplicate sets by updateLenientDuplicateMarkingDifferences
         if (s1.getDuplicateReadFlag() != s2.getDuplicateReadFlag()) {
             if (lenientDup) {
                 markDuplicatesCheckLeft.add(s1);
@@ -460,7 +471,9 @@ public final class SamComparison {
             sequenceDictionariesDiffer = true;
         }
         ret = compareReadGroups(h1, h2) && ret;
-        ret = compareProgramRecords(h1, h2) && ret;
+        if (!lenientHeader) {
+            ret = compareProgramRecords(h1, h2) && ret;
+        }
         return ret;
     }
 
@@ -527,7 +540,7 @@ public final class SamComparison {
         return ret;
     }
 
-    private static boolean compareSequenceDictionaries(final SAMFileHeader h1, final SAMFileHeader h2) {
+    private boolean compareSequenceDictionaries(final SAMFileHeader h1, final SAMFileHeader h2) {
         final List<SAMSequenceRecord> s1 = h1.getSequenceDictionary().getSequences();
         final List<SAMSequenceRecord> s2 = h2.getSequenceDictionary().getSequences();
         if (s1.size() != s2.size()) {
@@ -541,7 +554,7 @@ public final class SamComparison {
         return ret;
     }
 
-    private static boolean compareSequenceRecord(final SAMSequenceRecord sequenceRecord1, final SAMSequenceRecord sequenceRecord2, final int which) {
+    private boolean compareSequenceRecord(final SAMSequenceRecord sequenceRecord1, final SAMSequenceRecord sequenceRecord2, final int which) {
         if (!sequenceRecord1.getSequenceName().equals(sequenceRecord2.getSequenceName())) {
             reportDifference(sequenceRecord1.getSequenceName(), sequenceRecord2.getSequenceName(),
                     "Name of sequence record " + which);
@@ -549,14 +562,16 @@ public final class SamComparison {
         }
         boolean ret = compareValues(sequenceRecord1.getSequenceLength(), sequenceRecord2.getSequenceLength(), "Length of sequence " +
                 sequenceRecord1.getSequenceName());
-        ret = compareValues(sequenceRecord1.getSpecies(), sequenceRecord2.getSpecies(), "Species of sequence " +
-                sequenceRecord1.getSequenceName()) && ret;
-        ret = compareValues(sequenceRecord1.getAssembly(), sequenceRecord2.getAssembly(), "Assembly of sequence " +
-                sequenceRecord1.getSequenceName()) && ret;
-        ret = compareValues(sequenceRecord1.getAttribute("M5"), sequenceRecord2.getAttribute("M5"), "MD5 of sequence " +
-                sequenceRecord1.getSequenceName()) && ret;
-        ret = compareValues(sequenceRecord1.getAttribute("UR"), sequenceRecord2.getAttribute("UR"), "URI of sequence " +
-                sequenceRecord1.getSequenceName()) && ret;
+        if (!lenientHeader) {
+            ret = compareValues(sequenceRecord1.getSpecies(), sequenceRecord2.getSpecies(), "Species of sequence " +
+                    sequenceRecord1.getSequenceName()) && ret;
+            ret = compareValues(sequenceRecord1.getAssembly(), sequenceRecord2.getAssembly(), "Assembly of sequence " +
+                    sequenceRecord1.getSequenceName()) && ret;
+            ret = compareValues(sequenceRecord1.getAttribute("M5"), sequenceRecord2.getAttribute("M5"), "MD5 of sequence " +
+                    sequenceRecord1.getSequenceName()) && ret;
+            ret = compareValues(sequenceRecord1.getAttribute("UR"), sequenceRecord2.getAttribute("UR"), "URI of sequence " +
+                    sequenceRecord1.getSequenceName()) && ret;
+        }
         return ret;
     }
 
