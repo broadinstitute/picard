@@ -956,13 +956,13 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             boolean canUseTree = numNoCalls == 0;
             if (canUseTree && qualityScores != null) {
                 for (final byte[] q : qualityScores) {
-                    canUseTree &= StringDistanceUtils.anySmaller(q, minimumBaseQuality);
+                    canUseTree &= !StringDistanceUtils.anySmaller(q, minimumBaseQuality);
                 }
             }
 
             final BarcodeMatch match = new BarcodeMatch();
             match.matched = numNoCalls <= maxNoCalls;
-            
+
             if (canUseTree) {
                 // look for a match within maxMismatches
                 final Pair<byte[][], Integer> theMatch = barcodeTree.queryFirst(readSubsequences, maxMismatches);

@@ -40,7 +40,7 @@ public class BKTree<T> implements Serializable {
      */
     public void insert(final T newEntry) {
         if (root != null) {
-            final int distance = distanceMetric.apply(newEntry, root);
+            final int distance = distanceMetric.apply(root, newEntry);
             if (children.containsKey(distance)) {
                 children.get(distance).insert(newEntry);
             } else {
@@ -61,7 +61,7 @@ public class BKTree<T> implements Serializable {
     public HashMap<Integer, LinkedList<T>> query(final T query, final int maxDist) {
         final HashMap<Integer, LinkedList<T>> ret = new HashMap<>();
 
-        final int distance = distanceMetric.apply(query, root);
+        final int distance = distanceMetric.apply(root, query);
         if (distance <= maxDist) {
             ret.put(distance, new LinkedList<>(Collections.singletonList(root)));
         }
@@ -107,7 +107,7 @@ public class BKTree<T> implements Serializable {
      * @return pair of found and entry and distance, or null if no entry found within maxDist
      */
     public Pair<T, Integer> queryFirst(final T query, final int maxDist) {
-        final int distance = distanceMetric.apply(query, root);
+        final int distance = distanceMetric.apply(root, query);
         if (distance <= maxDist) {
             return Pair.of(root, distance);
         }
