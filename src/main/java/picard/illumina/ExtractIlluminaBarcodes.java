@@ -476,7 +476,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             }
         }
 
-        nearbyBarcodesMap = buildNearbyBarcodesMap(2*MAX_MISMATCHES + MIN_MISMATCH_DELTA - 1);
+        barcodeTree = buildBarcodeTree(barcodeToMetrics.values());
+        nearbyBarcodesMap = buildNearbyBarcodesMap(barcodeToMetrics.values(), 2*MAX_MISMATCHES + MIN_MISMATCH_DELTA - 1);
 //        for (final String barcode : nearbyBarcodesMap.keySet()) {
 //            System.out.println(barcode + " : " + nearbyBarcodesMap.get(barcode).size());
 //        }
@@ -503,16 +504,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             final boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
             final int numBarcodes = readStructure.sampleBarcodes.length();
             final Set<String> barcodes = new HashSet<>();
-            switch (DISTANCE_MODE){
-                case HAMMING:
-                    this.barcodeTree = new BKTree<>((bc1, bc2) -> StringDistanceUtils.countMismatches(bc1, bc2, null, MINIMUM_BASE_QUALITY));
-                    break;
-                case FREE:
-                    this.barcodeTree = new BKTree<>((bc1, bc2) -> StringDistanceUtils.countMismatchesWithIndelEvents(bc1, bc2, null, MINIMUM_BASE_QUALITY));
-                    break;
-                default:
-                    throw new PicardException("distanceMode: " + DISTANCE_MODE + " is not supported.");
-            }
+
             for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
                 final String[] bcStrings = new String[numBarcodes];
                 int barcodeNum = 0;
@@ -537,17 +529,35 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 final String libraryName = (hasLibraryName ? row.getField(LIBRARY_NAME_COLUMN) : "");
                 final BarcodeMetric metric = new BarcodeMetric(barcodeName, libraryName, bcStr, bcStrings);
                 barcodeToMetrics.put(metric.BARCODE_WITHOUT_DELIMITER, metric);
-                barcodeTree.insert(metric.barcodeBytes);
             }
         }
     }
 
-    private Map<String, LinkedList<Pair<byte[][], Integer>>> buildNearbyBarcodesMap(final int maximumDistance) {
+    private BKTree<byte[][]> buildBarcodeTree(final Collection<BarcodeMetric> barcodeMetrics) {
+        BKTree<byte[][]> tree;
+        switch (DISTANCE_MODE){
+            case HAMMING:
+                tree = new BKTree<>((bc1, bc2) -> StringDistanceUtils.countMismatches(bc1, bc2, null, MINIMUM_BASE_QUALITY));
+                break;
+            case FREE:
+                tree = new BKTree<>((bc1, bc2) -> StringDistanceUtils.countMismatchesWithIndelEvents(bc1, bc2, null, MINIMUM_BASE_QUALITY));
+                break;
+            default:
+                throw new PicardException("distanceMode: " + DISTANCE_MODE + " is not supported.");
+        }
+        for (final BarcodeMetric barcode : barcodeMetrics) {
+            tree.insert(barcode.barcodeBytes);
+        }
+
+        return tree;
+    }
+
+    private Map<String, LinkedList<Pair<byte[][], Integer>>> buildNearbyBarcodesMap(final Collection<BarcodeMetric> barcodeMetrics, final int maximumDistance) {
         HashMap<String, LinkedList<Pair<byte[][], Integer>>> retMap=new HashMap<>();
-        for (final BarcodeMetric metric1 : barcodeToMetrics.values()) {
+        for (final BarcodeMetric metric1 : barcodeMetrics) {
             retMap.put(metric1.BARCODE_WITHOUT_DELIMITER, new LinkedList<>());
             final LinkedList<Pair<byte[][], Integer>> nearbyBarcodes = retMap.get(metric1.BARCODE_WITHOUT_DELIMITER);
-            for (final BarcodeMetric metric2 : barcodeToMetrics.values()) {
+            for (final BarcodeMetric metric2 : barcodeMetrics) {
                 if (metric1.equals(metric2)) {
                     continue;
                 }

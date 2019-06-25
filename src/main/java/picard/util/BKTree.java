@@ -114,11 +114,13 @@ public class BKTree<T> implements Serializable {
 
         final int lowLimit = distance - maxDist;
         final int highLimit = maxDist + distance;
-        for (int i = lowLimit; i<= highLimit; i++) {
+        for (int i = lowLimit; i<= highLimit; i++)
             if (children.containsKey(i)) {
-                return children.get(i).queryFirst(query, maxDist);
+                final Pair<T, Integer> ret = children.get(i).queryFirst(query, maxDist);
+                if (ret != null) {
+                    return ret;
+                }
             }
-        }
         return null;
     }
 }
