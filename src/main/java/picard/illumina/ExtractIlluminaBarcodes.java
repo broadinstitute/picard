@@ -217,7 +217,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     private BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
 
     private BKTree<byte[][]> barcodeTree;
-    private int minimumBarcodeSeparation;
+    private Map<String, LinkedList<Pair<byte[][], Integer>>> nearbyBarcodesMap;
 
     public ExtractIlluminaBarcodes() {
         tileNumberFormatter.setMinimumIntegerDigits(4);
@@ -307,7 +307,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                         filterFiles,
                         DISTANCE_MODE,
                         barcodeTree,
-                        minimumBarcodeSeparation
+                        nearbyBarcodesMap
                 );
                 extractors.add(extractor);
             }
@@ -326,7 +326,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                         MIN_MISMATCH_DELTA,
                         DISTANCE_MODE,
                         barcodeTree,
-                        minimumBarcodeSeparation
+                        nearbyBarcodesMap
                 );
                 extractors.add(extractor);
             }
@@ -475,7 +475,11 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 barcodeToMetrics.put(barcode, metric);
             }
         }
-        minimumBarcodeSeparation = getMinimumBarcodeSeparation();
+
+        nearbyBarcodesMap = buildNearbyBarcodesMap(2*MAX_MISMATCHES + MIN_MISMATCH_DELTA - 1);
+//        for (final String barcode : nearbyBarcodesMap.keySet()) {
+//            System.out.println(barcode + " : " + nearbyBarcodesMap.get(barcode).size());
+//        }
         if (barcodeToMetrics.keySet().isEmpty()) {
             messages.add("No barcodes have been specified.");
         }
@@ -538,22 +542,32 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         }
     }
 
-    /**
-     * get minimum distance between barcodes.  If this minimum distance is large enough, barcode lookup algorithms can be sped up.
-     * @return
-     */
-    private int getMinimumBarcodeSeparation() {
-        int minSeparation = barcodeToMetrics.values().iterator().next().barcodeBytes[0].length;
+    private Map<String, LinkedList<Pair<byte[][], Integer>>> buildNearbyBarcodesMap(final int maximumDistance) {
+        HashMap<String, LinkedList<Pair<byte[][], Integer>>> retMap=new HashMap<>();
         for (final BarcodeMetric metric1 : barcodeToMetrics.values()) {
+            retMap.put(metric1.BARCODE_WITHOUT_DELIMITER, new LinkedList<>());
+            final LinkedList<Pair<byte[][], Integer>> nearbyBarcodes = retMap.get(metric1.BARCODE_WITHOUT_DELIMITER);
             for (final BarcodeMetric metric2 : barcodeToMetrics.values()) {
-                if (metric1.equals(metric2)) continue;
-                final int d = StringDistanceUtils.countMismatchesWithIndelEvents(metric1.barcodeBytes, metric2.barcodeBytes, null, 0);
-                if (d<minSeparation) {
-                    minSeparation = d;
+                if (metric1.equals(metric2)) {
+                    continue;
+                }
+                int distance;
+                switch (DISTANCE_MODE){
+                    case HAMMING:
+                        distance = StringDistanceUtils.countMismatches(metric1.barcodeBytes, metric2.barcodeBytes, null, MINIMUM_BASE_QUALITY);
+                        break;
+                    case FREE:
+                        distance = StringDistanceUtils.countMismatchesWithIndelEvents(metric1.barcodeBytes, metric2.barcodeBytes, null, MINIMUM_BASE_QUALITY);
+                        break;
+                    default:
+                        throw new PicardException("distanceMode: " + DISTANCE_MODE + " is not supported.");
+                }
+                if (distance <= maximumDistance) {
+                    nearbyBarcodes.add(Pair.of(metric2.barcodeBytes, distance));
                 }
             }
         }
-        return minSeparation;
+        return retMap;
     }
 
     /**
@@ -705,8 +719,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         private File[] filterFiles = null;
         private IlluminaDataProviderFactory factory = null;
         private final DistanceMetric distanceMode;
-        private int minimumBarcodeSeparation;  //if the barcodes in the dictionary are far enough from each other we don't need to look for a second best in BKTree. If we find one barcode within
-                                             // maxMismatches, then it will be impossible to find any other barcode within maxMismatches + minMismatchDelta
+        private Map<String, LinkedList<Pair<byte[][], Integer>>> nearbyBarcodesMap;
 
         public PerTileBarcodeExtractor(
                 final int tile,
@@ -723,7 +736,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 final File[] filterFiles,
                 final DistanceMetric distanceMode,
                 final BKTree<byte[][]> barcodeTree,
-                final int minimumBarcodeSeparation) {
+                final Map<String, LinkedList<Pair<byte[][], Integer>>> nearbyBarcodesMap) {
             this.tile = tile;
             this.barcodeFile = barcodeFile;
             this.usingQualityScores = minimumBaseQuality > 0;
@@ -744,7 +757,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             this.outputReadStructure = factory.getOutputReadStructure();
             this.distanceMode = distanceMode;
             this.barcodeTree = barcodeTree;
-            this.minimumBarcodeSeparation = minimumBarcodeSeparation;
+            this.nearbyBarcodesMap = nearbyBarcodesMap;
         }
 
         /**
@@ -785,7 +798,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 final int minMismatchDelta,
                 final DistanceMetric distanceMode,
                 final BKTree<byte[][]> barcodeTree,
-                final int minimumBarcodeSeparation) {
+                final Map<String, LinkedList<Pair<byte[][], Integer>>> nearbyBarcodesMap) {
 
             this.tile = tile;
             this.barcodeFile = barcodeFile;
@@ -804,7 +817,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             this.outputReadStructure = factory.getOutputReadStructure();
             this.distanceMode = distanceMode;
             this.barcodeTree = barcodeTree;
-            this.minimumBarcodeSeparation = minimumBarcodeSeparation;
+            this.nearbyBarcodesMap = nearbyBarcodesMap;
         }
 
         // These methods return the results of the extraction
@@ -941,49 +954,80 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             match.matched = numNoCalls <= maxNoCalls;
             
             if (canUseTree) {
-                if (minimumBarcodeSeparation >= 2*maxMismatches + minMismatchDelta) {
-                    //in this case we only need to search within maxMismatches, and we can stop our search once we find a single match.
-                    //  If we find a matching barcode then it would be impossible to have another barcode within less than maxMismatches + minMismatchDelta
-                    final Pair<byte[][], Integer> theMatch = barcodeTree.queryFirst(readSubsequences, maxMismatches);
-                    if (theMatch==null) {
-                        match.matched = false;
-                        match.mismatches = maxMismatches + 1;
-                        match.mismatchesToSecondBest = maxMismatches + 1;
-                        match.barcode = "";
-                    } else {
-                        match.matched = true;
-                        match.mismatches = theMatch.getValue();
-                        match.mismatchesToSecondBest = maxMismatches +  minMismatchDelta + 1;
-                        match.barcode = IlluminaUtil.byteArrayToString(theMatch.getKey(), "");
-                    }
+                // look for a match within maxMismatches
+                final Pair<byte[][], Integer> theMatch = barcodeTree.queryFirst(readSubsequences, maxMismatches);
+                if (theMatch==null) {
+                    // no match was found
+                    match.matched = false;
+                    match.mismatches = maxMismatches + 1;
+                    match.mismatchesToSecondBest = maxMismatches + 1;
+                    match.barcode = "";
                 } else {
-                    //in this case we need to search for possible second best barcodes
-                    final HashMap<Integer, LinkedList<byte[][]>> matches = barcodeTree.query(readSubsequences, maxMismatches + minMismatchDelta);
-                    if (matches.isEmpty()) {
-                        //no matches within required distance were found
-                        match.matched = false;
-                        match.mismatches = maxMismatches + minMismatchDelta + 1;
-                        match.mismatchesToSecondBest = maxMismatches + minMismatchDelta + 1;
-                        match.barcode = "";
-                    } else if (matches.size() == 1) {
-                        //we only found matches at a single distance within the required distance
-                        final HashMap.Entry<Integer,LinkedList<byte[][]>> barcodeMatches = matches.entrySet().iterator().next();
-                        match.matched &= barcodeMatches.getKey() <= maxMismatches && barcodeMatches.getValue().size() == 1;
-                        match.mismatches = barcodeMatches.getKey();
-                        final byte[][] barcode = barcodeMatches.getValue().peek();
-                        match.mismatchesToSecondBest = barcodeMatches.getValue().size() == 1?  maxMismatches + minMismatchDelta + 1 : barcodeMatches.getKey();
-                        match.barcode = match.matched? IlluminaUtil.byteArrayToString(barcode,"") : IlluminaUtil.byteArrayToString(barcode,"").toLowerCase();
-                    } else {
-                        //we found matches at multiple distances within the searched distance
-                        final int bestDistance = Collections.min(matches.keySet());
-                        final int secondBestDistance = matches.get(bestDistance).size() > 1? bestDistance : matches.keySet().stream().filter(k -> k!=bestDistance).min(Integer::compare).get();
-                        match.matched &= bestDistance < maxMismatches && (secondBestDistance - bestDistance) >= minMismatchDelta;
-                        match.mismatches = bestDistance;
-                        match.mismatchesToSecondBest = secondBestDistance;
-                        final byte[][] barcode = matches.get(bestDistance).peek();
-                        match.barcode = match.matched? IlluminaUtil.byteArrayToString(barcode,"") : IlluminaUtil.byteArrayToString(barcode,"").toLowerCase();
+                    // a match was found, need to look for other barcodes that could lead to ambiguity
+                    final String matchedBarcodeString = IlluminaUtil.byteArrayToString(theMatch.getKey(), "");
+                    final int matchedBarcodeDistance = theMatch.getValue();
+                    int minBarcodeDistance = matchedBarcodeDistance;
+                    byte[][] bestBarcode = theMatch.getKey();
+                    int secondBestBarcodeDistance = matchedBarcodeDistance + minMismatchDelta;
+
+                    for (final Pair<byte[][], Integer> nearbyBarcode : nearbyBarcodesMap.get(matchedBarcodeString)) {
+                        if (nearbyBarcode.getValue() >= 2 * matchedBarcodeDistance + minMismatchDelta) {
+                            // this barcode can't lead to ambiguity in this case, so can skip it
+                            continue;
+                        }
+                        int checkDistance = 0;
+                        switch (distanceMode) {
+                            case HAMMING:
+                                checkDistance = StringDistanceUtils.countMismatches(nearbyBarcode.getKey(), readSubsequences, qualityScores, minimumBaseQuality);
+                                break;
+                            case FREE:
+                                checkDistance = StringDistanceUtils.countMismatchesWithIndelEvents(nearbyBarcode.getKey(), readSubsequences, qualityScores, minimumBaseQuality);
+                                break;
+                        }
+                        if (checkDistance < secondBestBarcodeDistance) {
+                            if (checkDistance < minBarcodeDistance) {
+                                //it's posible the new barcode is actually better than the current best barcode
+                                secondBestBarcodeDistance = minBarcodeDistance;
+                                minBarcodeDistance = checkDistance;
+                                bestBarcode = nearbyBarcode.getKey();
+                            } else {
+                                secondBestBarcodeDistance = checkDistance;
+                            }
+                        }
                     }
+                    match.matched &= secondBestBarcodeDistance - minBarcodeDistance >= minMismatchDelta;
+                    match.mismatches = minBarcodeDistance;
+                    match.mismatchesToSecondBest = secondBestBarcodeDistance;
+                    match.barcode = match.matched? IlluminaUtil.byteArrayToString(bestBarcode, "") : IlluminaUtil.byteArrayToString(bestBarcode, "").toLowerCase();
                 }
+//                } else {
+//                    //in this case we need to search for possible second best barcodes
+//                    final HashMap<Integer, LinkedList<byte[][]>> matches = barcodeTree.query(readSubsequences, maxMismatches + minMismatchDelta);
+//                    if (matches.isEmpty()) {
+//                        //no matches within required distance were found
+//                        match.matched = false;
+//                        match.mismatches = maxMismatches + minMismatchDelta + 1;
+//                        match.mismatchesToSecondBest = maxMismatches + minMismatchDelta + 1;
+//                        match.barcode = "";
+//                    } else if (matches.size() == 1) {
+//                        //we only found matches at a single distance within the required distance
+//                        final HashMap.Entry<Integer,LinkedList<byte[][]>> barcodeMatches = matches.entrySet().iterator().next();
+//                        match.matched &= barcodeMatches.getKey() <= maxMismatches && barcodeMatches.getValue().size() == 1;
+//                        match.mismatches = barcodeMatches.getKey();
+//                        final byte[][] barcode = barcodeMatches.getValue().peek();
+//                        match.mismatchesToSecondBest = barcodeMatches.getValue().size() == 1?  maxMismatches + minMismatchDelta + 1 : barcodeMatches.getKey();
+//                        match.barcode = match.matched? IlluminaUtil.byteArrayToString(barcode,"") : IlluminaUtil.byteArrayToString(barcode,"").toLowerCase();
+//                    } else {
+//                        //we found matches at multiple distances within the searched distance
+//                        final int bestDistance = Collections.min(matches.keySet());
+//                        final int secondBestDistance = matches.get(bestDistance).size() > 1? bestDistance : matches.keySet().stream().filter(k -> k!=bestDistance).min(Integer::compare).get();
+//                        match.matched &= bestDistance < maxMismatches && (secondBestDistance - bestDistance) >= minMismatchDelta;
+//                        match.mismatches = bestDistance;
+//                        match.mismatchesToSecondBest = secondBestDistance;
+//                        final byte[][] barcode = matches.get(bestDistance).peek();
+//                        match.barcode = match.matched? IlluminaUtil.byteArrayToString(barcode,"") : IlluminaUtil.byteArrayToString(barcode,"").toLowerCase();
+//                    }
+//                }
                 //HashMap<Integer, LinkedList<byte[][]>> matches = barcodeTree.query(readSubsequences, maxMismatches + minMismatchDelta);
 
                 //HashMap<Integer, LinkedList<byte[][]>> matches = barcodeTree.query(readSubsequences, maxMismatches);
