@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
  *       O=output.bam \
  *       RGID=4 \
  *       RGLB=lib1 \
- *       RGPL=illumina \
+ *       RGPL=ILLUMINA \
  *       RGPU=unit1 \
  *       RGSM=20
  * </pre>
@@ -78,7 +78,7 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
             "      O=output.bam \\\n" +
             "      RGID=4 \\\n" +
             "      RGLB=lib1 \\\n" +
-            "      RGPL=illumina \\\n" +
+            "      RGPL=ILLUMINA \\\n" +
             "      RGPU=unit1 \\\n" +
             "      RGSM=20\n " +
             "\n" +
@@ -108,7 +108,7 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
     @Argument(shortName = "LB", doc = "Read-Group library")
     public String RGLB;
 
-    @Argument(shortName = "PL", doc = "Read-Group platform (e.g. illumina, solid)")
+    @Argument(shortName = "PL", doc = "Read-Group platform (e.g. ILLUMINA, SOLID)")
     public String RGPL;
 
     @Argument(shortName = "PU", doc = "Read-Group platform unit (eg. run barcode)")
