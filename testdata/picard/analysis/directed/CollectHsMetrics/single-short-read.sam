@@ -1,4 +1,4 @@
 @HD	VN:1.6	SO:unsorted
 @SQ	SN:chrM	LN:16571	M5:d2ed829b8a1628d16cbeee88e88e39eb	UR:file:///Users/tsato/workspace/picard/testdata/picard/quality/chrM.reference.fasta
-@RG	ID:TestReadGroup	SM:TestSample	PL:Illumina	LB:TestLibrary	PU:TestReadGroup
+@RG	ID:TestReadGroup	SM:TestSample	PL:ILLUMINA	LB:TestLibrary	PU:TestReadGroup
 SingleRead	99	chrM	1	255	10M	=	200	209	GTAAATATTT	IIIIIIIIII	MC:Z:10M	RG:Z:TestReadGroup	NM:i:0	MQ:i:255
