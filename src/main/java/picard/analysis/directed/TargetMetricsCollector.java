@@ -712,6 +712,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             metrics.MEAN_TARGET_COVERAGE = (double) totalCoverage / metrics.TARGET_TERRITORY;
             metrics.MEDIAN_TARGET_COVERAGE = highQualityDepthHistogram.getMedian();
             metrics.MAX_TARGET_COVERAGE = maxDepth;
+            // Use Math.min() to account for edge case where highQualityCoverageByTarget is empty (minDepth=Long.MAX_VALUE)
             metrics.MIN_TARGET_COVERAGE = Math.min(minDepth, maxDepth);
 
             // compute the coverage value such that 80% of target bases have better coverage than it i.e. 20th percentile
