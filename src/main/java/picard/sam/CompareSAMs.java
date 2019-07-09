@@ -56,8 +56,8 @@ public class CompareSAMs extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Compare two input \".sam\" or \".bam\" files.  ";
     static final String USAGE_DETAILS = "This tool initially compares the headers of SAM or BAM files. " +
             " If the file headers are comparable, the tool can perform either strict comparisons for which " +
-            "each alignment must be identical and the header, or a more lenient check of \"equivalence\", where mapping quality" +
-            "0 reads are allowed to have different alignments, duplicate marks are allowed to differ to account for " +
+            "each alignment and the header must be identical, or a more lenient check of \"equivalence\", where reads with mapping quality < LOW_MQ_THRESHOLD " +
+            "are allowed to have different alignments, duplicate marks are allowed to differ to account for " +
             "ambiguities in selecting the representative read of a duplicate set, and some differences in headers is allowed.  By default, alignment comparisons, " +
             "duplicate marking comparisons, and header comparisons are performed in the strict mode.  Results of comparison are summarised in " +
             " an output metrics file." +
@@ -65,15 +65,15 @@ public class CompareSAMs extends CommandLineProgram {
             "<h4>CompareSAMs for exact matching:</h4>" +
             "<pre>" +
             "java -jar picard.jar CompareSAMs \\<br />" +
-            "      I=file_1.bam \\<br />" +
-            "      I=file_2.bam \\<br />" +
+            "      file_1.bam \\<br />" +
+            "      file_2.bam \\<br />" +
             "      O=comparison.tsv" +
             "</pre>" +
             "\n" +
             "<h4>CompareSAMs for \"equivalence\":</h4>" +
             "java -jar picard.jar CompareSAMs \\<br />" +
-            "      I=file_1.bam \\<br />" +
-            "      I=file_2.bam \\<br />" +
+            "      file_1.bam \\<br />" +
+            "      file_2.bam \\<br />" +
             "      LENIENT_LOW_MQ_ALIGNMENT=true \\<br />" +
             "      LENIENT_DUP=true \\<br />" +
             "      O=comparison.tsv" +
@@ -81,8 +81,8 @@ public class CompareSAMs extends CommandLineProgram {
             "\n" +
             "<h4>CompareSAMs for \"equivalence\", allow certain differences in header:</h4>" +
             "java -jar picard.jar CompareSAMs \\<br />" +
-            "      I=file_1.bam \\<br />" +
-            "      I=file_2.bam \\<br />" +
+            "      file_1.bam \\<br />" +
+            "      file_2.bam \\<br />" +
             "      LENIENT_LOW_MQ_ALIGNMENT=true \\<br />" +
             "      LENIENT_DUP=true \\<br />" +
             "      LENIENT_HEADER=true \\<br />" +
@@ -113,8 +113,8 @@ public class CompareSAMs extends CommandLineProgram {
         try (final SamReader samReader1 = samReaderFactory.open(SAM_FILES.get(0));
              final SamReader samReader2 = samReaderFactory.open(SAM_FILES.get(1)))
         {
-            final SamComparison comparison = new SamComparison(samReader1, samReader2, samComparisonArgumentCollection,
-                    SAM_FILES.get(0).getAbsolutePath(), SAM_FILES.get(1).getAbsolutePath());
+            final SamComparison comparison = new SamComparison(samReader1, samReader2,
+                    SAM_FILES.get(0).getAbsolutePath(), SAM_FILES.get(1).getAbsolutePath(), samComparisonArgumentCollection);
             if (OUTPUT != null) {
                 comparison.writeReport(OUTPUT, getDefaultHeaders());
             }

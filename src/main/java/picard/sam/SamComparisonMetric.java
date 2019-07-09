@@ -69,7 +69,7 @@ public class SamComparisonMetric extends MetricBase {
 
     /**
      * Whether or not to consider the two input files equal.  The two input files are considered equal iff
-     * mappingsDiffer == unmappedLeft == unmappedRight == missingLeft == missingRight == duplicateMarkingsDiffer ==0 &&
+     * mappingsDiffer == unmappedLeft == unmappedRight == missingLeft == missingRight == duplicateMarkingsDiffer == 0 &&
      * the headers have been compared to be equal.  Note that the header comparison result can be dependent on whether
      * the tool is run with LENIENT_HEADER true or false.
      */

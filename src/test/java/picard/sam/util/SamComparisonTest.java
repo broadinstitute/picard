@@ -79,7 +79,7 @@ public class SamComparisonTest {
             final String f1,
             final String f2,
             final boolean lenientDup,
-            final boolean mq0Match,
+            final boolean lenientLowMQAlignment,
             final int expectedMatch,
             final int expectedDiffer,
             final int expectedUnmappedBoth,
@@ -92,7 +92,7 @@ public class SamComparisonTest {
     {
         // compare forward
         testHelper(
-                f1, f2, lenientDup, mq0Match,
+                f1, f2, lenientDup, lenientLowMQAlignment,
                 expectedMatch, expectedDiffer, expectedUnmappedBoth,
                 expectedUnmappedLeft, expectedUnmappedRight,
                 expectedMissingLeft, expectedMissingRight, expectedDupDiffer,
@@ -101,7 +101,7 @@ public class SamComparisonTest {
 
         // compare reverse to validate that comparison commutes (swapping inputs and left and right expected values)
         testHelper(
-                f2, f1, lenientDup, mq0Match,
+                f2, f1, lenientDup, lenientLowMQAlignment,
                 expectedMatch, expectedDiffer, expectedUnmappedBoth,
                 expectedUnmappedRight, expectedUnmappedLeft,    // Swap left and right
                 expectedMissingRight, expectedMissingLeft, expectedDupDiffer,      // Swap left and right
@@ -113,7 +113,7 @@ public class SamComparisonTest {
             final String f1,
             final String f2,
             final boolean lenientDup,
-            final boolean mq0Match,
+            final boolean lenientLowMQAlignment,
             final int expectedMatch,
             final int expectedDiffer,
             final int expectedUnmappedBoth,
@@ -129,9 +129,9 @@ public class SamComparisonTest {
         {
             final SAMComparisonArgumentCollection argumentCollection = new SAMComparisonArgumentCollection();
             argumentCollection.LENIENT_DUP = lenientDup;
-            argumentCollection.LENIENT_LOW_MQ_ALIGNMENT = mq0Match;
+            argumentCollection.LENIENT_LOW_MQ_ALIGNMENT = lenientLowMQAlignment;
             final SamComparison samComparison = new SamComparison(samReader1, samReader2,
-                    argumentCollection, null, null);
+                    null, null, argumentCollection);
 
             Assert.assertEquals(areEqual, samComparison.areEqual());
             Assert.assertEquals(expectedMatch, samComparison.getMappingsMatch());
