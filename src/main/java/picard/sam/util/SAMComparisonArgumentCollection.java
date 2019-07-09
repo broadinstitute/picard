@@ -12,7 +12,7 @@ public class SAMComparisonArgumentCollection {
     public boolean LENIENT_HEADER;
 
     @Argument(doc = "Perform lenient checking of duplicate marks.  In this mode, will reduce the number of mismatches by allowing the choice of the representative read in each duplicate set" +
-            " to differ bewteen the input files, as long as the duplicate sets agree.")
+            " to differ between the input files, as long as the duplicate sets agree.")
     public boolean LENIENT_DUP;
 
     @Argument(doc = "Count reads which have mapping quality below LOW_MQ_THRESHOLD in both files but are mapped to different locations as matches.  By default we count such reads as mismatching.")

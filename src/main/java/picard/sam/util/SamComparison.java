@@ -122,27 +122,14 @@ public final class SamComparison {
             // do not want to redo duplicate marking, want to keep marking assigned in files
             final List<SAMRecord> records = duplicateSet.getRecords(false);
             if (records.size() > 1) {
-                final List<String> duplicateRecordNames = records.stream().filter(SAMRecord::getDuplicateReadFlag).map(SAMRecord::getReadName)
-                        .collect(Collectors.toList());
-                final List<String> repRecordNames = records.stream().filter(r -> !r.getDuplicateReadFlag()).map(SAMRecord::getReadName)
-                        .collect(Collectors.toList());
-                for (final String dupName : duplicateRecordNames) {
-                    if (savedNames.contains(dupName)) {
-                        // This fragment has already been saved and assigned a swap, do not consider
-                        continue;
-                    }
-                    for (final String repName : repRecordNames) {
-                        if (savedNames.contains(repName)) {
-                            // This fragment has already been saved and assigned a swap, do not consider
-                            continue;
-                        }
-                        if (allowedSwapsMap.get(dupName) != null && allowedSwapsMap.get(dupName).contains(repName)) {
-                            // add both to list of read fragments which have been "saved" (and will not be counted as mismatching duplicate marks)
-                            savedNames.addAll(Arrays.asList(dupName, repName));
-                            break;
-                        }
-                    }
-                }
+                final List<String> swappableDuplicateRecordNames = records.stream().filter(SAMRecord::getDuplicateReadFlag).map(SAMRecord::getReadName)
+                        .filter(allowedSwapsMap::containsKey).collect(Collectors.toList());
+                records.stream().filter(r -> !r.getDuplicateReadFlag()).map(SAMRecord::getReadName).filter(nRep -> !savedNames.contains(nRep))
+                    .forEach(nRep ->
+                            swappableDuplicateRecordNames.stream().filter(nDup -> !savedNames.contains(nDup) &&
+                                 allowedSwapsMap.get(nDup).contains(nRep))
+                                    .findFirst().ifPresent(nDup -> savedNames.addAll(Arrays.asList(nDup, nRep)))
+                    );
             }
             // count reads which are not saved
             comparisonMetric.duplicateMarkingsDiffer += records.stream().map(SAMRecord::getReadName).filter(n -> !savedNames.contains(n)).count();
