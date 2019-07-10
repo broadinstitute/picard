@@ -107,16 +107,16 @@ public class GtcToVcf extends CommandLineProgram {
                     "<h4>Usage example:</h4>" +
                     "<pre>" +
                     "java -jar picard.jar GtcToVcf \\<br />" +
-                    "INPUT=input.gtc \\<br />" +
-                    "REFERENCE_SEQUENCE=reference.fasta \\<br />" +
-                    "OUTPUT=output.vcf \\<br />" +
-                    "EXTENDED_ILLUMINA_MANIFEST=chip_name.extended.csv \\<br />" +
-                    "CLUSTER_FILE=chip_name.egt \\<br />" +
-                    "ILLUMINA_NORMALIZATION_MANIFEST=chip_name.bpm.csv \\<br />" +
-                    "SAMPLE_ALIAS=my_sample_alias \\<br />" +
+                    "      INPUT=input.gtc \\<br />" +
+                    "      REFERENCE_SEQUENCE=reference.fasta \\<br />" +
+                    "      OUTPUT=output.vcf \\<br />" +
+                    "      EXTENDED_ILLUMINA_MANIFEST=chip_name.extended.csv \\<br />" +
+                    "      CLUSTER_FILE=chip_name.egt \\<br />" +
+                    "      ILLUMINA_NORMALIZATION_MANIFEST=chip_name.bpm.csv \\<br />" +
+                    "      SAMPLE_ALIAS=my_sample_alias \\<br />" +
                     "</pre>";
 
-    private final Log log = Log.getInstance(GtcToVcf.class);
+    private final static Log log = Log.getInstance(GtcToVcf.class);
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "GTC file to be converted")
     public File INPUT;

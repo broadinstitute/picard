@@ -29,8 +29,11 @@ import org.apache.commons.io.IOUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  * A class to provide methods for accessing Illumina Infinium Data Files.
@@ -110,11 +113,19 @@ abstract class InfiniumDataFile {
      * @return The converted int.
      */
     private int unsignedShortToInt(final byte[] bytes) {
-        int integer = 0;
-        integer |= bytes[1] & 0xFF;
-        integer <<= 8;
-        integer |= bytes[0] & 0xFF;
-        return integer;
+        final ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
+        return buffer.getInt();
+    }
+
+    /**
+     * Utility method to convert a short to a byte array
+     *
+     * @param value The short value to convert to byte array
+     * @return The byte array containing the short in little endian format.
+     */
+    private static byte[] shortToByteArray(final short value) {
+        final ByteBuffer buffer = ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN);
+        return buffer.putShort(value).array();
     }
 
     /**
@@ -124,15 +135,22 @@ abstract class InfiniumDataFile {
      * @return The converted float.
      */
     private float byteArrayToFloat(final byte[] bytes) {
-        int tempInt = ((0xff & bytes[0])
-                | ((0xff & bytes[1]) << 8)
-                | ((0xff & bytes[2]) << 16)
-                | ((0xff & bytes[3]) << 24));
-        return Float.intBitsToFloat(tempInt);
+        final ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
+        return buffer.getFloat();
     }
 
     private static final int FLOAT_BYTES_LENGTH = 4;
 
+    /**
+     * Utility method to convert a float to a byte array
+     *
+     * @param floatValue the float value to convert to byte array
+     * @return The byte array containing the float in little endian format.
+     */
+    private static byte[] floatToByteArray(final float floatValue) {
+        final ByteBuffer buffer = ByteBuffer.allocate(FLOAT_BYTES_LENGTH).order(ByteOrder.LITTLE_ENDIAN);
+        return buffer.putFloat(floatValue).array();
+    }
 
     /**
      * Utility method for parsing a float value. (Reads from current offset)
@@ -144,6 +162,24 @@ abstract class InfiniumDataFile {
         final byte[] floatBytes = new byte[FLOAT_BYTES_LENGTH];
         stream.readFully(floatBytes);
         return byteArrayToFloat(floatBytes);
+    }
+
+    /**
+     * Utility method for writing a short value to an outputStream.
+     * Writes in Illumina (little-endian) format
+     */
+    static void writeShort(final DataOutputStream outputStream, final short value) throws IOException {
+        final byte[] byteArray = shortToByteArray(value);
+        outputStream.write(byteArray);
+    }
+
+    /**
+     * Utility method for writing a float value to an outputStream.
+     * Writes in Illumina (little-endian) format
+     */
+    static void writeFloat(final DataOutputStream outputStream, final float value) throws IOException {
+        final byte[] byteArray = floatToByteArray(value);
+        outputStream.write(byteArray);
     }
 
     /**
