@@ -1,6 +1,6 @@
 package picard.arrays;
 
-import picard.util.VcfTestUtils;
+import picard.vcf.VcfTestUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

@@ -1,3 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2019 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package picard.arrays;
 
 import picard.arrays.illumina.InfiniumVcfFields;
@@ -38,15 +62,38 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static picard.arrays.MergePedIntoVcf.USAGE_DETAILS;
+
 /**
  * Class to take genotype calls from a ped file output from zCall and merge them into a vcf from autocall.
  */
 @CommandLineProgramProperties(
-        summary = "Program to merge a ped file from zCall into a VCF from autocall.",
+        summary = USAGE_DETAILS,
         oneLineSummary = "Program to merge a ped file from zCall into a VCF.",
         programGroup = picard.cmdline.programgroups.GenotypingArraysProgramGroup.class
 )
 public class MergePedIntoVcf extends CommandLineProgram {
+
+    static final String USAGE_DETAILS = "MergePedIntoVcf takes a ped file output from zCall and merges into a vcf file" +
+            "using several supporting files." +
+            "A VCF, aka Variant Calling Format, is a text file for storing how a sequenced sample differs from the reference genome. " +
+            "<a href='http://software.broadinstitute.org/software/igv/book/export/html/184'></a>" +
+            "A PED file is a whitespace-separated text file for storing phenotype information. " +
+            "<a href='http://zzz.bwh.harvard.edu/plink/data.shtml#ped'></a>" +
+            "A MAP file is a whitespace-separated text file for storing genotype information. " +
+            "<a href='http://zzz.bwh.harvard.edu/plink/data.shtml#map'></a>" +
+            "A zCall thresholds file is a whitespace-separated text file for storing the thresholds for " +
+            "genotype clustering for a SNP as determined by zCall." +
+            "<a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3463112/#SEC2title'></a>" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar MergePedIntoVcf \\<br />" +
+            "VCF=input.vcf \\<br />" +
+            "PED=zcall.output.ped \\<br />" +
+            "MAP=zcall.output.map \\<br />" +
+            "ZCALL_T_FILE=zcall.thresholds.7.txt \\<br />" +
+            "OUTPUT=output.vcf <br />" +
+            "</pre>";
 
     private final Log log = Log.getInstance(MergePedIntoVcf.class);
 
@@ -82,9 +129,9 @@ public class MergePedIntoVcf extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         try {
             parseZCallThresholds();
-            ZCallPedFile zCallPedFile = ZCallPedFile.fromFile(PED_FILE, MAP_FILE);
-            VCFFileReader vcfFileReader = new VCFFileReader(ORIGINAL_VCF, false);
-            VCFHeader header = vcfFileReader.getFileHeader();
+            final ZCallPedFile zCallPedFile = ZCallPedFile.fromFile(PED_FILE, MAP_FILE);
+            final VCFFileReader vcfFileReader = new VCFFileReader(ORIGINAL_VCF, false);
+            final VCFHeader header = vcfFileReader.getFileHeader();
             addAdditionalHeaderFields(header);
             writeVcf(vcfFileReader.iterator(), OUTPUT, vcfFileReader.getFileHeader().getSequenceDictionary(), header, zCallPedFile);
         } catch (FileNotFoundException e) {
@@ -98,7 +145,7 @@ public class MergePedIntoVcf extends CommandLineProgram {
         try (Stream<String> stream = Files.lines(ZCALL_THRESHOLDS_FILE.toPath())) {
 
             stream.forEach(line -> {
-                String[] tokens = line.split("\t");
+                final String[] tokens = line.split("\t");
                 if ((!tokens[1].equals(notApplicable)) && (!tokens[2].equals(notApplicable))) {
                     zCallThresholds.put(tokens[0], new String[]{tokens[1], tokens[2]});
                 } else {
@@ -138,24 +185,24 @@ public class MergePedIntoVcf extends CommandLineProgram {
 
         writer.writeHeader(vcfHeader);
         while (variants.hasNext()) {
-            VariantContext context = variants.next();
+            final VariantContext context = variants.next();
 
             final VariantContextBuilder builder = new VariantContextBuilder(context);
             if (zCallThresholds.containsKey(context.getID())) {
-                String[] zThresh = zCallThresholds.get(context.getID());
+                final String[] zThresh = zCallThresholds.get(context.getID());
                 builder.attribute(InfiniumVcfFields.ZTHRESH_X, zThresh[0]);
                 builder.attribute(InfiniumVcfFields.ZTHRESH_Y, zThresh[1]);
             }
             final Genotype originalGenotype = context.getGenotype(0);
             final Map<String, Object> newAttributes = originalGenotype.getExtendedAttributes();
-            VCFEncoder vcfEncoder = new VCFEncoder(vcfHeader, false, false);
-            Map<Allele, String> alleleMap = vcfEncoder.buildAlleleStrings(context);
+            final VCFEncoder vcfEncoder = new VCFEncoder(vcfHeader, false, false);
+            final Map<Allele, String> alleleMap = vcfEncoder.buildAlleleStrings(context);
 
-            String zCallAlleles = zCallPedFile.getAlleles(context.getID());
+            final String zCallAlleles = zCallPedFile.getAlleles(context.getID());
             if (zCallAlleles == null) {
                 throw new PicardException("No zCall alleles found for snp " + context.getID());
             }
-            List<Allele> zCallPedFileAlleles = buildNewAllelesFromZCall(zCallAlleles, context.getAttributes());
+            final List<Allele> zCallPedFileAlleles = buildNewAllelesFromZCall(zCallAlleles, context.getAttributes());
             newAttributes.put(InfiniumVcfFields.GTA, alleleMap.get(originalGenotype.getAllele(0)) + "/" + alleleMap.get(originalGenotype.getAllele(1)));
             newAttributes.put(InfiniumVcfFields.GTZ, alleleMap.get(zCallPedFileAlleles.get(0)) + "/" + alleleMap.get(zCallPedFileAlleles.get(1)));
 
@@ -165,7 +212,7 @@ public class MergePedIntoVcf extends CommandLineProgram {
             logger.record("0", 0);
             // AC, AF, and AN are recalculated here
             VariantContextUtils.calculateChromosomeCounts(builder, false);
-            VariantContext newContext = builder.make();
+            final VariantContext newContext = builder.make();
             if (!zCallPedFileAlleles.equals(originalGenotype.getAlleles())) {
                 newContext.getCommonInfo().addFilter(InfiniumVcfFields.ZCALL_DIFF);
             }
@@ -175,18 +222,21 @@ public class MergePedIntoVcf extends CommandLineProgram {
         writer.close();
     }
 
-    private List<Allele> buildNewAllelesFromZCall(String zCallPedFileAlleles, Map<String, Object> newAttributes) {
-        char allele1 = zCallPedFileAlleles.charAt(0);
-        char allele2 = zCallPedFileAlleles.charAt(1);
-        List<Allele> newAlleles = new ArrayList<>();
-        String alleleA = String.valueOf(newAttributes.get("ALLELE_A"));
-        String alleleB = String.valueOf(newAttributes.get("ALLELE_B"));
+    private List<Allele> buildNewAllelesFromZCall(final String zCallPedFileAlleles,
+                                                  final Map<String, Object> newAttributes) {
+        final char allele1 = zCallPedFileAlleles.charAt(0);
+        final char allele2 = zCallPedFileAlleles.charAt(1);
+        final List<Allele> newAlleles = new ArrayList<>();
+        final String alleleA = String.valueOf(newAttributes.get("ALLELE_A"));
+        final String alleleB = String.valueOf(newAttributes.get("ALLELE_B"));
         newAlleles.add(translateAllele(alleleA, alleleB, allele1));
         newAlleles.add(translateAllele(alleleA, alleleB, allele2));
         return newAlleles;
     }
 
-    private Allele translateAllele(String alleleA, String alleleB, char allele) {
+    private Allele translateAllele(final String alleleA,
+                                   final String alleleB,
+                                   final char allele) {
         if (allele == 'A') {
             return convertIndels(alleleA);
         } else if (allele == 'B') {
@@ -198,7 +248,7 @@ public class MergePedIntoVcf extends CommandLineProgram {
         }
     }
 
-    private Allele convertIndels(String alleleA) {
+    private Allele convertIndels(final String alleleA) {
         if (alleleA.equals("*")) {
             return Allele.SPAN_DEL;
         } else if (alleleA.contains("*")) {

@@ -1,5 +1,28 @@
-package picard.arrays;
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2019 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
+package picard.arrays;
 
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -26,11 +49,12 @@ class ZCallPedFile {
         return snpToAlleleMap.get(snp);
     }
 
-    public static ZCallPedFile fromFile(File pedFile, File mapFile) throws FileNotFoundException {
-        String[] pedFileFields = IOUtil.slurp(pedFile).split(" ");
-        String[] mapFileLines = IOUtil.slurpLines(mapFile).toArray(new String[0]);
+    public static ZCallPedFile fromFile(final File pedFile,
+                                        final File mapFile) throws FileNotFoundException {
+        final String[] pedFileFields = IOUtil.slurp(pedFile).split(" ");
+        final String[] mapFileLines = IOUtil.slurpLines(mapFile).toArray(new String[0]);
 
-        ZCallPedFile zCallPedFile = new ZCallPedFile();
+        final ZCallPedFile zCallPedFile = new ZCallPedFile();
 
         /* first six fields are ignored
             Family ID
@@ -42,8 +66,8 @@ class ZCallPedFile {
          */
         //two fields for each snp (each allele)
         for (int i = 0; i < mapFileLines.length; i++) {
-            int index = (i * 2) + OFFSET;
-            String alleles = pedFileFields[index] + pedFileFields[index + 1];
+            final int index = (i * 2) + OFFSET;
+            final String alleles = pedFileFields[index] + pedFileFields[index + 1];
             zCallPedFile.addAllele(mapFileLines[i].split("\t")[1], alleles);
         }
         return zCallPedFile;
