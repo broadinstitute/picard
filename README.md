@@ -1,5 +1,5 @@
 [![Coverage Status](https://coveralls.io/repos/github/broadinstitute/picard/badge.svg?branch=master)](https://coveralls.io/github/broadinstitute/picard?branch=master)
-[![Build Status](https://travis-ci.org/broadinstitute/picard.svg?branch=master)](https://travis-ci.org/broadinstitute/picard)
+[![Build Status](https://travis-ci.com/broadinstitute/picard.svg?branch=master)](https://travis-ci.com/broadinstitute/picard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/broadinstitute/picard/blob/master/LICENSE.txt)
 
 A set of Java command line tools for manipulating high-throughput sequencing (HTS) data and formats.  
