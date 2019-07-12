@@ -130,8 +130,8 @@ public class CollectWgsMetricsTestUtils{
         filters.add(new SecondaryAlignmentFilter()); // Not a counting filter because we never want to count reads twice
         filters.add(mapqFilter);
         filters.add(dupeFilter);
-        SamReader samReader = createSamReader(exampleSam);
-        AbstractLocusIterator iterator =  new EdgeReadIterator(samReader);
+        final SamReader samReader = createSamReader(exampleSam);
+        final AbstractLocusIterator iterator =  new EdgeReadIterator(samReader);
         iterator.setSamFilters(filters);
         iterator.setMappingQualityScoreCutoff(0); // Handled separately because we want to count bases
         iterator.setIncludeNonPfReads(false);
