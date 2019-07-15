@@ -493,8 +493,8 @@ public class ReadBaseStratification {
             try {
                 return samRecord.getCigar().getCigarElements().stream()
                         .filter(ce -> ce.getOperator().equals(operator))
-                        .map(CigarElement::getLength)
-                        .mapToInt(Integer::intValue).sum();
+                        .mapToInt(CigarElement::getLength)
+                        .sum();
             }
             catch ( final Exception ex ) {
                 return null;
@@ -517,8 +517,8 @@ public class ReadBaseStratification {
             try {
                 return samRecord.getCigar().getCigarElements().stream()
                         .filter(ce -> (ce.getOperator().equals(CigarOperator.I) || ce.getOperator().equals(CigarOperator.D)))
-                        .map(CigarElement::getLength)
-                        .mapToInt(Integer::intValue).sum();
+                        .mapToInt(CigarElement::getLength)
+                        .sum();
             }
             catch ( final Exception ex ) {
                 return null;

@@ -267,6 +267,9 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
             final SamLocusIterator samLocusIterator = new SamLocusIterator(sam, regionOfInterest);
 
+            // We want to know about indels:
+            samLocusIterator.setIncludeIndels(true);
+
             // Now go through and compare information at each of these sites
             samLocusIterator.setEmitUncoveredLoci(false);
             samLocusIterator.setMappingQualityScoreCutoff(MIN_MAPPING_Q);

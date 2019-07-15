@@ -47,6 +47,7 @@ public class SimpleErrorCalculator extends BaseErrorCalculator {
         }
     }
 
+
     /**
      * The suffix that pertains to the implementation of aggregation
      **/
