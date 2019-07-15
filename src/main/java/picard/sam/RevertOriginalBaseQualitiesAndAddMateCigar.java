@@ -65,11 +65,6 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
         this.CREATE_MD5_FILE = true;
     }
 
-    /** Default main method impl. */
-    public static void main(final String[] args) {
-        new RevertOriginalBaseQualitiesAndAddMateCigar().instanceMainWithExit(args);
-    }
-
     public int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);

@@ -10,6 +10,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFConstants;
+
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
@@ -248,6 +251,52 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         }
     }
 
+    @DataProvider(name = "dataTestSort")
+    public Object[][] dataTestVcfSorted() {
+        return new Object[][]{
+                {false},
+                {true}
+        };
+    }
+
+    @Test(dataProvider = "dataTestSort")
+    public void testVcfSorted(final boolean disableSort) {
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
+        final File input = new File(TEST_DATA_PATH, "testLiftoverBiallelicIndels.vcf");
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "CREATE_INDEX=" + (!disableSort),
+                "DISABLE_SORT=" + disableSort
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        //check input/header
+        try (final VCFFileReader inputReader = new VCFFileReader(input, false)) {
+                final VCFHeader header = inputReader.getFileHeader();
+                Assert.assertNull(header.getOtherHeaderLine("reference"));
+                }
+        //try to open with / without index
+        try (final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, !disableSort)) {
+                final VCFHeader header = liftReader.getFileHeader();
+                Assert.assertNotNull(header.getOtherHeaderLine("reference"));
+                try (final CloseableIterator<VariantContext> iter = liftReader.iterator()) {
+                Assert.assertEquals(iter.stream().count(), 5L);
+                }
+            }
+        }
+    
+
+    
+    
     @DataProvider
     Iterator<Object[]> testWriteVcfData() {
 
@@ -347,6 +396,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Allele TAG = Allele.create("TAG", false);
         final Allele ACGT = Allele.create("ACGT", false);
         final Allele AACG = Allele.create("AACG", false);
+
+        final Allele spanningDeletion = Allele.create(Allele.SPAN_DEL_STRING, false);
 
         final List<Object[]> tests = new ArrayList<>();
 
@@ -530,6 +581,42 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.genotypes(genotypeBuilder.make());
         result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), REFERENCE, result_builder.make()});
+
+        // insertion at end of section, with a spanning deletion
+        // a test that converts the initial C to a AC which requires
+        // code in LiftOver::extendOneBase(., false)
+        //
+        // improperly aligned with spanning deletion
+        // TTTT(G)->TTTTG(G) -> C/CC
+
+        start = CHAIN_SIZE - 4;
+        stop = CHAIN_SIZE - 1;
+
+        // Note that the spanning deletion prevents the indel from being left aligned.
+        builder.source("test13").start(start).stop(stop).alleles(CollectionUtil.makeList(Allele.create("TTTT", true), Allele.create("TTTTG"), spanningDeletion));
+        result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, Allele.create("CC"), spanningDeletion));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
+        tests.add(new Object[]{builder.make(), REFERENCE, result_builder.make()});
+
+        // non-simple deletion with spanning deletion
+        //  ACGT(T)*/A(T) -> AACG(T)*/A(T)
+        //       position of 13 ^ in result
+        start = CHAIN_SIZE - 13;
+        stop = start + 3;
+
+        builder.source("test14").start(start).stop(stop).alleles(CollectionUtil.makeList(RefACGT, A, spanningDeletion));
+        result_builder.start(CHAIN_SIZE - stop).stop(CHAIN_SIZE - start).alleles(CollectionUtil.makeList(RefAACG, A, spanningDeletion));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
+        tests.add(new Object[]{builder.make(), REFERENCE, result_builder.make()});
+        
+        builder.noGenotypes();
+        result_builder.noGenotypes();
 
         return tests.iterator();
     }

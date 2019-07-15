@@ -57,7 +57,7 @@ public abstract class VcfFileSegmentGenerator {
      * {@link OverlapDetector}.
      */
     public static <T> VcfFileSegmentGenerator excludingNonOverlaps(final VcfFileSegmentGenerator strategy, final OverlapDetector<T> overlaps) {
-        return new VcfFileSegmentGenerator() {
+        return  new VcfFileSegmentGenerator() {
             @Override
             public Iterable<VcfFileSegment> forVcf(final File vcf) {
                 return StreamSupport.stream(strategy.forVcf(vcf).spliterator(), false).filter(segment -> {

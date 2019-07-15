@@ -48,10 +48,6 @@ public class GatherVcfs extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(GatherVcfs.class);
 
-    public static void main(final String[] args) {
-        new GatherVcfs().instanceMainWithExit(args);
-    }
-
     public GatherVcfs() {
         CREATE_INDEX = true;
     }

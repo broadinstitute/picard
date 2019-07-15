@@ -61,18 +61,13 @@ public class BamIndexStats extends CommandLineProgram {
             "java -jar picard.jar BamIndexStats \\<br />" +
             "      I=input.bam \\<br />" +
             "      O=output" +
-            "</pre>"   +
-            "<hr />"       ;
+            "</pre>" +
+            "<hr />";
     private static final Log log = Log.getInstance(BamIndexStats.class);
 
     @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="A BAM file to process.")
     public File INPUT;
-
-    /** Stock main method for a command line program. */
-    public static void main(final String[] argv) {
-        System.exit(new BamIndexStats().instanceMain(argv));
-    }
 
     /**
      * Main method for the program.  Checks that input file is present and

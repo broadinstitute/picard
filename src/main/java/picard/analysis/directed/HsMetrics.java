@@ -46,7 +46,7 @@ package picard.analysis.directed;
  *
  * @author Tim Fennell
  */
-public class HsMetrics extends TargetMetricsBase {
+public class HsMetrics extends PanelMetricsBase {
     /** The name of the bait set used in the hybrid selection. */
     public String BAIT_SET;
 

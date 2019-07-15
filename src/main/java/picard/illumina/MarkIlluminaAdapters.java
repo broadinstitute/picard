@@ -138,11 +138,6 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(MarkIlluminaAdapters.class);
 
-    // Stock main method
-    public static void main(final String[] args) {
-        System.exit(new MarkIlluminaAdapters().instanceMain(args));
-    }
-
     @Override
     protected String[] customCommandLineValidation() {
         if ((FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER == null) || (THREE_PRIME_ADAPTER != null && FIVE_PRIME_ADAPTER == null)) {

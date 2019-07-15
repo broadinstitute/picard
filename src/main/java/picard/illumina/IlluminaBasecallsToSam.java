@@ -171,7 +171,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public Date RUN_START_DATE;
 
     @Argument(doc = "The name of the sequencing technology that produced the read.", optional = true)
-    public String PLATFORM = "illumina";
+    public String PLATFORM = "ILLUMINA";
 
     @Argument(doc = "Whether to include the barcode information in the @RG->BC header tag. Defaults to false until included in the SAM spec.")
     public boolean INCLUDE_BC_IN_RG_TAG = false;

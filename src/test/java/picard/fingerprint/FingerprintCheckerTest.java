@@ -236,4 +236,5 @@ public class FingerprintCheckerTest {
 
         VcfTestUtils.assertVcfFilesAreEqual(vcfOutput, vcfExpected);
     }
+
 }

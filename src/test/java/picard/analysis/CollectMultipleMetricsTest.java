@@ -1,5 +1,6 @@
 package picard.analysis;
 
+import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -10,20 +11,27 @@ import htsjdk.samtools.SAMTextHeaderCodec;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.BufferedLineReader;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
-import static picard.analysis.GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector.*;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
+
+import static picard.analysis.GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector.ACCUMULATION_LEVEL_ALL_READS;
 
 /**
  * Tests the two default "programs" that have tests in CollectMultipleMetrics
@@ -51,11 +59,23 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 "METRIC_ACCUMULATION_LEVEL=" + MetricAccumulationLevel.ALL_READS.name(),
                 "PROGRAM=null",
                 "PROGRAM=" + CollectMultipleMetrics.Program.CollectAlignmentSummaryMetrics.name(),
-                "PROGRAM=" + CollectMultipleMetrics.Program.CollectInsertSizeMetrics.name()
+                "PROGRAM=" + CollectMultipleMetrics.Program.CollectInsertSizeMetrics.name(),
+                "EXTRA_ARGUMENT=CollectInsertSizeMetrics::HISTOGRAM_WIDTH= 58",
+                "EXTRA_ARGUMENT=CollectInsertSizeMetrics::METRIC_ACCUMULATION_LEVEL=LIBRARY",
+                "EXTRA_ARGUMENT=CollectInsertSizeMetrics::METRIC_ACCUMULATION_LEVEL=READ_GROUP",
+
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<InsertSizeMetrics, Comparable<?>> outputISM = new MetricsFile<>();
+        outputISM.read(new FileReader(outfile + ".insert_size_metrics"));
+        Assert.assertEquals(outputISM.getMetrics().size(), 3);
+
+        for (final InsertSizeMetrics metrics : outputISM.getMetrics()) {
+            Assert.assertEquals(metrics.MEAN_INSERT_SIZE, 40D);
+        }
+
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile + ".alignment_summary_metrics"));
 
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
@@ -99,6 +119,48 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                     Assert.fail("Data does not contain this category: " + metrics.CATEGORY);
             }
         }
+    }
+
+    @DataProvider
+    Object[][] extraArgumentValue() {
+                List<Object[]> tests = new ArrayList<>();
+
+                // this is actually legal after conversion to the non-legacy parser
+                if (CommandLineProgram.useLegacyParser(getClass())) {
+                    tests.add(new Object[]{"CollectInsertSizeMetrics::OUTPUT =hi.out"});
+                }
+
+                tests.add(new Object[]{"BLAH::HISTOGRAM_WIDTH=58"});
+                tests.add(new Object[]{"QualityScoreDistribution::HISTOGRAM_WIDTH=58"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::BLAH=58"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics:HISTOGRAM_WIDTH=58"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH=5a8"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH="});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::HISTOGRAM_WIDTH=hello"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::REFERENCE=whyNot.fasta"});
+                tests.add(new Object[]{"CollectInsertSizeMetrics::OUTPUT="});
+
+        return tests.toArray(new Object[0][]);
+    }
+
+    @Test(expectedExceptions = {SAMException.class, CommandLineException.class}, dataProvider = "extraArgumentValue")
+    public void testMultipleMetricsFailing(final String extra) throws IOException {
+
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
+        final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
+        final File outfile = File.createTempFile("alignmentMetrics", "");
+        outfile.deleteOnExit();
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+                "METRIC_ACCUMULATION_LEVEL=" + MetricAccumulationLevel.ALL_READS.name(),
+                "PROGRAM=null",
+                "PROGRAM=" + CollectMultipleMetrics.Program.CollectAlignmentSummaryMetrics.name(),
+                "PROGRAM=" + CollectMultipleMetrics.Program.CollectInsertSizeMetrics.name(),
+                "EXTRA_ARGUMENT=" + extra
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
     }
 
     @Test
@@ -434,5 +496,4 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
             setBuilder.addPair(newReadName, 0, start + ID, start + ID + 99);
         }
     }
-
 }

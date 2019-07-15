@@ -146,13 +146,6 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
     // at bins of each GC %. Need 101 to get from 0-100.
     private static final int BINS = 101;
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Stock main method
-    ////////////////////////////////////////////////////////////////////////////
-    public static void main(final String[] args) {
-        System.exit(new CollectGcBiasMetrics().instanceMain(args));
-    }
-
     /////////////////////////////////////////////////////////////////////////////
     // Setup calculates windowsByGc for the entire reference. Must be done at
     // startup to avoid missing reference contigs in the case of small files

@@ -188,7 +188,7 @@ public class FastqToSam extends CommandLineProgram {
     @Argument(shortName="PU", doc="The platform unit (often run_barcode.lane) to insert into the read group header", optional=true)
     public String PLATFORM_UNIT;
 
-    @Argument(shortName="PL", doc="The platform type (e.g. illumina, solid) to insert into the read group header", optional=true)
+    @Argument(shortName="PL", doc="The platform type (e.g. ILLUMINA, SOLID) to insert into the read group header", optional=true)
     public String PLATFORM;
 
     @Argument(shortName="CN", doc="The sequencing center from which the data originated", optional=true)
@@ -260,10 +260,6 @@ public class FastqToSam extends CommandLineProgram {
         return qualityFormat;
     }
 
-    /** Stock main method. */
-    public static void main(final String[] argv) {
-        System.exit(new FastqToSam().instanceMain(argv));
-    }
 
     /**
      * Get a list of FASTQs that are sequentially numbered based on the first (base) fastq.

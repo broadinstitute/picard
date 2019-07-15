@@ -27,7 +27,11 @@ package picard.util;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineParser.ClpEnum;
@@ -37,12 +41,22 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
+import picard.util.IntervalList.IntervalListScatter;
 import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.BinaryOperator;
 
 /**
  * Performs various {@link IntervalList} manipulations.
@@ -305,41 +319,39 @@ public class IntervalListTools extends CommandLineProgram {
     public enum Action implements ClpEnum {
 
         CONCAT("The concatenation of all the intervals in all the INPUTs, no sorting or merging of overlapping/abutting " +
-                "intervals implied. Will result in a possibly unsorted list unless requested otherwise.", false) {
-            @Override
-            IntervalList act(final List<IntervalList> list, final List<IntervalList> unused) {
-                return IntervalList.concatenate(list);
-            }
-        },
+                "intervals implied. Will result in a possibly unsorted list unless requested otherwise.", false),
+
         UNION("Like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all INPUTS, " +
                 "with overlapping and abutting intervals merged into one.", false) {
             @Override
-            IntervalList act(final List<IntervalList> list, final List<IntervalList> unused) {
-                return IntervalList.union(list);
+            IntervalList act(final IntervalList firstList, final IntervalList ignored) {
+                return super.act(firstList.sorted().uniqued(), ignored);
             }
         },
+
         INTERSECT("The sorted and merged set of all loci that are contained in all of the INPUTs.", false) {
             @Override
-            IntervalList act(final List<IntervalList> list, final List<IntervalList> unused) {
-                return IntervalList.intersection(list);
+            IntervalList reduceEach(final IntervalList list1, final IntervalList list2) {
+                return IntervalList.intersection(CollectionUtil.makeList(list1, list2));
             }
         },
         SUBTRACT("Subtracts the intervals in SECOND_INPUT from those in INPUT. The resulting loci are those in INPUT that are not in SECOND_INPUT.", true) {
             @Override
-            IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
+            IntervalList act(final IntervalList list1, final IntervalList list2) {
                 return IntervalList.subtract(list1, list2);
             }
         },
         SYMDIFF("Results in loci that are in INPUT or SECOND_INPUT but are not in both.", true) {
             @Override
-            IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
-                return IntervalList.difference(list1, list2);
+            IntervalList act(final IntervalList list1, final IntervalList list2) {
+                //todo: fix this when new htsjdk
+                return IntervalList.difference(Collections.singleton(list1), Collections.singleton(list2));
             }
         },
         OVERLAPS("Outputs the entire intervals from INPUT that have bases which overlap any interval from SECOND_INPUT. " +
                 "Note that this is different than INTERSECT in that each original interval is either emitted in its entirety, or not at all.", true) {
             @Override
-            IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
+            IntervalList act(final IntervalList list1, final IntervalList list2) {
                 return IntervalList.overlaps(list1, list2);
             }
         };
@@ -357,8 +369,13 @@ public class IntervalListTools extends CommandLineProgram {
             return helpdoc;
         }
 
-        abstract IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2);
+        IntervalList act(final IntervalList firstList, final IntervalList secondList) {
+            return firstList;
+        }
 
+        IntervalList reduceEach(final IntervalList list1, final IntervalList list2){
+                return IntervalList.concatenate(CollectionUtil.makeList(list1, list2));
+        }
     }
 
     @Override
@@ -371,10 +388,10 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         // Read in the interval lists and apply any padding
-        final List<IntervalList> lists = openIntervalLists(INPUT);
+        final IntervalList lists = openIntervalLists(INPUT, ACTION::reduceEach);
 
         // same for the second list
-        final List<IntervalList> secondLists = openIntervalLists(SECOND_INPUT);
+        final IntervalList secondLists = openIntervalLists(SECOND_INPUT, ACTION::reduceEach);
 
         if (UNIQUE && !SORT) {
             LOG.warn("UNIQUE=true requires sorting but SORT=false was specified.  Results will be sorted.");
@@ -419,79 +436,61 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         final IntervalList output = new IntervalList(header);
-        for (final Interval i : finalIntervals) {
-            output.add(i);
+        finalIntervals.forEach(output::add);
+
+        final ScatterSummary resultIntervals;
+
+        if (SCATTER_CONTENT != null) {
+            final long listSize = SUBDIVISION_MODE.make().listWeight(output);
+            SCATTER_COUNT = (int) listSize / SCATTER_CONTENT;
+            LOG.info(String.format("Using SCATTER_CONTENT = %d and an interval of size %d, attempting to scatter into %s intervals.", SCATTER_CONTENT, listSize, SCATTER_COUNT));
         }
 
-        final List<IntervalList> resultIntervals;
-        if (OUTPUT != null) {
+        if (OUTPUT != null && SCATTER_COUNT > 1) {
 
-            if (SCATTER_CONTENT != null) {
-                final long listSize = SUBDIVISION_MODE.make().listWeight(output);
-                SCATTER_COUNT = (int) listSize / SCATTER_CONTENT;
-                LOG.info(String.format("Using SCATTER_CONTENT = %d and an interval of size %d, attempting to scatter into %s intervals.", SCATTER_CONTENT, listSize, SCATTER_COUNT));
-            }
+            IOUtil.assertDirectoryIsWritable(OUTPUT);
 
-            if (OUTPUT != null) {
-                if (SCATTER_COUNT == 1) {
-                    IOUtil.assertFileIsWritable(OUTPUT);
-                } else {
-                    IOUtil.assertDirectoryIsWritable(OUTPUT);
-                }
+            final ScatterSummary scattered = writeScatterIntervals(output);
+            LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size, OUTPUT));
+            if (scattered.size != SCATTER_COUNT) {
+                LOG.warn(String.format(
+                        "Requested scatter width of %s, but only emitted %s.  (This may be an expected consequence of running in %s mode.)",
+                        SCATTER_COUNT,
+                        scattered.size,
+                        SUBDIVISION_MODE
+                ));
             }
+            resultIntervals = scattered;
 
-            if (SCATTER_COUNT == 1) {
-                output.write(OUTPUT);
-                resultIntervals = Collections.singletonList(output);
-            } else {
-                final List<IntervalList> scattered = writeScatterIntervals(output);
-                LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size(), OUTPUT));
-                if (scattered.size() != SCATTER_COUNT) {
-                    LOG.warn(String.format(
-                            "Requested scatter width of %s, but only emitted %s.  (This may be an expected consequence of running in %s mode.)",
-                            SCATTER_COUNT,
-                            scattered.size(),
-                            SUBDIVISION_MODE
-                    ));
-                }
-                resultIntervals = scattered;
-            }
         } else {
-            resultIntervals = Collections.singletonList(output);
+            if (OUTPUT != null) {
+                output.write(OUTPUT);
+            }
+            resultIntervals = new ScatterSummary();
+            resultIntervals.size = 1;
+            resultIntervals.intervalCount = output.getIntervals().size();
+            resultIntervals.baseCount = output.getBaseCount();
         }
 
-        long totalBaseCount = 0;
-        long intervalCount = 0;
-        for (final IntervalList finalInterval : resultIntervals) {
-            totalBaseCount += finalInterval.getBaseCount();
-            intervalCount += finalInterval.size();
-        }
-
-        LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
+        LOG.info("Produced " + resultIntervals.intervalCount + " intervals totalling " + resultIntervals.baseCount + " bases.");
         if (COUNT_OUTPUT != null) {
             try (final PrintStream countStream = new PrintStream(COUNT_OUTPUT)) {
-                OUTPUT_VALUE.output(totalBaseCount, intervalCount, countStream);
+                OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, countStream);
             }
             catch (final IOException e) {
                 throw new PicardException("There was a problem writing count to " + COUNT_OUTPUT.getAbsolutePath());
             }
         } else {
-            OUTPUT_VALUE.output(totalBaseCount, intervalCount, System.out);
+            OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, System.out);
         }
         return 0;
     }
 
-    private List<IntervalList> openIntervalLists(final List<File> files) {
-        final List<IntervalList> lists = new ArrayList<>();
-        for (final File f : files) {
-            try {
-                lists.add(IntervalListInputType.getIntervalList(f, INCLUDE_FILTERED).padded(PADDING));
-            } catch (final Exception e) {
-                LOG.error("There was a problem opening IntervalList file " + f.getAbsolutePath());
-                throw e;
-            }
-        }
-        return lists;
+    private IntervalList openIntervalLists(final List<File> files, BinaryOperator<IntervalList> accumulator ) {
+        return files.stream()
+                .map(f->IntervalListInputType.getIntervalList(f, INCLUDE_FILTERED).padded(PADDING))
+                .reduce(accumulator)
+                .orElse(null);
     }
 
     @Override
@@ -513,26 +512,36 @@ public class IntervalListTools extends CommandLineProgram {
             errorMsgs.add("COUNT_OUTPUT was provided but OUTPUT_VALUE is set to NONE.");
         }
 
-        return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
+        return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[0]);
     }
 
+
+    static class ScatterSummary {
+        public long size;
+        public long baseCount;
+        public long intervalCount;
+    }
     /**
      * Method to scatter an interval list by locus.
      *
      * @param list The list of intervals to scatter
      * @return The scattered intervals, represented as a {@link List} of {@link IntervalList}
      */
-    private List<IntervalList> writeScatterIntervals(final IntervalList list) {
+    private  ScatterSummary writeScatterIntervals(final IntervalList list) {
         final IntervalListScatterer scatterer = SUBDIVISION_MODE.make();
-        final List<IntervalList> scattered = scatterer.scatter(list, SCATTER_COUNT);
+        final IntervalListScatter scatter = new IntervalListScatter(scatterer, list, SCATTER_COUNT);
 
         final DecimalFormat fileNameFormatter = new DecimalFormat("0000");
         int fileIndex = 1;
-        for (final IntervalList intervals : scattered) {
-            intervals.write(createDirectoryAndGetScatterFile(OUTPUT, scattered.size(), fileNameFormatter.format(fileIndex++)));
+        final ScatterSummary summary = new ScatterSummary();
+        for (final IntervalList intervals : scatter) {
+            summary.size++;
+            summary.baseCount += intervals.getBaseCount();
+            summary.intervalCount += intervals.getIntervals().size();
+            intervals.write(createDirectoryAndGetScatterFile(OUTPUT, SCATTER_COUNT, fileNameFormatter.format(fileIndex++)));
         }
 
-        return scattered;
+        return summary;
     }
 
     private static File getScatteredFileName(final File scatterDirectory, final long scatterTotal, final String formattedIndex) {

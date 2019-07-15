@@ -91,11 +91,6 @@ public class FilterVcf extends CommandLineProgram {
     /** Constructor to default to having index creation on. */
     public FilterVcf() { this.CREATE_INDEX = true; }
 
-    // Stock main method
-    public static void main(final String[] args) {
-        new FilterVcf().instanceMainWithExit(args);
-    }
-
     final private Log log = Log.getInstance(FilterVcf.class);
     final private ProgressLogger progress = new ProgressLogger(log, 100_000, "Processed", "Variants");
 

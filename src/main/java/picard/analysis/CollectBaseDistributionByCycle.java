@@ -98,10 +98,6 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
     private String plotSubtitle = "";
     private final Log log = Log.getInstance(CollectBaseDistributionByCycle.class);
 
-    public static void main(String[] args) {
-        System.exit(new CollectBaseDistributionByCycle().instanceMain(args));
-    }
-
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(CHART_OUTPUT);

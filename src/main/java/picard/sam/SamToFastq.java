@@ -56,6 +56,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * <p> Extracts read sequences and qualities from the input SAM/BAM file and writes them into
@@ -181,10 +182,6 @@ public class SamToFastq extends CommandLineProgram {
     private static final String CLIP_TO_N = "N";
 
     private final Log log = Log.getInstance(SamToFastq.class);
-
-    public static void main(final String[] argv) {
-        System.exit(new SamToFastq().instanceMain(argv));
-    }
 
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);

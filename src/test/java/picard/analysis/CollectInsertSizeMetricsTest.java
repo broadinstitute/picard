@@ -268,10 +268,13 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
     public void testWidthOfMetrics() throws IOException {
         final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam");
         testSamFile.deleteOnExit();
+        final File testSamFileIndex = new File(testSamFile.getParentFile(),testSamFile.getName().replaceAll("bam$","bai"));
+        testSamFileIndex.deleteOnExit();
+
 
         new File(testSamFile.getAbsolutePath().replace(".bam$",".bai")).deleteOnExit();
 
-        final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true, 100);
+        final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true);
         setBuilder.setReadLength(10);
 
         final int insertBy = 3; // the # of bases to increase the insert by in the records below.

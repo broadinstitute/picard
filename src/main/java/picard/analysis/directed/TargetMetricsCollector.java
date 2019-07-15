@@ -665,6 +665,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             // the maximum depth at any target base
             long maxDepth = 0;
 
+            // the minimum depth at any target base
+            long minDepth = Long.MAX_VALUE;
+
             // The "how many target bases at at-least X" calculations.
             // downstream code relies on this array being sorted in ascending order
             final int[] targetBasesDepth = {0, 1, 2, 10, 20, 30, 40, 50, 100};
@@ -679,6 +682,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                     zeroCoverageTargets++;
                     highQualityCoverageHistogramArray[0] += c.interval.length();
                     targetBases[0] += c.interval.length();
+                    minDepth = 0;
                     continue;
                 }
 
@@ -686,6 +690,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                     totalCoverage += depth;
                     highQualityCoverageHistogramArray[Math.min(depth, coverageCap)]++;
                     maxDepth = Math.max(maxDepth, depth);
+                    minDepth = Math.min(minDepth, depth);
 
                     // Add to the "how many target bases at at-least X" calculations.
                     for (int i = 0; i < targetBasesDepth.length; i++) {
@@ -707,6 +712,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             metrics.MEAN_TARGET_COVERAGE = (double) totalCoverage / metrics.TARGET_TERRITORY;
             metrics.MEDIAN_TARGET_COVERAGE = highQualityDepthHistogram.getMedian();
             metrics.MAX_TARGET_COVERAGE = maxDepth;
+            // Use Math.min() to account for edge case where highQualityCoverageByTarget is empty (minDepth=Long.MAX_VALUE)
+            metrics.MIN_TARGET_COVERAGE = Math.min(minDepth, maxDepth);
 
             // compute the coverage value such that 80% of target bases have better coverage than it i.e. 20th percentile
             // this roughly measures how much we must sequence extra such that 80% of target bases have coverage at least as deep as the current mean coverage

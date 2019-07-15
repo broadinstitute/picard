@@ -81,8 +81,4 @@ public class CompareMetrics extends CommandLineProgram {
         }
         return 0;
     }
-
-    public static void main(String[] argv) {
-        new CompareMetrics().instanceMainWithExit(argv);
-    }
 }

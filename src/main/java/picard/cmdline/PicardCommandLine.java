@@ -78,8 +78,8 @@ public class PicardCommandLine {
     private final static String COMMAND_LINE_NAME = PicardCommandLine.class.getSimpleName();
 
     /** Prefixes for class that annotated by @ExperimentalFeature and @BetaFeature **/
-    private final static String BETA_PREFIX = "**BETA FEATURE - WORK IN PROGRESS** ";
-    private final static String EXPERIMENTAL_PREFIX = "**EXPERIMENTAL FEATURE - USE AT YOUR OWN RISK** ";
+    private final static String BETA_PREFIX = "**BETA - WORK IN PROGRESS** ";
+    private final static String EXPERIMENTAL_PREFIX = "**EXPERIMENTAL - USE AT YOUR OWN RISK** ";
 
     /** The packages we wish to include in our command line **/
     protected static List<String> getPackageList() {

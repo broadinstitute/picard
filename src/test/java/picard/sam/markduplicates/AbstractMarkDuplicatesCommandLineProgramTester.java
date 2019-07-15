@@ -25,16 +25,11 @@
 package picard.sam.markduplicates;
 
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordSetBuilder;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.FormatUtil;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
 import picard.sam.DuplicationMetrics;
@@ -164,14 +159,14 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                 for (final SAMRecord record : reader) {
                     outputRecords++;
                     final String key = samRecordToDuplicatesFlagsKey(record);
-
-                    Assert.assertTrue(this.duplicateFlags.containsKey(key));
+                    Assert.assertTrue(this.duplicateFlags.containsKey(key), "DOES NOT CONTAIN KEY: " + key);
                     final boolean value = this.duplicateFlags.get(key);
                     this.duplicateFlags.remove(key);
                     Assert.assertEquals(record.getDuplicateReadFlag(), value, "Mismatching read: " + record.getSAMString());
                     if (testOpticalDuplicateDTTag && MarkDuplicates.DUPLICATE_TYPE_SEQUENCING.equals(record.getAttribute("DT"))) {
                         sequencingDTErrorsSeen.add(record.getReadName());
                     }
+                    Assert.assertEquals(record.getDuplicateReadFlag(), value);
                 }
             }
 

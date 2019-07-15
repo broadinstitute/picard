@@ -166,12 +166,19 @@ public class FingerprintChecker {
 
         final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
 
+        final Map<String, Fingerprint> fingerprints;
         if (reader.isQueryable()) {
-            return loadFingerprintsFromQueriableReader(reader, specificSample, fingerprintFile);
+            fingerprints = loadFingerprintsFromQueriableReader(reader, specificSample, fingerprintFile);
         } else {
             log.warn("Couldn't find index for file " + fingerprintFile + " going to read through it all.");
-            return loadFingerprintsFromVariantContexts(reader, specificSample, fingerprintFile);
+            fingerprints = loadFingerprintsFromVariantContexts(reader, specificSample, fingerprintFile);
         }
+        //add an entry for each sample which was not fingerprinted
+        for (final String sample : reader.getFileHeader().getGenotypeSamples()) {
+            fingerprints.computeIfAbsent(sample, s -> new Fingerprint(s, fingerprintFile, null));
+        }
+
+        return fingerprints;
     }
 
     /**
