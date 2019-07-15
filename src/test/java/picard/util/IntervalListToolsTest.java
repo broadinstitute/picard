@@ -25,17 +25,21 @@ package picard.util;
 
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
-import picard.cmdline.PicardCommandLineTest;
-import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Scanner;
 
 /**
  * Created by farjoun on 10/22/17.
@@ -45,6 +49,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private final File TEST_DATA_DIR = new File("testdata/picard/util/");
     private final File scatterable = new File(TEST_DATA_DIR, "scatterable.interval_list");
     private final File secondInput = new File(TEST_DATA_DIR, "secondInput.interval_list");
+    private final File largeScatterable = new File(TEST_DATA_DIR, "large_scatterable.interval_list");
 
     @Test
     public void testSecondInputValidation() {
@@ -58,14 +63,14 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
         intervalListTools.SECOND_INPUT.add(new File("fakefile"));
         errors = intervalListTools.customCommandLineValidation();
-        Assert.assertTrue(errors.length == 1);
+        Assert.assertEquals(errors.length, 1);
     }
 
     @Test
     public void testCountOutputValidation() {
         final IntervalListTools intervalListTools = new IntervalListTools();
 
-        for(IntervalListTools.Output output_value : IntervalListTools.Output.values()) {
+        for (IntervalListTools.Output output_value : IntervalListTools.Output.values()) {
             intervalListTools.OUTPUT_VALUE = output_value;
             intervalListTools.COUNT_OUTPUT = null;
             String[] errors = intervalListTools.customCommandLineValidation();
@@ -74,9 +79,8 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             intervalListTools.COUNT_OUTPUT = new File("fakefile");
             errors = intervalListTools.customCommandLineValidation();
             if (output_value == IntervalListTools.Output.NONE) {
-                Assert.assertTrue(errors.length == 1);
-            }
-            else {
+                Assert.assertEquals(errors.length, 1);
+            } else {
                 Assert.assertNull(errors);
             }
         }
@@ -129,8 +133,8 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
-        Assert.assertEquals(testerCountOutput(action,IntervalListTools.Output.BASES),bases, "unexpected number of bases written to count_output file.");
-        Assert.assertEquals(testerCountOutput(action,IntervalListTools.Output.INTERVALS),intervals,"unexpected number of intervals written to count_output file.");
+        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.BASES), bases, "unexpected number of bases written to count_output file.");
+        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.INTERVALS), intervals, "unexpected number of intervals written to count_output file.");
     }
 
     @DataProvider
@@ -184,7 +188,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     }
 
     private IntervalList tester(IntervalListTools.Action action, boolean invert, boolean unique) throws IOException {
-        final File ilOut = File.createTempFile("IntervalListTools", "interval_list");
+        final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
         ilOut.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
@@ -214,7 +218,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     }
 
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue) throws IOException {
-        return testerCountOutput(action, outputValue,false,false);
+        return testerCountOutput(action, outputValue, false, false);
     }
 
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert, boolean unique) throws IOException {
@@ -262,7 +266,13 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @AfterTest
     void deleteTempDirs() {
-        dirsToDelete.forEach(file -> IOUtil.recursiveDelete(file.toPath()));
+        for (File file : dirsToDelete) {
+            try {
+                IOUtil.recursiveDelete(file.toPath());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Test(dataProvider = "testScatterTestcases")
@@ -313,7 +323,6 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         }
     }
 
-
     @Test(dataProvider = "testScatterTestcases")
     public void testScatterByContent(final IntervalListScattererTest.Testcase tc) throws IOException {
 
@@ -335,7 +344,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             args.add("OUTPUT=" + ilOutDir);
         }
 
-        args.add("SCATTER_CONTENT=" + tc.mode.make().listWeight(tc.source)/tc.expectedScatter.size());
+        args.add("SCATTER_CONTENT=" + tc.mode.make().listWeight(tc.source) / tc.expectedScatter.size());
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -353,5 +362,44 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
             Assert.assertEquals(intervalList.getIntervals(), expected);
         }
+    }
+
+    //should only take about 3 seconds now.
+    @Test(timeOut = 40_000)
+    public void testLargeScatters() throws IOException {
+        final int scatterCount=1_000;
+        final File ilOutDir = IOUtil.createTempDir("IntervalListTools", "lists");
+        dirsToDelete.add(ilOutDir);
+
+        //scatter
+        {
+            final List<String> args = new ArrayList<>();
+
+            args.add("SCATTER_COUNT=" + scatterCount);
+            args.add("INPUT=" + largeScatterable);
+            args.add("OUTPUT=" + ilOutDir);
+
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+        }
+
+        final List<File> files = Arrays.asList(Objects.requireNonNull(ilOutDir.listFiles()));
+        Assert.assertEquals(files.size(), scatterCount);
+
+        //gather
+        final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
+        ilOut.deleteOnExit();
+        {
+            final List<String> args = new ArrayList<>();
+            files.forEach(f-> args.add("INPUT=" + f.toPath().resolve("scattered.interval_list").toAbsolutePath()));
+
+            args.add("OUTPUT=" + ilOut);
+            args.add("ACTION=UNION");
+
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+        }
+        final IntervalList gather = IntervalList.fromFile(ilOut);
+        final IntervalList original = IntervalList.fromFile(largeScatterable).uniqued();
+
+        Assert.assertEquals(gather, original);
     }
 }
