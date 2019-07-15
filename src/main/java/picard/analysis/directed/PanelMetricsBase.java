@@ -82,6 +82,9 @@ public class PanelMetricsBase extends MultilevelMetrics {
     /** The maximum coverage of reads that mapped to target regions of an experiment. */
     public long MAX_TARGET_COVERAGE;
 
+    /** The minimum coverage of reads that mapped to target regions of an experiment. */
+    public long MIN_TARGET_COVERAGE;
+
     /** The fraction of targets that did not reach coverage=1 over any base. */
     public double ZERO_CVG_TARGETS_PCT;
 
