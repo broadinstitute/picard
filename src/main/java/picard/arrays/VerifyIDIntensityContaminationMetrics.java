@@ -10,8 +10,8 @@ public class VerifyIDIntensityContaminationMetrics extends MetricBase {
     public double PCT_MIX;
 
     /** The log likelihood */
-    public long LLK;
+    public double LLK;
 
     /** The log likelihood 0 */
-    public long LLK0;
+    public double LLK0;
 }

@@ -25,6 +25,10 @@ public class InfiniumVcfFieldsTest {
             Assert.assertEquals(InfiniumVcfFields.getValueFromVcfOtherHeaderLine(header, InfiniumVcfFields.EXTENDED_ILLUMINA_MANIFEST_VERSION), "1.3");
             Assert.assertEquals(InfiniumVcfFields.getOptionalValueFromVcfOtherHeaderLine(header, InfiniumVcfFields.AUTOCALL_GENDER), "M");
             Assert.assertNull(InfiniumVcfFields.getOptionalValueFromVcfOtherHeaderLine(header, "nothing"));
+            Assert.assertNull(InfiniumVcfFields.getOptionalIntegerFromVcfOtherHeaderLine(header, "nothing"));
+            Integer analysisVersionNumber = InfiniumVcfFields.getOptionalIntegerFromVcfOtherHeaderLine(header, InfiniumVcfFields.ANALYSIS_VERSION_NUMBER);
+            Assert.assertNotNull(analysisVersionNumber);
+            Assert.assertEquals(analysisVersionNumber.intValue(), 1);
 
             final Date truthAutocallDate = new Iso8601Date(autocallDateFormat.parse("04/18/2019 20:57"));
             final Iso8601Date autocallDate = InfiniumVcfFields.getDateFromVcfOtherHeaderLine(header, InfiniumVcfFields.AUTOCALL_DATE, autocallDateFormat);
