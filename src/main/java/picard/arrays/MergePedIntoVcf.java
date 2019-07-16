@@ -62,7 +62,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static htsjdk.variant.variantcontext.Allele.SPAN_DEL_STRING;
+import static htsjdk.variant.vcf.VCFConstants.MISSING_VALUE_v4;
+import static htsjdk.variant.vcf.VCFConstants.UNPHASED;
 import static picard.arrays.MergePedIntoVcf.USAGE_DETAILS;
+import static picard.arrays.illumina.InfiniumVcfFields.ALLELE_A;
+import static picard.arrays.illumina.InfiniumVcfFields.ALLELE_B;
 
 /**
  * Class to take genotype calls from a ped file output from zCall and merge them into a vcf from autocall.
@@ -77,7 +82,7 @@ public class MergePedIntoVcf extends CommandLineProgram {
     static final String USAGE_DETAILS = "MergePedIntoVcf takes a ped file output from zCall and merges into a vcf file" +
             "using several supporting files." +
             "A VCF, aka Variant Calling Format, is a text file for storing how a sequenced sample differs from the reference genome. " +
-            "<a href='http://software.broadinstitute.org/software/igv/book/export/html/184'></a>" +
+            "<a href='https://samtools.github.io/hts-specs/VCFv4.2.pdf'></a>" +
             "A PED file is a whitespace-separated text file for storing phenotype information. " +
             "<a href='http://zzz.bwh.harvard.edu/plink/data.shtml#ped'></a>" +
             "A MAP file is a whitespace-separated text file for storing genotype information. " +
@@ -117,8 +122,6 @@ public class MergePedIntoVcf extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output VCF file to write with merged genotype calls.")
     public File OUTPUT;
 
-    private static final String DOT = ".";
-
     private static HashMap<String, String[]> zCallThresholds = new HashMap<>();
 
     @Override
@@ -149,7 +152,7 @@ public class MergePedIntoVcf extends CommandLineProgram {
                 if ((!tokens[1].equals(notApplicable)) && (!tokens[2].equals(notApplicable))) {
                     zCallThresholds.put(tokens[0], new String[]{tokens[1], tokens[2]});
                 } else {
-                    zCallThresholds.put(tokens[0], new String[]{DOT, DOT});
+                    zCallThresholds.put(tokens[0], new String[]{MISSING_VALUE_v4, MISSING_VALUE_v4});
                 }
             });
 
@@ -177,49 +180,47 @@ public class MergePedIntoVcf extends CommandLineProgram {
                           final SAMSequenceDictionary dict,
                           final VCFHeader vcfHeader, ZCallPedFile zCallPedFile) {
 
-        final VariantContextWriter writer = new VariantContextWriterBuilder()
+        try(VariantContextWriter writer = new VariantContextWriterBuilder()
                 .setOutputFile(output)
                 .setReferenceDictionary(dict)
                 .setOptions(VariantContextWriterBuilder.DEFAULT_OPTIONS)
-                .build();
+                .build()) {
+            writer.writeHeader(vcfHeader);
+            while (variants.hasNext()) {
+                final VariantContext context = variants.next();
 
-        writer.writeHeader(vcfHeader);
-        while (variants.hasNext()) {
-            final VariantContext context = variants.next();
+                final VariantContextBuilder builder = new VariantContextBuilder(context);
+                if (zCallThresholds.containsKey(context.getID())) {
+                    final String[] zThresh = zCallThresholds.get(context.getID());
+                    builder.attribute(InfiniumVcfFields.ZTHRESH_X, zThresh[0]);
+                    builder.attribute(InfiniumVcfFields.ZTHRESH_Y, zThresh[1]);
+                }
+                final Genotype originalGenotype = context.getGenotype(0);
+                final Map<String, Object> newAttributes = originalGenotype.getExtendedAttributes();
+                final VCFEncoder vcfEncoder = new VCFEncoder(vcfHeader, false, false);
+                final Map<Allele, String> alleleMap = vcfEncoder.buildAlleleStrings(context);
 
-            final VariantContextBuilder builder = new VariantContextBuilder(context);
-            if (zCallThresholds.containsKey(context.getID())) {
-                final String[] zThresh = zCallThresholds.get(context.getID());
-                builder.attribute(InfiniumVcfFields.ZTHRESH_X, zThresh[0]);
-                builder.attribute(InfiniumVcfFields.ZTHRESH_Y, zThresh[1]);
+                final String zCallAlleles = zCallPedFile.getAlleles(context.getID());
+                if (zCallAlleles == null) {
+                    throw new PicardException("No zCall alleles found for snp " + context.getID());
+                }
+                final List<Allele> zCallPedFileAlleles = buildNewAllelesFromZCall(zCallAlleles, context.getAttributes());
+                newAttributes.put(InfiniumVcfFields.GTA, alleleMap.get(originalGenotype.getAllele(0)) + UNPHASED + alleleMap.get(originalGenotype.getAllele(1)));
+                newAttributes.put(InfiniumVcfFields.GTZ, alleleMap.get(zCallPedFileAlleles.get(0)) + UNPHASED + alleleMap.get(zCallPedFileAlleles.get(1)));
+
+                final Genotype newGenotype = GenotypeBuilder.create(originalGenotype.getSampleName(), zCallPedFileAlleles,
+                        newAttributes);
+                builder.genotypes(newGenotype);
+                logger.record("0", 0);
+                // AC, AF, and AN are recalculated here
+                VariantContextUtils.calculateChromosomeCounts(builder, false);
+                final VariantContext newContext = builder.make();
+                if (!zCallPedFileAlleles.equals(originalGenotype.getAlleles())) {
+                    newContext.getCommonInfo().addFilter(InfiniumVcfFields.ZCALL_DIFF);
+                }
+                writer.add(newContext);
             }
-            final Genotype originalGenotype = context.getGenotype(0);
-            final Map<String, Object> newAttributes = originalGenotype.getExtendedAttributes();
-            final VCFEncoder vcfEncoder = new VCFEncoder(vcfHeader, false, false);
-            final Map<Allele, String> alleleMap = vcfEncoder.buildAlleleStrings(context);
-
-            final String zCallAlleles = zCallPedFile.getAlleles(context.getID());
-            if (zCallAlleles == null) {
-                throw new PicardException("No zCall alleles found for snp " + context.getID());
-            }
-            final List<Allele> zCallPedFileAlleles = buildNewAllelesFromZCall(zCallAlleles, context.getAttributes());
-            newAttributes.put(InfiniumVcfFields.GTA, alleleMap.get(originalGenotype.getAllele(0)) + "/" + alleleMap.get(originalGenotype.getAllele(1)));
-            newAttributes.put(InfiniumVcfFields.GTZ, alleleMap.get(zCallPedFileAlleles.get(0)) + "/" + alleleMap.get(zCallPedFileAlleles.get(1)));
-
-            final Genotype newGenotype = GenotypeBuilder.create(originalGenotype.getSampleName(), zCallPedFileAlleles,
-                    newAttributes);
-            builder.genotypes(newGenotype);
-            logger.record("0", 0);
-            // AC, AF, and AN are recalculated here
-            VariantContextUtils.calculateChromosomeCounts(builder, false);
-            final VariantContext newContext = builder.make();
-            if (!zCallPedFileAlleles.equals(originalGenotype.getAlleles())) {
-                newContext.getCommonInfo().addFilter(InfiniumVcfFields.ZCALL_DIFF);
-            }
-            writer.add(newContext);
         }
-
-        writer.close();
     }
 
     private List<Allele> buildNewAllelesFromZCall(final String zCallPedFileAlleles,
@@ -227,8 +228,8 @@ public class MergePedIntoVcf extends CommandLineProgram {
         final char allele1 = zCallPedFileAlleles.charAt(0);
         final char allele2 = zCallPedFileAlleles.charAt(1);
         final List<Allele> newAlleles = new ArrayList<>();
-        final String alleleA = String.valueOf(newAttributes.get("ALLELE_A"));
-        final String alleleB = String.valueOf(newAttributes.get("ALLELE_B"));
+        final String alleleA = String.valueOf(newAttributes.get(ALLELE_A));
+        final String alleleB = String.valueOf(newAttributes.get(ALLELE_B));
         newAlleles.add(translateAllele(alleleA, alleleB, allele1));
         newAlleles.add(translateAllele(alleleA, alleleB, allele2));
         return newAlleles;
@@ -249,10 +250,10 @@ public class MergePedIntoVcf extends CommandLineProgram {
     }
 
     private Allele convertIndels(final String alleleA) {
-        if (alleleA.equals("*")) {
+        if (alleleA.equals(SPAN_DEL_STRING)) {
             return Allele.SPAN_DEL;
-        } else if (alleleA.contains("*")) {
-            return Allele.create(alleleA.replace('*', ' ').trim(), true);
+        } else if (alleleA.contains(SPAN_DEL_STRING)) {
+            return Allele.create(alleleA.replace(SPAN_DEL_STRING.charAt(0), ' ').trim(), true);
         } else {
             return Allele.create(alleleA, false);
         }

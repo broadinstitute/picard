@@ -34,18 +34,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 class ZCallPedFile {
-    private final Log log = Log.getInstance(ZCallPedFile.class);
-    private final ProgressLogger logger = new ProgressLogger(log, 10000);
+    private static final Log log = Log.getInstance(ZCallPedFile.class);
+    private static final ProgressLogger logger = new ProgressLogger(log, 10000);
 
     private static final int OFFSET = 6;
     private final Map<String, String> snpToAlleleMap = new HashMap<>();
 
-    private void addAllele(String snp, String allele) {
+    private void addAllele(final String snp, final String allele) {
         logger.record("0", 0);
         snpToAlleleMap.put(snp, allele);
     }
 
-    String getAlleles(String snp) {
+    String getAlleles(final String snp) {
         return snpToAlleleMap.get(snp);
     }
 
@@ -68,7 +68,7 @@ class ZCallPedFile {
         for (int i = 0; i < mapFileLines.length; i++) {
             final int index = (i * 2) + OFFSET;
             final String alleles = pedFileFields[index] + pedFileFields[index + 1];
-            zCallPedFile.addAllele(mapFileLines[i].split("\t")[1], alleles);
+            zCallPedFile.addAllele(mapFileLines[i].split("\\s")[1], alleles);
         }
         return zCallPedFile;
     }
