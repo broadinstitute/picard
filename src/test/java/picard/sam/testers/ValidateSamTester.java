@@ -18,5 +18,4 @@ public class ValidateSamTester extends CommandLineProgramTest {
         final int validateExitStatus = runPicardCommandLine(new String[]{"I=" + samFile.getAbsolutePath()});
         Assert.assertEquals(validateExitStatus, 0);
     }
-
 }

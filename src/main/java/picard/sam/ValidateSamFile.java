@@ -24,18 +24,18 @@
 
 package picard.sam;
 
+import htsjdk.samtools.BamIndexValidator.IndexValidationStringency;
 import htsjdk.samtools.SAMValidationError;
 import htsjdk.samtools.SamFileValidator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.BamIndexValidator.IndexValidationStringency;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
@@ -109,7 +109,16 @@ public class ValidateSamFile extends CommandLineProgram {
             "<p>To obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional " +
             " <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>" +
             ""+
-            "<hr />";
+            "<hr />"+
+            "Return codes depend on the errors/warnings discovered:" +
+            "<p>"+
+            "-1 failed to complete execution\n" +
+            "0  ran successfully\n" +
+            "1  warnings but no errors\n" +
+            "2  errors and warnings\n" +
+            "3  errors but no warnings";
+
+
     public enum Mode {VERBOSE, SUMMARY}
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,

@@ -209,7 +209,7 @@ public class DuplicationMetrics extends MergeableMetricBase {
         for (double x = 1; x <= 100; x += 1) {
             histo.increment(x, estimateRoi(ESTIMATED_LIBRARY_SIZE, x, READ_PAIRS_EXAMINED, uniquePairs));
         }
-
+        histo.setValueLabel("CoverageMult");
         return histo;
     }
 

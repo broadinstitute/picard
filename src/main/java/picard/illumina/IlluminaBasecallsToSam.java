@@ -533,7 +533,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         if (READ_GROUP_ID == null) {
-            READ_GROUP_ID = RUN_BARCODE.substring(0, 5) + "." + LANE;
+            READ_GROUP_ID = RUN_BARCODE.substring(0, Math.min(RUN_BARCODE.length(), 5)) + "." + LANE;
         }
 
         if (!TAG_PER_MOLECULAR_INDEX.isEmpty() && TAG_PER_MOLECULAR_INDEX.size() != readStructure.molecularBarcode.length()) {

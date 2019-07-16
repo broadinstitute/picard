@@ -145,25 +145,32 @@ public abstract class AbstractAlignmentMerger {
 
     public enum UnmappingReadStrategy {
         // Leave on record, and copy to tag
-        COPY_TO_TAG(false, true),
-        // Leave on record, but do not create additional tag
-        DO_NOT_CHANGE(false, false),
+        COPY_TO_TAG(false, true, true),
+        // Leave on record (if valid), but do not create additional tag
+        DO_NOT_CHANGE(false, false, true),
+        // Leave on record (even if invalid), but do not create additional tag
+        DO_NOT_CHANGE_INVALID (false, false, false),
         // Add tag with information, and remove from standard fields in record
-        MOVE_TO_TAG(true, true);
+        MOVE_TO_TAG(true, true, true);
 
-        private final boolean resetMappingInformation, populatePATag;
+        private final boolean resetMappingInformation, populateOATag, keepValid;
 
-        UnmappingReadStrategy(final boolean resetMappingInformation, final boolean populatePATag) {
+        UnmappingReadStrategy(final boolean resetMappingInformation, final boolean populateOATag, final boolean keepValid) {
             this.resetMappingInformation = resetMappingInformation;
-            this.populatePATag = populatePATag;
+            this.populateOATag = populateOATag;
+            this.keepValid = keepValid;
+        }
+
+        public boolean isKeepValid() {
+            return keepValid;
         }
 
         public boolean isResetMappingInformation() {
             return resetMappingInformation;
         }
 
-        public boolean isPopulatePaTag() {
-            return populatePATag;
+        public boolean isPopulateOaTag() {
+            return populateOATag;
         }
     }
 
@@ -668,21 +675,22 @@ public abstract class AbstractAlignmentMerger {
 
             crossSpeciesReads++;
 
-            if (unmappingReadsStrategy.isPopulatePaTag()) {
-                unaligned.setAttribute("PA", encodeMappingInformation(aligned));
+            if (unmappingReadsStrategy.isPopulateOaTag()) {
+                unaligned.setAttribute(SAMTag.OA.name(), encodeMappingInformation(aligned));
             }
 
             if (unmappingReadsStrategy.isResetMappingInformation()) {
                 unaligned.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
                 unaligned.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
-                unaligned.setCigar(null);
-                unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
                 unaligned.setAttribute(SAMTag.NM.name(), null);
             }
 
             unaligned.setReadUnmappedFlag(true);
-            // Unmapped read cannot have non-zero mapping quality and remain valid
-            unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
+            // Unmapped read cannot have non-zero mapping quality or non-null cigars and remain valid
+            if (unmappingReadsStrategy.isKeepValid()) {
+                unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
+                unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+            }
 
             // if there already is a comment, add second comment with a | separator:
             Optional<String> optionalComment = Optional.ofNullable(unaligned.getStringAttribute(SAMTag.CO.name()));
@@ -699,7 +707,7 @@ public abstract class AbstractAlignmentMerger {
      * @param rec SAMRecord whose alignment information will be encoded
      * @return String encoding rec's alignment information according to SA tag in the SAM spec
      */
-    static public String encodeMappingInformation(final SAMRecord rec) {
+    public static String encodeMappingInformation(final SAMRecord rec) {
         return String.join(",",
                 rec.getContig(),
                 ((Integer) rec.getAlignmentStart()).toString(),
@@ -709,7 +717,7 @@ public abstract class AbstractAlignmentMerger {
     }
 
     //returns the toString() of its input or an empty string if null.
-    static private String getStringOfNullable(final Object obj) {
+    private static String getStringOfNullable(final Object obj) {
         return Optional.ofNullable(obj)
                 .map(Object::toString)
                 .orElse("");

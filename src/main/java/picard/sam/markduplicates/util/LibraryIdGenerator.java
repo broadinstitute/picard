@@ -92,9 +92,9 @@ public class LibraryIdGenerator {
     }
 
     public static String getReadGroupLibraryName(final SAMReadGroupRecord readGroup) {
-		return Optional.ofNullable(readGroup.getLibrary())
-				.orElse(UNKNOWN_LIBRARY);
-	}
+        return Optional.ofNullable(readGroup.getLibrary())
+                .orElse(UNKNOWN_LIBRARY);
+    }
    
     /**
      * Gets the library name from the header for the record. If the RG tag is not present on

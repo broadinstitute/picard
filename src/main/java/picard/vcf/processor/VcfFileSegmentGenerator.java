@@ -23,21 +23,20 @@
  */
 package picard.vcf.processor;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.primitives.Ints;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Describes a mechanism for producing {@link VcfFileSegment}s from a VCF file.
@@ -61,18 +60,15 @@ public abstract class VcfFileSegmentGenerator {
         return  new VcfFileSegmentGenerator() {
             @Override
             public Iterable<VcfFileSegment> forVcf(final File vcf) {
-                return FluentIterable.from(strategy.forVcf(vcf)).filter(new Predicate<VcfFileSegment>() {
-                    @Override
-                    public boolean apply(final VcfFileSegment segment) {
-                        final boolean keep = !overlaps.getOverlaps(new Interval(segment.contig(), segment.start(), segment.stop())).isEmpty();
-                        if (!keep) {
-                            LOG.debug(String.format("Ignoring segment because it does not overlap with detector, %s::%s:%s-%s",
-                                    segment.vcf().getName(), segment.contig(), segment.start(), segment.stop())
-                            );
-                        }
-                        return keep;
+                return StreamSupport.stream(strategy.forVcf(vcf).spliterator(), false).filter(segment -> {
+                    final boolean keep = !overlaps.getOverlaps(new Interval(segment.contig(), segment.start(), segment.stop())).isEmpty();
+                    if (!keep) {
+                        LOG.debug(String.format("Ignoring segment because it does not overlap with detector, %s::%s:%s-%s",
+                                segment.vcf().getName(), segment.contig(), segment.start(), segment.stop())
+                        );
                     }
-                });
+                    return keep;
+                }).collect(Collectors.toList());
             }
         };
     }
@@ -96,12 +92,7 @@ public abstract class VcfFileSegmentGenerator {
         @Override
         public Iterable<VcfFileSegment> forVcf(final File vcf) {
             final List<SAMSequenceRecord> samSequenceRecords = readSequences(vcf);
-            return FluentIterable.from(samSequenceRecords).transform(new Function<SAMSequenceRecord, VcfFileSegment>() {
-                @Override
-                public VcfFileSegment apply(final SAMSequenceRecord samSequenceRecord) {
-                    return VcfFileSegment.ofWholeSequence(samSequenceRecord, vcf);
-                }
-            });
+            return samSequenceRecords.stream().map(samSequenceRecord -> VcfFileSegment.ofWholeSequence(samSequenceRecord, vcf)).collect(Collectors.toList());
         }
 
         private static List<SAMSequenceRecord> readSequences(final File vcf) {
@@ -191,12 +182,7 @@ public abstract class VcfFileSegmentGenerator {
         @Override
         public Iterable<VcfFileSegment> forVcf(final File vcf) {
             // Turn the VCF into segments, and then apply our 
-            return FluentIterable.from(underlyingStrategy.forVcf(vcf)).transformAndConcat(new Function<VcfFileSegment, Iterable<? extends VcfFileSegment>>() {
-                @Override
-                public Iterable<? extends VcfFileSegment> apply(final VcfFileSegment vcfFileSegment) {
-                    return new VcfFileSegmentSubdivider(vcfFileSegment);
-                }
-            });
+            return StreamSupport.stream(underlyingStrategy.forVcf(vcf).spliterator(), false).flatMap(vcfFileSegment -> StreamSupport.stream(new VcfFileSegmentSubdivider(vcfFileSegment).spliterator(), false)).collect(Collectors.toList());
         }
     }
 
