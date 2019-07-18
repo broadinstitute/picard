@@ -32,13 +32,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 /**
  * A class to provide methods for accessing Illumina Infinium Data Files.
  */
-abstract class InfiniumDataFile {
+public abstract class InfiniumDataFile {
 
     private String identifier;
     private int numberOfEntries;
@@ -80,7 +78,7 @@ abstract class InfiniumDataFile {
         return dataString;
     }
 
-    private char[] byteArrayToCharArray(final byte[] stringBytes) {
+    public static char[] byteArrayToCharArray(final byte[] stringBytes) {
         final char[] chars = new char[stringBytes.length];
         for (int i = 0; i < chars.length; i++) {
             chars[i] = (char) stringBytes[i];
@@ -105,6 +103,8 @@ abstract class InfiniumDataFile {
         return byteArray;
     }
 
+    private static final int SHORT_BYTES_LENGTH = 2;
+
     /**
      * Utility method to convert an unsigned short to an int.
      *
@@ -112,9 +112,12 @@ abstract class InfiniumDataFile {
      *              (Java has no unsigned values which is why we promote it to an int)
      * @return The converted int.
      */
-    private int unsignedShortToInt(final byte[] bytes) {
-        final ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
-        return buffer.getInt();
+    public static int byteArrayToInt(final byte[] bytes) {
+        int integer = 0;
+        integer |= bytes[1] & 0xFF;
+        integer <<= 8;
+        integer |= bytes[0] & 0xFF;
+        return integer;
     }
 
     /**
@@ -123,9 +126,11 @@ abstract class InfiniumDataFile {
      * @param value The short value to convert to byte array
      * @return The byte array containing the short in little endian format.
      */
-    private static byte[] shortToByteArray(final short value) {
-        final ByteBuffer buffer = ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN);
-        return buffer.putShort(value).array();
+    public static byte[] shortToByteArray(final short value) {
+        byte[] bytes = new byte[SHORT_BYTES_LENGTH];
+        bytes[0] = (byte)(value & 0xFF);
+        bytes[1] = (byte)((value >> 8) & 0xFF);
+        return bytes;
     }
 
     /**
@@ -134,9 +139,12 @@ abstract class InfiniumDataFile {
      * @param bytes The byte array representing the float value.
      * @return The converted float.
      */
-    private float byteArrayToFloat(final byte[] bytes) {
-        final ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
-        return buffer.getFloat();
+    public static float byteArrayToFloat(final byte[] bytes) {
+        int tempInt = ((0xff & bytes[0])
+                | ((0xff & bytes[1]) << 8)
+                | ((0xff & bytes[2]) << 16)
+                | ((0xff & bytes[3]) << 24));
+        return Float.intBitsToFloat(tempInt);
     }
 
     private static final int FLOAT_BYTES_LENGTH = 4;
@@ -147,9 +155,14 @@ abstract class InfiniumDataFile {
      * @param floatValue the float value to convert to byte array
      * @return The byte array containing the float in little endian format.
      */
-    private static byte[] floatToByteArray(final float floatValue) {
-        final ByteBuffer buffer = ByteBuffer.allocate(FLOAT_BYTES_LENGTH).order(ByteOrder.LITTLE_ENDIAN);
-        return buffer.putFloat(floatValue).array();
+    public static byte[] floatToByteArray(final float floatValue) {
+        byte[] bytes = new byte[FLOAT_BYTES_LENGTH];
+        int floatBits = Float.floatToIntBits(floatValue);
+        bytes[0] = (byte) (floatBits & 0xFF);
+        bytes[1] = (byte) ((floatBits >> 8) & 0xFF);
+        bytes[2] = (byte) ((floatBits >> 16) & 0xFF);
+        bytes[3] = (byte) ((floatBits >> 24) & 0xFF);
+        return bytes;
     }
 
     /**
@@ -212,7 +225,7 @@ abstract class InfiniumDataFile {
         int[] unsignedShortArray = new int[arrayLen];
         for (int i = 0; i < arrayLen; i++) {
             stream.readFully(shortBytes);
-            unsignedShortArray[i] = unsignedShortToInt(shortBytes);
+            unsignedShortArray[i] = byteArrayToInt(shortBytes);
         }
         return unsignedShortArray;
     }
@@ -225,7 +238,7 @@ abstract class InfiniumDataFile {
     int readShort() throws IOException {
         final byte[] shortBytes = new byte[2];
         stream.readFully(shortBytes);
-        return unsignedShortToInt(shortBytes);
+        return byteArrayToInt(shortBytes);
     }
 
     int parseInt(final InfiniumFileTOC toc) throws IOException {

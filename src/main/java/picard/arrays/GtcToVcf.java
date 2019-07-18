@@ -149,6 +149,9 @@ public class GtcToVcf extends CommandLineProgram {
     @Argument(shortName = "FP_VCF", doc = "The fingerprint VCF for this sample", optional = true)
     public File FINGERPRINT_GENOTYPES_VCF_FILE;
 
+    @Argument(doc = "Causes the program to fail if it finds a case where there is a call on an assay that is flagged as 'zeroed-out' in the Illumina cluster file.", optional = true)
+    public boolean DO_NOT_ALLOW_CALLS_ON_ZEROED_OUT_ASSAYS = false;
+
     static final List<Allele> NO_CALL_ALLELES = Collections.unmodifiableList(Arrays.asList(Allele.NO_CALL, Allele.NO_CALL));
 
     // This file gets initialized during customCommandLineValidation.
@@ -170,7 +173,6 @@ public class GtcToVcf extends CommandLineProgram {
     static {
         df.setMaximumFractionDigits(3);
     }
-
 
     @Override
     protected boolean requiresReference() {
@@ -383,7 +385,12 @@ public class GtcToVcf extends CommandLineProgram {
         if (egtFile.totalScore[egtIndex] == 0.0) {
             builder.filter(InfiniumVcfFields.ZEROED_OUT_ASSAY);
             if (genotype.isCalled()) {
-                throw new PicardException("Found a call on a zeroed out SNP!!");
+                if (DO_NOT_ALLOW_CALLS_ON_ZEROED_OUT_ASSAYS) {
+                    throw new PicardException("Found a call (genotype: " + genotype + ") on a zeroed out Assay!!");
+                } else {
+                    log.warn("Found a call (genotype: " + genotype + ") on a zeroed out Assay. " +
+                            "This could occur if you called genotypes on a different cluster file than used here.");
+                }
             }
         }
         if (record.isDupe()) {
