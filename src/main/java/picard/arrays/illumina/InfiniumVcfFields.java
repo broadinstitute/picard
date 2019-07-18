@@ -114,7 +114,6 @@ public class InfiniumVcfFields {
     public static final String TRIALLELIC = "TRIALLELIC";
     public static final String DUPE = "DUPE";
     public static final String FAIL_REF = "FAIL_REF";
-    public static final String ZCALL_DIFF = "ZCALL_DIFF";
     public static final String ZEROED_OUT_ASSAY = "ZEROED_OUT_ASSAY";
 
     public enum GENOTYPE_VALUES {

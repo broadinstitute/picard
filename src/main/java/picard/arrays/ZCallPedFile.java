@@ -25,23 +25,21 @@
 package picard.arrays;
 
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
+import picard.PicardException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Represents a single-sample .ped file output from ZCall.
+ */
 class ZCallPedFile {
-    private static final Log log = Log.getInstance(ZCallPedFile.class);
-    private static final ProgressLogger logger = new ProgressLogger(log, 10000);
-
     private static final int OFFSET = 6;
     private final Map<String, String> snpToAlleleMap = new HashMap<>();
 
     private void addAllele(final String snp, final String allele) {
-        logger.record("0", 0);
         snpToAlleleMap.put(snp, allele);
     }
 
@@ -49,9 +47,36 @@ class ZCallPedFile {
         return snpToAlleleMap.get(snp);
     }
 
+    /**
+     *
+     * @param pedFile  .ped files are whitespace-separated files.
+     *                The .ped format is defined at http://zzz.bwh.harvard.edu/plink/data.shtml#ped.
+     *                The first six columns, in the following order, are mandatory:
+     *                  Family ID
+     *                  Individual ID
+     *                  Paternal ID
+     *                  Maternal ID
+     *                  Sex (1 = male, 2 = female, other = unknown)
+     *                  Phenotype
+     *                The seventh column onward should be biallelic genotype data. ZCall outputs these as A/B,
+     *                representing which cluster an allele falls in.
+     * @param mapFile .map files are whitespace-separated files.
+     *                The .map format is defined at http://zzz.bwh.harvard.edu/plink/data.shtml#map.
+     *                It has exactly four columns in the following order:
+     *                  Chromosome (1-22, X, Y, or 0 if unknown)
+     *                  rs# or SNP identifier
+     *                  Genetic distance in morgans
+     *                  Base-pair position in bp units
+     * @return A ZCallPedFile representing the input .ped and .map files.
+     * @throws FileNotFoundException
+     */
     public static ZCallPedFile fromFile(final File pedFile,
                                         final File mapFile) throws FileNotFoundException {
-        final String[] pedFileFields = IOUtil.slurp(pedFile).split(" ");
+        final String[] pedFileLines = IOUtil.slurpLines(pedFile).toArray(new String[0]);
+        if (pedFileLines.length > 1) {
+            throw new PicardException("Only single-sample .ped files are supported.");
+        }
+        final String[] pedFileFields = IOUtil.slurp(pedFile).split("\\s");
         final String[] mapFileLines = IOUtil.slurpLines(mapFile).toArray(new String[0]);
 
         final ZCallPedFile zCallPedFile = new ZCallPedFile();
@@ -67,6 +92,10 @@ class ZCallPedFile {
         //two fields for each snp (each allele)
         for (int i = 0; i < mapFileLines.length; i++) {
             final int index = (i * 2) + OFFSET;
+            // The fields are supposed to be one character each
+            if (pedFileFields[index].length() != 1 || pedFileFields[index + 1].length() != 1) {
+                throw new PicardException("Malformed file: each allele should be a single character.");
+            }
             final String alleles = pedFileFields[index] + pedFileFields[index + 1];
             zCallPedFile.addAllele(mapFileLines[i].split("\\s")[1], alleles);
         }

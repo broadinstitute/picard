@@ -40,7 +40,6 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFEncoder;
 import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
@@ -74,18 +73,18 @@ import static picard.arrays.illumina.InfiniumVcfFields.ALLELE_B;
  */
 @CommandLineProgramProperties(
         summary = USAGE_DETAILS,
-        oneLineSummary = "Program to merge a ped file from zCall into a VCF.",
+        oneLineSummary = "Program to merge a single-sample ped file from zCall into a single-sample VCF.",
         programGroup = picard.cmdline.programgroups.GenotypingArraysProgramGroup.class
 )
 public class MergePedIntoVcf extends CommandLineProgram {
 
-    static final String USAGE_DETAILS = "MergePedIntoVcf takes a ped file output from zCall and merges into a vcf file" +
-            "using several supporting files." +
+    static final String USAGE_DETAILS = "MergePedIntoVcf takes a single-sample ped file output from zCall and merges " +
+            "into a single-sample vcf file using several supporting files." +
             "A VCF, aka Variant Calling Format, is a text file for storing how a sequenced sample differs from the reference genome. " +
             "<a href='https://samtools.github.io/hts-specs/VCFv4.2.pdf'></a>" +
-            "A PED file is a whitespace-separated text file for storing phenotype information. " +
+            "A PED file is a whitespace-separated text file for storing genotype information. " +
             "<a href='http://zzz.bwh.harvard.edu/plink/data.shtml#ped'></a>" +
-            "A MAP file is a whitespace-separated text file for storing genotype information. " +
+            "A MAP file is a whitespace-separated text file for storing information about genetic distance. " +
             "<a href='http://zzz.bwh.harvard.edu/plink/data.shtml#map'></a>" +
             "A zCall thresholds file is a whitespace-separated text file for storing the thresholds for " +
             "genotype clustering for a SNP as determined by zCall." +
@@ -117,7 +116,7 @@ public class MergePedIntoVcf extends CommandLineProgram {
     public File ZCALL_THRESHOLDS_FILE = null;
 
     @Argument(shortName = "ZCALL_VERSION", doc = "The version of zcall used", optional = true)
-    public String ZCALL_VERSION = null;
+    public String ZCALL_VERSION = "UNKNOWN";
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output VCF file to write with merged genotype calls.")
     public File OUTPUT;
@@ -135,9 +134,12 @@ public class MergePedIntoVcf extends CommandLineProgram {
             final ZCallPedFile zCallPedFile = ZCallPedFile.fromFile(PED_FILE, MAP_FILE);
             final VCFFileReader vcfFileReader = new VCFFileReader(ORIGINAL_VCF, false);
             final VCFHeader header = vcfFileReader.getFileHeader();
+            if (header.getGenotypeSamples().size() > 1) {
+                throw new PicardException("MergePedIntoVCF only works with single-sample VCFs.");
+            }
             addAdditionalHeaderFields(header);
             writeVcf(vcfFileReader.iterator(), OUTPUT, vcfFileReader.getFileHeader().getSequenceDictionary(), header, zCallPedFile);
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return 0;
@@ -149,10 +151,10 @@ public class MergePedIntoVcf extends CommandLineProgram {
 
             stream.forEach(line -> {
                 final String[] tokens = line.split("\t");
-                if ((!tokens[1].equals(notApplicable)) && (!tokens[2].equals(notApplicable))) {
-                    zCallThresholds.put(tokens[0], new String[]{tokens[1], tokens[2]});
-                } else {
+                if (tokens[1].equals(notApplicable) || tokens[2].equals(notApplicable)) {
                     zCallThresholds.put(tokens[0], new String[]{MISSING_VALUE_v4, MISSING_VALUE_v4});
+                } else {
+                    zCallThresholds.put(tokens[0], new String[]{tokens[1], tokens[2]});
                 }
             });
 
@@ -164,7 +166,6 @@ public class MergePedIntoVcf extends CommandLineProgram {
     private void addAdditionalHeaderFields(VCFHeader header) {
         header.addMetaDataLine(new VCFHeaderLine(InfiniumVcfFields.ZCALL_VERSION, ZCALL_VERSION));
         header.addMetaDataLine(new VCFHeaderLine(InfiniumVcfFields.ZCALL_THRESHOLDS, ZCALL_THRESHOLDS_FILE.getName()));
-        header.addMetaDataLine(new VCFFilterHeaderLine(InfiniumVcfFields.ZCALL_DIFF));
         header.addMetaDataLine(new VCFInfoHeaderLine(InfiniumVcfFields.ZTHRESH_X, 1, VCFHeaderLineType.Float, "zCall X threshold"));
         header.addMetaDataLine(new VCFInfoHeaderLine(InfiniumVcfFields.ZTHRESH_Y, 1, VCFHeaderLineType.Float, "zCall Y threshold"));
         header.addMetaDataLine(new VCFFormatHeaderLine(InfiniumVcfFields.GTA, 1, VCFHeaderLineType.String, "Illumina Autocall Genotype"));
@@ -215,9 +216,6 @@ public class MergePedIntoVcf extends CommandLineProgram {
                 // AC, AF, and AN are recalculated here
                 VariantContextUtils.calculateChromosomeCounts(builder, false);
                 final VariantContext newContext = builder.make();
-                if (!zCallPedFileAlleles.equals(originalGenotype.getAlleles())) {
-                    newContext.getCommonInfo().addFilter(InfiniumVcfFields.ZCALL_DIFF);
-                }
                 writer.add(newContext);
             }
         }
@@ -239,9 +237,9 @@ public class MergePedIntoVcf extends CommandLineProgram {
                                    final String alleleB,
                                    final char allele) {
         if (allele == 'A') {
-            return convertIndels(alleleA);
+            return formatAllele(alleleA);
         } else if (allele == 'B') {
-            return convertIndels(alleleB);
+            return formatAllele(alleleB);
         } else if (allele == '0') {
             return Allele.NO_CALL;
         } else {
@@ -249,7 +247,7 @@ public class MergePedIntoVcf extends CommandLineProgram {
         }
     }
 
-    private Allele convertIndels(final String alleleA) {
+    private Allele formatAllele(final String alleleA) {
         if (alleleA.equals(SPAN_DEL_STRING)) {
             return Allele.SPAN_DEL;
         } else if (alleleA.contains(SPAN_DEL_STRING)) {
