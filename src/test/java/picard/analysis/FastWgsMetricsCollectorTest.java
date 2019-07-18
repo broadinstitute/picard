@@ -17,8 +17,9 @@ import static picard.analysis.CollectWgsMetricsTestUtils.exampleSamTwoReads;
 
 public class FastWgsMetricsCollectorTest {
     final private byte[] highQualities = {30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 50, 50, 50, 50, 50, 50, 50, 50, 50, 60, 60, 60, 70, 70, 70, 80, 80, 90, 90, 90};
+    //unclear why there are so few qualities here....I guess they are not needed, but this is not really valid.
     final private byte[] qualities = {2, 2, 3, 3, 3, 4, 4, 4, 4, 1};
-    final private byte[] refBases = "ACCTACGTTCAATATTCTTCGAGTCDGTCDAGTCTTCGAGTCTTCGCTTCGAGTCDGTCDAGTCTTCGAGTCTTCGCTTCGAGTCDGTCDGAGTCDGTCD".getBytes();
+    final private byte[] readBases = "ACCTACGTTCAATATTCTTCGAGTCDGTCDAGTCTTCGAGTCTTCGCTTCGAGTCDGTCDAGTCTTCGAGTCTTCGCTTCGAGTCDGTCDGAGTCDGTCD".getBytes();
     private SAMRecord record;
     private SAMSequenceRecord sequence;
     private SAMRecord secondRecord;
@@ -33,7 +34,7 @@ public class FastWgsMetricsCollectorTest {
         record = new SAMRecord(new SAMFileHeader());
         record.setReadName("test");
         record.setBaseQualities(qualities);
-        record.setReadBases(refBases);
+        record.setReadBases(readBases);
         secondRecord = generateRecord("test1");
         thirdRecord = generateRecord("test2");
     }
@@ -42,7 +43,7 @@ public class FastWgsMetricsCollectorTest {
         final SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName(name);
         record.setBaseQualities(highQualities);
-        record.setReadBases(refBases);
+        record.setReadBases(readBases);
         return record;
     }
 
@@ -219,6 +220,6 @@ public class FastWgsMetricsCollectorTest {
             AbstractLocusInfo<EdgingRecordAndOffset> info = sli.next();
             collector.addInfo(info, ref, false);
         }
-        assertEquals(11, collector.basesExcludedByOverlap, "Excluded by overlap:");
+        assertEquals(collector.basesExcludedByOverlap, 13,"Excluded by overlap:");
     }
 }

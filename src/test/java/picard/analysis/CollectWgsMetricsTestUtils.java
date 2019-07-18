@@ -55,9 +55,14 @@ import java.util.stream.IntStream;
 public class CollectWgsMetricsTestUtils{
 
     private static final String sqHeaderLN20 = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:20\n";
-    private static final String s1 = "3851612\t16\tchrM\t1\t255\t3M2D10M\t*\t0\t0\tACCTACGTTCAAT\tDDDDDDDDDDDDD\n";
-    private static final String sqHeaderLN100 = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:100\n";
-    private static final String s2 = "3851612\t16\tchrM\t2\t255\t10M1D5M\t*\t0\t0\tCCTACGTTCAATATT\tDDDDDDDDDDDDDDD\n";
+    //POS  123456789.12345678
+    //ref  ACCTACGTTCAATATTCTTCACCTACGTT
+    //s1   ACC--CGTTCAATAT
+    //s2   .CCTACGTTCA-TATTC
+
+    private static final String sqHeaderLN100 = "@HD	SO:coordinate	VN:1.0\n@SQ	SN:chrM	AS:HG18	LN:100\n";
+    private static final String s1            = "3851612	16	chrM	1	255	3M2D10M	*	0	0	ACCCGTTCAATAT	DDDDDDDDDDDDD\n";
+    private static final String s2            = "3851612	16	chrM	2	255	10M1D5M	*	0	0	CCTACGTTCATATTC	DDDDDDDDDDDDDDD\n";
     static final String exampleSamOneRead = sqHeaderLN20+s1;
     static final String exampleSamTwoReads = sqHeaderLN100+s1+s2;
 
