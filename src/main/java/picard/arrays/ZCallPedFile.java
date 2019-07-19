@@ -58,8 +58,9 @@ class ZCallPedFile {
      *                  Maternal ID
      *                  Sex (1 = male, 2 = female, other = unknown)
      *                  Phenotype
-     *                The seventh column onward should be biallelic genotype data. ZCall outputs these as A/B,
-     *                representing which cluster an allele falls in.
+     *                The seventh column onward should be biallelic genotype data. ZCall outputs these as A or B,
+     *                representing which cluster an allele falls in. Each element of the biallelic pairs should still
+     *                be tab-separated.
      *                This file should be a single line, representing a single sample.
      * @param mapFile .map files are whitespace-separated files.
      *                The .map format is defined at http://zzz.bwh.harvard.edu/plink/data.shtml#map.
