@@ -92,11 +92,11 @@ public class MergePedIntoVcf extends CommandLineProgram {
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar MergePedIntoVcf \\<br />" +
-            "VCF=input.vcf \\<br />" +
-            "PED=zcall.output.ped \\<br />" +
-            "MAP=zcall.output.map \\<br />" +
-            "ZCALL_T_FILE=zcall.thresholds.7.txt \\<br />" +
-            "OUTPUT=output.vcf <br />" +
+            "      VCF=input.vcf \\<br />" +
+            "      PED=zcall.output.ped \\<br />" +
+            "      MAP=zcall.output.map \\<br />" +
+            "      ZCALL_T_FILE=zcall.thresholds.7.txt \\<br />" +
+            "      OUTPUT=output.vcf <br />" +
             "</pre>";
 
     private final Log log = Log.getInstance(MergePedIntoVcf.class);
@@ -115,8 +115,8 @@ public class MergePedIntoVcf extends CommandLineProgram {
     @Argument(shortName = "ZCALL_T_FILE", doc = "The zcall thresholds file.")
     public File ZCALL_THRESHOLDS_FILE = null;
 
-    @Argument(shortName = "ZCALL_VERSION", doc = "The version of zcall used", optional = true)
-    public String ZCALL_VERSION = "UNKNOWN";
+    @Argument(shortName = "ZCALL_VERSION", doc = "The version of zcall used")
+    public String ZCALL_VERSION;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output VCF file to write with merged genotype calls.")
     public File OUTPUT;
