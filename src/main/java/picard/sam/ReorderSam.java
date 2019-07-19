@@ -54,7 +54,7 @@ import static htsjdk.samtools.SAMRecord.NO_ALIGNMENT_START;
 
 /**
  * Reorders a SAM/BAM input file according to the order of contigs in a second reference file.
- * <p>
+ *
  * <h3>Summary</h3>
  * Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary,
  * ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file,
