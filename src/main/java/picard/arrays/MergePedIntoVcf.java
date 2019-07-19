@@ -152,7 +152,9 @@ public class MergePedIntoVcf extends CommandLineProgram {
             stream.forEach(line -> {
                 final String[] tokens = line.split("\t");
                 if (tokens[1].equals(notApplicable) || tokens[2].equals(notApplicable)) {
-                    log.warn(String.format("Found a N/A threshold value - skipping. Tx: %s, Ty: %s", tokens[1], tokens[2]));
+                    if (!tokens[1].equals(notApplicable) || !tokens[2].equals(notApplicable)) {
+                        throw new PicardException("Thresholds should either both exist or both not exist.");
+                    }
                     zCallThresholds.put(tokens[0], new String[]{MISSING_VALUE_v4, MISSING_VALUE_v4});
                 } else {
                     zCallThresholds.put(tokens[0], new String[]{tokens[1], tokens[2]});
