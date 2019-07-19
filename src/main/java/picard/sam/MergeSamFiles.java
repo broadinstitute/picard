@@ -41,15 +41,17 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,7 +84,7 @@ public class MergeSamFiles extends CommandLineProgram {
     private static final Log log = Log.getInstance(MergeSamFiles.class);
 
     static final String USAGE_SUMMARY = "Merges multiple SAM and/or BAM files into a single file.  ";
-    static final String USAGE_DETAILS = "This tool is used for combining SAM and/or BAM files from different runs or read groups into a single file, similarl " +
+    static final String USAGE_DETAILS = "This tool is used for combining SAM and/or BAM files from different runs or read groups into a single file, similarly " +
             "to the \"merge\" function of Samtools (http://www.htslib.org/doc/samtools.html).  " +
             "<br /><br />Note that to prevent errors in downstream processing, it is critical to identify/label read groups appropriately. " +
             "If different samples contain identical read group IDs, this tool will avoid collisions by modifying the read group IDs to be " +
@@ -99,7 +101,7 @@ public class MergeSamFiles extends CommandLineProgram {
             "<hr />"
            ;
     @Argument(shortName = "I", doc = "SAM or BAM input file", minElements = 1)
-    public List<File> INPUT = new ArrayList<File>();
+    public List<String> INPUT = new ArrayList<>();
 
     @Argument(shortName = "O", doc = "SAM or BAM file to write merged result to")
     public File OUTPUT;
@@ -120,7 +122,7 @@ public class MergeSamFiles extends CommandLineProgram {
     public boolean USE_THREADING = false;
 
     @Argument(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
-    public List<String> COMMENT = new ArrayList<String>();
+    public List<String> COMMENT = new ArrayList<>();
 
     @Argument(shortName = "RGN", doc = "An interval list file that contains the locations of the positions to merge. "+
             "Assume bam are sorted and indexed. "+
@@ -139,22 +141,26 @@ public class MergeSamFiles extends CommandLineProgram {
         // read interval list if it is defined
         final List<Interval> intervalList = (INTERVALS == null ? null : IntervalList.fromFile(INTERVALS).uniqued().getIntervals() );
         // map reader->iterator used if INTERVALS is defined
-        final Map<SamReader, CloseableIterator<SAMRecord> > samReaderToIterator = new HashMap<SamReader, CloseableIterator<SAMRecord> >(INPUT.size());
-        
+        final Map<SamReader, CloseableIterator<SAMRecord> > samReaderToIterator = new HashMap<>(INPUT.size());
+
+        final List<Path> inputPaths = IOUtil.getPaths(INPUT);
+
         // Open the files for reading and writing
-        final List<SamReader> readers = new ArrayList<SamReader>();
-        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
+        final List<SamReader> readers = new ArrayList<>();
+        final List<SAMFileHeader> headers = new ArrayList<>();
         {
             SAMSequenceDictionary dict = null; // Used to try and reduce redundant SDs in memory
 
-            for (final File inFile : INPUT) {
+            for (final Path inFile : inputPaths) {
                 IOUtil.assertFileIsReadable(inFile);
                 final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(inFile);
-                 if ( INTERVALS != null ) {
-                     if( ! in.hasIndex() ) throw new PicardException("Merging with interval but Bam file is not indexed "+ inFile);
-                     final CloseableIterator<SAMRecord> samIterator = new SamRecordIntervalIteratorFactory().makeSamRecordIntervalIterator(in, intervalList, true);
-                     samReaderToIterator.put(in, samIterator);
-                 }
+                if (INTERVALS != null) {
+                    if (!in.hasIndex()) {
+                        throw new PicardException("Merging with interval but BAM file is not indexed: " + inFile);
+                    }
+                    final CloseableIterator<SAMRecord> samIterator = new SamRecordIntervalIteratorFactory().makeSamRecordIntervalIterator(in, intervalList, true);
+                    samReaderToIterator.put(in, samIterator);
+                }
 
                 readers.add(in);
                 headers.add(in.getFileHeader());
@@ -193,10 +199,9 @@ public class MergeSamFiles extends CommandLineProgram {
         final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(headerMergerSortOrder, headers, MERGE_SEQUENCE_DICTIONARIES);
         final MergingSamRecordIterator iterator;
         // no interval defined, get an iterator for the whole bam
-        if( intervalList == null) {
+        if (intervalList == null) {
             iterator = new MergingSamRecordIterator(headerMerger, readers, mergingSamRecordIteratorAssumeSorted);
-        }
-        else {
+        } else {
             // show warning related to https://github.com/broadinstitute/picard/pull/314/files
             log.info("Warning: merged bams from different interval lists may contain the same read in both files");
             iterator = new MergingSamRecordIterator(headerMerger, samReaderToIterator, true);
@@ -234,5 +239,4 @@ public class MergeSamFiles extends CommandLineProgram {
         }
         return null;
     }
-
 }
