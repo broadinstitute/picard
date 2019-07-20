@@ -32,6 +32,7 @@ import htsjdk.samtools.ValidationStringency;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.testers.CleanSamTester;
 
@@ -83,6 +84,26 @@ public class CleanSamTest extends CommandLineProgramTest {
                 {"long_trailing_insertion.sam", "90M10I"},
         };
     }
+
+
+    @Test(dataProvider = "testCleanSamDataProviderBroken", expectedExceptions = PicardException.class)
+    public void testCleanSamBroken(final String samFile) throws IOException {
+        final File cleanedFile = File.createTempFile(samFile + ".", ".sam");
+        cleanedFile.deleteOnExit();
+        final String[] args = new String[]{
+                "INPUT=" + new File(TEST_DATA_DIR, samFile).getAbsolutePath(),
+                "OUTPUT=" + cleanedFile.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 1);
+    }
+
+    @DataProvider()
+    public Object[][] testCleanSamDataProviderBroken() {
+        return new Object[][]{
+            {"git_1324.sam"},
+        };
+    }
+
 
     //identical test case using the SamFileTester to generate that SAM file on the fly
     @Test(dataProvider = "testCleanSamTesterDataProvider")

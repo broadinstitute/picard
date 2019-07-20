@@ -855,6 +855,9 @@ public abstract class AbstractAlignmentMerger {
         Cigar newCigar = null;
         if (!isUnmapped) {
             final SAMSequenceRecord refseq = header.getSequence(referenceIndex);
+            if (refseq == null) {
+                throw new PicardException("Record is mapped, but its reference name is not found in the dictionary.");
+            }
             final int overhang = alignmentEnd - refseq.getSequenceLength();
             if (overhang > 0) {
                 // 1-based index of first base in read to clip.
@@ -877,30 +880,34 @@ public abstract class AbstractAlignmentMerger {
      */
     public static void createNewCigarsIfMapsOffEndOfReference(final SAMRecord rec) {
         // If the read maps off the end of the alignment, clip it
-        if (!rec.getReadUnmappedFlag()) {
-            final Cigar readCigar = createNewCigarIfMapsOffEndOfReference(rec.getHeader(),
-                    rec.getReadUnmappedFlag(),
-                    rec.getReferenceIndex(),
-                    rec.getAlignmentEnd(),
-                    rec.getReadLength(),
-                    rec.getCigar());
-            if (null != readCigar) {
-                rec.setCigar(readCigar);
+        try {
+            if (!rec.getReadUnmappedFlag()) {
+                final Cigar readCigar = createNewCigarIfMapsOffEndOfReference(rec.getHeader(),
+                        rec.getReadUnmappedFlag(),
+                        rec.getReferenceIndex(),
+                        rec.getAlignmentEnd(),
+                        rec.getReadLength(),
+                        rec.getCigar());
+                if (null != readCigar) {
+                    rec.setCigar(readCigar);
+                }
             }
-        }
 
-        // If the read's mate maps off the end of the alignment, clip it
-        if (SAMUtils.hasMateCigar(rec)) {
-            Cigar mateCigar = SAMUtils.getMateCigar(rec);
-            mateCigar = createNewCigarIfMapsOffEndOfReference(rec.getHeader(),
-                    rec.getMateUnmappedFlag(),
-                    rec.getMateReferenceIndex(),
-                    SAMUtils.getMateAlignmentEnd(rec), // NB: this could be computed without another call to getMateCigar
-                    mateCigar.getReadLength(),
-                    mateCigar);
-            if (null != mateCigar) {
-                rec.setAttribute(SAMTag.MC.name(), mateCigar.toString());
+            // If the read's mate maps off the end of the alignment, clip it
+            if (SAMUtils.hasMateCigar(rec)) {
+                Cigar mateCigar = SAMUtils.getMateCigar(rec);
+                mateCigar = createNewCigarIfMapsOffEndOfReference(rec.getHeader(),
+                        rec.getMateUnmappedFlag(),
+                        rec.getMateReferenceIndex(),
+                        SAMUtils.getMateAlignmentEnd(rec), // NB: this could be computed without another call to getMateCigar
+                        mateCigar.getReadLength(),
+                        mateCigar);
+                if (null != mateCigar) {
+                    rec.setAttribute(SAMTag.MC.name(), mateCigar.toString());
+                }
             }
+        } catch (PicardException pe) {
+            throw new PicardException("Problem with record " + rec, pe);
         }
     }
 
