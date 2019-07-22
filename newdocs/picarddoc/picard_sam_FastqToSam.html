@@ -175,6 +175,19 @@
 								</ul>
 							</div>
 						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#GenotypingArraysManipulation">Genotyping Arrays Manipulation</a>
+							<div id="GenotypingArraysManipulation"
+								<?php echo ($group == 'Genotyping Arrays Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
+											</li>
+											<li>
+												<a href="picard_arrays_VcfToAdpc.html">VcfToAdpc</a>
+											</li>
+								</ul>
+							</div>
+						</li>
 						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalsManipulation">Intervals Manipulation</a>
 							<div id="IntervalsManipulation"
 								<?php echo ($group == 'Intervals Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
@@ -452,7 +465,7 @@
       F2=reverse_reads.fastq \
       O=unaligned_read_pairs.bam \
       SM=sample001 \
-      RG=rg0013 
+      RG=rg0013
  </pre>
 
 
@@ -556,7 +569,7 @@
 					</td>
 					<!--<td>String</td> -->
 					<td>null</td>
-					<td>The platform type (e.g. illumina, solid) to insert into the read group header</td>
+					<td>The platform type (e.g. ILLUMINA, SOLID) to insert into the read group header</td>
 				</tr>
 				<tr>
 					<td><a href="#--PLATFORM_MODEL">--PLATFORM_MODEL</a><br />
@@ -635,7 +648,16 @@
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
-					<td>Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz</td>
+					<td>Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz.The files should be named:
+    <prefix>_001.<extension>, <prefix>_002.<extension>, ..., <prefix>_XYZ.<extension>
+ The base files should be:
+    <prefix>_001.<extension>
+ An example would be:
+    RUNNAME_S8_L005_R1_001.fastq
+    RUNNAME_S8_L005_R1_002.fastq
+    RUNNAME_S8_L005_R1_003.fastq
+    RUNNAME_S8_L005_R1_004.fastq
+RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -925,7 +947,7 @@
 			 / <small>-PL</small>
 		</h3>
 		<p class="args">
-			<b>The platform type (e.g. illumina, solid) to insert into the read group header</b><br />
+			<b>The platform type (e.g. ILLUMINA, SOLID) to insert into the read group header</b><br />
 			
 		</p>
 		<p>
@@ -1156,7 +1178,16 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz</b><br />
+			<b>Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz.The files should be named:
+    <prefix>_001.<extension>, <prefix>_002.<extension>, ..., <prefix>_XYZ.<extension>
+ The base files should be:
+    <prefix>_001.<extension>
+ An example would be:
+    RUNNAME_S8_L005_R1_001.fastq
+    RUNNAME_S8_L005_R1_002.fastq
+    RUNNAME_S8_L005_R1_003.fastq
+    RUNNAME_S8_L005_R1_004.fastq
+RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</b><br />
 			
 		</p>
 		<p>
@@ -1221,7 +1252,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.20.2-SNAPSHOT built at 28-56-2019 10:56:38.
+        <p class="version">Picard version 2.20.4-SNAPSHOT built at 22-23-2019 04:23:08.
         </p>
 
 	</div>

@@ -1,5 +1,5 @@
 {
-  "summary": "Collect multiple classes of metrics.  ",
+  "summary": "Collect multiple classes of metrics.",
   "arguments": [
     {
       "summary": "If true (default), then the sort order in the header file will be ignored.",
@@ -69,6 +69,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "extra arguments to the various tools can be specified using the following format:\u003cPROGRAM\u003e::\u003cARGUMENT_AND_VALUE\u003e where \u003cPROGRAM\u003e is one of the programs specified in PROGRAM, and \u003cARGUMENT_AND_VALUE\u003e are the argument and value that you\u0027d like to specify as you would on the command line. For example, to change the HISTOGRAM_WIDTH in CollectInsertSizeMetrics to 200, use:\n \"EXTRA_ARGUMENT\u003dCollectInsertSizeMetrics::HISTOGRAM_WIDTH\u003d200\"\n or, in the new parser:--EXTRA_ARGUMENT \"CollectInsertSizeMetrics::--HISTOGRAM_WIDTH 200\"\n (Quotes are required to avoid the shell from separating this into two arguments.) Note that the following arguments cannot be modified on a per-program level: INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, and STOP_AFTER. Providing them in an EXTRA_ARGUMENT will _not_ result in an error, but they will be silently ignored. ",
+      "name": "--EXTRA_ARGUMENT",
+      "synonyms": "NA",
+      "type": "List[String]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",

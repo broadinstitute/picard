@@ -175,6 +175,19 @@
 								</ul>
 							</div>
 						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#GenotypingArraysManipulation">Genotyping Arrays Manipulation</a>
+							<div id="GenotypingArraysManipulation"
+								<?php echo ($group == 'Genotyping Arrays Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
+											</li>
+											<li>
+												<a href="picard_arrays_VcfToAdpc.html">VcfToAdpc</a>
+											</li>
+								</ul>
+							</div>
+						</li>
 						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalsManipulation">Intervals Manipulation</a>
 							<div id="IntervalsManipulation"
 								<?php echo ($group == 'Intervals Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
@@ -440,7 +453,7 @@
 					<td><a href="#--INPUT">--INPUT</a><br />
 								&nbsp;<em>-I</em>
 					</td>
-					<!--<td>List[File]</td> -->
+					<!--<td>List[String]</td> -->
 					<td>[]</td>
 					<td>SAM or BAM input file</td>
 				</tr>
@@ -681,7 +694,7 @@
 		</p>
 		<p>
 				<span class="badge badge-important">R</span>
-		<span class="label label-info ">List[File]</span>
+		<span class="label label-info ">List[String]</span>
 			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
@@ -892,7 +905,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.20.2-SNAPSHOT built at 28-56-2019 10:56:38.
+        <p class="version">Picard version 2.20.4-SNAPSHOT built at 22-23-2019 04:23:08.
         </p>
 
 	</div>

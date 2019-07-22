@@ -175,6 +175,19 @@
 								</ul>
 							</div>
 						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#GenotypingArraysManipulation">Genotyping Arrays Manipulation</a>
+							<div id="GenotypingArraysManipulation"
+								<?php echo ($group == 'Genotyping Arrays Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
+											</li>
+											<li>
+												<a href="picard_arrays_VcfToAdpc.html">VcfToAdpc</a>
+											</li>
+								</ul>
+							</div>
+						</li>
 						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalsManipulation">Intervals Manipulation</a>
 							<div id="IntervalsManipulation"
 								<?php echo ($group == 'Intervals Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
@@ -398,7 +411,7 @@
 
 		<h1>CollectMultipleMetrics</h1>
 
-		<p class="lead">Collect multiple classes of metrics.  </p>
+		<p class="lead">Collect multiple classes of metrics.</p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -457,6 +470,16 @@
 					<!--<td>File</td> -->
 					<td>null</td>
 					<td>VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis by some PROGRAMs; PROGRAMs whose CLP doesn't allow for this argument will quietly ignore it.</td>
+				</tr>
+				<tr>
+					<td><a href="#--EXTRA_ARGUMENT">--EXTRA_ARGUMENT</a><br />
+					</td>
+					<!--<td>List[String]</td> -->
+					<td>[]</td>
+					<td>extra arguments to the various tools can be specified using the following format:<PROGRAM>::<ARGUMENT_AND_VALUE> where <PROGRAM> is one of the programs specified in PROGRAM, and <ARGUMENT_AND_VALUE> are the argument and value that you'd like to specify as you would on the command line. For example, to change the HISTOGRAM_WIDTH in CollectInsertSizeMetrics to 200, use:
+ "EXTRA_ARGUMENT=CollectInsertSizeMetrics::HISTOGRAM_WIDTH=200"
+ or, in the new parser:--EXTRA_ARGUMENT "CollectInsertSizeMetrics::--HISTOGRAM_WIDTH 200"
+ (Quotes are required to avoid the shell from separating this into two arguments.) Note that the following arguments cannot be modified on a per-program level: INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, and STOP_AFTER. Providing them in an EXTRA_ARGUMENT will _not_ result in an error, but they will be silently ignored. </td>
 				</tr>
 				<tr>
 					<td><a href="#--FILE_EXTENSION">--FILE_EXTENSION</a><br />
@@ -673,6 +696,21 @@
 		<p>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--EXTRA_ARGUMENT">--EXTRA_ARGUMENT </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>extra arguments to the various tools can be specified using the following format:<PROGRAM>::<ARGUMENT_AND_VALUE> where <PROGRAM> is one of the programs specified in PROGRAM, and <ARGUMENT_AND_VALUE> are the argument and value that you'd like to specify as you would on the command line. For example, to change the HISTOGRAM_WIDTH in CollectInsertSizeMetrics to 200, use:
+ "EXTRA_ARGUMENT=CollectInsertSizeMetrics::HISTOGRAM_WIDTH=200"
+ or, in the new parser:--EXTRA_ARGUMENT "CollectInsertSizeMetrics::--HISTOGRAM_WIDTH 200"
+ (Quotes are required to avoid the shell from separating this into two arguments.) Note that the following arguments cannot be modified on a per-program level: INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, and STOP_AFTER. Providing them in an EXTRA_ARGUMENT will _not_ result in an error, but they will be silently ignored. </b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[String]</span>
+			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--FILE_EXTENSION">--FILE_EXTENSION </a>
@@ -942,7 +980,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.20.2-SNAPSHOT built at 28-56-2019 10:56:38.
+        <p class="version">Picard version 2.20.4-SNAPSHOT built at 22-23-2019 04:23:08.
         </p>
 
 	</div>

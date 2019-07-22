@@ -426,7 +426,7 @@
       "type": "String",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "illumina",
+      "defaultValue": "ILLUMINA",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",

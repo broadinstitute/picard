@@ -640,7 +640,7 @@
       "options": []
     },
     {
-      "summary": "How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) Currently ignored unless UNMAP_CONTAMINANT_READS \u003d true",
+      "summary": "How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) Currently ignored unless UNMAP_CONTAMINANT_READS \u003d true. Note that the DO_NOT_CHANGE strategy will actually reset the cigar and set the mapping quality on unmapped reads since otherwisethe result will be an invalid record. To force no change use the DO_NOT_CHANGE_INVALID strategy.",
       "name": "--UNMAPPED_READ_STRATEGY",
       "synonyms": "NA",
       "type": "UnmappingReadStrategy",
@@ -660,6 +660,10 @@
         {
           "summary": "",
           "name": "DO_NOT_CHANGE"
+        },
+        {
+          "summary": "",
+          "name": "DO_NOT_CHANGE_INVALID"
         },
         {
           "summary": "",

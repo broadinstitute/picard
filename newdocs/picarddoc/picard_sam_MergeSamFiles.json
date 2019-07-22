@@ -95,7 +95,7 @@
       "summary": "SAM or BAM input file",
       "name": "--INPUT",
       "synonyms": "-I",
-      "type": "List[File]",
+      "type": "List[String]",
       "required": "yes",
       "fulltext": "",
       "defaultValue": "[]",

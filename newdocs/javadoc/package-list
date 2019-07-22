@@ -4,6 +4,8 @@ picard.analysis.artifacts
 picard.analysis.directed
 picard.analysis.replicates
 picard.annotation
+picard.arrays
+picard.arrays.illumina
 picard.cmdline
 picard.cmdline.argumentcollections
 picard.cmdline.programgroups
