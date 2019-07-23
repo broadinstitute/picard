@@ -34,6 +34,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.AbstractLocusIterator;
 import htsjdk.samtools.util.EdgeReadIterator;
 import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import picard.cmdline.CommandLineProgramTest;
 import picard.filter.CountingDuplicateFilter;
@@ -54,10 +55,19 @@ import java.util.stream.IntStream;
 
 public class CollectWgsMetricsTestUtils{
 
-    private static final String sqHeaderLN20 = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:20\n";
-    private static final String s1 = "3851612\t16\tchrM\t1\t255\t3M2D10M\t*\t0\t0\tACCTACGTTCAAT\tDDDDDDDDDDDDD\n";
-    private static final String sqHeaderLN100 = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:100\n";
-    private static final String s2 = "3851612\t16\tchrM\t2\t255\t10M1D5M\t*\t0\t0\tCCTACGTTCAATATT\tDDDDDDDDDDDDDDD\n";
+    private static final String sqHeaderLN20 = "@HD	SO:coordinate	VN:1.0\n@SQ	SN:chrM	AS:HG18	LN:20\n";
+    private static final String sqHeaderLN100 = "@HD	SO:coordinate	VN:1.0\n@SQ	SN:chrM	AS:HG18	LN:100\n";
+    // ACC--TACGTTCAAT
+    // .CCTACGTTCA-ATATT
+    // 12345678901234567
+    // .ACCTACGTTCAAT
+    // ..CCTACGTTCAATATT
+
+
+//    private static final String s1 = "3851612	16	chrM	1	255	3M2D10M	*	0	0	ACCTACGTTCAAT	DDDDDDDDDDDDD\n";
+//    private static final String s2 = "3851612	16	chrM	2	255	10M1D5M	*	0	0	CCTACGTTCAATATT	DDDDDDDDDDDDDDD\n";
+    private static final String s1 = "3851612	83	chrM	2	255	13M	=	3	10	ACCTACGTTCAAT	DDDDDDDDDDDDD\n";
+    private static final String s2 = "3851612	163	chrM	3	255	15M	=	2	-10	CCTACGTTCAATATT	DDDDDDDDDDDDDDD\n";
     static final String exampleSamOneRead = sqHeaderLN20+s1;
     static final String exampleSamTwoReads = sqHeaderLN100+s1+s2;
 
@@ -137,6 +147,23 @@ public class CollectWgsMetricsTestUtils{
         iterator.setIncludeNonPfReads(false);
         return iterator;
     }
+
+
+    static AbstractLocusIterator createSamLocusIterator(final String exampleSam){
+        final List<SamRecordFilter> filters = new ArrayList<>();
+        final CountingFilter dupeFilter = new CountingDuplicateFilter();
+        final CountingFilter mapqFilter = new CountingMapQFilter(0);
+        filters.add(new SecondaryAlignmentFilter()); // Not a counting filter because we never want to count reads twice
+        filters.add(mapqFilter);
+        filters.add(dupeFilter);
+        SamReader samReader = createSamReader(exampleSam);
+        AbstractLocusIterator iterator =  new SamLocusIterator(samReader);
+        iterator.setSamFilters(filters);
+        iterator.setMappingQualityScoreCutoff(0); // Handled separately because we want to count bases
+        iterator.setIncludeNonPfReads(false);
+        return iterator;
+    }
+
 
     static SamReader createSamReader(final String samExample) {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(samExample.getBytes());

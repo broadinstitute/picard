@@ -8,11 +8,13 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.AbstractLocusInfo;
 import htsjdk.samtools.util.AbstractLocusIterator;
 import htsjdk.samtools.util.EdgingRecordAndOffset;
+import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static picard.analysis.CollectWgsMetricsTestUtils.createIntervalList;
 import static picard.analysis.CollectWgsMetricsTestUtils.createReadEndsIterator;
+import static picard.analysis.CollectWgsMetricsTestUtils.createSamLocusIterator;
 import static picard.analysis.CollectWgsMetricsTestUtils.exampleSamTwoReads;
 
 
@@ -198,7 +200,7 @@ public class FastWgsMetricsCollectorTest {
 
         collector.addInfo(firstInfo, ref, false);
         collector.addInfo(secondInfo, ref, false);
-        assertEquals(0, collector.basesExcludedByOverlap, "Excluded by overlap:");
+        assertEquals( collector.basesExcludedByOverlap, 0, "Excluded by overlap:");
     }
 
     @Test
@@ -210,6 +212,18 @@ public class FastWgsMetricsCollectorTest {
             AbstractLocusInfo<EdgingRecordAndOffset> info = sli.next();
             collector.addInfo(info, ref, false);
         }
-        assertEquals(11, collector.basesExcludedByOverlap, "Excluded by overlap:");
+        assertEquals( collector.basesExcludedByOverlap, 11, "Excluded by overlap:");
+    }
+
+    @Test
+    public void testForComplicatedCigarNonFast(){
+        CollectWgsMetrics collectWgsMetrics = new CollectWgsMetrics();
+        CollectWgsMetrics.WgsMetricsCollector collector = new CollectWgsMetrics.WgsMetricsCollector(collectWgsMetrics, 100, createIntervalList());
+        AbstractLocusIterator sli = createSamLocusIterator(exampleSamTwoReads);
+        while(sli.hasNext()) {
+            AbstractLocusInfo<SamLocusIterator.RecordAndOffset> info = sli.next();
+            collector.addInfo(info, ref, false);
+        }
+        assertEquals( collector.basesExcludedByOverlap, 11,"Excluded by overlap:");
     }
 }
