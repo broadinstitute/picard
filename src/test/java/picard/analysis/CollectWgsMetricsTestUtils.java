@@ -57,19 +57,23 @@ public class CollectWgsMetricsTestUtils{
 
     private static final String sqHeaderLN20 = "@HD	SO:coordinate	VN:1.0\n@SQ	SN:chrM	AS:HG18	LN:20\n";
     private static final String sqHeaderLN100 = "@HD	SO:coordinate	VN:1.0\n@SQ	SN:chrM	AS:HG18	LN:100\n";
-    // ACC--TACGTTCAAT
-    // .CCTACGTTCA-ATATT
+
     // 12345678901234567
     // .ACCTACGTTCAAT
     // ..CCTACGTTCAATATT
-
-
-//    private static final String s1 = "3851612	16	chrM	1	255	3M2D10M	*	0	0	ACCTACGTTCAAT	DDDDDDDDDDDDD\n";
-//    private static final String s2 = "3851612	16	chrM	2	255	10M1D5M	*	0	0	CCTACGTTCAATATT	DDDDDDDDDDDDDDD\n";
     private static final String s1 = "3851612	83	chrM	2	255	13M	=	3	10	ACCTACGTTCAAT	DDDDDDDDDDDDD\n";
     private static final String s2 = "3851612	163	chrM	3	255	15M	=	2	-10	CCTACGTTCAATATT	DDDDDDDDDDDDDDD\n";
+
+    // ACC--TACGTTCAAT
+    // .CCTACGTTCA-ATATT
+    private static final String s3 = "3851613	16	chrM	1	255	3M2D10M	*	0	0	ACCTACGTTCAAT	DDDDDDDDDDDDD\n";
+    private static final String s4 = "3851613	16	chrM	2	255	10M1D5M	*	0	0	CCTACGTTCAATATT	DDDDDDDDDDDDDDD\n";
+
     static final String exampleSamOneRead = sqHeaderLN20+s1;
     static final String exampleSamTwoReads = sqHeaderLN100+s1+s2;
+
+    static final String exampleSamComplexCigarTwoReads = sqHeaderLN20+s3+s4;
+
 
     protected static SAMRecordSetBuilder createTestSAMBuilder(final File reference,
                                                               final String readGroupId,
