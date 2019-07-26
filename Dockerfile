@@ -1,4 +1,4 @@
-FROM openjdk:8 
+FROM marketplace.gcr.io/google/debian9
 MAINTAINER Broad Institute DSDE <dsde-engineering@broadinstitute.org>
 
 ARG build_command=shadowJar
@@ -9,7 +9,8 @@ RUN apt-get update && \
     apt-get --no-install-recommends install -y --force-yes \
         git \
         r-base \
-        ant && \
+        ant \
+        openjdk-8-jdk && \
     apt-get clean autoclean && \
     apt-get autoremove -y
 
@@ -20,7 +21,6 @@ WORKDIR /usr/picard
 # Build the distribution jar, clean up everything else
 RUN ./gradlew ${build_command} && \
     mv build/libs/${jar_name} picard.jar && \
-    mv src/main/resources/picard/docker_helper.sh docker_helper.sh && \
     ./gradlew clean && \
     rm -rf src && \
     rm -rf gradle && \
@@ -30,6 +30,3 @@ RUN ./gradlew ${build_command} && \
 
 RUN mkdir /usr/working
 WORKDIR /usr/working
-
-ENTRYPOINT ["/usr/picard/docker_helper.sh"]
-CMD [""]
