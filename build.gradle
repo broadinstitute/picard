@@ -24,11 +24,11 @@ plugins {
 mainClassName = "picard.cmdline.PicardCommandLine"
 
 repositories {
-    mavenLocal()
     mavenCentral()
     maven {
         url "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/" //for htsjdk snapshots
     }
+    mavenLocal()
 }
 
 jacocoTestReport {
