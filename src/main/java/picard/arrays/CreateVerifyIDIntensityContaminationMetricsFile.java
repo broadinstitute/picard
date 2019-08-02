@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 
 /**
  * A simple program to create a standard picard metrics file
- * from the output of VerifyIDIntensity.
+ * from the output of VerifyIDIntensity
  */
 @CommandLineProgramProperties(
         summary = CreateVerifyIDIntensityContaminationMetricsFile.USAGE_DETAILS,
