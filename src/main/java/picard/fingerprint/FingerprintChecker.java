@@ -435,6 +435,10 @@ public class FingerprintChecker {
      * the interval list.
      */
     public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final IntervalList loci) {
+
+        // the seekableChannelFunction adds a buffered stream wrapper around the index reading which
+        // makes reading the index over NIO not hang indefinitely.
+        // See github issue https://github.com/broadinstitute/picard/issues/1175
         final SamReader in = SamReaderFactory.makeDefault()
                 .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
                 .referenceSequence(referenceFasta)
@@ -484,7 +488,10 @@ public class FingerprintChecker {
         // Now go through the data at each locus and figure stuff out!
         for (final SamLocusIterator.LocusInfo info : iterator) {
 
-            log.debug("At locus " + info.toString());
+            // if statement to avoid string building.
+            if (Log.isEnabled(Log.LogLevel.DEBUG)) {
+                log.debug("At locus " + info.toString());
+            }
             // TODO: Filter out the locus if the allele balance doesn't make sense for either a
             // TODO: 50/50 het or a hom with some errors; in HS data with deep coverage any base
             // TODO: with major strand bias could cause errors
