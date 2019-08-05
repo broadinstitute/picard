@@ -58,7 +58,7 @@ import java.util.Set;
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
-public class    CollectInsertSizeMetrics extends SinglePassSamProgram {
+public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     static final String USAGE_BRIEF = "Collect metrics about the insert size distribution of a paired-end library.";
     static final String USAGE_SUMMARY = "<p>This tool provides useful metrics for validating library construction including " +
             "the insert size distribution and read orientation of paired-end libraries.</p>" +
