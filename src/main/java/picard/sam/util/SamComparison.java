@@ -105,35 +105,9 @@ public final class SamComparison {
          * we do not count the read or the read it could be swapped with as having mismatched duplicates.  Note however, that once a swap is allowed, the reads swapped cannot be used for any
          * further swaps.
          */
-        final HashMap<String, Set<String>> allowedSwapsMap = new HashMap<>();
+        // count reads which are not saved
+        final HashMap<String, Set<String>> swapTargetsForLeftReps = new HashMap<>();
         for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetLeftIterator)) {
-            // do not want to redo duplicate marking, want to keep marks assigned in input files
-            final List<SAMRecord> records = duplicateSet.getRecords(false);
-            if (records.size() > 1) {
-                final Set<String> duplicateRecordNames = records.stream().filter(SAMRecord::getDuplicateReadFlag).map(SAMRecord::getReadName)
-                        .collect(Collectors.toSet());
-                records.stream().filter(r -> !r.getDuplicateReadFlag())
-                        .forEach(r -> allowedSwapsMap.put(r.getReadName(), duplicateRecordNames));
-            }
-        }
-        // set of fragments which have been "saved", i.e. will not be counted as having mismatched duplicate marks.
-        final HashSet<String> savedNames = new HashSet<>();
-        for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetRightIterator)) {
-            // do not want to redo duplicate marking, want to keep marking assigned in files
-            final List<SAMRecord> records = duplicateSet.getRecords(false);
-            if (records.size() > 1) {
-                final List<String> swappableDuplicateRecordNames = records.stream().filter(SAMRecord::getDuplicateReadFlag).map(SAMRecord::getReadName)
-                        .filter(allowedSwapsMap::containsKey).collect(Collectors.toList());
-                records.stream().filter(r -> !r.getDuplicateReadFlag()).map(SAMRecord::getReadName).filter(nRep -> !savedNames.contains(nRep))
-                    .forEach(nRep ->
-                            swappableDuplicateRecordNames.stream().filter(nDup -> !savedNames.contains(nDup) &&
-                                 allowedSwapsMap.get(nDup).contains(nRep))
-                                    .findFirst().ifPresent(nDup -> savedNames.addAll(Arrays.asList(nDup, nRep)))
-                    );
-            }
-            // count reads which are not saved
-       final HashMap<String, Set<String>> swapTargetsForLeftReps = new HashMap<>();
-       for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetLeftIterator)) {
            // do not want to redo duplicate marking, want to keep marks assigned in input files
            final List<SAMRecord> allRecords = duplicateSet.getRecords(false);
            if (allRecords.size() > 1) {
@@ -145,10 +119,10 @@ public final class SamComparison {
                allRecords.stream().filter(r -> !r.getDuplicateReadFlag())
                        .forEach(leftRep -> swapTargetsForLeftReps.put(leftRep.getReadName(), nonRepReads));
            }
-       }
-       // set of fragments which have been "matched", i.e. will not be counted as having mismatched duplicate marks.
-       final HashSet<String> matchedSwaps = new HashSet<>();
-       for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetRightIterator)) {
+        }
+        // set of fragments which have been "matched", i.e. will not be counted as having mismatched duplicate marks.
+        final HashSet<String> matchedSwaps = new HashSet<>();
+        for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetRightIterator)) {
            // do not want to redo duplicate marking, want to keep marking assigned in files
            final List<SAMRecord> records = duplicateSet.getRecords(false);
            if (records.size() > 1) {
