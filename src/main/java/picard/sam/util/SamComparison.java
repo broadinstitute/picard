@@ -132,7 +132,44 @@ public final class SamComparison {
                     );
             }
             // count reads which are not saved
-            comparisonMetric.duplicateMarkingsDiffer += records.stream().map(SAMRecord::getReadName).filter(n -> !savedNames.contains(n)).count();
+       final HashMap<String, Set<String>> swapTargetsForLeftReps = new HashMap<>();
+       for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetLeftIterator)) {
+           // do not want to redo duplicate marking, want to keep marks assigned in input files
+           final List<SAMRecord> allRecords = duplicateSet.getRecords(false);
+           if (allRecords.size() > 1) {
+               // for this set, get a list of non-rep reads that can potentially swap with the rep read
+               final Set<String> nonRepReads = allRecords.stream()
+                       .filter(SAMRecord::getDuplicateReadFlag)
+                       .map(SAMRecord::getReadName)
+                       .collect(Collectors.toSet());
+               allRecords.stream().filter(r -> !r.getDuplicateReadFlag())
+                       .forEach(leftRep -> swapTargetsForLeftReps.put(leftRep.getReadName(), nonRepReads));
+           }
+       }
+       // set of fragments which have been "matched", i.e. will not be counted as having mismatched duplicate marks.
+       final HashSet<String> matchedSwaps = new HashSet<>();
+       for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetRightIterator)) {
+           // do not want to redo duplicate marking, want to keep marking assigned in files
+           final List<SAMRecord> records = duplicateSet.getRecords(false);
+           if (records.size() > 1) {
+               // create a list of non-rep reads for this set that were also rep-reads in the left file
+               final List<String> nonRepSwapCandidates = records.stream()
+                       .filter(SAMRecord::getDuplicateReadFlag)
+                       .map(SAMRecord::getReadName)
+                       .filter(swapTargetsForLeftReps::containsKey)
+                       .collect(Collectors.toList());
+               // now try to match up the rep reads in this set with a non-rep swap candidate
+               records.stream().filter(r -> !r.getDuplicateReadFlag()).map(SAMRecord::getReadName)
+                       .filter(repRead -> !matchedSwaps.contains(repRead))
+                       .forEach(unMatchedRep ->
+                           nonRepSwapCandidates.stream()
+                                   .filter(nonRep -> !matchedSwaps.contains(nonRep) && swapTargetsForLeftReps.get(nonRep).contains(unMatchedRep))
+                                   .findFirst()
+                                   .ifPresent(matchedRep -> matchedSwaps.addAll(Arrays.asList(matchedRep, unMatchedRep)))
+                   );
+           }
+           // count reads which differ, but for which no swap match was found
+           comparisonMetric.duplicateMarkingsDiffer += records.stream().filter(n -> !matchedSwaps.contains(n.getReadName())).count();
         }
 
     }
