@@ -7,8 +7,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ErrorReadFilterTest {
 
@@ -55,17 +54,20 @@ public class ErrorReadFilterTest {
 
     @Test(dataProvider = "provideForTestBooleanFilter")
     void testBooleanFilter(final boolean[] values, final SamErrorReadFilter.Comparator[] comparators, final boolean[] thresholds, final boolean[] satisfied, final boolean overallSatisfied) {
-        Map<String, SamErrorReadFilterCriterion> criteria = new HashMap<>();
+        Map<String, ArrayList<SamErrorReadFilterCriterion>> criteria = new HashMap<>();
 
         for(int i = 0; i < values.length; i++) {
-            criteria.put(String.valueOf(i), new BooleanSamErrorReadFilterCriterion(comparators[i], thresholds[i]));
+            criteria.put(String.valueOf(i), new ArrayList<>(Collections.singletonList(new BooleanSamErrorReadFilterCriterion(comparators[i], thresholds[i]))));
         }
 
         SamErrorReadFilter filter = new SamErrorReadFilter("testFilter", criteria);
 
-        for(int i = 0; i < values.length; i++) {
-            filter.processValue(String.valueOf(i), values[i]);
-            Assert.assertEquals(filter.criteria.get(String.valueOf(i)).isSatisifed(), satisfied[i]);
+        for(int valueIndex = 0; valueIndex < values.length; ) {
+            filter.processValue(String.valueOf(valueIndex), values[valueIndex]);
+            for(int suffixCriteriaIndex = 0; valueIndex < values.length && suffixCriteriaIndex < filter.criteria.get(String.valueOf(valueIndex)).size(); suffixCriteriaIndex++) {
+                Assert.assertEquals(filter.criteria.get(String.valueOf(valueIndex)).get(suffixCriteriaIndex).isSatisifed(), satisfied[valueIndex]);
+                valueIndex++;
+            }
         }
 
         Assert.assertEquals(filter.isSatisfied(), overallSatisfied);
@@ -93,17 +95,20 @@ public class ErrorReadFilterTest {
 
     @Test(dataProvider = "provideForTestNumericFilter")
     void testNumericFilter(final int[] values, final SamErrorReadFilter.Comparator[] comparators, final int[] thresholds, final boolean[] satisfied, final boolean overallSatisfied) {
-        Map<String, SamErrorReadFilterCriterion> criteria = new HashMap<>();
+        Map<String, ArrayList<SamErrorReadFilterCriterion>> criteria = new HashMap<>();
 
         for(int i = 0; i < values.length; i++) {
-            criteria.put(String.valueOf(i), new NumericSamErrorReadFilterCriterion(comparators[i], thresholds[i]));
+            criteria.put(String.valueOf(i), new ArrayList<>(Collections.singletonList(new NumericSamErrorReadFilterCriterion(comparators[i], thresholds[i]))));
         }
 
         SamErrorReadFilter filter = new SamErrorReadFilter("testFilter", criteria);
 
-        for(int i = 0; i < values.length; i++) {
-            filter.processValue(String.valueOf(i), values[i]);
-            Assert.assertEquals(filter.criteria.get(String.valueOf(i)).isSatisifed(), satisfied[i]);
+        for(int valueIndex = 0; valueIndex < values.length; ) {
+            filter.processValue(String.valueOf(valueIndex), values[valueIndex]);
+            for(int suffixCriteriaIndex = 0; valueIndex < values.length && suffixCriteriaIndex < filter.criteria.get(String.valueOf(valueIndex)).size(); suffixCriteriaIndex++) {
+                Assert.assertEquals(filter.criteria.get(String.valueOf(valueIndex)).get(suffixCriteriaIndex).isSatisifed(), satisfied[valueIndex]);
+                valueIndex++;
+            }
         }
 
         Assert.assertEquals(filter.isSatisfied(), overallSatisfied);
@@ -111,8 +116,8 @@ public class ErrorReadFilterTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     void testIllegalComparator() {
-        Map<String, SamErrorReadFilterCriterion> criteria = new HashMap<>();
-        criteria.put("test", new BooleanSamErrorReadFilterCriterion(SamErrorReadFilter.Comparator.Greater, true));
+        Map<String, ArrayList<SamErrorReadFilterCriterion>> criteria = new HashMap<>();
+        criteria.put("test", new ArrayList<>(Collections.singletonList(new BooleanSamErrorReadFilterCriterion(SamErrorReadFilter.Comparator.Greater, true))));
 
         SamErrorReadFilter filter = new SamErrorReadFilter("testFilter", criteria);
 
@@ -122,10 +127,15 @@ public class ErrorReadFilterTest {
         Assert.fail();
     }
 
-    private Map<String, SamErrorReadFilterCriterion> createCriteriaMap(String[] suffixes, SamErrorReadFilterCriterion[] criteria) {
-        HashMap<String, SamErrorReadFilterCriterion> criteriaMap = new HashMap<>();
+    private Map<String, ArrayList<SamErrorReadFilterCriterion>> createCriteriaMap(String[] suffixes, SamErrorReadFilterCriterion[] criteria) {
+        HashMap<String, ArrayList<SamErrorReadFilterCriterion>> criteriaMap = new HashMap<>();
         for(int i = 0; i < suffixes.length; i++) {
-            criteriaMap.put(suffixes[i], criteria[i]);
+            if (criteriaMap.containsKey(suffixes[i])) {
+                criteriaMap.get(suffixes[i]).add(criteria[i]);
+            }
+            else {
+                criteriaMap.put(suffixes[i], new ArrayList<>(Collections.singletonList(criteria[i])));
+            }
         }
         return criteriaMap;
     }
@@ -207,11 +217,13 @@ public class ErrorReadFilterTest {
             Assert.assertEquals(filter.getName(), expected.getName());
             Assert.assertEquals(filter.criteria.size(), expected.criteria.size());
 
-            for (String criterionKey : filter.criteria.keySet()) {
-                SamErrorReadFilterCriterion criterion = filter.criteria.get(criterionKey);
-                SamErrorReadFilterCriterion expectedCriterion = expected.criteria.get(criterionKey);
-                Assert.assertEquals(criterion.value, expectedCriterion.value);
-                Assert.assertEquals(criterion.comparator, expectedCriterion.comparator);
+            for (String criterionKey : expected.criteria.keySet()) {
+                for(int suffixCriterionIndex = 0; suffixCriterionIndex < expected.criteria.get(criterionKey).size(); suffixCriterionIndex++) {
+                    SamErrorReadFilterCriterion criterion = filter.criteria.get(criterionKey).get(suffixCriterionIndex);
+                    SamErrorReadFilterCriterion expectedCriterion = expected.criteria.get(criterionKey).get(suffixCriterionIndex);
+                    Assert.assertEquals(criterion.value, expectedCriterion.value);
+                    Assert.assertEquals(criterion.comparator, expectedCriterion.comparator);
+                }
             }
         }
     }

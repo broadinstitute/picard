@@ -25,7 +25,6 @@
 package picard.sam.SamErrorMetric;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.sun.tools.javac.util.Pair;
 import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
@@ -50,8 +49,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static shaded.cloud_nio.com.google.common.collect.Iterables.concat;
 
 /**
  * Program to collect error metrics on bases stratified in various ways.
@@ -589,7 +586,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      *         For SAM files, the read name is used instead.
      */
     private String getUniqueReadId(final SAMRecord read) {
-        if (read.getFileSource() == null) {
+        if (read.getFileSource() == null || read.getFileSource().getFilePointer() == null) {
             log.warn("There is no supported way to generate a unique read ID for SAM files. Instead, the " +
                     "read name is used, which is likely to cause collisions. As a consequence, not all reads matching " +
                     "the filter criteria might be written to the output. To avoid this, consider using a BAM file.");

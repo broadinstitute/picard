@@ -12,14 +12,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
-import picard.sam.util.Pair;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static picard.cmdline.CommandLineProgramTest.CHR_M_REFERENCE;
 
@@ -787,7 +785,7 @@ public class CollectSamErrorMetricsTest {
 
     @Test(dataProvider = "provideForTestFilterOutput")
     void testFilterOutput(final String[] readCigars, String[][] filterFileLines, String[] filterNames, String[][] filterReadIDs, int[][] filterReadOccurrences) throws IOException{
-        final File temp = File.createTempFile("Indels", ".bam");
+        final File temp = File.createTempFile("Indels", ".sam");
         temp.deleteOnExit();
 
         try (
@@ -803,9 +801,10 @@ public class CollectSamErrorMetricsTest {
 
             }
 
+            // Using SAM file so that the unique read id is set to the read name
             try (final SAMFileWriter writer = new SAMFileWriterFactory()
                     .setCompressionLevel(2)
-                    .makeBAMWriter(builder.getHeader(), false, temp)) {
+                    .makeSAMWriter(builder.getHeader(), false, temp)) {
                 builder.forEach(writer::addAlignment);
             }
         }

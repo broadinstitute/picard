@@ -3,17 +3,13 @@ package picard.sam.SamErrorMetric;
 import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.tribble.util.ParsingUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SamErrorReadFilter {
     public enum Comparator {
@@ -43,7 +39,7 @@ public class SamErrorReadFilter {
     private final String name;
 
     @VisibleForTesting
-    protected final Map<String, SamErrorReadFilterCriterion> criteria;
+    protected final Map<String, ArrayList<SamErrorReadFilterCriterion>> criteria;
     private Map<String, Integer> filteredReads = new HashMap<>();
 
     /**
@@ -51,7 +47,7 @@ public class SamErrorReadFilter {
      * @param name The name of the filter, which will determine the output file name
      * @param criteria A Map of criteria with their corresponding suffixes as keys
      */
-    public SamErrorReadFilter(final String name, final Map<String, SamErrorReadFilterCriterion> criteria) {
+    public SamErrorReadFilter(final String name, final Map<String, ArrayList<SamErrorReadFilterCriterion>> criteria) {
         this.name = name;
         this.criteria = criteria;
     }
@@ -107,18 +103,30 @@ public class SamErrorReadFilter {
                 final int numberOfTerms = ParsingUtils.split(line, splitUnits, separator, false);
                 if(numberOfTerms == 4) {
                     try {
-                        SamErrorReadFilterCriterion criterion = null;
-                        Comparator comparator = Comparator.fromString(splitUnits[2].trim());
+                        String criterionSuffix = splitUnits[0].trim();
+                        String criterionType = splitUnits[1].trim();
+                        String criterionComparator = splitUnits[2].trim();
+                        String criterionValue = splitUnits[3].trim();
 
-                        switch (splitUnits[1].trim()) {
+                        SamErrorReadFilterCriterion criterion = null;
+                        Comparator comparator = Comparator.fromString(criterionComparator);
+
+                        switch (criterionType) {
                             case "boolean":
-                                if(!splitUnits[3].trim().toLowerCase().equals(String.valueOf(true)) && !splitUnits[3].trim().toLowerCase().equals(String.valueOf(false)))
+                                if(!criterionValue.toLowerCase().equals(String.valueOf(true)) && !criterionValue.toLowerCase().equals(String.valueOf(false)))
                                     throw new NumberFormatException();
-                                criterion = new BooleanSamErrorReadFilterCriterion(comparator, Boolean.valueOf(splitUnits[3].trim())); break;
-                            case "int": criterion = new NumericSamErrorReadFilterCriterion(comparator, Integer.valueOf(splitUnits[3].trim())); break;
+                                criterion = new BooleanSamErrorReadFilterCriterion(comparator, Boolean.valueOf(criterionValue)); break;
+                            case "int": criterion = new NumericSamErrorReadFilterCriterion(comparator, Integer.valueOf(criterionValue)); break;
                             default: log.warn("Invalid criterion type in line \""+ line + "\" in filter input file: " + file.toPath().toUri()); continue;
                         }
-                        filter.criteria.put(splitUnits[0].trim(), criterion);
+
+                        // Add to the criteria list
+                        if(filter.criteria.containsKey(criterionSuffix)) {
+                            filter.criteria.get(criterionSuffix).add(criterion);
+                        }
+                        else {
+                            filter.criteria.put(criterionSuffix, new ArrayList<>(Collections.singletonList(criterion)));
+                        }
                     } catch (IllegalArgumentException ex) {
                         // Also catches NumberFormatException, which is a subclass of IllegalArgumentException
                         log.warn("Invalid value in line \""+ line + "\" in filter input file: " + file.toPath().toUri() + ". Skipping this criterion.");
@@ -162,10 +170,27 @@ public class SamErrorReadFilter {
      * @param stratus The value to be checked
      */
     public void processValue(final String suffix, final Object stratus) {
-        if(criteria.containsKey(suffix)) {
-            SamErrorReadFilterCriterion criterion = criteria.get(suffix);
+        if (stratus == null) {
+            return;
+        }
 
-            criterion.checkCriterion(stratus);
+        if(criteria.containsKey(suffix)) {
+            ArrayList<SamErrorReadFilterCriterion> suffixCriteria = criteria.get(suffix);
+
+            for(SamErrorReadFilterCriterion suffixCriterion : suffixCriteria) {
+                try {
+                    if (suffixCriterion instanceof BooleanSamErrorReadFilterCriterion) {
+                        Boolean value = (Boolean) stratus;
+                        ((BooleanSamErrorReadFilterCriterion) suffixCriterion).checkCriterion(value);
+                    } else if (suffixCriterion instanceof NumericSamErrorReadFilterCriterion) {
+                        Integer value = (Integer) stratus;
+                        ((NumericSamErrorReadFilterCriterion) suffixCriterion).checkCriterion(value);
+                    }
+                } catch (ClassCastException x) {
+                    log.warn("Invalid stratus type for this filter criterion.");
+                    return;
+                }
+            }
         }
     }
 
@@ -173,13 +198,13 @@ public class SamErrorReadFilter {
      * Returns whether or not all criteria have been satisfied after the last call the filter has been reset.
      */
     public boolean isSatisfied() {
-        return criteria.values().stream().allMatch(SamErrorReadFilterCriterion::isSatisifed);
+        return criteria.values().stream().allMatch(samErrorReadFilterCriteria -> samErrorReadFilterCriteria.stream().allMatch(SamErrorReadFilterCriterion::isSatisifed));
     }
 
     /**
      * Resets the filter. This must be called each time a new RecordAndOffset is considered.
      */
     public void reset() {
-        criteria.forEach((suffix, criterion) -> criterion.reset());
+        criteria.forEach((suffix, suffixCriteria) -> suffixCriteria.forEach(SamErrorReadFilterCriterion::reset));
     }
 }

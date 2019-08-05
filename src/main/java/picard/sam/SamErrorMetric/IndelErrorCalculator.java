@@ -1,13 +1,7 @@
 package picard.sam.SamErrorMetric;
 
-import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.util.SamLocusIterator;
-import htsjdk.samtools.util.SequenceUtil;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * A calculator that estimates the error rate of the bases it observes for indels only.

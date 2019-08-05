@@ -23,7 +23,6 @@
  */
 package picard.sam.SamErrorMetric;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import htsjdk.samtools.*;
@@ -39,14 +38,12 @@ import picard.sam.util.PhysicalLocation;
 import picard.sam.util.PhysicalLocationInt;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -1236,7 +1233,7 @@ public class ReadBaseStratification {
 
     private static Integer stratifyIndelLength(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation) {
         if(operation != CollectSamErrorMetrics.BaseOperation.Insertion && operation != CollectSamErrorMetrics.BaseOperation.Deletion) {
-            return null;
+            return 0;
         }
 
         CigarElement cigarElement = getIndelElement(recordAndOffset, operation);

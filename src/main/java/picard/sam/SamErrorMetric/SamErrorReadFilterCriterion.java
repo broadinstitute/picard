@@ -23,7 +23,7 @@ public abstract class SamErrorReadFilterCriterion<T extends Comparable<T>> {
      * Method to be called in order to check whether this criterion is satisfied
      * @param stratus Object to check whether it satisfies the criterion
      */
-    public abstract void checkCriterion(Object stratus);
+    public abstract void checkCriterion(T stratus);
 
     /**
      * Returns whether or not the criterion is satisfied
