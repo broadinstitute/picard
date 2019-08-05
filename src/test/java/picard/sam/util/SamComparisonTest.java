@@ -150,15 +150,15 @@ public class SamComparisonTest {
             metricsOutput.read(new FileReader(outputFile));
             final SamComparisonMetric metric = metricsOutput.getMetrics().get(0);
 
-            Assert.assertEquals(areEqual, metric.areEqual);
-            Assert.assertEquals(expectedMatch, metric.mappingsMatch);
-            Assert.assertEquals(expectedDiffer, metric.mappingsDiffer);
-            Assert.assertEquals(expectedUnmappedBoth, metric.unmappedBoth);
-            Assert.assertEquals(expectedUnmappedLeft, metric.unmappedLeft);
-            Assert.assertEquals(expectedUnmappedRight, metric.unmappedRight);
-            Assert.assertEquals(expectedMissingLeft, metric.missingLeft);
-            Assert.assertEquals(expectedMissingRight, metric.missingRight);
-            Assert.assertEquals(expectedDupDiffer, metric.duplicateMarkingsDiffer);
+            Assert.assertEquals(areEqual, metric.ARE_EQUAL);
+            Assert.assertEquals(expectedMatch, metric.MAPPINGS_MATCH);
+            Assert.assertEquals(expectedDiffer, metric.MAPPINGS_DIFFER);
+            Assert.assertEquals(expectedUnmappedBoth, metric.UNMAPPED_BOTH);
+            Assert.assertEquals(expectedUnmappedLeft, metric.UNMAPPED_LEFT);
+            Assert.assertEquals(expectedUnmappedRight, metric.UNMAPPED_RIGHT);
+            Assert.assertEquals(expectedMissingLeft, metric.MISSING_LEFT);
+            Assert.assertEquals(expectedMissingRight, metric.MISSING_RIGHT);
+            Assert.assertEquals(expectedDupDiffer, metric.DUPLICATE_MARKINGS_DIFFER);
 
         }
     }

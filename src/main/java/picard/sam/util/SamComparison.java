@@ -47,28 +47,27 @@ public final class SamComparison {
         this.leftReader = leftReader;
         this.rightReader = rightReader;
         this.samComparisonArgumentCollection = samComparisonArgumentCollection;
-        comparisonMetric.leftFile = leftName;
-        comparisonMetric.rightFile = rightName;
+        comparisonMetric.LEFT_FILE = leftName;
+        comparisonMetric.RIGHT_FILE = rightName;
         if (samComparisonArgumentCollection.LENIENT_DUP) {
             setupLenientDuplicateChecking();
         }
-        comparisonMetric.areEqual = compareHeaders();
-        comparisonMetric.areEqual &= compareAlignmentsAndCatalogDuplicateMarkingDifferences();
+        comparisonMetric.ARE_EQUAL = compareHeaders();
+        comparisonMetric.ARE_EQUAL &= compareAlignmentsAndCatalogDuplicateMarkingDifferences();
         if (samComparisonArgumentCollection.LENIENT_DUP) {
             countLenientDuplicateMarkingDifferences();
         }
-        comparisonMetric.areEqual &= comparisonMetric.duplicateMarkingsDiffer == 0;
+        comparisonMetric.ARE_EQUAL &= comparisonMetric.DUPLICATE_MARKINGS_DIFFER == 0;
     }
 
     public void writeReport(final File output) {
-        writeReport(output, new ArrayList<>());
+        writeReport(output, Collections.EMPTY_LIST);
     }
 
     public void writeReport(final File output, final List<Header> headers) {
         final MetricsFile<SamComparisonMetric, ?> comparisonMetricFile = new MetricsFile<>();
-        for (final Header h : headers) {
-            comparisonMetricFile.addHeader(h);
-        }
+
+        headers.forEach(comparisonMetricFile::addHeader);
         comparisonMetricFile.addAllMetrics(Collections.singletonList(comparisonMetric));
         comparisonMetricFile.write(output);
     }
@@ -143,7 +142,7 @@ public final class SamComparison {
                    );
            }
            // count reads which differ, but for which no swap match was found
-           comparisonMetric.duplicateMarkingsDiffer += records.stream().filter(n -> !matchedSwaps.contains(n.getReadName())).count();
+           comparisonMetric.DUPLICATE_MARKINGS_DIFFER += records.stream().filter(n -> !matchedSwaps.contains(n.getReadName())).count();
         }
 
     }
@@ -195,7 +194,7 @@ public final class SamComparison {
                     final PrimaryAlignmentKey leftKey = new PrimaryAlignmentKey(left);
                     final SAMRecord right = rightUnmatched.remove(leftKey);
                     if (right == null) {
-                        ++comparisonMetric.missingRight;
+                        ++comparisonMetric.MISSING_RIGHT;
                     } else {
                         tallyAlignmentRecords(left, right);
                     }
@@ -255,14 +254,14 @@ public final class SamComparison {
             final SAMRecord left = leftEntry.getValue();
             final SAMRecord right = rightUnmatched.remove(leftKey);
             if (right == null) {
-                ++comparisonMetric.missingRight;
+                ++comparisonMetric.MISSING_RIGHT;
                 continue;
             }
             tallyAlignmentRecords(left, right);
         }
 
         // Any elements remaining in rightUnmatched are guaranteed not to be in leftUnmatched.
-        comparisonMetric.missingLeft += rightUnmatched.size();
+        comparisonMetric.MISSING_LEFT += rightUnmatched.size();
 
         return comparisonMetric.allVisitedAlignmentsEqual();
     }
@@ -292,16 +291,16 @@ public final class SamComparison {
 
         while (it1.hasCurrent()) {
             if (!it2.hasCurrent()) {
-                comparisonMetric.missingRight += countRemaining(it1);
+                comparisonMetric.MISSING_RIGHT += countRemaining(it1);
             }
             final PrimaryAlignmentKey leftKey = new PrimaryAlignmentKey(it1.getCurrent());
             final PrimaryAlignmentKey rightKey = new PrimaryAlignmentKey(it2.getCurrent());
             final int cmp = leftKey.compareTo(rightKey);
             if (cmp < 0) {
-                ++comparisonMetric.missingRight;
+                ++comparisonMetric.MISSING_RIGHT;
                 it1.advance();
             } else if (cmp > 0) {
-                ++comparisonMetric.missingLeft;
+                ++comparisonMetric.MISSING_LEFT;
                 it2.advance();
             } else {
                 tallyAlignmentRecords(it1.getCurrent(), it2.getCurrent());
@@ -310,7 +309,7 @@ public final class SamComparison {
             }
         }
         if (it2.hasCurrent()) {
-            comparisonMetric.missingLeft += countRemaining(it2);
+            comparisonMetric.MISSING_LEFT += countRemaining(it2);
         }
         return comparisonMetric.allVisitedAlignmentsEqual();
     }
@@ -331,7 +330,7 @@ public final class SamComparison {
         consumeAll(it1, (alignmentRecord, primaryKey) -> leftUnmatched.put(primaryKey, alignmentRecord));
         consumeUnmatchedRights(it2, leftUnmatched);
 
-        comparisonMetric.missingRight += leftUnmatched.size();
+        comparisonMetric.MISSING_RIGHT += leftUnmatched.size();
 
         return comparisonMetric.allVisitedAlignmentsEqual();
     }
@@ -349,7 +348,7 @@ public final class SamComparison {
                     if (left != null) {
                         tallyAlignmentRecords(left, alignmentRecord);
                     } else {
-                        ++comparisonMetric.missingLeft;
+                        ++comparisonMetric.MISSING_LEFT;
                     }
                 });
     }
@@ -411,7 +410,7 @@ public final class SamComparison {
     }
 
     private void catalogDuplicateDifferences(final SAMRecord s1, final SAMRecord s2) {
-        // if strict, reads with differing duplicate marking are counted by duplicateMarkingsDiffer.
+        // if strict, reads with differing duplicate marking are counted by DUPLICATE_MARKINGS_DIFFER.
         // if lenient, reads with differing duplicate marking are added to markDuplicatesCheckLeft/Right
         // to later be counted while allowing for swaps withing duplicate sets by updateLenientDuplicateMarkingDifferences
         if (s1.getDuplicateReadFlag() != s2.getDuplicateReadFlag()) {
@@ -419,7 +418,7 @@ public final class SamComparison {
                 markDuplicatesCheckLeft.add(s1);
                 markDuplicatesCheckRight.add(s2);
             } else {
-                comparisonMetric.duplicateMarkingsDiffer++;
+                comparisonMetric.DUPLICATE_MARKINGS_DIFFER++;
             }
         }
     }
@@ -566,38 +565,38 @@ public final class SamComparison {
     }
 
     public int getMappingsMatch() {
-        return comparisonMetric.mappingsMatch;
+        return comparisonMetric.MAPPINGS_MATCH;
     }
 
     public int getUnmappedBoth() {
-        return comparisonMetric.unmappedBoth;
+        return comparisonMetric.UNMAPPED_BOTH;
     }
 
     public int getUnmappedLeft() {
-        return comparisonMetric.unmappedLeft;
+        return comparisonMetric.UNMAPPED_LEFT;
     }
 
     public int getUnmappedRight() {
-        return comparisonMetric.unmappedRight;
+        return comparisonMetric.UNMAPPED_RIGHT;
     }
 
     public int getMappingsDiffer() {
-        return comparisonMetric.mappingsDiffer;
+        return comparisonMetric.MAPPINGS_DIFFER;
     }
 
     public int getMissingLeft() {
-        return comparisonMetric.missingLeft;
+        return comparisonMetric.MISSING_LEFT;
     }
 
     public int getMissingRight() {
-        return comparisonMetric.missingRight;
+        return comparisonMetric.MISSING_RIGHT;
     }
 
     public int getDuplicateMarkingsDiffer() {
-        return comparisonMetric.duplicateMarkingsDiffer;
+        return comparisonMetric.DUPLICATE_MARKINGS_DIFFER;
     }
 
     public boolean areEqual() {
-        return comparisonMetric.areEqual;
+        return comparisonMetric.ARE_EQUAL;
     }
 }

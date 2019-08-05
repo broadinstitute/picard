@@ -114,10 +114,10 @@ public class CompareSAMsTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(commandArgs) == 0, areEqual);
         metricsOutput.read(new FileReader(tmpOutput.toFile()));
 
-        Assert.assertEquals(metricsOutput.getMetrics().get(0).leftFile, in1);
-        Assert.assertEquals(metricsOutput.getMetrics().get(0).rightFile, in2);
+        Assert.assertEquals(metricsOutput.getMetrics().get(0).LEFT_FILE, in1);
+        Assert.assertEquals(metricsOutput.getMetrics().get(0).RIGHT_FILE, in2);
 
-        Assert.assertEquals(metricsOutput.getMetrics().get(1).leftFile, in2);
-        Assert.assertEquals(metricsOutput.getMetrics().get(1).rightFile, in1);
+        Assert.assertEquals(metricsOutput.getMetrics().get(1).LEFT_FILE, in2);
+        Assert.assertEquals(metricsOutput.getMetrics().get(1).RIGHT_FILE, in1);
     }
 }
