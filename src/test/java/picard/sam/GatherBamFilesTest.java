@@ -1,9 +1,12 @@
 package picard.sam;
 
 import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.sam.util.SamComparison;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,10 +43,11 @@ public class GatherBamFilesTest extends CommandLineProgramTest {
         args.add("OUTPUT=" + outputFile);
         runPicardCommandLine(args);
 
-        // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
-        final CompareSAMs compareSAMs = new CompareSAMs();
-        compareSAMs.samFiles = Arrays.asList(ORIG_BAM, outputFile);
-        Assert.assertEquals(compareSAMs.doWork(), 0);
+        try (final SamReader samReader1 = SamReaderFactory.makeDefault().open(ORIG_BAM);
+             final SamReader samReader2 = SamReaderFactory.makeDefault().open(outputFile)) {
+            final SamComparison samComparison = new SamComparison(samReader1, samReader2);
+            Assert.assertTrue(samComparison.areEqual());
+        }
     }
 
     @Test
@@ -57,10 +61,10 @@ public class GatherBamFilesTest extends CommandLineProgramTest {
         args.add("OUTPUT=" + outputFile);
         runPicardCommandLine(args);
 
-        // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
-        final CompareSAMs compareSAMs = new CompareSAMs();
-        compareSAMs.samFiles = Arrays.asList(ORIG_BAM, SPLIT_BAMS.get(0));
-        compareSAMs.doWork();
-        Assert.assertEquals(compareSAMs.doWork(), 1);
+        try (final SamReader samReader1 = SamReaderFactory.makeDefault().open(ORIG_BAM);
+             final SamReader samReader2 = SamReaderFactory.makeDefault().open(SPLIT_BAMS.get(0))) {
+            final SamComparison samComparison = new SamComparison(samReader1, samReader2);
+            Assert.assertFalse(samComparison.areEqual());
+        }
     }
 }
