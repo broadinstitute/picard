@@ -35,7 +35,7 @@ public abstract class BaseErrorCalculator implements BaseCalculator {
      * the function by which new loci are "shown" to the calculator
      **/
     @Override
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, CollectSamErrorMetrics.BaseOperation operation) {
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, final CollectSamErrorMetrics.BaseOperation operation) {
         if (operation == CollectSamErrorMetrics.BaseOperation.Match && !SequenceUtil.isNoCall(recordAndOffset.getReadBase())) {
             nBases++;
         }

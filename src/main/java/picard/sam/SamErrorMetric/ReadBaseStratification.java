@@ -82,7 +82,7 @@ public class ReadBaseStratification {
      */
     public interface RecordAndOffsetStratifier<T extends Comparable<T>> {
         // The method that stratifies a base in a read (provided by RecordAndOffset) into a type T.
-        T stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation);
+        T stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final CollectSamErrorMetrics.BaseOperation operation);
 
         // The string suffix that will be used to generate the extension of the metric file.
         String getSuffix();
@@ -91,11 +91,13 @@ public class ReadBaseStratification {
     /**
      * Interface determining that this stratifier can be used to filter reads using the SAMErrorReadFilter class.
      * Specializations of this template class defined below.
+     *
      * @param <T>
      */
     public interface FilterableRecordAndOffsetStratifier<T extends Comparable<T>> extends RecordAndOffsetStratifier<T> {
-        T stratifyAndApplyFilters(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation, List<SamErrorReadFilter> filters);
-        void applyFilters(T stratus, List<SamErrorReadFilter> filters);
+        T stratifyAndApplyFilters(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final CollectSamErrorMetrics.BaseOperation operation, final List<SamErrorReadFilter> filters);
+
+        void applyFilters(final T stratus, final List<SamErrorReadFilter> filters);
     }
 
     /**
@@ -537,7 +539,7 @@ public class ReadBaseStratification {
 
         private CigarOperator operator;
 
-        public CigarOperatorsInReadStratifier( final CigarOperator op ) {
+        public CigarOperatorsInReadStratifier(final CigarOperator op) {
             operator = op;
         }
 
@@ -548,8 +550,7 @@ public class ReadBaseStratification {
                         .filter(ce -> ce.getOperator().equals(operator))
                         .mapToInt(CigarElement::getLength)
                         .sum();
-            }
-            catch ( final Exception ex ) {
+            } catch (final Exception ex) {
                 return null;
             }
         }
@@ -572,8 +573,7 @@ public class ReadBaseStratification {
                         .filter(ce -> (ce.getOperator().equals(CigarOperator.I) || ce.getOperator().equals(CigarOperator.D)))
                         .mapToInt(CigarElement::getLength)
                         .sum();
-            }
-            catch ( final Exception ex ) {
+            } catch (final Exception ex) {
                 return null;
             }
         }
@@ -590,7 +590,7 @@ public class ReadBaseStratification {
     public static class IndelLengthStratifier implements NumericalRecordAndOffsetStratifier {
 
         @Override
-        public Integer stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation) {
+        public Integer stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final CollectSamErrorMetrics.BaseOperation operation) {
             return stratifyIndelLength(recordAndOffset, locusInfo, operation);
         }
 
@@ -600,14 +600,14 @@ public class ReadBaseStratification {
         }
 
         @Override
-        public Integer stratifyAndApplyFilters(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation, List<SamErrorReadFilter> filters) {
-            Integer stratus = stratifyIndelLength(recordAndOffset, locusInfo, operation);
+        public Integer stratifyAndApplyFilters(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final CollectSamErrorMetrics.BaseOperation operation, final List<SamErrorReadFilter> filters) {
+            final Integer stratus = stratifyIndelLength(recordAndOffset, locusInfo, operation);
             applyFilters(stratus, filters);
             return stratus;
         }
 
         @Override
-        public void applyFilters(Integer stratus, List<SamErrorReadFilter> filters) {
+        public void applyFilters(final Integer stratus, final List<SamErrorReadFilter> filters) {
             filters.forEach(filter -> filter.processValue(getSuffix(), stratus));
         }
     }
@@ -615,7 +615,7 @@ public class ReadBaseStratification {
     public static class IsInsertionStratifier implements BooleanRecordAndOffsetStratifier {
 
         @Override
-        public Boolean stratify(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation) {
+        public Boolean stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final CollectSamErrorMetrics.BaseOperation operation) {
             return stratifyBaseOperation(recordAndOffset, locusInfo, operation) == CollectSamErrorMetrics.BaseOperation.Insertion;
         }
 
@@ -625,14 +625,14 @@ public class ReadBaseStratification {
         }
 
         @Override
-        public Boolean stratifyAndApplyFilters(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation, List<SamErrorReadFilter> filters) {
-            Boolean stratus = stratify(recordAndOffset, locusInfo, operation);
+        public Boolean stratifyAndApplyFilters(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final CollectSamErrorMetrics.BaseOperation operation, final List<SamErrorReadFilter> filters) {
+            final Boolean stratus = stratify(recordAndOffset, locusInfo, operation);
             applyFilters(stratus, filters);
             return stratus;
         }
 
         @Override
-        public void applyFilters(Boolean stratus, List<SamErrorReadFilter> filters) {
+        public void applyFilters(final Boolean stratus, final List<SamErrorReadFilter> filters) {
             filters.forEach(filter -> filter.processValue(getSuffix(), stratus));
         }
     }
@@ -640,7 +640,7 @@ public class ReadBaseStratification {
     public static class IsDeletionStratifier implements BooleanRecordAndOffsetStratifier {
 
         @Override
-        public Boolean stratify(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation) {
+        public Boolean stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final CollectSamErrorMetrics.BaseOperation operation) {
             return stratifyBaseOperation(recordAndOffset, locusInfo, operation) == CollectSamErrorMetrics.BaseOperation.Deletion;
         }
 
@@ -650,14 +650,14 @@ public class ReadBaseStratification {
         }
 
         @Override
-        public Boolean stratifyAndApplyFilters(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation, List<SamErrorReadFilter> filters) {
-            Boolean stratus = stratify(recordAndOffset, locusInfo, operation);
+        public Boolean stratifyAndApplyFilters(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final CollectSamErrorMetrics.BaseOperation operation, final List<SamErrorReadFilter> filters) {
+            final Boolean stratus = stratify(recordAndOffset, locusInfo, operation);
             applyFilters(stratus, filters);
             return stratus;
         }
 
         @Override
-        public void applyFilters(Boolean stratus, List<SamErrorReadFilter> filters) {
+        public void applyFilters(final Boolean stratus, final List<SamErrorReadFilter> filters) {
             filters.forEach(filter -> filter.processValue(getSuffix(), stratus));
         }
     }
@@ -826,13 +826,19 @@ public class ReadBaseStratification {
      */
     public static final NsInReadStratifier nsInReadStratifier = new NsInReadStratifier();
 
-    /** Stratify by Insertions in the read cigars.  */
+    /**
+     * Stratify by Insertions in the read cigars.
+     */
     public static final CigarOperatorsInReadStratifier insertionsInReadStratifier = new CigarOperatorsInReadStratifier(CigarOperator.I);
 
-    /** Stratify by Deletions in the read cigars.  */
+    /**
+     * Stratify by Deletions in the read cigars.
+     */
     public static final CigarOperatorsInReadStratifier deletionsInReadStratifier = new CigarOperatorsInReadStratifier(CigarOperator.D);
 
-    /**  Stratify by Indels in the read cigars.  */
+    /**
+     * Stratify by Indels in the read cigars.
+     */
     public static final IndelsInReadStratifier indelsInReadStratifier = new IndelsInReadStratifier();
 
     /**
@@ -843,7 +849,7 @@ public class ReadBaseStratification {
     /**
      * Stratifies by whether or not the current RecordAndOffset is an insertion
      */
-    public static final IsInsertionStratifier isInsertionStratifier= new IsInsertionStratifier();
+    public static final IsInsertionStratifier isInsertionStratifier = new IsInsertionStratifier();
 
     /**
      * Stratifies by whether or not the current RecordAndOffset is a deletion
@@ -1028,7 +1034,7 @@ public class ReadBaseStratification {
      * An enum for holding a reads read-pair's Orientation (i.e. F1R2, F2R1, or TANDEM) indicating
      * the strand (positive or negative) that each of the two mated reads are aligned to. In connection with
      * READ_BASE and similar stratifiers this can be used to observe oxoG-type sequencing artifacts.
-     *
+     * <p>
      * Note that this is not related to FR/RF/TANDEM classification as per {@link htsjdk.samtools.SamPairUtil.PairOrientation PairOrientation}.
      */
     public enum PairOrientation {
@@ -1209,6 +1215,7 @@ public class ReadBaseStratification {
     }
 
     public static final int NOT_ALIGNED_ERROR = -1;
+
     private static Integer stratifySoftClippedBases(final SAMRecord sam) {
         final Cigar cigar = sam.getCigar();
         if (cigar == null) {
@@ -1231,30 +1238,30 @@ public class ReadBaseStratification {
         return sam.getReadGroup().getReadGroupId();
     }
 
-    private static Integer stratifyIndelLength(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation) {
-        if(operation != CollectSamErrorMetrics.BaseOperation.Insertion && operation != CollectSamErrorMetrics.BaseOperation.Deletion) {
+    private static Integer stratifyIndelLength(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final CollectSamErrorMetrics.BaseOperation operation) {
+        if (operation != CollectSamErrorMetrics.BaseOperation.Insertion && operation != CollectSamErrorMetrics.BaseOperation.Deletion) {
             return 0;
         }
 
-        CigarElement cigarElement = getIndelElement(recordAndOffset, operation);
-        if(cigarElement == null) {
+        final CigarElement cigarElement = getIndelElement(recordAndOffset, operation);
+        if (cigarElement == null) {
             // No CIGAR operation for given position.
             return null;
         }
-        if(operation == CollectSamErrorMetrics.BaseOperation.Insertion && cigarElement.getOperator() != CigarOperator.I) {
+        if (operation == CollectSamErrorMetrics.BaseOperation.Insertion && cigarElement.getOperator() != CigarOperator.I) {
             log.warn("Wrong CIGAR operator for the given position. This is an error and should be fixed.");
             return null;
         }
-        if(operation == CollectSamErrorMetrics.BaseOperation.Deletion && cigarElement.getOperator() != CigarOperator.D) {
+        if (operation == CollectSamErrorMetrics.BaseOperation.Deletion && cigarElement.getOperator() != CigarOperator.D) {
             log.warn("Wrong CIGAR operator for the given position. This is an error and should be fixed.");
             return null;
         }
         return cigarElement.getLength();
     }
 
-    public static CigarElement getIndelElement(final RecordAndOffset recordAndOffset, CollectSamErrorMetrics.BaseOperation operation) {
-        SAMRecord record = recordAndOffset.getRecord();
-        int offset = recordAndOffset.getOffset();
+    public static CigarElement getIndelElement(final RecordAndOffset recordAndOffset, final CollectSamErrorMetrics.BaseOperation operation) {
+        final SAMRecord record = recordAndOffset.getRecord();
+        final int offset = recordAndOffset.getOffset();
 
         if (operation != CollectSamErrorMetrics.BaseOperation.Insertion && operation != CollectSamErrorMetrics.BaseOperation.Deletion) {
             log.warn("This method is not supported for matching bases.");
@@ -1262,7 +1269,7 @@ public class ReadBaseStratification {
             return null;
         }
 
-        if(record == null) {
+        if (record == null) {
             throw new IllegalArgumentException("record must not be null.");
         }
 
@@ -1275,11 +1282,11 @@ public class ReadBaseStratification {
             throw new IllegalArgumentException("offset must greater than -1 for a deletion.");
         }
 
-        Cigar cigar = record.getCigar();
+        final Cigar cigar = record.getCigar();
         if (cigar.isEmpty())
             return null;
 
-        if(offset == -1) {
+        if (offset == -1) {
             return cigar.getCigarElement(0);
         }
 

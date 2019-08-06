@@ -39,7 +39,7 @@ public class SimpleErrorCalculator extends BaseErrorCalculator {
      * The function by which new loci are "shown" to the calculator
      **/
     @Override
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, CollectSamErrorMetrics.BaseOperation operation) {
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, final CollectSamErrorMetrics.BaseOperation operation) {
         super.addBase(recordAndOffset, locusAndRef, operation);
         final byte readBase = recordAndOffset.getReadBase();
         if (!SequenceUtil.isNoCall(readBase) && (readBase != locusAndRef.getReferenceBase())) {

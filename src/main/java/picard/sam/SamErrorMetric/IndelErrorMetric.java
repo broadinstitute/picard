@@ -1,3 +1,28 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2018 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+
 package picard.sam.SamErrorMetric;
 
 /**
@@ -11,7 +36,9 @@ public class IndelErrorMetric extends BaseErrorMetric {
     @MergeByAdding
     public long NUM_INSERTS = 0;
 
-    /** The (phred) rate of insertions. TODO mgatzen Does this make sense? */
+    /**
+     * The (phred) rate of insertions. TODO mgatzen Does this make sense?
+     */
     @NoMergingIsDerived
     public int INSERTS_Q = 0;
 
@@ -21,7 +48,9 @@ public class IndelErrorMetric extends BaseErrorMetric {
     @MergeByAdding
     public long NUM_DELETIONS = 0L;
 
-    /** The (phred) rate of deletions. TODO mgatzen Does this make sense? */
+    /**
+     * The (phred) rate of deletions. TODO mgatzen Does this make sense?
+     */
     @NoMergingIsDerived
     public int DELETIONS_Q = 0;
 
@@ -33,9 +62,9 @@ public class IndelErrorMetric extends BaseErrorMetric {
     }
 
     public IndelErrorMetric(final String covariate,
-                                  final long nTotalBases,
-                                  final long nInserts,
-                                  final long nDeletions) {
+                            final long nTotalBases,
+                            final long nInserts,
+                            final long nDeletions) {
         super(covariate, nTotalBases, nInserts + nDeletions);
 
         this.NUM_INSERTS = nInserts;
@@ -43,5 +72,6 @@ public class IndelErrorMetric extends BaseErrorMetric {
     }
 
     // needed for reading in a metric from a file
-    public IndelErrorMetric() {}
+    public IndelErrorMetric() {
+    }
 }

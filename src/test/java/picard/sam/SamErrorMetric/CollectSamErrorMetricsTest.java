@@ -566,7 +566,7 @@ public class CollectSamErrorMetricsTest {
             for(int iCigarElementPosition = 0; iCigarElementPosition < cigarElement.getLength(); iCigarElementPosition++) {
                 locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, ++position);
                 if(cigarElement.getOperator() == CigarOperator.D) {
-                    Assert.assertEquals(collectSamErrorMetrics.hasDeletionBeenProcessed(new SamLocusIterator.RecordAndOffset(deletionRecord, 0), locusInfo), (boolean) expected.get(iExpected++));
+                    Assert.assertEquals(collectSamErrorMetrics.processDeletionLocus(new SamLocusIterator.RecordAndOffset(deletionRecord, 0), locusInfo), (boolean) expected.get(iExpected++));
                 }
             }
         }
@@ -576,71 +576,73 @@ public class CollectSamErrorMetricsTest {
     public Object[][] provideForTestIndelErrors() {
         return new Object[][] {
                 // insertions
-                { new String[] { "100M" },          ".indel_error_by_all", 30, new IndelErrorMetric("all", 100, 0, 0) },
-                { new String[] { "50M1I50M" },      ".indel_error_by_all", 30, new IndelErrorMetric("all", 100, 1, 0) },
-                { new String[] { "2I100M" },        ".indel_error_by_all", 30, new IndelErrorMetric("all", 100, 1, 0) },
-                { new String[] { "100M1I" },        ".indel_error_by_all", 30, new IndelErrorMetric("all", 100, 1, 0) },
-                { new String[] { "50M2I2M2I50M" },  ".indel_error_by_all", 30, new IndelErrorMetric("all", 102, 2, 0) },
+                { new String[] { "100M" },          ".indel_error_by_all", new IndelErrorMetric("all", 100, 0, 0) },
+                { new String[] { "50M1I50M" },      ".indel_error_by_all", new IndelErrorMetric("all", 100, 1, 0) },
+                { new String[] { "2I100M" },        ".indel_error_by_all", new IndelErrorMetric("all", 100, 1, 0) },
+                { new String[] { "100M1I" },        ".indel_error_by_all", new IndelErrorMetric("all", 100, 1, 0) },
+                { new String[] { "50M2I2M2I50M" },  ".indel_error_by_all", new IndelErrorMetric("all", 102, 2, 0) },
                 { new String[] { "50M2I2M2I50M",
-                                 "50M2I2M2I50M"},   ".indel_error_by_all", 30, new IndelErrorMetric("all", 204, 4, 0) },
+                                 "50M2I2M2I50M"},   ".indel_error_by_all", new IndelErrorMetric("all", 204, 4, 0) },
                 // deletions
-                { new String[] { "50M1D50M" },      ".indel_error_by_all", 30, new IndelErrorMetric("all", 100, 0, 1) },
-                { new String[] { "1D100M" },        ".indel_error_by_all", 30, new IndelErrorMetric("all", 100, 0, 1) },
-                { new String[] { "100M1D" },        ".indel_error_by_all", 30, new IndelErrorMetric("all", 100, 0, 1) },
-                { new String[] { "50M2D2M2D50M" },  ".indel_error_by_all", 30, new IndelErrorMetric("all", 102, 0, 2) },
+                { new String[] { "50M1D50M" },      ".indel_error_by_all", new IndelErrorMetric("all", 100, 0, 1) },
+                { new String[] { "1D100M" },        ".indel_error_by_all", new IndelErrorMetric("all", 100, 0, 1) },
+                { new String[] { "100M1D" },        ".indel_error_by_all", new IndelErrorMetric("all", 100, 0, 1) },
+                { new String[] { "50M2D2M2D50M" },  ".indel_error_by_all", new IndelErrorMetric("all", 102, 0, 2) },
                 { new String[] { "50M2D2M2D50M",
-                                 "50M2D2M2D50M"},   ".indel_error_by_all", 30, new IndelErrorMetric("all", 204, 0, 4) },
+                                 "50M2D2M2D50M"},   ".indel_error_by_all", new IndelErrorMetric("all", 204, 0, 4) },
                 // insertions & deletions
-                { new String[] { "20M1I20M1D20M" }, ".indel_error_by_all", 30, new IndelErrorMetric("all", 60, 1, 1) },
-                { new String[] { "20M2I2D20M" },    ".indel_error_by_all", 30, new IndelErrorMetric("all", 40, 1, 1) },
-                { new String[] { "20M2D2I20M" },    ".indel_error_by_all", 30, new IndelErrorMetric("all", 40, 1, 1) },
-                { new String[] { "2I2D20M" },       ".indel_error_by_all", 30, new IndelErrorMetric("all", 20, 1, 1) },
-                { new String[] { "2D2I20M" },       ".indel_error_by_all", 30, new IndelErrorMetric("all", 20, 1, 1) },
-                { new String[] { "20M2D2I" },       ".indel_error_by_all", 30, new IndelErrorMetric("all", 20, 1, 1) },
-                { new String[] { "20M2I2D" },       ".indel_error_by_all", 30, new IndelErrorMetric("all", 20, 1, 1) },
+                { new String[] { "20M1I20M1D20M" }, ".indel_error_by_all", new IndelErrorMetric("all", 60, 1, 1) },
+                { new String[] { "20M2I2D20M" },    ".indel_error_by_all", new IndelErrorMetric("all", 40, 1, 1) },
+                { new String[] { "20M2D2I20M" },    ".indel_error_by_all", new IndelErrorMetric("all", 40, 1, 1) },
+                { new String[] { "2I2D20M" },       ".indel_error_by_all", new IndelErrorMetric("all", 20, 1, 1) },
+                { new String[] { "2D2I20M" },       ".indel_error_by_all", new IndelErrorMetric("all", 20, 1, 1) },
+                { new String[] { "20M2D2I" },       ".indel_error_by_all", new IndelErrorMetric("all", 20, 1, 1) },
+                { new String[] { "20M2I2D" },       ".indel_error_by_all", new IndelErrorMetric("all", 20, 1, 1) },
 
                 // indel_length:
                 // insertions
-                { new String[] { "50M1I50M" },      ".indel_error_by_indel_length", 30, new IndelErrorMetric("1", 0, 1, 0) },
-                { new String[] { "50M2I50M" },      ".indel_error_by_indel_length", 30, new IndelErrorMetric("2", 0, 1, 0) },
-                { new String[] { "20M2I20M2I20M" }, ".indel_error_by_indel_length", 30, new IndelErrorMetric("2", 0, 2, 0) },
-                { new String[] { "1I10M" },         ".indel_error_by_indel_length", 30, new IndelErrorMetric("1", 0, 1, 0) },
-                { new String[] { "10M1I" },         ".indel_error_by_indel_length", 30, new IndelErrorMetric("1", 0, 1, 0) },
+                { new String[] { "50M1I50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 1, 0) },
+                { new String[] { "50M2I50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 1, 0) },
+                { new String[] { "20M2I20M2I20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 2, 0) },
+                { new String[] { "1I10M" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 1, 0) },
+                { new String[] { "10M1I" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 1, 0) },
                 // deletions
-                { new String[] { "50M1D50M" },      ".indel_error_by_indel_length", 30, new IndelErrorMetric("1", 0, 0, 1) },
-                { new String[] { "50M2D50M" },      ".indel_error_by_indel_length", 30, new IndelErrorMetric("2", 0, 0, 1) },
-                { new String[] { "20M2D20M2D20M" }, ".indel_error_by_indel_length", 30, new IndelErrorMetric("2", 0, 0, 2) },
-                { new String[] { "1D10M" },         ".indel_error_by_indel_length", 30, new IndelErrorMetric("1", 0, 0, 1) },
-                { new String[] { "10M1D" },         ".indel_error_by_indel_length", 30, new IndelErrorMetric("1", 0, 0, 1) },
+                { new String[] { "50M1D50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 1) },
+                { new String[] { "50M2D50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 1) },
+                { new String[] { "20M2D20M2D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 2) },
+                { new String[] { "1D10M" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 1) },
+                { new String[] { "10M1D" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 1) },
                 // insertions & deletions
-                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", 30, new IndelErrorMetric("2", 0, 1, 0) },
-                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", 30, new IndelErrorMetric("3", 0, 0, 1) },
-                { new String[] { "2I2D20M" },       ".indel_error_by_indel_length", 30, new IndelErrorMetric("2", 0, 1, 1) },
-                { new String[] { "2D2I20M" },       ".indel_error_by_indel_length", 30, new IndelErrorMetric("2", 0, 1, 1) },
-                { new String[] { "2M2D2I" },        ".indel_error_by_indel_length", 30, new IndelErrorMetric("2", 0, 1, 1) },
-                { new String[] { "20M2I2D" },       ".indel_error_by_indel_length", 30, new IndelErrorMetric("2", 0, 1, 1) },
+                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 1, 0) },
+                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("3", 0, 0, 1) },
+                { new String[] { "2I2D20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 1, 1) },
+                { new String[] { "2D2I20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 1, 1) },
+                { new String[] { "2M2D2I" },        ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 1, 1) },
+                { new String[] { "20M2I2D" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 1, 1) },
 
                 // is_insertion:
-                { new String[] { "20M1I20M" },      ".indel_error_by_is_insertion", 30, new IndelErrorMetric("true", 0, 1, 0) },
-                { new String[] { "2I2D20M" },       ".indel_error_by_is_insertion", 30, new IndelErrorMetric("true", 0, 1, 0) },
-                { new String[] { "2D2I20M" },       ".indel_error_by_is_insertion", 30, new IndelErrorMetric("true", 0, 1, 0) },
-                { new String[] { "2M2D2I" },        ".indel_error_by_is_insertion", 30, new IndelErrorMetric("true", 0, 1, 0) },
-                { new String[] { "20M2I2D" },       ".indel_error_by_is_insertion", 30, new IndelErrorMetric("true", 0, 1, 0) },
+                { new String[] { "20M1I20M" },      ".indel_error_by_is_insertion", new IndelErrorMetric("true", 0, 1, 0) },
+                { new String[] { "2I2D20M" },       ".indel_error_by_is_insertion", new IndelErrorMetric("true", 0, 1, 0) },
+                { new String[] { "2D2I20M" },       ".indel_error_by_is_insertion", new IndelErrorMetric("true", 0, 1, 0) },
+                { new String[] { "2M2D2I" },        ".indel_error_by_is_insertion", new IndelErrorMetric("true", 0, 1, 0) },
+                { new String[] { "20M2I2D" },       ".indel_error_by_is_insertion", new IndelErrorMetric("true", 0, 1, 0) },
                 // is_deletion
-                { new String[] { "20M1D20M" },      ".indel_error_by_is_deletion", 30, new IndelErrorMetric("true", 0, 0, 1) },
-                { new String[] { "2I2D20M" },       ".indel_error_by_is_deletion", 30, new IndelErrorMetric("true", 0, 0, 1) },
-                { new String[] { "2D2I20M" },       ".indel_error_by_is_deletion", 30, new IndelErrorMetric("true", 0, 0, 1) },
-                { new String[] { "2M2D2I" },        ".indel_error_by_is_deletion", 30, new IndelErrorMetric("true", 0, 0, 1) },
-                { new String[] { "20M2I2D" },       ".indel_error_by_is_deletion", 30, new IndelErrorMetric("true", 0, 0, 1) },
+                { new String[] { "20M1D20M" },      ".indel_error_by_is_deletion", new IndelErrorMetric("true", 0, 0, 1) },
+                { new String[] { "2I2D20M" },       ".indel_error_by_is_deletion", new IndelErrorMetric("true", 0, 0, 1) },
+                { new String[] { "2D2I20M" },       ".indel_error_by_is_deletion", new IndelErrorMetric("true", 0, 0, 1) },
+                { new String[] { "2M2D2I" },        ".indel_error_by_is_deletion", new IndelErrorMetric("true", 0, 0, 1) },
+                { new String[] { "20M2I2D" },       ".indel_error_by_is_deletion", new IndelErrorMetric("true", 0, 0, 1) },
 
         };
     }
 
     @Test(dataProvider = "provideForTestIndelErrors")
-    public void testIndelErrors(final String[] readCigars, final String errorSubscript, final int priorQ, IndelErrorMetric expectedMetric) throws IOException {
+    public void testIndelErrors(final String[] readCigars, final String errorSubscript, IndelErrorMetric expectedMetric) throws IOException {
 
         final File temp = File.createTempFile("Indels", ".bam");
         temp.deleteOnExit();
+
+        final int priorQ = 30;
 
         try (
                 final ReferenceSequenceFileWalker referenceSequenceFileWalker =
