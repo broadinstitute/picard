@@ -1,4 +1,4 @@
-FROM marketplace.gcr.io/google/debian9
+FROM openjdk:8
 MAINTAINER Broad Institute DSDE <dsde-engineering@broadinstitute.org>
 
 ARG build_command=shadowJar
@@ -9,8 +9,7 @@ RUN apt-get update && \
     apt-get --no-install-recommends install -y --force-yes \
         git \
         r-base \
-        ant \
-        openjdk-8-jdk && \
+        ant && \
     apt-get clean autoclean && \
     apt-get autoremove -y
 
