@@ -339,8 +339,8 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 nTotalLoci++;
 
                 // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
-                if (checkLocus(vcfFileReader, info.getLocus(), sequenceDictionary)) {
-                    log.debug("Locus does not overlap any variants: " + locusToInterval(info.getLocus(), sequenceDictionary));
+                if (checkLocus(vcfFileReader, info.getLocus())) {
+                    log.debug("Locus does not overlap any variants: " + info.getLocus(), sequenceDictionary);
                     nSkippedLoci++;
                     continue;
                 }
@@ -434,18 +434,16 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * HAS SIDE EFFECTS!!! Queries the vcfFileReader
      *
      * @param vcfFileReader      a {@link VCFFileReader} to query for the given locus
-     * @param locus              a {@link Locus} at which to examine the variants
-     * @param sequenceDictionary a dictionary with which to compare the Locatable to the Locus...
+     * @param locusInfo          a {@link SamLocusIterator.LocusInfo} at which to examine the variants
      * @return true if there's a variant over the locus, false otherwise.
      */
-    private static boolean checkLocus(final VCFFileReader vcfFileReader, final Locus locus, final SAMSequenceDictionary sequenceDictionary) {
+    private static boolean checkLocus(final VCFFileReader vcfFileReader, final SamLocusIterator.LocusInfo locusInfo) {
 
         boolean overlaps = false;
-        final Interval queryInterval = locusToInterval(locus, sequenceDictionary);
 
-        if (queryInterval != null) {
+        if (locusInfo != null) {
 
-            try (final CloseableIterator<VariantContext> vcfIterator = vcfFileReader.query(queryInterval)) {
+            try (final CloseableIterator<VariantContext> vcfIterator = vcfFileReader.query(locusInfo)) {
 
                 overlaps = true;
 
@@ -466,22 +464,6 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         }
 
         return overlaps;
-    }
-
-    /**
-     * Converts the given locus into an interval using the given sequenceDictionary.
-     *
-     * @param locus              The {@link Locus} to convert.
-     * @param sequenceDictionary The {@link SAMSequenceDictionary} to use to convert the given {@code locus}.
-     * @return An {@link Interval} representing the given {@code locus} or {@code null} if it cannot be converted.
-     */
-    private static Interval locusToInterval(final Locus locus, final SAMSequenceDictionary sequenceDictionary) {
-        final SAMSequenceRecord samSequenceRecord = sequenceDictionary.getSequence(locus.getSequenceIndex());
-        if (samSequenceRecord == null) {
-            return null;
-        }
-
-        return new Interval(samSequenceRecord.getSequenceName(), locus.getPosition(), locus.getPosition());
     }
 
     /**
