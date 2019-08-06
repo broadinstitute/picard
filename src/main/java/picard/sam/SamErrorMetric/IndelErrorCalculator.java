@@ -25,6 +25,7 @@
 
 package picard.sam.SamErrorMetric;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.util.SamLocusIterator;
 
@@ -39,9 +40,19 @@ public class IndelErrorCalculator extends BaseErrorCalculator {
     protected long nInserts;
 
     /**
+     * Total number of inserted bases
+     */
+    protected long nInsertedBases;
+
+    /**
      * Total number of deletions
      */
     protected long nDeletions;
+
+    /**
+     * Total number of deleted bases
+     */
+    protected long nDeletedBases;
 
     @Override
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, final CollectSamErrorMetrics.BaseOperation operation) {
@@ -49,8 +60,16 @@ public class IndelErrorCalculator extends BaseErrorCalculator {
 
         if (operation == CollectSamErrorMetrics.BaseOperation.Insertion) {
             nInserts++;
+            CigarElement cigarElement = ReadBaseStratification.getIndelElement(recordAndOffset, operation);
+            if (cigarElement != null) {
+                nInsertedBases += cigarElement.getLength();
+            }
         } else if (operation == CollectSamErrorMetrics.BaseOperation.Deletion) {
             nDeletions++;
+            CigarElement cigarElement = ReadBaseStratification.getIndelElement(recordAndOffset, operation);
+            if (cigarElement != null) {
+                nDeletedBases += cigarElement.getLength();
+            }
         }
     }
 
@@ -72,6 +91,6 @@ public class IndelErrorCalculator extends BaseErrorCalculator {
      **/
     @Override
     public IndelErrorMetric getMetric() {
-        return new IndelErrorMetric("", nBases, nInserts, nDeletions);
+        return new IndelErrorMetric("", nBases, nInserts, nInsertedBases, nDeletions, nDeletedBases);
     }
 }

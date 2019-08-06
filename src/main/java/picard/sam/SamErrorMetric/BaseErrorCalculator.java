@@ -24,6 +24,7 @@
 
 package picard.sam.SamErrorMetric;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
@@ -36,8 +37,16 @@ public abstract class BaseErrorCalculator implements BaseCalculator {
      **/
     @Override
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, final CollectSamErrorMetrics.BaseOperation operation) {
-        if (operation == CollectSamErrorMetrics.BaseOperation.Match && !SequenceUtil.isNoCall(recordAndOffset.getReadBase())) {
-            nBases++;
+        // TODO mgatzen should deletions be counted towards total bases?
+        if (operation == CollectSamErrorMetrics.BaseOperation.Match) {
+            if (!SequenceUtil.isNoCall(recordAndOffset.getReadBase())) {
+                nBases++;
+            }
+        } else if (operation == CollectSamErrorMetrics.BaseOperation.Insertion) {
+            CigarElement cigarElement = ReadBaseStratification.getIndelElement(recordAndOffset, operation);
+            if (cigarElement != null) {
+                nBases += cigarElement.getLength();
+            }
         }
     }
 

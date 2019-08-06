@@ -37,6 +37,12 @@ public class IndelErrorMetric extends BaseErrorMetric {
     public long NUM_INSERTS = 0;
 
     /**
+     * The number of inserted bases.
+     */
+    @MergeByAdding
+    public long NUM_INSERTED_BASES = 0;
+
+    /**
      * The (phred) rate of insertions. TODO mgatzen Does this make sense?
      */
     @NoMergingIsDerived
@@ -47,6 +53,12 @@ public class IndelErrorMetric extends BaseErrorMetric {
      */
     @MergeByAdding
     public long NUM_DELETIONS = 0L;
+
+    /**
+     * The number of deleted bases.
+     */
+    @MergeByAdding
+    public long NUM_DELETED_BASES = 0;
 
     /**
      * The (phred) rate of deletions. TODO mgatzen Does this make sense?
@@ -64,11 +76,15 @@ public class IndelErrorMetric extends BaseErrorMetric {
     public IndelErrorMetric(final String covariate,
                             final long nTotalBases,
                             final long nInserts,
-                            final long nDeletions) {
-        super(covariate, nTotalBases, nInserts + nDeletions);
+                            final long nInsertedBases,
+                            final long nDeletions,
+                            final long nDeletedBases) {
+        super(covariate, nTotalBases, nInsertedBases + nDeletedBases);
 
         this.NUM_INSERTS = nInserts;
+        this.NUM_INSERTED_BASES = nInsertedBases;
         this.NUM_DELETIONS = nDeletions;
+        this.NUM_DELETED_BASES = nDeletedBases;
     }
 
     // needed for reading in a metric from a file
