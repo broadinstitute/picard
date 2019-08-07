@@ -43,7 +43,7 @@ public class IndelErrorMetric extends BaseErrorMetric {
     public long NUM_INSERTED_BASES = 0;
 
     /**
-     * The (phred) rate of insertions. TODO mgatzen Does this make sense?
+     * The (phred) rate of insertions.
      */
     @NoMergingIsDerived
     public int INSERTS_Q = 0;
@@ -61,7 +61,7 @@ public class IndelErrorMetric extends BaseErrorMetric {
     public long NUM_DELETED_BASES = 0;
 
     /**
-     * The (phred) rate of deletions. TODO mgatzen Does this make sense?
+     * The (phred) rate of deletions.
      */
     @NoMergingIsDerived
     public int DELETIONS_Q = 0;

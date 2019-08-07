@@ -1249,12 +1249,10 @@ public class ReadBaseStratification {
             return null;
         }
         if (operation == CollectSamErrorMetrics.BaseOperation.Insertion && cigarElement.getOperator() != CigarOperator.I) {
-            log.warn("Wrong CIGAR operator for the given position. This is an error and should be fixed.");
-            return null;
+            throw new IllegalStateException("Wrong CIGAR operator for the given position.");
         }
         if (operation == CollectSamErrorMetrics.BaseOperation.Deletion && cigarElement.getOperator() != CigarOperator.D) {
-            log.warn("Wrong CIGAR operator for the given position. This is an error and should be fixed.");
-            return null;
+            throw new IllegalStateException("Wrong CIGAR operator for the given position.");
         }
         return cigarElement.getLength();
     }
