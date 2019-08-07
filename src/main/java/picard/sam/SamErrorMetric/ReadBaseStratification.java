@@ -483,6 +483,74 @@ public class ReadBaseStratification {
         }
     }
 
+    /**
+     * Stratifies according to the number of matching cigar operators (from CIGAR string) that the read has.
+     */
+    public static class CigarOperatorsInReadStratifier extends RecordStratifier<Integer> {
+
+        private CigarOperator operator;
+
+        public CigarOperatorsInReadStratifier(final CigarOperator op) {
+            operator = op;
+        }
+
+        @Override
+        public Integer stratify(final SAMRecord samRecord) {
+            try {
+                return samRecord.getCigar().getCigarElements().stream()
+                        .filter(ce -> ce.getOperator().equals(operator))
+                        .mapToInt(CigarElement::getLength)
+                        .sum();
+            } catch (final Exception ex) {
+                return null;
+            }
+        }
+
+        @Override
+        public String getSuffix() {
+            return "cigar_elements_" + operator.name() + "_in_read";
+        }
+    }
+
+    /**
+     * Stratifies according to the number of indel bases (from CIGAR string) that the read has.
+     */
+    public static class IndelsInReadStratifier extends RecordStratifier<Integer> {
+
+        @Override
+        public Integer stratify(final SAMRecord samRecord) {
+            try {
+                return samRecord.getCigar().getCigarElements().stream()
+                        .filter(ce -> (ce.getOperator().equals(CigarOperator.I) || ce.getOperator().equals(CigarOperator.D)))
+                        .mapToInt(CigarElement::getLength)
+                        .sum();
+            } catch (final Exception ex) {
+                return null;
+            }
+        }
+
+        @Override
+        public String getSuffix() {
+            return "indels_in_read";
+        }
+    }
+
+    /**
+     * Stratifies according to the length of an insertion or deletion.
+     */
+    public static class IndelLengthStratifier implements RecordAndOffsetStratifier {
+
+        @Override
+        public Integer stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final CollectSamErrorMetrics.BaseOperation operation) {
+            return stratifyIndelLength(recordAndOffset, locusInfo, operation);
+        }
+
+        @Override
+        public String getSuffix() {
+            return "indel_length";
+        }
+    }
+
 
     /* ************ Instances of stratifiers so that they do not need to be allocated every time ****************/
 
@@ -647,6 +715,26 @@ public class ReadBaseStratification {
      */
     public static final NsInReadStratifier nsInReadStratifier = new NsInReadStratifier();
 
+    /**
+     * Stratify by Insertions in the read cigars.
+     */
+    public static final CigarOperatorsInReadStratifier insertionsInReadStratifier = new CigarOperatorsInReadStratifier(CigarOperator.I);
+
+    /**
+     * Stratify by Deletions in the read cigars.
+     */
+    public static final CigarOperatorsInReadStratifier deletionsInReadStratifier = new CigarOperatorsInReadStratifier(CigarOperator.D);
+
+    /**
+     * Stratify by Indels in the read cigars.
+     */
+    public static final IndelsInReadStratifier indelsInReadStratifier = new IndelsInReadStratifier();
+
+    /**
+     * Stratifies into the number of bases in an insertion
+     */
+    public static final IndelLengthStratifier indelLengthStratifier = new IndelLengthStratifier();
+
     /* *************** enums **************/
 
     /**
@@ -685,7 +773,11 @@ public class ReadBaseStratification {
         ONE_BASE_PADDED_CONTEXT(() -> oneBasePaddedContextStratifier, "The current reference base and a one base padded region from the read resulting in a 3-base context."),
         TWO_BASE_PADDED_CONTEXT(() -> twoBasePaddedContextStratifier, "The current reference base and a two base padded region from the read resulting in a 5-base context."),
         CONSENSUS(() -> consensusStratifier, "Whether or not duplicate reads were used to form a consensus read.  This stratifier makes use of the aD, bD, and cD tags for duplex consensus reads.  If the reads are single index consensus, only the cD tags are used."),
-        NS_IN_READ(() -> nsInReadStratifier, "The number of Ns in the read.");
+        NS_IN_READ(() -> nsInReadStratifier, "The number of Ns in the read."),
+        INSERTIONS_IN_READ(() -> insertionsInReadStratifier, "The number of Insertions in the read cigar."),
+        DELETIONS_IN_READ(() -> deletionsInReadStratifier, "The number of Deletions in the read cigar."),
+        INDELS_IN_READ(() -> indelsInReadStratifier, "The number of INDELs in the read cigar."),
+        INDEL_LENGTH(() -> indelLengthStratifier, "The number of bases in an indel");
 
         private final String docString;
 
@@ -1021,6 +1113,26 @@ public class ReadBaseStratification {
 
     private static String stratifyReadGroup(final SAMRecord sam) {
         return sam.getReadGroup().getReadGroupId();
+    }
+
+    private static Integer stratifyIndelLength(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, final CollectSamErrorMetrics.BaseOperation operation) {
+        // If the base is not an indel, stratify it as a length of 0
+        if (operation != CollectSamErrorMetrics.BaseOperation.Insertion && operation != CollectSamErrorMetrics.BaseOperation.Deletion) {
+            return 0;
+        }
+
+        final CigarElement cigarElement = getIndelElement(recordAndOffset, operation);
+        if (cigarElement == null) {
+            // No CIGAR operation for given position.
+            return null;
+        }
+        if (operation == CollectSamErrorMetrics.BaseOperation.Insertion && cigarElement.getOperator() != CigarOperator.I) {
+            throw new IllegalStateException("Wrong CIGAR operator for the given position.");
+        }
+        if (operation == CollectSamErrorMetrics.BaseOperation.Deletion && cigarElement.getOperator() != CigarOperator.D) {
+            throw new IllegalStateException("Wrong CIGAR operator for the given position.");
+        }
+        return cigarElement.getLength();
     }
 
     public static CigarElement getIndelElement(final RecordAndOffset recordAndOffset, final CollectSamErrorMetrics.BaseOperation operation) {

@@ -599,26 +599,26 @@ public class CollectSamErrorMetricsTest {
                 { new String[] { "20M2D2I" },       ".indel_error_by_all", new IndelErrorMetric("all", 22, 1, 2, 1,2) },
                 { new String[] { "20M2I2D" },       ".indel_error_by_all", new IndelErrorMetric("all", 22, 1, 2, 1,2) },
 
-//                // indel_length:
-//                // insertions
-//                { new String[] { "50M1I50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("1", 1, 1, 1, 0, 0) },
-//                { new String[] { "50M2I50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 0, 0) },
-//                { new String[] { "20M2I20M2I20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 4, 2, 4, 0, 0) },
-//                { new String[] { "1I10M" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 1, 1, 1, 0, 0) },
-//                { new String[] { "10M1I" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 1, 1, 1, 0, 0) },
-//                // deletions
-//                { new String[] { "50M1D50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 1, 1) },
-//                { new String[] { "50M2D50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 0, 1, 2) },
-//                { new String[] { "20M2D20M2D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 0, 2, 4) },
-//                { new String[] { "1D10M" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 1, 1) },
-//                { new String[] { "10M1D" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 1, 1) },
-//                // insertions & deletions
-//                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 0, 0) },
-//                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("3", 0, 0, 0, 1, 3) },
-//                { new String[] { "2I2D20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1,  2,1, 2) },
-//                { new String[] { "2D2I20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
-//                { new String[] { "2M2D2I" },        ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
-//                { new String[] { "20M2I2D" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
+                // indel_length:
+                // insertions
+                { new String[] { "50M1I50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("1", 1, 1, 1, 0, 0) },
+                { new String[] { "50M2I50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 0, 0) },
+                { new String[] { "20M2I20M2I20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 4, 2, 4, 0, 0) },
+                { new String[] { "1I10M" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 1, 1, 1, 0, 0) },
+                { new String[] { "10M1I" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 1, 1, 1, 0, 0) },
+                // deletions
+                { new String[] { "50M1D50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 1, 1) },
+                { new String[] { "50M2D50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 0, 1, 2) },
+                { new String[] { "20M2D20M2D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 0, 2, 4) },
+                { new String[] { "1D10M" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 1, 1) },
+                { new String[] { "10M1D" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 1, 1) },
+                // insertions & deletions
+                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 0, 0) },
+                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("3", 0, 0, 0, 1, 3) },
+                { new String[] { "2I2D20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1,  2,1, 2) },
+                { new String[] { "2D2I20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
+                { new String[] { "2M2D2I" },        ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
+                { new String[] { "20M2I2D" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
         };
     }
 
@@ -664,7 +664,7 @@ public class CollectSamErrorMetricsTest {
                 "OUTPUT=" + outputBaseFileName,
                 "REFERENCE_SEQUENCE=" + referenceFile.getAbsolutePath(),
                 "ERROR_METRICS=" + "INDEL_ERROR",
-//                "ERROR_METRICS=" + "INDEL_ERROR:INDEL_LENGTH",
+                "ERROR_METRICS=" + "INDEL_ERROR:INDEL_LENGTH",
                 "VCF=" + vcf.getAbsolutePath()
         };
 
