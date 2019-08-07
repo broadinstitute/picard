@@ -129,7 +129,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             "ERROR:INSERT_LENGTH",
             "ERROR:GC_CONTENT",
             "ERROR:READ_DIRECTION",
-            "ERROR:PAIR_ORIENTATION",
+//            "ERROR:PAIR_ORIENTATION",
             "ERROR:HOMOPOLYMER",
             "ERROR:BINNED_HOMOPOLYMER",
             "ERROR:CYCLE",
@@ -679,7 +679,10 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      */
     private void readFiltersFromFiles() {
         for (final File filterFile : FILTERS) {
-            samErrorReadFilters.add(SamErrorReadFilter.fromFile(filterFile));
+            final SamErrorReadFilter filter = SamErrorReadFilter.fromFile(filterFile);
+            if (filter != null) {
+                samErrorReadFilters.add(filter);
+            }
         }
     }
 
