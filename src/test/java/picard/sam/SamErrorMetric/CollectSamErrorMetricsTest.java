@@ -619,20 +619,6 @@ public class CollectSamErrorMetricsTest {
                 { new String[] { "2D2I20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
                 { new String[] { "2M2D2I" },        ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
                 { new String[] { "20M2I2D" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
-
-                // is_insertion:
-                { new String[] { "20M1I20M" },      ".indel_error_by_is_insertion", new IndelErrorMetric("true", 1, 1, 1, 0, 0) },
-                { new String[] { "2I2D20M" },       ".indel_error_by_is_insertion", new IndelErrorMetric("true", 2, 1, 2, 0, 0) },
-                { new String[] { "2D2I20M" },       ".indel_error_by_is_insertion", new IndelErrorMetric("true", 2, 1, 2, 0, 0) },
-                { new String[] { "2M2D2I" },        ".indel_error_by_is_insertion", new IndelErrorMetric("true", 2, 1, 2, 0, 0) },
-                { new String[] { "20M2I2D" },       ".indel_error_by_is_insertion", new IndelErrorMetric("true", 2, 1, 2, 0, 0) },
-                // is_deletion
-                { new String[] { "20M1D20M" },      ".indel_error_by_is_deletion", new IndelErrorMetric("true", 0, 0, 0, 1, 1) },
-                { new String[] { "2I2D20M" },       ".indel_error_by_is_deletion", new IndelErrorMetric("true", 0, 0, 0, 1, 2) },
-                { new String[] { "2D2I20M" },       ".indel_error_by_is_deletion", new IndelErrorMetric("true", 0, 0, 0, 1, 2) },
-                { new String[] { "2M2D2I" },        ".indel_error_by_is_deletion", new IndelErrorMetric("true", 0, 0, 0, 1, 2) },
-                { new String[] { "20M2I2D" },       ".indel_error_by_is_deletion", new IndelErrorMetric("true", 0, 0, 0, 1, 2) },
-
         };
     }
 
@@ -679,8 +665,6 @@ public class CollectSamErrorMetricsTest {
                 "REFERENCE_SEQUENCE=" + referenceFile.getAbsolutePath(),
                 "ERROR_METRICS=" + "INDEL_ERROR",
                 "ERROR_METRICS=" + "INDEL_ERROR:INDEL_LENGTH",
-                "ERROR_METRICS=" + "INDEL_ERROR:IS_INSERTION",
-                "ERROR_METRICS=" + "INDEL_ERROR:IS_DELETION",
                 "VCF=" + vcf.getAbsolutePath()
         };
 
