@@ -42,9 +42,7 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
@@ -104,10 +102,6 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     private static final int MAX_DIRECTIVES = ReadBaseStratification.Stratifier.values().length + 1;
     private static final Log log = Log.getInstance(CollectSamErrorMetrics.class);
 
-    private final List<SamErrorReadFilter> samErrorReadFilters = new ArrayList<>();
-    private SAMFileWriter filterOutputWriter;
-    private final HashSet<String> outputReadOccurrence = new HashSet<>();
-
     // =====================================================================
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
@@ -129,13 +123,10 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             "ERROR:INSERT_LENGTH",
             "ERROR:GC_CONTENT",
             "ERROR:READ_DIRECTION",
-//            "ERROR:PAIR_ORIENTATION",
+            "ERROR:PAIR_ORIENTATION",
             "ERROR:HOMOPOLYMER",
             "ERROR:BINNED_HOMOPOLYMER",
             "ERROR:CYCLE",
-            "ERROR:INSERTIONS_IN_READ",
-            "ERROR:DELETIONS_IN_READ",
-            "ERROR:INDELS_IN_READ",
             "ERROR:READ_ORDINALITY",
             "ERROR:READ_ORDINALITY:CYCLE",
             "ERROR:READ_ORDINALITY:HOMOPOLYMER",
@@ -168,17 +159,6 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
     @Argument(shortName = "L", doc = "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will intersect inputs if multiple are given. ", optional = true)
     public List<File> INTERVALS;
-
-    @Argument(shortName = "F", doc = "Filters for writing reads to output which match certain criteria in order to " +
-            "being able to analyze them subsequently. Within each file, the first line defines the name of the " +
-            "filter, which determines the name of the output file which lists reads that match this filter's criteria. " +
-            "Each subsequent line represents one criterion. Each criterion is represented by 3 tab-separated fields: " +
-            "\"suffix(TAB)datatype(TAB)operator(TAB)value\", where \"suffix\" is the suffix of the stratifier used for " +
-            "this criterion. \"datatype\" can be any of \"boolean, int\" and \"operator\" can be one of " +
-            "\"=, !=, <, <=, >, >=\" (depending on the datatype). These criteria are conjunctive, i.e. all criteria must " +
-            "be met for the read to be included in the output. Multiple files can be provided which are disjuncitve to each " +
-            "other (i.e. reads are included if they meet either of the filters).", optional = true)
-    public List<File> FILTERS;
 
     @Argument(shortName = StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality to include read.")
     public int MIN_MAPPING_Q = 20;
@@ -297,9 +277,6 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
             final IntervalList regionOfInterest = getIntervals(sequenceDictionary);
 
-            log.info("Reading output read filters from files");
-            readFiltersFromFiles();
-
             log.info("Getting SamLocusIterator");
 
             final SamLocusIterator samLocusIterator = new SamLocusIterator(sam, regionOfInterest);
@@ -322,17 +299,12 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
             final SamLocusAndReferenceIterator iterator = new SamLocusAndReferenceIterator(referenceSequenceFileWalker, samLocusIterator);
 
-            if (samErrorReadFilters.size() > 0) {
-                initializeFilterOutput(sam.getFileHeader());
-            }
-
             // This hasNext() call has side-effects. It loads up the index and makes sure that the iterator is really ready for
             // action. Calling this allows for the logging to be more accurate.
             iterator.hasNext();
             log.info("Really starting iteration now.");
 
             for (final SAMLocusAndReference info : iterator) {
-
                 if (random.nextDouble() > PROBABILITY) {
                     continue;
                 }
@@ -355,11 +327,6 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                     break;
                 }
             }
-
-            log.info("Writing filtered reads");
-
-            finalizeFilterOutput();
-
         } catch (final IOException e) {
             log.error(e, "A problem occurred:");
             return 1;
@@ -372,42 +339,6 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 "Computation took %d seconds.", nTotalLoci, nProcessedLoci, nSkippedLoci, progressLogger.getElapsedSeconds()));
 
         return 0;
-    }
-
-    /**
-     * Initializes the writer to generate a BAM file for reads that match filter criteria and should be written to output
-     *
-     * @param samFileHeader The header to be used for the output BAM
-     */
-    private void initializeFilterOutput(final SAMFileHeader samFileHeader) {
-        filterOutputWriter = new SAMFileWriterFactory()
-                .setCompressionLevel(2)
-                .makeWriter(samFileHeader, false, new File(OUTPUT + ".outputreads.bam"), REFERENCE_SEQUENCE);
-    }
-
-    /**
-     * Closes the BAM file writer for the filtered output reads. In addition to that, for each filter specified in the
-     * FILTER argument, a separate file is created which lists all reads that matched that specific filter's criteria.
-     * Within each file, each line consists of the unique read ID and the number of occurrences that this read has
-     * matched this filter's criteria. The reads in the output BAM file are annotated with this unique ID in the
-     * CO:Z:uniquefilterid tag and can be queried that way.
-     */
-    private void finalizeFilterOutput() {
-        if (filterOutputWriter == null) {
-            return;
-        }
-
-        filterOutputWriter.close();
-
-        for (final SamErrorReadFilter filter : samErrorReadFilters) {
-            try (final BufferedWriter out = IOUtil.openFileForBufferedWriting(new File(OUTPUT + "." + filter.getName() + ".filteredreads"))) {
-                for (final Map.Entry<String, Integer> entry : filter.getFilteredReads().entrySet()) {
-                    out.write(entry.getKey() + "\t" + entry.getValue() + "\n");
-                }
-            } catch (final IOException e) {
-                throw new SAMException("Could not write output files.", e);
-            }
-        }
     }
 
     /**
@@ -479,7 +410,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     /**
      * Checks if the same record has been seen at the previous locus already, thereby determining
      * whether or not a deletion has already been processed. Note that calling this method will
-     * signal that the record is processed at this location.
+     * have the side effect of signaling that the record is processed at this location.
      *
      * @param deletionRaO The RecordAndOffset to be checked
      * @param locusInfo   The LocusInfo to determine the current locus
@@ -506,54 +437,21 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     }
 
     /**
-     * Method for applying filters to stratifiers recursively, in case they are made up of multiple stratifiers
-     *
-     * @param stratifier Stratifier(s) to apply filters to. Can also be a CollectionStratifier or PairStratifier
-     * @param rao        The RecordAndOffset for applying the filter
-     * @param info       The SAMLocusAndReference for applying the filter
-     * @param operation  Classifies whether the current event is a match, insertion, or deletion
-     */
-    private void applyFiltersIfFilterable(final ReadBaseStratification.RecordAndOffsetStratifier stratifier, final SamLocusIterator.RecordAndOffset rao, final SAMLocusAndReference info, final CollectSamErrorMetrics.BaseOperation operation) {
-        if (stratifier instanceof ReadBaseStratification.FilterableRecordAndOffsetStratifier) {
-            ((ReadBaseStratification.FilterableRecordAndOffsetStratifier) stratifier).stratifyAndApplyFilters(rao, info, operation, samErrorReadFilters);
-        } else if (stratifier instanceof ReadBaseStratification.CollectionStratifier) {
-            applyFiltersIfFilterable(((ReadBaseStratification.CollectionStratifier) stratifier).getStratifier(), rao, info, operation);
-        } else if (stratifier instanceof ReadBaseStratification.PairStratifier) {
-            applyFiltersIfFilterable(((ReadBaseStratification.PairStratifier) stratifier).getFirstStratifier(), rao, info, operation);
-            applyFiltersIfFilterable(((ReadBaseStratification.PairStratifier) stratifier).getSecondStratifier(), rao, info, operation);
-        }
-    }
-
-    /**
-     * Stratifies the current RecordAndOffset and applies the filters to it. In case isDeletionRecord is true, the record
-     * is checked if this deletion has already been processed, as it will be populated for each locus in the reference
+     * Stratifies the current RecordAndOffset. In case isDeletionRecord is true, the record is checked for whether or not
+     * this deletion has already been processed, as it will be populated for each locus in the reference
      *
      * @param aggregatorList The aggregators to add the bases to
      * @param rao            The ReadAndOffset object
      * @param info           The SAMLocusAndReference object
      * @param operation      Classifies whether the current event is a match, insertion, or deletion
      */
-    private void addAndFilterRecordAndOffset(final Collection<BaseErrorAggregation> aggregatorList, final SamLocusIterator.RecordAndOffset rao, final SAMLocusAndReference info, final BaseOperation operation) {
+    private void addAndRecordAndOffset(final Collection<BaseErrorAggregation> aggregatorList, final SamLocusIterator.RecordAndOffset rao, final SAMLocusAndReference info, final BaseOperation operation) {
         // If deletion has been processed already, skip it
-
         if (operation == BaseOperation.Deletion && processDeletionLocus(rao, info.getLocus()))
             return;
 
-        samErrorReadFilters.forEach(SamErrorReadFilter::reset);
         for (final BaseErrorAggregation aggregation : aggregatorList) {
-            Object stratus = aggregation.addBase(rao, info, operation);
-
-            applyFiltersIfFilterable(aggregation.getStratifier(), rao, info, operation);
-        }
-
-        for (final SamErrorReadFilter filter : samErrorReadFilters) {
-            if (filter.isSatisfied()) {
-                // Add the read to the filter for it to keep track of how many reads it matched
-                filter.addReadById(getUniqueReadId(rao.getRecord()));
-
-                // And add it to the output list
-                addOutputRead(rao.getRecord());
-            }
+            aggregation.addBase(rao, info, operation);
         }
     }
 
@@ -563,57 +461,17 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     private void addLocusBases(final Collection<BaseErrorAggregation> aggregatorList, final SAMLocusAndReference info) {
         // Matching bases
         for (final SamLocusIterator.RecordAndOffset rao : info.getRecordAndOffsets()) {
-            addAndFilterRecordAndOffset(aggregatorList, rao, info, BaseOperation.Match);
+            addAndRecordAndOffset(aggregatorList, rao, info, BaseOperation.Match);
         }
 
         // Deleted bases
         for (final SamLocusIterator.RecordAndOffset deletionRao : info.getLocus().getDeletedInRecord()) {
-            addAndFilterRecordAndOffset(aggregatorList, deletionRao, info, BaseOperation.Deletion);
+            addAndRecordAndOffset(aggregatorList, deletionRao, info, BaseOperation.Deletion);
         }
 
         // Inserted bases
         for (final SamLocusIterator.RecordAndOffset insertionRao : info.getLocus().getInsertedInRecord()) {
-            addAndFilterRecordAndOffset(aggregatorList, insertionRao, info, BaseOperation.Insertion);
-        }
-    }
-
-    /**
-     * Gets a unique identifier for a read. In BAM files, this identifier is guaranteed to be unique, however, in SAM
-     * files, this identifier is not available and the read name is used instead. This is likely to cause collisions
-     * and as a consequence not all matching reads might be written to the output. To avoid this, consider using a BAM file.
-     *
-     * @param read The read to calculate the unique Id for
-     * @return A String representing the position of the read in the BAM file, thereby acting as a unique identifier.
-     * For SAM files, the read name is used instead.
-     */
-    private String getUniqueReadId(final SAMRecord read) {
-        if (read.getFileSource() == null || read.getFileSource().getFilePointer() == null) {
-            log.warn("There is no supported way to generate a unique read ID for SAM files. Instead, the " +
-                    "read name is used, which is likely to cause collisions. As a consequence, not all reads matching " +
-                    "the filter criteria might be written to the output. To avoid this, consider using a BAM file.");
-            return read.getReadName();
-        }
-        return String.valueOf(((BAMFileSpan) read.getFileSource().getFilePointer()).getFirstOffset());
-    }
-
-    /**
-     * Whenever a read matches filter criteria, write it to the output BAM file and remember that it has been written,
-     * so we don't need to output it again. The unique identifier for that read is written to the SAM "CO" tag
-     * (prefixed with "uniquefilterid:"), which can be used to search for reads specified in each filter's output file
-     * (see {@link #finalizeFilterOutput()}).
-     *
-     * @param read The read that matched filter criteria and should be written to the output BAM file
-     */
-    private void addOutputRead(final SAMRecord read) {
-        if (filterOutputWriter == null)
-            return;
-
-        String readId = getUniqueReadId(read);
-        if (!outputReadOccurrence.contains(readId)) {
-            // If it hasn't been seen yet, write that read to the output BAM file
-            outputReadOccurrence.add(readId);
-            read.setAttribute("CO", "uniquefilterid:" + readId);
-            filterOutputWriter.addAlignment(read);
+            addAndRecordAndOffset(aggregatorList, insertionRao, info, BaseOperation.Insertion);
         }
     }
 
@@ -671,49 +529,6 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             }
         }
         return regionOfInterest;
-    }
-
-    /**
-     * Reads SamErrorReadFilters from the files specified as arguments. See argument documentation for detailed
-     * format description
-     */
-    private void readFiltersFromFiles() {
-        for (final File filterFile : FILTERS) {
-            final SamErrorReadFilter filter = SamErrorReadFilter.fromFile(filterFile);
-            if (filter != null) {
-                samErrorReadFilters.add(filter);
-            }
-        }
-    }
-
-    /**
-     * Compares a VariantContext to a Locus providing information regarding possible overlap, or relative location
-     *
-     * @param dictionary     The {@link SAMSequenceDictionary} to use for ordering the sequences
-     * @param variantContext the {@link VariantContext} to compare
-     * @param locus          the {@link Locus} to compare
-     * @return negative if variantContext comes before locus (with no overlap)
-     * zero if variantContext and locus overlap
-     * positive if variantContext comes after locus (with no overlap)
-     * <p/>
-     * if variantContext and locus are in the same contig the return value will be the number of bases apart they are,
-     * otherwise it will be MIN_INT/MAX_INT
-     */
-    public static int CompareVariantContextToLocus(final SAMSequenceDictionary dictionary, final VariantContext variantContext, final Locus locus) {
-
-        log.debug("Comparing variant (" + variantContext.toStringWithoutGenotypes() + ") to locus (" + locus.toString() + ")");
-
-        final int indexDiff = dictionary.getSequenceIndex(variantContext.getContig()) - locus.getSequenceIndex();
-        if (indexDiff != 0) {
-            return indexDiff < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-        }
-
-        //same SequenceIndex, can compare by genomic position
-        if (locus.getPosition() < variantContext.getStart())
-            return variantContext.getStart() - locus.getPosition();
-        if (locus.getPosition() > variantContext.getEnd())
-            return variantContext.getEnd() - locus.getPosition();
-        return 0;
     }
 
     /**

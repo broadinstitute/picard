@@ -51,17 +51,12 @@ public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
                 (ignored -> simpleAggregatorGenerator.get(), true);
     }
 
-    public Object addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
-        return addBase(recordAndOffset, locusInfo, CollectSamErrorMetrics.BaseOperation.Match);
-    }
-
-    public Object addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation) {
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, CollectSamErrorMetrics.BaseOperation operation) {
         final Object stratus = stratifier.stratify(recordAndOffset, locusInfo, operation);
         // this assumes we do not want to aggregate null.
         if (stratus != null) {
             strataAggregatorMap.get(stratus).addBase(recordAndOffset, locusInfo, operation);
         }
-        return stratus;
     }
 
     public String getSuffix() {
@@ -80,10 +75,6 @@ public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
             metrics.add(metric);
         }
         return metrics.toArray(new ErrorMetric[0]);
-    }
-
-    public final ReadBaseStratification.RecordAndOffsetStratifier getStratifier() {
-        return stratifier;
     }
 }
 

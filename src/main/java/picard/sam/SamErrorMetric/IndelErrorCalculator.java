@@ -73,11 +73,6 @@ public class IndelErrorCalculator extends BaseErrorCalculator {
         }
     }
 
-    @Override
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
-        addBase(recordAndOffset, locusAndRef, CollectSamErrorMetrics.BaseOperation.Match);
-    }
-
     /**
      * The suffix that pertains to the implementation of aggregation
      **/

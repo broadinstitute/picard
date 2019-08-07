@@ -68,8 +68,8 @@ public class BaseErrorAggregationTest {
 
             final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
 
-            baseErrorAggregation.addBase(recordAndOffset1, locusAndReference);
-            baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);
+            baseErrorAggregation.addBase(recordAndOffset1, locusAndReference, CollectSamErrorMetrics.BaseOperation.Match);
+            baseErrorAggregation.addBase(recordAndOffset2, locusAndReference, CollectSamErrorMetrics.BaseOperation.Match);
         }
         return length;
     }

@@ -50,14 +50,6 @@ public interface BaseCalculator {
      * the function by which new loci are "shown" to the calculator
      **/
     void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset,
-                 final SamLocusAndReferenceIterator.SAMLocusAndReference locusInfo);
-
-    /**
-     * the function by which new loci are "shown" to the calculator.
-     * Deleted bases should not be counted towards the total number correct bases seen and should therefore be ignored
-     * for the calculation of the error rates
-     **/
-    void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset,
                  final SamLocusAndReferenceIterator.SAMLocusAndReference locusInfo,
                  CollectSamErrorMetrics.BaseOperation operation);
 }

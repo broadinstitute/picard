@@ -48,15 +48,6 @@ public class SimpleErrorCalculator extends BaseErrorCalculator {
     }
 
     /**
-     * The function by which new loci are "shown" to the calculator
-     **/
-    @Override
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
-        addBase(recordAndOffset, locusAndRef, CollectSamErrorMetrics.BaseOperation.Match);
-    }
-
-
-    /**
      * The suffix that pertains to the implementation of aggregation
      **/
     @Override
