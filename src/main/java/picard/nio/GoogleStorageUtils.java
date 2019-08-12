@@ -66,16 +66,6 @@ class GoogleStorageUtils {
                 .setTransportOptions(HttpTransportOptions.newBuilder()
                         .setConnectTimeout(120_000)
                         .setReadTimeout(120_000)
-                        .build())
-                .setRetrySettings(RetrySettings.newBuilder()
-                        .setMaxAttempts(15)
-                        .setMaxRetryDelay(Duration.ofMillis(256_000L))
-                        .setTotalTimeout(Duration.ofMillis(4000_000L))
-                        .setInitialRetryDelay(Duration.ofMillis(1000L))
-                        .setRetryDelayMultiplier(2.0)
-                        .setInitialRpcTimeout(Duration.ofMillis(180_000L))
-                        .setRpcTimeoutMultiplier(1.0)
-                        .setMaxRpcTimeout(Duration.ofMillis(180_000L))
                         .build());
     }
 }

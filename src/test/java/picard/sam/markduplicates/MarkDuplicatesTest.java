@@ -311,7 +311,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     }
 
     @DataProvider(name = "testDuplexUmiDataProvider")
-    private Object[][] testDuplexUmiDataProvider() {
+    public Object[][] testDuplexUmiDataProvider() {
         return new Object[][]{
                 {
                         // Test case where UMIs are not duplex, but are the same.
