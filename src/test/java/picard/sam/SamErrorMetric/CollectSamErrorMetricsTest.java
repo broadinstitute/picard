@@ -615,7 +615,7 @@ public class CollectSamErrorMetricsTest {
                 // insertions & deletions
                 { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 0, 0) },
                 { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("3", 0, 0, 0, 1, 3) },
-                { new String[] { "2I2D20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1,  2,1, 2) },
+                { new String[] { "2I2D20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
                 { new String[] { "2D2I20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
                 { new String[] { "2M2D2I" },        ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },
                 { new String[] { "20M2I2D" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2) },

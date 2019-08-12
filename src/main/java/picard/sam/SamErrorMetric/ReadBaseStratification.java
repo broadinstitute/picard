@@ -932,6 +932,11 @@ public class ReadBaseStratification {
             final ReadOrdinality ordinality = ReadOrdinality.of(sam);
             final ReadDirection direction = ReadDirection.of(sam);
 
+            // Make sure that the read is paired
+            if (!sam.getReadPairedFlag()) {
+                return null;
+            }
+
             // if read is unmapped, read isn't mapped, or mate is unmapped, return null
             if (direction == null ||
                     sam.getReadUnmappedFlag() ||

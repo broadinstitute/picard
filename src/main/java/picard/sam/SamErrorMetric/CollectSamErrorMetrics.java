@@ -408,7 +408,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * @param info           The SAMLocusAndReference object
      * @param operation      Classifies whether the current event is a match, insertion, or deletion
      */
-    private void addAndRecordAndOffset(final Collection<BaseErrorAggregation> aggregatorList, final SamLocusIterator.RecordAndOffset rao, final SAMLocusAndReference info, final BaseOperation operation) {
+    private void addRecordAndOffset(final Collection<BaseErrorAggregation> aggregatorList, final SamLocusIterator.RecordAndOffset rao, final SAMLocusAndReference info, final BaseOperation operation) {
         // If deletion has been processed already, skip it
         if (operation == BaseOperation.Deletion && processDeletionLocus(rao, info.getLocus()))
             return;
@@ -424,17 +424,17 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     private void addLocusBases(final Collection<BaseErrorAggregation> aggregatorList, final SAMLocusAndReference info) {
         // Matching bases
         for (final SamLocusIterator.RecordAndOffset rao : info.getRecordAndOffsets()) {
-            addAndRecordAndOffset(aggregatorList, rao, info, BaseOperation.Match);
+            addRecordAndOffset(aggregatorList, rao, info, BaseOperation.Match);
         }
 
         // Deleted bases
         for (final SamLocusIterator.RecordAndOffset deletionRao : info.getLocus().getDeletedInRecord()) {
-            addAndRecordAndOffset(aggregatorList, deletionRao, info, BaseOperation.Deletion);
+            addRecordAndOffset(aggregatorList, deletionRao, info, BaseOperation.Deletion);
         }
 
         // Inserted bases
         for (final SamLocusIterator.RecordAndOffset insertionRao : info.getLocus().getInsertedInRecord()) {
-            addAndRecordAndOffset(aggregatorList, insertionRao, info, BaseOperation.Insertion);
+            addRecordAndOffset(aggregatorList, insertionRao, info, BaseOperation.Insertion);
         }
     }
 
