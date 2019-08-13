@@ -91,6 +91,8 @@ import java.util.stream.Collectors;
 @DocumentedFeature
 public class CollectSamErrorMetrics extends CommandLineProgram {
 
+    // =====================================================================
+
     private static final int MAX_DIRECTIVES = ReadBaseStratification.Stratifier.values().length + 1;
     private static final Log log = Log.getInstance(CollectSamErrorMetrics.class);
 
@@ -169,11 +171,43 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     public double PROBABILITY = 1;
 
     @Argument(
-            fullName = "progressStepInterval",
+            fullName = "PROGRESS_STEP_INTERVAL",
             doc = "The interval between which progress will be displayed.",
             optional = true
     )
-    public int progressStepInterval = 100000;
+    public int PROGRESS_STEP_INTERVAL = 100000;
+
+    @Argument(
+            fullName = "INTERVAL_ITERATOR",
+            doc = "Iterate through the files assuming they are a pre-created subset interval of the full genome.  " +
+                    "This enables fast processing of files with reads at disperate parts of the genome.  " +
+                    "Requires that the provided VCF file is indexed. ",
+            optional = true
+    )
+    public boolean INTERVAL_ITERATOR = false;
+
+    // =====================================================================
+
+    /** Random object from which to pull pseudo-random numbers.  Initialized in {@link #initializeAggregationState()}.*/
+    private Random random;
+
+    /** Aggregator list to store errors.  Initialized in {@link #initializeAggregationState()}.*/
+    private Collection<BaseErrorAggregation> aggregatorList;
+
+    /** Logger with which to keep the user apprised of our progress.  Initialized in {@link #initializeAggregationState()}.*/
+    private ProgressLogger progressLogger;
+
+    /** Count of the total number of loci visited.  Initialized in {@link #initializeAggregationState()}.*/
+    private long nTotalLoci;
+
+    /** Count of the number of skipped loci.  Initialized in {@link #initializeAggregationState()}.*/
+    private long nSkippedLoci;
+
+    /** Count of the number of processed loci.  Initialized in {@link #initializeAggregationState()}.*/
+    private long nProcessedLoci;
+
+    /** The {@link SAMSequenceDictionary} for the reference, variants, and reads being processed. */
+    private SAMSequenceDictionary sequenceDictionary;
 
     // =====================================================================
 
@@ -228,68 +262,30 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         }
     }
 
-    @Override
-    protected int doWork() {
+    /**
+     * Process our input data by iterating through input variants and reads.
+     * Useful for going through whole genomes / exomes, but slow for sets of reads not beginning at the start of chr1.
+     *
+     * @return {@code 0} if all inputs were processed successfully.  {@code 1} if there was any kind of error.
+     */
+    private int processDataNormalIteration() {
 
-        final Random random = new Random(42);
-
-        final ProgressLogger progressLogger = new ProgressLogger(log, progressStepInterval);
-        long nTotalLoci = 0;
-        long nSkippedLoci = 0;
-        long nProcessedLoci = 0;
-
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFilesAreReadable(INTERVALS);
-
-        final Collection<BaseErrorAggregation> aggregatorList = getAggregatorList();
         // Open up the input resources:
         try (
-                final SamReader sam = SamReaderFactory.makeDefault()
-                        .referenceSequence(REFERENCE_SEQUENCE)
-                        .setOption(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS, true)
-                        .open(INPUT);
-                final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-                final VCFFileReader vcfFileReader = new VCFFileReader(VCF, true)
+            final SamReader sam = SamReaderFactory.makeDefault()
+                    .referenceSequence(REFERENCE_SEQUENCE)
+                    .setOption(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS, true)
+                    .open(INPUT);
+
+            final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
+
+            final PeekableIterator<VariantContext> vcfIterator = new PeekableIterator<>(
+                    VCF == null ? Collections.emptyIterator() : new VCFFileReader(VCF, true).iterator())
         ) {
+            // Go through our reads and variants now:
+            final SamLocusAndReferenceIterator iterator = createSamLocusAndReferenceIterator(sam, referenceSequenceFileWalker);
 
-            // Make sure we can query our file:
-            if (!vcfFileReader.isQueryable()) {
-                throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!");
-            }
-
-            final SAMSequenceDictionary sequenceDictionary = referenceSequenceFileWalker.getSequenceDictionary();
-            if (sam.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-                throw new PicardException("Input BAM must be sorted by coordinate");
-            }
-
-            sequenceDictionary.assertSameDictionary(sam.getFileHeader().getSequenceDictionary());
-
-            final IntervalList regionOfInterest = getIntervals(sequenceDictionary);
-
-            log.info("Getting SamLocusIterator");
-
-            final SamLocusIterator samLocusIterator = new SamLocusIterator(sam, regionOfInterest);
-
-            // Now go through and compare information at each of these sites
-            samLocusIterator.setEmitUncoveredLoci(false);
-            samLocusIterator.setMappingQualityScoreCutoff(MIN_MAPPING_Q);
-            samLocusIterator.setQualityScoreCutoff(MIN_BASE_Q);
-
-            log.info("Using " + aggregatorList.size() + " aggregators.");
-
-            aggregatorList.forEach(la ->
-                    IOUtil.assertFileIsWritable(new File(OUTPUT + la.getSuffix())));
-
-            // iterate over loci
-            log.info("Starting iteration over loci");
-
-            final SamLocusAndReferenceIterator iterator = new SamLocusAndReferenceIterator(referenceSequenceFileWalker, samLocusIterator);
-
-            // This hasNext() call has side-effects. It loads up the index and makes sure that the iterator is really ready for
-            // action. Calling this allows for the logging to be more accurate.
-            iterator.hasNext();
             log.info("Really starting iteration now.");
-
             for (final SAMLocusAndReference info : iterator) {
                 if (random.nextDouble() > PROBABILITY) {
                     continue;
@@ -297,8 +293,8 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 nTotalLoci++;
 
                 // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
-                if (checkLocus(vcfFileReader, info.getLocus())) {
-                    log.debug("Locus does not overlap any variants: " + info.getLocus(), sequenceDictionary);
+                if (advanceIteratorAndCheckLocus(vcfIterator, info.getLocus(), sequenceDictionary)) {
+                    log.debug(String.format("Skipping locus from VCF: %s", vcfIterator.peek().toStringWithoutGenotypes()));
                     nSkippedLoci++;
                     continue;
                 }
@@ -318,6 +314,165 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             log.error(e, "A problem occurred:");
             return 1;
         }
+
+        return 0;
+    }
+
+    /**
+     * Process our input data using interval / seeking iteration.
+     * This will query the input variant file for overlapping variants, rather than just iterating through them.
+     * It should be only a little slower than the normal iteration, and much faster if a subset of a genome is used.
+     *
+     * @return {@code 0} if all inputs were processed successfully.  {@code 1} if there was any kind of error.
+     */
+    private int processDataIntervalIteration() {
+
+        // Open up the input resources:
+        try (
+            final SamReader sam = SamReaderFactory.makeDefault()
+                    .referenceSequence(REFERENCE_SEQUENCE)
+                    .setOption(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS, true)
+                    .open(INPUT);
+            final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
+            final VCFFileReader vcfFileReader = new VCFFileReader(VCF, true)
+        ) {
+
+            // Make sure we can query our file for interval mode:
+            if (!vcfFileReader.isQueryable()) {
+                throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!");
+            }
+
+            // Go through our reads and variants now:
+            final SamLocusAndReferenceIterator iterator = createSamLocusAndReferenceIterator(sam, referenceSequenceFileWalker);
+
+            log.info("Really starting iteration now.");
+            for (final SAMLocusAndReference info : iterator) {
+                if (random.nextDouble() > PROBABILITY) {
+                    continue;
+                }
+                nTotalLoci++;
+
+                // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
+                if (checkLocus(vcfFileReader, info.getLocus())) {
+                    log.debug("Skipping locus overlapping a known variant: " + info.getLocus());
+                    nSkippedLoci++;
+                    continue;
+                }
+
+                addLocusBases(aggregatorList, info);
+
+                nProcessedLoci++;
+                progressLogger.record(info.getLocus().getSequenceName(), info.getLocus().getPosition());
+
+                if (MAX_LOCI != 0 && nProcessedLoci >= MAX_LOCI) {
+                    log.warn("Early stopping due to having processed MAX_LOCI loci.");
+                    break;
+                }
+            }
+
+        } catch (IOException e) {
+            log.error(e, "A problem occurred:");
+            return 1;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Creates the {@link SamLocusAndReferenceIterator} object to use to traverse the input files.
+     * Also initializes the {@link #sequenceDictionary} and performs some checks on the output
+     * files in {@link #aggregatorList} to make sure we can write our output.
+     * @param sam an open {@link SamReader} from which to pull reads.
+     * @param referenceSequenceFileWalker an open {@link ReferenceSequenceFileWalker} from which to get reference sequence information.
+     * @return An open {@link SamLocusAndReferenceIterator} ready to iterate.
+     */
+    private SamLocusAndReferenceIterator createSamLocusAndReferenceIterator(final SamReader sam, final ReferenceSequenceFileWalker referenceSequenceFileWalker) {
+
+        sequenceDictionary = referenceSequenceFileWalker.getSequenceDictionary();
+        if (sam.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+            throw new PicardException("Input BAM must be sorted by coordinate");
+        }
+
+        // Make sure our reference and reads have teh same sequence dictionary:
+        sequenceDictionary.assertSameDictionary(sam.getFileHeader().getSequenceDictionary());
+
+        final IntervalList regionOfInterest = getIntervals(sequenceDictionary);
+
+        log.info("Getting SamLocusIterator");
+
+        final SamLocusIterator samLocusIterator = new SamLocusIterator(sam, regionOfInterest);
+
+        // Now go through and compare information at each of these sites
+        samLocusIterator.setEmitUncoveredLoci(false);
+        samLocusIterator.setMappingQualityScoreCutoff(MIN_MAPPING_Q);
+        samLocusIterator.setQualityScoreCutoff(MIN_BASE_Q);
+
+        log.info("Using " + aggregatorList.size() + " aggregators.");
+
+        aggregatorList.forEach(la ->
+                IOUtil.assertFileIsWritable(new File(OUTPUT + la.getSuffix())));
+
+        // iterate over loci
+        log.info("Starting iteration over loci");
+
+        final SamLocusAndReferenceIterator iterator = new SamLocusAndReferenceIterator(referenceSequenceFileWalker, samLocusIterator);
+
+        // This hasNext() call has side-effects. It loads up the index and makes sure that
+        // the iterator is really ready for
+        // action. Calling this allows for the logging to be more accurate.
+        iterator.hasNext();
+        return iterator;
+    }
+
+    /**
+     * Initializes the counts, random object, and iterators for this class.
+     *
+     * Specifically, the following fields are initialized:
+     *
+     *   random
+     *   aggregatorList
+     *   progressLogger
+     *   nTotalLoci
+     *   nSkippedLoci
+     *   nProcessedLoci
+     */
+    private void initializeAggregationState() {
+        random = new Random(42);
+
+        aggregatorList = getAggregatorList();
+
+        progressLogger = new ProgressLogger(log, PROGRESS_STEP_INTERVAL);
+        nTotalLoci = 0;
+        nSkippedLoci = 0;
+        nProcessedLoci = 0;
+    }
+
+
+    @Override
+    protected int doWork() {
+
+        // Initialize our iteration:
+        initializeAggregationState();
+
+        // Make sure we can read our files:
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFilesAreReadable(INTERVALS);
+
+        // Process our data based on how we will be iterating:
+        final int returnValue;
+        if ( INTERVAL_ITERATOR ) {
+            returnValue = processDataIntervalIteration();
+        }
+        else {
+            returnValue = processDataNormalIteration();
+        }
+
+        // Check if we had an error and if so, immediately return
+        // (to preserve old functionality):
+        if (returnValue != 0) {
+            return returnValue;
+        }
+
         log.info("Iteration complete, generating metric files");
 
         aggregatorList.forEach(this::writeMetricsFileForAggregator);
@@ -325,7 +480,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         log.info(String.format("Examined %d loci, Processed %d loci, Skipped %d loci.\n" +
                 "Computation took %d seconds.", nTotalLoci, nProcessedLoci, nSkippedLoci, progressLogger.getElapsedSeconds()));
 
-        return 0;
+        return returnValue;
     }
 
     /**
@@ -347,6 +502,52 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     }
 
     /**
+     * Advance the iterator until at or ahead of locus. if there's a variant at the locus return true, otherwise false.
+     * <p>
+     * HAS SIDE EFFECTS!!! draws from vcfIterator!!!
+     *
+     * @param vcfIterator        a {@link VariantContext} iterator to advance (assumed sorted)
+     * @param locus              a {@link Locus} at which to examine the variants
+     * @param sequenceDictionary a dictionary with which to compare the Locatable to the Locus...
+     * @return true if there's a variant over the locus, false otherwise.
+     */
+    private static boolean advanceIteratorAndCheckLocus(final PeekableIterator<VariantContext> vcfIterator, final Locus locus, final SAMSequenceDictionary sequenceDictionary) {
+        while (vcfIterator.hasNext() && (vcfIterator.peek().isFiltered() ||
+                CompareVariantContextToLocus(sequenceDictionary, vcfIterator.peek(), locus) < 0)) {
+            vcfIterator.next();
+        }
+        return vcfIterator.hasNext() && CompareVariantContextToLocus(sequenceDictionary, vcfIterator.peek(), locus) == 0;
+    }
+
+    /**
+     * Compares a VariantContext to a Locus providing information regarding possible overlap, or relative location
+     *
+     * @param dictionary     The {@link SAMSequenceDictionary} to use for ordering the sequences
+     * @param variantContext the {@link VariantContext} to compare
+     * @param locus          the {@link Locus} to compare
+     * @return negative if variantContext comes before locus (with no overlap)
+     * zero if variantContext and locus overlap
+     * positive if variantContext comes after locus (with no overlap)
+     * <p/>
+     * if variantContext and locus are in the same contig the return value will be the number of bases apart they are,
+     * otherwise it will be MIN_INT/MAX_INT
+     */
+    public static int CompareVariantContextToLocus(final SAMSequenceDictionary dictionary, final VariantContext variantContext, final Locus locus) {
+
+        final int indexDiff = dictionary.getSequenceIndex(variantContext.getContig()) - locus.getSequenceIndex();
+        if (indexDiff != 0) {
+            return indexDiff < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        }
+
+        //same SequenceIndex, can compare by genomic position
+        if (locus.getPosition() < variantContext.getStart())
+            return variantContext.getStart() - locus.getPosition();
+        if (locus.getPosition() > variantContext.getEnd())
+            return variantContext.getEnd() - locus.getPosition();
+        return 0;
+    }
+
+    /**
      * If there's a variant at the locus return true, otherwise false.
      * <p>
      * HAS SIDE EFFECTS!!! Queries the vcfFileReader
@@ -356,11 +557,9 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * @return true if there's a variant over the locus, false otherwise.
      */
     private static boolean checkLocus(final VCFFileReader vcfFileReader, final SamLocusIterator.LocusInfo locusInfo) {
-
         boolean overlaps = false;
 
         if (locusInfo != null) {
-
             try (final CloseableIterator<VariantContext> vcfIterator = vcfFileReader.query(locusInfo)) {
 
                 overlaps = true;
@@ -380,7 +579,6 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 }
             }
         }
-
         return overlaps;
     }
 
