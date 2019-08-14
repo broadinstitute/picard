@@ -55,7 +55,14 @@ As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last ver
 * To run a specific test, the command is:
 ```
     ./gradlew legacyTest --tests "*TestClassName*"
+    
+    or
+    
+    ./gradlew barclayTest --tests "*TestClassName*"
 ```
+Running `legacyTest` uses the legacy commandline parser while `barclayTest` uses the new parser.  
+
+
 
 #### Changing the released version of HTSJDK that Picard depends on
 
@@ -79,7 +86,7 @@ During development in Picard, it is sometimes necessary to build locally against
 * To build against a version of HTSJDK that has *not* yet been merged into HTSJDK's master branch:
     * Clone [HTSJDK](https://github.com/samtools/htsjdk/), and in your clone check out the tag or branch you want to build Picard with.
     * Run `./gradlew install printVersion` in your htsjdk clone to install that version to your local maven repository. Take note of the version number that gets printed at the end.
-    * Switch back to your Picard clone, and run `./gradlew shadowJar -Dhtsjdk.version=VERSION`, where VERSION is the version of HTSJDK you installed to your local maven repository.
+    * Switch back to your Picard clone, and run `./gradlew shadowJar -Dhtsjdk.version=VERSION`, where VERSION is the version of HTSJDK you installed to your local mavenl repository.
 
 #### Releasing Picard
 
