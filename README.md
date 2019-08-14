@@ -54,8 +54,15 @@ As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last ver
 
 * To run a specific test, the command is:
 ```
-    ./gradlew test -Dtest.single=TestClassName 
+    ./gradlew legacyTest --tests "*TestClassName*"
+    
+    or
+    
+    ./gradlew barclayTest --tests "*TestClassName*"
 ```
+Running `legacyTest` uses the legacy commandline parser while `barclayTest` uses the new parser.  
+
+
 
 #### Changing the released version of HTSJDK that Picard depends on
 
