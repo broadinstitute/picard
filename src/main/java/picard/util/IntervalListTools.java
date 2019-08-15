@@ -472,7 +472,7 @@ public class IntervalListTools extends CommandLineProgram {
             resultIntervals.baseCount = output.getBaseCount();
         }
 
-        LOG.info("Produced " + resultIntervals.intervalCount + " intervals totalling " + resultIntervals.baseCount + " bases.");
+        LOG.info("Produced " + resultIntervals.intervalCount + " intervals totaling " + resultIntervals.baseCount + " bases.");
         if (COUNT_OUTPUT != null) {
             try (final PrintStream countStream = new PrintStream(COUNT_OUTPUT)) {
                 OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, countStream);
