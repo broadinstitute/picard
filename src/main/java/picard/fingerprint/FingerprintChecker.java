@@ -211,14 +211,15 @@ public class FingerprintChecker {
         if (sequenceDictionaryToCheck.getSequences().size() < activeDictionary.size()) {
             throw new IllegalArgumentException("Dictionary on fingerprinted file smaller than that on Haplotype Database!");
         }
-        SequenceUtil.assertSequenceDictionariesEqual(activeDictionary, sequenceDictionaryToCheck,true);
+        SequenceUtil.assertSequenceDictionariesEqual(activeDictionary, sequenceDictionaryToCheck, true);
     }
 
     private SAMSequenceDictionary getActiveDictionary(final HaplotypeMap haplotypes){
         final SAMSequenceDictionary origSequenceDictionary = haplotypes.getHeader().getSequenceDictionary();
 
         final OptionalInt maxSequenceIndex = haplotypes.getAllSnps().stream()
-                .mapToInt(s -> origSequenceDictionary.getSequenceIndex(s.getChrom()))
+                .map(Snp::getChrom)
+                .mapToInt(origSequenceDictionary::getSequenceIndex)
                 .max();
         if (!maxSequenceIndex.isPresent()) {
             return origSequenceDictionary;

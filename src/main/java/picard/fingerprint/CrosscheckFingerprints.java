@@ -26,7 +26,6 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -35,6 +34,7 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Hidden;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
@@ -263,7 +263,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "Should only be used with SECOND_INPUT. ", optional = true, mutex = {"INPUT_SAMPLE_FILE_MAP"})
     public File INPUT_SAMPLE_MAP;
 
-    @Hidden
     @Argument(doc = "A tsv with two columns representing " +
             "the sample as it should be used for comparisons to SECOND_INPUT (in the first column) and  " +
             "the source file (in INPUT) for the fingerprint (in the second column). " +
@@ -548,7 +547,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             });
             throw new IllegalArgumentException("After applying the mapping found in the " + inputFieldName + " the resulting " +
                     "sample names must be unique when taken together with the remaining unmapped samples. " +
-                    "Duplicates are: [" + String.join(",", duplicates) + "], " + inputFieldName);
+                    "Duplicates are: " + Arrays.toString(duplicates.toArray()) );
         }
 
         // replace samples with their mapped values:
@@ -578,41 +577,39 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     try {
                         return IOUtil.getPath(e.getValue()).toUri().toString();
                     } catch (IOException e1) {
-                        e1.printStackTrace();
+                        throw new PicardException("Trouble reading file: " + e.getValue(), e1);
                     }
-                    return null;
                 }, Map.Entry::getKey));
 
         // check that every key in the sample map is a sample in the fpMap, and warn otherwise
-        final Set<String> filesInFpMap = fpMap.keySet().stream().map(id->id.file).collect(Collectors.toSet());
+        final Set<String> filesInFpMap = fpMap.keySet().stream().map(id -> id.file).collect(Collectors.toSet());
         final Set<String> sampleNotInFpMap = sampleMap.keySet().stream()
-                .filter(((Predicate<String>)filesInFpMap::contains).negate())
+                .filter(((Predicate<String>) filesInFpMap::contains).negate())
                 .collect(Collectors.toSet());
         if (!sampleNotInFpMap.isEmpty()) {
-            log.warn("Some samples from the first column in " + "INPUT_SAMPLE_FILE_MAP" + " were not found: [" +
-                    String.join(", ", sampleNotInFpMap)+ "].");
+            log.warn("Some samples from the first column in " + "INPUT_SAMPLE_FILE_MAP" + " were not found: " +
+                    Arrays.toString(sampleNotInFpMap.toArray()));
         }
 
-
-        final Map<String, List<FingerprintIdDetails>> fileFpDetailSetMap = fpMap.keySet().stream().collect(Collectors.groupingBy(s->s.file));
+        final Map<String, List<FingerprintIdDetails>> fileFpDetailSetMap = fpMap.keySet().stream().collect(Collectors.groupingBy(s -> s.file));
 
         final Map<String, String> fileSampleMap = new HashMap<>();
         // check that each file in the map points only to one sample
         fileFpDetailSetMap.forEach((key, fingerprintIdDetails) -> {
-            final List<String> samples = fingerprintIdDetails.stream().map(id -> id.sample).distinct().collect(Collectors.toList());
+            final Set<String> samples = fingerprintIdDetails.stream().map(id -> id.sample).collect(Collectors.toSet());
             if (samples.size() > 1) {
                 throw new IllegalArgumentException("fingerprinting file (" + key +
                         "in INPUT_SAMPLE_FILE_MAP contains multiple samples: " +
                         String.join("", samples));
             }
-            fileSampleMap.put(key,fingerprintIdDetails.get(0).sample);
+            fileSampleMap.put(key, fingerprintIdDetails.get(0).sample);
         });
 
         // verify that resulting file-set is associated with a unique sample:
 
         final List<String> resultingSamples = new ArrayList<>(filesInFpMap);
-        fileSampleMap.forEach((f,id)->{
-            if (resultingSamples.remove(id)){
+        fileSampleMap.forEach((f, id) -> {
+            if (resultingSamples.remove(id)) {
                 resultingSamples.add(sampleMap.get(f));
             }
         });
@@ -621,19 +618,22 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             final Set<String> duplicates = new HashSet<>();
             final Set<String> unique = new HashSet<>();
             resultingSamples.forEach(s -> {
-                if (unique.add(s))
+                if (unique.add(s)) {
                     duplicates.add(s);
+                }
             });
             throw new IllegalArgumentException("After applying the mapping found in the " + "INPUT_SAMPLE_FILE_MAP" + " the resulting " +
                     "sample names must be unique when taken together with the remaining unmapped samples. " +
-                    "Duplicates are: [" + String.join(",", duplicates) + "], " + "INPUT_SAMPLE_FILE_MAP");
+                    "Duplicates are: " + Arrays.toString(duplicates.toArray()));
         }
 
         // replace samples with their mapped values:
         final Set<FingerprintIdDetails> ids = new HashSet<>(fpMap.keySet());
         ids.forEach(id -> {
             // if sample isn't in sampleMap, leave it alone
-            if (!sampleMap.containsKey(id.file)) return;
+            if (!sampleMap.containsKey(id.file)) {
+                return;
+            }
             // one needs to replace the item, not simply modify it so that it is placed correctly in the map (since the key is changing)
             final Fingerprint fingerprint = fpMap.remove(id);
             //update the key
@@ -652,7 +652,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         for (final String[] strings : parser) {
             if (strings.length != 2) {
                 throw new IllegalArgumentException("Each line of the " + inputFieldName + " must have exactly two strings separated by a tab. " +
-                        "Found: [" + String.join(",", Arrays.asList(strings)) +
+                        "Found: " + Arrays.toString(strings) +
                         "] right before [" + parser.getCurrentLine() + "], in " + sampleMapFile.getAbsolutePath());
             }
             if (sampleMap.containsKey(strings[0])) {
