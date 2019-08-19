@@ -452,15 +452,20 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             }
 
             // remember to close the inputs
+            log.info("Writing complete. Closing input iterator.");
             iterator.close();
 
+            log.info("Duplicate Index cleanup.");
             this.duplicateIndexes.cleanup();
             if (TAG_DUPLICATE_SET_MEMBERS) {
+                log.info("Representative read Index cleanup.");
                 this.representativeReadIndicesForDuplicates.cleanup();
             }
 
+            log.info("Getting Memory Stats.");
             reportMemoryStats("Before output close");
         }
+        log.info("Closed outputs. Getting more Memory Stats.");
         reportMemoryStats("After output close");
 
         // Write out the metrics
