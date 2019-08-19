@@ -150,12 +150,9 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
  * When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that
  * it finds.
  *
- *
- *
  * @author Tim Fennell
  * @author Yossi Farjoun
  */
-
 
 @CommandLineProgramProperties(
         summary =
@@ -273,13 +270,13 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "Should only be used in the presence of SECOND_INPUT. ", optional = true, mutex = {"INPUT_SAMPLE_MAP"})
     public File INPUT_SAMPLE_FILE_MAP;
 
-    @Argument(shortName = "SI", optional = true, mutex={"MATRIX_OUTPUT"},
+    @Argument(shortName = "SI", optional = true, mutex = {"MATRIX_OUTPUT"},
             doc = "A second set of input files (or lists of files) with which to compare fingerprints. If this option is provided " +
                     "the tool compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. " +
                     "In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. " +
                     "When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. " +
                     "If this is violated, the tool will proceed to check the matching samples, but report the missing samples " +
-                    "and return a non-zero error-code." )
+                    "and return a non-zero error-code.")
     public List<String> SECOND_INPUT;
 
     @Argument(doc = "A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and " +
@@ -337,7 +334,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     public boolean ALLOW_DUPLICATE_READS = false;
 
     @Argument(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from " +
-            "the expected sample. Must be greater than zero. " )
+            "the expected sample. Must be greater than zero. ")
     public double GENOTYPING_ERROR_RATE = 0.01;
 
     @Argument(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.")
@@ -359,8 +356,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 1;
 
     @Hidden
-    @Argument(doc = "When true code will forgo readability checks on input files (useful for cloud access)",optional=true)
-    public boolean SKIP_INPUT_READABLITY_TEST=false;
+    @Argument(doc = "When true code will forgo readability checks on input files (useful for cloud access)", optional = true)
+    public boolean SKIP_INPUT_READABLITY_TEST = false;
 
     private final Log log = Log.getInstance(CrosscheckFingerprints.class);
 
@@ -379,7 +376,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         if (SECOND_INPUT == null && SECOND_INPUT_SAMPLE_MAP != null) {
             return new String[]{"SECOND_INPUT_SAMPLE_MAP can only be used when also using SECOND_INPUT"};
         }
-        if (GENOTYPING_ERROR_RATE <= 0 ) {
+        if (GENOTYPING_ERROR_RATE <= 0) {
             return new String[]{"GENOTYPING_ERROR_RATE must be greater than zero. Found " + GENOTYPING_ERROR_RATE};
         }
 
@@ -402,7 +399,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         // Check inputs
 
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
-        if (OUTPUT != null) IOUtil.assertFileIsWritable(OUTPUT);
+        if (OUTPUT != null) {
+            IOUtil.assertFileIsWritable(OUTPUT);
+        }
 
         if (!SECOND_INPUT.isEmpty() && CROSSCHECK_MODE == CHECK_SAME_SAMPLE) {
             log.info("SECOND_INPUT is not empty, and CROSSCHECK_MODE==CHECK_SAME_SAMPLE. NOT doing cross-check. Will only compare each SAMPLE in INPUT against that sample in SECOND_INPUT.");
@@ -416,10 +415,18 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             log.info("SECOND_INPUT is not empty, and CROSSCHECK_MODE==CHECK_ALL_OTHERS. Will compare fingerprints from INPUT against all the fingerprints in SECOND_INPUT.");
         }
 
-        if (MATRIX_OUTPUT != null) IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
-        if (INPUT_SAMPLE_MAP != null) IOUtil.assertFileIsReadable(INPUT_SAMPLE_MAP);
-        if (INPUT_SAMPLE_FILE_MAP != null) IOUtil.assertFileIsReadable(INPUT_SAMPLE_FILE_MAP);
-        if (SECOND_INPUT_SAMPLE_MAP != null) IOUtil.assertFileIsReadable(SECOND_INPUT_SAMPLE_MAP);
+        if (MATRIX_OUTPUT != null) {
+            IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
+        }
+        if (INPUT_SAMPLE_MAP != null) {
+            IOUtil.assertFileIsReadable(INPUT_SAMPLE_MAP);
+        }
+        if (INPUT_SAMPLE_FILE_MAP != null) {
+            IOUtil.assertFileIsReadable(INPUT_SAMPLE_FILE_MAP);
+        }
+        if (SECOND_INPUT_SAMPLE_MAP != null) {
+            IOUtil.assertFileIsReadable(SECOND_INPUT_SAMPLE_MAP);
+        }
 
         final HaplotypeMap map = new HaplotypeMap(HAPLOTYPE_MAP);
         final FingerprintChecker checker = new FingerprintChecker(map);
@@ -438,14 +445,18 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final List<Path> inputPaths = IOUtil.getPaths(INPUT);
 
         final List<Path> unrolledFiles = IOUtil.unrollPaths(inputPaths, extensions.toArray(new String[0]));
-        if (!SKIP_INPUT_READABLITY_TEST) IOUtil.assertPathsAreReadable(unrolledFiles);
+        if (!SKIP_INPUT_READABLITY_TEST) {
+            IOUtil.assertPathsAreReadable(unrolledFiles);
+        }
 
         final List<Path> secondInputsPaths = IOUtil.getPaths(SECOND_INPUT);
 
         // unroll and check readable here, as it can be annoying to fingerprint INPUT files and only then discover a problem
         // in a file in SECOND_INPUT
         final List<Path> unrolledFiles2 = IOUtil.unrollPaths(secondInputsPaths, extensions.toArray(new String[0]));
-        if (!SKIP_INPUT_READABLITY_TEST) IOUtil.assertPathsAreReadable(unrolledFiles2);
+        if (!SKIP_INPUT_READABLITY_TEST) {
+            IOUtil.assertPathsAreReadable(unrolledFiles2);
+        }
 
         log.info("Fingerprinting " + unrolledFiles.size() + " INPUT files.");
         final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
@@ -511,29 +522,30 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
     }
 
-    /** Inspects the contents of sampleMapFile building a map of Sample->Sample.
+    /**
+     * Inspects the contents of sampleMapFile building a map of Sample->Sample.
      * Checks for sanity, and then replaces in the fpMap,
-     * @param fpMap A fingerprint map from a FingerprintIdDetails to a fingerprint
-     * @param sampleMapFile a file contining two columns, sample name to be mapped, and mapped sample name.
      *
+     * @param fpMap         A fingerprint map from a FingerprintIdDetails to a fingerprint
+     * @param sampleMapFile a file contining two columns, sample name to be mapped, and mapped sample name.
      */
     private void remapFingerprints(final Map<FingerprintIdDetails, Fingerprint> fpMap, final File sampleMapFile, final String inputFieldName) {
         final Map<String, String> sampleMap = getStringStringMap(sampleMapFile, inputFieldName);
 
         // check that every key in the sample map is a sample in the fpMap, and warn otherwise
-        final Set<String> samplesInFpMap = fpMap.keySet().stream().map(id->id.sample).collect(Collectors.toSet());
+        final Set<String> samplesInFpMap = fpMap.keySet().stream().map(id -> id.sample).collect(Collectors.toSet());
         final Set<String> samplesNotInSampleMap = sampleMap.keySet().stream()
-                .filter(((Predicate<String>)samplesInFpMap::contains).negate())
+                .filter(((Predicate<String>) samplesInFpMap::contains).negate())
                 .collect(Collectors.toSet());
         if (!samplesNotInSampleMap.isEmpty()) {
             log.warn("Some samples in first column in the " + inputFieldName + " were not present as samples in fingerprinted file: [" +
-                      String.join(", ", samplesNotInSampleMap)+ "].");
+                    String.join(", ", samplesNotInSampleMap) + "].");
         }
 
         // verify that resulting sample-set is unique
         final List<String> resultingSamples = new ArrayList<>(samplesInFpMap);
-        sampleMap.keySet().forEach(s->{
-            if(resultingSamples.remove(s)){
+        sampleMap.keySet().forEach(s -> {
+            if (resultingSamples.remove(s)) {
                 resultingSamples.add(sampleMap.get(s));
             }
         });
@@ -542,19 +554,22 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             final Set<String> duplicates = new HashSet<>();
             final Set<String> unique = new HashSet<>();
             resultingSamples.forEach(s -> {
-                if (unique.add(s))
+                if (unique.add(s)) {
                     duplicates.add(s);
+                }
             });
             throw new IllegalArgumentException("After applying the mapping found in the " + inputFieldName + " the resulting " +
                     "sample names must be unique when taken together with the remaining unmapped samples. " +
-                    "Duplicates are: " + Arrays.toString(duplicates.toArray()) );
+                    "Duplicates are: " + Arrays.toString(duplicates.toArray()));
         }
 
         // replace samples with their mapped values:
         final Set<FingerprintIdDetails> ids = new HashSet<>(fpMap.keySet());
         ids.forEach(id -> {
             // if sample isn't in sampleMap, leave it alone
-            if (!sampleMap.containsKey(id.sample)) return;
+            if (!sampleMap.containsKey(id.sample)) {
+                return;
+            }
             // one needs to replace the item, not simply modify it so that it is placed correctly in the map (since the key is changing)
             final Fingerprint fingerprint = fpMap.remove(id);
             //update the key
@@ -564,12 +579,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         });
     }
 
-
-
-    /** Inspects the contents of sampleMapFile building a map of Sample->Sample.
+    /**
+     * Inspects the contents of sampleMapFile building a map of Sample->Sample.
      * Checks for sanity, and then replaces in the fpMap,
-     * @param fpMap
-     * @param sampleMapFile
      */
     private void remapFingerprintsFromFiles(final Map<FingerprintIdDetails, Fingerprint> fpMap, final File sampleMapFile) {
         final Map<String, String> sampleMap = getStringStringMap(sampleMapFile, "INPUT_SAMPLE_FILE_MAP").entrySet().stream()
@@ -745,7 +757,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final List<FingerprintIdDetails> rhsFingerprintIdDetails = new ArrayList<>(rhsFingerprints.keySet());
 
         // use 1L to promote size() to a long and avoid possible overflow
-        final long totalChecks = lhsFingerprintIdDetails.size() * ((long) rhsFingerprintIdDetails.size() ) ;
+        final long totalChecks = lhsFingerprintIdDetails.size() * ((long) rhsFingerprintIdDetails.size());
 
         for (int row = 0; row < lhsFingerprintIdDetails.size(); row++) {
             final FingerprintIdDetails lhsId = lhsFingerprintIdDetails.get(row);
@@ -761,7 +773,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 if (!OUTPUT_ERRORS_ONLY || result == FingerprintResult.INCONCLUSIVE || !result.isExpected()) {
                     metrics.add(getMatchDetails(result, results, lhsId, rhsId, type));
                 }
-                if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
+                if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) {
+                    unexpectedResults++;
+                }
                 if (crosscheckMatrix != null) {
                     crosscheckMatrix[row][col] = results.getLOD();
                 }
@@ -817,7 +831,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             if (!OUTPUT_ERRORS_ONLY || !result.isExpected()) {
                 metrics.add(getMatchDetails(result, results, lhsID, rhsID, CrosscheckMetric.DataType.SAMPLE));
             }
-            if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) unexpectedResults++;
+            if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) {
+                unexpectedResults++;
+            }
             if (results.getLOD() == 0) {
                 log.error("LOD score of zero found when checking sample fingerprints.  Probably there are no reads/variants at fingerprinting sites for one of the samples");
                 unexpectedResults++;
