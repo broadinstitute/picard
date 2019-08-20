@@ -1,5 +1,6 @@
 package picard.util;
 
+import htsjdk.samtools.util.Log;
 import picard.PicardException;
 
 import java.util.concurrent.CancellationException;
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit;
  * while executing
  */
 public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
+    private static final Log log = Log.getInstance(ThreadPoolExecutorWithExceptions.class);
     public Throwable exception = null;
 
     /**
@@ -23,6 +25,7 @@ public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
      */
     public ThreadPoolExecutorWithExceptions(final int threads) {
         super(threads, threads, 0, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
+        log.info("creating an executor with " + threads + " threads");
     }
 
     @Override
@@ -43,6 +46,7 @@ public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
         }
         if (t != null) {
             exception = t;
+            log.error(t, "A thread failed:");
             throw new PicardException(t.getMessage(), t);
         }
     }
