@@ -25,7 +25,6 @@ public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
      */
     public ThreadPoolExecutorWithExceptions(final int threads) {
         super(threads, threads, 0, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
-        log.info("creating an executor with " + threads + " threads");
     }
 
     @Override
@@ -57,5 +56,9 @@ public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
         t.setUncaughtExceptionHandler((t1, e) -> {
             throw new PicardException("Uncaught exception in thread: " + t1.getName() + " : " + e.getMessage(), e);
         });
+    }
+
+    public boolean hasError() {
+        return exception != null;
     }
 }
