@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
  */
 
 @CommandLineProgramProperties(
-        summary = "(iteration_indel_stratifiers) Program to collect error metrics on bases stratified in various ways.\n" +
+        summary = "[iteration_indel_stratifiers] Program to collect error metrics on bases stratified in various ways.\n" +
                 "<p>" +
                 "Sequencing errors come in different 'flavors'. For example, some occur during sequencing while " +
                 "others happen during library construction, prior to the sequencing. They may be correlated with " +
