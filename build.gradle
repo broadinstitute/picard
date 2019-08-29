@@ -51,7 +51,7 @@ def ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage) {
 ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage)
 
 final htsjdkVersion = System.getProperty('htsjdk.version', '2.20.3')
-final googleNio = 'com.google.cloud:google-cloud-nio:0.81.0-alpha:shaded'
+final googleNio = 'com.google.cloud:google-cloud-nio:0.107.0-alpha:shaded'
 
 // Get the jdk files we need to run javaDoc. We need to use these during compile, testCompile,
 // test execution, and gatkDoc generation, but we don't want them as part of the runtime
@@ -77,7 +77,9 @@ dependencies {
     compile 'commons-lang:commons-lang:2.6'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     compile 'org.broadinstitute:barclay:2.0.0'
-    compileOnly googleNio
+    compileOnly(googleNio) {
+        transitive = false
+    }
 
     // javadoc utilities; compile/test only to prevent redistribution of sdk jars
     compileOnly(javadocJDKFiles)
