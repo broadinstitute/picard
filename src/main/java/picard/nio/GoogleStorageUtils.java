@@ -24,13 +24,14 @@
 
 package picard.nio;
 
-import com.google.cloud.http.HttpTransportOptions;
+
 import com.google.cloud.storage.StorageOptions;
 import com.google.cloud.storage.contrib.nio.CloudStorageConfiguration;
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystemProvider;
+import shaded.cloud_nio.com.google.api.client.util.Strings;
 import shaded.cloud_nio.com.google.api.gax.retrying.RetrySettings;
+import shaded.cloud_nio.com.google.cloud.http.HttpTransportOptions;
 import shaded.cloud_nio.org.threeten.bp.Duration;
-
 
 /**
  * This class serves as a connection to google's implementation of nio support for GCS housed files.
@@ -49,16 +50,25 @@ import shaded.cloud_nio.org.threeten.bp.Duration;
 class GoogleStorageUtils {
 
     public static void initialize() {
-        CloudStorageFileSystemProvider.setDefaultCloudStorageConfiguration(GoogleStorageUtils.getCloudStorageConfiguration(20));
+        // requester pays support is currently not configured
+        CloudStorageFileSystemProvider.setDefaultCloudStorageConfiguration(GoogleStorageUtils.getCloudStorageConfiguration(20, null));
         CloudStorageFileSystemProvider.setStorageOptions(GoogleStorageUtils.setGenerousTimeouts(StorageOptions.newBuilder()).build());
     }
 
     /** The config we want to use. **/
-    private static CloudStorageConfiguration getCloudStorageConfiguration(int maxReopens) {
-        return CloudStorageConfiguration.builder()
+    private static CloudStorageConfiguration getCloudStorageConfiguration(int maxReopens, String requesterProject) {
+        CloudStorageConfiguration.Builder builder = CloudStorageConfiguration.builder()
                 // if the channel errors out, re-open up to this many times
-                .maxChannelReopens(maxReopens)
-                .build();
+                .maxChannelReopens(maxReopens);
+        if (!Strings.isNullOrEmpty(requesterProject)) {
+            // enable requester pays and indicate who pays
+            builder = builder.autoDetectRequesterPays(true).userProject(requesterProject);
+        }
+
+        // this causes the gcs filesystem to treat files that end in a / as a directory
+        // true is the default but this protects against future changes in behavior
+        builder.usePseudoDirectories(true);
+        return builder.build();
     }
 
     private static StorageOptions.Builder setGenerousTimeouts(StorageOptions.Builder builder) {
