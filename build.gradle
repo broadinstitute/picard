@@ -15,7 +15,7 @@ plugins {
     id 'jacoco'
     id 'application'
     id 'com.palantir.git-version' version '0.5.1'
-    id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id 'com.github.johnrengelman.shadow' version '5.1.0'
     id "com.github.kt3k.coveralls" version '2.6.3'
     id 'org.ajoberstar.grgit' version '1.4.2'
     id 'org.ajoberstar.github-pages' version '1.4.2'
@@ -24,11 +24,11 @@ plugins {
 mainClassName = "picard.cmdline.PicardCommandLine"
 
 repositories {
-    mavenLocal()
     mavenCentral()
     maven {
         url "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/" //for htsjdk snapshots
     }
+    mavenLocal()
 }
 
 
@@ -308,7 +308,7 @@ jacocoTestReport {
     dependsOn legacyTest
     group = "Reporting"
     description = "Generate Jacoco coverage reports after running tests."
-    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
+    getAdditionalSourceDirs().from(sourceSets.main.allJava.srcDirs)
 
     reports {
         xml.enabled = true // coveralls plugin depends on xml format report
@@ -316,30 +316,24 @@ jacocoTestReport {
     }
 }
 
-jacoco {
-    toolVersion = "0.7.5.201505241946"
-}
-
-task wrapper(type: Wrapper) {
-    description = "Regenerate the gradle wrapper"
-    gradleVersion = '3.1'
+ wrapper {
+    gradleVersion = '5.6'
 }
 
 task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+    archiveClassifier.set('javadoc')
     from 'build/docs/javadoc'
 }
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
-    classifier = 'sources'
+    archiveClassifier.set('sources')
 }
 
 /**
  * This specifies what artifacts will be built and uploaded when performing a maven upload.
  */
 artifacts {
-    archives jar
     archives javadocJar
     archives sourcesJar
 }
