@@ -32,16 +32,21 @@ public class CreateVerifyIDIntensityContaminationMetricsFileTest {
         final MetricsFile<VerifyIDIntensityContaminationMetrics, Comparable<?>> metrics = new MetricsFile<>();
         metrics.read(new FileReader(output));
 
-        Assert.assertEquals(metrics.getMetrics().size(), 2);
+        Assert.assertEquals(metrics.getMetrics().size(), 3);
         Assert.assertEquals(metrics.getMetrics().get(0).ID, 0);
-        Assert.assertEquals(metrics.getMetrics().get(0).PCT_MIX, 0.214766);
-        Assert.assertEquals(metrics.getMetrics().get(0).LLK, 157575);
-        Assert.assertEquals(metrics.getMetrics().get(0).LLK0, 177169);
+        Assert.assertEquals(metrics.getMetrics().get(0).PCT_MIX, 0.214766, 0.0001);
+        Assert.assertEquals(metrics.getMetrics().get(0).LLK, 157575.0, 0.0001);
+        Assert.assertEquals(metrics.getMetrics().get(0).LLK0, 177169.0, 0.0001);
 
         Assert.assertEquals(metrics.getMetrics().get(1).ID, 1);
-        Assert.assertEquals(metrics.getMetrics().get(1).PCT_MIX, 0.214767);
-        Assert.assertEquals(metrics.getMetrics().get(1).LLK, 157576);
-        Assert.assertEquals(metrics.getMetrics().get(1).LLK0, 177170);
+        Assert.assertEquals(metrics.getMetrics().get(1).PCT_MIX, 0.214767, 0.0001);
+        Assert.assertEquals(metrics.getMetrics().get(1).LLK, 157576.0, 0.0001);
+        Assert.assertEquals(metrics.getMetrics().get(1).LLK0, 177170.0, 0.0001);
+
+        Assert.assertEquals(metrics.getMetrics().get(2).ID, 2);
+        Assert.assertEquals(metrics.getMetrics().get(2).PCT_MIX, 0.0994769, 0.0001);
+        Assert.assertEquals(metrics.getMetrics().get(2).LLK, 90260.4, 0.0001);
+        Assert.assertEquals(metrics.getMetrics().get(2).LLK0, 91166.7, 0.0001);
     }
 
     @Test(expectedExceptions = PicardException.class)
