@@ -393,7 +393,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             throw new PicardException("Input BAM must be sorted by coordinate");
         }
 
-        // Make sure our reference and reads have teh same sequence dictionary:
+        // Make sure our reference and reads have the same sequence dictionary:
         sequenceDictionary.assertSameDictionary(sam.getFileHeader().getSequenceDictionary());
 
         final IntervalList regionOfInterest = getIntervals(sequenceDictionary);
