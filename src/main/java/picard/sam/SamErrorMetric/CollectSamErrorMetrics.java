@@ -43,6 +43,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import sun.misc.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -209,6 +210,12 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     /** The {@link SAMSequenceDictionary} for the reference, variants, and reads being processed. */
     private SAMSequenceDictionary sequenceDictionary;
 
+    /** A {@link VCFFileReader} to read in variants when running in {@link #INTERVAL_ITERATOR} mode. */
+    private VCFFileReader vcfFileReader;
+
+    /** A {@link PeekableIterator<VariantContext>} to read in variants when running in default mode. */
+    private PeekableIterator<VariantContext> vcfIterator;
+
     // =====================================================================
 
     @Override
@@ -263,84 +270,80 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     }
 
     /**
-     * Process our input data by iterating through input variants and reads.
-     * Useful for going through whole genomes / exomes, but slow for sets of reads not beginning at the start of chr1.
-     *
-     * @return {@code 0} if all inputs were processed successfully.  {@code 1} if there was any kind of error.
+     * Initialize the source for {@link VariantContext} information.
+     * If running in {@link #INTERVAL_ITERATOR} mode, will initialize the {@link #vcfFileReader}.
+     * Otherwise, will initialize the {@link #vcfIterator}.
      */
-    private int processDataNormalIteration() {
-
-        // Open up the input resources:
-        try (
-            final SamReader sam = SamReaderFactory.makeDefault()
-                    .referenceSequence(REFERENCE_SEQUENCE)
-                    .setOption(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS, true)
-                    .open(INPUT);
-
-            final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-
-            final PeekableIterator<VariantContext> vcfIterator = new PeekableIterator<>(
-                    VCF == null ? Collections.emptyIterator() : new VCFFileReader(VCF, true).iterator())
-        ) {
-            // Go through our reads and variants now:
-            final SamLocusAndReferenceIterator iterator = createSamLocusAndReferenceIterator(sam, referenceSequenceFileWalker);
-
-            log.info("Really starting iteration now.");
-            for (final SAMLocusAndReference info : iterator) {
-                if (random.nextDouble() > PROBABILITY) {
-                    continue;
-                }
-                nTotalLoci++;
-
-                // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
-                if (advanceIteratorAndCheckLocus(vcfIterator, info.getLocus(), sequenceDictionary)) {
-                    log.debug(String.format("Skipping locus from VCF: %s", vcfIterator.peek().toStringWithoutGenotypes()));
-                    nSkippedLoci++;
-                    continue;
-                }
-
-                addLocusBases(aggregatorList, info);
-
-                nProcessedLoci++;
-                progressLogger.record(info.getLocus().getSequenceName(), info.getLocus().getPosition());
-
-                if (MAX_LOCI != 0 && nProcessedLoci >= MAX_LOCI) {
-                    log.warn("Early stopping due to having processed MAX_LOCI loci.");
-                    break;
-                }
-            }
-
-        } catch (IOException e) {
-            log.error(e, "A problem occurred:");
-            return 1;
-        }
-
-        return 0;
-    }
-
-    /**
-     * Process our input data using interval / seeking iteration.
-     * This will query the input variant file for overlapping variants, rather than just iterating through them.
-     * It should be only a little slower than the normal iteration, and much faster if a subset of a genome is used.
-     *
-     * @return {@code 0} if all inputs were processed successfully.  {@code 1} if there was any kind of error.
-     */
-    private int processDataIntervalIteration() {
-
-        // Open up the input resources:
-        try (
-            final SamReader sam = SamReaderFactory.makeDefault()
-                    .referenceSequence(REFERENCE_SEQUENCE)
-                    .setOption(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS, true)
-                    .open(INPUT);
-            final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-            final VCFFileReader vcfFileReader = new VCFFileReader(VCF, true)
-        ) {
-
+    private void initializeVcfDataSource() {
+        if ( INTERVAL_ITERATOR ) {
+            vcfFileReader = new VCFFileReader(VCF, true);
             // Make sure we can query our file for interval mode:
             if (!vcfFileReader.isQueryable()) {
                 throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!");
             }
+        }
+        else {
+            vcfIterator = new PeekableIterator<>(
+                    VCF == null ? Collections.emptyIterator() : new VCFFileReader(VCF, true).iterator());
+        }
+    }
+
+    /**
+     * Check if the given locus overlaps a variant from our variant source.
+     *
+     * If running in {@link #INTERVAL_ITERATOR} mode:
+     * This will query the input variant file for overlapping variants, rather than just iterating through them.
+     * It should be only a little slower than the normal iteration, and much faster if a subset of a genome is used.
+     *
+     * If running in default mode:
+     * Process our input data by iterating through input variants and reads.
+     * Useful for going through whole genomes / exomes, but slow for sets of reads not beginning at the start of chr1.
+     *
+     * NOTE: This method HAS SIDE EFFECTS for both the {@link #vcfFileReader} and {@link #vcfIterator}.
+     *
+     * @return {@code true} if a variant overlaps the given locus.  {@code false} otherwise.
+     */
+    private boolean checkLocusForVariantOverlap(final SamLocusIterator.LocusInfo locusInfo) {
+        final boolean returnValue;
+        if (INTERVAL_ITERATOR) {
+            returnValue = checkLocus(vcfFileReader, locusInfo);
+            if ( returnValue ) {
+                log.debug("Locus overlaps a known variant: " + locusInfo);
+            }
+        }
+        else {
+            returnValue = advanceIteratorAndCheckLocus(vcfIterator, locusInfo, sequenceDictionary);
+            if ( returnValue ) {
+                log.debug(String.format("Locus overlaps a known variant from VCF: %s -> %s", locusInfo.toString(),
+                        vcfIterator.peek().toStringWithoutGenotypes()));
+            }
+        }
+        return returnValue;
+    }
+
+    /**
+     * Close the variant data source.
+     * If running in {@link #INTERVAL_ITERATOR} mode will close the {@link #vcfFileReader};
+     * If running in default mode will close the {@link #vcfIterator};
+     */
+    private void closeVcfDataSource() {
+        if (INTERVAL_ITERATOR) {
+            vcfFileReader.close();
+        }
+        else {
+            vcfIterator.close();
+        }
+    }
+
+    private int processData() {
+        try (
+            final SamReader sam = SamReaderFactory.makeDefault()
+                    .referenceSequence(REFERENCE_SEQUENCE)
+                    .open(INPUT);
+            final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
+        ) {
+            // Initialize our variants:
+            initializeVcfDataSource();
 
             // Go through our reads and variants now:
             final SamLocusAndReferenceIterator iterator = createSamLocusAndReferenceIterator(sam, referenceSequenceFileWalker);
@@ -352,9 +355,9 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 }
                 nTotalLoci++;
 
-                // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
-                if (checkLocus(vcfFileReader, info.getLocus())) {
-                    log.debug("Skipping locus overlapping a known variant: " + info.getLocus());
+                // Check if a variant overlaps the current locus:
+                if ( checkLocusForVariantOverlap(info.getLocus()) ) {
+                    log.debug("Skipping overlapping locus.");
                     nSkippedLoci++;
                     continue;
                 }
@@ -371,8 +374,12 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             }
 
         } catch (IOException e) {
-            log.error(e, "A problem occurred:");
+            log.error(e, "A problem occurred:", e.getMessage());
             return 1;
+        }
+        finally {
+            // Close our data source:
+            closeVcfDataSource();
         }
 
         return 0;
@@ -447,7 +454,6 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         nProcessedLoci = 0;
     }
 
-
     @Override
     protected int doWork() {
 
@@ -456,16 +462,12 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
         // Make sure we can read our files:
         IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsReadable(VCF);
+        IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
         IOUtil.assertFilesAreReadable(INTERVALS);
 
         // Process our data based on how we will be iterating:
-        final int returnValue;
-        if ( INTERVAL_ITERATOR ) {
-            returnValue = processDataIntervalIteration();
-        }
-        else {
-            returnValue = processDataNormalIteration();
-        }
+        final int returnValue = processData();
 
         // Check if we had an error and if so, immediately return
         // (to preserve old functionality):
