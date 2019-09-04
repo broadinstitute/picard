@@ -34,6 +34,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
+import org.apache.logging.log4j.core.util.FileUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -41,6 +42,8 @@ import picard.PicardException;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
+import picard.annotation.Gff3Codec;
+import picard.annotation.Gff3Reader;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.RExecutor;
 
@@ -73,7 +76,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
 "<p>The sequence input must be a valid SAM/BAM file containing RNAseq data aligned by an RNAseq-aware genome aligner such a "+
 "<a href='http://github.com/alexdobin/STAR'>STAR</a> or <a href='http://ccb.jhu.edu/software/tophat/index.shtml'>TopHat</a>. "+
-"The tool also requires a REF_FLAT file, a tab-delimited file containing information about the location of RNA transcripts, "+
+"The tool also requires a ANNOTATION_FILE file, a tab-delimited file containing information about the location of RNA transcripts, "+
 "exon start and stop sites, etc. For an example refFlat file for GRCh38, see refFlat.txt.gz at "+
 "<a href='http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database'>http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database</a>.  "+
 "The first five lines of the tab-limited text file appear as follows.</p>"+
@@ -92,7 +95,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 "java -jar picard.jar CollectRnaSeqMetrics \\<br />" +
 "      I=input.bam \\<br />" +
 "      O=output.RNA_Metrics \\<br />" +
-"      REF_FLAT=ref_flat.txt \\<br />" +
+"      ANNOTATION_FILE=ref_flat.txt \\<br />" +
 "      STRAND=SECOND_READ_TRANSCRIPTION_STRAND \\<br />" +
 "      RIBOSOMAL_INTERVALS=ribosomal.interval_list" +
 "</pre>" +
@@ -104,8 +107,8 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
 
-    @Argument(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
-    public File REF_FLAT;
+    @Argument(doc="Gene annotations in refFlat form, or gff3 foramt  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
+    public File ANNOTATION_FILE;
 
     @Argument(doc="Location of rRNA sequences in genome, in interval_list format.  " +
             "If not specified no bases will be identified as being ribosomal.  " +
@@ -153,11 +156,23 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
         if (CHART_OUTPUT != null) IOUtil.assertFileIsWritable(CHART_OUTPUT);
 
-        final OverlapDetector<Gene> geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary());
+        final OverlapDetector<Gene> geneOverlapDetector;
+        final OverlapDetector<Interval> ribosomalSequenceOverlapDetector;
+        final Long ribosomalBasesInitialValue;
+        if(Gff3Codec.GFF3_FILE_EXTENSIONS.contains(FileUtils.getFileExtension(ANNOTATION_FILE))) {
+            geneOverlapDetector = GeneAnnotationReader.loadGff3(ANNOTATION_FILE);
+            ribosomalSequenceOverlapDetector = Gff3Reader.loadRibosomalIntervals(ANNOTATION_FILE);
+            ribosomalBasesInitialValue = 0L;
+        }
+
+        else {
+            geneOverlapDetector = GeneAnnotationReader.loadRefFlat(ANNOTATION_FILE, header.getSequenceDictionary());
+            ribosomalSequenceOverlapDetector = RnaSeqMetricsCollector.makeOverlapDetector(samFile, header, RIBOSOMAL_INTERVALS, LOG);
+            ribosomalBasesInitialValue = RIBOSOMAL_INTERVALS != null ? 0L : null;
+        }
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
 
-        final Long ribosomalBasesInitialValue = RIBOSOMAL_INTERVALS != null ? 0L : null;
-        final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = RnaSeqMetricsCollector.makeOverlapDetector(samFile, header, RIBOSOMAL_INTERVALS, LOG);
+
 
         final HashSet<Integer> ignoredSequenceIndices = RnaSeqMetricsCollector.makeIgnoredSequenceIndicesSet(header, IGNORE_SEQUENCE);
 

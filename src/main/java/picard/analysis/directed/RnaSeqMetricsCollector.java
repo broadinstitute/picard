@@ -203,7 +203,6 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
 
                     }
                 }
-
                 // Tally the function of each base in the alignment block.
                 for (final LocusFunction locusFunction : locusFunctions) {
                     ++metrics.PF_ALIGNED_BASES;

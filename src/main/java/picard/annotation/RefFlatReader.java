@@ -153,7 +153,7 @@ public class RefFlatReader {
     /**
      * Conversion from 0-based half-open to 1-based inclusive intervals is done here.
      */
-    private Gene.Transcript makeTranscriptFromRefFlatLine(final Gene gene, final TabbedTextFileWithHeaderParser.Row row) {
+    private Gene.Transcript  makeTranscriptFromRefFlatLine(final Gene gene, final TabbedTextFileWithHeaderParser.Row row) {
         final String geneName = row.getField(RefFlatColumns.GENE_NAME.name());
         final String transcriptName = row.getField(RefFlatColumns.TRANSCRIPT_NAME.name());
         final String transcriptDescription = geneName + ":" + transcriptName;

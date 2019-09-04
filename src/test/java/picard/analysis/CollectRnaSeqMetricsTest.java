@@ -87,7 +87,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         final String[] args = new String[] {
                 "INPUT=" +               samFile.getAbsolutePath(),
                 "OUTPUT=" +              metricsFile.getAbsolutePath(),
-                "REF_FLAT=" +            getRefFlatFile(sequence).getAbsolutePath(),
+                "ANNOTATION_FILE=" +            getRefFlatFile(sequence).getAbsolutePath(),
                 "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
                 "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
                 "IGNORE_SEQUENCE=" + ignoredSequence
@@ -159,7 +159,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         final String[] args = new String[]{
                 "INPUT=" + samFile.getAbsolutePath(),
                 "OUTPUT=" + metricsFile.getAbsolutePath(),
-                "REF_FLAT=" + getRefFlatFile(sequence).getAbsolutePath(),
+                "ANNOTATION_FILE=" + getRefFlatFile(sequence).getAbsolutePath(),
                 "RIBOSOMAL_INTERVALS=" + rRnaIntervalsPath,
                 "RRNA_FRAGMENT_PERCENTAGE=" + 0.0,
                 "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
@@ -224,7 +224,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         final String[] args = new String[] {
                 "INPUT=" +               samFile.getAbsolutePath(),
                 "OUTPUT=" +              metricsFile.getAbsolutePath(),
-                "REF_FLAT=" +            getRefFlatFile(sequence).getAbsolutePath(),
+                "ANNOTATION_FILE=" +            getRefFlatFile(sequence).getAbsolutePath(),
                 "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
                 "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
                 "IGNORE_SEQUENCE=" + ignoredSequence,
@@ -354,7 +354,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         final String[] args = new String[] {
                 "INPUT=" +               samFile.getAbsolutePath(),
                 "OUTPUT=" +              metricsFile.getAbsolutePath(),
-                "REF_FLAT=" +            getRefFlatFile(sequence).getAbsolutePath(),
+                "ANNOTATION_FILE=" +            getRefFlatFile(sequence).getAbsolutePath(),
                 "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
                 "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
                 "IGNORE_SEQUENCE=" + ignoredSequence
@@ -420,7 +420,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         final String[] args = new String[]{
                 "INPUT=" + samFile.getAbsolutePath(),
                 "OUTPUT=" + metricsFile.getAbsolutePath(),
-                "REF_FLAT=" + getRefFlatFile(sequence).getAbsolutePath(),
+                "ANNOTATION_FILE=" + getRefFlatFile(sequence).getAbsolutePath(),
                 "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
                 "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
                 "IGNORE_SEQUENCE=" + ignoredSequence

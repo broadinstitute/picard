@@ -26,7 +26,6 @@ package picard.analysis;
 
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.StringUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineException;
@@ -358,7 +357,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 program.INPUT = input;
                 program.RIBOSOMAL_INTERVALS = intervals;
                 program.IGNORE_SEQUENCE = ignoreSequence;
-                program.REF_FLAT = refflat;
+                program.ANNOTATION_FILE = refflat;
                 program.STRAND_SPECIFICITY = RnaSeqMetricsCollector.StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND;
 
                 return program;
@@ -561,7 +560,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
             if (program.needsRefflatFile() && REF_FLAT == null) {
                 throw new PicardException("The " + program.toString() + " program needs a gene annotations file, " +
-                        "please set REF_FLAT in the command line");
+                        "please set ANNOTATION_FILE in the command line");
             }
             if (!accumLevelDefault.equals(METRIC_ACCUMULATION_LEVEL) && !program.supportsMetricAccumulationLevel()) {
                 log.warn("The " + program.toString() + " program does not support a metric accumulation level, " +

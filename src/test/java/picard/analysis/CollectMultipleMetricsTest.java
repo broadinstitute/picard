@@ -328,7 +328,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "METRIC_ACCUMULATION_LEVEL=" + MetricAccumulationLevel.ALL_READS.name(),
                 "INTERVALS=" + intervals.getAbsolutePath(),
-                "REF_FLAT=" + refflat.getAbsolutePath(),
+                "ANNOTATION_FILE=" + refflat.getAbsolutePath(),
                 "IGNORE_SEQUENCE=" + StringUtils.join(ignoreSequence, ','),
                 "PROGRAM=" + CollectMultipleMetrics.Program.RnaSeqMetrics.name(),
         };
