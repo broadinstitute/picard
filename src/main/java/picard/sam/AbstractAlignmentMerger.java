@@ -403,7 +403,9 @@ public abstract class AbstractAlignmentMerger {
         while (unmappedIterator.hasNext()) {
             // Load next unaligned read or read pair.
             final SAMRecord rec = unmappedIterator.next();
-
+            if (!rec.getReadUnmappedFlag()) {
+                throw new PicardException("Unmapped bam contains mapped reads");
+            }
             rec.setHeader(this.header);
             maybeSetPgTag(rec);
 
