@@ -246,7 +246,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 final SamReader sam = SamReaderFactory.makeDefault()
                         .referenceSequence(REFERENCE_SEQUENCE)
                         .setOption(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS, true)
-                        .open(INPUT);
+                        .open(IOUtil.getPath(INPUT));
                 final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
                 final VCFFileReader vcfFileReader = new VCFFileReader(IOUtil.getPath(VCF), true)
         ) {
