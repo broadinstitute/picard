@@ -403,6 +403,7 @@ public abstract class AbstractAlignmentMerger {
         while (unmappedIterator.hasNext()) {
             // Load next unaligned read or read pair.
             final SAMRecord rec = unmappedIterator.next();
+            
             rec.setHeader(this.header);
             maybeSetPgTag(rec);
 
