@@ -145,7 +145,7 @@ public class MergeBamAlignment extends CommandLineProgram {
     public final PGTagArgumentCollection pgTagArgumentCollection = new PGTagArgumentCollection();
 
     @Argument(shortName = "UNMAPPED",
-            doc = "Original SAM or BAM file of unmapped reads, which must be in queryname order.")
+            doc = "Original SAM or BAM file of unmapped reads, which must be in queryname order.  Reads MUST be unmapped.")
     public File UNMAPPED_BAM;
 
     @Argument(shortName = "ALIGNED",
