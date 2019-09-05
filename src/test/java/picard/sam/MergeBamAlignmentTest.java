@@ -1930,5 +1930,54 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         assertSamValid(mergedSam);
         IOUtil.assertFilesEqual(expectedSam, mergedSam);
     }
+
+    @Test(expectedExceptions = {PicardException.class})
+    public void testReverseStrandMappedReadInUnmappedBam() throws IOException {
+        //put mapped read mapped to reverse strand in "unmapped" bam and same read in aligned bam
+        final SAMFileHeader header = new SAMFileHeader();
+        header.setSortOrder(SAMFileHeader.SortOrder.queryname);
+        final SAMRecord mappedRecord = new SAMRecord(header);
+
+        mappedRecord.setReadName("theRead");
+        mappedRecord.setReadString("ATGTCGGGGCGTTGAC");
+        mappedRecord.setBaseQualityString("5555555555555555");
+        mappedRecord.setReadUnmappedFlag(false); //just to be explicit about it
+        final String sequence = "chr1";
+        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2.toPath()));
+        mappedRecord.setReferenceName(sequence);
+        mappedRecord.setAlignmentStart(1);
+        mappedRecord.setReadNegativeStrandFlag(true); //on negative strand
+        mappedRecord.setCigarString("16M");
+        mappedRecord.setMappingQuality(60);
+
+        //add to both unmappedSam and alignedSam
+        final File unmappedSam = File.createTempFile("unmapped.", ".sam");
+        unmappedSam.deleteOnExit();
+        final File alignedSam = File.createTempFile("aligned.", ".sam");
+        alignedSam.deleteOnExit();
+
+        final SAMFileWriterFactory factory = new SAMFileWriterFactory();
+
+        final SAMFileWriter unmappedWriter = factory.makeSAMWriter(header, false, unmappedSam);
+        unmappedWriter.addAlignment(mappedRecord);
+        unmappedWriter.close();
+
+        final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
+        alignedWriter.addAlignment(mappedRecord);
+        alignedWriter.close();
+
+        //run merge
+        final File output = File.createTempFile("output", ".sam");
+        output.deleteOnExit();
+        final List<String> args = new ArrayList<>(Arrays.asList(
+                "UNMAPPED_BAM=" + unmappedSam.getAbsolutePath(),
+                "ALIGNED_BAM=" + alignedSam.getAbsolutePath(),
+                "OUTPUT=" + output.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + fasta.getAbsolutePath())
+        );
+
+        //should throw PicardException when run because mapped read found in UNMAPPED_BAM input
+        runPicardCommandLine(args);
+    }
 }
 
