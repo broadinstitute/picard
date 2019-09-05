@@ -23,22 +23,7 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.BamFileIoUtils;
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.Defaults;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SAMTag;
-import htsjdk.samtools.SamPairUtil;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
@@ -1931,24 +1916,35 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         IOUtil.assertFilesEqual(expectedSam, mergedSam);
     }
 
-    @Test(expectedExceptions = {PicardException.class})
-    public void testReverseStrandMappedReadInUnmappedBam() throws IOException {
-        //put mapped read mapped to reverse strand in "unmapped" bam and same read in aligned bam
-        final SAMFileHeader header = new SAMFileHeader();
-        header.setSortOrder(SAMFileHeader.SortOrder.queryname);
-        final SAMRecord mappedRecord = new SAMRecord(header);
+    @DataProvider(name = "mappedReadInUnmappedBamDataProvider")
+    Object[][] mappedReadInUnmappedBamDataProvider() {
+        return new Object[][] {
+            {false, false, false},
+            {true, true, false},
+            {true, false, true},
+            {true, false, false}
+        };
+    }
 
-        mappedRecord.setReadName("theRead");
-        mappedRecord.setReadString("ATGTCGGGGCGTTGAC");
-        mappedRecord.setBaseQualityString("5555555555555555");
-        mappedRecord.setReadUnmappedFlag(false); //just to be explicit about it
-        final String sequence = "chr1";
-        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(sequenceDict2.toPath()));
-        mappedRecord.setReferenceName(sequence);
-        mappedRecord.setAlignmentStart(1);
-        mappedRecord.setReadNegativeStrandFlag(true); //on negative strand
-        mappedRecord.setCigarString("16M");
-        mappedRecord.setMappingQuality(60);
+    @Test(dataProvider = "mappedReadInUnmappedBamDataProvider", expectedExceptions = PicardException.class)
+    public void testSingleEndMappedReadInUnmappedBam(final boolean paired, final boolean firstUnMapped, final boolean secondUnMapped) throws IOException {
+        final SAMRecordSetBuilder samRecordSetBuilderUnmappedBam = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.queryname);
+        samRecordSetBuilderUnmappedBam.setRandomSeed(12345);
+        final SAMFileHeader header = samRecordSetBuilderUnmappedBam.getHeader();
+        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(fasta.toPath()));
+
+        final SAMRecordSetBuilder samRecordSetBuilderAlignedBam = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.queryname);
+        samRecordSetBuilderUnmappedBam.setRandomSeed(12345);
+        final SAMFileHeader headerAligned = samRecordSetBuilderUnmappedBam.getHeader();
+        headerAligned.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(fasta.toPath()));
+
+        if (!paired) {
+            samRecordSetBuilderUnmappedBam.addFrag("theRead", 1, 1, false, false, null, null, -1);
+            samRecordSetBuilderAlignedBam.addFrag("theRead", 1, 1, false, false, null, null, -1);
+        } else {
+            samRecordSetBuilderUnmappedBam.addPair("theRead", 1, 1, 65, firstUnMapped, secondUnMapped, null, null, false, true, -1);
+            samRecordSetBuilderAlignedBam.addPair("theRead", 1, 1, 65, false, false, null, null, false, true, -1);
+        }
 
         //add to both unmappedSam and alignedSam
         final File unmappedSam = File.createTempFile("unmapped.", ".sam");
@@ -1959,11 +1955,15 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final SAMFileWriterFactory factory = new SAMFileWriterFactory();
 
         final SAMFileWriter unmappedWriter = factory.makeSAMWriter(header, false, unmappedSam);
-        unmappedWriter.addAlignment(mappedRecord);
-        unmappedWriter.close();
-
         final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
-        alignedWriter.addAlignment(mappedRecord);
+        for (final SAMRecord rec : samRecordSetBuilderUnmappedBam.getRecords()) {
+            unmappedWriter.addAlignment(rec);
+        }
+
+        for (final SAMRecord rec : samRecordSetBuilderAlignedBam.getRecords()) {
+            alignedWriter.addAlignment(rec);
+        }
+        unmappedWriter.close();
         alignedWriter.close();
 
         //run merge
