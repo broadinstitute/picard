@@ -1927,7 +1927,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "mappedReadInUnmappedBamDataProvider", expectedExceptions = PicardException.class)
-    public void testSingleEndMappedReadInUnmappedBam(final boolean paired, final boolean firstUnMapped, final boolean secondUnMapped) throws IOException {
+    public void testMappedReadInUnmappedBam(final boolean paired, final boolean firstUnMapped, final boolean secondUnMapped) throws IOException {
         final SAMRecordSetBuilder samRecordSetBuilderUnmappedBam = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.queryname);
         samRecordSetBuilderUnmappedBam.setRandomSeed(12345);
         final SAMFileHeader header = samRecordSetBuilderUnmappedBam.getHeader();
