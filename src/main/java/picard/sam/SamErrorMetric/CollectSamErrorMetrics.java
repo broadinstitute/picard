@@ -24,6 +24,7 @@
 
 package picard.sam.SamErrorMetric;
 
+import com.google.cloud.storage.contrib.nio.SeekableByteChannelPrefetcher;
 import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
@@ -31,8 +32,11 @@ import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.*;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.readers.LineIterator;
 import htsjdk.tribble.util.ParsingUtils;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -44,7 +48,9 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.SeekableByteChannel;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -53,7 +59,7 @@ import java.util.stream.Collectors;
  */
 
 @CommandLineProgramProperties(
-        summary = "[iteration_indel_stratifiers] Program to collect error metrics on bases stratified in various ways.\n" +
+        summary = "[iteration_indel_stratifiers prefetch] Program to collect error metrics on bases stratified in various ways.\n" +
                 "<p>" +
                 "Sequencing errors come in different 'flavors'. For example, some occur during sequencing while " +
                 "others happen during library construction, prior to the sequencing. They may be correlated with " +
@@ -241,18 +247,28 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         IOUtil.assertFilesAreReadable(INTERVALS);
 
         final Collection<BaseErrorAggregation> aggregatorList = getAggregatorList();
+
+        Function<SeekableByteChannel, SeekableByteChannel> nioBufferingFunction = is -> {
+            try {
+                return SeekableByteChannelPrefetcher.addPrefetcher(40, is);
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading from resource file.", e);
+            }
+        };
+
         // Open up the input resources:
         try (
                 final SamReader sam = SamReaderFactory.makeDefault()
                         .referenceSequence(REFERENCE_SEQUENCE)
                         .setOption(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS, true)
-                        .open(IOUtil.getPath(INPUT));
+                        .open(IOUtil.getPath(INPUT), nioBufferingFunction, nioBufferingFunction);
                 final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-                final VCFFileReader vcfFileReader = new VCFFileReader(IOUtil.getPath(VCF), true)
+                //final VCFFileReader vcfFileReader = new VCFFileReader(IOUtil.getPath(VCF), true);
+                final AbstractFeatureReader featureReader = AbstractFeatureReader.getFeatureReader(VCF, null, new VCFCodec(), true, nioBufferingFunction, nioBufferingFunction)
         ) {
 
             // Make sure we can query our file:
-            if (!vcfFileReader.isQueryable()) {
+            if (!featureReader.isQueryable()) {
                 throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!");
             }
 
@@ -299,7 +315,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 nTotalLoci++;
 
                 // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
-                if (checkLocus(vcfFileReader, info.getLocus())) {
+                if (checkLocus(featureReader, info.getLocus())) {
                     log.debug("Locus does not overlap any variants: " + info.getLocus(), sequenceDictionary);
                     nSkippedLoci++;
                     continue;
@@ -356,7 +372,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * @param locusInfo          a {@link SamLocusIterator.LocusInfo} at which to examine the variants
      * @return true if there's a variant over the locus, false otherwise.
      */
-    private static boolean checkLocus(final VCFFileReader vcfFileReader, final SamLocusIterator.LocusInfo locusInfo) {
+    private static boolean checkLocus(final AbstractFeatureReader<VariantContext, LineIterator> vcfFileReader, final SamLocusIterator.LocusInfo locusInfo) {
 
         boolean overlaps = false;
 
@@ -379,6 +395,8 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 if (allFiltered) {
                     overlaps = false;
                 }
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading from resource.", e);
             }
         }
 
