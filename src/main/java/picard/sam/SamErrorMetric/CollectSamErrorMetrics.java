@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
  */
 
 @CommandLineProgramProperties(
-        summary = "[iteration_indel_stratifiers prefetch] Program to collect error metrics on bases stratified in various ways.\n" +
+        summary = "[iteration_indel_stratifiers multivcf] Program to collect error metrics on bases stratified in various ways.\n" +
                 "<p>" +
                 "Sequencing errors come in different 'flavors'. For example, some occur during sequencing while " +
                 "others happen during library construction, prior to the sequencing. They may be correlated with " +
@@ -381,16 +381,22 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             return false;
         }
         for(final AbstractFeatureReader vcfFeatureReader : vcfFeatureReaders) {
-            try (final CloseableIterator<VariantContext> vcfIterator = vcfFeatureReader.query(locusInfo)) {
-                while (vcfIterator.hasNext()) {
-                    final VariantContext vcf = vcfIterator.next();
-                    if (vcf.isFiltered()) {
-                        continue;
+            // TODO mgatzen this.
+            final List<SamLocusIterator.LocusInfo> lociToCheck = new ArrayList<>();
+            lociToCheck.add(locusInfo);
+            lociToCheck.add(new SamLocusIterator.LocusInfo(new SAMSequenceRecord(locusInfo.getSequenceName().replace("chr", ""), locusInfo.getSequenceLength()), locusInfo.getPosition()));
+            for(SamLocusIterator.LocusInfo locusToCheck : lociToCheck) {
+                try (final CloseableIterator<VariantContext> vcfIterator = vcfFeatureReader.query(locusToCheck)) {
+                    while (vcfIterator.hasNext()) {
+                        final VariantContext vcf = vcfIterator.next();
+                        if (vcf.isFiltered()) {
+                            continue;
+                        }
+                        return true;
                     }
-                    return true;
+                } catch (IOException e) {
+                    throw new RuntimeException("Error reading from resource.", e);
                 }
-            } catch (IOException e) {
-                throw new RuntimeException("Error reading from resource.", e);
             }
         }
 
