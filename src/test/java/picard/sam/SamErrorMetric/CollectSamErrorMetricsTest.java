@@ -697,7 +697,7 @@ public class CollectSamErrorMetricsTest {
 
     @Test
     public void testCheckLocus() {
-        Function<SeekableByteChannel, SeekableByteChannel> nioBufferingFunction = is -> {
+        final Function<SeekableByteChannel, SeekableByteChannel> nioBufferingFunction = is -> {
             try {
                 return SeekableByteChannelPrefetcher.addPrefetcher(40, is);
             } catch (IOException e) {
@@ -705,14 +705,42 @@ public class CollectSamErrorMetricsTest {
             }
         };
 
-        String nistVCFFilename = TEST_DIR + "/NIST.selected.vcf";
+        final String nistVCFFilename = TEST_DIR + "/NIST.selected.vcf";
         final AbstractFeatureReader<VariantContext, LineIterator> featureReader = AbstractFeatureReader.getFeatureReader(nistVCFFilename, null, new VCFCodec(), true, nioBufferingFunction, nioBufferingFunction);
 
-        SamLocusIterator.LocusInfo actualVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 249250621), 18016237);
-        SamLocusIterator.LocusInfo noVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 249250621), 18016238);
+        final SamLocusIterator.LocusInfo actualVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016237);
+        final SamLocusIterator.LocusInfo noVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016238);
 
         Assert.assertTrue(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), actualVariantSite));
         Assert.assertFalse(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), noVariantSite));
+    }
+
+    @Test
+    public void testMultipleVCFs() {
+        final Function<SeekableByteChannel, SeekableByteChannel> nioBufferingFunction = is -> {
+            try {
+                return SeekableByteChannelPrefetcher.addPrefetcher(40, is);
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading from resource file.", e);
+            }
+        };
+
+        final String nistVCFFilename = TEST_DIR + "/NIST.selected.vcf";
+        final String nistChr1VCFFilename = TEST_DIR + "/NIST.selected.chr1.vcf";
+        final AbstractFeatureReader<VariantContext, LineIterator> featureReader = AbstractFeatureReader.getFeatureReader(nistVCFFilename, null, new VCFCodec(), true, nioBufferingFunction, nioBufferingFunction);
+        final AbstractFeatureReader<VariantContext, LineIterator> featureReaderChr1= AbstractFeatureReader.getFeatureReader(nistChr1VCFFilename, null, new VCFCodec(), true, nioBufferingFunction, nioBufferingFunction);
+
+        final List<AbstractFeatureReader<VariantContext, LineIterator>> vcfFeatureReaders = new ArrayList<>();
+        vcfFeatureReaders.add(featureReader);
+        vcfFeatureReaders.add(featureReaderChr1);
+
+        SamLocusIterator.LocusInfo actualVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016237);
+        SamLocusIterator.LocusInfo actualChr1VariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("1", 249250621), 216407409);
+        SamLocusIterator.LocusInfo noVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016238);
+
+        Assert.assertTrue(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualVariantSite));
+        Assert.assertTrue(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualChr1VariantSite));
+        Assert.assertFalse(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, noVariantSite));
     }
 }
 
