@@ -150,7 +150,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
     @Argument(shortName = "V", doc = "VCF of known variation for sample. program will skip over polymorphic sites in this VCF and " +
             "avoid collecting data on these loci.")
-    public String VCF;
+    public List<String> VCF;
 
     @Argument(shortName = "L", doc = "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will intersect inputs if multiple are given. ", optional = true)
     public List<File> INTERVALS;
@@ -256,6 +256,17 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             }
         };
 
+        final List<AbstractFeatureReader<VariantContext, LineIterator>> featureReaders = new ArrayList<>();
+        for(final String vcf : VCF) {
+            final AbstractFeatureReader<VariantContext, LineIterator> featureReader = AbstractFeatureReader.getFeatureReader(vcf, null, new VCFCodec(), true, nioBufferingFunction, nioBufferingFunction);
+
+            // Make sure we can query our file:
+            if (!featureReader.isQueryable()) {
+                throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!");
+            }
+            featureReaders.add(featureReader);
+        }
+
         // Open up the input resources:
         try (
                 final SamReader sam = SamReaderFactory.makeDefault()
@@ -263,15 +274,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                         .setOption(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS, true)
                         .open(IOUtil.getPath(INPUT), nioBufferingFunction, nioBufferingFunction);
                 final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-                //final VCFFileReader vcfFileReader = new VCFFileReader(IOUtil.getPath(VCF), true);
-                final AbstractFeatureReader featureReader = AbstractFeatureReader.getFeatureReader(VCF, null, new VCFCodec(), true, nioBufferingFunction, nioBufferingFunction)
         ) {
-
-            // Make sure we can query our file:
-            if (!featureReader.isQueryable()) {
-                throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!");
-            }
-
             final SAMSequenceDictionary sequenceDictionary = referenceSequenceFileWalker.getSequenceDictionary();
             if (sam.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
                 throw new PicardException("Input BAM must be sorted by coordinate");
@@ -315,7 +318,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 nTotalLoci++;
 
                 // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
-                if (checkLocus(featureReader, info.getLocus())) {
+                if (checkLocus(featureReaders, info.getLocus())) {
                     log.debug("Locus does not overlap any variants: " + info.getLocus(), sequenceDictionary);
                     nSkippedLoci++;
                     continue;
@@ -366,41 +369,32 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     /**
      * If there's a variant at the locus return true, otherwise false.
      * <p>
-     * HAS SIDE EFFECTS!!! Queries the vcfFileReader
+     * HAS SIDE EFFECTS!!! Queries the vcfFeatureReaders
      *
-     * @param vcfFileReader      a {@link VCFFileReader} to query for the given locus
+     * @param vcfFeatureReaders      a List of {@link VCFFileReader}s to query for the given locus
      * @param locusInfo          a {@link SamLocusIterator.LocusInfo} at which to examine the variants
      * @return true if there's a variant over the locus, false otherwise.
      */
-    private static boolean checkLocus(final AbstractFeatureReader<VariantContext, LineIterator> vcfFileReader, final SamLocusIterator.LocusInfo locusInfo) {
-
-        boolean overlaps = false;
-
-        if (locusInfo != null) {
-
-            try (final CloseableIterator<VariantContext> vcfIterator = vcfFileReader.query(locusInfo)) {
-
-                overlaps = true;
-
-                boolean allFiltered = true;
-
+    @VisibleForTesting
+    protected static boolean checkLocus(final List<AbstractFeatureReader<VariantContext, LineIterator>> vcfFeatureReaders, final SamLocusIterator.LocusInfo locusInfo) {
+        if (locusInfo == null) {
+            return false;
+        }
+        for(final AbstractFeatureReader vcfFeatureReader : vcfFeatureReaders) {
+            try (final CloseableIterator<VariantContext> vcfIterator = vcfFeatureReader.query(locusInfo)) {
                 while (vcfIterator.hasNext()) {
                     final VariantContext vcf = vcfIterator.next();
                     if (vcf.isFiltered()) {
                         continue;
                     }
-                    allFiltered = false;
-                }
-
-                if (allFiltered) {
-                    overlaps = false;
+                    return true;
                 }
             } catch (IOException e) {
                 throw new RuntimeException("Error reading from resource.", e);
             }
         }
 
-        return overlaps;
+        return false;
     }
 
     /**

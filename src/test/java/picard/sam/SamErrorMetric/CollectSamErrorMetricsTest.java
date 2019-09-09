@@ -1,11 +1,16 @@
 package picard.sam.SamErrorMetric;
 
+import com.google.cloud.storage.contrib.nio.SeekableByteChannelPrefetcher;
 import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.QualityUtil;
 import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.readers.LineIterator;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFCodec;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -16,8 +21,10 @@ import picard.cmdline.CommandLineProgramTest;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.function.Function;
 
 import static picard.cmdline.CommandLineProgramTest.CHR_M_REFERENCE;
 
@@ -686,6 +693,26 @@ public class CollectSamErrorMetricsTest {
                 .orElseThrow(() -> new AssertionError("didn't find metric with COVARIATE==" + expectedMetric.COVARIATE));
 
         Assert.assertEquals(metric, expectedMetric);
+    }
+
+    @Test
+    public void testCheckLocus() {
+        Function<SeekableByteChannel, SeekableByteChannel> nioBufferingFunction = is -> {
+            try {
+                return SeekableByteChannelPrefetcher.addPrefetcher(40, is);
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading from resource file.", e);
+            }
+        };
+
+        String nistVCFFilename = TEST_DIR + "/NIST.selected.vcf";
+        final AbstractFeatureReader<VariantContext, LineIterator> featureReader = AbstractFeatureReader.getFeatureReader(nistVCFFilename, null, new VCFCodec(), true, nioBufferingFunction, nioBufferingFunction);
+
+        SamLocusIterator.LocusInfo actualVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 249250621), 18016237);
+        SamLocusIterator.LocusInfo noVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 249250621), 18016238);
+
+        Assert.assertTrue(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), actualVariantSite));
+        Assert.assertFalse(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), noVariantSite));
     }
 }
 
