@@ -24,15 +24,23 @@ public class Gff3Reader {
         final OverlapDetector<Gene> overlapDetector = new OverlapDetector<Gene>(0, 0);
         try (AbstractFeatureReader<GtfFeature, LineIterator> reader = AbstractFeatureReader.getFeatureReader(gffFile.getAbsolutePath(), null, new Gff3Codec(), false)) {
             for (final GtfFeature feature : reader.iterator()) {
-                if(featureEvaluator.isASubClassOf(feature.getType(), "http://purl.obolibrary.org/obo/SO_0001263")) {
-                    continue;
-                }
                 if (featureEvaluator.isASubClassOf(feature.getType(), Gff3FeatureEvaluator.DEFAULT_GENE_IRI)) {
                     final Gene gene = new Gene(feature.getContig(), feature.getStart(), feature.getEnd(), feature.getStrand() == Strand.NEGATIVE, feature.getAttribute("ID"));
+                    final Set<String> usedTranscriptNames = new HashSet<>();
                     for (final GtfFeature child : feature.getChildren()) {
                         if (featureEvaluator.isASubClassOf(child.getType(), Gff3FeatureEvaluator.DEFAULT_CDS_IRI)) {
-                            final Gene.Transcript tx = gene.addTranscript(child.getAttribute("ID"), child.getStart(), child.getEnd(), child.getStart(), child.getEnd(), 1);
+                            String transcriptName = child.getAttribute("ID");
+                            if (usedTranscriptNames.contains(transcriptName)) {
+                                final String transcriptNameBase = transcriptName;
+                                int index = 1;
+                                while (usedTranscriptNames.contains(transcriptName)) {
+                                    transcriptName = transcriptNameBase + "_" + index;
+                                    index++;
+                                }
+                            }
+                            final Gene.Transcript tx = gene.addTranscript(transcriptName, child.getStart(), child.getEnd(), child.getStart(), child.getEnd(), 1);
                             tx.addExon(child.getStart(), child.getEnd());
+                            usedTranscriptNames.add(transcriptName);
                         }
                         if (featureEvaluator.isASubClassOf(child.getType(), Gff3FeatureEvaluator.DEFAULT_TRANSCRIPT_IRI)) {
                             loadTranscriptIntoGene(child, gene);
@@ -57,13 +65,25 @@ public class Gff3Reader {
 
         final List<GtfFeature> exons = transcript.getChildren().stream().filter(f -> featureEvaluator.isASubClassOf(f.getType(), Gff3FeatureEvaluator.DEFAULT_EXON_IRI)).collect(Collectors.toList());
 
-        Gene.Transcript tx = gene.addTranscript(transcript.getAttribute("ID"), transcript.getStart(), transcript.getEnd(), cdsStart, cdsEnd, exons.size() > 0 ? exons.size() : 1);
-        if (exons.size() > 0) {
-            for (final GtfFeature exon : exons) {
-                tx.addExon(exon.getStart(), exon.getEnd());
+        boolean notYetLoaded = true;
+        String transcriptName = transcript.getAttribute("ID");
+        final String transcriptBaseName = transcriptName;
+        int index = 1;
+        while (notYetLoaded) {
+            try {
+                Gene.Transcript tx = gene.addTranscript(transcriptName, transcript.getStart(), transcript.getEnd(), cdsStart, cdsEnd, exons.size() > 0 ? exons.size() : 1);
+                if (exons.size() > 0) {
+                    for (final GtfFeature exon : exons) {
+                        tx.addExon(exon.getStart(), exon.getEnd());
+                    }
+                } else {
+                    tx.addExon(cdsStart, cdsEnd);
+                }
+                notYetLoaded = false;
+            } catch (final AnnotationException ex) {
+                transcriptName = transcriptBaseName + "_"+index;
+                index++;
             }
-        } else {
-            tx.addExon(cdsStart, cdsEnd);
         }
 
     }

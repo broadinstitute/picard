@@ -19,6 +19,7 @@ public class GtfFeature implements Feature {
     private final Map<String, String> attributes;
     private final List<GtfFeature> parents = new ArrayList<>();
     private final List<GtfFeature> children = new ArrayList<>();
+    private final String ID;
 
     public GtfFeature(final String contig, final String source, final String type, final int start, final int end, final Strand strand, final int phase, final Map<String, String> attributes) {
         this.contig = contig;
@@ -29,6 +30,7 @@ public class GtfFeature implements Feature {
         this.phase = phase;
         this.strand = strand;
         this.attributes = attributes;
+        this.ID = attributes.get("ID");
     }
 
     public String getSource() {
@@ -69,6 +71,8 @@ public class GtfFeature implements Feature {
     public List<GtfFeature> getParents() {return parents;}
 
     public List<GtfFeature> getChildren() {return children;}
+
+    public String getID() {return ID;}
 
     public boolean hasParents() {return parents.size()>0;}
 
@@ -113,25 +117,11 @@ public class GtfFeature implements Feature {
     }
 
     public Set<GtfFeature> flatten() {
-        final HashSet<GtfFeature> features = new HashSet<>(Collections.singleton(this));
+        final Set<GtfFeature> features = new HashSet<>(Collections.singleton(this));
 
         for(final GtfFeature child : children) {
             features.addAll(child.flatten());
         }
         return features;
-    }
-
-    public Set<Interval> getRibosomalIntervals() {
-        if (type == "rRNA") {
-            return new HashSet<>(Arrays.asList(new Interval(contig, start, end)));
-        } else {
-            final Set<Interval> ribosomalIntervals = new HashSet<>();
-            if (hasChildren()) {
-                for (final GtfFeature child : children) {
-                    ribosomalIntervals.addAll(child.getRibosomalIntervals());
-                }
-            }
-            return ribosomalIntervals;
-        }
     }
 }

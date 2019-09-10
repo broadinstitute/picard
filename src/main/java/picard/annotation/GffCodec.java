@@ -19,10 +19,8 @@ import picard.PicardException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class GffCodec extends AbstractFeatureCodec<GtfFeature, LineIterator> {
     final Logger logger = LogManager.getLogger(GffCodec.class);
@@ -44,6 +42,15 @@ public abstract class GffCodec extends AbstractFeatureCodec<GtfFeature, LineIter
 
     private static final String COMMENT_START = "#";
 
+    private static final String FLUSH_DIRECTIVE = "###";
+
+    private final LinkedList<GtfFeature> activeFeatures = new LinkedList<>();
+    private final LinkedList<GtfFeature> featuresToFlush = new LinkedList<>();
+    /* discontinuous features can have multiple lines representing the same feature, with the same ID in GFF.
+    For this implementation the discontinous features are split into separate features, with children only associated with the portion on the discontinous feature they overlap.
+     */
+    private final Map<String, Set<GtfFeature>> activeFeaturesWithIDs = new HashMap<>();
+
     private int currentLineNum = 0;
 
      GffCodec(final Set<String> fileExtensions) {
@@ -53,6 +60,18 @@ public abstract class GffCodec extends AbstractFeatureCodec<GtfFeature, LineIter
 
     @Override
     public GtfFeature decode(final LineIterator lineIterator) {
+        if(!lineIterator.hasNext()) {
+            featuresToFlush.addAll(activeFeatures);
+            for (final GtfFeature feature : activeFeatures) {
+                activeFeaturesWithIDs.get(feature.getID()).remove(feature);
+                if (activeFeaturesWithIDs.get(feature.getID()).isEmpty()) {
+                    activeFeaturesWithIDs.remove(feature.getID());
+                }
+            }
+            activeFeatures.clear();
+            return featuresToFlush.poll();
+        }
+
         final String line = lineIterator.next();
         currentLineNum++;
 
@@ -76,10 +95,37 @@ public abstract class GffCodec extends AbstractFeatureCodec<GtfFeature, LineIter
             final int phase = splitLine[GENOMIC_PHASE_INDEX].equals(".")? -1 : Integer.valueOf(splitLine[GENOMIC_PHASE_INDEX]);
             final Strand strand = Strand.decode(splitLine[GENOMIC_STRAND_INDEX]);
             final Map<String, String> attributes = parseAttributes(splitLine[EXTRA_FIELDS_INDEX]);
-            return new GtfFeature(contig, source, type, start, end, strand, phase, attributes);
+            final GtfFeature thisFeature = new GtfFeature(contig, source, type, start, end, strand, phase, attributes);
+            final List<String> parentIDs = attributes.get("Parent") != null? Arrays.asList(attributes.get("Parent").split(",")) : new ArrayList<>();
+            final String id = attributes.get("ID");
+            for (final String parentID : parentIDs) {
+                final Set<GtfFeature> parents = activeFeaturesWithIDs.get(parentID);
+                if (parents == null) {
+                    throw new PicardException("Could not find feature with ID " + parentID);
+                }
+                final List<GtfFeature> overlappingParents = parents.stream().filter(p -> p.overlaps(thisFeature)).collect(Collectors.toList());
+                if (overlappingParents.isEmpty()) {
+                    throw new PicardException("Could not find feautre with ID " + parentID + " overlapping " + thisFeature.getContig() + ":" + thisFeature.getStart() + "-" + thisFeature.getEnd());
+                }
+                for (final GtfFeature parent : overlappingParents) {
+                    parent.addChild(thisFeature);
+                    thisFeature.addParent(parent);
+                }
+            }
+            if (!thisFeature.hasParents()) {
+                activeFeatures.add(thisFeature);
+            }
+            if (activeFeaturesWithIDs.containsKey(id)) {
+                activeFeaturesWithIDs.get(id).add(thisFeature);
+            } else {
+                activeFeaturesWithIDs.put(id, new HashSet<>(Collections.singleton(thisFeature)));
+            }
+
+            featuresToFlush.poll();
         } catch (final NumberFormatException ex ) {
             throw new PicardException("Cannot read integer value for start/end position!");
         }
+        return null;
     }
 
     protected abstract Map<String,String> parseAttributes(final String attributesString);
@@ -87,6 +133,7 @@ public abstract class GffCodec extends AbstractFeatureCodec<GtfFeature, LineIter
     @Override
     public Feature decodeLoc(LineIterator lineIterator) {
         final String line = lineIterator.next();
+
         if (line.startsWith(COMMENT_START)) {
             return null;
         }
@@ -191,7 +238,7 @@ public abstract class GffCodec extends AbstractFeatureCodec<GtfFeature, LineIter
 
     @Override
     public boolean isDone(final LineIterator lineIterator) {
-        return !lineIterator.hasNext();
+        return !lineIterator.hasNext() && activeFeatures.isEmpty() && featuresToFlush.isEmpty();
     }
 
     @Override
