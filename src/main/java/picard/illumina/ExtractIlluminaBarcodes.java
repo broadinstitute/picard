@@ -822,7 +822,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                     final boolean passingFilter = cluster.isPf();
                     final BarcodeMatch match = findBestBarcode(barcodeSubsequences, qualityScores,
                             metrics, maxNoCalls, maxMismatches,
-                            minMismatchDelta, minimumBaseQuality);
+                            minMismatchDelta, minimumBaseQuality, barcodeLookupMap, distanceMode);
                     updateMetrics(match, passingFilter, metrics, noMatch);
 
                     final String yOrN = (match.matched ? "Y" : "N");
@@ -844,7 +844,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             }
         }
 
-        private boolean ensureLookupMinimumValue(final byte[][] qualityScores, final int minimumBaseQuality) {
+        private static boolean ensureLookupMinimumValue(final byte[][] qualityScores, final int minimumBaseQuality) {
             if (qualityScores != null) {
                 for (final byte[] qs : qualityScores) {
                     for (final byte q : qs) {
@@ -863,13 +863,15 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * @param readSubsequences portion of read containing barcode
          * @return perfect barcode string, if there was a match within tolerance, or null if not.
          */
-        private BarcodeMatch findBestBarcode(final byte[][] readSubsequences,
+        static BarcodeMatch findBestBarcode(final byte[][] readSubsequences,
                                              final byte[][] qualityScores,
                                              final Map<String, BarcodeMetric> metrics,
                                              final int maxNoCalls,
                                              final int maxMismatches,
                                              final int minMismatchDelta,
-                                             final int minimumBaseQuality) {
+                                             final int minimumBaseQuality,
+                                            Map<String, BarcodeMatch> barcodeLookupMap,
+                                            final DistanceMetric distanceMode) {
             BarcodeMetric bestBarcodeMetric = null;
             final boolean canUseLookupTable = ensureLookupMinimumValue(qualityScores, minimumBaseQuality);
             final BarcodeMatch match;
@@ -897,7 +899,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 int numMismatchesInSecondBestBarcode = totalBarcodeReadBases + 1;
 
                 for (final BarcodeMetric barcodeMetric : metrics.values()) {
-                    final BarcodeEditDistanceQuery barcodeEditDistanceQuery = new BarcodeEditDistanceQuery(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality, maxMismatches);
+                    // need to add maxMismatches + minMismatchDelta together since the result might get used as numMismatchesInSecondBestBarcode
+                    final BarcodeEditDistanceQuery barcodeEditDistanceQuery = new BarcodeEditDistanceQuery(barcodeMetric.barcodeBytes, readSubsequences, qualityScores,
+                            minimumBaseQuality, Math.min(maxMismatches, numMismatchesInBestBarcode) + minMismatchDelta);
                     final int numMismatches = distanceMode.distance(barcodeEditDistanceQuery);
 
                     if (numMismatches < numMismatchesInBestBarcode) {
