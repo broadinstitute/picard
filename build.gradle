@@ -77,7 +77,7 @@ dependencies {
     compile 'commons-lang:commons-lang:2.6'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     compile 'org.broadinstitute:barclay:2.0.0'
-    compileOnly(googleNio) {
+    compile(googleNio) {
         transitive = false
     }
 

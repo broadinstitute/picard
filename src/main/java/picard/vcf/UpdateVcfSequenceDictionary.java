@@ -38,15 +38,12 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 
 /**
  * Takes a VCF file and a Sequence Dictionary (from a variety of file types) and updates the Sequence Dictionary in VCF.
@@ -89,13 +86,7 @@ public class UpdateVcfSequenceDictionary extends CommandLineProgram {
         if (CREATE_INDEX)
             builder.setOption(Options.INDEX_ON_THE_FLY);
 
-        try {
-            builder.setOutputStream(new FileOutputStream(OUTPUT));
-        } catch (final FileNotFoundException ex ) {
-            throw new PicardException("Could not open " + OUTPUT.getAbsolutePath() + ": " + ex.getMessage(), ex);
-        }
-
-        final VariantContextWriter vcfWriter = builder.build();
+        final VariantContextWriter vcfWriter = builder.setOutputFile(OUTPUT).build();
         fileHeader.setSequenceDictionary(samSequenceDictionary);
         vcfWriter.writeHeader(fileHeader);
 

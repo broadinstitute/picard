@@ -24,6 +24,7 @@
 
 package picard.sam.SamErrorMetric;
 
+import com.google.cloud.storage.contrib.nio.SeekableByteChannelPrefetcher;
 import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
@@ -31,8 +32,11 @@ import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.*;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.readers.LineIterator;
 import htsjdk.tribble.util.ParsingUtils;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -44,7 +48,9 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.SeekableByteChannel;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -53,7 +59,7 @@ import java.util.stream.Collectors;
  */
 
 @CommandLineProgramProperties(
-        summary = "Program to collect error metrics on bases stratified in various ways.\n" +
+        summary = "[olditeration multivcf] Program to collect error metrics on bases stratified in various ways.\n" +
                 "<p>" +
                 "Sequencing errors come in different 'flavors'. For example, some occur during sequencing while " +
                 "others happen during library construction, prior to the sequencing. They may be correlated with " +
@@ -88,6 +94,9 @@ import java.util.stream.Collectors;
 )
 @DocumentedFeature
 public class CollectSamErrorMetrics extends CommandLineProgram {
+
+    private static final int MAX_DIRECTIVES = ReadBaseStratification.Stratifier.values().length + 1;
+    private static final Log log = Log.getInstance(CollectSamErrorMetrics.class);
 
     // =====================================================================
 
@@ -141,7 +150,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
     @Argument(shortName = "V", doc = "VCF of known variation for sample. program will skip over polymorphic sites in this VCF and " +
             "avoid collecting data on these loci.")
-    public String VCF;
+    public List<String> VCF;
 
     @Argument(shortName = "L", doc = "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will intersect inputs if multiple are given. ", optional = true)
     public List<File> INTERVALS;
@@ -164,6 +173,15 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
     @Argument(shortName = "P", doc = "The probability of selecting a locus for analysis (for downsampling).", optional = true)
     public double PROBABILITY = 1;
+
+    @Argument(
+            fullName = "progressStepInterval",
+            doc = "The interval between which progress will be displayed.",
+            optional = true
+    )
+    public int progressStepInterval = 100000;
+
+    // =====================================================================
 
     @Override
     protected boolean requiresReference() {
@@ -216,15 +234,12 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         }
     }
 
-    private static final int MAX_DIRECTIVES = ReadBaseStratification.Stratifier.values().length + 1;
-    private static final Log log = Log.getInstance(CollectSamErrorMetrics.class);
-
     @Override
     protected int doWork() {
 
         final Random random = new Random(42);
 
-        final ProgressLogger progressLogger = new ProgressLogger(log, 100000);
+        final ProgressLogger progressLogger = new ProgressLogger(log, progressStepInterval);
         long nTotalLoci = 0;
         long nSkippedLoci = 0;
         long nProcessedLoci = 0;
@@ -232,14 +247,38 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         IOUtil.assertFilesAreReadable(INTERVALS);
 
         final Collection<BaseErrorAggregation> aggregatorList = getAggregatorList();
+
+        Function<SeekableByteChannel, SeekableByteChannel> nioBufferingFunction = is -> {
+            try {
+                return SeekableByteChannelPrefetcher.addPrefetcher(40, is);
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading from resource file.", e);
+            }
+        };
+
+        final List<PeekableIterator<VariantContext>> featureIterators = new ArrayList<>();
+        for(final String vcf : VCF) {
+            final AbstractFeatureReader<VariantContext, LineIterator> featureReader = AbstractFeatureReader.getFeatureReader(vcf, null, new VCFCodec(), true, nioBufferingFunction, nioBufferingFunction);
+
+            // Make sure we can query our file:
+            if (!featureReader.isQueryable()) {
+                throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!");
+            }
+            try {
+                featureIterators.add(new PeekableIterator<>(featureReader.iterator()));
+            } catch (IOException e) {
+                throw new PicardException("Error reading from VCF file.", e);
+            }
+        }
+
         // Open up the input resources:
         try (
-                final SamReader sam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(IOUtil.getPath(INPUT));
+                final SamReader sam = SamReaderFactory.makeDefault()
+                        .referenceSequence(REFERENCE_SEQUENCE)
+                        .setOption(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS, true)
+                        .open(IOUtil.getPath(INPUT), nioBufferingFunction, nioBufferingFunction);
                 final ReferenceSequenceFileWalker referenceSequenceFileWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-                final PeekableIterator<VariantContext> vcfIterator = new PeekableIterator<>(
-                        VCF == null ? Collections.emptyIterator() : new VCFFileReader(IOUtil.getPath(VCF), true).iterator())
         ) {
-
             final SAMSequenceDictionary sequenceDictionary = referenceSequenceFileWalker.getSequenceDictionary();
             if (sam.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
                 throw new PicardException("Input BAM must be sorted by coordinate");
@@ -283,10 +322,12 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 nTotalLoci++;
 
                 // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
-                if (advanceIteratorAndCheckLocus(vcfIterator, info.getLocus(), sequenceDictionary)) {
-                    log.debug(String.format("Skipping locus from VCF: %s", vcfIterator.peek().toStringWithoutGenotypes()));
-                    nSkippedLoci++;
-                    continue;
+                for (final PeekableIterator<VariantContext> vcfIterator : featureIterators) {
+                    if (advanceIteratorAndCheckLocus(vcfIterator, info.getLocus(), sequenceDictionary)) {
+                        log.debug(String.format("Skipping locus from VCF: %s", vcfIterator.peek().toStringWithoutGenotypes()));
+                        nSkippedLoci++;
+                        continue;
+                    }
                 }
 
                 addLocusBases(aggregatorList, info);
@@ -497,7 +538,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      */
     public static int CompareVariantContextToLocus(final SAMSequenceDictionary dictionary, final VariantContext variantContext, final Locus locus) {
 
-        final int indexDiff = dictionary.getSequenceIndex(variantContext.getContig()) - locus.getSequenceIndex();
+        final int indexDiff = dictionary.getSequenceIndex("chr" + variantContext.getContig()) - locus.getSequenceIndex();
         if (indexDiff != 0) {
             return indexDiff < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
