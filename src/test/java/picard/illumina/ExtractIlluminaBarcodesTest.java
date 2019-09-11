@@ -407,36 +407,25 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "testDeltaData")
     void testDelta(final String[] barcodeRead, final String[] barcodeQuality, final int expectedMismatches, final int expectedSecondMismatches) {
-        Map<String, BarcodeMatch> barcodeMatches = new HashMap<>();
 
-        List<String[]> barcodes = Arrays.asList(
+        final List<String[]> barcodes = Arrays.asList(
                 new String[]{"CTGTGG", "GGCTAG"},
                 new String[]{"AGGTCG", "AATTGT"},
                 new String[]{"ACCAAC", "GTATTG"}
                 );
-        Map<String, ExtractIlluminaBarcodes.BarcodeMetric> barcodeMetrics = barcodes.stream()
+        final Map<String, ExtractIlluminaBarcodes.BarcodeMetric> barcodeMetrics = barcodes.stream()
                 .collect(Collectors.toMap(
                         s -> s[0] + s[1],
-                        s -> new ExtractIlluminaBarcodes.BarcodeMetric(s[0] + s[1], "dummy", "more_dummy", s)));
+                        s -> new ExtractIlluminaBarcodes.BarcodeMetric("dummy_name","dummy_library", s[0] + s[1], s)));
 
-        byte[][] reads = new byte[][]{
-                barcodeRead[0].getBytes(),
-                barcodeRead[1].getBytes()
-        };
-        byte[][] qualities = new byte[][]{
-                barcodeQuality[0].getBytes(),
-                barcodeQuality[1].getBytes()
-        };
-        BarcodeMatch match = ExtractIlluminaBarcodes.PerTileBarcodeExtractor.findBestBarcode(reads, qualities,
+        final byte[][] reads     = new byte[][]{barcodeRead[0].getBytes(), barcodeRead[1].getBytes()};
+        final byte[][] qualities = new byte[][]{barcodeQuality[0].getBytes(), barcodeQuality[1].getBytes()};
+
+        final BarcodeMatch match = ExtractIlluminaBarcodes.PerTileBarcodeExtractor.calculateBarcodeMatch(reads, qualities,
                 barcodeMetrics, 2, 2, 2, 20,
-                barcodeMatches, DistanceMetric.HAMMING);
+                DistanceMetric.HAMMING);
 
-
-        Assert.assertFalse(barcodeMatches.isEmpty());
-        final BarcodeMatch barcodeMatch = barcodeMatches.get(String.join("-",barcodeRead[0], barcodeRead[1]));
-        Assert.assertNotNull(barcodeMatch);
-
-        Assert.assertEquals(barcodeMatch.mismatches,expectedMismatches);
-        Assert.assertEquals(barcodeMatch.mismatchesToSecondBest,expectedSecondMismatches);
+        Assert.assertEquals(match.mismatches,expectedMismatches);
+        Assert.assertEquals(match.mismatchesToSecondBest,expectedSecondMismatches);
     }
 }
