@@ -38,6 +38,8 @@ import htsjdk.tribble.util.ParsingUtils;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFIterator;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -257,6 +259,8 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         };
 
         final List<PeekableIterator<VariantContext>> featureIterators = new ArrayList<>();
+        final Map<PeekableIterator<VariantContext>, Boolean> appendChrPrefixMap = new HashMap<>();
+
         for(final String vcf : VCF) {
             final AbstractFeatureReader<VariantContext, LineIterator> featureReader = AbstractFeatureReader.getFeatureReader(vcf, null, new VCFCodec(), true, nioBufferingFunction, nioBufferingFunction);
 
@@ -265,7 +269,12 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!");
             }
             try {
-                featureIterators.add(new PeekableIterator<>(featureReader.iterator()));
+                PeekableIterator<VariantContext> featureIterator = new PeekableIterator<>(featureReader.iterator());
+                featureIterators.add(featureIterator);
+                appendChrPrefixMap.put(featureIterator, ((VCFHeader)featureReader.getHeader()).getOtherHeaderLine("source").getValue().toLowerCase().contains("dbsnp"));
+                if (appendChrPrefixMap.get(featureIterator)) {
+                    log.warn("dbSNP VCF file detected. Will prepend \"chr\" prefix to contig names when querying file " + vcf);
+                }
             } catch (IOException e) {
                 throw new PicardException("Error reading from VCF file.", e);
             }
@@ -323,7 +332,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
                 // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
                 for (final PeekableIterator<VariantContext> vcfIterator : featureIterators) {
-                    if (advanceIteratorAndCheckLocus(vcfIterator, info.getLocus(), sequenceDictionary)) {
+                    if (advanceIteratorAndCheckLocus(vcfIterator, info.getLocus(), sequenceDictionary, appendChrPrefixMap.get(vcfIterator))) {
                         log.debug(String.format("Skipping locus from VCF: %s", vcfIterator.peek().toStringWithoutGenotypes()));
                         nSkippedLoci++;
                         continue;
@@ -382,12 +391,12 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * @param sequenceDictionary a dictionary with which to compare the Locatable to the Locus...
      * @return true if there's a variant over the locus, false otherwise.
      */
-    private static boolean advanceIteratorAndCheckLocus(final PeekableIterator<VariantContext> vcfIterator, final Locus locus, final SAMSequenceDictionary sequenceDictionary) {
+    private static boolean advanceIteratorAndCheckLocus(final PeekableIterator<VariantContext> vcfIterator, final Locus locus, final SAMSequenceDictionary sequenceDictionary, boolean appendChrPrefix) {
         while (vcfIterator.hasNext() && (vcfIterator.peek().isFiltered() ||
-                CompareVariantContextToLocus(sequenceDictionary, vcfIterator.peek(), locus) < 0)) {
+                CompareVariantContextToLocus(sequenceDictionary, vcfIterator.peek(), locus, appendChrPrefix) < 0)) {
             vcfIterator.next();
         }
-        return vcfIterator.hasNext() && CompareVariantContextToLocus(sequenceDictionary, vcfIterator.peek(), locus) == 0;
+        return vcfIterator.hasNext() && CompareVariantContextToLocus(sequenceDictionary, vcfIterator.peek(), locus, appendChrPrefix) == 0;
     }
 
     /**
@@ -536,9 +545,14 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * if variantContext and locus are in the same contig the return value will be the number of bases apart they are,
      * otherwise it will be MIN_INT/MAX_INT
      */
-    public static int CompareVariantContextToLocus(final SAMSequenceDictionary dictionary, final VariantContext variantContext, final Locus locus) {
-
-        final int indexDiff = dictionary.getSequenceIndex(variantContext.getContig()) - locus.getSequenceIndex();
+    public static int CompareVariantContextToLocus(final SAMSequenceDictionary dictionary, final VariantContext variantContext, final Locus locus, boolean appendChrPrefix) {
+        final int indexDiff;
+        if (appendChrPrefix) {
+            indexDiff = dictionary.getSequenceIndex("chr" + variantContext.getContig()) - locus.getSequenceIndex();
+        }
+        else {
+            indexDiff = dictionary.getSequenceIndex(variantContext.getContig()) - locus.getSequenceIndex();
+        }
         if (indexDiff != 0) {
             return indexDiff < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
