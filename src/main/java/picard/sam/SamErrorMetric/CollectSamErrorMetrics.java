@@ -538,7 +538,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      */
     public static int CompareVariantContextToLocus(final SAMSequenceDictionary dictionary, final VariantContext variantContext, final Locus locus) {
 
-        final int indexDiff = dictionary.getSequenceIndex("chr" + variantContext.getContig()) - locus.getSequenceIndex();
+        final int indexDiff = dictionary.getSequenceIndex(variantContext.getContig()) - locus.getSequenceIndex();
         if (indexDiff != 0) {
             return indexDiff < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
