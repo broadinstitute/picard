@@ -399,9 +399,9 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
     @DataProvider
     Object[][] testDeltaData(){
         return new Object[][]{
-                new Object[] {new String[]{"ACCAACTG", "GAATTCCC"}, new String [] {"!AAAAAAA","!AAAAAAA"}, 2, 5},
-                new Object[] {new String[]{"CTACGCGT", "TGTCGTGT"}, new String [] {"!AAAAAAA","!AAAAAAA"}, 5, 5},
-                new Object[] {new String[]{"AGGTCGCA", "AATTGTGC"}, new String [] {"AAAAAAAA","AAAAAAAA"}, 0, 3},
+                new Object[] {new String[]{"ACCAAC", "GAATTC"}, new String [] {"!AAAAA","!AAAAA"}, 2, 5},
+                new Object[] {new String[]{"CTACGC", "TGTCGT"}, new String [] {"!AAAAA","!AAAAA"}, 5, 5},
+                new Object[] {new String[]{"AGGTCG", "AATTGT"}, new String [] {"AAAAAA","AAAAAA"}, 0, 5},
         };
     }
 
@@ -410,11 +410,10 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         Map<String, BarcodeMatch> barcodeMatches = new HashMap<>();
 
         List<String[]> barcodes = Arrays.asList(
-                new String[]{"CTGTGGCG", "GGCTAGTG"},
-                new String[]{"AGGTCGCA", "AATTGTGC"},
-                new String[]{"ACCAACTG", "GTATTGCC"}
+                new String[]{"CTGTGG", "GGCTAG"},
+                new String[]{"AGGTCG", "AATTGT"},
+                new String[]{"ACCAAC", "GTATTG"}
                 );
-
         Map<String, ExtractIlluminaBarcodes.BarcodeMetric> barcodeMetrics = barcodes.stream()
                 .collect(Collectors.toMap(
                         s -> s[0] + s[1],

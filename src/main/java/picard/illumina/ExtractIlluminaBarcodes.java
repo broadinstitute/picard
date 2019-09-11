@@ -860,8 +860,16 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         /**
          * Find the best barcode match for the given read sequence, and accumulate metrics
          *
+         * NOTE: the returned BarcodeMatch object will contain mismatches mismatchesToSecondBest values that may be
+         * inaccurate as long as the conclusion match/no-match isn't affected. for example, mismatches and mismatchesToSecondBest
+         * may be smaller than their true value if mismatches is truly larger than maxMismatches.
+         * Also, mismatchesToSecondBest might be smaller than it's true value if its true value is greater than
+         * mismatches + minMismatchDelta. This is due to an optimization which allows the distance calculation to stop once
+         * the conclusion (Match or no-Match) can be reached.
+         *
          * @param readSubsequences portion of read containing barcode
          * @return perfect barcode string, if there was a match within tolerance, or null if not.
+         *
          */
         static BarcodeMatch findBestBarcode(final byte[][] readSubsequences,
                                              final byte[][] qualityScores,
