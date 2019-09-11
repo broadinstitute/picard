@@ -886,6 +886,13 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             final boolean canUseLookupTable = ensureLookupMinimumValue(qualityScores, minimumBaseQuality);
             final BarcodeMatch match;
             final String barcodesAsString = IlluminaUtil.barcodeSeqsToString(readSubsequences);
+
+            // this implementation is optimized for barcodeLookupMap being a ConcurrentHashMap for which this
+            // pattern is faster than using computeIfAbsent (or rather, it lock the map
+            // for a shorter time, allow other threads to access it).
+
+            // Also, a ConcurrentHashMap was used rather than a Cache since a thread-safe Cache was not found,
+            // hence the "poor man's cache" of using the first maxLookupSize distinct barcode reads.
             if (canUseLookupTable && barcodeLookupMap.containsKey(barcodesAsString)) {
                 match = barcodeLookupMap.get(barcodesAsString);
             } else {
@@ -894,7 +901,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                         minimumBaseQuality, distanceMode);
 
                 if (canUseLookupTable && barcodeLookupMap.size() < maxLookupSize) {
-                    barcodeLookupMap.putIfAbsent(barcodesAsString, match);
+                    barcodeLookupMap.put(barcodesAsString, match);
                 }
             }
 
@@ -907,8 +914,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                                                   final int maxNoCalls, final int maxMismatches,
                                                   final int minMismatchDelta, final int minimumBaseQuality,
                                                   final DistanceMetric distanceMode) {
+            final BarcodeMatch match;
             BarcodeMetric bestBarcodeMetric = null;
-            final BarcodeMatch match = new BarcodeMatch();
+            match = new BarcodeMatch();
 
             int totalBarcodeReadBases = 0;
             int numNoCalls = 0; // NoCalls are calculated for all the barcodes combined
