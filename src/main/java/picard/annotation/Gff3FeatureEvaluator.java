@@ -14,6 +14,9 @@ import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 import picard.PicardException;
 
 
+import java.io.File;
+import java.net.URL;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +34,7 @@ public class Gff3FeatureEvaluator {
     final private OWLDataFactory df = OWLManager.getOWLDataFactory();
     final OWLObjectPropertyExpression partOf;
 
-    final public static String DEFAULT_ONTOLOGY_IRI = "https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/v3.1/so.owl";
+    final static URL DEFAULT_ONTOLOGY_URL = Gff3FeatureEvaluator.class.getResource("so.owl");
     final public static String DEFAULT_CDS_IRI = "http://purl.obolibrary.org/obo/SO_0000316";
     final public static String DEFAULT_TRANSCRIPT_IRI = "http://purl.obolibrary.org/obo/SO_0000673";
     final public static String DEFAULT_GENE_IRI = "http://purl.obolibrary.org/obo/SO_0000704";
@@ -39,13 +42,14 @@ public class Gff3FeatureEvaluator {
     final public static String DEFAULT_EXON_IRI = "http://purl.obolibrary.org/obo/SO_0000147";
 
     public Gff3FeatureEvaluator() {
-        this(DEFAULT_ONTOLOGY_IRI, DEFAULT_PARTOF_IRI);
+        this(DEFAULT_ONTOLOGY_URL, DEFAULT_PARTOF_IRI);
     }
 
-    public Gff3FeatureEvaluator(final String ontologyIRI, final String partOfIRI) {
+    public Gff3FeatureEvaluator(final URL ontologyIRI, final String partOfIRI) {
         final OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
         try {
-            ontology = manager.loadOntology(IRI.create(ontologyIRI));
+            //ontology = manager.loadOntology(IRI.create("file:///" + new File(ontologyIRI).getAbsolutePath()));
+            ontology = manager.loadOntology(IRI.create(DEFAULT_ONTOLOGY_URL));
             final ReasonerFactory reasonerFactory = new ReasonerFactory();
             reasoner = reasonerFactory.createReasoner(ontology);
 
