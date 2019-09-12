@@ -84,8 +84,14 @@ import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
  * - matched barcode sequence (empty if read did not match one of the barcodes).  If there is no match
  * but we're close to the threshold of calling it a match we output the barcode that would have been
  * matched but in lower case
+ * - distance to best matching barcode, "mismatches" (*)
+ * - distance to second-best matching barcode, "mismatchesToSecondBest" (*)
  *
- * @author jburke@broadinstitute.org
+ * NOTE (*): Due to an optimization the reported mismatches & mismatchesToSecondBest values may be inaccurate as long as
+ * the conclusion (match vs. no-match) isn't affected. For example, reported mismatches and
+ * mismatchesToSecondBest may be smaller than their true value if mismatches is truly larger than MAX_MISMATCHES.
+ * Also, mismatchesToSecondBest might be smaller than its true value if its true value is greater than
+ * mismatches + MIN_MISMATCH_DELTA.
  */
 @CommandLineProgramProperties(
 
@@ -799,12 +805,12 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 }
                 LOG.info("Extracting barcodes for tile " + tile);
 
-                //Sometimes makeDataProvider takes a while waiting for slow file IO, for each tile the needed set of files
-                //is non-overlapping sets of files so make the  data providers in the individual threads for PerTileBarcodeExtractors
-                //so they are not all waiting for each others file operations
+                // Sometimes makeDataProvider takes a while waiting for slow file IO, for each tile the needed set of files
+                // is non-overlapping sets of files so make the  data providers in the individual threads for PerTileBarcodeExtractors
+                // so they are not all waiting for each others file operations
 
-                //Most likely we have SKIPS in our read structure since we replace all template reads with skips in the input data structure
-                //(see customCommnandLineValidation), therefore we must use the outputReadStructure to index into the output cluster data
+                // Most likely we have SKIPS in our read structure since we replace all template reads with skips in the input data structure
+                // (see customCommnandLineValidation), therefore we must use the outputReadStructure to index into the output cluster data
                 final int[] barcodeIndices = outputReadStructure.sampleBarcodes.getIndices();
                 final BufferedWriter writer = IOUtil.openFileForBufferedWriting(barcodeFile);
                 final byte[][] barcodeSubsequences = new byte[barcodeIndices.length][];
@@ -844,7 +850,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             }
         }
 
-        private boolean ensureLookupMinimumValue(final byte[][] qualityScores, final int minimumBaseQuality) {
+        private static boolean ensureLookupMinimumValue(final byte[][] qualityScores, final int minimumBaseQuality) {
             if (qualityScores != null) {
                 for (final byte[] qs : qualityScores) {
                     for (final byte q : qs) {
@@ -860,89 +866,120 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         /**
          * Find the best barcode match for the given read sequence, and accumulate metrics
          *
+         * NOTE: the returned BarcodeMatch object will contain mismatches mismatchesToSecondBest values that may be
+         * inaccurate as long as the conclusion match/no-match isn't affected. for example, mismatches and mismatchesToSecondBest
+         * may be smaller than their true value if mismatches is truly larger than maxMismatches.
+         * Also, mismatchesToSecondBest might be smaller than its true value if its true value is greater than
+         * mismatches + minMismatchDelta. This is due to an optimization which allows the distance calculation to stop once
+         * the conclusion (Match or no-Match) can be reached.
+         *
          * @param readSubsequences portion of read containing barcode
          * @return perfect barcode string, if there was a match within tolerance, or null if not.
          */
         private BarcodeMatch findBestBarcode(final byte[][] readSubsequences,
-                                             final byte[][] qualityScores,
-                                             final Map<String, BarcodeMetric> metrics,
-                                             final int maxNoCalls,
-                                             final int maxMismatches,
-                                             final int minMismatchDelta,
-                                             final int minimumBaseQuality) {
-            BarcodeMetric bestBarcodeMetric = null;
+                                            final byte[][] qualityScores,
+                                            final Map<String, BarcodeMetric> metrics,
+                                            final int maxNoCalls,
+                                            final int maxMismatches,
+                                            final int minMismatchDelta,
+                                            final int minimumBaseQuality) {
             final boolean canUseLookupTable = ensureLookupMinimumValue(qualityScores, minimumBaseQuality);
             final BarcodeMatch match;
             final String barcodesAsString = IlluminaUtil.barcodeSeqsToString(readSubsequences);
+
+            // this implementation is optimized for barcodeLookupMap being a ConcurrentHashMap for which this
+            // pattern is faster than using computeIfAbsent (or rather, it locks the map
+            // for a shorter time, allowing other threads to access it).
+
+            // Also, a ConcurrentHashMap was used rather than a Cache since a high-performance, thread-safe
+            // Cache was not found, hence the "poor man's cache" of using the first maxLookupSize distinct
+            // barcode reads.
+
             if (canUseLookupTable && barcodeLookupMap.containsKey(barcodesAsString)) {
                 match = barcodeLookupMap.get(barcodesAsString);
             } else {
-                match = new BarcodeMatch();
-
-                int totalBarcodeReadBases = 0;
-                int numNoCalls = 0; // NoCalls are calculated for all the barcodes combined
-
-                for (final byte[] bc : readSubsequences) {
-                    totalBarcodeReadBases += bc.length;
-                    for (final byte b : bc) {
-                        if (SequenceUtil.isNoCall(b)) {
-                            ++numNoCalls;
-                        }
-                    }
-                }
-
-                // PIC-506 When forcing all reads to match a single barcode, allow a read to match even if every
-                // base is a mismatch.
-                int numMismatchesInBestBarcode = totalBarcodeReadBases + 1;
-                int numMismatchesInSecondBestBarcode = totalBarcodeReadBases + 1;
-
-                for (final BarcodeMetric barcodeMetric : metrics.values()) {
-                    final BarcodeEditDistanceQuery barcodeEditDistanceQuery = new BarcodeEditDistanceQuery(barcodeMetric.barcodeBytes, readSubsequences, qualityScores, minimumBaseQuality, maxMismatches);
-                    final int numMismatches = distanceMode.distance(barcodeEditDistanceQuery);
-
-                    if (numMismatches < numMismatchesInBestBarcode) {
-                        if (bestBarcodeMetric != null) {
-                            numMismatchesInSecondBestBarcode = numMismatchesInBestBarcode;
-                        }
-                        numMismatchesInBestBarcode = numMismatches;
-                        bestBarcodeMetric = barcodeMetric;
-                    } else if (numMismatches < numMismatchesInSecondBestBarcode) {
-                        numMismatchesInSecondBestBarcode = numMismatches;
-                    }
-                }
-
-                match.matched = bestBarcodeMetric != null &&
-                        numNoCalls <= maxNoCalls &&
-                        numMismatchesInBestBarcode <= maxMismatches &&
-                        numMismatchesInSecondBestBarcode - numMismatchesInBestBarcode >= minMismatchDelta;
-
-                // If we have something that's not a "match" but matches one barcode
-                // slightly, we output that matching barcode in lower case
-                if (numNoCalls + numMismatchesInBestBarcode < totalBarcodeReadBases && bestBarcodeMetric != null) {
-                    match.mismatches = numMismatchesInBestBarcode;
-                    match.mismatchesToSecondBest = numMismatchesInSecondBestBarcode;
-                    match.barcode = bestBarcodeMetric.BARCODE_WITHOUT_DELIMITER.toLowerCase();
-                } else {
-                    match.mismatches = totalBarcodeReadBases;
-                    match.barcode = "";
-                }
-
-                if (match.matched) {
-                    match.barcode = bestBarcodeMetric.BARCODE_WITHOUT_DELIMITER;
-                }
+                match = calculateBarcodeMatch(readSubsequences, qualityScores, metrics, maxNoCalls,
+                        maxMismatches, minMismatchDelta,
+                        minimumBaseQuality, distanceMode);
 
                 if (canUseLookupTable && barcodeLookupMap.size() < maxLookupSize) {
-                    barcodeLookupMap.putIfAbsent(barcodesAsString, match);
+                    barcodeLookupMap.put(barcodesAsString, match);
                 }
             }
 
             return match;
         }
 
+        static BarcodeMatch calculateBarcodeMatch(final byte[][] readSubsequences,
+                                                  final byte[][] qualityScores,
+                                                  final Map<String, BarcodeMetric> metrics,
+                                                  final int maxNoCalls, final int maxMismatches,
+                                                  final int minMismatchDelta, final int minimumBaseQuality,
+                                                  final DistanceMetric distanceMode) {
+            final BarcodeMatch match;
+            BarcodeMetric bestBarcodeMetric = null;
+            match = new BarcodeMatch();
+
+            int totalBarcodeReadBases = 0;
+            int numNoCalls = 0; // NoCalls are calculated for all the barcodes combined
+
+            for (final byte[] bc : readSubsequences) {
+                totalBarcodeReadBases += bc.length;
+                for (final byte b : bc) {
+                    if (SequenceUtil.isNoCall(b)) {
+                        ++numNoCalls;
+                    }
+                }
+            }
+
+            // PIC-506 When forcing all reads to match a single barcode, allow a read to match even if every
+            // base is a mismatch.
+            int numMismatchesInBestBarcode = totalBarcodeReadBases + 1;
+            int numMismatchesInSecondBestBarcode = totalBarcodeReadBases + 1;
+
+            for (final BarcodeMetric barcodeMetric : metrics.values()) {
+                // need to add maxMismatches + minMismatchDelta together since the result might get used as numMismatchesInSecondBestBarcode
+                final BarcodeEditDistanceQuery barcodeEditDistanceQuery = new BarcodeEditDistanceQuery(barcodeMetric.barcodeBytes, readSubsequences, qualityScores,
+                        minimumBaseQuality, Math.min(maxMismatches, numMismatchesInBestBarcode) + minMismatchDelta);
+                final int numMismatches = distanceMode.distance(barcodeEditDistanceQuery);
+
+                if (numMismatches < numMismatchesInBestBarcode) {
+                    if (bestBarcodeMetric != null) {
+                        numMismatchesInSecondBestBarcode = numMismatchesInBestBarcode;
+                    }
+                    numMismatchesInBestBarcode = numMismatches;
+                    bestBarcodeMetric = barcodeMetric;
+                } else if (numMismatches < numMismatchesInSecondBestBarcode) {
+                    numMismatchesInSecondBestBarcode = numMismatches;
+                }
+            }
+
+            match.matched = bestBarcodeMetric != null &&
+                    numNoCalls <= maxNoCalls &&
+                    numMismatchesInBestBarcode <= maxMismatches &&
+                    numMismatchesInSecondBestBarcode - numMismatchesInBestBarcode >= minMismatchDelta;
+
+            // If we have something that's not a "match" but matches one barcode
+            // slightly, we output that matching barcode in lower case
+            if (numNoCalls + numMismatchesInBestBarcode < totalBarcodeReadBases && bestBarcodeMetric != null) {
+                match.mismatches = numMismatchesInBestBarcode;
+                match.mismatchesToSecondBest = numMismatchesInSecondBestBarcode;
+                match.barcode = bestBarcodeMetric.BARCODE_WITHOUT_DELIMITER.toLowerCase();
+            } else {
+                match.mismatches = totalBarcodeReadBases;
+                match.barcode = "";
+            }
+
+            if (match.matched) {
+                match.barcode = bestBarcodeMetric.BARCODE_WITHOUT_DELIMITER;
+            }
+            return match;
+        }
+
         private static void updateMetrics(final BarcodeMatch match, final boolean passingFilter,
                                           final Map<String, BarcodeMetric> metrics, final BarcodeMetric noMatchBarcodeMetric) {
             if (match.matched) {
-                BarcodeMetric matchMetric = metrics.get(match.barcode);
+                final BarcodeMetric matchMetric = metrics.get(match.barcode);
                 ++matchMetric.READS;
                 if (passingFilter) {
                     ++matchMetric.PF_READS;

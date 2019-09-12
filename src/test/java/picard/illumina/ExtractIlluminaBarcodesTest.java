@@ -31,6 +31,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.illumina.ExtractIlluminaBarcodes.PerTileBarcodeExtractor.BarcodeMatch;
 import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProviderFactory;
@@ -43,7 +44,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author alecw@broadinstitute.org
@@ -390,5 +394,38 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> retval = new MetricsFile<>();
         retval.read(new FileReader(metricsFile));
         return retval;
+    }
+
+    @DataProvider
+    Object[][] testDeltaData(){
+        return new Object[][]{
+                new Object[] {new String[]{"ACCAAC", "GAATTC"}, new String [] {"!AAAAA","!AAAAA"}, 2, 5},
+                new Object[] {new String[]{"CTACGC", "TGTCGT"}, new String [] {"!AAAAA","!AAAAA"}, 5, 5},
+                new Object[] {new String[]{"AGGTCG", "AATTGT"}, new String [] {"AAAAAA","AAAAAA"}, 0, 5},
+        };
+    }
+
+    @Test(dataProvider = "testDeltaData")
+    void testDelta(final String[] barcodeRead, final String[] barcodeQuality, final int expectedMismatches, final int expectedSecondMismatches) {
+
+        final List<String[]> barcodes = Arrays.asList(
+                new String[]{"CTGTGG", "GGCTAG"},
+                new String[]{"AGGTCG", "AATTGT"},
+                new String[]{"ACCAAC", "GTATTG"}
+                );
+        final Map<String, ExtractIlluminaBarcodes.BarcodeMetric> barcodeMetrics = barcodes.stream()
+                .collect(Collectors.toMap(
+                        s -> s[0] + s[1],
+                        s -> new ExtractIlluminaBarcodes.BarcodeMetric("dummy_name","dummy_library", s[0] + s[1], s)));
+
+        final byte[][] reads     = new byte[][]{barcodeRead[0].getBytes(), barcodeRead[1].getBytes()};
+        final byte[][] qualities = new byte[][]{barcodeQuality[0].getBytes(), barcodeQuality[1].getBytes()};
+
+        final BarcodeMatch match = ExtractIlluminaBarcodes.PerTileBarcodeExtractor.calculateBarcodeMatch(reads, qualities,
+                barcodeMetrics, 2, 2, 2, 20,
+                DistanceMetric.HAMMING);
+
+        Assert.assertEquals(match.mismatches,expectedMismatches);
+        Assert.assertEquals(match.mismatchesToSecondBest,expectedSecondMismatches);
     }
 }
