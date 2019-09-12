@@ -888,11 +888,13 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             final String barcodesAsString = IlluminaUtil.barcodeSeqsToString(readSubsequences);
 
             // this implementation is optimized for barcodeLookupMap being a ConcurrentHashMap for which this
-            // pattern is faster than using computeIfAbsent (or rather, it lock the map
-            // for a shorter time, allow other threads to access it).
+            // pattern is faster than using computeIfAbsent (or rather, it locks the map
+            // for a shorter time, allowing other threads to access it).
 
-            // Also, a ConcurrentHashMap was used rather than a Cache since a thread-safe Cache was not found,
-            // hence the "poor man's cache" of using the first maxLookupSize distinct barcode reads.
+            // Also, a ConcurrentHashMap was used rather than a Cache since a high-performance, thread-safe
+            // Cache was not found, hence the "poor man's cache" of using the first maxLookupSize distinct
+            // barcode reads.
+
             if (canUseLookupTable && barcodeLookupMap.containsKey(barcodesAsString)) {
                 match = barcodeLookupMap.get(barcodesAsString);
             } else {
