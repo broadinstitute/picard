@@ -23,7 +23,6 @@
  */
 package picard.illumina;
 
-import com.sun.xml.internal.rngom.parse.host.Base;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.fastq.BasicFastqWriter;
