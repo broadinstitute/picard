@@ -812,6 +812,9 @@ public abstract class AbstractAlignmentMerger {
      * @param alignment The alignment record
      */
     protected void setValuesFromAlignment(final SAMRecord rec, final SAMRecord alignment, final boolean needsSafeReverseComplement) {
+        if (!rec.getReadUnmappedFlag()) {
+            throw new PicardException("UNMAPPED_BAM contains mapped reads.  If you would like to use this file as the UNMAPPED_BAM, first revert it using RevertSam.");
+        }
         for (final SAMRecord.SAMTagAndValue attr : alignment.getAttributes()) {
             // Copy over any non-reserved attributes.  attributesToRemove overrides attributesToRetain.
             if ((!isReservedTag(attr.tag) || this.attributesToRetain.contains(attr.tag)) && !this.attributesToRemove.contains(attr.tag)) {
