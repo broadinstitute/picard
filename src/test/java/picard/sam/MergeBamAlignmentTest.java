@@ -23,7 +23,22 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.Defaults;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
@@ -1919,15 +1934,15 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     @DataProvider(name = "mappedReadInUnmappedBamDataProvider")
     Object[][] mappedReadInUnmappedBamDataProvider() {
         return new Object[][] {
-            {false, false, false},
-            {true, true, false},
-            {true, false, true},
-            {true, false, false}
+            {false, false, false, true},
+            {true, true, false, true},
+            {true, false, true, true},
+            {true, true, true, false}
         };
     }
 
-    @Test(dataProvider = "mappedReadInUnmappedBamDataProvider", expectedExceptions = PicardException.class)
-    public void testMappedReadInUnmappedBam(final boolean paired, final boolean firstUnMapped, final boolean secondUnMapped) throws IOException {
+    @Test(dataProvider = "mappedReadInUnmappedBamDataProvider")
+    public void testMappedReadInUnmappedBam(final boolean paired, final boolean firstUnMapped, final boolean secondUnMapped, final boolean shouldThrowException) throws IOException {
         final SAMRecordSetBuilder samRecordSetBuilderUnmappedBam = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.queryname);
         samRecordSetBuilderUnmappedBam.setRandomSeed(12345);
         final SAMFileHeader header = samRecordSetBuilderUnmappedBam.getHeader();
@@ -1977,7 +1992,11 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         );
 
         //should throw PicardException when run because mapped read found in UNMAPPED_BAM input
-        runPicardCommandLine(args);
+        if (shouldThrowException) {
+            Assert.assertThrows(PicardException.class, () -> runPicardCommandLine(args));
+        } else {
+            runPicardCommandLine(args);
+        }
     }
 }
 
