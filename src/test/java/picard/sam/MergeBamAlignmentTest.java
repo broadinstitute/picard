@@ -35,6 +35,7 @@ import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.SamReader;
