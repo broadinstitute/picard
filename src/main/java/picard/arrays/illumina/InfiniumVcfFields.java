@@ -129,7 +129,7 @@ public class InfiniumVcfFields {
     }
     final static int NUM_GENOTYPE_VALUES = GENOTYPE_VALUES.values().length;
 
-    static String getValueFromVcfOtherHeaderLine(final VCFHeader vcfHeader, final String keyName) {
+    public static String getValueFromVcfOtherHeaderLine(final VCFHeader vcfHeader, final String keyName) {
         VCFHeaderLine otherHeaderLine = vcfHeader.getOtherHeaderLine(keyName);
         if (otherHeaderLine != null) {
             return otherHeaderLine.getValue();
@@ -138,7 +138,7 @@ public class InfiniumVcfFields {
         }
     }
 
-    static Iso8601Date getDateFromVcfOtherHeaderLine(final VCFHeader vcfHeader, final String keyName, final SimpleDateFormat dateformat) {
+    public static Iso8601Date getDateFromVcfOtherHeaderLine(final VCFHeader vcfHeader, final String keyName, final SimpleDateFormat dateformat) {
         String dateString = InfiniumVcfFields.getValueFromVcfOtherHeaderLine(vcfHeader, keyName);
         try {
             return new Iso8601Date(dateformat.parse(dateString));
@@ -147,7 +147,7 @@ public class InfiniumVcfFields {
         }
     }
 
-    static Integer getIntegerFromVcfOtherHeaderLine(final VCFHeader vcfHeader, final String keyName) {
+    public static Integer getIntegerFromVcfOtherHeaderLine(final VCFHeader vcfHeader, final String keyName) {
         VCFHeaderLine otherHeaderLine = vcfHeader.getOtherHeaderLine(keyName);
         if (otherHeaderLine != null) {
             return Integer.valueOf(otherHeaderLine.getValue());
@@ -156,7 +156,12 @@ public class InfiniumVcfFields {
         }
     }
 
-    static String getOptionalValueFromVcfOtherHeaderLine(final VCFHeader vcfHeader, final String keyName) {
+    public static Integer getOptionalIntegerFromVcfOtherHeaderLine(final VCFHeader vcfHeader, final String keyName) {
+        String value = getOptionalValueFromVcfOtherHeaderLine(vcfHeader, keyName);
+        return (value != null) ? Integer.valueOf(value) : null;
+    }
+
+    public static String getOptionalValueFromVcfOtherHeaderLine(final VCFHeader vcfHeader, final String keyName) {
         VCFHeaderLine otherHeaderLine = vcfHeader.getOtherHeaderLine(keyName);
         if (otherHeaderLine != null) {
             return otherHeaderLine.getValue();

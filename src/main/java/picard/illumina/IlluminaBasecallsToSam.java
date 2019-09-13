@@ -221,7 +221,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Argument(doc = "If set, process no more than this many tiles (used for debugging).", optional = true)
     public Integer TILE_LIMIT;
 
-    @Argument(doc = "If set, process only the tile number given and append the tile number to the output file name.",
+    @Argument(doc = "If set, process only the tile number given and prepend the tile number to the output file name.",
             mutex = "FIRST_TILE",
             optional = true)
     public Integer PROCESS_SINGLE_TILE;

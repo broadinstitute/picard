@@ -24,11 +24,21 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.*;
-import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
+import com.google.cloud.storage.contrib.nio.SeekableByteChannelPrefetcher;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SecondaryAlignmentFilter;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -41,10 +51,28 @@ import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Random;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import static htsjdk.samtools.SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES;
 
@@ -401,15 +429,27 @@ public class FingerprintChecker {
         return fpIdMap;
     }
 
+    private static final Function<SeekableByteChannel, SeekableByteChannel> seekableChannelFunction = (chan) -> {
+        try {
+            return SeekableByteChannelPrefetcher.addPrefetcher(1, chan);
+        } catch (IOException e) {
+            throw new RuntimeException("Trouble wrapping seekable stream with prefetcher.", e);
+        }
+    };
+
     /**
      * Generates a Fingerprint per read group in the supplied SAM file using the loci provided in
      * the interval list.
      */
     public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final IntervalList loci) {
+
+        // the seekableChannelFunction adds a buffered stream wrapper around the index reading which
+        // makes reading the index over NIO not hang indefinitely.
+        // See github issue https://github.com/broadinstitute/picard/issues/1175
         final SamReader in = SamReaderFactory.makeDefault()
                 .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
                 .referenceSequence(referenceFasta)
-                .open(samFile);
+                .open(samFile, null, seekableChannelFunction);
 
         SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
                 in.getFileHeader().getSequenceDictionary());
@@ -455,6 +495,10 @@ public class FingerprintChecker {
         // Now go through the data at each locus and figure stuff out!
         for (final SamLocusIterator.LocusInfo info : iterator) {
 
+            // if statement to avoid string building.
+            if (Log.isEnabled(Log.LogLevel.DEBUG)) {
+                log.debug("At locus " + info.toString());
+            }
             // TODO: Filter out the locus if the allele balance doesn't make sense for either a
             // TODO: 50/50 het or a hom with some errors; in HS data with deep coverage any base
             // TODO: with major strand bias could cause errors

@@ -28,20 +28,28 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceDictionaryCodec;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.AsciiWriter;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.Md5CalculatingOutputStream;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReferenceProgramGroup;
-import picard.cmdline.StandardOptionDefinitions;
+import picard.util.SequenceDictionaryUtils;
 
-import java.io.*;
-import java.math.BigInteger;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -69,7 +77,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             "sequence provided in FASTA format, which is required by many processing and analysis tools. The output file contains a " +
             "header but no SAMRecords, and the header contains only sequence records." +
             "<br /><br />" +
-            "The reference sequence can be gzipped (both .fasta and .fasta.gz are supported)."  +
+            "The reference sequence can be gzipped (both .fasta and .fasta.gz are supported)." +
             "" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
@@ -105,15 +113,20 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     public int NUM_SEQUENCES = Integer.MAX_VALUE;
 
     @Argument(shortName = "AN", doc = "Optional file containing the alternative names for the contigs. "
-    		+ "Tools may use this information to consider different contig notations as identical (e.g: 'chr1' and '1'). "
-    		+ "The alternative names will be put into the appropriate @AN annotation for each contig. "
-    		+ "No header. "
-    		+ "First column is the original name, the second column is an alternative name. "
-            + "One contig may have more than one alternative name." ,
-            optional=true)
+            + "Tools may use this information to consider different contig notations as identical (e.g: 'chr1' and '1'). "
+            + "The alternative names will be put into the appropriate @AN annotation for each contig. "
+            + "No header. "
+            + "First column is the original name, the second column is an alternative name. "
+            + "One contig may have more than one alternative name.",
+            optional = true)
     public File ALT_NAMES = null;
 
     private final MessageDigest md5;
+    /**
+     * Regular expression defined in the sam spec. Any alternative contig should match this regular expression
+     * TODO: replace the pattern with a constant : see https://github.com/samtools/htsjdk/pull/956/files
+     */
+    private static final Pattern ALTERNATIVE_CONTIG_NAME_PATTERN = Pattern.compile("[0-9A-Za-z][0-9A-Za-z\\*\\+@\\|\\-]*");
 
     /**
      * 'AN' attribute in the dictionary
@@ -131,24 +144,36 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     /**
      * Read all the sequences from the given reference file, and convert into SAMSequenceRecords
+     *
      * @param referenceFile fasta or fasta.gz
      * @return SAMSequenceRecords containing info from the fasta, plus from cmd-line arguments.
      */
-    @Deprecated
     public SAMSequenceDictionary makeSequenceDictionary(final File referenceFile) {
-        final ReferenceSequenceFile refSeqFile =
-                ReferenceSequenceFileFactory.getReferenceSequenceFile(referenceFile, TRUNCATE_NAMES_AT_WHITESPACE);
-        ReferenceSequence refSeq;
+        final Iterable<SAMSequenceRecord> samSequenceRecordsIterable = getSamSequenceRecordsIterable();
+
         final List<SAMSequenceRecord> ret = new ArrayList<>();
         final Set<String> sequenceNames = new HashSet<>();
-        for (int numSequences = 0; numSequences < NUM_SEQUENCES && (refSeq = refSeqFile.nextSequence()) != null; ++numSequences) {
-            if (sequenceNames.contains(refSeq.getName())) {
-                throw new PicardException("Sequence name appears more than once in reference: " + refSeq.getName());
+        for (SAMSequenceRecord rec : samSequenceRecordsIterable) {
+
+            if (sequenceNames.contains(rec.getSequenceName())) {
+                throw new PicardException("Sequence name appears more than once in reference: " + rec.getSequenceName());
             }
-            sequenceNames.add(refSeq.getName());
-            ret.add(makeSequenceRecord(refSeq));
+            sequenceNames.add(rec.getSequenceName());
+            ret.add(rec);
         }
         return new SAMSequenceDictionary(ret);
+    }
+
+    private Iterable<SAMSequenceRecord> getSamSequenceRecordsIterable() {
+        return () -> {
+            final SequenceDictionaryUtils.SamSequenceRecordsIterator iterator =
+                    new SequenceDictionaryUtils.SamSequenceRecordsIterator(REFERENCE_SEQUENCE,
+                            TRUNCATE_NAMES_AT_WHITESPACE);
+            iterator.setGenomeAssembly(GENOME_ASSEMBLY);
+            iterator.setSpecies(SPECIES);
+            iterator.setUri(URI);
+            return iterator;
+        };
     }
 
     /**
@@ -179,7 +204,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         @Override
         public File getReferenceFile() {
             return REFERENCE;
-        };
+        }
     }
 
     /**
@@ -189,6 +214,8 @@ public class CreateSequenceDictionary extends CommandLineProgram {
      * @return program exit status.
      */
     protected int doWork() {
+        int sequencesWritten = 0;
+
         if (OUTPUT.exists()) {
             throw new PicardException(OUTPUT.getAbsolutePath() +
                     " already exists.  Delete this file and try again, or specify a different output file.");
@@ -197,17 +224,13 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         // map for aliases mapping a contig to its aliases
         final Map<String, Set<String>> aliasesByContig = loadContigAliasesMap();
 
-        // SortingCollection is used to check uniqueness of sequence names
-        final SortingCollection<String> sequenceNames = makeSortingCollection();
         try (BufferedWriter writer = makeWriter()) {
-            final ReferenceSequenceFile refSeqFile = ReferenceSequenceFileFactory.
-                    getReferenceSequenceFile(REFERENCE_SEQUENCE, TRUNCATE_NAMES_AT_WHITESPACE);
+            final Iterable<SAMSequenceRecord> samSequenceRecordIterable = getSamSequenceRecordsIterable();
             SAMSequenceDictionaryCodec samDictCodec = new SAMSequenceDictionaryCodec(writer);
 
             samDictCodec.encodeHeaderLine(false);
             // read reference sequence one by one and write its metadata
-            for (ReferenceSequence refSeq = refSeqFile.nextSequence(); refSeq != null; refSeq = refSeqFile.nextSequence()) {
-                final SAMSequenceRecord samSequenceRecord = makeSequenceRecord(refSeq);
+            for (SAMSequenceRecord samSequenceRecord : samSequenceRecordIterable) {
                 // retrieve aliases, if any
                 final Set<String> aliases = aliasesByContig.get(samSequenceRecord.getSequenceName());
                 if (aliases != null) {
@@ -215,29 +238,23 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                     samSequenceRecord.setAttribute(AN_ATTRIBUTE, String.join(",", aliases));
                 }
                 samDictCodec.encodeSequenceRecord(samSequenceRecord);
-                sequenceNames.add(refSeq.getName());
+
+                if (++sequencesWritten >= NUM_SEQUENCES) {
+                    break;
+                }
+
             }
         } catch (FileNotFoundException e) {
             throw new PicardException("File " + OUTPUT.getAbsolutePath() + " not found");
         } catch (IOException e) {
             throw new PicardException("Can't write to or close output file " + OUTPUT.getAbsolutePath());
+        } catch (IllegalArgumentException e) {
+            // in case of an unexpected error delete the file so that there isn't a
+            // truncated result which might be valid and wrong.
+            OUTPUT.delete();
+            throw new PicardException("Unknown problem. Partial dictionary file was deleted.", e);
         }
 
-        // check uniqueness of sequences names
-        final CloseableIterator<String> iterator = sequenceNames.iterator();
-
-        if (!iterator.hasNext()) return 0;
-
-        String current = iterator.next();
-        while (iterator.hasNext()) {
-            final String next = iterator.next();
-            if (current.equals(next)) {
-                OUTPUT.delete();
-                throw new PicardException("Sequence name " + current +
-                        " appears more than once in reference file");
-            }
-            current = next;
-        }
         return 0;
     }
 
@@ -254,6 +271,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     }
 
     /**
+<<<<<<< HEAD
      * Create one SAMSequenceRecord from a single fasta sequence
      */
     private SAMSequenceRecord makeSequenceRecord(final ReferenceSequence refSeq) {
@@ -277,26 +295,12 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         return ret;
     }
 
-    private SortingCollection<String> makeSortingCollection() {
-        final String name = getClass().getSimpleName();
-        final File tmpDir = IOUtil.createTempDir(name, null);
-        tmpDir.deleteOnExit();
-        // 256 byte for one name, and 1/10 part of all memory for this, rough estimate
-        long maxNamesInRam = Runtime.getRuntime().maxMemory() / 256 / 10;
-        return SortingCollection.newInstance(
-                String.class,
-                new StringCodec(),
-                String::compareTo,
-                (int) Math.min(maxNamesInRam, Integer.MAX_VALUE),
-                tmpDir
-        );
-    }
-
     /**
      * Load the file ALT_NAMES containing the alternative contig names
-     * @author Pierre Lindenbaum
+     *
      * @return a <code>Map&lt;src_contig,Set&lt;new_names&gt;&gt;</code>. Never null. May be empty if ALT_NAMES is null.
      * @throws PicardException if there is any error in the file ALT_NAMES
+     * @author Pierre Lindenbaum
      */
     private Map<String, Set<String>> loadContigAliasesMap() throws PicardException {
         // return an empty map if no mapping file was provided
@@ -308,8 +312,8 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         try {
             for (final String line : IOUtil.slurpLines(this.ALT_NAMES)) {
                 if (StringUtil.isBlank(line)) {
-                        continue;
-                    }
+                    continue;
+                }
                 final int tab = line.indexOf('\t');
                 if (tab == -1) {
                     throw new IOException("tabulation missing in " + line);
@@ -337,12 +341,12 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                             " previously defined as a contig in " + line);
                 }
                 // check contig not previously defined as alias
-                if (aliasesByContig.keySet().stream().
+                if (aliasesByContig.keySet().stream()
                         // not an error if defined twice for same contig
-                        filter(K -> !K.equals(contigName)). 
-                        anyMatch(K -> aliasesByContig.get(K).contains(contigName))) {
-                            throw new IOException("contig " + contigName +
-                                " previously defined as an alternate name in " + line);
+                        .filter(K -> !K.equals(contigName))
+                        .anyMatch(K -> aliasesByContig.get(K).contains(contigName))) {
+                    throw new IOException("contig  " + contigName +
+                            " previously defined as an alternate name in " + line);
                 }
                 // add alias
                 if (!aliasesByContig.containsKey(contigName)) {
@@ -350,45 +354,10 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                 }
                 aliasesByContig.get(contigName).add(altName);
             }
-            return aliasesByContig;  
+            return aliasesByContig;
         } catch (final IOException e) {
             throw new PicardException("Can't read alias file " + ALT_NAMES, e);
         }
-   
-    }
-
-    private static class StringCodec implements SortingCollection.Codec<String> {
-        private DataInputStream dis;
-        private DataOutputStream dos;
-
-        public StringCodec clone() {
-            return new StringCodec();
-        }
-
-        public void setOutputStream(final OutputStream os) {
-            dos = new DataOutputStream(os);
-        }
-
-        public void setInputStream(final InputStream is) {
-            dis = new DataInputStream(is);
-        }
-
-        public void encode(final String str) {
-            try {
-                dos.writeUTF(str);
-            } catch (IOException e) {
-                throw new RuntimeIOException(e);
-            }
-        }
-
-        public String decode() {
-            try {
-                return dis.readUTF();
-            } catch (EOFException e) {
-                return null;
-            } catch (IOException e) {
-                throw new PicardException("Exception reading sequence name from temporary file.", e);
-            }
-        }
     }
 }
+

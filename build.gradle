@@ -15,7 +15,7 @@ plugins {
     id 'jacoco'
     id 'application'
     id 'com.palantir.git-version' version '0.5.1'
-    id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id 'com.github.johnrengelman.shadow' version '5.1.0'
     id "com.github.kt3k.coveralls" version '2.6.3'
     id 'org.ajoberstar.grgit' version '1.4.2'
     id 'org.ajoberstar.github-pages' version '1.4.2'
@@ -24,28 +24,13 @@ plugins {
 mainClassName = "picard.cmdline.PicardCommandLine"
 
 repositories {
-    mavenLocal()
     mavenCentral()
     maven {
         url "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/" //for htsjdk snapshots
     }
+    mavenLocal()
 }
 
-jacocoTestReport {
-    dependsOn test
-    group = "Reporting"
-    description = "Generate Jacoco coverage reports after running tests."
-    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
-
-    reports {
-        xml.enabled = true // coveralls plugin depends on xml format report
-        html.enabled = true
-    }
-}
-
-jacoco {
-    toolVersion = "0.7.5.201505241946"
-}
 
 final requiredJavaVersion = "8"
 final buildPrerequisitesMessage = "See https://github.com/broadinstitute/picard/blob/master/README.md#building-picard for information on how to build picard."
@@ -65,8 +50,8 @@ def ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage) {
 }
 ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage)
 
-final htsjdkVersion = System.getProperty('htsjdk.version', '2.19.0')
-final googleNio = 'com.google.cloud:google-cloud-nio:0.81.0-alpha:shaded'
+final htsjdkVersion = System.getProperty('htsjdk.version', '2.20.3')
+final googleNio = 'com.google.cloud:google-cloud-nio:0.107.0-alpha:shaded'
 
 // Get the jdk files we need to run javaDoc. We need to use these during compile, testCompile,
 // test execution, and gatkDoc generation, but we don't want them as part of the runtime
@@ -92,13 +77,15 @@ dependencies {
     compile 'commons-lang:commons-lang:2.6'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     compile 'org.broadinstitute:barclay:2.0.0'
-    compileOnly googleNio
+    compileOnly(googleNio) {
+        transitive = false
+    }
 
     // javadoc utilities; compile/test only to prevent redistribution of sdk jars
     compileOnly(javadocJDKFiles)
     testCompile(javadocJDKFiles)
 
-    testCompile 'org.testng:testng:6.9.10'
+    testCompile 'org.testng:testng:6.14.3'
     testCompile 'org.apache.commons:commons-lang3:3.6'
 }
 
@@ -317,26 +304,36 @@ tasks.withType(Test) {
     }
 }
 
-task wrapper(type: Wrapper) {
-    description = "Regenerate the gradle wrapper"
-    gradleVersion = '3.1'
+jacocoTestReport {
+    dependsOn legacyTest
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports after running tests."
+    getAdditionalSourceDirs().from(sourceSets.main.allJava.srcDirs)
+
+    reports {
+        xml.enabled = true // coveralls plugin depends on xml format report
+        html.enabled = true
+    }
+}
+
+ wrapper {
+    gradleVersion = '5.6'
 }
 
 task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+    archiveClassifier.set('javadoc')
     from 'build/docs/javadoc'
 }
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
-    classifier = 'sources'
+    archiveClassifier.set('sources')
 }
 
 /**
  * This specifies what artifacts will be built and uploaded when performing a maven upload.
  */
 artifacts {
-    archives jar
     archives javadocJar
     archives sourcesJar
 }

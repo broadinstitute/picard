@@ -90,7 +90,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
             // Run MarkDuplicates, merging the 3 input files, and either enabling or suppressing PG header
             // record creation according to suppressPg.
             final MarkDuplicates markDuplicates = new MarkDuplicates();
-            final ArrayList<String> args = new ArrayList<String>();
+            final ArrayList<String> args = new ArrayList<>();
             for (int i = 1; i <= 3; ++i) {
                 args.add("INPUT=" + new File(TEST_DATA_DIR, "merge" + i + ".sam").getAbsolutePath());
             }
@@ -110,7 +110,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
             // the PG ID should be the same for both ends of a pair.
             final SamReader reader = SamReaderFactory.makeDefault().open(outputSam);
 
-            final Map<String, String> pgIdForReadName = new HashMap<String, String>();
+            final Map<String, String> pgIdForReadName = new HashMap<>();
             for (final SAMRecord rec : reader) {
                 final String existingPgId = pgIdForReadName.get(rec.getReadName());
                 final String thisPgId = rec.getStringAttribute(SAMTag.PG.name());
@@ -160,15 +160,15 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     @DataProvider(name = "pgRecordChainingTest")
     public Object[][] pgRecordChainingTestDataProvider() {
         // Two test cases: One in which PG record generation is enabled, the other in which it is turned off.
-        final Map<String, List<ExpectedPnAndVn>> withPgMap = new HashMap<String, List<ExpectedPnAndVn>>();
+        final Map<String, List<ExpectedPnAndVn>> withPgMap = new HashMap<>();
         withPgMap.put("1AAXX.1.1", Arrays.asList(new ExpectedPnAndVn(TEST_BASE_NAME, null), new ExpectedPnAndVn(TEST_BASE_NAME, "1"), new ExpectedPnAndVn("bwa", "1")));
         withPgMap.put("1AAXX.2.1", Arrays.asList(new ExpectedPnAndVn(TEST_BASE_NAME, null), new ExpectedPnAndVn("bwa", "2")));
         withPgMap.put("1AAXX.3.1", Arrays.asList(new ExpectedPnAndVn(TEST_BASE_NAME, null)));
 
-        final Map<String, List<ExpectedPnAndVn>> suppressPgMap = new HashMap<String, List<ExpectedPnAndVn>>();
+        final Map<String, List<ExpectedPnAndVn>> suppressPgMap = new HashMap<>();
         suppressPgMap .put("1AAXX.1.1", Arrays.asList(new ExpectedPnAndVn(TEST_BASE_NAME, "1"), new ExpectedPnAndVn("bwa", "1")));
         suppressPgMap .put("1AAXX.2.1", Arrays.asList(new ExpectedPnAndVn("bwa", "2")));
-        suppressPgMap .put("1AAXX.3.1", new ArrayList<ExpectedPnAndVn>(0));
+        suppressPgMap .put("1AAXX.3.1", new ArrayList<>(0));
         return new Object[][] {
                 { false, withPgMap},
                 { true, suppressPgMap}
@@ -213,7 +213,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addMappedFragment(2, 41212324, false, "50M", DEFAULT_BASE_QUALITY);
         tester.addMappedFragment(2, 41212324, true, "50M", DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
-        for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
+        for (final SAMRecord record : new IterableAdapter<>(tester.getRecordIterator())) {
             record.setAttribute(barcodeTag, "GACT");
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
@@ -226,7 +226,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         tester.addMatePair("RUNID:2:2:15993:13362", 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
-        for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
+        for (final SAMRecord record : new IterableAdapter<>(tester.getRecordIterator())) {
             record.setAttribute(barcodeTag, "Barcode1");
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
@@ -241,7 +241,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         tester.addMatePair("RUNID:2:2:15993:13362", 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         final String barcodeTag = "BC";
-        for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
+        for (final SAMRecord record : new IterableAdapter<>(tester.getRecordIterator())) {
             record.setAttribute(barcodeTag, "ATGC");
         }
         tester.addArg("BARCODE_TAG=" + barcodeTag);
@@ -262,7 +262,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addMatePair(readNameThree, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
 
         final String barcodeTag = "BC";
-        for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
+        for (final SAMRecord record : new IterableAdapter<>(tester.getRecordIterator())) {
             if (record.getReadName().equals(readNameOne) || record.getReadName().equals(readNameTwo)) {
                 record.setAttribute(barcodeTag, "AAAA");
             }
@@ -290,7 +290,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         final String barcodeTag = "BC";
         final String readOneBarcodeTag = "BX"; // want the same tag as the second end, since this is allowed
         final String readTwoBarcodeTag = "BX";
-        for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
+        for (final SAMRecord record : new IterableAdapter<>(tester.getRecordIterator())) {
             record.setAttribute(barcodeTag, "ATC"); // same barcode
             if (record.getFirstOfPairFlag()) { // always the same value for the first end
                 record.setAttribute(readOneBarcodeTag, "ACA");
@@ -358,7 +358,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         };
     }
 
-    @Test(dataProvider = "testDuplexUmiDataProvider")
+    @Test(dataProvider = "testDuplexUmiDataProvider",enabled = false)
     public void testWithUMIs(final boolean duplexUmi, final List<String> UMIs, final List<Integer> alignmentStart1,
                              final List<Integer> alignmentStart2, final List<Boolean> isDuplicate,
                              final List<Boolean> isFirstNegativeStrand, final List<Boolean> isSecondNegativeStrand) {

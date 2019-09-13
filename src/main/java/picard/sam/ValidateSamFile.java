@@ -66,15 +66,15 @@ import java.util.List;
  *
  * This tool is a wrapper for {@link SamFileValidator}.
  *
- * <h4>Usage example:</h4>
+ * <h3>Usage example:</h3>
  * <pre>
- * java -jar picard.jar ValidateSamFile \\<br />
- *       I=input.bam \\<br />
+ * java -jar picard.jar ValidateSamFile \<br />
+ *       I=input.bam \<br />
  *       MODE=SUMMARY
  * </pre>
  * <p>To obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional
  *  <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>
- * "<hr />
+ * <hr />
  *
  * @author Doug Voet
  */
@@ -100,14 +100,14 @@ public class ValidateSamFile extends CommandLineProgram {
 
             "<p>After identifying and fixing your 'warnings/errors', we recommend that you rerun this tool to validate your SAM/BAM " +
             "file prior to proceeding with your downstream analysis.  This will verify that all problems in your file have been addressed.</p>" +
-            "<h4>Usage example:</h4>" +
+            "<h3>Usage example:</h3>" +
             "<pre>" +
             "java -jar picard.jar ValidateSamFile \\<br />" +
             "      I=input.bam \\<br />" +
             "      MODE=SUMMARY" +
             "</pre>" +
             "<p>To obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional " +
-            " <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>" +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>" +
             ""+
             "<hr />"+
             "Return codes depend on the errors/warnings discovered:" +
@@ -135,7 +135,7 @@ public class ValidateSamFile extends CommandLineProgram {
     public Mode MODE = Mode.VERBOSE;
 
     @Argument(doc = "List of validation error types to ignore.", optional = true)
-    public List<SAMValidationError.Type> IGNORE = new ArrayList<SAMValidationError.Type>();
+    public List<SAMValidationError.Type> IGNORE = new ArrayList<>();
 
     @Argument(shortName = "MO",
             doc = "The maximum number of lines output in verbose mode")

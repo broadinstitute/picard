@@ -32,19 +32,37 @@ import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.AbstractLocusInfo;
+import htsjdk.samtools.util.AbstractLocusIterator;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
+import htsjdk.samtools.util.EdgeReadIterator;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.IntervalArgumentCollection;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
-import picard.filter.*;
+import picard.filter.CountingAdapterFilter;
+import picard.filter.CountingDuplicateFilter;
+import picard.filter.CountingFilter;
+import picard.filter.CountingMapQFilter;
+import picard.filter.CountingPairedFilter;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 
 import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
@@ -400,8 +418,14 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                 }
 
                 if (recs.getBaseQuality() < collectWgsMetrics.MINIMUM_BASE_QUALITY ||
-                        SequenceUtil.isNoCall(recs.getReadBase()))                  { ++basesExcludedByBaseq;   continue; }
-                if (!readNames.add(recs.getRecord().getReadName()))                 { ++basesExcludedByOverlap; continue; }
+                        SequenceUtil.isNoCall(recs.getReadBase())) {
+                    ++basesExcludedByBaseq;
+                    continue;
+                }
+                if (!readNames.add(recs.getRecord().getReadName())) {
+                    ++basesExcludedByOverlap;
+                    continue;
+                }
                 pileupSize++;
             }
             final int highQualityDepth = Math.min(pileupSize, coverageCap);

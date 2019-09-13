@@ -26,10 +26,14 @@ package picard.sam;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.RuntimeIOException;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.ArgumentCollection;
+import org.broadinstitute.barclay.argparser.PositionalArguments;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import org.broadinstitute.barclay.argparser.PositionalArguments;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.sam.util.SAMComparisonArgumentCollection;
 import picard.sam.util.SamComparison;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
@@ -51,19 +55,50 @@ import java.util.List;
 public class CompareSAMs extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Compare two input \".sam\" or \".bam\" files.  ";
     static final String USAGE_DETAILS = "This tool initially compares the headers of SAM or BAM files. " +
-            " If the file headers are comparable, the tool will examine and compare readUnmapped flag, reference name, " +
-            "start position and strand between the SAMRecords. The tool summarizes information on the number of read " +
-            "pairs that match or mismatch, and of reads that are missing or unmapped (stratified by direction: " +
-            "forward or reverse)." +
-            "<h4>Usage example:</h4>" +
+            " If the file headers are comparable, the tool can perform either strict comparisons for which " +
+            "each alignment and the header must be identical, or a more lenient check of \"equivalence\", where reads with mapping quality < LOW_MQ_THRESHOLD " +
+            "are allowed to have different alignments, duplicate marks are allowed to differ to account for " +
+            "ambiguities in selecting the representative read of a duplicate set, and some differences in headers is allowed.  By default, alignment comparisons, " +
+            "duplicate marking comparisons, and header comparisons are performed in the strict mode.  Results of comparison are summarised in " +
+            " an output metrics file." +
+            "<h3>Usage example:</h3>" +
+            "<h4>CompareSAMs for exact matching:</h4>" +
             "<pre>" +
             "java -jar picard.jar CompareSAMs \\<br />" +
             "      file_1.bam \\<br />" +
-            "      file_2.bam" +
+            "      file_2.bam \\<br />" +
+            "      O=comparison.tsv" +
             "</pre>" +
+            "\n" +
+            "<h4>CompareSAMs for \"equivalence\":</h4>" +
+            "java -jar picard.jar CompareSAMs \\<br />" +
+            "      file_1.bam \\<br />" +
+            "      file_2.bam \\<br />" +
+            "      LENIENT_LOW_MQ_ALIGNMENT=true \\<br />" +
+            "      LENIENT_DUP=true \\<br />" +
+            "      O=comparison.tsv" +
+            "</pre>" +
+            "\n" +
+            "<h4>CompareSAMs for \"equivalence\", allow certain differences in header:</h4>" +
+            "java -jar picard.jar CompareSAMs \\<br />" +
+            "      file_1.bam \\<br />" +
+            "      file_2.bam \\<br />" +
+            "      LENIENT_LOW_MQ_ALIGNMENT=true \\<br />" +
+            "      LENIENT_DUP=true \\<br />" +
+            "      LENIENT_HEADER=true \\<br />" +
+            "      O=comparison.tsv" +
             "<hr />";
-    @PositionalArguments(minElements = 2, maxElements = 2)
-    public List<File> samFiles;
+    @PositionalArguments(doc = "Exactly two input .sam or .bam files to compare to one another.", minElements = 2, maxElements = 2)
+    public List<File> SAM_FILES;
+
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+            doc = "Output file to write comparison results to.", optional = true)
+    public File OUTPUT;
+
+    @ArgumentCollection
+    public SAMComparisonArgumentCollection samComparisonArgumentCollection = new SAMComparisonArgumentCollection();
+
+
 
     /**
      * Do the work after command line has been parsed. RuntimeException may be
@@ -75,11 +110,14 @@ public class CompareSAMs extends CommandLineProgram {
     protected int doWork() {
         final SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE);
 
-        try (final SamReader samReader1 = samReaderFactory.open(samFiles.get(0));
-             final SamReader samReader2 = samReaderFactory.open(samFiles.get(1)))
+        try (final SamReader samReader1 = samReaderFactory.open(SAM_FILES.get(0));
+             final SamReader samReader2 = samReaderFactory.open(SAM_FILES.get(1)))
         {
-            final SamComparison comparison = new SamComparison(samReader1, samReader2);
-            comparison.printReport();
+            final SamComparison comparison = new SamComparison(samReader1, samReader2,
+                    SAM_FILES.get(0).getAbsolutePath(), SAM_FILES.get(1).getAbsolutePath(), samComparisonArgumentCollection);
+            if (OUTPUT != null) {
+                comparison.writeReport(OUTPUT, getDefaultHeaders());
+            }
             if (comparison.areEqual()) {
                 System.out.println("SAM files match.");
             } else {

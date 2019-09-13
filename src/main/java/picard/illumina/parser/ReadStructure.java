@@ -25,12 +25,10 @@ package picard.illumina.parser;
 
 import htsjdk.samtools.util.CoordMath;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Describes the intended logical output structure of clusters of an Illumina run.
@@ -82,29 +80,21 @@ public class ReadStructure {
     private static final String ValidTypeCharsWSep;
 
     static {
-        String validTypes = "";
-        String vtWSep = "";
+        ValidTypeCharsWSep = Arrays.stream(ReadType.values())
+                .map(Enum::toString)
+                .collect(Collectors.joining(","));
 
-        boolean written = false;
-        for(ReadType rt : ReadType.values()) {
-            if(written) {
-                vtWSep += ",";
-            }
-
-            validTypes += rt.name();
-            vtWSep += rt.name();
-        }
-
-        ValidTypeChars = validTypes;
-        ValidTypeCharsWSep = vtWSep;
+        ValidTypeChars = Arrays.stream(ReadType.values())
+                .map(Enum::toString)
+                .collect(Collectors.joining(""));
     }
 
     private static final String ReadStructureMsg = "Read structure must be formatted as follows: " +
             "<number of bases><type><number of bases><type>...<number of bases> where number of bases is a " +
             "positive (NON-ZERO) integer and type is one of the following characters " + ValidTypeCharsWSep +
             " (e.g. 76T8B68T would denote a paired-end run with a 76 base first end an 8 base barcode followed by a 68 base second end).";
-    private static final Pattern FullPattern = java.util.regex.Pattern.compile("^((\\d+[" + ValidTypeChars + "]{1}))+$");
-    private static final Pattern SubPattern = java.util.regex.Pattern.compile("(\\d+)([" + ValidTypeChars + "]{1})");
+    private static final Pattern SubPattern = Pattern.compile("(\\d+)([" + ValidTypeChars + "]{1})");
+    private static final Pattern FullPattern = Pattern.compile("^(" + SubPattern.pattern() + ")+$");
 
     /**
      * Copies collection into descriptors (making descriptors unmodifiable) and then calculates relevant statistics about descriptors.
@@ -115,15 +105,15 @@ public class ReadStructure {
             throw new IllegalArgumentException("ReadStructure does not support 0 length clusters!");
         }
 
-        final List<Range> allRanges = new ArrayList<Range>(collection.size());
+        final List<Range> allRanges = new ArrayList<>(collection.size());
         this.descriptors = Collections.unmodifiableList(collection);
         int cycles = 0;
 
-        final List<Integer> nonSkipIndicesList          = new ArrayList<Integer>();
-        final List<Integer> sampleBarcodeIndicesList    = new ArrayList<Integer>();
-        final List<Integer> templateIndicesList         = new ArrayList<Integer>();
-        final List<Integer> molecularBarcodeIndicesList = new ArrayList<Integer>();
-        final List<Integer> skipIndicesList             = new ArrayList<Integer>();
+        final List<Integer> nonSkipIndicesList          = new ArrayList<>();
+        final List<Integer> sampleBarcodeIndicesList    = new ArrayList<>();
+        final List<Integer> templateIndicesList         = new ArrayList<>();
+        final List<Integer> molecularBarcodeIndicesList = new ArrayList<>();
+        final List<Integer> skipIndicesList             = new ArrayList<>();
         readLengths = new int[collection.size()];
 
         int currentCycleIndex = 0;   // Current cycle in the entire read structure
@@ -190,11 +180,11 @@ public class ReadStructure {
      */
     @Override
     public String toString() {
-        String out = "";
+        StringBuilder out = new StringBuilder();
         for(final ReadDescriptor rd : descriptors) {
-            out += rd.toString();
+            out.append(rd.toString());
         }
-        return out;
+        return out.toString();
     }
 
     /**
@@ -203,14 +193,14 @@ public class ReadStructure {
      * a read structure
      * @return A List<ReadDescriptor> corresponding to the input string
      */
-    private final static List<ReadDescriptor> readStructureStringToDescriptors(final String readStructure) {
+    private static final List<ReadDescriptor> readStructureStringToDescriptors(final String readStructure) {
         final Matcher fullMatcher = FullPattern.matcher(readStructure);
         if(!fullMatcher.matches()) {
             throw new IllegalArgumentException(readStructure + " cannot be parsed as a ReadStructure! " + ReadStructureMsg);
         }
 
         final Matcher subMatcher = SubPattern.matcher(readStructure);
-        final List<ReadDescriptor> descriptors = new ArrayList<ReadDescriptor>();
+        final List<ReadDescriptor> descriptors = new ArrayList<>();
         while(subMatcher.find()) {
             final ReadDescriptor rd =  new ReadDescriptor(Integer.parseInt(subMatcher.group(1)), ReadType.valueOf(subMatcher.group(2)));
             descriptors.add(rd);
@@ -345,7 +335,7 @@ public class ReadStructure {
          * (36T8S8B36T) and this substructure consists of all the non-skipped reads than toReadStructure would return
          * (36T8B36T) in ReadStructure form*/
         public ReadStructure toReadStructure() {
-            final List<ReadDescriptor> descriptors = new ArrayList<ReadDescriptor>(numDescriptors);
+            final List<ReadDescriptor> descriptors = new ArrayList<>(numDescriptors);
             for(final ReadDescriptor rd : this) {
                 descriptors.add(rd);
             }
