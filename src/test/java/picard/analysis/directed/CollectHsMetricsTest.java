@@ -57,7 +57,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
                 // A read 10 base pairs long. two intervals: one maps identically to the read, other does not overlap at all
                 {TEST_DIR + "/single-short-read.sam", twoSmallIntervals, 20, 20, true, 1, 10, 0.0, 0.0, 0.0, 0.5, 0.0, 1, 0, 10, 1000},
                 // test that we can figure out low quality and off target in the same bam (low quality is identified first)
-                {TEST_DIR + "/someLowbaseq.sam", twoSmallIntervals, 0, 21, true, 2, 200, 150D / 200, 0, 40D / 200, 1 / 2D, 0D, 1, 0, 200, 1000},
+                {TEST_DIR + "/someLowbaseq.sam", twoSmallIntervals, 0, 21, true, 2, 200, 150D / 200, 0D, 40D / 200, 1 / 2D, 0D, 1, 0, 200, 1000},
         };
     }
 
