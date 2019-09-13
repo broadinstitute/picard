@@ -26,6 +26,10 @@ package picard.sam.SamErrorMetric;
 
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.variant.variantcontext.VariantContext;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * An interface that can take a collection of bases (provided as {@link htsjdk.samtools.util.SamLocusIterator.RecordAndOffset RecordAndOffset}
@@ -50,5 +54,6 @@ public interface BaseCalculator {
      * the function by which new loci are "shown" to the calculator
      **/
     void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset,
-                 final SamLocusAndReferenceIterator.SAMLocusAndReference locusInfo);
+                 final SamLocusAndReferenceIterator.SAMLocusAndReference locusInfo,
+                 final Map<Integer, List<VariantContext>> potentialVariants);
 }

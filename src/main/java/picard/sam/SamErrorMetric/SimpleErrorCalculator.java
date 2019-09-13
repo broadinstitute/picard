@@ -27,6 +27,10 @@ package picard.sam.SamErrorMetric;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.variant.variantcontext.VariantContext;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * A calculator that estimates the error rate of the bases it observes, assuming that the reference is truth.
@@ -35,13 +39,25 @@ public class SimpleErrorCalculator extends BaseErrorCalculator {
 
     protected long nMismatchingBases;
 
+    // todo mgatzen debug
+    protected long nSkippedBases = 0;
+
     /**
      * The function by which new loci are "shown" to the calculator
      **/
     @Override
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
-        super.addBase(recordAndOffset, locusAndRef);
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, final Map<Integer, List<VariantContext>> potentialVariants) {
+        super.addBase(recordAndOffset, locusAndRef, potentialVariants);
         final byte readBase = recordAndOffset.getReadBase();
+        if (potentialVariants.containsKey(0)) {
+            for (VariantContext variantContext : potentialVariants.get(0)) {
+                if (variantContext.getType() == VariantContext.Type.SNP) {
+                    // Don't consider mismatches at a SNP variant site as an error
+                    nSkippedBases++;
+                    return;
+                }
+            }
+        }
         if (!SequenceUtil.isNoCall(readBase) && (readBase != locusAndRef.getReferenceBase())) {
             nMismatchingBases++;
         }

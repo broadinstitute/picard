@@ -49,7 +49,7 @@ public class BaseErrorCalculationTest {
             final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
 
             SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(samRecord, i);
-            baseErrorCalculator.addBase(recordAndOffset, locusAndReference);
+            baseErrorCalculator.addBase(recordAndOffset, locusAndReference, new HashMap<>());
         }
         final BaseErrorMetric metric = baseErrorCalculator.getMetric();
         metric.calculateDerivedFields();
@@ -89,8 +89,8 @@ public class BaseErrorCalculationTest {
 
             final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
 
-            overlappingErrorCalculator1.addBase(recordAndOffset1, locusAndReference);
-            overlappingErrorCalculator2.addBase(recordAndOffset2, locusAndReference);
+            overlappingErrorCalculator1.addBase(recordAndOffset1, locusAndReference, new HashMap<>());
+            overlappingErrorCalculator2.addBase(recordAndOffset2, locusAndReference, new HashMap<>());
         }
 
         final OverlappingErrorMetric metric1 = overlappingErrorCalculator1.getMetric();
@@ -152,7 +152,7 @@ public class BaseErrorCalculationTest {
             for (final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndReference : samLocusAndReferences) {
                 for (SamLocusIterator.RecordAndOffset recordAndOffset : locusAndReference.getRecordAndOffsets())
 
-                    aggregation.addBase(recordAndOffset, locusAndReference);
+                    aggregation.addBase(recordAndOffset, locusAndReference, new HashMap<>());
             }
         }
     }

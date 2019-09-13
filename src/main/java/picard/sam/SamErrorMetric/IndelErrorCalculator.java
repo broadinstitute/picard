@@ -29,6 +29,10 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.util.AbstractRecordAndOffset;
 import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.variant.variantcontext.VariantContext;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * A calculator that estimates the error rate of the bases it observes for indels only.
@@ -54,9 +58,22 @@ public class IndelErrorCalculator extends BaseErrorCalculator {
      */
     protected long nDeletedBases;
 
+    // todo mgatzen debug
+    protected long nSkippedBases = 0;
+
     @Override
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
-        super.addBase(recordAndOffset, locusAndRef);
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, final Map<Integer, List<VariantContext>> potentialVariants) {
+        super.addBase(recordAndOffset, locusAndRef, potentialVariants);
+
+        for (final Map.Entry<Integer, List<VariantContext>> entry : potentialVariants.entrySet()) {
+            for (final VariantContext variantContext : entry.getValue()) {
+                if (variantContext.getType() == VariantContext.Type.INDEL) {
+                    // Don't consider records at an indel variant site (or its surrounding loci) sas an error.
+                    nSkippedBases++;
+                    return;
+                }
+            }
+        }
 
         if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Insertion) {
             nInsertions++;

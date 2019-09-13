@@ -11,6 +11,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class BaseErrorAggregationTest {
@@ -69,8 +70,8 @@ public class BaseErrorAggregationTest {
 
             final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refBases[i]);
 
-            baseErrorAggregation.addBase(recordAndOffset1, locusAndReference);
-            baseErrorAggregation.addBase(recordAndOffset2, locusAndReference);
+            baseErrorAggregation.addBase(recordAndOffset1, locusAndReference, new HashMap<>());
+            baseErrorAggregation.addBase(recordAndOffset2, locusAndReference, new HashMap<>());
         }
         return length;
     }

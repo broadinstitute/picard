@@ -29,8 +29,10 @@ import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.variant.variantcontext.VariantContext;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -64,8 +66,8 @@ public class OverlappingReadsErrorCalculator extends BaseErrorCalculator {
      * The function by which new loci are "shown" to the calculator
      **/
     @Override
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
-        super.addBase(recordAndOffset, locusAndRef);
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, final Map<Integer, List<VariantContext>> potentialVariants) {
+        super.addBase(recordAndOffset, locusAndRef, potentialVariants);
         final byte readBase = recordAndOffset.getReadBase();
         final SAMRecord record = recordAndOffset.getRecord();
 

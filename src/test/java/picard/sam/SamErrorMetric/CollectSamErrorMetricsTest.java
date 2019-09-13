@@ -709,10 +709,13 @@ public class CollectSamErrorMetricsTest {
         final AbstractFeatureReader<VariantContext, LineIterator> featureReader = AbstractFeatureReader.getFeatureReader(nistVCFFilename, null, new VCFCodec(), true, nioBufferingFunction, nioBufferingFunction);
 
         final SamLocusIterator.LocusInfo actualVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016237);
-        final SamLocusIterator.LocusInfo noVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016238);
+        final SamLocusIterator.LocusInfo neighboringVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016238);
 
-        Assert.assertTrue(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), actualVariantSite));
-        Assert.assertFalse(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), noVariantSite));
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), actualVariantSite).size(), 1);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), actualVariantSite).get(0).size(), 1);
+
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), neighboringVariantSite).size(), 1);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), neighboringVariantSite).get(-1).size(), 1);
     }
 
     @Test
@@ -738,9 +741,9 @@ public class CollectSamErrorMetricsTest {
         SamLocusIterator.LocusInfo actualChr1VariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("1", 249250621), 216407409);
         SamLocusIterator.LocusInfo noVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016238);
 
-        Assert.assertTrue(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualVariantSite));
-        Assert.assertTrue(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualChr1VariantSite));
-        Assert.assertFalse(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, noVariantSite));
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualVariantSite).size(), 2);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualChr1VariantSite).size(), 1);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, noVariantSite).size(), 0);
     }
 }
 

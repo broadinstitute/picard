@@ -115,30 +115,30 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             "ERROR_VALUE and STRATIFIER_VALUE.")
     public List<String> ERROR_METRICS = CollectionUtil.makeList(
             "ERROR",
-            "ERROR:BASE_QUALITY",
-            "ERROR:INSERT_LENGTH",
-            "ERROR:GC_CONTENT",
-            "ERROR:READ_DIRECTION",
-            "ERROR:PAIR_ORIENTATION",
-            "ERROR:HOMOPOLYMER",
-            "ERROR:BINNED_HOMOPOLYMER",
-            "ERROR:CYCLE",
-            "ERROR:READ_ORDINALITY",
-            "ERROR:READ_ORDINALITY:CYCLE",
-            "ERROR:READ_ORDINALITY:HOMOPOLYMER",
-            "ERROR:READ_ORDINALITY:GC_CONTENT",
-            "ERROR:READ_ORDINALITY:PRE_DINUC",
-            "ERROR:MAPPING_QUALITY",
-            "ERROR:READ_GROUP",
-            "ERROR:MISMATCHES_IN_READ",
-            "ERROR:ONE_BASE_PADDED_CONTEXT",
-            "OVERLAPPING_ERROR",
-            "OVERLAPPING_ERROR:BASE_QUALITY",
-            "OVERLAPPING_ERROR:INSERT_LENGTH",
-            "OVERLAPPING_ERROR:READ_ORDINALITY",
-            "OVERLAPPING_ERROR:READ_ORDINALITY:CYCLE",
-            "OVERLAPPING_ERROR:READ_ORDINALITY:HOMOPOLYMER",
-            "OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT",
+//            "ERROR:BASE_QUALITY", todo mgatzen debug
+//            "ERROR:INSERT_LENGTH",
+//            "ERROR:GC_CONTENT",
+//            "ERROR:READ_DIRECTION",
+//            "ERROR:PAIR_ORIENTATION",
+//            "ERROR:HOMOPOLYMER",
+//            "ERROR:BINNED_HOMOPOLYMER",
+//            "ERROR:CYCLE",
+//            "ERROR:READ_ORDINALITY",
+//            "ERROR:READ_ORDINALITY:CYCLE",
+//            "ERROR:READ_ORDINALITY:HOMOPOLYMER",
+//            "ERROR:READ_ORDINALITY:GC_CONTENT",
+//            "ERROR:READ_ORDINALITY:PRE_DINUC",
+//            "ERROR:MAPPING_QUALITY",
+//            "ERROR:READ_GROUP",
+//            "ERROR:MISMATCHES_IN_READ",
+//            "ERROR:ONE_BASE_PADDED_CONTEXT",
+//            "OVERLAPPING_ERROR",
+//            "OVERLAPPING_ERROR:BASE_QUALITY",
+//            "OVERLAPPING_ERROR:INSERT_LENGTH",
+//            "OVERLAPPING_ERROR:READ_ORDINALITY",
+//            "OVERLAPPING_ERROR:READ_ORDINALITY:CYCLE",
+//            "OVERLAPPING_ERROR:READ_ORDINALITY:HOMOPOLYMER",
+//            "OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT",
             "INDEL_ERROR"
     );
 
@@ -180,6 +180,8 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             optional = true
     )
     public int progressStepInterval = 100000;
+
+    public static int INDEL_LOCUS_WINDOW = 10;
 
     // =====================================================================
 
@@ -318,13 +320,9 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 nTotalLoci++;
 
                 // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
-                if (checkLocus(featureReaders, info.getLocus())) {
-                    log.debug("Locus does not overlap any variants: " + info.getLocus(), sequenceDictionary);
-                    nSkippedLoci++;
-                    continue;
-                }
+                Map<Integer, List<VariantContext>> potentialVariants = checkLocus(featureReaders, info.getLocus());
 
-                addLocusBases(aggregatorList, info);
+                addLocusBases(aggregatorList, info, potentialVariants);
 
                 nProcessedLoci++;
                 progressLogger.record(info.getLocus().getSequenceName(), info.getLocus().getPosition());
@@ -341,6 +339,16 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         log.info("Iteration complete, generating metric files");
 
         aggregatorList.forEach(this::writeMetricsFileForAggregator);
+
+        // todo mgatzen debug
+        for(BaseErrorAggregation aggregation : aggregatorList) {
+            if (aggregation.getSuffix().equals("error_by_all")) {
+                log.info("Skipped SNPs: " + ((SimpleErrorCalculator)aggregation.strataAggregatorMap.get("all")).nSkippedBases);
+            }
+            if (aggregation.getSuffix().equals("indel_error_by_all")) {
+                log.info("Skipped Indels: " + ((IndelErrorCalculator)aggregation.strataAggregatorMap.get("all")).nSkippedBases);
+            }
+        }
 
         log.info(String.format("Examined %d loci, Processed %d loci, Skipped %d loci.\n" +
                 "Computation took %d seconds.", nTotalLoci, nProcessedLoci, nSkippedLoci, progressLogger.getElapsedSeconds()));
@@ -376,23 +384,31 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * @return true if there's a variant over the locus, false otherwise.
      */
     @VisibleForTesting
-    protected static boolean checkLocus(final List<AbstractFeatureReader<VariantContext, LineIterator>> vcfFeatureReaders, final SamLocusIterator.LocusInfo locusInfo) {
+    protected static Map<Integer, List<VariantContext>> checkLocus(final List<AbstractFeatureReader<VariantContext, LineIterator>> vcfFeatureReaders, final SamLocusIterator.LocusInfo locusInfo) {
+        Map<Integer, List<VariantContext>> potentialVariants = new HashMap<>();
         if (locusInfo == null) {
-            return false;
+            return potentialVariants;
         }
+
         for(final AbstractFeatureReader vcfFeatureReader : vcfFeatureReaders) {
             // TODO mgatzen this.
             final List<SamLocusIterator.LocusInfo> lociToCheck = new ArrayList<>();
             lociToCheck.add(locusInfo);
-            lociToCheck.add(new SamLocusIterator.LocusInfo(new SAMSequenceRecord(locusInfo.getSequenceName().replace("chr", ""), locusInfo.getSequenceLength()), locusInfo.getPosition()));
+            if (locusInfo.getContig().contains("chr")) {
+                lociToCheck.add(new SamLocusIterator.LocusInfo(new SAMSequenceRecord(locusInfo.getSequenceName().replace("chr", ""), locusInfo.getSequenceLength()), locusInfo.getPosition()));
+            }
             for(SamLocusIterator.LocusInfo locusToCheck : lociToCheck) {
-                try (final CloseableIterator<VariantContext> vcfIterator = vcfFeatureReader.query(locusToCheck)) {
+                try (final CloseableIterator<VariantContext> vcfIterator = vcfFeatureReader.query(locusToCheck.getContig(), locusToCheck.getStart() - INDEL_LOCUS_WINDOW, locusToCheck.getEnd() + INDEL_LOCUS_WINDOW)) {
                     while (vcfIterator.hasNext()) {
                         final VariantContext vcf = vcfIterator.next();
                         if (vcf.isFiltered()) {
                             continue;
                         }
-                        return true;
+                        int offsetToLocus = vcf.getStart() - locusToCheck.getStart();
+                        if (!potentialVariants.containsKey(offsetToLocus)) {
+                            potentialVariants.put(offsetToLocus, new ArrayList<>());
+                        }
+                        potentialVariants.get(offsetToLocus).add(vcf);
                     }
                 } catch (IOException e) {
                     throw new RuntimeException("Error reading from resource.", e);
@@ -400,7 +416,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             }
         }
 
-        return false;
+        return potentialVariants;
     }
 
     /**
@@ -450,33 +466,33 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * @param rao            The ReadAndOffset object
      * @param info           The SAMLocusAndReference object
      */
-    private void addRecordAndOffset(final Collection<BaseErrorAggregation> aggregatorList, final SamLocusIterator.RecordAndOffset rao, final SAMLocusAndReference info) {
+    private void addRecordAndOffset(final Collection<BaseErrorAggregation> aggregatorList, final SamLocusIterator.RecordAndOffset rao, final SAMLocusAndReference info, Map<Integer, List<VariantContext>> potentialVariants) {
         // If deletion has been processed already, skip it
         if (rao.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Deletion && processDeletionLocus(rao, info.getLocus()))
             return;
 
         for (final BaseErrorAggregation aggregation : aggregatorList) {
-            aggregation.addBase(rao, info);
+            aggregation.addBase(rao, info, potentialVariants);
         }
     }
 
     /**
      * Iterate over the different records in the locus and add bases to aggregators
      */
-    private void addLocusBases(final Collection<BaseErrorAggregation> aggregatorList, final SAMLocusAndReference info) {
+    private void addLocusBases(final Collection<BaseErrorAggregation> aggregatorList, final SAMLocusAndReference info, Map<Integer, List<VariantContext>> potentialVariants) {
         // Matching bases
         for (final SamLocusIterator.RecordAndOffset rao : info.getRecordAndOffsets()) {
-            addRecordAndOffset(aggregatorList, rao, info);
+            addRecordAndOffset(aggregatorList, rao, info, potentialVariants);
         }
 
         // Deleted bases
         for (final SamLocusIterator.RecordAndOffset deletionRao : info.getLocus().getDeletedInRecord()) {
-            addRecordAndOffset(aggregatorList, deletionRao, info);
+            addRecordAndOffset(aggregatorList, deletionRao, info, potentialVariants);
         }
 
         // Inserted bases
         for (final SamLocusIterator.RecordAndOffset insertionRao : info.getLocus().getInsertedInRecord()) {
-            addRecordAndOffset(aggregatorList, insertionRao, info);
+            addRecordAndOffset(aggregatorList, insertionRao, info, potentialVariants);
         }
     }
 

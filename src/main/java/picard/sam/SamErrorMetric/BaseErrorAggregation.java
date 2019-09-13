@@ -27,6 +27,7 @@ package picard.sam.SamErrorMetric;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.variant.variantcontext.VariantContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +42,8 @@ import java.util.function.Supplier;
 public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
     private final Supplier<CALCULATOR> simpleAggregatorGenerator;
     private final ReadBaseStratification.RecordAndOffsetStratifier stratifier;
-    private final Map<Object, CALCULATOR> strataAggregatorMap;
+    // todo mgatzen debug private
+    public final Map<Object, CALCULATOR> strataAggregatorMap;
 
     public BaseErrorAggregation(final Supplier<CALCULATOR> simpleAggregatorGenerator,
                                 final ReadBaseStratification.RecordAndOffsetStratifier stratifier) {
@@ -51,11 +53,11 @@ public class BaseErrorAggregation<CALCULATOR extends BaseCalculator> {
                 (ignored -> simpleAggregatorGenerator.get(), true);
     }
 
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo, Map<Integer, List<VariantContext>> potentialVariants) {
         final Object stratus = stratifier.stratify(recordAndOffset, locusInfo);
         // this assumes we do not want to aggregate null.
         if (stratus != null) {
-            strataAggregatorMap.get(stratus).addBase(recordAndOffset, locusInfo);
+            strataAggregatorMap.get(stratus).addBase(recordAndOffset, locusInfo, potentialVariants);
         }
     }
 

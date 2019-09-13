@@ -29,6 +29,10 @@ import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.util.AbstractRecordAndOffset;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.variant.variantcontext.VariantContext;
+
+import java.util.List;
+import java.util.Map;
 
 public abstract class BaseErrorCalculator implements BaseCalculator {
     long nBases;
@@ -37,7 +41,7 @@ public abstract class BaseErrorCalculator implements BaseCalculator {
      * the function by which new loci are "shown" to the calculator
      **/
     @Override
-    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
+    public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, final Map<Integer, List<VariantContext>> potentialVariants) {
         // TODO mgatzen should deletions be counted towards total bases?
         if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Match) {
             if (!SequenceUtil.isNoCall(recordAndOffset.getReadBase())) {
