@@ -107,6 +107,11 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
                 .collect(Collectors.toList());
 
         Assert.assertEquals(currentDict, expectedDict);
+        final SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(outputDict.toPath());
+        dict.getSequences().forEach(ssr -> {
+            final String md5 = ssr.getAttribute("M5");
+            Assert.assertNotNull(md5, "M5 Missing");
+        });
     }
 
     /**
@@ -200,6 +205,8 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
             Assert.assertNotNull(an, "AN Missing");
             final Set<String> anSet = new HashSet<>(Arrays.asList(an.split("[,]")));
             Assert.assertTrue(anSet.contains("1.01"));
+            final String md5 = ssr.getAttribute("M5");
+            Assert.assertNotNull(md5, "M5 Missing");
         }
 
         // check chr2/hello
@@ -210,6 +217,8 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
             Assert.assertNotNull(an, "AN Missing");
             final Set<String> anSet = new HashSet<>(Arrays.asList(an.split("[,]")));
             Assert.assertTrue(anSet.contains("2/hello"));
+            final String md5 = ssr.getAttribute("M5");
+            Assert.assertNotNull(md5, "M5 Missing");
         }
     }
 }

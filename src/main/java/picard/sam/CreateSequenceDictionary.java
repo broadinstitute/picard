@@ -271,31 +271,6 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     }
 
     /**
-<<<<<<< HEAD
-     * Create one SAMSequenceRecord from a single fasta sequence
-     */
-    private SAMSequenceRecord makeSequenceRecord(final ReferenceSequence refSeq) {
-        final SAMSequenceRecord ret = new SAMSequenceRecord(refSeq.getName(), refSeq.length());
-
-        // Compute MD5 of upcased bases
-        final byte[] bases = refSeq.getBases();
-        for (int i = 0; i < bases.length; ++i) {
-                bases[i] = StringUtil.toUpperCase(bases[i]);
-        }
-
-        ret.setAttribute(SAMSequenceRecord.MD5_TAG, SequenceUtil.calculateMD5String(bases));
-
-        if (GENOME_ASSEMBLY != null) {
-            ret.setAttribute(SAMSequenceRecord.ASSEMBLY_TAG, GENOME_ASSEMBLY);
-        }
-        ret.setAttribute(SAMSequenceRecord.URI_TAG, URI);
-        if (SPECIES != null) {
-                ret.setAttribute(SAMSequenceRecord.SPECIES_TAG, SPECIES);
-            }
-        return ret;
-    }
-
-    /**
      * Load the file ALT_NAMES containing the alternative contig names
      *
      * @return a <code>Map&lt;src_contig,Set&lt;new_names&gt;&gt;</code>. Never null. May be empty if ALT_NAMES is null.
@@ -360,4 +335,3 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         }
     }
 }
-
