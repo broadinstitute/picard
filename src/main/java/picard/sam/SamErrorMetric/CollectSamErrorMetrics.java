@@ -180,7 +180,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
     @Argument(
             fullName = "INTERVAL_ITERATOR",
-            doc = "Iterate through the files assuming they are a pre-created subset interval of the full genome.  " +
+            doc = "Iterate through the file assuming they are a pre-created subset interval of the full genome.  " +
                     "This enables fast processing of files with reads at disperate parts of the genome.  " +
                     "Requires that the provided VCF file is indexed. ",
             optional = true
@@ -293,11 +293,16 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      *
      * If running in {@link #INTERVAL_ITERATOR} mode:
      * This will query the input variant file for overlapping variants, rather than just iterating through them.
-     * It should be only a little slower than the normal iteration, and much faster if a subset of a genome is used.
+     * It will be a little slower than the normal iteration, and much faster if a subset of a genome is used.
      *
      * If running in default mode:
      * Process our input data by iterating through input variants and reads.
-     * Useful for going through whole genomes / exomes, but slow for sets of reads not beginning at the start of chr1.
+     * Useful for going through whole genomes / exomes, but slow for sets of reads not beginning at the start of the
+     * given variant file.
+     * This slowness is because {@link CollectSamErrorMetrics} by default iterates through both the reads and the
+     * variants sequentially from start to finish.  In the case your region of interest begins much later in the genome
+     * (e.g. chr20:145000) then you will have to wait for the variant file to be traversed from the start to your
+     * locus of interest.
      *
      * NOTE: This method HAS SIDE EFFECTS for both the {@link #vcfFileReader} and {@link #vcfIterator}.
      *
@@ -471,17 +476,14 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
         // Check if we had an error and if so, immediately return
         // (to preserve old functionality):
-        if (returnValue != 0) {
-            return returnValue;
+        if (returnValue == 0) {
+            log.info("Iteration complete, generating metric files");
+
+            aggregatorList.forEach(this::writeMetricsFileForAggregator);
+
+            log.info(String.format("Examined %d loci, Processed %d loci, Skipped %d loci.\n" +
+                    "Computation took %d seconds.", nTotalLoci, nProcessedLoci, nSkippedLoci, progressLogger.getElapsedSeconds()));
         }
-
-        log.info("Iteration complete, generating metric files");
-
-        aggregatorList.forEach(this::writeMetricsFileForAggregator);
-
-        log.info(String.format("Examined %d loci, Processed %d loci, Skipped %d loci.\n" +
-                "Computation took %d seconds.", nTotalLoci, nProcessedLoci, nSkippedLoci, progressLogger.getElapsedSeconds()));
-
         return returnValue;
     }
 
@@ -564,20 +566,13 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         if (locusInfo != null) {
             try (final CloseableIterator<VariantContext> vcfIterator = vcfFileReader.query(locusInfo)) {
 
-                overlaps = true;
-
-                boolean allFiltered = true;
-
                 while (vcfIterator.hasNext()) {
-                    final VariantContext vcf = vcfIterator.next();
-                    if (vcf.isFiltered()) {
+                    final VariantContext variantContext = vcfIterator.next();
+                    if (variantContext.isFiltered()) {
                         continue;
                     }
-                    allFiltered = false;
-                }
-
-                if (allFiltered) {
-                    overlaps = false;
+                    overlaps = true;
+                    break;
                 }
             }
         }
