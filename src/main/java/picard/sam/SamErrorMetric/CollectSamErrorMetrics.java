@@ -343,10 +343,10 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         // todo mgatzen debug
         for(BaseErrorAggregation aggregation : aggregatorList) {
             if (aggregation.getSuffix().equals("error_by_all")) {
-                log.info("Skipped SNPs: " + ((SimpleErrorCalculator)aggregation.strataAggregatorMap.get("all")).nSkippedBases);
+                log.info("Skipped SNPs: " + ((SimpleErrorCalculator)aggregation.strataAggregatorMap.get("all")).nSkippedSNPs);
             }
             if (aggregation.getSuffix().equals("indel_error_by_all")) {
-                log.info("Skipped Indels: " + ((IndelErrorCalculator)aggregation.strataAggregatorMap.get("all")).nSkippedBases);
+                log.info("Skipped Indels: " + ((IndelErrorCalculator)aggregation.strataAggregatorMap.get("all")).nSkippedIndels);
             }
         }
 

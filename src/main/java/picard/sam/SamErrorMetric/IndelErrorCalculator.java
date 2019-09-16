@@ -58,22 +58,9 @@ public class IndelErrorCalculator extends BaseErrorCalculator {
      */
     protected long nDeletedBases;
 
-    // todo mgatzen debug
-    protected long nSkippedBases = 0;
-
     @Override
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, final Map<Integer, List<VariantContext>> potentialVariants) {
         super.addBase(recordAndOffset, locusAndRef, potentialVariants);
-
-        for (final Map.Entry<Integer, List<VariantContext>> entry : potentialVariants.entrySet()) {
-            for (final VariantContext variantContext : entry.getValue()) {
-                if (variantContext.getType() == VariantContext.Type.INDEL) {
-                    // Don't consider records at an indel variant site (or its surrounding loci) sas an error.
-                    nSkippedBases++;
-                    return;
-                }
-            }
-        }
 
         if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Insertion) {
             nInsertions++;

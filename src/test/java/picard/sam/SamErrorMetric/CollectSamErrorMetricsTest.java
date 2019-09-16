@@ -739,10 +739,11 @@ public class CollectSamErrorMetricsTest {
 
         SamLocusIterator.LocusInfo actualVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016237);
         SamLocusIterator.LocusInfo actualChr1VariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("1", 249250621), 216407409);
-        SamLocusIterator.LocusInfo noVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016238);
+        SamLocusIterator.LocusInfo noVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 180162276);
 
-        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualVariantSite).size(), 2);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualVariantSite).size(), 1);
         Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualChr1VariantSite).size(), 1);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualChr1VariantSite).get(0).size(), 2);
         Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, noVariantSite).size(), 0);
     }
 }

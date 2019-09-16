@@ -37,11 +37,41 @@ import java.util.Map;
 public abstract class BaseErrorCalculator implements BaseCalculator {
     long nBases;
 
+    // TODO mgatzen debug
+    protected long nSkippedSNPs = 0;
+    protected long nSkippedIndels = 0;
+
     /**
      * the function by which new loci are "shown" to the calculator
      **/
     @Override
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, final Map<Integer, List<VariantContext>> potentialVariants) {
+
+        if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Match) {
+            // Search for SNP variants
+            if (potentialVariants.containsKey(0)) {
+                for (VariantContext variantContext : potentialVariants.get(0)) {
+                    if (variantContext.getType() == VariantContext.Type.SNP) {
+                        // Don't consider mismatches at a SNP variant site as an error
+                        nSkippedSNPs++;
+                        return;
+                    }
+                }
+            }
+        }
+        else {
+            // Search for indel variants
+            for (final Map.Entry<Integer, List<VariantContext>> entry : potentialVariants.entrySet()) {
+                for (final VariantContext variantContext : entry.getValue()) {
+                    if (variantContext.getType() == VariantContext.Type.INDEL) {
+                        // Don't consider records at an indel variant site (or its surrounding loci) sas an error.
+                        nSkippedIndels++;
+                        return;
+                    }
+                }
+            }
+        }
+
         // TODO mgatzen should deletions be counted towards total bases?
         if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Match) {
             if (!SequenceUtil.isNoCall(recordAndOffset.getReadBase())) {

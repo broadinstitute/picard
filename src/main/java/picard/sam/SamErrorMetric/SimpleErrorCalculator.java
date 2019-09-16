@@ -25,6 +25,7 @@
 package picard.sam.SamErrorMetric;
 
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -39,9 +40,6 @@ public class SimpleErrorCalculator extends BaseErrorCalculator {
 
     protected long nMismatchingBases;
 
-    // todo mgatzen debug
-    protected long nSkippedBases = 0;
-
     /**
      * The function by which new loci are "shown" to the calculator
      **/
@@ -49,15 +47,7 @@ public class SimpleErrorCalculator extends BaseErrorCalculator {
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef, final Map<Integer, List<VariantContext>> potentialVariants) {
         super.addBase(recordAndOffset, locusAndRef, potentialVariants);
         final byte readBase = recordAndOffset.getReadBase();
-        if (potentialVariants.containsKey(0)) {
-            for (VariantContext variantContext : potentialVariants.get(0)) {
-                if (variantContext.getType() == VariantContext.Type.SNP) {
-                    // Don't consider mismatches at a SNP variant site as an error
-                    nSkippedBases++;
-                    return;
-                }
-            }
-        }
+
         if (!SequenceUtil.isNoCall(readBase) && (readBase != locusAndRef.getReferenceBase())) {
             nMismatchingBases++;
         }
