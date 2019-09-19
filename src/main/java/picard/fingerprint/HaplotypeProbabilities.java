@@ -24,7 +24,6 @@
 
 package picard.fingerprint;
 
-import htsjdk.utils.ValidationUtils;
 import picard.util.MathUtil;
 
 /**
@@ -57,28 +56,39 @@ public abstract class HaplotypeProbabilities {
      * Mathematically, this is P(H | D, F) where and H is the vector of possible haplotypes {AA,Aa,aa}.
      * D is the data seen by the class, and
      * F is the population frequency of each genotype.
-     */
-    /**
-     * Returns the posterior probabilities using the population frequency as a prior.
+     *
+     *
+     * Returns the posterior normalized probabilities using the population frequency as a prior.
      */
     public double[] getPosteriorProbabilities() {
-        return MathUtil.pNormalizeVector(MathUtil.multiply(getLikelihoods(), getPriorProbablities()));
+        return MathUtil.pNormalizeVector(getPosteriorLikelihoods());
     }
+
+    /** Returns the probabilities, in order, of the AA, Aa and aa haplotypes.
+
+     * Mathematically, this is P(H | D, F) where and H is the vector of possible haplotypes {AA,Aa,aa}.
+     * D is the data seen by the class, and
+     * F is the population frequency of each genotype.
+     *
+     *
+     * Returns the unnormalized likelihoods using the population frequency as a prior.
+     */
+    public double[] getPosteriorLikelihoods() {
+        return MathUtil.multiply(getLikelihoods(), getPriorProbablities());
+    }
+
 
     /**
      * Returns the likelihoods, in order, of the AA, Aa and aa haplotypes given the evidence
      * <p>
      * Mathematically this is P(evidence | haplotype) where haplotype={AA,Aa,aa}.
+     *
+     * Will be normalized.
      */
     public abstract double[] getLikelihoods();
 
     public double[] getLogLikelihoods() {
-        final double[] likelihoods = getLikelihoods();
-        final double[] lLikelihoods = new double[NUM_GENOTYPES];
-        for (final Genotype g : Genotype.values()){
-            lLikelihoods[g.v] = Math.log10(likelihoods[g.v]);
-        }
-        return lLikelihoods;
+        return MathUtil.getLogFromProbability(getLikelihoods());
     }
 
     /**
@@ -164,7 +174,7 @@ public abstract class HaplotypeProbabilities {
      */
     void assertSnpPartOfHaplotype(final Snp snp) {
         if (!this.haplotypeBlock.contains(snp)) {
-            throw new IllegalArgumentException("Snp " + snp + " does not belong to haplotype " + this.haplotypeBlock);
+            throw new IllegalArgumentException("Snp " + snp + " does not belong to haplotype " + this.haplotypeBlock + ".");
         }
     }
 
@@ -188,15 +198,7 @@ public abstract class HaplotypeProbabilities {
      */
 
     public double scaledEvidenceProbabilityUsingGenotypeFrequencies(final double[] genotypeFrequencies) {
-        final double[] likelihoods = getLikelihoods();
-        ValidationUtils.validateArg(genotypeFrequencies.length == NUM_GENOTYPES, "provided genotype frequencies must be length 3");
-        ValidationUtils.validateArg(likelihoods.length == NUM_GENOTYPES, "internal liklihoods must be length 3");
-
-        double result = 0;
-        for (Genotype g : Genotype.values()) {
-            result += likelihoods[g.v] * genotypeFrequencies[g.v];
-        }
-        return result;
+        return MathUtil.sum(MathUtil.multiply(getLikelihoods(), genotypeFrequencies));
     }
 
     public double shiftedLogEvidenceProbabilityUsingGenotypeFrequencies(final double[] genotypeFrequencies) {
@@ -213,16 +215,16 @@ public abstract class HaplotypeProbabilities {
         if (!this.haplotypeBlock.equals(otherHp.getHaplotype())) {
             throw new IllegalArgumentException("Haplotypes are from different HaplotypeBlocks!");
         }
-        /** Get the posterior from the other otherHp. Use this posterior as the prior to calculate probability.
-         *
-         *   P(hap|x,y) = P(x|hap,y) P(hap|y) / P(x|y)
-         *              = P(x | hap) * P(hap | y) / P(x)
-         *                likelihood * other.posterior
-         *
-         *              = P(x|hap) P(y|hap) P(hap)/P(x)P(y)
-         *              = A P(x| hap) P(y| hap) P(hap)  # where A is an unknown scaling factor
+        /* Get the posterior from the other otherHp. Use this posterior as the prior to calculate probability.
+
+            P(hap|x,y) = P(x|hap,y) P(hap|y) / P(x|y)
+                       = P(x | hap) * P(hap | y) / P(x)
+                         likelihood * other.posterior
+
+                       = P(x|hap) P(y|hap) P(hap)/P(x)P(y)
+                       = A P(x| hap) P(y| hap) P(hap)  # where A is an unknown scaling factor
          */
-        return shiftedLogEvidenceProbabilityUsingGenotypeFrequencies(otherHp.getPosteriorProbabilities());
+        return shiftedLogEvidenceProbabilityUsingGenotypeFrequencies(otherHp.getPosteriorLikelihoods());
     }
 
     /**

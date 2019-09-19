@@ -47,6 +47,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import picard.PicardException;
 import picard.util.AlleleSubsettingUtils;
+import picard.util.MathUtil;
 import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
@@ -63,7 +64,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.OptionalInt;
-import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -197,9 +197,7 @@ public class FingerprintChecker {
             fingerprints = loadFingerprintsFromVariantContexts(reader, specificSample, fingerprintFile);
         }
         //add an entry for each sample which was not fingerprinted
-        reader.getFileHeader().getGenotypeSamples().forEach(sample -> {
-            fingerprints.computeIfAbsent(sample, s -> new Fingerprint(s, fingerprintFile, null));
-        });
+        reader.getFileHeader().getGenotypeSamples().forEach(sample -> fingerprints.computeIfAbsent(sample, s -> new Fingerprint(s, fingerprintFile, null)));
 
         return fingerprints;
     }
@@ -633,7 +631,7 @@ public class FingerprintChecker {
                 final Snp snp = this.haplotypes.getSnp(info.getSequenceName(), info.getPosition());
 
                 // randomly select locusMaxReads elements from the list
-                final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = randomSublist(info.getRecordAndPositions(), locusMaxReads);
+                final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = MathUtil.randomSublist(info.getRecordAndOffsets(), locusMaxReads);
 
                 for (final SamLocusIterator.RecordAndOffset rec : recordAndOffsetList) {
                     final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
@@ -659,33 +657,6 @@ public class FingerprintChecker {
             log.error("Unexpected Error while reading from " + samFile + ". Trying to continue.", e.getMessage(), e.getStackTrace());
         }
         return fingerprintsBySample;
-    }
-
-    /**
-     * A small utility function to choose n random elements (un-shuffled) from a list
-     *
-     * @param list A list of elements
-     * @param n    a number of elements requested from list
-     * @return a list of n randomly chosen (but in the original order) elements from list.
-     * If the list has less than n elements it is returned in its entirety.
-     */
-    protected static <T> List<T> randomSublist(final List<T> list, final int n) {
-        int availableElements = list.size();
-        if (availableElements <= n) return list;
-
-        int stillNeeded = n;
-        final Random rg = new Random();
-        final List<T> shortList = new ArrayList<>(n);
-        for (final T aList : list) {
-            if (rg.nextDouble() < stillNeeded / (double) availableElements) {
-                shortList.add(aList);
-                stillNeeded--;
-            }
-            if (stillNeeded == 0) break; // fast out if do not need more elements
-            availableElements--;
-        }
-
-        return shortList;
     }
 
     /**
@@ -868,18 +839,18 @@ public class FingerprintChecker {
     public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp, final double minPExpected, final double pLoH, final boolean calculateLocusInfo, final boolean calculateTumorAwareLod) {
         final List<LocusResult> locusResults = calculateLocusInfo ? new ArrayList<>() : null;
 
-        double llThisSample = 0;
-        double llOtherSample = 0;
+        double llNoSwapModel = 0;
+        double llSwapModel = 0;
 
         double lodExpectedSampleTumorNormal = 0;
         double lodExpectedSampleNormalTumor = 0;
 
-        final double lminPExpected = Math.log10(minPExpected);
-
         for (final HaplotypeProbabilities probs2 : expectedFp.values()) {
             final HaplotypeBlock haplotypeBlock = probs2.getHaplotype();
             final HaplotypeProbabilities probs1 = observedFp.get(haplotypeBlock);
-            if (probs1 == null) continue;
+            if (probs1 == null) {
+                continue;
+            }
 
             final HaplotypeProbabilityOfNormalGivenTumor prob1AssumingDataFromTumor;
             final HaplotypeProbabilityOfNormalGivenTumor prob2AssumingDataFromTumor;
@@ -917,11 +888,8 @@ public class FingerprintChecker {
                 locusResults.add(lr);
             }
             if (probs1.hasEvidence() && probs2.hasEvidence()) {
-                //TODO: what's the mathematics behind the lminPexpected?
-                llThisSample += Math.max(lminPExpected,
-                        probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2));
-
-                llOtherSample += probs1.shiftedLogEvidenceProbability();
+                llNoSwapModel += probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2);
+                llSwapModel += probs1.shiftedLogEvidenceProbability() + probs2.shiftedLogEvidenceProbability();
 
                 if (calculateTumorAwareLod) {
                     lodExpectedSampleTumorNormal += prob1AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2) -
@@ -934,7 +902,7 @@ public class FingerprintChecker {
         }
 
         // TODO: prune the set of LocusResults for things that are too close together?
-        return new MatchResults(expectedFp.getSource(), expectedFp.getSample(), llThisSample, llOtherSample, lodExpectedSampleTumorNormal, lodExpectedSampleNormalTumor, locusResults);
+        return new MatchResults(expectedFp.getSource(), expectedFp.getSample(), llNoSwapModel, llSwapModel, lodExpectedSampleTumorNormal, lodExpectedSampleNormalTumor, locusResults);
     }
 
     /**

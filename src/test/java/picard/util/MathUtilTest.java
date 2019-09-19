@@ -4,6 +4,9 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static picard.util.MathUtil.divide;
 
 /**
@@ -82,6 +85,19 @@ public class MathUtilTest {
         for (int i = 0; i < actual.length; ++i) {
             Assert.assertEquals(actual[i], expected[i], "Array differ at position " + i);
         }
+    }
+
+    @Test
+    public void testRandomSublist() {
+
+        final List<Integer> list = new ArrayList<>();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+
+        Assert.assertEquals(list, MathUtil.randomSublist(list, 3));
+        Assert.assertEquals(list, MathUtil.randomSublist(list, 4));
+        Assert.assertEquals(MathUtil.randomSublist(list, 2).size(), 2);
     }
 
     @Test(dataProvider = "divideDoubleTestCases")
