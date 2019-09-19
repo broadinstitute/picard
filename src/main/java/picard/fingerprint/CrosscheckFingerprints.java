@@ -356,8 +356,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 1;
 
     @Hidden
-    @Argument(doc = "When true code will forgo readability checks on input files (useful for cloud access)", optional = true)
-    public boolean SKIP_INPUT_READABLITY_TEST = false;
+    @Argument(doc = "When true code will check for readability on input files (this can be slow on cloud access)")
+    public boolean TEST_INPUT_READABILITY = true;
 
     private final Log log = Log.getInstance(CrosscheckFingerprints.class);
 
@@ -445,7 +445,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final List<Path> inputPaths = IOUtil.getPaths(INPUT);
 
         final List<Path> unrolledFiles = IOUtil.unrollPaths(inputPaths, extensions.toArray(new String[0]));
-        if (!SKIP_INPUT_READABLITY_TEST) {
+        if (TEST_INPUT_READABILITY) {
             IOUtil.assertPathsAreReadable(unrolledFiles);
         }
 
@@ -454,7 +454,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         // unroll and check readable here, as it can be annoying to fingerprint INPUT files and only then discover a problem
         // in a file in SECOND_INPUT
         final List<Path> unrolledFiles2 = IOUtil.unrollPaths(secondInputsPaths, extensions.toArray(new String[0]));
-        if (!SKIP_INPUT_READABLITY_TEST) {
+        if (TEST_INPUT_READABILITY) {
             IOUtil.assertPathsAreReadable(unrolledFiles2);
         }
 
@@ -664,7 +664,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         for (final String[] strings : parser) {
             if (strings.length != 2) {
                 throw new IllegalArgumentException("Each line of the " + inputFieldName + " must have exactly two strings separated by a tab. " +
-                        "Found: " + Arrays.toString(strings) +
+                        "Found: [" + Arrays.toString(strings) +
                         "] right before [" + parser.getCurrentLine() + "], in " + sampleMapFile.getAbsolutePath());
             }
             if (sampleMap.containsKey(strings[0])) {

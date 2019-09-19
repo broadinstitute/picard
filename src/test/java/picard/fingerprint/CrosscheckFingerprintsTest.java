@@ -22,6 +22,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -653,8 +655,9 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         args.add("INPUT=" + NA12891_named_NA12892_r1.getAbsolutePath());
         args.add("SECOND_INPUT=" + NA12891_r2.getAbsolutePath());
 
-        final File map = File.createTempFile("map", ".txt");
-        map.deleteOnExit();
+        final Path map = File.createTempFile("map", ".txt").toPath();
+        IOUtil.deleteOnExit(map);
+
         tabbedWrite(map, Arrays.asList(Collections.singletonList("NA12891"), Collections.singletonList(NA12891_named_NA12892_r1.getAbsolutePath())));
 
         args.add("OUTPUT=" + metrics.getAbsolutePath());
@@ -673,14 +676,17 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         doTest(args.toArray(new String[0]), metrics, expectedRetVal, numberOfSamples1 * numberOfSamples2, CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
     }
 
-    private void tabbedWrite(final File output, final List<List<String>> outputs) throws IOException {
+    private void tabbedWrite(final Path output, final List<List<String>> outputs) throws IOException {
         final int[] ints = outputs.stream().mapToInt(List::size).distinct().toArray();
-        if (ints.length > 1){
-            throw new IllegalArgumentException("got lists with different lengths: "+ Arrays.toString(ints));
-        } else if (ints.length == 0) return;
+        if (ints.length > 1) {
+            throw new IllegalArgumentException("got lists with different lengths: " + Arrays.toString(ints));
+        }
+        if (ints.length == 0) {
+            return;
+        }
 
         final int length = ints[0];
-        try(PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(output)))){
+        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(output))) {
 
             for (int i = 0; i < length; i++) {
                 // j is not redundant, due to "effective final" requirement in lambda...

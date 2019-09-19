@@ -40,7 +40,6 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
-import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeLikelihoods;
@@ -205,7 +204,7 @@ public class FingerprintChecker {
         return fingerprints;
     }
 
-    private void checkDictionaryGoodForFingerprinting(final SAMSequenceDictionary sequenceDictionaryToCheck ) {
+    private void checkDictionaryGoodForFingerprinting(final SAMSequenceDictionary sequenceDictionaryToCheck) {
         final SAMSequenceDictionary activeDictionary = getActiveDictionary(haplotypes);
 
         if (sequenceDictionaryToCheck.getSequences().size() < activeDictionary.size()) {
@@ -214,7 +213,7 @@ public class FingerprintChecker {
         SequenceUtil.assertSequenceDictionariesEqual(activeDictionary, sequenceDictionaryToCheck, true);
     }
 
-    private SAMSequenceDictionary getActiveDictionary(final HaplotypeMap haplotypes){
+    private static SAMSequenceDictionary getActiveDictionary(final HaplotypeMap haplotypes) {
         final SAMSequenceDictionary origSequenceDictionary = haplotypes.getHeader().getSequenceDictionary();
 
         final OptionalInt maxSequenceIndex = haplotypes.getAllSnps().stream()
@@ -717,9 +716,9 @@ public class FingerprintChecker {
 
                 if (oneFileFingerprints.isEmpty()) {
                         log.warn("No fingerprint data was found in file:" + p);
-                } else {
-                    retval.putAll(oneFileFingerprints);
                 }
+                retval.putAll(oneFileFingerprints);
+
 
                 log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
                 if (filesRead.incrementAndGet() % 100 == 0) {
