@@ -494,14 +494,7 @@ public class ReadBaseStratification {
 
         @Override
         public Integer stratify(final SAMRecord samRecord) {
-            try {
-                return samRecord.getCigar().getCigarElements().stream()
-                        .filter(ce -> ce.getOperator().equals(operator))
-                        .mapToInt(CigarElement::getLength)
-                        .sum();
-            } catch (final Exception ex) {
-                return null;
-            }
+            return stratifyCigarOperatorsInRead(samRecord, operator);
         }
 
         @Override
@@ -515,16 +508,20 @@ public class ReadBaseStratification {
      */
     public static class IndelsInReadStratifier extends RecordStratifier<Integer> {
 
+        /**
+         * Returns the number of bases associated with I and D CIGAR elements.
+         * @param samRecord The read to investigate
+         * @return The number of bases associated with I and D CIGAR elements, or null if the evaluation of either
+         *         operation caused an error
+         */
         @Override
         public Integer stratify(final SAMRecord samRecord) {
-            try {
-                return samRecord.getCigar().getCigarElements().stream()
-                        .filter(ce -> (ce.getOperator().equals(CigarOperator.I) || ce.getOperator().equals(CigarOperator.D)))
-                        .mapToInt(CigarElement::getLength)
-                        .sum();
-            } catch (final Exception ex) {
+            final Integer insertedBasesInRead = stratifyCigarOperatorsInRead(samRecord, CigarOperator.I);
+            final Integer deletedBasesInRead = stratifyCigarOperatorsInRead(samRecord, CigarOperator.D);
+            if (insertedBasesInRead == null || deletedBasesInRead == null) {
                 return null;
             }
+            return insertedBasesInRead + deletedBasesInRead;
         }
 
         @Override
@@ -987,6 +984,22 @@ public class ReadBaseStratification {
          * Read whose consensus status cannot be determined.
          */
         UNKNOWN
+    }
+
+    /**
+     * Returns the number of bases associated with a specific cigar operator within a read
+     * @param samRecord The read to investigate
+     * @param operator The operator that the counted bases should be associated with
+     */
+    private static Integer stratifyCigarOperatorsInRead(final SAMRecord samRecord, final CigarOperator operator) {
+        try {
+            return samRecord.getCigar().getCigarElements().stream()
+                    .filter(ce -> ce.getOperator().equals(operator))
+                    .mapToInt(CigarElement::getLength)
+                    .sum();
+        } catch (final Exception ex) {
+            return null;
+        }
     }
 
     /**

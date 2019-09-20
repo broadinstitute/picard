@@ -551,12 +551,11 @@ public class CollectSamErrorMetricsTest {
 
     @Test(dataProvider = "provideForTestHasDeletionBeenProcessed")
     public void testHasDeletionBeenProcessed(final String cigarString, final List<Boolean> expected) {
-        Cigar cigar = TextCigarCodec.decode(cigarString);
-        SAMRecord deletionRecord = createRecordFromCigar(cigar.toString());
+        final Cigar cigar = TextCigarCodec.decode(cigarString);
+        final SAMRecord deletionRecord = createRecordFromCigar(cigar.toString());
 
-        CollectSamErrorMetrics collectSamErrorMetrics = new CollectSamErrorMetrics();
+        final CollectSamErrorMetrics collectSamErrorMetrics = new CollectSamErrorMetrics();
         final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 2000);
-        SamLocusIterator.LocusInfo locusInfo;
 
         int position = 100;
 
@@ -564,7 +563,7 @@ public class CollectSamErrorMetricsTest {
 
         for(CigarElement cigarElement : cigar.getCigarElements()) {
             for(int iCigarElementPosition = 0; iCigarElementPosition < cigarElement.getLength(); iCigarElementPosition++) {
-                locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, ++position);
+                final SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, ++position);
                 if(cigarElement.getOperator() == CigarOperator.D) {
                     Assert.assertEquals(collectSamErrorMetrics.processDeletionLocus(new SamLocusIterator.RecordAndOffset(deletionRecord, 0), locusInfo), (boolean) expected.get(iExpected++));
                 }

@@ -38,13 +38,12 @@ public abstract class BaseErrorCalculator implements BaseCalculator {
      **/
     @Override
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
-        // TODO mgatzen should deletions be counted towards total bases?
         if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Match) {
             if (!SequenceUtil.isNoCall(recordAndOffset.getReadBase())) {
                 nBases++;
             }
         } else if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Insertion) {
-            CigarElement cigarElement = ReadBaseStratification.getIndelElement(recordAndOffset);
+            final CigarElement cigarElement = ReadBaseStratification.getIndelElement(recordAndOffset);
             if (cigarElement != null) {
                 nBases += cigarElement.getLength();
             }
