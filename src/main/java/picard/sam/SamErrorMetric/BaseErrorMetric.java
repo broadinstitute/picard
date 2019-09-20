@@ -42,8 +42,8 @@ public class BaseErrorMetric extends ErrorMetric {
         this.Q_SCORE = computeQScore(ERROR_BASES);
     }
 
-    public BaseErrorMetric(final String covariate, final long totalBases, final long errorBases) {
-        super(covariate, totalBases);
+    public BaseErrorMetric(final String covariate, final long totalBases, final long skippedSNPs, final long skippedIndels, final long errorBases) {
+        super(covariate, totalBases, skippedSNPs, skippedIndels);
         this.ERROR_BASES = errorBases;
     }
 

@@ -73,11 +73,13 @@ public class OverlappingErrorMetric extends ErrorMetric {
 
     public OverlappingErrorMetric(final String covariate,
                                   final long nTotalBases,
+                                  final long nSkippedSNPs,
+                                  final long nSkippedIndels,
                                   final long nTotalBasesWithOverlappingReads,
                                   final long nDisagreeWithRefAndMate,
                                   final long nDisagreeWithReferenceOnly,
                                   final long nThreeWaysDisagreement) {
-        super(covariate, nTotalBases);
+        super(covariate, nTotalBases, nSkippedSNPs, nSkippedIndels);
 
         this.NUM_BASES_WITH_OVERLAPPING_READS = nTotalBasesWithOverlappingReads;
         this.NUM_DISAGREES_WITH_REFERENCE_ONLY = nDisagreeWithReferenceOnly;

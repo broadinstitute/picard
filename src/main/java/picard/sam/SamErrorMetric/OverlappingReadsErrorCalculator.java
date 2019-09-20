@@ -119,7 +119,7 @@ public class OverlappingReadsErrorCalculator extends BaseErrorCalculator {
      **/
     @Override
     public OverlappingErrorMetric getMetric() {
-        return new OverlappingErrorMetric("", nBases, nTotalBasesWithOverlappingReads, nDisagreeWithRefAndMate,
+        return new OverlappingErrorMetric("", nBases, nSkippedSNPs, nSkippedIndels, nTotalBasesWithOverlappingReads, nDisagreeWithRefAndMate,
                 nBothDisagreeWithReference, nThreeWaysDisagreement);
     }
 

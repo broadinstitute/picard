@@ -45,10 +45,25 @@ public class ErrorMetric extends MergeableMetricBase {
      */
     @MergeByAdding
     public long TOTAL_BASES;
+    /**
+     * Number of bases which are skipped because they overlap with a SNP variant site
+     */
 
-    public ErrorMetric(final String covariate, final long totalBases) {
+    @MergeByAdding
+    public long SKIPPED_SNPS;
+
+    /**
+     * Number of insertions or deletions which are skipped because they overlap with an indel variant site. Note that
+     * this is not the number of bases that are skipped, i.e. each insertion or deletion is counted only once.
+     */
+    @MergeByAdding
+    public long SKIPPED_INDELS;
+
+    public ErrorMetric(final String covariate, final long totalBases, final long skipeedSNPs, final long skippedIndels) {
         this.TOTAL_BASES = totalBases;
         this.COVARIATE = covariate;
+        this.SKIPPED_SNPS = skipeedSNPs;
+        this.SKIPPED_INDELS = skippedIndels;
     }
 
     // required to enable reading metric from a file.

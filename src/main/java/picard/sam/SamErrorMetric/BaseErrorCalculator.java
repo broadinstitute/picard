@@ -38,7 +38,15 @@ public abstract class BaseErrorCalculator implements BaseCalculator {
     long nBases;
 
     // TODO mgatzen debug
+    /**
+     * Number of bases which are skipped because they overlap with a SNP variant site
+     */
     protected long nSkippedSNPs = 0;
+
+    /**
+     * Number of insertions or deletions which are skipped because they overlap with an indel variant site. Note that
+     * this is not the number of bases that are skipped, i.e. each insertion or deletion is counted only once.
+     */
     protected long nSkippedIndels = 0;
 
     /**

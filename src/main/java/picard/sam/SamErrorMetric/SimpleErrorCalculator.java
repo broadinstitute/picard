@@ -66,6 +66,6 @@ public class SimpleErrorCalculator extends BaseErrorCalculator {
      **/
     @Override
     public BaseErrorMetric getMetric() {
-        return new BaseErrorMetric("", nBases, nMismatchingBases);
+        return new BaseErrorMetric("", nBases, nSkippedSNPs, nSkippedIndels, nMismatchingBases);
     }
 }
