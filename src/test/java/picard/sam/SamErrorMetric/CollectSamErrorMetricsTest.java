@@ -149,117 +149,117 @@ public class CollectSamErrorMetricsTest {
 
                 // Note that soft clipped bases are not counted.
                 {".error_by_all", chrMReadsWithClips, priorQ,
-                        new BaseErrorMetric("all", 0, 0, 62L, 49L)},
+                        new BaseErrorMetric("all", 62L, 49L, 0, 0)},
                 {".error_by_base_quality", chrMReadsWithClips, priorQ,
-                        new BaseErrorMetric("32", 0, 0, 52L, 41L)},
+                        new BaseErrorMetric("32", 52L, 41L, 0, 0)},
                 {".error_by_base_quality", chrMReadsWithClips, priorQ,
-                        new BaseErrorMetric("33", 0, 0, 10L, 8L)},
+                        new BaseErrorMetric("33", 10L, 8L, 0, 0)},
 //                 Note that the homopolymer is counted as the number of bases in the read that match each other before a new base.
 //                 This catches mismatches (and matches) of the ends of homopolymers.
                 {".error_by_homopolymer_and_following_ref_base", chrMReadsWithClips, priorQ,
-                        new BaseErrorMetric("9,T,T", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("9,T,T", 1L, 1L, 0, 0)},
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("2,G,T", 0, 0, 2L, 1L)},
+                        new BaseErrorMetric("2,G,T", 2L, 1L, 0, 0)},
 
                 {".error_by_binned_length_homopolymer_and_following_ref_base", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("SHORT_HOMOPOLYMER,G,T", 0, 0, 6L, 1L)},
+                        new BaseErrorMetric("SHORT_HOMOPOLYMER,G,T", 6L, 1L, 0, 0)},
 
                 {".error_by_read_ordinality_and_pre_dinuc", chrMReadsWithClips, priorQ,
-                        new BaseErrorMetric("FIRST,A,A", 0, 0, 3L, 3L)},
+                        new BaseErrorMetric("FIRST,A,A", 3L, 3L, 0, 0)},
                 // Using a sam file with a single error it is easy to validate demonstrate these tests should pass
                 {".error_by_all", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("all", 0, 0, 72L, 1L)},
+                        new BaseErrorMetric("all", 72L, 1L, 0, 0)},
                 // There are two base qualities in the bam, the error occurs in quality "32"
                 {".error_by_base_quality", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("32", 0, 0, 51L, 1L)},
+                        new BaseErrorMetric("32", 51L, 1L, 0, 0)},
                 // There are two base qualities in the bam, the error occurs in quality "32", make sure we detect no errors in quality "33"
                 {".error_by_base_quality", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("33", 0, 0, 21L, 0L)},
+                        new BaseErrorMetric("33", 21L, 0L, 0, 0)},
                 // simpleSamWithBaseErrors2 contains 2 differences from the reference
                 // after 2 different homopolymers.
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("2,T,A", 0, 0, 2L, 1L)},
+                        new BaseErrorMetric("2,T,A", 2L, 1L, 0, 0)},
                 // Make sure that we can correctly identify an error after a homopolymer
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("3,C,G", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("3,C,G", 1L, 1L, 0, 0)},
                 {".error_by_read_ordinality_and_pre_dinuc", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("FIRST,G,T", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("FIRST,G,T", 1L, 1L, 0, 0)},
                 // The covariate "0.5" was chosen to avoid those that have repeating decimals and could have alternative representations as
                 // a string.  GC is calculated over the entire read including clipped bases, while errors are calculated only over unclipped bases.
                 {".error_by_gc", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("0.5", 0, 0, 36L, 1L)},
+                        new BaseErrorMetric("0.5", 36L, 1L, 0, 0)},
                 // Make sure that we can detect errors at a particular cycle
                 {".error_by_cycle", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("10", 0, 0, 2L, 1L)},
+                        new BaseErrorMetric("10", 2L, 1L, 0, 0)},
                 // There should be one error in the read with mapping quality 60.
                 {".error_by_mapping_quality", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("60", 0, 0, 36L, 1L)},
+                        new BaseErrorMetric("60", 36L, 1L, 0, 0)},
                 // There should be no errors in the read with mapping quality 0.
                 {".error_by_mapping_quality", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("50", 0, 0, 36L, 0L)},
+                        new BaseErrorMetric("50", 36L, 0L, 0, 0)},
                 // One base has an error in the read group 62A40.2
                 {".error_by_read_group", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("62A40.2", 0, 0, 72L, 1L)},
+                        new BaseErrorMetric("62A40.2", 72L, 1L, 0, 0)},
                 // No additional mismatches are found on the read with 1 mismatch.
                 {".error_by_mismatches_in_read", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("1", 0, 0, 35L, 0L)},
+                        new BaseErrorMetric("1", 35L, 0L, 0, 0)},
                 // No additional mismatches are found on the read with 1 mismatch. (Just another way to check)
                 {".error_by_mismatches_in_read", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("0", 0, 0, 37L, 1L)},
+                        new BaseErrorMetric("0", 37L, 1L, 0, 0)},
                 // There should be no errors in the CAG context because it matches reference
                 {".error_by_one_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("CAG", 0, 0, 1L, 0L)},
+                        new BaseErrorMetric("CAG", 1L, 0L, 0, 0)},
                 // There should be one error in the GTC context
                 {".error_by_one_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("GTC", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("GTC", 1L, 1L, 0, 0)},
                 // There should be one error in the CTT context
                 {".error_by_one_base_padded_context", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("CCT", 0, 0, 3L, 0L)},
+                        new BaseErrorMetric("CCT", 3L, 0L, 0, 0)},
                 // There should be no errors in the ACGGG context
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("ACGGG", 0, 0, 1L, 0L)},
+                        new BaseErrorMetric("ACGGG", 1L, 0L, 0, 0)},
                 // There should be one error in the GGTCT context
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("GGTCT", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("GGTCT", 1L, 1L, 0, 0)},
                 // There should be no errors in the CTTGA context (appears in sam file as TCAaG in second read)
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("CTTGA", 0, 0, 1L, 0L)},
+                        new BaseErrorMetric("CTTGA", 1L, 0L, 0, 0)},
                 // There should be one error in the CCGTG context
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("CCGTG", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("CCGTG", 1L, 1L, 0, 0)},
                 // Reads that don't have consensus tags should be stratified as UNKNOWN
                 {".error_by_consensus", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("UNKNOWN", 0, 0, 72L, 1L)},
+                        new BaseErrorMetric("UNKNOWN", 72L, 1L, 0, 0)},
                 // There should be 2 errors in the one simplex singleton reads.
                 {".error_by_consensus", simpleSingleStrandConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("SIMPLEX_SINGLETON", 0, 0, 36L, 2L)},
+                        new BaseErrorMetric("SIMPLEX_SINGLETON", 36L, 2L, 0, 0)},
                 // There should be no errors in the simplex consensus read.
                 {".error_by_consensus", simpleSingleStrandConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("SIMPLEX_CONSENSUS", 0, 0, 36L, 0L)},
+                        new BaseErrorMetric("SIMPLEX_CONSENSUS", 36L, 0L, 0, 0)},
                 // There should be one error in duplex singleton read.  Also the N in this read reduces total bases from 36 to 35.
                 {".error_by_consensus", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("DUPLEX_SINGLETON", 0, 0, 35L, 1L)},
+                        new BaseErrorMetric("DUPLEX_SINGLETON", 35L, 1L, 0, 0)},
                 // There should be two errors in the duplex consensus read.
                 {".error_by_consensus", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("DUPLEX_CONSENSUS", 0, 0, 36L, 2L)},
+                        new BaseErrorMetric("DUPLEX_CONSENSUS", 36L, 2L, 0, 0)},
                 // There should be two errors in the read with no Ns.
                 {".error_by_ns_in_read", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("0", 0, 0, 36L, 2L)},
+                        new BaseErrorMetric("0", 36L, 2L, 0, 0)},
                 // There should be one errors in the read with one N.
                 {".error_by_ns_in_read", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("1", 0, 0, 35L, 1L)},
+                        new BaseErrorMetric("1", 35L, 1L, 0, 0)},
                 // There are two errors, one should show up in QUINTILE_1 and the other in QUINTILE_3
                 // QUINTILE_5 has 16 total (2 more than the other bins) bases due to rounding.
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("QUINTILE_1", 0, 0, 14L, 1L)},
+                        new BaseErrorMetric("QUINTILE_1", 14L, 1L, 0, 0)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("QUINTILE_2", 0, 0, 14L, 0L)},
+                        new BaseErrorMetric("QUINTILE_2", 14L, 0L, 0, 0)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("QUINTILE_3", 0, 0, 14L, 1L)},
+                        new BaseErrorMetric("QUINTILE_3", 14L, 1L, 0, 0)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("QUINTILE_4", 0, 0, 14L, 0L)},
+                        new BaseErrorMetric("QUINTILE_4", 14L, 0L, 0, 0)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("QUINTILE_5", 0, 0, 16L, 0L)}
+                        new BaseErrorMetric("QUINTILE_5", 16L, 0L, 0, 0)}
         };
     }
 
@@ -315,117 +315,117 @@ public class CollectSamErrorMetricsTest {
 
                 // Note that soft clipped bases are not counted.
                 {".error_by_all", chrMReadsWithClips, priorQ,
-                        new BaseErrorMetric("all", 0, 0, 62L, 49L)},
+                        new BaseErrorMetric("all", 62L, 49L, 0, 0)},
                 {".error_by_base_quality", chrMReadsWithClips, priorQ,
-                        new BaseErrorMetric("32", 0, 0, 52L, 41L)},
+                        new BaseErrorMetric("32", 52L, 41L, 0, 0)},
                 {".error_by_base_quality", chrMReadsWithClips, priorQ,
-                        new BaseErrorMetric("33", 0, 0, 10L, 8L)},
+                        new BaseErrorMetric("33", 10L, 8L, 0, 0)},
 //                 Note that the homopolymer is counted as the number of bases in the read that match each other before a new base.
 //                 This catches mismatches (and matches) of the ends of homopolymers.
                 {".error_by_homopolymer_and_following_ref_base", chrMReadsWithClips, priorQ,
-                        new BaseErrorMetric("9,T,T", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("9,T,T", 1L, 1L, 0, 0)},
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("2,G,T", 0, 0, 2L, 1L)},
+                        new BaseErrorMetric("2,G,T", 2L, 1L, 0, 0)},
 
                 {".error_by_binned_length_homopolymer_and_following_ref_base", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("SHORT_HOMOPOLYMER,G,T", 0, 0, 6L, 1L)},
+                        new BaseErrorMetric("SHORT_HOMOPOLYMER,G,T", 6L, 1L, 0, 0)},
 
                 {".error_by_read_ordinality_and_pre_dinuc", chrMReadsWithClips, priorQ,
-                        new BaseErrorMetric("FIRST,A,A", 0, 0, 3L, 3L)},
+                        new BaseErrorMetric("FIRST,A,A", 3L, 3L, 0, 0)},
                 // Using a sam file with a single error it is easy to validate demonstrate these tests should pass
                 {".error_by_all", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("all", 0, 0, 72L, 1L)},
+                        new BaseErrorMetric("all", 72L, 1L, 0, 0)},
                 // There are two base qualities in the bam, the error occurs in quality "32"
                 {".error_by_base_quality", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("32", 0, 0, 51L, 1L)},
+                        new BaseErrorMetric("32", 51L, 1L, 0, 0)},
                 // There are two base qualities in the bam, the error occurs in quality "32", make sure we detect no errors in quality "33"
                 {".error_by_base_quality", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("33", 0, 0, 21L, 0L)},
+                        new BaseErrorMetric("33", 21L, 0L, 0, 0)},
                 // simpleSamWithBaseErrors2 contains 2 differences from the reference
                 // after 2 different homopolymers.
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("2,T,A", 0, 0, 2L, 1L)},
+                        new BaseErrorMetric("2,T,A", 2L, 1L, 0, 0)},
                 // Make sure that we can correctly identify an error after a homopolymer
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("3,C,G", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("3,C,G", 1L, 1L, 0, 0)},
                 {".error_by_read_ordinality_and_pre_dinuc", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("FIRST,G,T", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("FIRST,G,T", 1L, 1L, 0, 0)},
                 // The covariate "0.5" was chosen to avoid those that have repeating decimals and could have alternative representations as
                 // a string.  GC is calculated over the entire read including clipped bases, while errors are calculated only over unclipped bases.
                 {".error_by_gc", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("0.5", 0, 0, 36L, 1L)},
+                        new BaseErrorMetric("0.5", 36L, 1L, 0, 0)},
                 // Make sure that we can detect errors at a particular cycle
                 {".error_by_cycle", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("10", 0, 0, 2L, 1L)},
+                        new BaseErrorMetric("10", 2L, 1L, 0, 0)},
                 // There should be one error in the read with mapping quality 60.
                 {".error_by_mapping_quality", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("60", 0, 0, 36L, 1L)},
+                        new BaseErrorMetric("60", 36L, 1L, 0, 0)},
                 // There should be no errors in the read with mapping quality 0.
                 {".error_by_mapping_quality", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("50", 0, 0, 36L, 0L)},
+                        new BaseErrorMetric("50", 36L, 0L, 0, 0)},
                 // One base has an error in the read group 62A40.2
                 {".error_by_read_group", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("62A40.2", 0, 0, 72L, 1L)},
+                        new BaseErrorMetric("62A40.2", 72L, 1L, 0, 0)},
                 // No additional mismatches are found on the read with 1 mismatch.
                 {".error_by_mismatches_in_read", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("1", 0, 0, 35L, 0L)},
+                        new BaseErrorMetric("1", 35L, 0L, 0, 0)},
                 // No additional mismatches are found on the read with 1 mismatch. (Just another way to check)
                 {".error_by_mismatches_in_read", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("0", 0, 0, 37L, 1L)},
+                        new BaseErrorMetric("0", 37L, 1L, 0, 0)},
                 // There should be no errors in the CAG context because it matches reference
                 {".error_by_one_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("CAG", 0, 0, 1L, 0L)},
+                        new BaseErrorMetric("CAG", 1L, 0L, 0, 0)},
                 // There should be one error in the GTC context
                 {".error_by_one_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("GTC", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("GTC", 1L, 1L, 0, 0)},
                 // There should be one error in the CTT context
                 {".error_by_one_base_padded_context", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("CCT", 0, 0, 3L, 0L)},
+                        new BaseErrorMetric("CCT", 3L, 0L, 0, 0)},
                 // There should be no errors in the ACGGG context
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("ACGGG", 0, 0, 1L, 0L)},
+                        new BaseErrorMetric("ACGGG", 1L, 0L, 0, 0)},
                 // There should be one error in the GGTCT context
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("GGTCT", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("GGTCT", 1L, 1L, 0, 0)},
                 // There should be no errors in the CTTGA context (appears in sam file as TCAaG in second read)
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("CTTGA", 0, 0, 1L, 0L)},
+                        new BaseErrorMetric("CTTGA", 1L, 0L, 0, 0)},
                 // There should be one error in the CCGTG context
                 {".error_by_two_base_padded_context", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("CCGTG", 0, 0, 1L, 1L)},
+                        new BaseErrorMetric("CCGTG", 1L, 1L, 0, 0)},
                 // Reads that don't have consensus tags should be stratified as UNKNOWN
                 {".error_by_consensus", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("UNKNOWN", 0, 0, 72L, 1L)},
+                        new BaseErrorMetric("UNKNOWN", 72L, 1L, 0, 0)},
                 // There should be 2 errors in the one simplex singleton reads.
                 {".error_by_consensus", simpleSingleStrandConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("SIMPLEX_SINGLETON", 0, 0, 36L, 2L)},
+                        new BaseErrorMetric("SIMPLEX_SINGLETON", 36L, 2L, 0, 0)},
                 // There should be no errors in the simplex consensus read.
                 {".error_by_consensus", simpleSingleStrandConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("SIMPLEX_CONSENSUS", 0, 0, 36L, 0L)},
+                        new BaseErrorMetric("SIMPLEX_CONSENSUS", 36L, 0L, 0, 0)},
                 // There should be one error in duplex singleton read.  Also the N in this read reduces total bases from 36 to 35.
                 {".error_by_consensus", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("DUPLEX_SINGLETON", 0, 0, 35L, 1L)},
+                        new BaseErrorMetric("DUPLEX_SINGLETON", 35L, 1L, 0, 0)},
                 // There should be two errors in the duplex consensus read.
                 {".error_by_consensus", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("DUPLEX_CONSENSUS", 0, 0, 36L, 2L)},
+                        new BaseErrorMetric("DUPLEX_CONSENSUS", 36L, 2L, 0, 0)},
                 // There should be two errors in the read with no Ns.
                 {".error_by_ns_in_read", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("0", 0, 0, 36L, 2L)},
+                        new BaseErrorMetric("0", 36L, 2L, 0, 0)},
                 // There should be one errors in the read with one N.
                 {".error_by_ns_in_read", simpleDuplexConsensusSamWithBaseErrors, priorQ,
-                        new BaseErrorMetric("1", 0, 0, 35L, 1L)},
+                        new BaseErrorMetric("1", 35L, 1L, 0, 0)},
                 // There are two errors, one should show up in QUINTILE_1 and the other in QUINTILE_3
                 // QUINTILE_5 has 16 total (2 more than the other bins) bases due to rounding.
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("QUINTILE_1", 0, 0, 14L, 1L)},
+                        new BaseErrorMetric("QUINTILE_1", 14L, 1L, 0, 0)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("QUINTILE_2", 0, 0, 14L, 0L)},
+                        new BaseErrorMetric("QUINTILE_2", 14L, 0L, 0, 0)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("QUINTILE_3", 0, 0, 14L, 1L)},
+                        new BaseErrorMetric("QUINTILE_3", 14L, 1L, 0, 0)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("QUINTILE_4", 0, 0, 14L, 0L)},
+                        new BaseErrorMetric("QUINTILE_4", 14L, 0L, 0, 0)},
                 {".error_by_binned_cycle", simpleSamWithBaseErrors2, priorQ,
-                        new BaseErrorMetric("QUINTILE_5", 0, 0, 16L, 0L)}
+                        new BaseErrorMetric("QUINTILE_5", 16L, 0L, 0, 0)}
         };
     }
 
@@ -583,49 +583,49 @@ public class CollectSamErrorMetricsTest {
     public Object[][] provideForTestIndelErrors() {
         return new Object[][] {
                 // insertions
-                { new String[] { "100M" },          ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 100, 0, 0, 0, 0) },
-                { new String[] { "50M1I50M" },      ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 101, 1, 1, 0, 0) },
-                { new String[] { "2I100M" },        ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 102, 1, 2, 0, 0) },
-                { new String[] { "100M1I" },        ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 101, 1, 1, 0, 0) },
-                { new String[] { "50M2I2M2I50M" },  ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 106, 2, 4, 0, 0) },
+                { new String[] { "100M" },          ".indel_error_by_all", new IndelErrorMetric("all", 100, 0, 0, 0, 0, 0, 0) },
+                { new String[] { "50M1I50M" },      ".indel_error_by_all", new IndelErrorMetric("all", 101, 1, 1, 0, 0, 0, 0) },
+                { new String[] { "2I100M" },        ".indel_error_by_all", new IndelErrorMetric("all", 102, 1, 2, 0, 0, 0, 0) },
+                { new String[] { "100M1I" },        ".indel_error_by_all", new IndelErrorMetric("all", 101, 1, 1, 0, 0, 0, 0) },
+                { new String[] { "50M2I2M2I50M" },  ".indel_error_by_all", new IndelErrorMetric("all", 106, 2, 4, 0, 0, 0, 0) },
                 { new String[] { "50M2I2M2I50M",
-                                 "50M2I2M2I50M"},   ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 212, 4, 8, 0, 0) },
+                                 "50M2I2M2I50M"},   ".indel_error_by_all", new IndelErrorMetric("all", 212, 4, 8, 0, 0, 0, 0) },
                 // deletions
-                { new String[] { "50M1D50M" },      ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 100, 0, 0, 1, 1) },
-                { new String[] { "1D100M" },        ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 100, 0, 0, 1, 1) },
-                { new String[] { "100M1D" },        ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 100, 0, 0, 1, 1) },
-                { new String[] { "50M2D2M2D50M" },  ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 102, 0, 0, 2, 4) },
+                { new String[] { "50M1D50M" },      ".indel_error_by_all", new IndelErrorMetric("all", 100, 0, 0, 1, 1, 0, 0) },
+                { new String[] { "1D100M" },        ".indel_error_by_all", new IndelErrorMetric("all", 100, 0, 0, 1, 1, 0, 0) },
+                { new String[] { "100M1D" },        ".indel_error_by_all", new IndelErrorMetric("all", 100, 0, 0, 1, 1, 0, 0) },
+                { new String[] { "50M2D2M2D50M" },  ".indel_error_by_all", new IndelErrorMetric("all", 102, 0, 0, 2, 4, 0, 0) },
                 { new String[] { "50M2D2M2D50M",
-                                 "50M2D2M2D50M"},   ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 204, 0, 0, 4, 8) },
+                                 "50M2D2M2D50M"},   ".indel_error_by_all", new IndelErrorMetric("all", 204, 0, 0, 4, 8, 0, 0) },
                 // insertions & deletions
-                { new String[] { "20M1I20M1D20M" }, ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 61, 1, 1, 1,1) },
-                { new String[] { "20M2I2D20M" },    ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 42, 1, 2, 1,2) },
-                { new String[] { "20M2D2I20M" },    ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 42, 1, 2, 1,2) },
-                { new String[] { "2I2D20M" },       ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 22, 1, 2, 1,2) },
-                { new String[] { "2D2I20M" },       ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 22, 1, 2, 1,2) },
-                { new String[] { "20M2D2I" },       ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 22, 1, 2, 1,2) },
-                { new String[] { "20M2I2D" },       ".indel_error_by_all", new IndelErrorMetric("all", 0, 0, 22, 1, 2, 1,2) },
+                { new String[] { "20M1I20M1D20M" }, ".indel_error_by_all", new IndelErrorMetric("all", 61, 1, 1, 1,1, 0, 0) },
+                { new String[] { "20M2I2D20M" },    ".indel_error_by_all", new IndelErrorMetric("all", 42, 1, 2, 1,2, 0, 0) },
+                { new String[] { "20M2D2I20M" },    ".indel_error_by_all", new IndelErrorMetric("all", 42, 1, 2, 1,2, 0, 0) },
+                { new String[] { "2I2D20M" },       ".indel_error_by_all", new IndelErrorMetric("all", 22, 1, 2, 1,2, 0, 0) },
+                { new String[] { "2D2I20M" },       ".indel_error_by_all", new IndelErrorMetric("all", 22, 1, 2, 1,2, 0, 0) },
+                { new String[] { "20M2D2I" },       ".indel_error_by_all", new IndelErrorMetric("all", 22, 1, 2, 1,2, 0, 0) },
+                { new String[] { "20M2I2D" },       ".indel_error_by_all", new IndelErrorMetric("all", 22, 1, 2, 1,2, 0, 0) },
 
                 // indel_length:
                 // insertions
-                { new String[] { "50M1I50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 1, 1, 1, 0, 0) },
-                { new String[] { "50M2I50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 2, 1, 2, 0, 0) },
-                { new String[] { "20M2I20M2I20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 4, 2, 4, 0, 0) },
-                { new String[] { "1I10M" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 1, 1, 1, 0, 0) },
-                { new String[] { "10M1I" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 1, 1, 1, 0, 0) },
+                { new String[] { "50M1I50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("1", 1, 1, 1, 0, 0, 0, 0) },
+                { new String[] { "50M2I50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 0, 0, 0, 0) },
+                { new String[] { "20M2I20M2I20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 4, 2, 4, 0, 0, 0, 0) },
+                { new String[] { "1I10M" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 1, 1, 1, 0, 0, 0, 0) },
+                { new String[] { "10M1I" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 1, 1, 1, 0, 0, 0, 0) },
                 // deletions
-                { new String[] { "50M1D50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 0, 0, 1, 1) },
-                { new String[] { "50M2D50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 0, 0, 0, 1, 2) },
-                { new String[] { "20M2D20M2D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 0, 0, 0, 2, 4) },
-                { new String[] { "1D10M" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 0, 0, 1, 1) },
-                { new String[] { "10M1D" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 0, 0, 1, 1) },
+                { new String[] { "50M1D50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 1, 1, 0, 0) },
+                { new String[] { "50M2D50M" },      ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 0, 1, 2, 0, 0) },
+                { new String[] { "20M2D20M2D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 0, 2, 4, 0, 0) },
+                { new String[] { "1D10M" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 1, 1, 0, 0) },
+                { new String[] { "10M1D" },         ".indel_error_by_indel_length", new IndelErrorMetric("1", 0, 0, 0, 1, 1, 0, 0) },
                 // insertions & deletions
-                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 2, 1, 2, 0, 0) },
-                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("3", 0, 0, 0, 0, 0, 1, 3) },
-                { new String[] { "2I2D20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 2, 1, 2, 1, 2) },
-                { new String[] { "2D2I20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 2, 1, 2, 1, 2) },
-                { new String[] { "2M2D2I" },        ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 2, 1, 2, 1, 2) },
-                { new String[] { "20M2I2D" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 0, 0, 2, 1, 2, 1, 2) },
+                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 0, 0, 0, 0) },
+                { new String[] { "20M2I20M3D20M" }, ".indel_error_by_indel_length", new IndelErrorMetric("3", 0, 0, 0, 1, 3, 0, 0) },
+                { new String[] { "2I2D20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2, 0, 0) },
+                { new String[] { "2D2I20M" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2, 0, 0) },
+                { new String[] { "2M2D2I" },        ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2, 0, 0) },
+                { new String[] { "20M2I2D" },       ".indel_error_by_indel_length", new IndelErrorMetric("2", 2, 1, 2, 1, 2, 0, 0) },
         };
     }
 
@@ -711,11 +711,13 @@ public class CollectSamErrorMetricsTest {
         final SamLocusIterator.LocusInfo actualVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016237);
         final SamLocusIterator.LocusInfo neighboringVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 18016238);
 
-        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), actualVariantSite).size(), 1);
-        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), actualVariantSite).get(0).size(), 1);
+        int INDEL_LOCUS_WINDOW = 10;
 
-        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), neighboringVariantSite).size(), 1);
-        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), neighboringVariantSite).get(-1).size(), 1);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), actualVariantSite, INDEL_LOCUS_WINDOW).size(), 1);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), actualVariantSite, INDEL_LOCUS_WINDOW).get(0).size(), 1);
+
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), neighboringVariantSite, INDEL_LOCUS_WINDOW).size(), 1);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(Collections.singletonList(featureReader), neighboringVariantSite, INDEL_LOCUS_WINDOW).get(-1).size(), 1);
     }
 
     @Test
@@ -741,10 +743,12 @@ public class CollectSamErrorMetricsTest {
         SamLocusIterator.LocusInfo actualChr1VariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("1", 249250621), 216407409);
         SamLocusIterator.LocusInfo noVariantSite = new SamLocusIterator.LocusInfo(new SAMSequenceRecord("2", 243199373), 180162276);
 
-        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualVariantSite).size(), 1);
-        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualChr1VariantSite).size(), 1);
-        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualChr1VariantSite).get(0).size(), 2);
-        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, noVariantSite).size(), 0);
+        int INDEL_LOCUS_WINDOW = 10;
+
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualVariantSite, INDEL_LOCUS_WINDOW).size(), 1);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualChr1VariantSite, INDEL_LOCUS_WINDOW).size(), 1);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, actualChr1VariantSite, INDEL_LOCUS_WINDOW).get(0).size(), 2);
+        Assert.assertEquals(CollectSamErrorMetrics.checkLocus(vcfFeatureReaders, noVariantSite, INDEL_LOCUS_WINDOW).size(), 0);
     }
 }
 

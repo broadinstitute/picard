@@ -25,7 +25,6 @@
 package picard.sam.SamErrorMetric;
 
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
-import htsjdk.samtools.util.AbstractRecordAndOffset;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -66,6 +65,6 @@ public class SimpleErrorCalculator extends BaseErrorCalculator {
      **/
     @Override
     public BaseErrorMetric getMetric() {
-        return new BaseErrorMetric("", nBases, nSkippedSNPs, nSkippedIndels, nMismatchingBases);
+        return new BaseErrorMetric("", nBases, nMismatchingBases, nSkippedSNPs, nSkippedIndels);
     }
 }

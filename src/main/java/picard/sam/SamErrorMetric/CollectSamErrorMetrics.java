@@ -181,7 +181,12 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     )
     public int progressStepInterval = 100000;
 
-    public static int INDEL_LOCUS_WINDOW = 10;
+    @Argument(
+            fullName = "indelLocusWindow",
+            doc = "The window size in which to consider an indel variant the same and therefore skipping that error site.",
+            optional = true
+    )
+    public int INDEL_LOCUS_WINDOW = 0;
 
     // =====================================================================
 
@@ -320,7 +325,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 nTotalLoci++;
 
                 // while there is a next (non-filtered) variant and it is before the locus, advance the pointer.
-                Map<Integer, List<VariantContext>> potentialVariants = checkLocus(featureReaders, info.getLocus());
+                Map<Integer, List<VariantContext>> potentialVariants = checkLocus(featureReaders, info.getLocus(), INDEL_LOCUS_WINDOW);
 
                 addLocusBases(aggregatorList, info, potentialVariants);
 
@@ -384,7 +389,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * @return true if there's a variant over the locus, false otherwise.
      */
     @VisibleForTesting
-    protected static Map<Integer, List<VariantContext>> checkLocus(final List<AbstractFeatureReader<VariantContext, LineIterator>> vcfFeatureReaders, final SamLocusIterator.LocusInfo locusInfo) {
+    protected static Map<Integer, List<VariantContext>> checkLocus(final List<AbstractFeatureReader<VariantContext, LineIterator>> vcfFeatureReaders, final SamLocusIterator.LocusInfo locusInfo, final int indelLocusWindow) {
         Map<Integer, List<VariantContext>> potentialVariants = new HashMap<>();
         if (locusInfo == null) {
             return potentialVariants;
@@ -398,7 +403,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
                 lociToCheck.add(new SamLocusIterator.LocusInfo(new SAMSequenceRecord(locusInfo.getSequenceName().replace("chr", ""), locusInfo.getSequenceLength()), locusInfo.getPosition()));
             }
             for(SamLocusIterator.LocusInfo locusToCheck : lociToCheck) {
-                try (final CloseableIterator<VariantContext> vcfIterator = vcfFeatureReader.query(locusToCheck.getContig(), locusToCheck.getStart() - INDEL_LOCUS_WINDOW, locusToCheck.getEnd() + INDEL_LOCUS_WINDOW)) {
+                try (final CloseableIterator<VariantContext> vcfIterator = vcfFeatureReader.query(locusToCheck.getContig(), locusToCheck.getStart() - indelLocusWindow, locusToCheck.getEnd() + indelLocusWindow)) {
                     while (vcfIterator.hasNext()) {
                         final VariantContext vcf = vcfIterator.next();
                         if (vcf.isFiltered()) {

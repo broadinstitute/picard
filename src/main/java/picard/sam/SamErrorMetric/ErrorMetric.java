@@ -59,10 +59,10 @@ public class ErrorMetric extends MergeableMetricBase {
     @MergeByAdding
     public long SKIPPED_INDELS;
 
-    public ErrorMetric(final String covariate, final long totalBases, final long skipeedSNPs, final long skippedIndels) {
+    public ErrorMetric(final String covariate, final long totalBases, final long skippedSNPs, final long skippedIndels) {
         this.TOTAL_BASES = totalBases;
         this.COVARIATE = covariate;
-        this.SKIPPED_SNPS = skipeedSNPs;
+        this.SKIPPED_SNPS = skippedSNPs;
         this.SKIPPED_INDELS = skippedIndels;
     }
 

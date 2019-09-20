@@ -75,13 +75,11 @@ public class IndelErrorMetric extends BaseErrorMetric {
 
     public IndelErrorMetric(final String covariate,
                             final long nTotalBases,
+                            final long nInserts, final long nInsertedBases,
+                            final long nDeletions, final long nDeletedBases,
                             final long nSkippedSNPs,
-                            final long nSkippedIndels,
-                            final long nInserts,
-                            final long nInsertedBases,
-                            final long nDeletions,
-                            final long nDeletedBases) {
-        super(covariate, nTotalBases, nSkippedSNPs, nSkippedIndels, nInsertedBases + nDeletedBases);
+                            final long nSkippedIndels) {
+        super(covariate, nTotalBases, nInsertedBases + nDeletedBases, nSkippedSNPs, nSkippedIndels);
 
         this.NUM_INSERTIONS = nInserts;
         this.NUM_INSERTED_BASES = nInsertedBases;

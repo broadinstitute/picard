@@ -90,6 +90,6 @@ public class IndelErrorCalculator extends BaseErrorCalculator {
      **/
     @Override
     public IndelErrorMetric getMetric() {
-        return new IndelErrorMetric("", nBases, nSkippedSNPs, nSkippedIndels, nInsertions, nInsertedBases, nDeletions, nDeletedBases);
+        return new IndelErrorMetric("", nBases, nInsertions, nInsertedBases, nDeletions, nDeletedBases, nSkippedSNPs, nSkippedIndels);
     }
 }
