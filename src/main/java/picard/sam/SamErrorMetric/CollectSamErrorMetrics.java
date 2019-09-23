@@ -180,7 +180,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
     @Argument(
             fullName = "INTERVAL_ITERATOR",
-            doc = "Iterate through the file assuming they are a pre-created subset interval of the full genome.  " +
+            doc = "Iterate through the file assuming it consists of a pre-created subset interval of the full genome.  " +
                     "This enables fast processing of files with reads at disperate parts of the genome.  " +
                     "Requires that the provided VCF file is indexed. ",
             optional = true
@@ -279,7 +279,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             vcfFileReader = new VCFFileReader(VCF, true);
             // Make sure we can query our file for interval mode:
             if (!vcfFileReader.isQueryable()) {
-                throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!");
+                throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!  Please index input VCF and re-run.");
             }
         }
         else {
@@ -544,10 +544,12 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         }
 
         //same SequenceIndex, can compare by genomic position
-        if (locus.getPosition() < variantContext.getStart())
+        if (locus.getPosition() < variantContext.getStart()) {
             return variantContext.getStart() - locus.getPosition();
-        if (locus.getPosition() > variantContext.getEnd())
+        }
+        if (locus.getPosition() > variantContext.getEnd()) {
             return variantContext.getEnd() - locus.getPosition();
+        }
         return 0;
     }
 
@@ -567,8 +569,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             try (final CloseableIterator<VariantContext> vcfIterator = vcfFileReader.query(locusInfo)) {
 
                 while (vcfIterator.hasNext()) {
-                    final VariantContext variantContext = vcfIterator.next();
-                    if (variantContext.isFiltered()) {
+                    if (vcfIterator.next().isFiltered()) {
                         continue;
                     }
                     overlaps = true;
