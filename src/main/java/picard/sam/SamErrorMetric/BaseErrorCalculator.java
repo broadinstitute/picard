@@ -24,7 +24,9 @@
 
 package picard.sam.SamErrorMetric;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
 
@@ -36,8 +38,15 @@ public abstract class BaseErrorCalculator implements BaseCalculator {
      **/
     @Override
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
-        if (!SequenceUtil.isNoCall(recordAndOffset.getReadBase())) {
-            nBases++;
+        if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Match) {
+            if (!SequenceUtil.isNoCall(recordAndOffset.getReadBase())) {
+                nBases++;
+            }
+        } else if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Insertion) {
+            final CigarElement cigarElement = ReadBaseStratification.getIndelElement(recordAndOffset);
+            if (cigarElement != null) {
+                nBases += cigarElement.getLength();
+            }
         }
     }
 }

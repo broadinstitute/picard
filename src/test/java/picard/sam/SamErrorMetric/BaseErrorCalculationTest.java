@@ -1,5 +1,7 @@
 package picard.sam.SamErrorMetric;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Iterables;
 import htsjdk.samtools.*;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
@@ -12,6 +14,8 @@ import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 /**

@@ -27,7 +27,9 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import htsjdk.samtools.*;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
 import htsjdk.samtools.util.Lazy;
+import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SamLocusIterator.RecordAndOffset;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
@@ -48,6 +50,9 @@ import java.util.stream.Stream;
  * Classes, methods, and enums that deal with the stratification of read bases and reference information.
  */
 public class ReadBaseStratification {
+
+    private static final Log log = Log.getInstance(CollectSamErrorMetrics.class);
+
     // This variable has to be set using setLongHomopolymer _before_ the first call to binnedHomopolymerStratifier.get()
     // if you need different binned Homopolymers with different LONG_HOMOPOLYMER values, you'll need to make your own
     // instances.
@@ -425,7 +430,7 @@ public class ReadBaseStratification {
     }
 
     /**
-     * Stratifies according to the overall mismatches (from NM) that the read has against the reference, NOT
+     * Stratifies according to the overall mismatches (from {@link SAMTag#NM}) that the read has against the reference, NOT
      * including the current base.
      */
     public static class MismatchesInReadStratifier implements RecordAndOffsetStratifier<Integer> {
@@ -473,6 +478,71 @@ public class ReadBaseStratification {
         @Override
         public String getSuffix() {
             return "tile";
+        }
+    }
+
+    /**
+     * Stratifies according to the number of matching cigar operators (from CIGAR string) that the read has.
+     */
+    public static class CigarOperatorsInReadStratifier extends RecordStratifier<Integer> {
+
+        private CigarOperator operator;
+
+        public CigarOperatorsInReadStratifier(final CigarOperator op) {
+            operator = op;
+        }
+
+        @Override
+        public Integer stratify(final SAMRecord samRecord) {
+            return stratifyCigarOperatorsInRead(samRecord, operator);
+        }
+
+        @Override
+        public String getSuffix() {
+            return "cigar_elements_" + operator.name() + "_in_read";
+        }
+    }
+
+    /**
+     * Stratifies according to the number of indel bases (from CIGAR string) that the read has.
+     */
+    public static class IndelsInReadStratifier extends RecordStratifier<Integer> {
+
+        /**
+         * Returns the number of bases associated with I and D CIGAR elements.
+         * @param samRecord The read to investigate
+         * @return The number of bases associated with I and D CIGAR elements, or null if the evaluation of either
+         *         operation caused an error
+         */
+        @Override
+        public Integer stratify(final SAMRecord samRecord) {
+            final Integer insertedBasesInRead = stratifyCigarOperatorsInRead(samRecord, CigarOperator.I);
+            final Integer deletedBasesInRead = stratifyCigarOperatorsInRead(samRecord, CigarOperator.D);
+            if (insertedBasesInRead == null || deletedBasesInRead == null) {
+                return null;
+            }
+            return insertedBasesInRead + deletedBasesInRead;
+        }
+
+        @Override
+        public String getSuffix() {
+            return "indels_in_read";
+        }
+    }
+
+    /**
+     * Stratifies according to the length of an insertion or deletion.
+     */
+    public static class IndelLengthStratifier implements RecordAndOffsetStratifier {
+
+        @Override
+        public Integer stratify(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
+            return stratifyIndelLength(recordAndOffset, locusInfo);
+        }
+
+        @Override
+        public String getSuffix() {
+            return "indel_length";
         }
     }
 
@@ -640,6 +710,26 @@ public class ReadBaseStratification {
      */
     public static final NsInReadStratifier nsInReadStratifier = new NsInReadStratifier();
 
+    /**
+     * Stratify by Insertions in the read cigars.
+     */
+    public static final CigarOperatorsInReadStratifier insertionsInReadStratifier = new CigarOperatorsInReadStratifier(CigarOperator.I);
+
+    /**
+     * Stratify by Deletions in the read cigars.
+     */
+    public static final CigarOperatorsInReadStratifier deletionsInReadStratifier = new CigarOperatorsInReadStratifier(CigarOperator.D);
+
+    /**
+     * Stratify by Indels in the read cigars.
+     */
+    public static final IndelsInReadStratifier indelsInReadStratifier = new IndelsInReadStratifier();
+
+    /**
+     * Stratifies into the number of bases in an insertion
+     */
+    public static final IndelLengthStratifier indelLengthStratifier = new IndelLengthStratifier();
+
     /* *************** enums **************/
 
     /**
@@ -678,7 +768,11 @@ public class ReadBaseStratification {
         ONE_BASE_PADDED_CONTEXT(() -> oneBasePaddedContextStratifier, "The current reference base and a one base padded region from the read resulting in a 3-base context."),
         TWO_BASE_PADDED_CONTEXT(() -> twoBasePaddedContextStratifier, "The current reference base and a two base padded region from the read resulting in a 5-base context."),
         CONSENSUS(() -> consensusStratifier, "Whether or not duplicate reads were used to form a consensus read.  This stratifier makes use of the aD, bD, and cD tags for duplex consensus reads.  If the reads are single index consensus, only the cD tags are used."),
-        NS_IN_READ(() -> nsInReadStratifier, "The number of Ns in the read.");
+        NS_IN_READ(() -> nsInReadStratifier, "The number of Ns in the read."),
+        INSERTIONS_IN_READ(() -> insertionsInReadStratifier, "The number of Insertions in the read cigar."),
+        DELETIONS_IN_READ(() -> deletionsInReadStratifier, "The number of Deletions in the read cigar."),
+        INDELS_IN_READ(() -> indelsInReadStratifier, "The number of INDELs in the read cigar."),
+        INDEL_LENGTH(() -> indelLengthStratifier, "The number of bases in an indel");
 
         private final String docString;
 
@@ -812,7 +906,7 @@ public class ReadBaseStratification {
      * An enum for holding a reads read-pair's Orientation (i.e. F1R2, F2R1, or TANDEM) indicating
      * the strand (positive or negative) that each of the two mated reads are aligned to. In connection with
      * READ_BASE and similar stratifiers this can be used to observe oxoG-type sequencing artifacts.
-     *
+     * <p>
      * Note that this is not related to FR/RF/TANDEM classification as per {@link htsjdk.samtools.SamPairUtil.PairOrientation PairOrientation}.
      */
     public enum PairOrientation {
@@ -832,6 +926,11 @@ public class ReadBaseStratification {
         public static PairOrientation of(final SAMRecord sam) {
             final ReadOrdinality ordinality = ReadOrdinality.of(sam);
             final ReadDirection direction = ReadDirection.of(sam);
+
+            // Make sure that the read is paired
+            if (!sam.getReadPairedFlag()) {
+                return null;
+            }
 
             // if read is unmapped, read isn't mapped, or mate is unmapped, return null
             if (direction == null ||
@@ -885,6 +984,22 @@ public class ReadBaseStratification {
          * Read whose consensus status cannot be determined.
          */
         UNKNOWN
+    }
+
+    /**
+     * Returns the number of bases associated with a specific cigar operator within a read
+     * @param samRecord The read to investigate
+     * @param operator The operator that the counted bases should be associated with
+     */
+    private static Integer stratifyCigarOperatorsInRead(final SAMRecord samRecord, final CigarOperator operator) {
+        try {
+            return samRecord.getCigar().getCigarElements().stream()
+                    .filter(ce -> ce.getOperator().equals(operator))
+                    .mapToInt(CigarElement::getLength)
+                    .sum();
+        } catch (final Exception ex) {
+            return null;
+        }
     }
 
     /**
@@ -993,6 +1108,7 @@ public class ReadBaseStratification {
     }
 
     public static final int NOT_ALIGNED_ERROR = -1;
+
     private static Integer stratifySoftClippedBases(final SAMRecord sam) {
         final Cigar cigar = sam.getCigar();
         if (cigar == null) {
@@ -1013,5 +1129,84 @@ public class ReadBaseStratification {
 
     private static String stratifyReadGroup(final SAMRecord sam) {
         return sam.getReadGroup().getReadGroupId();
+    }
+
+    private static Integer stratifyIndelLength(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
+        // If the base is not an indel, stratify it as a length of 0
+        if (recordAndOffset.getAlignmentType() != AbstractRecordAndOffset.AlignmentType.Insertion &&
+                recordAndOffset.getAlignmentType() != AbstractRecordAndOffset.AlignmentType.Deletion) {
+            return 0;
+        }
+
+        final CigarElement cigarElement = getIndelElement(recordAndOffset);
+        if (cigarElement == null) {
+            // No CIGAR operation for given position.
+            return null;
+        }
+        if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Insertion &&
+                cigarElement.getOperator() != CigarOperator.I) {
+            throw new IllegalStateException("Wrong CIGAR operator for the given position.");
+        }
+        if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Deletion &&
+                cigarElement.getOperator() != CigarOperator.D) {
+            throw new IllegalStateException("Wrong CIGAR operator for the given position.");
+        }
+        return cigarElement.getLength();
+    }
+
+    public static CigarElement getIndelElement(final RecordAndOffset recordAndOffset) {
+        final SAMRecord record = recordAndOffset.getRecord();
+        final int offset = recordAndOffset.getOffset();
+
+        if (recordAndOffset.getAlignmentType() != AbstractRecordAndOffset.AlignmentType.Insertion &&
+                recordAndOffset.getAlignmentType() != AbstractRecordAndOffset.AlignmentType.Deletion) {
+            log.warn("This method is not supported for matching bases.");
+            // But could be included by handling matches the same way as insertions?
+            return null;
+        }
+
+        if (record == null) {
+            throw new IllegalArgumentException("record must not be null.");
+        }
+
+        // -1 is still a valid input for a deletion (returns the first cigar element). Everything below that is an error.
+        if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Insertion && offset < 0) {
+            throw new IllegalArgumentException("offset must greater than zero for an insertion.");
+        }
+
+        if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Deletion && offset < -1) {
+            throw new IllegalArgumentException("offset must greater than -1 for a deletion.");
+        }
+
+        final Cigar cigar = record.getCigar();
+        if (cigar.isEmpty())
+            return null;
+
+        if (offset == -1) {
+            return cigar.getCigarElement(0);
+        }
+
+        int readPosition = 0;
+        for (CigarElement cigarElement : cigar) {
+            if (readPosition > offset + 1) {
+                // We somehow went past the desired location
+                return null;
+            }
+
+            if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Insertion) {
+                // If it doesn't consume bases, skip to the next
+                if (cigarElement.getOperator().consumesReadBases() && readPosition == offset) {
+                    return cigarElement;
+                }
+            }
+            else if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Deletion) {
+                if (readPosition == offset + 1) {
+                    return cigarElement;
+                }
+            }
+
+            readPosition += cigarElement.getOperator().consumesReadBases() ? cigarElement.getLength() : 0;
+        }
+        return null;
     }
 }
