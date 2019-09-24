@@ -28,6 +28,7 @@ import com.google.cloud.storage.contrib.nio.SeekableByteChannelPrefetcher;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
@@ -39,7 +40,6 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
-import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeLikelihoods;
@@ -62,6 +62,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.OptionalInt;
 import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
@@ -93,6 +94,7 @@ public class FingerprintChecker {
     private int minimumMappingQuality = DEFAULT_MINIMUM_MAPPING_QUALITY;
     private double genotypingErrorRate = DEFAULT_GENOTYPING_ERROR_RATE;
     private int maximalPLDifference = DEFAULT_MAXIMAL_PL_DIFFERENCE;
+    private File referenceFasta;
 
     public ValidationStringency getValidationStringency() {
         return validationStringency;
@@ -104,12 +106,7 @@ public class FingerprintChecker {
 
     public File getReferenceFasta() { return referenceFasta;}
 
-    public void setReferenceFasta(final File referenceFasta) {
-        this.referenceFasta = referenceFasta;
-    }
-
     private ValidationStringency validationStringency = ValidationStringency.DEFAULT_STRINGENCY;
-    private File referenceFasta;
 
     private boolean allowDuplicateReads = false;
     private double pLossofHet = 0;
@@ -189,10 +186,8 @@ public class FingerprintChecker {
      * @return a Map of Sample name to Fingerprint
      */
     public Map<String, Fingerprint> loadFingerprints(final Path fingerprintFile, final String specificSample) {
-        SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
-                VCFFileReader.getSequenceDictionary(fingerprintFile));
-
         final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
+        checkDictionaryGoodForFingerprinting(reader.getFileHeader().getSequenceDictionary());
 
         final Map<String, Fingerprint> fingerprints;
         if (reader.isQueryable()) {
@@ -202,11 +197,34 @@ public class FingerprintChecker {
             fingerprints = loadFingerprintsFromVariantContexts(reader, specificSample, fingerprintFile);
         }
         //add an entry for each sample which was not fingerprinted
-        for (final String sample : reader.getFileHeader().getGenotypeSamples()) {
+        reader.getFileHeader().getGenotypeSamples().forEach(sample -> {
             fingerprints.computeIfAbsent(sample, s -> new Fingerprint(s, fingerprintFile, null));
-        }
+        });
 
         return fingerprints;
+    }
+
+    private void checkDictionaryGoodForFingerprinting(final SAMSequenceDictionary sequenceDictionaryToCheck) {
+        final SAMSequenceDictionary activeDictionary = getActiveDictionary(haplotypes);
+
+        if (sequenceDictionaryToCheck.getSequences().size() < activeDictionary.size()) {
+            throw new IllegalArgumentException("Dictionary on fingerprinted file smaller than that on Haplotype Database!");
+        }
+        SequenceUtil.assertSequenceDictionariesEqual(activeDictionary, sequenceDictionaryToCheck, true);
+    }
+
+    private static SAMSequenceDictionary getActiveDictionary(final HaplotypeMap haplotypes) {
+        final SAMSequenceDictionary origSequenceDictionary = haplotypes.getHeader().getSequenceDictionary();
+
+        final OptionalInt maxSequenceIndex = haplotypes.getAllSnps().stream()
+                .map(Snp::getChrom)
+                .mapToInt(origSequenceDictionary::getSequenceIndex)
+                .max();
+        if (!maxSequenceIndex.isPresent()) {
+            return origSequenceDictionary;
+        }
+        //plus one since sublist is exclusive of the end.
+        return new SAMSequenceDictionary(origSequenceDictionary.getSequences().subList(0, maxSequenceIndex.getAsInt() + 1));
     }
 
     /**
@@ -221,7 +239,7 @@ public class FingerprintChecker {
      */
     public Map<String, Fingerprint> loadFingerprintsFromNonIndexedVcf(final Path fingerprintFile, final String specificSample) {
         final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
-        SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(), SAMSequenceDictionaryExtractor.extractDictionary(fingerprintFile));
+        checkDictionaryGoodForFingerprinting(reader.getFileHeader().getSequenceDictionary());
 
         return loadFingerprintsFromVariantContexts(reader, specificSample, fingerprintFile);
     }
@@ -295,8 +313,7 @@ public class FingerprintChecker {
      */
     public Map<String, Fingerprint> loadFingerprintsFromQueriableReader(final VCFFileReader reader, final String specificSample, final Path source) {
 
-        SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
-                reader.getFileHeader().getSequenceDictionary());
+        checkDictionaryGoodForFingerprinting(reader.getFileHeader().getSequenceDictionary());
 
         final SortedSet<Snp> snps = new TreeSet<>(haplotypes.getAllSnps());
 
@@ -451,8 +468,7 @@ public class FingerprintChecker {
                 .referenceSequence(referenceFasta)
                 .open(samFile, null, seekableChannelFunction);
 
-        SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
-                in.getFileHeader().getSequenceDictionary());
+        checkDictionaryGoodForFingerprinting(in.getFileHeader().getSequenceDictionary());
 
         final SamLocusIterator iterator = new SamLocusIterator(in, loci, in.hasIndex());
         iterator.setEmitUncoveredLoci(true);
@@ -496,6 +512,7 @@ public class FingerprintChecker {
         for (final SamLocusIterator.LocusInfo info : iterator) {
 
             // if statement to avoid string building.
+            // TODO: replace with lambda version once htsjdk is rev'ed
             if (Log.isEnabled(Log.LogLevel.DEBUG)) {
                 log.debug("At locus " + info.toString());
             }
@@ -574,8 +591,7 @@ public class FingerprintChecker {
         final Map<String, Fingerprint> fingerprintsBySample = new HashMap<>();
 
         try (final SamReader in = SamReaderFactory.makeDefault().enable(CACHE_FILE_BASED_INDEXES).open(samFile)) {
-            SequenceUtil.assertSequenceDictionariesEqual(this.haplotypes.getHeader().getSequenceDictionary(),
-                    in.getFileHeader().getSequenceDictionary());
+            checkDictionaryGoodForFingerprinting(in.getFileHeader().getSequenceDictionary());
 
             final SamLocusIterator iterator = new SamLocusIterator(in, haplotypes.getIntervalList(), in.hasIndex());
             iterator.setEmitUncoveredLoci(true);
@@ -685,16 +701,24 @@ public class FingerprintChecker {
         final ExecutorService executor = new ThreadPoolExecutorWithExceptions(threads);
         final ExecutorCompletionService<Path> executorCompletionService = new ExecutorCompletionService<>(executor);
         final IntervalList intervals = this.haplotypes.getIntervalList();
-        final Map<FingerprintIdDetails, Fingerprint> retval = new ConcurrentHashMap<>();
+        final Map<FingerprintIdDetails, Fingerprint> retval = new ConcurrentHashMap<>(files.size());
 
         for (final Path p : files) {
             executorCompletionService.submit(() -> {
 
+                final Map<FingerprintIdDetails, Fingerprint> oneFileFingerprints;
                 if (CheckFingerprint.fileContainsReads(p)) {
-                    retval.putAll(fingerprintSamFile(p, intervals));
+
+                    oneFileFingerprints = fingerprintSamFile(p, intervals);
                 } else {
-                    retval.putAll(fingerprintVcf(p));
+                    oneFileFingerprints = fingerprintVcf(p);
                 }
+
+                if (oneFileFingerprints.isEmpty()) {
+                        log.warn("No fingerprint data was found in file:" + p);
+                }
+                retval.putAll(oneFileFingerprints);
+
 
                 log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
                 if (filesRead.incrementAndGet() % 100 == 0) {
@@ -705,7 +729,6 @@ public class FingerprintChecker {
 
         executor.shutdown();
         try {
-
             executor.awaitTermination(waitTime, waitTimeUnit);
         } catch (final InterruptedException ie) {
             throw new PicardException("Interrupted while waiting for executor to terminate.", ie);
@@ -718,6 +741,8 @@ public class FingerprintChecker {
                 throw new PicardException("Failed to fingerprint", e);
             }
         }
+
+        log.info("Processed files. " + retval.size() + " fingerprints found in map.");
 
         return retval;
     }
@@ -922,5 +947,9 @@ public class FingerprintChecker {
      */
     public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp) {
         return calculateMatchResults(observedFp, expectedFp, 0, 0);
+    }
+
+    public void setReferenceFasta(final File referenceFasta) {
+        this.referenceFasta = referenceFasta;
     }
 }

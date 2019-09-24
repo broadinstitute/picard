@@ -12,9 +12,25 @@ import picard.util.TabbedTextFileWithHeaderParser;
 import picard.vcf.SamTestUtils;
 import picard.vcf.VcfTestUtils;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -70,7 +86,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     private static File NA12891_no_fp_sites_and_NA12892_vcf;
 
     private static final Map<CrosscheckMetric.DataType, List<String>> lookupMap = new HashMap<>(4);
-    
+
     @BeforeClass
     public void setup() throws IOException {
         NA12891_r1 = SamTestUtils.createIndexedBamOrCram(NA12891_r1_sam, NA12891_r1_sam, SamReader.Type.BAM_TYPE);
@@ -620,11 +636,66 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         args.add("CROSSCHECK_BY=SAMPLE");
         args.add("CROSSCHECK_MODE=CHECK_ALL_OTHERS");
 
-        if(inputSampleMap!=null)  args.add("INPUT_SAMPLE_MAP="+inputSampleMap.getAbsolutePath());
-        if(secondInputSampleMap!=null)  args.add("SECOND_INPUT_SAMPLE_MAP="+secondInputSampleMap.getAbsolutePath());
+        if (inputSampleMap != null) {
+            args.add("INPUT_SAMPLE_MAP=" + inputSampleMap.getAbsolutePath());
+        }
+        if (secondInputSampleMap != null) {
+            args.add("SECOND_INPUT_SAMPLE_MAP=" + secondInputSampleMap.getAbsolutePath());
+        }
 
-        doTest(args.toArray(new String[args.size()]), metrics, 0, 0 , CrosscheckMetric.DataType.SAMPLE, false);
+        doTest(args.toArray(new String[0]), metrics, 0, 0, CrosscheckMetric.DataType.SAMPLE, false);
     }
+
+    @Test()
+    public void testSecondInputCheckAllWithFileMapping() throws IOException {
+        File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
+        metrics.deleteOnExit();
+
+        final List<String> args = new ArrayList<>();
+        args.add("INPUT=" + NA12891_named_NA12892_r1.getAbsolutePath());
+        args.add("SECOND_INPUT=" + NA12891_r2.getAbsolutePath());
+
+        final Path map = File.createTempFile("map", ".txt").toPath();
+        IOUtil.deleteOnExit(map);
+
+        tabbedWrite(map, Arrays.asList(Collections.singletonList("NA12891"), Collections.singletonList(NA12891_named_NA12892_r1.getAbsolutePath())));
+
+        args.add("OUTPUT=" + metrics.getAbsolutePath());
+        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
+        args.add("LOD_THRESHOLD=" + -1.0);
+        args.add("CROSSCHECK_BY=SAMPLE");
+        args.add("CROSSCHECK_MODE=CHECK_ALL_OTHERS");
+
+        args.add("INPUT_SAMPLE_FILE_MAP=" + map);
+
+        final int expectedRetVal = 0;
+        final int numberOfSamples1 = 1;
+        final int numberOfSamples2 = 1;
+        boolean ExpectAllMatch = false;
+
+        doTest(args.toArray(new String[0]), metrics, expectedRetVal, numberOfSamples1 * numberOfSamples2, CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
+    }
+
+    private void tabbedWrite(final Path output, final List<List<String>> outputs) throws IOException {
+        final int[] ints = outputs.stream().mapToInt(List::size).distinct().toArray();
+        if (ints.length > 1) {
+            throw new IllegalArgumentException("got lists with different lengths: " + Arrays.toString(ints));
+        }
+        if (ints.length == 0) {
+            return;
+        }
+
+        final int length = ints[0];
+        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(output))) {
+
+            for (int i = 0; i < length; i++) {
+                // j is not redundant, due to "effective final" requirement in lambda...
+                final int j = i;
+                writer.println(outputs.stream().map(l -> l.get(j)).collect(Collectors.joining("\t")));
+            }
+        }
+    }
+
 
     @Test(dataProvider = "checkSamplesCrosscheckAllData")
     public void testSecondInputCheckAll(final List<File> files1, final List<File> files2, final int expectedRetVal, final int numberOfSamples1, final int numberOfSamples2, boolean ExpectAllMatch) throws IOException {
@@ -684,7 +755,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         args.add("LOD_THRESHOLD=" + -1.0);
         args.add("CROSSCHECK_BY=FILE");
 
-        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.FILE, ExpectAllMatch);
+        doTest(args.toArray(new String[0]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.FILE, ExpectAllMatch);
     }
 
     @DataProvider(name = "checkPathsData")
@@ -723,7 +794,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         args.add("LOD_THRESHOLD=" + -1.0);
         args.add("CROSSCHECK_BY=FILE");
 
-        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.FILE, ExpectAllMatch);
+        doTest(args.toArray(new String[0]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.FILE, ExpectAllMatch);
     }
 
     @DataProvider(name = "missingOrNoFingerprintingSitesData")
@@ -824,7 +895,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     }
 
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType, final boolean expectAllMatch) throws IOException {
-       
+
         final CrosscheckFingerprints crossChecker = new CrosscheckFingerprints();
         Assert.assertEquals(crossChecker.instanceMain(args), expectedRetVal);
 
