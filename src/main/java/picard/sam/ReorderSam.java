@@ -284,7 +284,7 @@ public class ReorderSam extends CommandLineProgram {
     private void printDictionary(String name, SAMSequenceDictionary dict) {
         log.info(name);
         for (final SAMSequenceRecord contig : dict.getSequences()) {
-            log.info(String.format("   SN=%s LN=%d%n", contig.getSequenceName(), contig.getSequenceLength()));
+            log.info(String.format("   SN=%s LN=%d", contig.getSequenceName(), contig.getSequenceLength()));
         }
     }
 }
