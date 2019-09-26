@@ -119,8 +119,9 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     @Argument(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.")
     public boolean IS_BISULFITE_SEQUENCED = false;
 
-    @Argument(doc = "Avoid collecting actual alignment information. Only count READS, PF_READS, and NOISE_READS. (For backwards compatibility).")
-    public boolean DO_NOT_COLLECT_ALIGNMENT_INFORMATION = false;
+    @Argument(doc = "A flag to disable the collection of actual alignment information. " +
+            "If false, tool will only count READS, PF_READS, and NOISE_READS. (For backwards compatibility).")
+    public boolean COLLECT_ALIGNMENT_INFORMATION = true;
 
     private AlignmentSummaryMetricsCollector collector;
 
@@ -133,11 +134,11 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                     "in the file are aligned, then alignment summary metrics collection will fail.");
         }
 
-        if(REFERENCE_SEQUENCE == null && !DO_NOT_COLLECT_ALIGNMENT_INFORMATION) {
+        if(REFERENCE_SEQUENCE == null && COLLECT_ALIGNMENT_INFORMATION) {
             log.warn("Without a REFERENCE_SEQUENCE, metrics pertaining to mismatch rates will not be collected!");
         }
 
-        collector = new AlignmentSummaryMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), !DO_NOT_COLLECT_ALIGNMENT_INFORMATION,
+        collector = new AlignmentSummaryMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), COLLECT_ALIGNMENT_INFORMATION,
                 ADAPTER_SEQUENCE, MAX_INSERT_SIZE, EXPECTED_PAIR_ORIENTATIONS, IS_BISULFITE_SEQUENCED);
     }
 

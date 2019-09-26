@@ -40,6 +40,7 @@ import htsjdk.samtools.util.SequenceUtil;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordAndReference;
 import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
+import picard.util.MathUtil;
 
 import java.util.List;
 import java.util.Set;
@@ -210,14 +211,14 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     }
 
                     if(doRefMetrics) {
-                        metrics.PCT_PF_READS_ALIGNED = divideIfYouCan((double) metrics.PF_READS_ALIGNED, (double) metrics.PF_READS);
-                        metrics.PCT_READS_ALIGNED_IN_PAIRS = divideIfYouCan((double) metrics.READS_ALIGNED_IN_PAIRS, (double) metrics.PF_READS_ALIGNED);
-                        metrics.PCT_PF_READS_IMPROPER_PAIRS = divideIfYouCan((double) metrics.PF_READS_IMPROPER_PAIRS, (double) metrics.PF_READS_ALIGNED);
-                        metrics.STRAND_BALANCE = divideIfYouCan(numPositiveStrand, (double) metrics.PF_READS_ALIGNED);
-                        metrics.PCT_CHIMERAS = divideIfYouCan(this.chimeras, (double) this.chimerasDenominator);
-                        metrics.PF_INDEL_RATE = divideIfYouCan(this.indels, (double) metrics.PF_ALIGNED_BASES);
-                        metrics.PF_MISMATCH_RATE = divideIfYouCan(mismatchHistogram.getSum(), (double) nonBisulfiteAlignedBases);
-                        metrics.PF_HQ_ERROR_RATE = divideIfYouCan(hqMismatchHistogram.getSum(), (double) hqNonBisulfiteAlignedBases);
+                        metrics.PCT_PF_READS_ALIGNED =  MathUtil.divide((double) metrics.PF_READS_ALIGNED, (double) metrics.PF_READS);
+                        metrics.PCT_READS_ALIGNED_IN_PAIRS =  MathUtil.divide((double) metrics.READS_ALIGNED_IN_PAIRS, (double) metrics.PF_READS_ALIGNED);
+                        metrics.PCT_PF_READS_IMPROPER_PAIRS =  MathUtil.divide((double) metrics.PF_READS_IMPROPER_PAIRS, (double) metrics.PF_READS_ALIGNED);
+                        metrics.STRAND_BALANCE =  MathUtil.divide(numPositiveStrand, (double) metrics.PF_READS_ALIGNED);
+                        metrics.PCT_CHIMERAS =  MathUtil.divide(this.chimeras, (double) this.chimerasDenominator);
+                        metrics.PF_INDEL_RATE =  MathUtil.divide(this.indels, (double) metrics.PF_ALIGNED_BASES);
+                        metrics.PF_MISMATCH_RATE =  MathUtil.divide(mismatchHistogram.getSum(), (double) nonBisulfiteAlignedBases);
+                        metrics.PF_HQ_ERROR_RATE =  MathUtil.divide(hqMismatchHistogram.getSum(), (double) hqNonBisulfiteAlignedBases);
 
                         metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
                     }
@@ -297,25 +298,33 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
                         for (int i = 0; i < length && refIndex + i < refLength; ++i) {
                             final int readBaseIndex = readIndex + i;
-                            boolean mismatch = false;
-                            if (refBases != null) {
-                                mismatch = !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex + i]);
-                            }
-                            final boolean bisulfiteMatch = isBisulfiteSequenced && SequenceUtil.bisulfiteBasesEqual(record.getReadNegativeStrandFlag(), readBases[readBaseIndex], refBases[readBaseIndex]);
+                            boolean mismatch = refBases != null && !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex + i]);
+
+                            final boolean bisulfiteMatch = refBases != null && isBisulfiteSequenced && SequenceUtil.bisulfiteBasesEqual(record.getReadNegativeStrandFlag(), readBases[readBaseIndex], refBases[readBaseIndex]);
 
                             final boolean bisulfiteBase = mismatch && bisulfiteMatch;
                             mismatch = mismatch && !bisulfiteMatch;
 
-                            if (mismatch) mismatchCount++;
+                            if (mismatch) {
+                                mismatchCount++;
+                            }
 
                             metrics.PF_ALIGNED_BASES++;
-                            if (!bisulfiteBase) nonBisulfiteAlignedBases++;
+                            if (!bisulfiteBase) {
+                                nonBisulfiteAlignedBases++;
+                            }
 
                             if (highQualityMapping) {
                                 metrics.PF_HQ_ALIGNED_BASES++;
-                                if (!bisulfiteBase) hqNonBisulfiteAlignedBases++;
-                                if (qualities[readBaseIndex] >= BASE_QUALITY_THRESHOLD) metrics.PF_HQ_ALIGNED_Q20_BASES++;
-                                if (mismatch) hqMismatchCount++;
+                                if (!bisulfiteBase) {
+                                    hqNonBisulfiteAlignedBases++;
+                                }
+                                if (qualities[readBaseIndex] >= BASE_QUALITY_THRESHOLD) {
+                                    metrics.PF_HQ_ALIGNED_Q20_BASES++;
+                                }
+                                if (mismatch) {
+                                    hqMismatchCount++;
+                                }
                             }
 
                             if (mismatch || SequenceUtil.isNoCall(readBases[readBaseIndex])) {
@@ -334,10 +343,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     }
                 }
             }
-
-            private double divideIfYouCan(double numerator, double denominator){
-                return denominator == 0D ? 0D : numerator/denominator; 
-            }
+            
             private boolean isNoiseRead(final SAMRecord record) {
                 final Object noiseAttribute = record.getAttribute(ReservedTagConstants.XN);
                 return (noiseAttribute != null && noiseAttribute.equals(1));
