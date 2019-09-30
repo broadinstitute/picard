@@ -30,9 +30,11 @@ abstract public class MarkDuplicateWithMissingBarcodeTest extends MarkDuplicates
                     break;
                 }
             }
-            
+
             // Tests that specify the RX tag, or the DUPLEX_UMI argument should not be used with missing barcodes.
-            if (!hasRX && !isDuplex) addArg(getArgumentName() + "=" + getTagValue());
+            if (!hasRX && !isDuplex) {
+                addArg(getArgumentName() + "=" + getTagValue());
+            }
 
             super.runTest();
         }
