@@ -19,13 +19,20 @@ abstract public class MarkDuplicateWithMissingBarcodeTest extends MarkDuplicates
         @Override
         public void runTest() {
             boolean hasRX = false;
+            boolean isDuplex = false;
             for (final String argument : this.getArgs()) {
                 if (argument.startsWith(getArgumentName())) {
                     hasRX = true;
                     break;
                 }
+                if (argument.startsWith("DUPLEX_UMI")) {
+                    isDuplex = true;
+                    break;
+                }
             }
-            if (!hasRX) addArg(getArgumentName() + "=" + getTagValue());
+            
+            // Tests that specify the RX tag, or the DUPLEX_UMI argument should not be used with missing barcodes.
+            if (!hasRX && !isDuplex) addArg(getArgumentName() + "=" + getTagValue());
 
             super.runTest();
         }

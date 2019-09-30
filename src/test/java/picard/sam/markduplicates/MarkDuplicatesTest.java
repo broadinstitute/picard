@@ -311,7 +311,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     }
 
     @DataProvider(name = "testDuplexUmiDataProvider")
-    private Object[][] testDuplexUmiDataProvider() {
+    public Object[][] testDuplexUmiDataProvider() {
         return new Object[][]{
                 {
                         // Test case where UMIs are not duplex, but are the same.
@@ -358,7 +358,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         };
     }
 
-    @Test(dataProvider = "testDuplexUmiDataProvider",enabled = false)
+    @Test(dataProvider = "testDuplexUmiDataProvider")
     public void testWithUMIs(final boolean duplexUmi, final List<String> UMIs, final List<Integer> alignmentStart1,
                              final List<Integer> alignmentStart2, final List<Boolean> isDuplicate,
                              final List<Boolean> isFirstNegativeStrand, final List<Boolean> isSecondNegativeStrand) {
