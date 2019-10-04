@@ -180,6 +180,9 @@
 								<?php echo ($group == 'Genotyping Arrays Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_arrays_CreateVerifyIDIntensityContaminationMetricsFile.html">CreateVerifyIDIntensityContaminationMetricsFile</a>
+											</li>
+											<li>
 												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
 											</li>
 											<li>
@@ -424,15 +427,19 @@
  Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary,
  ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file,
  as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new
- reference are dropped. Runs substantially faster if the input is an indexed BAM file.
+ reference are unmapped. Runs substantially faster if the input is an indexed BAM file.
 
  <h3>Example</h3>
  <pre>
      java -jar picard.jar ReorderSam \
           INPUT=sample.bam \
           OUTPUT=reordered.bam \
-          REFERENCE=reference_with_different_order.fasta
+          SEQUENCE_DICTIONARY=reference_with_different_order.dict
  </pre>
+
+ <h3>Caveats</h3>
+ Note that REFERENCE_SEQUENCE is used for reading the INPUT, (e.g. when reading cram files) not for determining
+ the order of the OUTPUT. For that you must specify the SEQUENCE_DICTIONARY argument.
 
 
 				<h3>ReorderSam specific arguments</h3>
@@ -466,12 +473,12 @@
 					<td>Output file (SAM or BAM) to write extracted reads to.</td>
 				</tr>
 				<tr>
-					<td><a href="#--REFERENCE">--REFERENCE</a><br />
-								&nbsp;<em>-R</em>
+					<td><a href="#--SEQUENCE_DICTIONARY">--SEQUENCE_DICTIONARY</a><br />
+								&nbsp;<em>-SD</em>
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Reference sequence to reorder reads to match.  A sequence dictionary corresponding to the reference fasta is required.  Create one with CreateSequenceDictionary.</td>
+					<td>A Sequence Dictionary for the OUTPUT file (can be read from one of the following file types (SAM, BAM, VCF, BCF, Interval List, Fasta, or Dict)</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -490,7 +497,7 @@
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
-					<td>If true, then allows only a partial overlap of the original contigs with the new reference sequence contigs.  By default, this tool requires a corresponding contig in the new reference for each read contig</td>
+					<td>If true, allows only a partial overlap of the original contigs with the new reference sequence contigs.  By default, this tool requires a corresponding contig in the new reference for each read contig</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -536,6 +543,14 @@
 					<!--<td>Boolean</td> -->
 					<td>false</td>
 					<td>Whether to suppress job-summary info on System.err.</td>
+				</tr>
+				<tr>
+					<td><a href="#--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE</a><br />
+								&nbsp;<em>-R</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Reference sequence file.</td>
 				</tr>
 				<tr>
 					<td><a href="#--TMP_DIR">--TMP_DIR</a><br />
@@ -596,7 +611,7 @@
 			 / <small>-S</small>
 		</h3>
 		<p class="args">
-			<b>If true, then allows only a partial overlap of the original contigs with the new reference sequence contigs.  By default, this tool requires a corresponding contig in the new reference for each read contig</b><br />
+			<b>If true, allows only a partial overlap of the original contigs with the new reference sequence contigs.  By default, this tool requires a corresponding contig in the new reference for each read contig</b><br />
 			
 		</p>
 		<p>
@@ -706,11 +721,23 @@
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--REFERENCE">--REFERENCE </a>
+		<h3><a name="--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE </a>
 			 / <small>-R</small>
 		</h3>
 		<p class="args">
-			<b>Reference sequence to reorder reads to match.  A sequence dictionary corresponding to the reference fasta is required.  Create one with CreateSequenceDictionary.</b><br />
+			<b>Reference sequence file.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--SEQUENCE_DICTIONARY">--SEQUENCE_DICTIONARY </a>
+			 / <small>-SD</small>
+		</h3>
+		<p class="args">
+			<b>A Sequence Dictionary for the OUTPUT file (can be read from one of the following file types (SAM, BAM, VCF, BCF, Interval List, Fasta, or Dict)</b><br />
 			
 		</p>
 		<p>
@@ -812,7 +839,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.20.4-SNAPSHOT built at 22-23-2019 04:23:08.
+        <p class="version">Picard version 2.21.1-SNAPSHOT built at 04-35-2019 10:35:30.
         </p>
 
 	</div>

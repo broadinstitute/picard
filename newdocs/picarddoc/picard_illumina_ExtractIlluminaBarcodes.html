@@ -180,6 +180,9 @@
 								<?php echo ($group == 'Genotyping Arrays Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_arrays_CreateVerifyIDIntensityContaminationMetricsFile.html">CreateVerifyIDIntensityContaminationMetricsFile</a>
+											</li>
+											<li>
 												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
 											</li>
 											<li>
@@ -427,6 +430,14 @@
  - matched barcode sequence (empty if read did not match one of the barcodes).  If there is no match
  but we're close to the threshold of calling it a match we output the barcode that would have been
  matched but in lower case
+ - distance to best matching barcode, "mismatches" (*)
+ - distance to second-best matching barcode, "mismatchesToSecondBest" (*)
+
+ NOTE (*): Due to an optimization the reported mismatches & mismatchesToSecondBest values may be inaccurate as long as
+ the conclusion (match vs. no-match) isn't affected. For example, reported mismatches and
+ mismatchesToSecondBest may be smaller than their true value if mismatches is truly larger than MAX_MISMATCHES.
+ Also, mismatchesToSecondBest might be smaller than its true value if its true value is greater than
+ mismatches + MIN_MISMATCH_DELTA.
 
 
 				<h3>ExtractIlluminaBarcodes specific arguments</h3>
@@ -507,6 +518,13 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<td>Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the file names.</td>
 				</tr>
 				<tr>
+					<td><a href="#--DISTANCE_MODE">--DISTANCE_MODE</a><br />
+					</td>
+					<!--<td>DistanceMetric</td> -->
+					<td>HAMMING</td>
+					<td>The distance metric that should be used to compare the barcode-reads and the provided barcodes for finding the best and second-best assignments.</td>
+				</tr>
+				<tr>
 					<td><a href="#--MAX_MISMATCHES">--MAX_MISMATCHES</a><br />
 					</td>
 					<!--<td>int</td> -->
@@ -533,7 +551,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					</td>
 					<!--<td>int</td> -->
 					<td>0</td>
-					<td>Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match.</td>
+					<td>Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even if the bases match.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MINIMUM_QUALITY">--MINIMUM_QUALITY</a><br />
@@ -743,6 +761,29 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--DISTANCE_MODE">--DISTANCE_MODE </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>The distance metric that should be used to compare the barcode-reads and the provided barcodes for finding the best and second-best assignments.</b><br />
+			
+		</p>
+			<p>
+				The --DISTANCE_MODE argument is an enumerated type (DistanceMetric), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">HAMMING</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">LENIENT_HAMMING</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">FREE</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
+		<p>
+		<span class="label label-info ">DistanceMetric</span>
+			&nbsp;<span class="label">HAMMING</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
 			 / <small>NA</small>
 		</h3>
@@ -841,7 +882,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			 / <small>-Q</small>
 		</h3>
 		<p class="args">
-			<b>Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match.</b><br />
+			<b>Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even if the bases match.</b><br />
 			
 		</p>
 		<p>
@@ -1027,7 +1068,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.20.4-SNAPSHOT built at 22-23-2019 04:23:08.
+        <p class="version">Picard version 2.21.1-SNAPSHOT built at 04-35-2019 10:35:30.
         </p>
 
 	</div>

@@ -107,6 +107,34 @@
       "options": []
     },
     {
+      "summary": "The distance metric that should be used to compare the barcode-reads and the provided barcodes for finding the best and second-best assignments.",
+      "name": "--DISTANCE_MODE",
+      "synonyms": "NA",
+      "type": "DistanceMetric",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "HAMMING",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": [
+        {
+          "summary": "",
+          "name": "HAMMING"
+        },
+        {
+          "summary": "",
+          "name": "LENIENT_HAMMING"
+        },
+        {
+          "summary": "",
+          "name": "FREE"
+        }
+      ]
+    },
+    {
       "summary": "Google Genomics API client_secrets.json file path.",
       "name": "--GA4GH_CLIENT_SECRETS",
       "synonyms": "NA",
@@ -212,7 +240,7 @@
       "options": []
     },
     {
-      "summary": "Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match.",
+      "summary": "Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even if the bases match.",
       "name": "--MINIMUM_BASE_QUALITY",
       "synonyms": "-Q",
       "type": "int",
@@ -422,7 +450,7 @@
       ]
     }
   ],
-  "description": "Determine the barcode for each read in an Illumina lane.\n For each tile, a file is written to the basecalls directory of the form s_\u003clane\u003e_\u003ctile\u003e_barcode.txt.\n An output file contains a line for each read in the tile, aligned with the regular basecall output\n The output file contains the following tab-separated columns:\n - read subsequence at barcode position\n - Y or N indicating if there was a barcode match\n - matched barcode sequence (empty if read did not match one of the barcodes).  If there is no match\n but we\u0027re close to the threshold of calling it a match we output the barcode that would have been\n matched but in lower case",
+  "description": "Determine the barcode for each read in an Illumina lane.\n For each tile, a file is written to the basecalls directory of the form s_\u003clane\u003e_\u003ctile\u003e_barcode.txt.\n An output file contains a line for each read in the tile, aligned with the regular basecall output\n The output file contains the following tab-separated columns:\n - read subsequence at barcode position\n - Y or N indicating if there was a barcode match\n - matched barcode sequence (empty if read did not match one of the barcodes).  If there is no match\n but we\u0027re close to the threshold of calling it a match we output the barcode that would have been\n matched but in lower case\n - distance to best matching barcode, \"mismatches\" (*)\n - distance to second-best matching barcode, \"mismatchesToSecondBest\" (*)\n\n NOTE (*): Due to an optimization the reported mismatches \u0026 mismatchesToSecondBest values may be inaccurate as long as\n the conclusion (match vs. no-match) isn\u0027t affected. For example, reported mismatches and\n mismatchesToSecondBest may be smaller than their true value if mismatches is truly larger than MAX_MISMATCHES.\n Also, mismatchesToSecondBest might be smaller than its true value if its true value is greater than\n mismatches + MIN_MISMATCH_DELTA.",
   "name": "ExtractIlluminaBarcodes",
   "group": "Base Calling",
   "beta": false,

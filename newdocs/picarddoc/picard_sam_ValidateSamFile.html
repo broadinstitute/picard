@@ -180,6 +180,9 @@
 								<?php echo ($group == 'Genotyping Arrays Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_arrays_CreateVerifyIDIntensityContaminationMetricsFile.html">CreateVerifyIDIntensityContaminationMetricsFile</a>
+											</li>
+											<li>
 												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
 											</li>
 											<li>
@@ -435,15 +438,15 @@
 
  This tool is a wrapper for SamFileValidator.
 
- <h4>Usage example:</h4>
+ <h3>Usage example:</h3>
  <pre>
- java -jar picard.jar ValidateSamFile \\<br />
-       I=input.bam \\<br />
+ java -jar picard.jar ValidateSamFile \<br />
+       I=input.bam \<br />
        MODE=SUMMARY
  </pre>
  <p>To obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional
   <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>
- "<hr />
+ <hr />
 
 
 				<h3>ValidateSamFile specific arguments</h3>
@@ -980,7 +983,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.20.4-SNAPSHOT built at 22-23-2019 04:23:08.
+        <p class="version">Picard version 2.21.1-SNAPSHOT built at 04-35-2019 10:35:30.
         </p>
 
 	</div>

@@ -180,6 +180,9 @@
 								<?php echo ($group == 'Genotyping Arrays Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_arrays_CreateVerifyIDIntensityContaminationMetricsFile.html">CreateVerifyIDIntensityContaminationMetricsFile</a>
+											</li>
+											<li>
 												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
 											</li>
 											<li>
@@ -502,6 +505,14 @@
 					<td>The level(s) at which to accumulate metrics.  </td>
 				</tr>
 				<tr>
+					<td><a href="#--MIN_HISTOGRAM_WIDTH">--MIN_HISTOGRAM_WIDTH</a><br />
+								&nbsp;<em>-MW</em>
+					</td>
+					<!--<td>Integer</td> -->
+					<td>null</td>
+					<td>Minimum width of histogram plots. In the case when the histogram would otherwise betruncated to a shorter range of sizes, the MIN_HISTOGRAM_WIDTH will enforce a minimum range.</td>
+				</tr>
+				<tr>
 					<td><a href="#--MINIMUM_PCT">--MINIMUM_PCT</a><br />
 								&nbsp;<em>-M</em>
 					</td>
@@ -764,6 +775,18 @@
 			&nbsp;<span class="label">[ALL_READS]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--MIN_HISTOGRAM_WIDTH">--MIN_HISTOGRAM_WIDTH </a>
+			 / <small>-MW</small>
+		</h3>
+		<p class="args">
+			<b>Minimum width of histogram plots. In the case when the histogram would otherwise betruncated to a shorter range of sizes, the MIN_HISTOGRAM_WIDTH will enforce a minimum range.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Integer</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MINIMUM_PCT">--MINIMUM_PCT </a>
 			 / <small>-M</small>
 		</h3>
@@ -922,7 +945,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.20.4-SNAPSHOT built at 22-23-2019 04:23:08.
+        <p class="version">Picard version 2.21.1-SNAPSHOT built at 04-35-2019 10:35:30.
         </p>
 
 	</div>

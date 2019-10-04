@@ -238,6 +238,21 @@
       "options": []
     },
     {
+      "summary": "A tsv with two columns representing the sample as it should be used for comparisons to SECOND_INPUT (in the first column) and  the source file (in INPUT) for the fingerprint (in the second column). Need only to include the samples that change. Values in column 1 should be unique even in union with the remaining unmapped samples. Values in column 2 should be unique in the file. Will error if more than one sample is found in a file (multi-sample vcf) pointed to in column 2. Should only be used in the presence of SECOND_INPUT. ",
+      "name": "--INPUT_SAMPLE_FILE_MAP",
+      "synonyms": "NA",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "A tsv with two columns representing the sample as it appears in the INPUT data (in column 1) and the sample as it should be used for comparisons to SECOND_INPUT (in the second column). Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. ",
       "name": "--INPUT_SAMPLE_MAP",
       "synonyms": "NA",
@@ -403,7 +418,7 @@
       "options": []
     },
     {
-      "summary": "A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and the sample as it should be used for comparisons to INPUT (in the second column). Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. ",
+      "summary": "A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and the sample as it should be used for comparisons to INPUT (in the second column). Note that in case of unrolling files (file-of-filenames) one would need to reference the final file, i.e. the file that contains the genomic data. Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. ",
       "name": "--SECOND_INPUT_SAMPLE_MAP",
       "synonyms": "NA",
       "type": "File",

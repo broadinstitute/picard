@@ -180,6 +180,9 @@
 								<?php echo ($group == 'Genotyping Arrays Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_arrays_CreateVerifyIDIntensityContaminationMetricsFile.html">CreateVerifyIDIntensityContaminationMetricsFile</a>
+											</li>
+											<li>
 												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
 											</li>
 											<li>
@@ -441,7 +444,53 @@
 					</td>
 					<!--<td>List[File]</td> -->
 					<td>NA</td>
-					<td>Undocumented option</td>
+					<td>Exactly two input .sam or .bam files to compare to one another.</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--LENIENT_DUP">--LENIENT_DUP</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Perform lenient checking of duplicate marks.  In this mode, will reduce the number of mismatches by allowing the choice of the representative read in each duplicate set to differ between the input files, as long as the duplicate sets agree.</td>
+				</tr>
+				<tr>
+					<td><a href="#--LENIENT_HEADER">--LENIENT_HEADER</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Perform lenient checking of header.  In this mode, species, assembly, ur, m5, fields of sequence records, and pg fields in the header may all differ. Sequence record length must also be the same.</td>
+				</tr>
+				<tr>
+					<td><a href="#--LENIENT_LOW_MQ_ALIGNMENT">--LENIENT_LOW_MQ_ALIGNMENT</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Count reads which have mapping quality below LOW_MQ_THRESHOLD in both files but are mapped to different locations as matches.  By default we count such reads as mismatching.</td>
+				</tr>
+				<tr>
+					<td><a href="#--LENIENT_UNKNOWN_MQ_ALIGNMENT">--LENIENT_UNKNOWN_MQ_ALIGNMENT</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Count reads for which no mapping quality is available (mapping quality value 255) in both files but are mapped to different locations as matches.  By default we count such reads as mismatching.</td>
+				</tr>
+				<tr>
+					<td><a href="#--LOW_MQ_THRESHOLD">--LOW_MQ_THRESHOLD</a><br />
+					</td>
+					<!--<td>int</td> -->
+					<td>3</td>
+					<td>When running in LENIENT_LOW_MQ_ALIGNMENT mode, reads which have mapping quality below this value will be counted as matches. if LENIENT_LOW_MQ_ALIGNMENT is false (default), then this argument has no effect.</td>
+				</tr>
+				<tr>
+					<td><a href="#--OUTPUT">--OUTPUT</a><br />
+								&nbsp;<em>-O</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Output file to write comparison results to.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -543,8 +592,8 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Undocumented option</b><br />
-			Undocumented option
+			<b>Exactly two input .sam or .bam files to compare to one another.</b><br />
+			Exactly two input .sam or .bam files to compare to one another.
 		</p>
 		<p>
 				<span class="badge badge-important">R</span>
@@ -602,6 +651,68 @@
 			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--LENIENT_DUP">--LENIENT_DUP </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Perform lenient checking of duplicate marks.  In this mode, will reduce the number of mismatches by allowing the choice of the representative read in each duplicate set to differ between the input files, as long as the duplicate sets agree.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--LENIENT_HEADER">--LENIENT_HEADER </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Perform lenient checking of header.  In this mode, species, assembly, ur, m5, fields of sequence records, and pg fields in the header may all differ. Sequence record length must also be the same.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--LENIENT_LOW_MQ_ALIGNMENT">--LENIENT_LOW_MQ_ALIGNMENT </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Count reads which have mapping quality below LOW_MQ_THRESHOLD in both files but are mapped to different locations as matches.  By default we count such reads as mismatching.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--LENIENT_UNKNOWN_MQ_ALIGNMENT">--LENIENT_UNKNOWN_MQ_ALIGNMENT </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Count reads for which no mapping quality is available (mapping quality value 255) in both files but are mapped to different locations as matches.  By default we count such reads as mismatching.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--LOW_MQ_THRESHOLD">--LOW_MQ_THRESHOLD </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>When running in LENIENT_LOW_MQ_ALIGNMENT mode, reads which have mapping quality below this value will be counted as matches. if LENIENT_LOW_MQ_ALIGNMENT is false (default), then this argument has no effect.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">3</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM </a>
 			 / <small>NA</small>
 		</h3>
@@ -614,6 +725,18 @@
 			&nbsp;<span class="label">500000</span>
 			&nbsp;<span class="label label-warning">[ [ -∞</span>
 			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--OUTPUT">--OUTPUT </a>
+			 / <small>-O</small>
+		</h3>
+		<p class="args">
+			<b>Output file to write comparison results to.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--QUIET">--QUIET </a>
@@ -733,7 +856,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.20.4-SNAPSHOT built at 22-23-2019 04:23:08.
+        <p class="version">Picard version 2.21.1-SNAPSHOT built at 04-35-2019 10:35:30.
         </p>
 
 	</div>

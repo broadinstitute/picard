@@ -182,6 +182,21 @@
       "options": []
     },
     {
+      "summary": "Minimum width of histogram plots. In the case when the histogram would otherwise betruncated to a shorter range of sizes, the MIN_HISTOGRAM_WIDTH will enforce a minimum range.",
+      "name": "--MIN_HISTOGRAM_WIDTH",
+      "synonyms": "-MW",
+      "type": "Integer",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this percentage of overall reads. (Range: 0 to 1).",
       "name": "--MINIMUM_PCT",
       "synonyms": "-M",

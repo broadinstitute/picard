@@ -53,7 +53,7 @@
       "type": "List[String]",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "[ERROR, ERROR:BASE_QUALITY, ERROR:INSERT_LENGTH, ERROR:GC_CONTENT, ERROR:READ_DIRECTION, ERROR:PAIR_ORIENTATION, ERROR:HOMOPOLYMER, ERROR:BINNED_HOMOPOLYMER, ERROR:CYCLE, ERROR:READ_ORDINALITY, ERROR:READ_ORDINALITY:CYCLE, ERROR:READ_ORDINALITY:HOMOPOLYMER, ERROR:READ_ORDINALITY:GC_CONTENT, ERROR:READ_ORDINALITY:PRE_DINUC, ERROR:MAPPING_QUALITY, ERROR:READ_GROUP, ERROR:MISMATCHES_IN_READ, ERROR:ONE_BASE_PADDED_CONTEXT, OVERLAPPING_ERROR, OVERLAPPING_ERROR:BASE_QUALITY, OVERLAPPING_ERROR:INSERT_LENGTH, OVERLAPPING_ERROR:READ_ORDINALITY, OVERLAPPING_ERROR:READ_ORDINALITY:CYCLE, OVERLAPPING_ERROR:READ_ORDINALITY:HOMOPOLYMER, OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT]",
+      "defaultValue": "[ERROR, ERROR:BASE_QUALITY, ERROR:INSERT_LENGTH, ERROR:GC_CONTENT, ERROR:READ_DIRECTION, ERROR:PAIR_ORIENTATION, ERROR:HOMOPOLYMER, ERROR:BINNED_HOMOPOLYMER, ERROR:CYCLE, ERROR:READ_ORDINALITY, ERROR:READ_ORDINALITY:CYCLE, ERROR:READ_ORDINALITY:HOMOPOLYMER, ERROR:READ_ORDINALITY:GC_CONTENT, ERROR:READ_ORDINALITY:PRE_DINUC, ERROR:MAPPING_QUALITY, ERROR:READ_GROUP, ERROR:MISMATCHES_IN_READ, ERROR:ONE_BASE_PADDED_CONTEXT, OVERLAPPING_ERROR, OVERLAPPING_ERROR:BASE_QUALITY, OVERLAPPING_ERROR:INSERT_LENGTH, OVERLAPPING_ERROR:READ_ORDINALITY, OVERLAPPING_ERROR:READ_ORDINALITY:CYCLE, OVERLAPPING_ERROR:READ_ORDINALITY:HOMOPOLYMER, OVERLAPPING_ERROR:READ_ORDINALITY:GC_CONTENT, INDEL_ERROR]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
@@ -82,6 +82,10 @@
         {
           "summary": "",
           "name": "OVERLAPPING_ERROR"
+        },
+        {
+          "summary": "",
+          "name": "INDEL_ERROR"
         }
       ]
     },
@@ -104,7 +108,7 @@
       "summary": "Input SAM or BAM file.",
       "name": "--INPUT",
       "synonyms": "-I",
-      "type": "File",
+      "type": "String",
       "required": "yes",
       "fulltext": "",
       "defaultValue": "null",
@@ -113,6 +117,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "Iterate through the file assuming it consists of a pre-created subset interval of the full genome.  This enables fast processing of files with reads at disperate parts of the genome.  Requires that the provided VCF file is indexed. ",
+      "name": "--INTERVAL_ITERATOR",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -243,6 +262,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "1.0",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "The interval between which progress will be displayed.",
+      "name": "--PROGRESS_STEP_INTERVAL",
+      "synonyms": "NA",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "100000",
       "minValue": "-Infinity",
       "maxValue": "Infinity",
       "minRecValue": "NA",
@@ -397,6 +431,22 @@
         {
           "summary": "",
           "name": "NS_IN_READ"
+        },
+        {
+          "summary": "",
+          "name": "INSERTIONS_IN_READ"
+        },
+        {
+          "summary": "",
+          "name": "DELETIONS_IN_READ"
+        },
+        {
+          "summary": "",
+          "name": "INDELS_IN_READ"
+        },
+        {
+          "summary": "",
+          "name": "INDEL_LENGTH"
         }
       ]
     },
@@ -477,7 +527,7 @@
       "summary": "VCF of known variation for sample. program will skip over polymorphic sites in this VCF and avoid collecting data on these loci.",
       "name": "--VCF",
       "synonyms": "-V",
-      "type": "File",
+      "type": "String",
       "required": "yes",
       "fulltext": "",
       "defaultValue": "null",

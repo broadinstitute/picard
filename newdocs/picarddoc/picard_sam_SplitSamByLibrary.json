@@ -98,7 +98,7 @@
       "type": "File",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "/Users/samn/picard/.",
+      "defaultValue": "/Users/jway/source/picard/.",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",

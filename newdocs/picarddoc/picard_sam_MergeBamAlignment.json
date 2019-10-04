@@ -625,7 +625,7 @@
       "options": []
     },
     {
-      "summary": "Original SAM or BAM file of unmapped reads, which must be in queryname order.",
+      "summary": "Original SAM or BAM file of unmapped reads, which must be in queryname order.  Reads MUST be unmapped.",
       "name": "--UNMAPPED_BAM",
       "synonyms": "-UNMAPPED",
       "type": "File",

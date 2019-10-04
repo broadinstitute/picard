@@ -180,6 +180,9 @@
 								<?php echo ($group == 'Genotyping Arrays Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_arrays_CreateVerifyIDIntensityContaminationMetricsFile.html">CreateVerifyIDIntensityContaminationMetricsFile</a>
+											</li>
+											<li>
 												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
 											</li>
 											<li>
@@ -595,6 +598,13 @@
 					<td>Assumed genotyping error rate that provides a floor on the probability that a genotype comes from the expected sample. Must be greater than zero. </td>
 				</tr>
 				<tr>
+					<td><a href="#--INPUT_SAMPLE_FILE_MAP">--INPUT_SAMPLE_FILE_MAP</a><br />
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>A tsv with two columns representing the sample as it should be used for comparisons to SECOND_INPUT (in the first column) and  the source file (in INPUT) for the fingerprint (in the second column). Need only to include the samples that change. Values in column 1 should be unique even in union with the remaining unmapped samples. Values in column 2 should be unique in the file. Will error if more than one sample is found in a file (multi-sample vcf) pointed to in column 2. Should only be used in the presence of SECOND_INPUT. </td>
+				</tr>
+				<tr>
 					<td><a href="#--INPUT_SAMPLE_MAP">--INPUT_SAMPLE_MAP</a><br />
 					</td>
 					<!--<td>File</td> -->
@@ -661,7 +671,7 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and the sample as it should be used for comparisons to INPUT (in the second column). Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. </td>
+					<td>A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and the sample as it should be used for comparisons to INPUT (in the second column). Note that in case of unrolling files (file-of-filenames) one would need to reference the final file, i.e. the file that contains the genomic data. Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. </td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -959,6 +969,19 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--INPUT_SAMPLE_FILE_MAP">--INPUT_SAMPLE_FILE_MAP </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>A tsv with two columns representing the sample as it should be used for comparisons to SECOND_INPUT (in the first column) and  the source file (in INPUT) for the fingerprint (in the second column). Need only to include the samples that change. Values in column 1 should be unique even in union with the remaining unmapped samples. Values in column 2 should be unique in the file. Will error if more than one sample is found in a file (multi-sample vcf) pointed to in column 2. Should only be used in the presence of SECOND_INPUT. </b><br />
+			
+		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>INPUT_SAMPLE_MAP</code>.</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INPUT_SAMPLE_MAP">--INPUT_SAMPLE_MAP </a>
 			 / <small>NA</small>
 		</h3>
@@ -966,6 +989,7 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 			<b>A tsv with two columns representing the sample as it appears in the INPUT data (in column 1) and the sample as it should be used for comparisons to SECOND_INPUT (in the second column). Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. </b><br />
 			
 		</p>
+			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>INPUT_SAMPLE_FILE_MAP</code>.</p>
 		<p>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
@@ -1107,7 +1131,7 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and the sample as it should be used for comparisons to INPUT (in the second column). Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. </b><br />
+			<b>A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and the sample as it should be used for comparisons to INPUT (in the second column). Note that in case of unrolling files (file-of-filenames) one would need to reference the final file, i.e. the file that contains the genomic data. Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. </b><br />
 			
 		</p>
 		<p>
@@ -1208,7 +1232,7 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.20.4-SNAPSHOT built at 22-23-2019 04:23:08.
+        <p class="version">Picard version 2.21.1-SNAPSHOT built at 04-35-2019 10:35:30.
         </p>
 
 	</div>

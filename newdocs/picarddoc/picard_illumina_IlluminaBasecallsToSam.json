@@ -435,7 +435,7 @@
       "options": []
     },
     {
-      "summary": "If set, process only the tile number given and append the tile number to the output file name.",
+      "summary": "If set, process only the tile number given and prepend the tile number to the output file name.",
       "name": "--PROCESS_SINGLE_TILE",
       "synonyms": "NA",
       "type": "Integer",

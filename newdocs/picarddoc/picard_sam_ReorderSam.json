@@ -17,7 +17,7 @@
       "options": []
     },
     {
-      "summary": "If true, then allows only a partial overlap of the original contigs with the new reference sequence contigs.  By default, this tool requires a corresponding contig in the new reference for each read contig",
+      "summary": "If true, allows only a partial overlap of the original contigs with the new reference sequence contigs.  By default, this tool requires a corresponding contig in the new reference for each read contig",
       "name": "--ALLOW_INCOMPLETE_DICT_CONCORDANCE",
       "synonyms": "-S",
       "type": "boolean",
@@ -152,9 +152,24 @@
       "options": []
     },
     {
-      "summary": "Reference sequence to reorder reads to match.  A sequence dictionary corresponding to the reference fasta is required.  Create one with CreateSequenceDictionary.",
-      "name": "--REFERENCE",
+      "summary": "Reference sequence file.",
+      "name": "--REFERENCE_SEQUENCE",
       "synonyms": "-R",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "A Sequence Dictionary for the OUTPUT file (can be read from one of the following file types (SAM, BAM, VCF, BCF, Interval List, Fasta, or Dict)",
+      "name": "--SEQUENCE_DICTIONARY",
+      "synonyms": "-SD",
       "type": "File",
       "required": "yes",
       "fulltext": "",
@@ -272,7 +287,7 @@
       ]
     }
   ],
-  "description": "Reorders a SAM/BAM input file according to the order of contigs in a second reference file.\n\n \u003ch3\u003eSummary\u003c/h3\u003e\n Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary,\n ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file,\n as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new\n reference are dropped. Runs substantially faster if the input is an indexed BAM file.\n\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n     java -jar picard.jar ReorderSam \\\n          INPUT\u003dsample.bam \\\n          OUTPUT\u003dreordered.bam \\\n          REFERENCE\u003dreference_with_different_order.fasta\n \u003c/pre\u003e",
+  "description": "Reorders a SAM/BAM input file according to the order of contigs in a second reference file.\n\n \u003ch3\u003eSummary\u003c/h3\u003e\n Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary,\n ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file,\n as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new\n reference are unmapped. Runs substantially faster if the input is an indexed BAM file.\n\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n     java -jar picard.jar ReorderSam \\\n          INPUT\u003dsample.bam \\\n          OUTPUT\u003dreordered.bam \\\n          SEQUENCE_DICTIONARY\u003dreference_with_different_order.dict\n \u003c/pre\u003e\n\n \u003ch3\u003eCaveats\u003c/h3\u003e\n Note that REFERENCE_SEQUENCE is used for reading the INPUT, (e.g. when reading cram files) not for determining\n the order of the OUTPUT. For that you must specify the SEQUENCE_DICTIONARY argument.",
   "name": "ReorderSam",
   "group": "Read Data Manipulation",
   "beta": false,
