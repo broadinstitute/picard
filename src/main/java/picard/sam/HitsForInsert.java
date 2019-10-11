@@ -130,7 +130,9 @@ class HitsForInsert {
      */
     public SAMRecord getFragment(final int i) {
         final SAMRecord samRecord = firstOfPairOrFragment.get(i);
-        if (samRecord.getReadPairedFlag()) throw new UnsupportedOperationException("getFragment called for paired read");
+        if (samRecord.getReadPairedFlag()) {
+            throw new UnsupportedOperationException("getFragment called for paired read: " + samRecord.toString());
+        }
         return samRecord;
     }
 
