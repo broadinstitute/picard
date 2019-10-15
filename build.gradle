@@ -18,7 +18,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '5.1.0'
     id "com.github.kt3k.coveralls" version '2.6.3'
     id "org.ajoberstar.grgit" version "4.0.0-rc.1"
-    id "org.ajoberstar.github-pages" version "1.7.2"
+    id "org.ajoberstar.git-publish" version "2.1.1"
 }
 
 mainClassName = "picard.cmdline.PicardCommandLine"
@@ -416,14 +416,15 @@ task updateGhPages(dependsOn: ['copyJavadoc', 'copyPicardDoc']){
   outputs.dir htmlDir
 }
 
-updateGhPages.finalizedBy publishGhPages
+updateGhPages.finalizedBy gitPublishPush
 
-githubPages {
-  repoUri = 'git@github.com:broadinstitute/picard.git'
-  targetBranch = 'gh-pages'
-  deleteExistingFiles = false
-  pages {
-    from htmlDir
-    into 'newdocs'
-  }
+gitPublish {
+    repoUri = 'git@github.com:broadinstitute/picard.git'
+    branch = 'gh-pages'
+    preserve { include '**/*' }
+    contents { 
+        from('build/docs/html') { 
+            into 'newdocs' 
+        } 
+    }
 }
