@@ -198,7 +198,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
         log.info("Querying BAM for sites.");
 
-        final SAMRecordIterator samRecordIterator = in.query(intervalAlleleMap.keySet().toArray(new QueryInterval[intervalAlleleMap.size()]), false);
+        final SAMRecordIterator samRecordIterator = in.query(QueryInterval.optimizeIntervals(intervalAlleleMap.keySet().toArray(new QueryInterval[0])), false);
         final List<SamRecordFilter> samFilters = CollectionUtil.makeList(
                 new AlignedFilter(true),
                 new CountingPairedFilter(),
