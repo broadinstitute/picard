@@ -60,6 +60,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ExperimentalFeature;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
@@ -159,6 +160,13 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         IOUtil.assertFileIsReadable(VCF);
         IOUtil.assertFileIsReadable(INPUT);
 
+        // get an iterator to reads that overlap the heterozygous sites
+        final SamReader in = SamReaderFactory.makeDefault().open(INPUT);
+
+        if (!in.hasIndex()) {
+            throw new PicardException("INPUT file must have an index.");
+        }
+
         IOUtil.assertFileIsWritable(OUTPUT);
         if (MATRIX_OUTPUT != null) IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
 
@@ -193,8 +201,6 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
         log.info("Found " + intervalAlleleMap.size() + " heterozygous sites in VCF.");
 
-        // get an iterator to reads that overlap the heterozygous sites
-        final SamReader in = SamReaderFactory.makeDefault().open(INPUT);
 
         log.info("Querying BAM for sites.");
 
