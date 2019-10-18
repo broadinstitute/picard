@@ -152,6 +152,9 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
     @Argument(shortName = "MBQ", doc = "minimal value for the base quality of all the bases in a molecular barcode, for it to be used.", optional = true)
     public Integer MINIMUM_BARCODE_BQ = 30;
 
+    @Argument(shortName = "FUR", doc = "Whether to filter unpaired reads from the input.", optional = true)
+    public boolean FILTER_UNPAIRED_READS=true;
+
     private static final Log log = Log.getInstance(CollectIndependentReplicateMetrics.class);
 
     @Override
@@ -207,10 +210,13 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         final SAMRecordIterator samRecordIterator = in.query(QueryInterval.optimizeIntervals(intervalAlleleMap.keySet().toArray(new QueryInterval[0])), false);
         final List<SamRecordFilter> samFilters = CollectionUtil.makeList(
                 new AlignedFilter(true),
-                new CountingPairedFilter(),
                 new SecondaryOrSupplementaryFilter(),
                 new MappingQualityFilter(MINIMUM_MQ)
         );
+
+        if (FILTER_UNPAIRED_READS){
+            samFilters.add(new CountingPairedFilter());
+        }
 
         final FilteringSamIterator filteredSamRecordIterator = new FilteringSamIterator(samRecordIterator, new AggregateFilter(samFilters));
         log.info("Queried BAM, getting duplicate sets.");
