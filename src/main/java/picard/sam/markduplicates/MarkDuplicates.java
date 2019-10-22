@@ -533,7 +533,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         final SamHeaderAndIterator headerAndIterator = openInputs(true);
         final SAMFileHeader.SortOrder assumedSortOrder = headerAndIterator.header.getSortOrder();
         final SAMFileHeader header = headerAndIterator.header;
-        final ReadEndsForMarkDuplicatesMap tmp = new DiskBasedReadEndsForMarkDuplicatesMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP, diskCodec);
+        final ReadEndsForMarkDuplicatesMap tmp = assumedSortOrder == SAMFileHeader.SortOrder.queryname ?
+                new MemoryBasedReadEndsForMarkDuplicatesMap() :  new DiskBasedReadEndsForMarkDuplicatesMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP, diskCodec);
         long index = 0;
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
         final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
