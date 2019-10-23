@@ -24,6 +24,7 @@ public class IlluminaAdpcFileWriterTest {
             adpcRecordList.add(new IlluminaAdpcFileWriter.Record((short) 458, (short) 2743, 0.043f, 0.852f, 0.818f, IlluminaGenotype.BB));
             adpcRecordList.add(new IlluminaAdpcFileWriter.Record((short) 7548, (short) 303, 1.072f, 0.076f, 0.0f, IlluminaGenotype.NN));
             adpcRecordList.add(new IlluminaAdpcFileWriter.Record((short) 7414, (short) 2158, 0.805f, 0.597f, 0.881f, IlluminaGenotype.AB));
+            adpcRecordList.add(new IlluminaAdpcFileWriter.Record((short) 222, (short) 215, 0.0f, 0.0f, 0.91f, IlluminaGenotype.NN));
             adpcFileWriter.write(adpcRecordList);
         }
         IOUtil.assertFilesEqual(TEST_EXPECTED_ADPC_BIN_FILE, output);

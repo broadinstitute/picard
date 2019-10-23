@@ -99,12 +99,17 @@ public class VcfToAdpc extends CommandLineProgram {
 
                     final short rawXIntensity = getShortAttribute(genotype, InfiniumVcfFields.X);
                     final short rawYIntensity = getShortAttribute(genotype, InfiniumVcfFields.Y);
-                    final float normalizedXIntensity = getFloatAttribute(genotype, InfiniumVcfFields.NORMX);
-                    final float normalizedYIntensity = getFloatAttribute(genotype, InfiniumVcfFields.NORMY);
 
-                    final IlluminaAdpcFileWriter.Record record = new IlluminaAdpcFileWriter.Record(rawXIntensity, rawYIntensity, normalizedXIntensity, normalizedYIntensity, gcScore, illuminaGenotype);
-                    adpcRecordList.add(record);
+                    final Float normalizedXIntensity = getFloatAttribute(genotype, InfiniumVcfFields.NORMX);
+                    final Float normalizedYIntensity = getFloatAttribute(genotype, InfiniumVcfFields.NORMY);
+                    if ((normalizedXIntensity != null) && (normalizedYIntensity != null)) {
+                        final IlluminaAdpcFileWriter.Record record = new IlluminaAdpcFileWriter.Record(rawXIntensity, rawYIntensity, normalizedXIntensity, normalizedYIntensity, gcScore, illuminaGenotype);
+                        adpcRecordList.add(record);
+                    }
                 }
+            }
+            if (adpcRecordList.isEmpty()) {
+                throw new PicardException("No valid records found in VCF!");
             }
             adpcFileWriter.write(adpcRecordList);
         } catch (Exception e) {
@@ -165,8 +170,12 @@ public class VcfToAdpc extends CommandLineProgram {
         return returnedAttribute;
     }
 
-    private float getFloatAttribute(final Genotype genotype, final String key) {
-        return Float.parseFloat(getRequiredAttribute(genotype, key).toString());
+    private Float getFloatAttribute(final Genotype genotype, final String key) {
+        final Object value = genotype.getAnyAttribute(key);
+        if (value != null) {
+            return Float.parseFloat(value.toString());
+        }
+        return null;
     }
 
     private Object getRequiredAttribute(Genotype genotype, final String key) {
