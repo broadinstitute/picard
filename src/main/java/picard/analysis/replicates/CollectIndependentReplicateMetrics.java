@@ -66,6 +66,8 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.filter.CountingPairedFilter;
+import picard.util.BarcodeEditDistanceQuery;
+import picard.util.SingleBarcodeDistanceMetric;
 
 import java.io.File;
 import java.util.HashMap;
@@ -155,6 +157,14 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
     @Argument(shortName = "FUR", doc = "Whether to filter unpaired reads from the input.", optional = true)
     public boolean FILTER_UNPAIRED_READS=true;
 
+    @Argument(
+            fullName = "PROGRESS_STEP_INTERVAL",
+            doc = "The interval between which progress will be displayed.",
+            optional = true
+    )
+    public int PROGRESS_STEP_INTERVAL = 100000;
+
+
     private static final Log log = Log.getInstance(CollectIndependentReplicateMetrics.class);
 
     @Override
@@ -222,12 +232,12 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         log.info("Queried BAM, getting duplicate sets.");
 
         // get duplicate iterator from iterator above
-        final DuplicateSetIterator duplicateSets = new DuplicateSetIterator(filteredSamRecordIterator, in.getFileHeader());
+        final DuplicateSetIterator duplicateSets = new DuplicateSetIterator(filteredSamRecordIterator, in.getFileHeader(),false, null, log);
 
         QueryInterval queryInterval = null;
 
         log.info("Starting iteration on reads");
-        final ProgressLogger progress = new ProgressLogger(log, 10000000, "examined", "duplicate sets");
+        final ProgressLogger progress = new ProgressLogger(log, PROGRESS_STEP_INTERVAL, "examined", "duplicate sets");
 
         IndependentReplicateMetric locusData = new IndependentReplicateMetric();
         boolean useLocus = true;
@@ -353,13 +363,13 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
             log.debug("Classification of set is: " + classification);
             if (setSize == DOUBLETON_SIZE) {
 
-                final boolean useBarcodes = !set.getRecords().stream()
+                final boolean useBarcodes = set.getRecords().stream()
                         .map(read -> read.getStringAttribute(BARCODE_BQ))
-                        .map(string -> string == null ? "" : string).map(string ->
+                        .map(string -> string == null ? "" : string).noneMatch(string ->
                         {
                             final byte[] bytes = SAMUtils.fastqToPhred(string);
                             return IntStream.range(0, bytes.length).map(i -> bytes[i]).anyMatch(q -> q < MINIMUM_BARCODE_BQ);
-                        }).anyMatch(a -> a);
+                        });
 
                 log.debug("using barcodes?" + useBarcodes);
 
@@ -371,7 +381,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
                 log.debug("found UMIs:" + barcodes);
                 final boolean hasMultipleOrientations = set.getRecords().stream()
-                        .map(SAMRecord::getFirstOfPairFlag) //must be paired, due to filter on sam Iterator
+                        .map(rec->!rec.getReadPairedFlag() || rec.getFirstOfPairFlag())
                         .distinct().count() != 1;
                 log.debug("reads have multiple orientation?" + hasMultipleOrientations);
 
@@ -390,24 +400,36 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                     if (useBarcodes) {
                         umiEditDistanceInDiffBiDups.increment(editDistance);
 
-                        if(editDistance == 0) locusData.nMatchingUMIsInDiffBiDups++; else locusData.nMismatchingUMIsInDiffBiDups++;
+                        if (editDistance == 0) {
+                            locusData.nMatchingUMIsInDiffBiDups++;
+                        } else {
+                            locusData.nMismatchingUMIsInDiffBiDups++;
+                        }
                     }
 
                     // we're going to toss out this locus.
                 } else if (classification == SetClassification.MISMATCHING_ALLELE) {
                     locusData.nMismatchingAllelesBiDups++;
                 } else { // the classification is either ALTERNATE_ALLELE or REFERENCE_ALLELE if we've reached here
-                    if (classification == SetClassification.ALTERNATE_ALLELE) locusData.nAlternateAllelesBiDups++;
-                    else locusData.nReferenceAllelesBiDups++;
+                    if (classification == SetClassification.ALTERNATE_ALLELE) {
+                        locusData.nAlternateAllelesBiDups++;
+                    } else {
+                        locusData.nReferenceAllelesBiDups++;
+                    }
 
                     if (useBarcodes) {
-
                         umiEditDistanceInSameBiDups.increment(editDistance);
                         final ComparableTuple<String, String> key = new ComparableTuple<>(barcodes.get(0), barcodes.get(1));
                         umiConfusionMatrix.increment(key);
-                        if (!umiConfusionMatrixEditDistance.containsKey(key)) umiConfusionMatrixEditDistance.increment(key, editDistance);
+                        if (!umiConfusionMatrixEditDistance.containsKey(key)) {
+                            umiConfusionMatrixEditDistance.increment(key, editDistance);
+                        }
 
-                        if (editDistance == 0) locusData.nMatchingUMIsInSameBiDups++; else  locusData.nMismatchingUMIsInSameBiDups++;
+                        if (editDistance == 0) {
+                            locusData.nMatchingUMIsInSameBiDups++;
+                        } else {
+                            locusData.nMismatchingUMIsInSameBiDups++;
+                        }
                     }
                 }
             }
@@ -484,16 +506,24 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
     private static SetClassification classifySet(final int nRef, final int nAlt, final int nOther) {
         // if we found any "other" alleles, this is a mismatching set
-        if (nOther != 0) return SetClassification.MISMATCHING_ALLELE;
+        if (nOther != 0) {
+            return SetClassification.MISMATCHING_ALLELE;
+        }
 
         // if we found both ref and alt alleles, this is a heterogeneous set
-        if (nAlt > 0 && nRef > 0) return SetClassification.DIFFERENT_ALLELES;
+        if (nAlt > 0 && nRef > 0) {
+            return SetClassification.DIFFERENT_ALLELES;
+        }
 
         // if we found no reference alleles, this is an "alternate" set
-        if (nRef == 0) return SetClassification.ALTERNATE_ALLELE;
+        if (nRef == 0) {
+            return SetClassification.ALTERNATE_ALLELE;
+        }
 
         // if we found no alternate alleles, this is a "reference" set.
-        if (nAlt == 0) return SetClassification.REFERENCE_ALLELE;
+        if (nAlt == 0) {
+            return SetClassification.REFERENCE_ALLELE;
+        }
 
         throw new IllegalAccessError("shouldn't be here!");
     }
