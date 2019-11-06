@@ -108,13 +108,31 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
 @DocumentedFeature
 @ExperimentalFeature
 @CommandLineProgramProperties(
-        summary = "Estimates the rate of independent replication rate of reads within a bam. \n" +
-                "That is, it estimates the fraction of the reads which would be marked as duplicates but " +
-                "are actually biological replicates, independent observations of the data. ",
-        oneLineSummary = "Estimates the rate of independent replication of reads within a bam.",
+        summary = CollectIndependentReplicateMetrics.USAGE_SUMMARY + CollectIndependentReplicateMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectIndependentReplicateMetrics.USAGE_SUMMARY,
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
 public class CollectIndependentReplicateMetrics extends CommandLineProgram {
+
+    static final String USAGE_SUMMARY = "Estimates the rate of independent replication rate of reads within a bam. \n";
+    static final String USAGE_DETAILS = "<p>" +
+            "This tool estimates the fraction of the input reads which would be marked as duplicates but " +
+            "are actually biological replicates, independent observations of the data. " +
+            "<p>" +
+            "The tools examines duplicate sets of size 2 and 3 that overlap known heterozygous sites of the sample. " +
+            "The tool classifies these duplicate sets into heterogeneous and homogeneous sets (those that contain the " +
+            "two alleles that are present in the variant and those that only contain one of them). From this the tool" +
+            "estimates the fraction of duplicates that arose from different original molecules, i.e. independently. " +
+            "<p>" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CollectIndependentReplicateMetrics \\\n" +
+            "    I=input.bam \\\n" +
+            "    V=input.vcf \\\n" +
+            "    O=output.independent_replicates_metrics \\\n" +
+            "</pre> ";
+
+
     private static final int DOUBLETON_SIZE = 2, TRIPLETON_SIZE = 3;
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input (indexed) BAM file.")
