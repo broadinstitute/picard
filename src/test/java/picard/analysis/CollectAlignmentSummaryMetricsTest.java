@@ -255,6 +255,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
+                "COLLECT_ALIGNMENT_INFORMATION=false"
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -314,6 +315,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
+                "COLLECT_ALIGNMENT_INFORMATION=false"
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -338,6 +340,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                 "METRIC_ACCUMULATION_LEVEL=SAMPLE",
                 "METRIC_ACCUMULATION_LEVEL=LIBRARY",
                 "METRIC_ACCUMULATION_LEVEL=READ_GROUP",
+                "COLLECT_ALIGNMENT_INFORMATION=false"
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 

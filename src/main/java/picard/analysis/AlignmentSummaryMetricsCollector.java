@@ -24,17 +24,23 @@
 
 package picard.analysis;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamPairUtil.PairOrientation;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CoordMath;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.StringUtil;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordAndReference;
 import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
+import picard.util.MathUtil;
 
 import java.util.List;
 import java.util.Set;
@@ -205,16 +211,16 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     }
 
                     if(doRefMetrics) {
-                        if (metrics.PF_READS > 0)         metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
-                        if (metrics.PF_READS_ALIGNED > 0) metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS / (double) metrics.PF_READS_ALIGNED;
-                        if (metrics.PF_READS_ALIGNED > 0) metrics.PCT_PF_READS_IMPROPER_PAIRS = (double) metrics.PF_READS_IMPROPER_PAIRS / (double) metrics.PF_READS_ALIGNED;
-                        if (metrics.PF_READS_ALIGNED > 0) metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
-                        if (this.chimerasDenominator > 0) metrics.PCT_CHIMERAS = this.chimeras / (double) this.chimerasDenominator;
+                        metrics.PCT_PF_READS_ALIGNED =  MathUtil.divide((double) metrics.PF_READS_ALIGNED, (double) metrics.PF_READS);
+                        metrics.PCT_READS_ALIGNED_IN_PAIRS =  MathUtil.divide((double) metrics.READS_ALIGNED_IN_PAIRS, (double) metrics.PF_READS_ALIGNED);
+                        metrics.PCT_PF_READS_IMPROPER_PAIRS =  MathUtil.divide((double) metrics.PF_READS_IMPROPER_PAIRS, (double) metrics.PF_READS_ALIGNED);
+                        metrics.STRAND_BALANCE =  MathUtil.divide(numPositiveStrand, (double) metrics.PF_READS_ALIGNED);
+                        metrics.PCT_CHIMERAS =  MathUtil.divide(this.chimeras, (double) this.chimerasDenominator);
+                        metrics.PF_INDEL_RATE =  MathUtil.divide(this.indels, (double) metrics.PF_ALIGNED_BASES);
+                        metrics.PF_MISMATCH_RATE =  MathUtil.divide(mismatchHistogram.getSum(), (double) nonBisulfiteAlignedBases);
+                        metrics.PF_HQ_ERROR_RATE =  MathUtil.divide(hqMismatchHistogram.getSum(), (double) hqNonBisulfiteAlignedBases);
 
-                        if (nonBisulfiteAlignedBases > 0) metrics.PF_MISMATCH_RATE = mismatchHistogram.getSum() / (double) nonBisulfiteAlignedBases;
                         metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
-                        if (hqNonBisulfiteAlignedBases > 0) metrics.PF_HQ_ERROR_RATE = hqMismatchHistogram.getSum() / (double) hqNonBisulfiteAlignedBases;
-                        if (metrics.PF_ALIGNED_BASES > 0) metrics.PF_INDEL_RATE = this.indels / (double) metrics.PF_ALIGNED_BASES;
                     }
                 }
             }
@@ -274,41 +280,51 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                             badCycleHistogram.increment(CoordMath.getCycle(record.getReadNegativeStrandFlag(), readBases.length, i));
                         }
                     }
-                }
-                else if (!record.getReadFailsVendorQualityCheckFlag()) {
+                } else if (!record.getReadFailsVendorQualityCheckFlag()) {
                     final boolean highQualityMapping = isHighQualityMapping(record);
                     if (highQualityMapping && !record.getSupplementaryAlignmentFlag()) metrics.PF_HQ_ALIGNED_READS++;
 
                     final byte[] readBases = record.getReadBases();
-                    final byte[] refBases = reference.getBases();
-                    final byte[] qualities  = record.getBaseQualities();
-                    final int refLength = refBases.length;
-                    long mismatchCount   = 0;
+                    final byte[] refBases = reference == null ? null : reference.getBases();
+                    final int refLength = reference == null ? Integer.MAX_VALUE : refBases.length;
+                    final byte[] qualities = record.getBaseQualities();
+                    long mismatchCount = 0;
                     long hqMismatchCount = 0;
 
                     for (final AlignmentBlock alignmentBlock : record.getAlignmentBlocks()) {
                         final int readIndex = alignmentBlock.getReadStart() - 1;
-                        final int refIndex  = alignmentBlock.getReferenceStart() - 1;
-                        final int length    = alignmentBlock.getLength();
+                        final int refIndex = alignmentBlock.getReferenceStart() - 1;
+                        final int length = alignmentBlock.getLength();
 
-                        for (int i=0; i<length && refIndex+i<refLength; ++i) {
+                        for (int i = 0; i < length && refIndex + i < refLength; ++i) {
                             final int readBaseIndex = readIndex + i;
-                            boolean mismatch = !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex + i]);
-                            final boolean bisulfiteMatch = isBisulfiteSequenced && SequenceUtil.bisulfiteBasesEqual(record.getReadNegativeStrandFlag(), readBases[readBaseIndex], refBases[readBaseIndex]);
+                            boolean mismatch = refBases != null && !SequenceUtil.basesEqual(readBases[readBaseIndex], refBases[refIndex + i]);
+
+                            final boolean bisulfiteMatch = refBases != null && isBisulfiteSequenced && SequenceUtil.bisulfiteBasesEqual(record.getReadNegativeStrandFlag(), readBases[readBaseIndex], refBases[readBaseIndex]);
 
                             final boolean bisulfiteBase = mismatch && bisulfiteMatch;
                             mismatch = mismatch && !bisulfiteMatch;
 
-                            if (mismatch) mismatchCount++;
+                            if (mismatch) {
+                                mismatchCount++;
+                            }
 
                             metrics.PF_ALIGNED_BASES++;
-                            if (!bisulfiteBase) nonBisulfiteAlignedBases++;
+                            if (!bisulfiteBase) {
+                                nonBisulfiteAlignedBases++;
+                            }
 
                             if (highQualityMapping) {
                                 metrics.PF_HQ_ALIGNED_BASES++;
-                                if (!bisulfiteBase) hqNonBisulfiteAlignedBases++;
-                                if (qualities[readBaseIndex] >= BASE_QUALITY_THRESHOLD) metrics.PF_HQ_ALIGNED_Q20_BASES++;
-                                if (mismatch) hqMismatchCount++;
+                                if (!bisulfiteBase) {
+                                    hqNonBisulfiteAlignedBases++;
+                                }
+                                if (qualities[readBaseIndex] >= BASE_QUALITY_THRESHOLD) {
+                                    metrics.PF_HQ_ALIGNED_Q20_BASES++;
+                                }
+                                if (mismatch) {
+                                    hqMismatchCount++;
+                                }
                             }
 
                             if (mismatch || SequenceUtil.isNoCall(readBases[readBaseIndex])) {
@@ -327,7 +343,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     }
                 }
             }
-
+            
             private boolean isNoiseRead(final SAMRecord record) {
                 final Object noiseAttribute = record.getAttribute(ReservedTagConstants.XN);
                 return (noiseAttribute != null && noiseAttribute.equals(1));
