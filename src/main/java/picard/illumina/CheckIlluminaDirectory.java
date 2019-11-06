@@ -304,6 +304,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 for (final IlluminaDataType dataType : unmatchedDataTypes) {
                     final IlluminaFileUtil.SupportedIlluminaFormat format =
                             IlluminaDataProviderFactory.findPreferredFormat(dataType, fileUtil);
+                    log.info("Faking files for " + dataType.name());
                     fileUtil.getUtil(format).fakeFiles(expectedTiles, cycles, format);
 
                 }
