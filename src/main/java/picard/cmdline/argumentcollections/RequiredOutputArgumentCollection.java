@@ -38,4 +38,10 @@ public class RequiredOutputArgumentCollection implements OutputArgumentCollectio
     public File getOutputFile() {
         return OUTPUT;
     }
+
+    public RequiredOutputArgumentCollection(final File output) {
+        this.OUTPUT = output;
+    }
+
+    public RequiredOutputArgumentCollection() {}
 }

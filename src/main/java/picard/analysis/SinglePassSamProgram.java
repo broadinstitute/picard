@@ -91,7 +91,6 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
     @Override
     protected final int doWork() {
 
-        OUTPUT = output.getOutputFile();
         makeItSo(INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, STOP_AFTER, Arrays.asList(this));
         return 0;
     }
@@ -137,6 +136,9 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         // Call the abstract setup method!
         boolean anyUseNoRefReads = false;
         for (final SinglePassSamProgram program : programs) {
+            if (program.OUTPUT == null) {
+                program.OUTPUT = program.output.getOutputFile();
+            }
             program.setup(in.getFileHeader(), input);
             anyUseNoRefReads = anyUseNoRefReads || program.usesNoRefReads();
         }
