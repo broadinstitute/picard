@@ -23,9 +23,10 @@
  */
 package picard.sam.markduplicates;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.util.CloserUtil;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -35,7 +36,7 @@ import java.io.IOException;
 /**
  * Tests a few hand build sam files as they are.
  */
-public class AsIsMarkDuplicatesTester {
+public class AsIsMarkDuplicatesTest {
 
     @DataProvider
     public Object[][] testSameUnclipped5PrimeOppositeStrandData() {
@@ -53,13 +54,13 @@ public class AsIsMarkDuplicatesTester {
     @Test(dataProvider = "testSameUnclipped5PrimeOppositeStrandData")
     public void testSameUnclipped5PrimeOppositeStrand(final File input) throws IOException {
 
-        final AbstractMarkDuplicatesCommandLineProgramTester tester = new BySumOfBaseQAndInOriginalOrderMDTester();
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester(SAMFileHeader.SortOrder.coordinate);
 
         try (final SamReader reader = SamReaderFactory.makeDefault().open(input)) {
-
             tester.setHeader(reader.getFileHeader());
-            reader.iterator().stream().forEach(tester::addRecord);
-
+            for (final SAMRecord rec : reader) {
+                tester.addRecord(rec);
+            }
         }
         tester.setExpectedOpticalDuplicate(0);
         tester.runTest();
@@ -77,15 +78,18 @@ public class AsIsMarkDuplicatesTester {
     @Test(dataProvider = "queryGroupedInput")
     public void testQueryGroupedInput(final File input) throws IOException {
 
-        final AbstractMarkDuplicatesCommandLineProgramTester tester = new BySumOfBaseQAndInOriginalOrderMDTester();
-
         try (final SamReader reader = SamReaderFactory.makeDefault().open(input)) {
+            final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester(reader.getFileHeader().getSortOrder());
             tester.setHeader(reader.getFileHeader());
             reader.iterator().stream().forEach(tester::addRecord);
+            tester.setExpectedOpticalDuplicate(0);
+            tester.addArg("ASSUME_SORT_ORDER=queryname");
+            tester.runTest();
         }
-        tester.setExpectedOpticalDuplicate(0);
-        tester.addArg("ASSUME_SORT_ORDER=queryname");
-        tester.runTest();
+    }
+
+    AbstractMarkDuplicatesCommandLineProgramTester getTester(SAMFileHeader.SortOrder so) {
+        return new BySumOfBaseQAndInOriginalOrderMDTester();
     }
 }
 

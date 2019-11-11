@@ -24,13 +24,12 @@
 
 package picard.sam.markduplicates;
 
+import htsjdk.samtools.SAMFileHeader;
+
 public class CollectDuplicateMetricsTest extends AbstractMarkDuplicatesCommandLineProgramTest {
     @Override
     protected AbstractMarkDuplicatesCommandLineProgramTester getTester() {
-        final CollectDuplicateMetricsTester collectDuplicateMetricsTester = new CollectDuplicateMetricsTester();
-
-        collectDuplicateMetricsTester.getArgs().removeIf(s->s.startsWith("DUPLICATE_SCORING_STRATEGY="));
-        collectDuplicateMetricsTester.getArgs().removeIf(s->s.startsWith("TAGGING_POLICY="));
+        final CollectDuplicateMetricsTester collectDuplicateMetricsTester = new CollectDuplicateMetricsTester(SAMFileHeader.SortOrder.coordinate);
 
         return collectDuplicateMetricsTester;
     }

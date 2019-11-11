@@ -23,6 +23,8 @@
  */
 package picard.sam.markduplicates;
 
+import htsjdk.samtools.DuplicateScoringStrategy;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
@@ -59,16 +61,23 @@ public class CollectDuplicateMetricsTester extends AbstractMarkDuplicatesCommand
     protected void customPretestCallback() {
         super.customPretestCallback();
 
-        getArgs().removeIf(s->s.startsWith("INPUT="));
         getArgs().removeIf(s->s.startsWith("OUTPUT="));
         getArgs().removeIf(s->s.startsWith("READ_NAME_REGEX="));
+        getArgs().removeIf(s->s.startsWith("DUPLICATE_SCORING_STRATEGY="));
+        getArgs().removeIf(s->s.startsWith("TAGGING_POLICY="));
+        getArgs().removeIf(s->s.startsWith("ASSUME_SORT_ORDER="));
 
+        getArgs().removeIf(s->s.startsWith("INPUT="));
         getArgs().add("INPUT=" + getOutput().getAbsoluteFile());
     }
 
     @Override
     protected CommandLineProgram getProgram() {
         return new CollectDuplicateMetrics();
+    }
+
+    public CollectDuplicateMetricsTester( final SAMFileHeader.SortOrder sortOrder) {
+        super(DuplicateScoringStrategy.ScoringStrategy.SUM_OF_BASE_QUALITIES, sortOrder, false);
     }
 
     @Override

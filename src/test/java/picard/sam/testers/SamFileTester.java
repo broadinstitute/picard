@@ -402,7 +402,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                     Assert.assertFalse(sum >= 10_000_000,
                             "Sequence dictionary is very large (total size " + sum + "). In a Cram test this could be a problem leading to writing lots" +
                                     "of bases to disk. please modify the tester using 'ModifyTesterForCramTests'. " +
-                                    "For exmaple look at testBulkFragmentsNoDuplicates in AbstractMarkDuplicatesCommandLineProgramTest");
+                                    "For example look at testBulkFragmentsNoDuplicates in AbstractMarkDuplicatesCommandLineProgramTest");
 
                     samRecordSetBuilder.writeRandomReference(newFasta);
                 } catch (IOException e) {
@@ -417,8 +417,11 @@ public abstract class SamFileTester extends CommandLineProgramTest {
             writer = samFileWriterFactory.makeWriter(samRecordSetBuilder.getHeader(), true, input, null);
         }
 
-        samRecordSetBuilder.getRecords().forEach(writer::addAlignment);
+        for(final SAMRecord a : samRecordSetBuilder.getRecords()) {
+            writer.addAlignment(a);
+        }
         writer.close();
+
         return input;
     }
 
