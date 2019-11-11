@@ -158,13 +158,12 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
      *
      * @param libraryIdGenerator
      */
-    protected void finalizeAndWriteMetrics(final LibraryIdGenerator libraryIdGenerator) {
+    static public void finalizeAndWriteMetrics(final LibraryIdGenerator libraryIdGenerator, final MetricsFile<DuplicationMetrics, Double> file, final File metricsFile) {
         final Map<String, DuplicationMetrics> metricsByLibrary = libraryIdGenerator.getMetricsByLibraryMap();
         final Histogram<Short> opticalDuplicatesByLibraryId = libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap();
         final Map<String, Short> libraryIds = libraryIdGenerator.getLibraryIdsMap();
 
         // Write out the metrics
-        final MetricsFile<DuplicationMetrics, Double> file = getMetricsFile();
         for (final Map.Entry<String, DuplicationMetrics> entry : metricsByLibrary.entrySet()) {
             final String libraryName = entry.getKey();
             final DuplicationMetrics metrics = entry.getValue();
@@ -193,7 +192,42 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         file.addHistogram(libraryIdGenerator.getOpticalDuplicateCountHist());
         file.addHistogram(libraryIdGenerator.getNonOpticalDuplicateCountHist());
 
-        file.write(METRICS_FILE);
+        file.write(metricsFile);
+    }
+
+
+    public static DuplicationMetrics addReadToLibraryMetrics(final SAMRecord rec, final SAMFileHeader header, final LibraryIdGenerator libraryIdGenerator) {
+        final String library = LibraryIdGenerator.getLibraryName(header, rec);
+        DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
+        if (metrics == null) {
+            metrics = new DuplicationMetrics();
+            metrics.LIBRARY = library;
+            libraryIdGenerator.addMetricsByLibrary(library, metrics);
+        }
+
+        // First bring the simple metrics up to date
+        if (rec.getReadUnmappedFlag()) {
+            ++metrics.UNMAPPED_READS;
+        } else if (rec.isSecondaryOrSupplementary()) {
+            ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
+        } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+            ++metrics.UNPAIRED_READS_EXAMINED;
+        } else {
+            ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
+        }
+        return metrics;
+    }
+
+    public static void addDuplicateReadToMetrics(final SAMRecord rec, final DuplicationMetrics metrics) {
+        // only update duplicate counts for "decider" reads, not tag-a-long reads
+        if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
+            // Update the duplication metrics
+            if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+                ++metrics.UNPAIRED_READ_DUPLICATES;
+            } else {
+                ++metrics.READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
+            }
+        }
     }
 
     /** Little class used to package up a header and an iterable/iterator. */

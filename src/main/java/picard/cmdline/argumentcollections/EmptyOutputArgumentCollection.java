@@ -21,17 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package picard.cmdline.argumentcollections;
 
 import java.io.File;
 
-/**
- * Base interface for an interval argument collection.
- */
-public interface IntervalArgumentCollection {
-    /**
-     * @return The interval file provided by the user, if any, or the default, if any.
-     */
-    File getIntervalFile();
+public class EmptyOutputArgumentCollection implements OutputArgumentCollection {
+    @Override
+    public File getOutputFile() {
+        return null;
+    }
 }
+

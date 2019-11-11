@@ -79,7 +79,7 @@ public class AsIsMarkDuplicatesTester {
 
         final AbstractMarkDuplicatesCommandLineProgramTester tester = new BySumOfBaseQAndInOriginalOrderMDTester();
 
-        try(final SamReader reader = SamReaderFactory.makeDefault().open(input)) {
+        try (final SamReader reader = SamReaderFactory.makeDefault().open(input)) {
             tester.setHeader(reader.getFileHeader());
             reader.iterator().stream().forEach(tester::addRecord);
         }

@@ -27,11 +27,11 @@ package picard.cmdline.argumentcollections;
 import java.io.File;
 
 /**
- * Base interface for an interval argument collection.
+ * Base interface for an output argument collection.
  */
-public interface IntervalArgumentCollection {
+public interface OutputArgumentCollection {
     /**
-     * @return The interval file provided by the user, if any, or the default, if any.
+     * @return The reference provided by the user, if any, or the default, if any.
      */
-    File getIntervalFile();
+    File getOutputFile();
 }

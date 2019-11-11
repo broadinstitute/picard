@@ -37,9 +37,12 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.argumentcollections.OutputArgumentCollection;
+import picard.cmdline.argumentcollections.RequiredOutputArgumentCollection;
 
 import java.io.File;
 import java.util.Arrays;
@@ -56,8 +59,14 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
 
-    @Argument(shortName = "O", doc = "File to write the output to.")
-    public File OUTPUT;
+    @ArgumentCollection
+    public OutputArgumentCollection output = getOutputArgumentCollection();
+
+    protected OutputArgumentCollection getOutputArgumentCollection(){
+        return new RequiredOutputArgumentCollection();
+    }
+
+    protected File OUTPUT;
 
     @Argument(doc = "If true (default), then the sort order in the header file will be ignored.",
             shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
@@ -81,6 +90,8 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
      */
     @Override
     protected final int doWork() {
+
+        OUTPUT = output.getOutputFile();
         makeItSo(INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, STOP_AFTER, Arrays.asList(this));
         return 0;
     }
