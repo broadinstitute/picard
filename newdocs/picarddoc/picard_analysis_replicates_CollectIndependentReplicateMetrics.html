@@ -89,6 +89,9 @@
 												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
 											</li>
 											<li>
+												<a href="picard_arrays_CollectArraysVariantCallingMetrics.html">CollectArraysVariantCallingMetrics</a>
+											</li>
+											<li>
 												<a href="picard_analysis_CollectBaseDistributionByCycle.html">CollectBaseDistributionByCycle</a>
 											</li>
 											<li>
@@ -184,6 +187,9 @@
 											</li>
 											<li>
 												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
+											</li>
+											<li>
+												<a href="picard_arrays_MergePedIntoVcf.html">MergePedIntoVcf</a>
 											</li>
 											<li>
 												<a href="picard_arrays_VcfToAdpc.html">VcfToAdpc</a>
@@ -414,7 +420,8 @@
 
 		<h1>CollectIndependentReplicateMetrics</h1>
 
-		<p class="lead">Estimates the rate of independent replication of reads within a bam.</p>
+		<p class="lead">Estimates the rate of independent replication rate of reads within a bam. 
+</p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -497,6 +504,14 @@
 					<td>Barcode SAM tag.</td>
 				</tr>
 				<tr>
+					<td><a href="#--FILTER_UNPAIRED_READS">--FILTER_UNPAIRED_READS</a><br />
+								&nbsp;<em>-FUR</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>true</td>
+					<td>Whether to filter unpaired reads from the input.</td>
+				</tr>
+				<tr>
 					<td><a href="#--MATRIX_OUTPUT">--MATRIX_OUTPUT</a><br />
 								&nbsp;<em>-MO</em>
 					</td>
@@ -535,6 +550,13 @@
 					<!--<td>Integer</td> -->
 					<td>40</td>
 					<td>minimal value for the mapping quality of the reads to be used in the estimation.</td>
+				</tr>
+				<tr>
+					<td><a href="#--PROGRESS_STEP_INTERVAL">--PROGRESS_STEP_INTERVAL</a><br />
+					</td>
+					<!--<td>int</td> -->
+					<td>100000</td>
+					<td>The interval between which progress will be displayed.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SAMPLE">--SAMPLE</a><br />
@@ -709,6 +731,18 @@
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--FILTER_UNPAIRED_READS">--FILTER_UNPAIRED_READS </a>
+			 / <small>-FUR</small>
+		</h3>
+		<p class="args">
+			<b>Whether to filter unpaired reads from the input.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
 			 / <small>NA</small>
 		</h3>
@@ -827,6 +861,20 @@
 				<span class="badge badge-important">R</span>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--PROGRESS_STEP_INTERVAL">--PROGRESS_STEP_INTERVAL </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>The interval between which progress will be displayed.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">100000</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--QUIET">--QUIET </a>
@@ -985,7 +1033,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.21.1-SNAPSHOT built at 04-35-2019 10:35:30.
+        <p class="version">Picard version 2.21.3-SNAPSHOT built at 12-52-2019 11:52:27.
         </p>
 
 	</div>

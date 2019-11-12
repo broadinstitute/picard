@@ -1,5 +1,5 @@
 {
-  "summary": "Estimates the rate of independent replication of reads within a bam.",
+  "summary": "Estimates the rate of independent replication rate of reads within a bam. \n",
   "arguments": [
     {
       "summary": "Barcode Quality SAM tag.",
@@ -74,6 +74,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "Whether to filter unpaired reads from the input.",
+      "name": "--FILTER_UNPAIRED_READS",
+      "synonyms": "-FUR",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -209,6 +224,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "The interval between which progress will be displayed.",
+      "name": "--PROGRESS_STEP_INTERVAL",
+      "synonyms": "NA",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "100000",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {

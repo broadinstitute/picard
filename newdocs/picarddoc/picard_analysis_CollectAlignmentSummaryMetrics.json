@@ -32,6 +32,21 @@
       "options": []
     },
     {
+      "summary": "A flag to disable the collection of actual alignment information. If false, tool will only count READS, PF_READS, and NOISE_READS. (For backwards compatibility).",
+      "name": "--COLLECT_ALIGNMENT_INFORMATION",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
       "synonyms": "NA",
@@ -212,7 +227,7 @@
       "options": []
     },
     {
-      "summary": "Reference sequence file. Note that while this argument isn\u0027t required, without it only a small subset of the metrics will be calculated. Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.",
+      "summary": "Reference sequence file. Note that while this argument isn\u0027t required, without it a small subset (MISMATCH-related) of the metrics cannot be calculated. Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.",
       "name": "--REFERENCE_SEQUENCE",
       "synonyms": "-R",
       "type": "File",

@@ -89,6 +89,9 @@
 												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
 											</li>
 											<li>
+												<a href="picard_arrays_CollectArraysVariantCallingMetrics.html">CollectArraysVariantCallingMetrics</a>
+											</li>
+											<li>
 												<a href="picard_analysis_CollectBaseDistributionByCycle.html">CollectBaseDistributionByCycle</a>
 											</li>
 											<li>
@@ -184,6 +187,9 @@
 											</li>
 											<li>
 												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
+											</li>
+											<li>
+												<a href="picard_arrays_MergePedIntoVcf.html">MergePedIntoVcf</a>
 											</li>
 											<li>
 												<a href="picard_arrays_VcfToAdpc.html">VcfToAdpc</a>
@@ -497,6 +503,13 @@
 					<td>If true (default), then the sort order in the header file will be ignored.</td>
 				</tr>
 				<tr>
+					<td><a href="#--COLLECT_ALIGNMENT_INFORMATION">--COLLECT_ALIGNMENT_INFORMATION</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>true</td>
+					<td>A flag to disable the collection of actual alignment information. If false, tool will only count READS, PF_READS, and NOISE_READS. (For backwards compatibility).</td>
+				</tr>
+				<tr>
 					<td><a href="#--EXPECTED_PAIR_ORIENTATIONS">--EXPECTED_PAIR_ORIENTATIONS</a><br />
 					</td>
 					<!--<td>Set[PairOrientation]</td> -->
@@ -532,7 +545,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Reference sequence file. Note that while this argument isn't required, without it only a small subset of the metrics will be calculated. Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.</td>
+					<td>Reference sequence file. Note that while this argument isn't required, without it a small subset (MISMATCH-related) of the metrics cannot be calculated. Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.</td>
 				</tr>
 				<tr>
 					<td><a href="#--STOP_AFTER">--STOP_AFTER</a><br />
@@ -646,6 +659,18 @@
 		</h3>
 		<p class="args">
 			<b>If true (default), then the sort order in the header file will be ignored.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--COLLECT_ALIGNMENT_INFORMATION">--COLLECT_ALIGNMENT_INFORMATION </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>A flag to disable the collection of actual alignment information. If false, tool will only count READS, PF_READS, and NOISE_READS. (For backwards compatibility).</b><br />
 			
 		</p>
 		<p>
@@ -809,7 +834,7 @@
 			 / <small>-R</small>
 		</h3>
 		<p class="args">
-			<b>Reference sequence file. Note that while this argument isn't required, without it only a small subset of the metrics will be calculated. Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.</b><br />
+			<b>Reference sequence file. Note that while this argument isn't required, without it a small subset (MISMATCH-related) of the metrics cannot be calculated. Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.</b><br />
 			
 		</p>
 		<p>
@@ -924,7 +949,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.21.1-SNAPSHOT built at 04-35-2019 10:35:30.
+        <p class="version">Picard version 2.21.3-SNAPSHOT built at 12-52-2019 11:52:27.
         </p>
 
 	</div>
