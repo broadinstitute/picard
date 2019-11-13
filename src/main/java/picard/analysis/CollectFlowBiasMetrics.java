@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2019 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@
 package picard.analysis;
 
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.IOUtil;
@@ -35,31 +34,20 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
-import picard.metrics.GcBiasMetrics;
-import picard.util.RExecutor;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.NumberFormat;
-import java.util.List;
 
 /**
- * Tool to collect information about GC bias in the reads in a given BAM file. Computes
- * the number of windows (of size specified by SCAN_WINDOW_SIZE) in the genome at each GC%
- * and counts the number of read starts in each GC bin.  What is output and plotted is
- * the "normalized coverage" in each bin - i.e. the number of reads per window normalized
- * to the average number of reads per window across the whole genome.
  *
- * @author Tim Fennell
- * edited by Kylee Bergin
  */
 @CommandLineProgramProperties(
-        summary = picard.analysis.CollectGcBiasMetrics.USAGE_SUMMARY + picard.analysis.CollectGcBiasMetrics.USAGE_DETAILS,
-        oneLineSummary = picard.analysis.CollectGcBiasMetrics.USAGE_SUMMARY,
+        summary = CollectFlowBiasMetrics.USAGE_SUMMARY + CollectFlowBiasMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectFlowBiasMetrics.USAGE_SUMMARY,
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
-public class EstimateFlowCoverage extends CommandLineProgram {
+public class CollectFlowBiasMetrics extends CommandLineProgram {
 
     static final String USAGE_SUMMARY = "Collect metrics regarding Flow. ";
     static final String USAGE_DETAILS = "";
@@ -104,7 +92,7 @@ public class EstimateFlowCoverage extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        try (ReferenceSequenceFileWalker referenceSequenceWalker = new ReferenceSequenceFileWalker(OUTPUT)) {
+        try (ReferenceSequenceFileWalker referenceSequenceWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE)) {
             for (SAMSequenceRecord samSequenceRecord : referenceSequenceWalker.getSequenceDictionary().getSequences()) {
                 final ReferenceSequence referenceSequence = referenceSequenceWalker.get(samSequenceRecord.getSequenceIndex());
 
@@ -119,42 +107,57 @@ public class EstimateFlowCoverage extends CommandLineProgram {
     }
 
     private void updateMetrics(final ReferenceSequence referenceSequence) {
-        .....
-    }
+        for (int i = 0; i < referenceSequence.length() - this.FLOW_LENGTH; i++) {
+            final String referenceSlice = referenceSequence.getBaseString().substring(i, i + FLOW_LENGTH);
+            final int lengthGivenFlow = readLengthGivenFlow(referenceSlice, FLOW_ORDER, FLOW_LENGTH);
 
-    /////////////////////////////////////////////////////////////////////////////
-    // Write out all levels of normalized coverage metrics to a file
-    /////////////////////////////////////////////////////////////////////////////
-    @Override
-    protected void finish() {
-        multiCollector.finish();
-        writeResultsToFiles();
-    }
 
-    private void writeResultsToFiles() {
-        final MetricsFile<GcBiasMetrics, Integer> file = getMetricsFile();
-        final MetricsFile<GcBiasDetailMetrics, ?> detailMetricsFile = getMetricsFile();
-        final MetricsFile<GcBiasSummaryMetrics, ?> summaryMetricsFile = getMetricsFile();
-        multiCollector.addAllLevelsToFile(file);
-        final List<GcBiasMetrics> gcBiasMetricsList = file.getMetrics();
-        for (final GcBiasMetrics gcbm : gcBiasMetricsList) {
-            final List<GcBiasDetailMetrics> gcDetailList = gcbm.DETAILS.getMetrics();
-            for (final GcBiasDetailMetrics d : gcDetailList) {
-                detailMetricsFile.addMetric(d);
-            }
-            summaryMetricsFile.addMetric(gcbm.SUMMARY);
         }
-        detailMetricsFile.write(OUTPUT);
-        summaryMetricsFile.write(SUMMARY_OUTPUT);
-
-        final NumberFormat fmt = NumberFormat.getIntegerInstance();
-        fmt.setGroupingUsed(true);
-        RExecutor.executeFromClasspath(R_SCRIPT,
-                OUTPUT.getAbsolutePath(),
-                SUMMARY_OUTPUT.getAbsolutePath(),
-                CHART_OUTPUT.getAbsolutePath(),
-                String.valueOf(SCAN_WINDOW_SIZE));
     }
+
+    static public int readLengthGivenFlow(final String referenceSlice, final String FLOW_ORDER, final int FLOW_LENGTH) {
+        int i = 0;
+        for (int j = 0; j < FLOW_LENGTH; j++) {
+            while (referenceSlice.getBytes()[i] == FLOW_ORDER.getBytes()[j % FLOW_ORDER.length()]) {
+                i++;
+            }
+        }
+        return i;
+    }
+
+//    /////////////////////////////////////////////////////////////////////////////
+//    // Write out all levels of normalized coverage metrics to a file
+//    /////////////////////////////////////////////////////////////////////////////
+//    @Override
+//    protected void finish() {
+//        multiCollector.finish();
+//        writeResultsToFiles();
+//    }
+//
+//    private void writeResultsToFiles() {
+//        final MetricsFile<GcBiasMetrics, Integer> file = getMetricsFile();
+//        final MetricsFile<GcBiasDetailMetrics, ?> detailMetricsFile = getMetricsFile();
+//        final MetricsFile<GcBiasSummaryMetrics, ?> summaryMetricsFile = getMetricsFile();
+//        multiCollector.addAllLevelsToFile(file);
+//        final List<GcBiasMetrics> gcBiasMetricsList = file.getMetrics();
+//        for (final GcBiasMetrics gcbm : gcBiasMetricsList) {
+//            final List<GcBiasDetailMetrics> gcDetailList = gcbm.DETAILS.getMetrics();
+//            for (final GcBiasDetailMetrics d : gcDetailList) {
+//                detailMetricsFile.addMetric(d);
+//            }
+//            summaryMetricsFile.addMetric(gcbm.SUMMARY);
+//        }
+//        detailMetricsFile.write(OUTPUT);
+//        summaryMetricsFile.write(SUMMARY_OUTPUT);
+//
+//        final NumberFormat fmt = NumberFormat.getIntegerInstance();
+//        fmt.setGroupingUsed(true);
+//        RExecutor.executeFromClasspath(R_SCRIPT,
+//                OUTPUT.getAbsolutePath(),
+//                SUMMARY_OUTPUT.getAbsolutePath(),
+//                CHART_OUTPUT.getAbsolutePath(),
+//                String.valueOf(SCAN_WINDOW_SIZE));
+//    }
 }
 
 
