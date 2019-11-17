@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2019 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,7 @@ import java.io.File;
 
 /**
  *
- * Collect DuplicateMark'ing metrics from a input file that was already DuplicateMarked.
+ * Collect DuplicateMark'ing metrics from an input file that was already Duplicate-Marked.
  *
  */
 @CommandLineProgramProperties(
@@ -53,7 +53,8 @@ import java.io.File;
 
 public class CollectDuplicateMetrics extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "Collect Duplicate metrics from marked file.";
-    static final String USAGE_DETAILS = "This tool only collects the duplicate metrics from a file that has already been dupicate-marked.";
+    static final String USAGE_DETAILS = "This tool only collects the duplicate metrics from a file that has already been duplicate-marked. " +
+            "The resulting metrics file will always have a READ_PAIR_OPTICAL_DUPLICATES=0 and as a result the ESTIMATED_LIBRARY_SIZE will be slightly incorrect. ";
 
     @Argument(shortName = "M",
             doc = "File to write duplication metrics to.")
@@ -79,6 +80,7 @@ public class CollectDuplicateMetrics extends SinglePassSamProgram {
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
+
         libraryIdGenerator = new LibraryIdGenerator(header);
         this.header = header;
     }
@@ -87,7 +89,6 @@ public class CollectDuplicateMetrics extends SinglePassSamProgram {
     protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
 
         final DuplicationMetrics metrics = AbstractMarkDuplicatesCommandLineProgram.addReadToLibraryMetrics(rec, header, libraryIdGenerator);
-
         final boolean isDuplicate = rec.getDuplicateReadFlag();
 
         if (isDuplicate) {
