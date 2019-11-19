@@ -25,9 +25,15 @@
 package picard.analysis;
 
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SequenceUtil;
+import org.apache.commons.io.output.NullOutputStream;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -36,7 +42,15 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayDeque;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+import java.util.Random;
+
+import static htsjdk.samtools.util.SequenceUtil.N;
 
 /**
  *
@@ -58,8 +72,8 @@ public class CollectFlowBiasMetrics extends CommandLineProgram {
 
     // Usage and parameters
 
-    @Argument(shortName = "CHART", doc = "The PDF file to render the chart to.")
-    public File CHART_OUTPUT;
+    @Argument(shortName = "CHART", doc = "The PDF file to render the chart to.", optional = true)
+    public File DETAILED_OUTPUT;
 
     @Argument(shortName = "S", doc = "The text file to write summary metrics to.")
     public File SUMMARY_OUTPUT;
@@ -70,6 +84,22 @@ public class CollectFlowBiasMetrics extends CommandLineProgram {
     @Argument(shortName = "SIZE", doc = "The number of flows that were used")
     public Integer FLOW_LENGTH;
 
+    @Argument
+    public Integer MAX_READ_TO_CONSIDER = 2000;
+
+    @Argument
+    public double READ_PROBABILITY = 1D;
+
+    @Argument
+    long STOP_AFTER = 0;
+    @Argument
+    int PROGRESS_INTERVAL = 100000;
+
+    private final long randomSeed = 42;
+
+    private final int[] localCoverage = new int[MAX_READ_TO_CONSIDER];
+    private String FLOW_ORDER_RC;
+
     /////////////////////////////////////////////////////////////////////////////
     // Setup calculates windowsByGc for the entire reference. Must be done at
     // startup to avoid missing reference contigs in the case of small files
@@ -78,7 +108,9 @@ public class CollectFlowBiasMetrics extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        if (DETAILED_OUTPUT != null) {
+            IOUtil.assertFileIsWritable(DETAILED_OUTPUT);
+        }
         IOUtil.assertFileIsWritable(SUMMARY_OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 
@@ -90,35 +122,136 @@ public class CollectFlowBiasMetrics extends CommandLineProgram {
         return true;
     }
 
+    final Log log = Log.getInstance(CollectFlowBiasMetrics.class);
+    private ProgressLogger progressLogger;
+    private Random random;
+
+    private final Histogram<Integer> coverageHist = new Histogram<>();
+
     @Override
     protected int doWork() {
-        try (ReferenceSequenceFileWalker referenceSequenceWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE)) {
-            for (SAMSequenceRecord samSequenceRecord : referenceSequenceWalker.getSequenceDictionary().getSequences()) {
-                final ReferenceSequence referenceSequence = referenceSequenceWalker.get(samSequenceRecord.getSequenceIndex());
+        try (PrintStream detailedOutput = DETAILED_OUTPUT != null ?
+                new PrintStream(DETAILED_OUTPUT) :
+                new PrintStream(NullOutputStream.NULL_OUTPUT_STREAM)) {
 
-                updateMetrics(referenceSequence);
+            detailedOutput.println("#CHROM\tPOS\tEND\tNAME\tCOUNT\tCOUNT_POS\tCOUNT_NEG");
+            random = new Random(randomSeed);
 
+            progressLogger = new ProgressLogger(log, PROGRESS_INTERVAL, "positions", "examined");
+
+            FLOW_ORDER_RC = SequenceUtil.reverseComplement(FLOW_ORDER);
+            coverageHist.setValueLabel("Coverage");
+            coverageHist.setValueLabel("Count");
+            try (ReferenceSequenceFileWalker referenceSequenceWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE)) {
+                for (SAMSequenceRecord samSequenceRecord : referenceSequenceWalker.getSequenceDictionary().getSequences()) {
+
+                    final ReferenceSequence referenceSequence = referenceSequenceWalker.get(samSequenceRecord.getSequenceIndex());
+                    log.info("examining sequence " + referenceSequence.getName());
+                    updateMetrics(referenceSequence, detailedOutput);
+                    if (STOP_AFTER != 0 && progressLogger.getCount() > STOP_AFTER) {
+                        break;
+                    }
+                }
+            } catch (
+                    IOException e) {
+                throw new PicardException("Error while reading reference " + REFERENCE_SEQUENCE, e);
             }
-
-        } catch (IOException e) {
-            throw new PicardException("Error while reading reference " + REFERENCE_SEQUENCE, e);
+        } catch (FileNotFoundException e) {
+            throw new PicardException("Error while writing to " + DETAILED_OUTPUT, e);
         }
+
+        MetricsFile<?, Integer> metricsFile = getMetricsFile();
+        metricsFile.addHistogram(coverageHist);
+        metricsFile.write(SUMMARY_OUTPUT);
         return 0;
     }
 
-    private void updateMetrics(final ReferenceSequence referenceSequence) {
-        for (int i = 0; i < referenceSequence.length() - this.FLOW_LENGTH; i++) {
-            final String referenceSlice = referenceSequence.getBaseString().substring(i, i + FLOW_LENGTH);
-            final int lengthGivenFlow = readLengthGivenFlow(referenceSlice, FLOW_ORDER, FLOW_LENGTH);
+    private void updateMetrics(final ReferenceSequence referenceSequence, final PrintStream detailedOutput) {
+        final int N = referenceSequence.length();
+        final byte[] referenceBytesCopy = new byte[N];
+        System.arraycopy(referenceSequence.getBases(), 0, referenceBytesCopy, 0, N);
 
+        SequenceUtil.reverseComplement(referenceBytesCopy);
+        final ReferenceSequence referenceSequenceRC = new ReferenceSequence(referenceSequence.getName(), referenceSequence.getContigIndex(), referenceBytesCopy);
 
+        final byte[] baseString = referenceSequence.getBases();
+        final byte[] baseStringRC = referenceSequenceRC.getBases();
+        final LinkedList<Integer> readLengths = new LinkedList<>();
+        final LinkedList<Integer> readLengthsRC = new LinkedList<>();
+        final byte[] flowOrder = FLOW_ORDER.getBytes();
+        final byte[] flowOrderRC = FLOW_ORDER_RC.getBytes();
+        final byte[] referenceSlice = new byte[MAX_READ_TO_CONSIDER];
+        final byte[] referenceSliceRC = new byte[MAX_READ_TO_CONSIDER];
+
+        for (int i = MAX_READ_TO_CONSIDER; i < N - MAX_READ_TO_CONSIDER; i++) {
+            progressLogger.record(referenceSequence.getName(), i);
+
+            if (STOP_AFTER != 0 && progressLogger.getCount() > STOP_AFTER) {
+                return;
+            }
+
+            System.arraycopy(baseString, i, referenceSlice, 0, MAX_READ_TO_CONSIDER);
+            final int lengthGivenFlow = readLengthGivenFlow(referenceSlice, flowOrder, FLOW_LENGTH);
+            if (random.nextDouble() < READ_PROBABILITY) {
+                readLengths.addFirst(lengthGivenFlow);
+            } else {
+                readLengths.addFirst(-1); //-1 means that theres no read here.
+            }
+
+            System.arraycopy(baseStringRC, N - 1 - i - MAX_READ_TO_CONSIDER, referenceSliceRC, 0, MAX_READ_TO_CONSIDER);
+
+            final int lengthGivenFlowRC = readLengthGivenFlow(referenceSliceRC, flowOrderRC, FLOW_LENGTH);
+            if (random.nextDouble() < READ_PROBABILITY) {
+                readLengthsRC.addFirst(lengthGivenFlowRC);
+            } else {
+                readLengthsRC.addFirst(-1); //-1 means that there's no read here.
+            }
+            final Integer coverageFor = countCoverage(readLengths);
+            final Integer coverageRev = countCoverage(readLengthsRC);
+            final int localCoverage;
+            localCoverage = coverageFor + coverageRev;
+            if (DETAILED_OUTPUT != null) {
+                detailedOutput.print(referenceSequence.getName());
+                detailedOutput.print("\t");
+                detailedOutput.print(i);
+                detailedOutput.print("\t");
+                detailedOutput.print(i);
+                detailedOutput.print("\t");
+                detailedOutput.print(localCoverage);
+                detailedOutput.print("\t");
+                detailedOutput.print(coverageFor);
+                detailedOutput.print("\t");
+                detailedOutput.print(coverageRev);
+                detailedOutput.println();
+            }
+            coverageHist.increment(localCoverage);
         }
     }
 
-    static public int readLengthGivenFlow(final String referenceSlice, final String FLOW_ORDER, final int FLOW_LENGTH) {
+    private Integer countCoverage(final LinkedList<Integer> readLengths) {
+
         int i = 0;
-        for (int j = 0; j < FLOW_LENGTH; j++) {
-            while (referenceSlice.getBytes()[i] == FLOW_ORDER.getBytes()[j % FLOW_ORDER.length()]) {
+        int depth = 0;
+        int readLengthI;
+        while (i < readLengths.size() && ((readLengthI = readLengths.get(i)) == -1 || i < readLengthI)) {
+            if (readLengthI != -1) {
+                depth++;
+            }
+            i++;
+        }
+        while (readLengths.size() > i) {
+            readLengths.removeLast();
+        }
+        return depth;
+    }
+
+    static int readLengthGivenFlow(final byte[] referenceSlice, final byte[] flowOrder, final int flowLength) {
+        int i = 0;
+        for (int j = 0; j < flowLength; j++) {
+            if (SequenceUtil.basesEqual(N, referenceSlice[i])) {
+                return 0;
+            }
+            while (SequenceUtil.basesEqual(referenceSlice[i], flowOrder[j % flowOrder.length])) {
                 i++;
             }
         }

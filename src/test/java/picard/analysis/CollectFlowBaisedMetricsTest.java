@@ -19,6 +19,6 @@ public class CollectFlowBaisedMetricsTest {
     }
     @Test(dataProvider = "readLengthGivenFlowData")
     public void testReadLengthGivenFlow(String reference, String flow, int flowLength, int readLength) {
-        Assert.assertEquals(CollectFlowBiasMetrics.readLengthGivenFlow(reference,flow,flowLength),readLength);
+        Assert.assertEquals(CollectFlowBiasMetrics.readLengthGivenFlow(reference,flow.getBytes(),flowLength),readLength);
     }
 }
