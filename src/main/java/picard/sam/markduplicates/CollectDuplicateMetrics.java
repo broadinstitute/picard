@@ -53,7 +53,8 @@ import java.io.File;
 
 public class CollectDuplicateMetrics extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "Collect Duplicate metrics from marked file.";
-    static final String USAGE_DETAILS = "This tool only collects the duplicate metrics from a file that has already been duplicate-marked. " +
+    static final String USAGE_DETAILS = "\n" +
+            "This tool only collects the duplicate metrics from a file that has already been duplicate-marked. " +
             "The resulting metrics file will always have a READ_PAIR_OPTICAL_DUPLICATES=0 and as a result the ESTIMATED_LIBRARY_SIZE will be slightly incorrect. ";
 
     @Argument(shortName = "M",
