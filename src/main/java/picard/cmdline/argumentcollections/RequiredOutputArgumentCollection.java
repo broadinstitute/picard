@@ -24,14 +24,24 @@
 
 package picard.cmdline.argumentcollections;
 
+import org.broadinstitute.barclay.argparser.Argument;
+import picard.cmdline.StandardOptionDefinitions;
+
 import java.io.File;
 
-/**
- * Base interface for an interval argument collection.
- */
-public interface IntervalArgumentCollection {
-    /**
-     * @return The interval file provided by the user, if any, or the default, if any.
-     */
-    File getIntervalFile();
+public class RequiredOutputArgumentCollection implements OutputArgumentCollection {
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+            doc = "The file to write the output to.")
+    public File OUTPUT;
+
+    @Override
+    public File getOutputFile() {
+        return OUTPUT;
+    }
+
+    public RequiredOutputArgumentCollection(final File output) {
+        this.OUTPUT = output;
+    }
+
+    public RequiredOutputArgumentCollection() {}
 }

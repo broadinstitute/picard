@@ -22,16 +22,15 @@
  * THE SOFTWARE.
  */
 
-package picard.cmdline.argumentcollections;
+package picard.sam.markduplicates;
 
-import java.io.File;
+import htsjdk.samtools.SAMFileHeader;
 
-/**
- * Base interface for an interval argument collection.
- */
-public interface IntervalArgumentCollection {
-    /**
-     * @return The interval file provided by the user, if any, or the default, if any.
-     */
-    File getIntervalFile();
+public class CollectDuplicateMetricsTest extends AbstractMarkDuplicatesCommandLineProgramTest {
+    @Override
+    protected AbstractMarkDuplicatesCommandLineProgramTester getTester() {
+        final CollectDuplicateMetricsTester collectDuplicateMetricsTester = new CollectDuplicateMetricsTester(SAMFileHeader.SortOrder.coordinate);
+
+        return collectDuplicateMetricsTester;
+    }
 }

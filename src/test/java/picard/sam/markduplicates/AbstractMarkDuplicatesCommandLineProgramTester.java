@@ -155,7 +155,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
             // Read the output and check the duplicate flag
             int outputRecords = 0;
             final Set<String> sequencingDTErrorsSeen = new HashSet<>();
-            try(final SamReader reader = SamReaderFactory.makeDefault().open(getOutput())) {
+            try(final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(fastaFiles.get(samRecordSetBuilder.getHeader())).open(getOutput())) {
                 for (final SAMRecord record : reader) {
                     outputRecords++;
                     final String key = samRecordToDuplicatesFlagsKey(record);

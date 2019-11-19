@@ -38,6 +38,7 @@ import picard.analysis.artifacts.CollectSequencingArtifactMetrics;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.argumentcollections.RequiredOutputArgumentCollection;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
@@ -174,7 +175,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final CollectAlignmentSummaryMetrics program = new CollectAlignmentSummaryMetrics();
-                program.OUTPUT = new File(outbase + ".alignment_summary_metrics" + outext);
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".alignment_summary_metrics" + outext));
 
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -204,7 +205,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final CollectInsertSizeMetrics program = new CollectInsertSizeMetrics();
-                program.OUTPUT = new File(outbase + ".insert_size_metrics" + outext);
+                program.output = new RequiredOutputArgumentCollection( new File(outbase + ".insert_size_metrics" + outext));
                 program.Histogram_FILE = new File(outbase + ".insert_size_histogram.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -227,7 +228,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final QualityScoreDistribution program = new QualityScoreDistribution();
-                program.OUTPUT = new File(outbase + ".quality_distribution_metrics" + outext);
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".quality_distribution_metrics" + outext));
                 program.CHART_OUTPUT = new File(outbase + ".quality_distribution.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -251,7 +252,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final MeanQualityByCycle program = new MeanQualityByCycle();
-                program.OUTPUT = new File(outbase + ".quality_by_cycle_metrics" + outext);
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".quality_by_cycle_metrics" + outext));
                 program.CHART_OUTPUT = new File(outbase + ".quality_by_cycle.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -275,7 +276,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final CollectBaseDistributionByCycle program = new CollectBaseDistributionByCycle();
-                program.OUTPUT = new File(outbase + ".base_distribution_by_cycle_metrics" + outext);
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".base_distribution_by_cycle_metrics" + outext));
                 program.CHART_OUTPUT = new File(outbase + ".base_distribution_by_cycle.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -309,7 +310,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final CollectGcBiasMetrics program = new CollectGcBiasMetrics();
-                program.OUTPUT = new File(outbase + ".gc_bias.detail_metrics" + outext);
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".gc_bias.detail_metrics" + outext));
                 program.SUMMARY_OUTPUT = new File(outbase + ".gc_bias.summary_metrics" + outext);
                 program.CHART_OUTPUT = new File(outbase + ".gc_bias.pdf");
                 program.INPUT = input;
@@ -349,7 +350,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final CollectRnaSeqMetrics program = new CollectRnaSeqMetrics();
-                program.OUTPUT = new File(outbase + ".rna_metrics" + outext);
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".rna_metrics" + outext));
                 program.CHART_OUTPUT = new File(outbase + ".rna_coverage.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -404,7 +405,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final Set<String> ignoreSequence,
                                                      final boolean includeUnpaired) {
                 final CollectSequencingArtifactMetrics program = new CollectSequencingArtifactMetrics();
-                program.OUTPUT = new File(outbase);
+                program.output = new RequiredOutputArgumentCollection(new File(outbase));
                 program.FILE_EXTENSION = outext;
                 program.DB_SNP = dbSnp;
                 program.INTERVALS = intervals;
@@ -431,7 +432,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final CollectQualityYieldMetrics program = new CollectQualityYieldMetrics();
-                program.OUTPUT = new File(outbase + ".quality_yield_metrics" + outext);
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".quality_yield_metrics" + outext));
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -457,7 +458,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             doc = "Base name of output files.")
     public String OUTPUT;
 
-    //create the default accumulation level as a variable.
+    // create the default accumulation level as a variable.
     // We'll use this to init the command-line arg and for validation later.
     private final Set<MetricAccumulationLevel> accumLevelDefault = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
