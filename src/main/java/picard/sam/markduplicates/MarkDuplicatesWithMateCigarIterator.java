@@ -52,13 +52,13 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
     private PeekableIterator<SAMRecord> backingIterator = null;
 
     /** The ordinal of the next record to be read from the backing iterator */
-    private int backingIteratorRecordIndex = 0;
+    private long backingIteratorRecordIndex = 0;
 
     private boolean removeDuplicates = false;
 
     /** Should we skip pairs with no mate cigars or should be throw an error? */
     private boolean skipPairsWithNoMateCigar = true;
-    private int numRecordsWithNoMateCigar = 0;
+    private long numRecordsWithNoMateCigar = 0;
 
     /** When we hit unmapped reads that are just before the EOF, we can greedily process them as they will not have coordinates */
     private boolean foundUnmappedEOFReads = false;
@@ -497,7 +497,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
     }
 
     /** Useful for statistics after the iterator has been exhausted and closed. */
-    public int getNumRecordsWithNoMateCigar() {
+    public long getNumRecordsWithNoMateCigar() {
         enforceClosed();
         return numRecordsWithNoMateCigar;
     }
