@@ -197,7 +197,7 @@
       "options": []
     },
     {
-      "summary": "File to write the output to.",
+      "summary": "The file to write the output to.",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",

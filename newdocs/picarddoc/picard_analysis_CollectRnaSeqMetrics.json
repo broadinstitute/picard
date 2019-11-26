@@ -92,18 +92,18 @@
       "options": []
     },
     {
-      "summary": "If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.  These reads are not counted as ",
+      "summary": "If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases. These reads are not counted towards any metrics, except for the PF_BASES field.",
       "name": "--IGNORE_SEQUENCE",
       "synonyms": "NA",
       "type": "Set[String]",
-      "required": "yes",
+      "required": "no",
       "fulltext": "",
       "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
       "maxRecValue": "NA",
-      "kind": "required",
+      "kind": "optional",
       "options": []
     },
     {
@@ -167,7 +167,7 @@
       "options": []
     },
     {
-      "summary": "File to write the output to.",
+      "summary": "The file to write the output to.",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",

@@ -249,6 +249,9 @@
 												<a href="picard_sam_CleanSam.html">CleanSam</a>
 											</li>
 											<li>
+												<a href="picard_sam_markduplicates_CollectDuplicateMetrics.html">CollectDuplicateMetrics</a>
+											</li>
+											<li>
 												<a href="picard_sam_DownsampleSam.html">DownsampleSam</a>
 											</li>
 											<li>
@@ -445,13 +448,6 @@
 				<th colspan="4" id="row-divider">Required Arguments</th>
 			</tr>
 				<tr>
-					<td><a href="#--IGNORE_SEQUENCE">--IGNORE_SEQUENCE</a><br />
-					</td>
-					<!--<td>Set[String]</td> -->
-					<td>[]</td>
-					<td>If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.  These reads are not counted as </td>
-				</tr>
-				<tr>
 					<td><a href="#--INPUT">--INPUT</a><br />
 								&nbsp;<em>-I</em>
 					</td>
@@ -465,7 +461,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>File to write the output to.</td>
+					<td>The file to write the output to.</td>
 				</tr>
 				<tr>
 					<td><a href="#--REF_FLAT">--REF_FLAT</a><br />
@@ -500,6 +496,13 @@
 					<!--<td>File</td> -->
 					<td>null</td>
 					<td>The PDF file to write out a plot of normalized position vs. coverage.</td>
+				</tr>
+				<tr>
+					<td><a href="#--IGNORE_SEQUENCE">--IGNORE_SEQUENCE</a><br />
+					</td>
+					<!--<td>Set[String]</td> -->
+					<td>[]</td>
+					<td>If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases. These reads are not counted towards any metrics, except for the PF_BASES field.</td>
 				</tr>
 				<tr>
 					<td><a href="#--METRIC_ACCUMULATION_LEVEL">--METRIC_ACCUMULATION_LEVEL</a><br />
@@ -711,11 +714,10 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.  These reads are not counted as </b><br />
+			<b>If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases. These reads are not counted towards any metrics, except for the PF_BASES field.</b><br />
 			
 		</p>
 		<p>
-				<span class="badge badge-important">R</span>
 		<span class="label label-info ">Set[String]</span>
 			&nbsp;<span class="label">[]</span>
 		</p>
@@ -777,7 +779,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>File to write the output to.</b><br />
+			<b>The file to write the output to.</b><br />
 			
 		</p>
 		<p>
@@ -980,7 +982,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.21.3-SNAPSHOT built at 12-52-2019 11:52:27.
+        <p class="version">Picard version 2.21.4-SNAPSHOT built at 26-04-2019 02:04:24.
         </p>
 
 	</div>
