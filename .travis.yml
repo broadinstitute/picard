@@ -14,6 +14,7 @@ env:
 jdk:
   - oraclejdk8
   - openjdk8
+  - openjdk11
 before_install:
   - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
   - sudo apt-get -qq update

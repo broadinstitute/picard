@@ -31,24 +31,39 @@ repositories {
     mavenLocal()
 }
 
-
-final requiredJavaVersion = "8"
 final buildPrerequisitesMessage = "See https://github.com/broadinstitute/picard/blob/master/README.md#building-picard for information on how to build picard."
-// Ensure that we have the right JDK version, a clone of the git repository
-def ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage) {
-    // Make sure we can get a ToolProvider class loader. If not we may have just a JRE, or a JDK from the future.
-    if (ToolProvider.getSystemToolClassLoader() == null) {
+
+// Check that we're in a folder which git recognizes as a git repository.
+// This works for either a standard git clone or one created with `git worktree add`
+def looksLikeWereInAGitRepository(){
+    file(".git").isDirectory() || (file(".git").exists() && file(".git").text.startsWith("gitdir"))
+}
+
+// Ensure that we have a clone of the git repository, and resolve any required git-lfs
+// resource files that are needed to run the build but are still lfs stub files.
+def ensureBuildPrerequisites(rbuildPrerequisitesMessage) {
+    if (!JavaVersion.current().isJava8Compatible()) {
         throw new GradleException(
-                "The ClassLoader obtained from the Java ToolProvider is null. \n"
-                + "A Java $requiredJavaVersion JDK must be installed. $buildPrerequisitesMessage \n"
-		+ "The detected java version was ${JavaVersion.current()} located at: ${System.getProperty('java.home')} ")
+                "Java 8 or later is required to build Picard, but ${JavaVersion.current()} was found. "
+                        + "$buildPrerequisitesMessage")
     }
-    if (!file(".git").isDirectory()) {
-        throw new GradleException("The Picard Github repository must be cloned using \"git clone\" to run the build. "
-                + "$buildPrerequisitesMessage")
+    // Make sure we can get a ToolProvider class loader (for Java 8). If not we may have just a JRE.
+    if (JavaVersion.current().isJava8() && ToolProvider.getSystemToolClassLoader() == null) {
+        throw new GradleException(
+                "The ClassLoader obtained from the Java ToolProvider is null. "
+                        + "If using Java 8 you must have a full JDK installed and not just a JRE. $buildPrerequisitesMessage")
+    }
+    if (!JavaVersion.current().isJava8() && !JavaVersion.current().isJava11()) {
+        println("Warning: using Java ${JavaVersion.current()} but only Java 8 and Java 11 have been tested.")
+    }
+    if (!looksLikeWereInAGitRepository()) {
+        throw new GradleException("This doesn't appear to be a git folder. " +
+                "The Picard Github repository must be cloned using \"git clone\" to run the build. " +
+                "\n$buildPrerequisitesMessage")
     }
 }
-ensureBuildPrerequisites(requiredJavaVersion, buildPrerequisitesMessage)
+
+ensureBuildPrerequisites(buildPrerequisitesMessage)
 
 final htsjdkVersion = System.getProperty('htsjdk.version', '2.21.0')
 final googleNio = 'com.google.cloud:google-cloud-nio:0.107.0-alpha:shaded'
@@ -56,7 +71,7 @@ final googleNio = 'com.google.cloud:google-cloud-nio:0.107.0-alpha:shaded'
 // Get the jdk files we need to run javaDoc. We need to use these during compile, testCompile,
 // test execution, and gatkDoc generation, but we don't want them as part of the runtime
 // classpath and we don't want to redistribute them in the uber jar.
-final javadocJDKFiles = files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs())
+final javadocJDKFiles = ToolProvider.getSystemToolClassLoader() == null ? files([]) : files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs())
 
 configurations {
     cloudConfiguration {
