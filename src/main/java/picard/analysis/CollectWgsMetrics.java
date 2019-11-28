@@ -57,6 +57,7 @@ import picard.filter.CountingDuplicateFilter;
 import picard.filter.CountingFilter;
 import picard.filter.CountingMapQFilter;
 import picard.filter.CountingPairedFilter;
+import picard.sam.markduplicates.CollectDuplicateMetrics;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -268,7 +269,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         return intervals;
     }
 
-    /** This method should only be called after {@link this.getSamReader()} is called. */
+    /** This method should only be called after {@link #getSamReader()} is called. */
     protected SAMFileHeader getSamFileHeader() {
         if (this.header == null) throw new IllegalStateException("getSamFileHeader() was called but this.header is null");
         return this.header;
@@ -360,10 +361,10 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     }
 
     /**
-     * Creates {@link htsjdk.samtools.util.AbstractLocusIterator} implementation according to {@link this#USE_FAST_ALGORITHM} value.
+     * Creates {@link htsjdk.samtools.util.AbstractLocusIterator} implementation according to {@link #USE_FAST_ALGORITHM} value.
      *
      * @param in inner {@link htsjdk.samtools.SamReader}
-     * @return if {@link this#USE_FAST_ALGORITHM} is enabled, returns {@link htsjdk.samtools.util.EdgeReadIterator} implementation,
+     * @return if {@link #USE_FAST_ALGORITHM} is enabled, returns {@link htsjdk.samtools.util.EdgeReadIterator} implementation,
      * otherwise default algorithm is used and {@link htsjdk.samtools.util.SamLocusIterator} is returned.
      */
     protected AbstractLocusIterator getLocusIterator(final SamReader in) {
@@ -378,11 +379,11 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     }
 
     /**
-     * Creates {@link picard.analysis.AbstractWgsMetricsCollector} implementation according to {@link this#USE_FAST_ALGORITHM} value.
+     * Creates {@link picard.analysis.AbstractWgsMetricsCollector} implementation according to {@link #USE_FAST_ALGORITHM} value.
      *
      * @param coverageCap the maximum depth/coverage to consider.
      * @param intervals the intervals over which metrics are collected.
-     * @return if {@link this#USE_FAST_ALGORITHM} is enabled, returns {@link picard.analysis.FastWgsMetricsCollector} implementation,
+     * @return if {@link #USE_FAST_ALGORITHM} is enabled, returns {@link picard.analysis.FastWgsMetricsCollector} implementation,
      * otherwise default algorithm is used and {@link picard.analysis.CollectWgsMetrics.WgsMetricsCollector} is returned.
      */
     protected AbstractWgsMetricsCollector getCollector(final int coverageCap, final IntervalList intervals) {
