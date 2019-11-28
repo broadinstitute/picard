@@ -34,6 +34,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SecondaryAlignmentFilter;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
@@ -366,10 +367,7 @@ public class FingerprintChecker {
         for (final String sample : fingerprints.keySet()) {
             final Fingerprint fp = fingerprints.get(sample);
 
-            //PLs are preferred over GTs
-            //TODO: this code is replicated in various places (ReconstructTriosFromVCF for example). Needs refactoring.
-            //TODO: add a way to force using GTs when both are available (why?)
-
+            // PLs are preferred over GTs
             // Get the genotype for the sample and check that it is useful
             final Genotype genotype = usableSnp.getGenotype(sample);
             if (genotype == null) {
@@ -390,7 +388,7 @@ public class FingerprintChecker {
 
                 if (genotype.isNoCall()) continue;
 
-                // TODO: when multiple genotypes are available for a Haplotype check that they
+                // TODO: when multiple genotypes are available for a Haplotype, check that they
                 // TODO: agree. Not urgent since DownloadGenotypes already does this.
                 // TODO: more urgent now as we convert vcfs to haplotypeProbabilities and
                 // TODO: there could be different VCs with information we'd like to use...

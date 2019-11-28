@@ -31,6 +31,7 @@ import java.util.Arrays;
 
 import static java.lang.Math.log1p;
 import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
 
 /**
  * General math utilities
@@ -440,6 +441,72 @@ final public class MathUtil {
         }
         return retVal;
     }
+
+    /**
+     * Calculates the the set of kMeans clusters given a set of starting
+     * centroids.
+     * @param data a 2d array where the first-array represents the set of datapoints and the
+     *             2nd level arrays are the n-coordinates in n-dimensions
+     * @param centroids a 2d array containing arrays of coordinates for each centroid
+     * @return an array of length data.length, with values between 0 and centroids. length-1 representing
+     *         the assignment of each data point to the labeled centroid/cluster. The values of the
+     *         centroid coordinates are updated
+     */
+    public static int[] kMeansCluster(final double[][] data, final double[][] centroids) {
+        final int numPoints = data.length;
+        final int numClusters = centroids.length;
+        final int numDimensions = centroids[0].length;
+
+        final int[] assignments = new int[numPoints];
+        final double[][] distances = new double[numPoints][numClusters];
+        for (final double[] ds : distances) Arrays.fill(ds, Double.MAX_VALUE);
+
+        Arrays.fill(assignments, -1);
+        boolean assignmentsChanged;
+
+        do {
+            assignmentsChanged = false;
+
+            // Go through and compute the distance^2 between each data point and each centroid
+            for (int d=0; d<numPoints; ++d) {
+                for (int c=0; c<numClusters; ++c) {
+                    double distance = 0;
+                    for (int n=0; n<numDimensions; ++n) {
+                        distance += pow(data[d][n] - centroids[c][n], 2);
+                    }
+
+                    distance = sqrt(distance);
+                    distances[d][c] = distance;
+                }
+
+                for (int c=0; c<numClusters; ++c) {
+                    if (assignments[d] == -1 || distances[d][c] < distances[d][assignments[d]]) {
+                        assignments[d] = c;
+                        assignmentsChanged = true;
+                    }
+                }
+            }
+
+            // Re-compute the centroids
+            final double[][] newCentroids = new double[numClusters][numDimensions];
+            final int[] pointsInCentroids = new int[numClusters];
+            for (int d=0; d<numPoints; ++d) {
+                final int assignment = assignments[d];
+                pointsInCentroids[assignment]++;
+                for (int n=0; n<numDimensions; ++n) newCentroids[assignment][n] += data[d][n];
+            }
+
+            for (int c=0; c<numClusters; ++c) {
+                for (int d=0; d<numDimensions; ++d) {
+                    centroids[c][d] = newCentroids[c][d] / pointsInCentroids[c];
+                }
+            }
+
+        } while (assignmentsChanged);
+
+        return assignments;
+    }
+
 
     /** 
      * A collection of common math operations that work with log values. To use it, pass values from log space, the operation will be
