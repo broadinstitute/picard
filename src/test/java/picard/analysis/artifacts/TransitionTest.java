@@ -31,7 +31,12 @@ public class TransitionTest {
 
     @DataProvider
     public Object[][] badBases() {
-        return new Object[][] {{Character.MIN_VALUE}, {Transition.Base.A.base - 1}, {'Z'}, {Character.MAX_VALUE}};
+        return new Object[][] {
+                {Character.MIN_VALUE},
+                {(char) (Transition.Base.A.base + 1)},
+                {'Z'},
+                {Character.MAX_VALUE}
+                };
     }
 
     @Test(dataProvider = "badBases", expectedExceptions = IllegalArgumentException.class)

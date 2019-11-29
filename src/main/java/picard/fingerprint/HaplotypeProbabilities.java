@@ -24,8 +24,6 @@
 
 package picard.fingerprint;
 
-import java.util.Arrays;
-
 import static java.lang.Math.log10;
 import static picard.util.MathUtil.multiply;
 import static picard.util.MathUtil.pNormalizeVector;
@@ -44,12 +42,14 @@ public abstract class HaplotypeProbabilities {
         this.haplotypeBlock = haplotypeBlock;
     }
 
-    /** Returns the haplotype for which the probabilities apply. */
+    /**
+     * Returns the haplotype for which the probabilities apply.
+     */
     public HaplotypeBlock getHaplotype() {
         return this.haplotypeBlock;
     }
 
-    public double [] getPriorProbablities(){
+    public double[] getPriorProbablities() {
         return getHaplotype().getHaplotypeFrequencies();
     }
 
@@ -59,20 +59,23 @@ public abstract class HaplotypeProbabilities {
      * D is the data seen by the class, and
      * F is the population frequency of each genotype.
      */
-    /** Returns the posterior probabilities using the population frequency as a prior. */
+    /**
+     * Returns the posterior probabilities using the population frequency as a prior.
+     */
     public double[] getPosteriorProbabilities() {
-        return pNormalizeVector(multiply(getLikelihoods(), getPriorProbablities()));}
+        return pNormalizeVector(multiply(getLikelihoods(), getPriorProbablities()));
+    }
 
     /**
      * Returns the likelihoods, in order, of the AA, Aa and aa haplotypes given the evidence
-     *
+     * <p>
      * Mathematically this is P(evidence | haplotype) where haplotype={AA,Aa,aa}.
      */
     public abstract double[] getLikelihoods();
 
     public double[] getLogLikelihoods() {
         final double[] likelihoods = getLikelihoods();
-        final double[] lLikelihoods = new double [likelihoods.length];
+        final double[] lLikelihoods = new double[likelihoods.length];
         for (int i = 0; i < likelihoods.length; ++i) {
             lLikelihoods[i] = Math.log10(likelihoods[i]);
         }
@@ -89,33 +92,46 @@ public abstract class HaplotypeProbabilities {
      * Returns the number of observations of alleles supporting the first/major haplotype allele.
      * Strictly this doesn't make sense for all subclasses, but it's nice to have it part of the API so
      * a default implementation is provided here.
+     *
      * @return int
      */
-    public int getObsAllele1() { return 0; }
+    public int getObsAllele1() {
+        return 0;
+    }
 
     /**
      * Returns the number of observations of alleles supporting the second/minor haplotype allele.
      * Strictly this doesn't make sense for all subclasses, but it's nice to have it part of the API so
      * a default implementation is provided here.
+     *
      * @return int
      */
-    public int getObsAllele2() { return 0; }
+    public int getObsAllele2() {
+        return 0;
+    }
 
     /**
      * Returns the total number of observations of any allele.
      * Strictly this doesn't make sense for all subclasses, but it's nice to have it part of the API so
      * a default implementation is provided here.
+     *
      * @return int
      */
-    public int getTotalObs() { return 0; }
+    public int getTotalObs() {
+        return 0;
+    }
 
-    /** Returns true if evidence has been added, false if the probabilities are just the priors. */
+    /**
+     * Returns true if evidence has been added, false if the probabilities are just the priors.
+     */
     public boolean hasEvidence() {
         return true;
     }
 
-	/** Merges in the likelihood information from the supplied haplotype probabilities object. */
-	public abstract void merge(final HaplotypeProbabilities other);
+    /**
+     * Merges in the likelihood information from the supplied haplotype probabilities object.
+     */
+    public abstract void merge(final HaplotypeProbabilities other);
 
     /**
      * Returns the index of the highest probability which can then be used to look up
@@ -129,34 +145,41 @@ public abstract class HaplotypeProbabilities {
         else return 2;
     }
 
-    /** Gets the most likely haplotype given the probabilities. */
+    /**
+     * Gets the most likely haplotype given the probabilities.
+     */
     public DiploidHaplotype getMostLikelyHaplotype() {
         return DiploidHaplotype.values()[getMostLikelyIndex()];
     }
 
-    /** Gets the genotype for this Snp given the most likely haplotype. */
+    /**
+     * Gets the genotype for this Snp given the most likely haplotype.
+     */
     public DiploidGenotype getMostLikelyGenotype(final Snp snp) {
         assertSnpPartOfHaplotype(snp);
         return snp.getGenotype(getMostLikelyHaplotype());
     }
 
-    /** Throws an exception if the passed SNP is not part of this haplotype. */
+    /**
+     * Throws an exception if the passed SNP is not part of this haplotype.
+     */
     void assertSnpPartOfHaplotype(final Snp snp) {
-        if (!this.haplotypeBlock.getSnps().contains(snp)) {
+        if (!this.haplotypeBlock.contains(snp)) {
             throw new IllegalArgumentException("Snp " + snp + " does not belong to haplotype " + this.haplotypeBlock);
         }
     }
 
-    /** This function returns the scaled probability of the evidence collected
+    /**
+     * This function returns the scaled probability of the evidence collected
      * given a vector of priors on the haplotype using the internal likelihood, which may be
      * scaled by an unknown factor. This factor causes the result to be scaled, hence the name.
-     *
+     * <p>
      * Mathematically:
-     *
+     * <p>
      * P(Evidence| P(h_i)=F_i) = \sum_i P(Evidence | h_i) P(h_i)
-     *                         = \sum_i P(Evidence | h_i) F_i
-     *                         = c * \sum_i Likelihood_i * F_i
-     *
+     * = \sum_i P(Evidence | h_i) F_i
+     * = c * \sum_i Likelihood_i * F_i
+     * <p>
      * Here, h_i are the three possible haplotypes, F_i are the given priors, and Likelihood_i
      * are the stored likelihoods which are scaled from the actually likelihoods by an unknown
      * factor, c. Note that the calculation ignores the internal haplotype probabilities (i.e. priors)
@@ -184,7 +207,7 @@ public abstract class HaplotypeProbabilities {
      * returns the log-probability the evidence, using as priors the posteriors of another object
      *
      * @param otherHp an additional HaplotypeProbabilities object representing the same underlying HaplotypeBlock
-     * @return  log10( P(evidence| P(h_i)=P(h_i|otherHp) ) + c where c is an unknown constant
+     * @return log10(P(evidence| P(h_i)=P(h_i|otherHp) ) + c where c is an unknown constant
      */
     public double shiftedLogEvidenceProbabilityGivenOtherEvidence(final HaplotypeProbabilities otherHp) {
         if (!this.haplotypeBlock.equals(otherHp.getHaplotype())) {
@@ -210,19 +233,30 @@ public abstract class HaplotypeProbabilities {
         return shiftedLogEvidenceProbabilityUsingGenotypeFrequencies(getPriorProbablities());
     }
 
-    /** Returns the LOD score between the most probable haplotype and the second most probable. */
+    /**
+     * Returns the LOD score between the most probable haplotype and the second most probable.
+     */
     public double getLodMostProbableGenotype() {
         final double[] probs = getPosteriorProbabilities();
-        final double[] logs = new double[probs.length];
-        for (int i = 0; i < probs.length; ++i) {
-            logs[i] = log10(probs[i]);
-        }
+        //since probabilities are positive, we can start with 0;
+        double biggest = 0;
+        double secondBiggest = 0;
 
-        Arrays.sort(logs);
-        return logs[2] - logs[1];
+        for (double prob : probs) {
+            if (prob > biggest) {
+                secondBiggest = biggest;
+                biggest = prob;
+                continue;
+            }
+            if (prob > secondBiggest) {
+                secondBiggest = prob;
+            }
+        }
+        return log10(biggest) - log10(secondBiggest);
     }
 
-    /** Log10(P(evidence| haplotype)) for the 3 different possible haplotypes
+    /**
+     * Log10(P(evidence| haplotype)) for the 3 different possible haplotypes
      * {aa, ab, bb}
      */
 

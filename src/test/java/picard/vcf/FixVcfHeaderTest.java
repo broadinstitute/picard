@@ -25,9 +25,10 @@
 
 package picard.vcf;
 
-import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 import org.testng.Assert;
-import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -48,9 +49,7 @@ public class FixVcfHeaderTest {
     private File HEADER_VCF_WITH_EXTRA_SAMPLE;
 
     @BeforeTest
-    void setup() throws IOException {
-        File OUTPUT_DATA_PATH = IOUtil.createTempDir("FixVcfHeaderTest", null);
-        OUTPUT_DATA_PATH.deleteOnExit();
+    void setup() {
         final File testDataPath      = new File("testdata/picard/vcf/FixVcfHeaderTest/");
         INPUT_VCF                    = new File(testDataPath, "input.vcf");
         OUTPUT_VCF                   = new File(testDataPath, "output.vcf");
@@ -62,7 +61,7 @@ public class FixVcfHeaderTest {
                                  final File replacementHeader,
                                  final boolean enforceSampleSamples) throws IOException {
         final FixVcfHeader program = new FixVcfHeader();
-        final File outputVcf = VcfTestUtils.createTemporaryIndexedVcfFile("output.", ".vcf");
+        final File outputVcf = VcfTestUtils.createTemporaryIndexedFile("output.", ".vcf");
 
         program.INPUT      = INPUT_VCF;
         program.OUTPUT     = outputVcf;
@@ -76,7 +75,21 @@ public class FixVcfHeaderTest {
 
         Assert.assertEquals(program.instanceMain(new String[0]), 0);
 
-        IOUtil.assertFilesEqual(OUTPUT_VCF, outputVcf);
+        final VCFFileReader actualReader   = new VCFFileReader(OUTPUT_VCF, false);
+        final VCFFileReader expectedReader = new VCFFileReader(outputVcf, false);
+
+        // Check that the headers match (order does not matter
+        final VCFHeader actualHeader   = actualReader.getFileHeader();
+        final VCFHeader expectedHeader = expectedReader.getFileHeader();
+        Assert.assertEquals(actualHeader.getFilterLines().size(), expectedHeader.getFilterLines().size());
+        Assert.assertEquals(actualHeader.getInfoHeaderLines().size(), expectedHeader.getInfoHeaderLines().size());
+        Assert.assertEquals(actualHeader.getFormatHeaderLines().size(), expectedHeader.getFormatHeaderLines().size());
+
+        // Check the number of records match, since we don't touch them
+        Assert.assertEquals(actualReader.iterator().stream().count(), expectedReader.iterator().stream().count(), "The wrong number of variants was found.");
+
+        CloserUtil.close(actualReader);
+        CloserUtil.close(expectedReader);
     }
 
     @Test(dataProvider = "testFixVcfHeaderDataProvider")
@@ -89,13 +102,19 @@ public class FixVcfHeaderTest {
     @DataProvider(name="testFixVcfHeaderDataProvider")
     public Object[][] testFixVcfHeaderDataProvider() {
         return new Object[][] {
-                {-1,                HEADER_VCF,                   true},
-                {-1,                HEADER_VCF,                   false},
-                {-1,                HEADER_VCF_WITH_EXTRA_SAMPLE, false},
-                {-1,                null,                         true},
-                {1,                 null,                         true},
-                {Integer.MAX_VALUE, null,                         true}
+                {-1,                HEADER_VCF,                   true},  // tests replacing with a new header, enforcing the same samples
+                {-1,                HEADER_VCF,                   false}, // tests replacing with a new header, not enforcing the same samples
+                {-1,                HEADER_VCF_WITH_EXTRA_SAMPLE, false}, // tests replacing with a new header with an extra sample, not enforcing the same samples
+                {-1,                null,                         true},  // tests discovering the header lines from the VCF using all records
+                {2,                 null,                         true},  // tests that the MissingFilter FILTER is found (in the second record)
+                {Integer.MAX_VALUE, null,                         true}   // tests discovering the header lines from the VCF using all records (with CHECK_FIRST_N_RECORDS set to infinity)
         };
+    }
+
+    @Test(expectedExceptions=java.lang.IllegalStateException.class)
+    public void testMissingFilterNotInFirstNRecords() throws IOException {
+        // NB: the MissingFilter FILTER is in the second record, so not found in the first pass of the VCF
+        runFixVcfHeader(1, null, true);
     }
 
     @Test(expectedExceptions=PicardException.class)

@@ -217,6 +217,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     }
 
     private void setupNewDataProvider(final IlluminaDataProviderFactory factory) {
+        if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
         final File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(LANE));
 
         final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
@@ -249,11 +250,10 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
 
         IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
         final Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
-                ParameterizedFileUtil.makeLaneTileRegex("_barcode.txt", LANE)));
-
+                ParameterizedFileUtil.makeBarcodeRegex(LANE)));
 
         final Map<Integer, File> barcodesFiles = new HashMap<>();
-        for (final File barcodeFile : NewIlluminaBasecallsConverter.getTiledFiles(laneDir, barcodeRegex)) {
+        for (final File barcodeFile : NewIlluminaBasecallsConverter.getTiledFiles(BARCODES_DIR, barcodeRegex)) {
             final Matcher tileMatcher = barcodeRegex.matcher(barcodeFile.getName());
             if (tileMatcher.matches()) {
                 IOUtil.assertFileIsReadable(barcodeFile);
@@ -307,10 +307,6 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
         } catch (final Exception ex) {
             throw new PicardException("Error writing output file " + OUTPUT.getPath(), ex);
         }
-    }
-
-    public static void main(final String[] argv) {
-        new CollectIlluminaBasecallingMetrics().instanceMainWithExit(argv);
     }
 
     /***

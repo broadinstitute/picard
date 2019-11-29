@@ -24,6 +24,9 @@ import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -296,7 +299,19 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
         writeTileMetricsOutFile(makeMap(makeList(lane - 1, lane + 1, lane), makeList(makeList(1, 2, 3), tiles, tiles)));
 
         final String[] args = makeCheckerArgs(basecallDir, lane, readStructure, dataTypes, filterTiles, makeFakeFiles, false);
-        Assert.assertEquals(runPicardCommandLine(args), expectedNumErrors);
+        final int returnCode = runPicardCommandLine(args);
+        Assert.assertEquals(returnCode, 1);
+
+        try {
+            final Path errorPath = Paths.get("./errors.count");
+            final int numErrors = Integer.parseInt(new String(Files.readAllBytes(errorPath)));
+            Assert.assertEquals(numErrors, expectedNumErrors);
+            Files.deleteIfExists(errorPath);
+        }
+        catch (IOException e) {
+            Assert.fail("Could not read the number of errors from file", e);
+        }
+
         //if we previously faked files make sure CheckIlluminaDirectory returns with no failures
         if (makeFakeFiles) {
             Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -370,8 +385,11 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
         writeTileMetricsOutFile(makeMap(makeList(lane), makeList(tileList)));
 
         createSingleLocsFile();
-        final File intensityLaneDir = new File(intensityDir, IlluminaFileUtil.longLaneStr(lane));
-        intensityLaneDir.mkdirs();
+        // if we aren't creating symlinks we shouldn't create lane dirs
+        if(createSymlinks) {
+            final File intensityLaneDir = new File(intensityDir, IlluminaFileUtil.longLaneStr(lane));
+            intensityLaneDir.mkdirs();
+        }
         Assert.assertEquals(runPicardCommandLine(args), 0);
         //now that we have created the loc files lets test to make sure they are there
         args = makeCheckerArgs(basecallDir, lane, "50T", new IlluminaDataType[]{IlluminaDataType.Position},

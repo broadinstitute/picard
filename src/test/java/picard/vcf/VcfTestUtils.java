@@ -17,14 +17,14 @@ import java.util.Iterator;
 public class VcfTestUtils {
 
     /**
-     * This method creates a temporary VCF file and it's appropriately named index file, and will delete them on exit.
+     * This method creates a temporary VCF or Bam file and its appropriately named index file, and will delete them on exit.
      *
      * @param prefix - The prefix string to be used in generating the file's name; must be at least three characters long
      * @param suffix - The suffix string to be used in generating the file's name; may be null, in which case the suffix ".tmp" will be used
-     * @return A File object referencing the newly created temporary VCF file
+     * @return A File object referencing the newly created temporary file
      * @throws IOException - if a file could not be created.
      */
-    public static File createTemporaryIndexedVcfFile(final String prefix, final String suffix) throws IOException {
+    public static File createTemporaryIndexedFile(final String prefix, final String suffix) throws IOException {
         final File out = File.createTempFile(prefix, suffix);
         out.deleteOnExit();
         String indexFileExtension = null;
@@ -32,12 +32,27 @@ public class VcfTestUtils {
             indexFileExtension = ".tbi";
         } else if (suffix.endsWith("vcf")) {
             indexFileExtension = ".idx";
+        } else if (suffix.endsWith(".bam")) {
+            indexFileExtension = ".bai";
         }
+
         if (indexFileExtension != null) {
             final File indexOut = new File(out.getAbsolutePath() + indexFileExtension);
             indexOut.deleteOnExit();
         }
         return out;
+    }
+
+    /**
+     * Given a VCF file, create a temporary VCF file with an index file. Both the temporary file and its index are
+     * deleted when the JVM exits.
+     *
+     * @param vcfFile        the file to use as a source
+     * @param tempFilePrefix a prefix name for the temporary file
+     * @return the temporary VCF file
+     */
+    public static File createTemporaryIndexedVcfFromInput(final File vcfFile, final String tempFilePrefix) throws IOException {
+        return createTemporaryIndexedVcfFromInput(vcfFile, tempFilePrefix, null);
     }
 
     /**
@@ -48,29 +63,37 @@ public class VcfTestUtils {
      * @param vcfFile the vcf file to index
      * @return File a vcf file (index file is created in same path).
      */
-    public static File createTemporaryIndexedVcfFromInput(final File vcfFile, final String tempFilePrefix) throws IOException {
+    public static File createTemporaryIndexedVcfFromInput(final File vcfFile, final String tempFilePrefix, final String suffix) throws IOException {
         final String extension;
 
-        if (vcfFile.getAbsolutePath().endsWith(".vcf")) extension = ".vcf";
-        else if (vcfFile.getAbsolutePath().endsWith(".vcf.gz")) extension = ".vcf.gz";
-        else
-            throw new IllegalArgumentException("couldn't find a .vcf or .vcf.gz ending for input file " + vcfFile.getAbsolutePath());
-
-        File output = createTemporaryIndexedVcfFile(tempFilePrefix, extension);
-
-        final VCFFileReader in = new VCFFileReader(vcfFile, false);
-        final VCFHeader header = in.getFileHeader();
-
-        final VariantContextWriter out = new VariantContextWriterBuilder().
-                setReferenceDictionary(header.getSequenceDictionary()).
-                setOptions(EnumSet.of(Options.INDEX_ON_THE_FLY)).
-                setOutputFile(output).build();
-        out.writeHeader(header);
-        for (final VariantContext ctx : in) {
-            out.add(ctx);
+        if (suffix != null) {
+            extension = suffix;
+        } else if (vcfFile.getAbsolutePath().endsWith(".vcf")) {
+            extension = ".vcf";
+        } else if (vcfFile.getAbsolutePath().endsWith(".vcf.gz")) {
+            extension = ".vcf.gz";
+        } else {
+            extension = "";
         }
-        out.close();
-        in.close();
+
+        if (!extension.equals(".vcf") && !extension.equals(".vcf.gz")) {
+            throw new IllegalArgumentException("couldn't find a .vcf or .vcf.gz ending for input file " + vcfFile.getAbsolutePath());
+        }
+
+        File output = createTemporaryIndexedFile(tempFilePrefix, extension);
+
+        try (final VCFFileReader in = new VCFFileReader(vcfFile, false)) {
+            final VCFHeader header = in.getFileHeader();
+            try (final VariantContextWriter out = new VariantContextWriterBuilder().
+                    setReferenceDictionary(header.getSequenceDictionary()).
+                    setOptions(EnumSet.of(Options.INDEX_ON_THE_FLY)).
+                    setOutputFile(output).build()) {
+                out.writeHeader(header);
+                for (final VariantContext ctx : in) {
+                    out.add(ctx);
+                }
+            }
+        }
         return output;
     }
 
@@ -96,18 +119,23 @@ public class VcfTestUtils {
             Assert.assertNull(actual);
             return;
         }
-
+        final String expectedString = expected.toString();
         Assert.assertNotNull(actual, "null status");
-        Assert.assertEquals(actual.getContig(), expected.getContig(), "Different contigs: ");
-        Assert.assertEquals(actual.getStart(), expected.getStart(), "Different starts: ");
-        Assert.assertEquals(actual.getEnd(), expected.getEnd(), "Different ends: ");
+        Assert.assertEquals(actual.getContig(), expected.getContig(), expectedString + " Different contigs: ");
+        Assert.assertEquals(actual.getStart(), expected.getStart(), expectedString + " Different starts: ");
+        Assert.assertEquals(actual.getEnd(), expected.getEnd(), expectedString + " Different ends: ");
 
         Assert.assertTrue(actual.hasSameAllelesAs(expected), "Alleles differ between " + actual + " and " + expected + ": ");
         assertEquals(actual.getGenotypes(), expected.getGenotypes());
 
-        Assert.assertEquals(actual.getID(), expected.getID());
-        Assert.assertEquals(actual.getFilters(), expected.getFilters());
-        Assert.assertEquals(actual.getAttributes(), expected.getAttributes(), "");
+        Assert.assertEquals(actual.getID(), expected.getID(), "IDs differ for " + expectedString);
+        Assert.assertEquals(actual.getFilters(), expected.getFilters(), "Filters differ for " + expectedString);
+
+        Assert.assertEquals(actual.getAttributes().keySet(), expected.getAttributes().keySet(), "Attributes keys differ for " + expectedString);
+        actual.getAttributes().keySet().forEach(key->{
+            Assert.assertEquals(actual.getAttribute(key), expected.getAttribute(key), "Attribute values differ for key " + key + " for " + expectedString);
+        });
+
     }
 
     public static void assertEquals(final GenotypesContext actual, final GenotypesContext expected) {
@@ -129,10 +157,9 @@ public class VcfTestUtils {
         final File indexedActual = createTemporaryIndexedVcfFromInput(actual, "assert");
         final File indexedExpected = createTemporaryIndexedVcfFromInput(expected, "assert");
 
-        try (
-                final VCFFileReader vcfReaderActual = new VCFFileReader(indexedActual);
-                final VCFFileReader vcfReaderExpected = new VCFFileReader(indexedExpected)) {
-            VcfTestUtils.assertEquals(vcfReaderActual, vcfReaderExpected);
+        try (final VCFFileReader vcfReaderActual = new VCFFileReader(indexedActual);
+             final VCFFileReader vcfReaderExpected = new VCFFileReader(indexedExpected)) {
+            assertEquals(vcfReaderActual, vcfReaderExpected);
         }
     }
 }

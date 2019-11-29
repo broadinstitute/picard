@@ -31,6 +31,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.illumina.ExtractIlluminaBarcodes.PerTileBarcodeExtractor.BarcodeMatch;
 import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProviderFactory;
@@ -43,7 +44,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author alecw@broadinstitute.org
@@ -52,6 +56,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
     private static final File SINGLE_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
     private static final File DUAL_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
     private static final File HISEQX_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T_hiseqx/Data/Intensities/BaseCalls");
+    private static final File CBCL_DATA_DIR = new File("testdata/picard/illumina/151T8B8B151T_cbcl/Data/Intensities");
     private static final String[] BARCODES = {
             "CAACTCTC",
             "CAACTCTG", // This one is artificial -- one edit away from the first one
@@ -72,6 +77,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
     private File dual;
     private File qual;
     private File noSymlink;
+    private File cbcl;
 
     public String getCommandLineProgramName() {
         return ExtractIlluminaBarcodes.class.getSimpleName();
@@ -96,6 +102,11 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         Assert.assertTrue(noSymlink.delete());
         Assert.assertTrue(noSymlink.mkdir());
         IOUtil.copyDirectoryTree(HISEQX_DATA_DIR, noSymlink);
+
+        cbcl = File.createTempFile("eib_cbcl", ".tmp");
+        Assert.assertTrue(cbcl.delete());
+        Assert.assertTrue(cbcl.mkdir());
+        IOUtil.copyDirectoryTree(CBCL_DATA_DIR, cbcl);
     }
 
     @AfterTest
@@ -265,6 +276,26 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, 0, "Got wrong number of one-mismatch matches");
     }
 
+    @Test
+    public void testCbclDualBarcodes() throws Exception {
+        final File metricsFile = File.createTempFile("cbcl.", ".metrics");
+        metricsFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "BASECALLS_DIR=" + cbcl.getAbsolutePath() + "/BaseCalls",
+                "LANE=" + 1,
+                "METRICS_FILE=" + metricsFile.getPath(),
+                "READ_STRUCTURE=" + "151T8B8B151T",
+                "BARCODE=" + "CACCTAGTACTCGAGT"
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> result = new MetricsFile<>();
+        result.read(new FileReader(metricsFile));
+        Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, 1, "Got wrong number of perfect matches");
+        Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, 0, "Got wrong number of one-mismatch matches");
+    }
+
     /**
      * Testing the quality thresholding. Looking at a single barcode (ACAGTG) with a min quality of 25 and no mismatches
      */
@@ -363,5 +394,38 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> retval = new MetricsFile<>();
         retval.read(new FileReader(metricsFile));
         return retval;
+    }
+
+    @DataProvider
+    Object[][] testDeltaData(){
+        return new Object[][]{
+                new Object[] {new String[]{"ACCAAC", "GAATTC"}, new String [] {"!AAAAA","!AAAAA"}, 2, 5},
+                new Object[] {new String[]{"CTACGC", "TGTCGT"}, new String [] {"!AAAAA","!AAAAA"}, 5, 5},
+                new Object[] {new String[]{"AGGTCG", "AATTGT"}, new String [] {"AAAAAA","AAAAAA"}, 0, 5},
+        };
+    }
+
+    @Test(dataProvider = "testDeltaData")
+    void testDelta(final String[] barcodeRead, final String[] barcodeQuality, final int expectedMismatches, final int expectedSecondMismatches) {
+
+        final List<String[]> barcodes = Arrays.asList(
+                new String[]{"CTGTGG", "GGCTAG"},
+                new String[]{"AGGTCG", "AATTGT"},
+                new String[]{"ACCAAC", "GTATTG"}
+                );
+        final Map<String, ExtractIlluminaBarcodes.BarcodeMetric> barcodeMetrics = barcodes.stream()
+                .collect(Collectors.toMap(
+                        s -> s[0] + s[1],
+                        s -> new ExtractIlluminaBarcodes.BarcodeMetric("dummy_name","dummy_library", s[0] + s[1], s)));
+
+        final byte[][] reads     = new byte[][]{barcodeRead[0].getBytes(), barcodeRead[1].getBytes()};
+        final byte[][] qualities = new byte[][]{barcodeQuality[0].getBytes(), barcodeQuality[1].getBytes()};
+
+        final BarcodeMatch match = ExtractIlluminaBarcodes.PerTileBarcodeExtractor.calculateBarcodeMatch(reads, qualities,
+                barcodeMetrics, 2, 2, 2, 20,
+                DistanceMetric.HAMMING);
+
+        Assert.assertEquals(match.mismatches,expectedMismatches);
+        Assert.assertEquals(match.mismatchesToSecondBest,expectedSecondMismatches);
     }
 }

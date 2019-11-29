@@ -1,5 +1,6 @@
 package picard.util;
 
+import htsjdk.samtools.SAMException;
 import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.FastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -9,6 +10,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFConstants;
+
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
@@ -17,9 +21,10 @@ import picard.cmdline.CommandLineProgramTest;
 import picard.vcf.LiftoverVcf;
 import picard.vcf.VcfTestUtils;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -29,7 +34,7 @@ import java.util.*;
  */
 public class LiftoverVcfTest extends CommandLineProgramTest {
 
-    private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
+    private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/LiftOver");
     private static final File CHAIN_FILE = new File(TEST_DATA_PATH, "test.over.chain");
     private static final File POSITIVE_CHAIN_FILE = new File(TEST_DATA_PATH, "test.positive.over.chain");
     private static final File TWO_INTERVAL_CHAIN_FILE = new File(TEST_DATA_PATH, "test.two.block.over.chain");
@@ -42,12 +47,10 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
     private final int CHAIN_SIZE = 540; // the length of the single chain in CHAIN_FILE
 
-
     // comment can help find positions in string. not inline due to IDE shenanigans
     //                                       123456789 123456789 123456789 123
     private static final String refString = "CAAAAAAAAAACGTACGTACTCTCTCTCTACGT";
     private static final ReferenceSequence REFERENCE = new ReferenceSequence("chr1", 0, refString.getBytes());
-
 
     public String getCommandLineProgramName() {
         return LiftoverVcf.class.getSimpleName();
@@ -62,8 +65,9 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
     public Object[][] liftoverReverseStrand() {
         return new Object[][]{
                 {"testLiftoverBiallelicIndels.vcf", 5, 0},
-                {"testLiftoverMultiallelicIndels.vcf", 0, 2},
+                {"testLiftoverMultiallelicIndels.vcf", 2, 0},
                 {"testLiftoverFailingVariants.vcf", 3, 0},
+                {"testLiftoverMixedVariants.vcf", 4, 0},
         };
     }
 
@@ -82,15 +86,16 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 "REJECT=" + rejectOutputFile.getAbsolutePath(),
                 "CHAIN=" + CHAIN_FILE,
                 "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "RECOVER_SWAPPED_REF_ALT=true",
                 "CREATE_INDEX=false"
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, false);
-        Assert.assertEquals(liftReader.iterator().stream().count(), expectedPassing, "The wrong number of variants was lifted over");
+        Assert.assertEquals(liftReader.iterator().stream().count(), expectedPassing, "The wrong number of variants were lifted over.");
 
         final VCFFileReader rejectReader = new VCFFileReader(rejectOutputFile, false);
-        Assert.assertEquals(rejectReader.iterator().stream().count(), expectedFailing, "The wrong number of variants was lifted over");
+        Assert.assertEquals(rejectReader.iterator().stream().count(), expectedFailing, "The wrong number of variants were rejected.");
     }
 
     @Test
@@ -109,6 +114,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 "REJECT=" + rejectOutputFile.getAbsolutePath(),
                 "CHAIN=" + CHAIN_FILE,
                 "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "RECOVER_SWAPPED_REF_ALT=true",
                 "CREATE_INDEX=false"
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -245,51 +251,19 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         }
     }
 
-    @Test
-    public void testWriteVcfWithFlippedAlleles() throws IOException {
-        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
-        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
-        final File input = new File(TEST_DATA_PATH, "testLiftoverMismatchingSnps.vcf");
-
-        final File expectedVcf = new File(TEST_DATA_PATH, "vcfWithFlippedAlleles.lift.vcf");
-        final File expectedRejectVcf = new File(TEST_DATA_PATH, "vcfWithFlippedAlleles.reject.vcf");
-
-        liftOutputFile.deleteOnExit();
-        rejectOutputFile.deleteOnExit();
-
-        final String[] args = new String[]{
-                "INPUT=" + input.getAbsolutePath(),
-                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
-                "REJECT=" + rejectOutputFile.getAbsolutePath(),
-                "CHAIN=" + TWO_INTERVAL_CHAIN_FILE,
-                "REFERENCE_SEQUENCE=" + TWO_INTERVALS_REFERENCE_FILE,
-                "CREATE_INDEX=false"
+    @DataProvider(name = "dataTestSort")
+    public Object[][] dataTestVcfSorted() {
+        return new Object[][]{
+                {false},
+                {true}
         };
-
-        Assert.assertEquals(runPicardCommandLine(args), 0);
-
-        try (final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, false)) {
-            Assert.assertTrue(liftReader.getFileHeader().hasInfoLine(LiftoverUtils.SWAPPED_ALLELES));
-            for (final VariantContext vc : liftReader) {
-                Assert.assertFalse(vc.hasAttribute(LiftoverVcf.ORIGINAL_CONTIG));
-                Assert.assertFalse(vc.hasAttribute(LiftoverVcf.ORIGINAL_START));
-
-            }
-        }
-
-        VcfTestUtils.assertVcfFilesAreEqual(liftOutputFile, expectedVcf);
-        VcfTestUtils.assertVcfFilesAreEqual(rejectOutputFile, expectedRejectVcf);
-
     }
 
-    @Test
-    public void testWriteVcfWithFlippedAllelesNegativeChain() throws IOException {
+    @Test(dataProvider = "dataTestSort")
+    public void testVcfSorted(final boolean disableSort) {
         final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
         final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
-        final File input = new File(TEST_DATA_PATH, "testLiftoverMismatchingSnps.vcf");
-
-        final File expectedVcf = new File(TEST_DATA_PATH, "vcfWithFlippedAllelesNegativeChain.lift.vcf");
-        final File expectedRejectVcf = new File(TEST_DATA_PATH, "vcfWithFlippedAllelesNegativeChain.reject.vcf");
+        final File input = new File(TEST_DATA_PATH, "testLiftoverBiallelicIndels.vcf");
 
         liftOutputFile.deleteOnExit();
         rejectOutputFile.deleteOnExit();
@@ -300,6 +274,80 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 "REJECT=" + rejectOutputFile.getAbsolutePath(),
                 "CHAIN=" + CHAIN_FILE,
                 "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "CREATE_INDEX=" + (!disableSort),
+                "DISABLE_SORT=" + disableSort
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        //check input/header
+        try (final VCFFileReader inputReader = new VCFFileReader(input, false)) {
+                final VCFHeader header = inputReader.getFileHeader();
+                Assert.assertNull(header.getOtherHeaderLine("reference"));
+                }
+        //try to open with / without index
+        try (final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, !disableSort)) {
+                final VCFHeader header = liftReader.getFileHeader();
+                Assert.assertNotNull(header.getOtherHeaderLine("reference"));
+                try (final CloseableIterator<VariantContext> iter = liftReader.iterator()) {
+                Assert.assertEquals(iter.stream().count(), 5L);
+                }
+            }
+        }
+    
+
+    
+    
+    @DataProvider
+    Iterator<Object[]> testWriteVcfData() {
+
+        List<Object[]> tests = new ArrayList<>();
+        {
+            final File input = new File(TEST_DATA_PATH, "testLiftoverMismatchingSnps.vcf");
+            final File expectedVcf = new File(TEST_DATA_PATH, "vcfWithFlippedAlleles.lift.vcf");
+            final File expectedRejectVcf = new File(TEST_DATA_PATH, "vcfWithFlippedAlleles.reject.vcf");
+
+            tests.add(new Object[]{input, expectedVcf, expectedRejectVcf, TWO_INTERVALS_REFERENCE_FILE, TWO_INTERVAL_CHAIN_FILE});
+        }
+
+        {
+            final File input = new File(TEST_DATA_PATH, "testLiftoverMismatchingSnps.vcf");
+            final File expectedVcf = new File(TEST_DATA_PATH, "vcfWithFlippedAllelesNegativeChain.lift.vcf");
+            final File expectedRejectVcf = new File(TEST_DATA_PATH, "vcfWithFlippedAllelesNegativeChain.reject.vcf");
+
+            tests.add(new Object[]{input, expectedVcf, expectedRejectVcf, REFERENCE_FILE, CHAIN_FILE});
+        }
+        {
+            final File input = new File(TEST_DATA_PATH, "testLiftoverMixedVariants.vcf");
+            final File expectedVcf = new File(TEST_DATA_PATH, "vcfWithMixed.lift.vcf");
+            final File expectedRejectVcf = new File(TEST_DATA_PATH, "vcfWithMixed.reject.vcf");
+
+            tests.add(new Object[]{input, expectedVcf, expectedRejectVcf, REFERENCE_FILE, CHAIN_FILE});
+        }
+
+        return tests.iterator();
+    }
+
+    @Test(dataProvider = "testWriteVcfData")
+    public void testWriteVcfWithFlippedAlleles(
+            final File input,
+            final File expectedVcf,
+            final File expectedRejectVcf,
+            final File reference,
+            final File liftoverChain) throws IOException {
+
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + liftoverChain.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+                "RECOVER_SWAPPED_REF_ALT=true",
                 "CREATE_INDEX=false"
         };
 
@@ -316,8 +364,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         VcfTestUtils.assertVcfFilesAreEqual(liftOutputFile, expectedVcf);
         VcfTestUtils.assertVcfFilesAreEqual(rejectOutputFile, expectedRejectVcf);
-
     }
+
 
     @DataProvider(name = "indelFlipData")
     public Iterator<Object[]> indelFlipData() {
@@ -348,6 +396,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Allele TAG = Allele.create("TAG", false);
         final Allele ACGT = Allele.create("ACGT", false);
         final Allele AACG = Allele.create("AACG", false);
+
+        final Allele spanningDeletion = Allele.create(Allele.SPAN_DEL_STRING, false);
 
         final List<Object[]> tests = new ArrayList<>();
 
@@ -532,6 +582,42 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), REFERENCE, result_builder.make()});
 
+        // insertion at end of section, with a spanning deletion
+        // a test that converts the initial C to a AC which requires
+        // code in LiftOver::extendOneBase(., false)
+        //
+        // improperly aligned with spanning deletion
+        // TTTT(G)->TTTTG(G) -> C/CC
+
+        start = CHAIN_SIZE - 4;
+        stop = CHAIN_SIZE - 1;
+
+        // Note that the spanning deletion prevents the indel from being left aligned.
+        builder.source("test13").start(start).stop(stop).alleles(CollectionUtil.makeList(Allele.create("TTTT", true), Allele.create("TTTTG"), spanningDeletion));
+        result_builder.start(1).stop(1).alleles(CollectionUtil.makeList(RefC, Allele.create("CC"), spanningDeletion));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
+        tests.add(new Object[]{builder.make(), REFERENCE, result_builder.make()});
+
+        // non-simple deletion with spanning deletion
+        //  ACGT(T)*/A(T) -> AACG(T)*/A(T)
+        //       position of 13 ^ in result
+        start = CHAIN_SIZE - 13;
+        stop = start + 3;
+
+        builder.source("test14").start(start).stop(stop).alleles(CollectionUtil.makeList(RefACGT, A, spanningDeletion));
+        result_builder.start(CHAIN_SIZE - stop).stop(CHAIN_SIZE - start).alleles(CollectionUtil.makeList(RefAACG, A, spanningDeletion));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
+        tests.add(new Object[]{builder.make(), REFERENCE, result_builder.make()});
+        
+        builder.noGenotypes();
+        result_builder.noGenotypes();
+
         return tests.iterator();
     }
 
@@ -545,7 +631,39 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             throw new RuntimeException("not reversed");
         }
 
-        final VariantContext flipped = LiftoverUtils.liftVariant(source, target, reference, false);
+        final VariantContext flipped = LiftoverUtils.liftVariant(source, target, reference, false, false);
+
+        VcfTestUtils.assertEquals(flipped, result);
+    }
+
+    @DataProvider(name = "indelFlipDataWithOriginalAllele")
+    public Iterator<Object[]> indelFlipDataWithOriginalAllele() {
+        final List<Object[]> tests = new ArrayList<>();
+        indelFlipData().forEachRemaining(x -> {
+            if (x[2] == null) {
+                tests.add(x);
+            } else {
+                VariantContext source = (VariantContext) x[0];
+                VariantContextBuilder result_builder = new VariantContextBuilder((VariantContext) x[2]);
+                result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, LiftoverUtils.allelesToStringList(source.getAlleles()));
+                tests.add(new Object[]{x[0], x[1], result_builder.make()});
+            }
+        });
+
+        return tests.iterator();
+    }
+
+    @Test(dataProvider = "indelFlipDataWithOriginalAllele")
+    public void testFlipIndelWithOriginalAlleles(final VariantContext source, final ReferenceSequence reference, final VariantContext result) {
+
+        final LiftOver liftOver = new LiftOver(CHAIN_FILE);
+        final Interval originalLocus = new Interval(source.getContig(), source.getStart(), source.getEnd());
+        final Interval target = liftOver.liftOver(originalLocus);
+        if (target != null && !target.isNegativeStrand()) {
+            throw new RuntimeException("not reversed");
+        }
+
+        final VariantContext flipped = LiftoverUtils.liftVariant(source, target, reference, false, true);
 
         VcfTestUtils.assertEquals(flipped, result);
     }
@@ -554,7 +672,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
     public Iterator<Object[]> snpWithChangedRef() {
 
         final ReferenceSequence reference = new ReferenceSequence("chr1", 0,
-                "CAAAAAAAAAACGTACGTACTCTCTCTCTACGT".getBytes());
+                refString.getBytes());
         //       123456789 123456789 123456789 123
 
         final Allele RefT = Allele.create("T", true);
@@ -1039,8 +1157,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
     @DataProvider(name = "noCallAndSymbolicData")
     public Iterator<Object[]> noCallAndSymbolicData() {
 
-        final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1");
-        final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1");
+        final VariantContextBuilder builder = new VariantContextBuilder().source("test1").chr("chr1").attribute("TEST_ATTRIBUTE",1).attribute("TEST_ATTRIBUTE2","Hi").attribute("TEST_ATTRIBUTE3",new double[] {1.2,2.1});
+        final VariantContextBuilder result_builder = new VariantContextBuilder().source("test1").chr("chr1").attribute("TEST_ATTRIBUTE",1).attribute("TEST_ATTRIBUTE2","Hi").attribute("TEST_ATTRIBUTE3",new double[] {1.2,2.1});
         result_builder.attribute(LiftoverVcf.ORIGINAL_CONTIG, "chr1");
         final GenotypeBuilder genotypeBuilder = new GenotypeBuilder("test1");
         final GenotypeBuilder resultGenotypeBuilder = new GenotypeBuilder("test1");
@@ -1086,7 +1204,9 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(CRef, T, DEL));
         result_builder.start(liftedStart).stop(liftedStart).alleles(CollectionUtil.makeList(GRef, A, DEL));
         result_builder.attribute(LiftoverVcf.ORIGINAL_START, start);
+        result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, LiftoverUtils.allelesToStringList(builder.getAlleles()));
         result_builder.attribute(LiftoverUtils.REV_COMPED_ALLELES, true);
+
 
         genotypeBuilder.alleles(CollectionUtil.makeList(T, DEL));
         resultGenotypeBuilder.alleles(CollectionUtil.makeList(A, DEL));
@@ -1102,7 +1222,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.start(start).stop(start).alleles(CollectionUtil.makeList(CRef, T));
         result_builder.start(liftedStart).stop(liftedStart).alleles(CollectionUtil.makeList(GRef, A));
         result_builder.attribute(LiftoverVcf.ORIGINAL_START, start);
-
+        result_builder.attribute(LiftoverVcf.ORIGINAL_ALLELES, LiftoverUtils.allelesToStringList(builder.getAlleles()));
         genotypeBuilder.alleles(CollectionUtil.makeList(T, Allele.NO_CALL));
         resultGenotypeBuilder.alleles(CollectionUtil.makeList(A, Allele.NO_CALL));
         builder.genotypes(genotypeBuilder.make());
@@ -1120,10 +1240,70 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         Assert.assertEquals(target.isNegativeStrand(), expectReversed);
 
-        VariantContext vc = LiftoverUtils.liftVariant(source, target, REFERENCE, true);
+        VariantContext vc = LiftoverUtils.liftVariant(source, target, REFERENCE, true, true);
         VcfTestUtils.assertEquals(vc, result);
 
         Assert.assertEquals(vc.getAttribute(LiftoverVcf.ORIGINAL_CONTIG), source.getContig());
         Assert.assertEquals(vc.getAttribute(LiftoverVcf.ORIGINAL_START), source.getStart());
+        Assert.assertTrue(source.getAlleles().equals(result.getAlleles()) != result.hasAttribute(LiftoverVcf.ORIGINAL_ALLELES));
+        if (!source.getAlleles().equals(result.getAlleles())) {
+            List<String> resultAlleles = new ArrayList<>();
+            source.getAlleles().forEach(a -> resultAlleles.add(a.getDisplayString()));
+            Assert.assertEquals(resultAlleles, result.getAttributeAsStringList(LiftoverVcf.ORIGINAL_ALLELES, null));
+        }
+        result.getAttributes().entrySet().stream().filter(e->e.getKey().matches("TEST_ATTRIBUTE.*")).forEach(e -> {
+
+            Assert.assertTrue(vc.hasAttribute(e.getKey()));
+            Assert.assertEquals(vc.getAttribute(e.getKey()), e.getValue());
+        });
+    }
+
+    @Test()
+    public void testNoDictionary() throws IOException {
+        final Path liftOutput = Files.createTempFile("tmpoutput", ".vcf");
+        liftOutput.toFile().deleteOnExit();
+        final Path rejectOutput = Files.createTempFile("tmpreject", ".vcf");
+        rejectOutput.toFile().deleteOnExit();
+        final Path input = TEST_DATA_PATH.toPath().resolve("testLiftoverBiallelicIndels.vcf");
+        final Path tmpCopyDir = Files.createTempDirectory("copy");
+        tmpCopyDir.toFile().deleteOnExit();
+        final Path referenceCopy = tmpCopyDir.resolve("refCopy.fasta");
+        referenceCopy.toFile().deleteOnExit();
+        Files.copy(REFERENCE_FILE.toPath(), referenceCopy);
+        final String[] args = new String[]{
+                "INPUT=" + input,
+                "OUTPUT=" + liftOutput,
+                "REJECT=" + rejectOutput,
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + referenceCopy,
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 1);
+    }
+
+    @Test(expectedExceptions = SAMException.class, expectedExceptionsMessageRegExp = "File exists but is not readable:.*")
+    public void testUnreadableDictionary() throws IOException {
+        final Path liftOutput = Files.createTempFile("tmpouput", ".vcf");
+        liftOutput.toFile().deleteOnExit();
+        final Path rejectOutput = Files.createTempFile("tmpreject", ".vcf");
+        rejectOutput.toFile().deleteOnExit();
+        final Path input = TEST_DATA_PATH.toPath().resolve("testLiftoverBiallelicIndels.vcf");
+        final Path tmpCopyDir = Files.createTempDirectory("copy");
+        tmpCopyDir.toFile().deleteOnExit();
+        final Path referenceCopy = tmpCopyDir.resolve("refCopy.fasta");
+        referenceCopy.toFile().deleteOnExit();
+        Files.copy(REFERENCE_FILE.toPath(), referenceCopy);
+        final Path dictCopy = referenceCopy.resolveSibling(referenceCopy.toFile().getName().replaceAll("fasta$", "dict"));
+        dictCopy.toFile().deleteOnExit();
+        final Path dictionary = REFERENCE_FILE.toPath().resolveSibling(REFERENCE_FILE.getName().replaceAll("fasta$", "dict"));
+        Files.copy(dictionary, dictCopy);
+        dictCopy.toFile().setReadable(false);
+        final String[] args = new String[]{
+                "INPUT=" + input,
+                "OUTPUT=" + liftOutput,
+                "REJECT=" + rejectOutput,
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + referenceCopy,
+        };
+        runPicardCommandLine(args);
     }
 }

@@ -136,10 +136,6 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
         return 0;
     }
 
-    public static void main(final String[] args) {
-        new CollectIlluminaLaneMetrics().instanceMainWithExit(args);
-    }
-
     /**
      * Utility for collating Tile records from the Illumina TileMetrics file into lane-level and phasing-level metrics.
      */
@@ -154,15 +150,16 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
                                                                              final boolean isNovaSeq) {
             final Collection<Tile> tiles;
             try {
-                File tileMetricsOutFile = TileMetricsUtil.renderTileMetricsFileFromBasecallingDirectory(illuminaRunDirectory, isNovaSeq);
+                final List<File> tileMetricsOutFiles = TileMetricsUtil.findTileMetricsFiles(illuminaRunDirectory, readStructure.totalCycles, isNovaSeq);
                 if (isNovaSeq) {
-                    tiles = TileMetricsUtil.parseTileMetrics(
-                            tileMetricsOutFile,
+                    tiles = TileMetricsUtil.parseClusterRecordsFromTileMetricsV3(
+                            tileMetricsOutFiles,
                             TileMetricsUtil.renderPhasingMetricsFilesFromBasecallingDirectory(illuminaRunDirectory),
-                            readStructure,
-                            validationStringency);
+                            readStructure
+                    );
                 } else {
-                    tiles = TileMetricsUtil.parseTileMetrics(tileMetricsOutFile,
+                    tiles = TileMetricsUtil.parseTileMetrics(
+                            tileMetricsOutFiles.get(0),
                             readStructure,
                             validationStringency
                     );

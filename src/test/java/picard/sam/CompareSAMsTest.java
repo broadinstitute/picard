@@ -23,11 +23,19 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class CompareSAMsTest extends CommandLineProgramTest {
     private static final File TEST_FILES_DIR = new File("testdata/picard/sam/CompareSAMs");
@@ -36,110 +44,80 @@ public class CompareSAMsTest extends CommandLineProgramTest {
         return CompareSAMs.class.getSimpleName();
     }
 
-    private void testHelper(final String f1, final String f2, final int expectedMatch, final int expectedDiffer,
-                            final int expectedUnmappedBoth,
-                            final int expectedUnmappedLeft, final int expectedUnmappedRight, final int expectedMissingLeft,
-                            final int expectedMissingRight, final boolean areEqual) {
-        final String[] samFiles = {
-                new File(TEST_FILES_DIR, f1).getAbsolutePath(),
-                new File(TEST_FILES_DIR, f2).getAbsolutePath()
+    @DataProvider(name="compareSams")
+    public Object[][] compareSamsTestData() {
+        final ArrayList<String> lenientArgs = new ArrayList<>(Arrays.asList("LENIENT_DUP=true", "LENIENT_LOW_MQ_ALIGNMENT=true"));
+        return new Object[][] {
+                {"genomic_sorted.sam", "unsorted.sam", null, false},
+                {"genomic_sorted.sam", "chr21.sam", null, false},
+                {"genomic_sorted.sam", "bigger_seq_dict.sam", null, false},
+                {"bigger_seq_dict.sam", "bigger_seq_dict.sam", null, true},
+                {"genomic_sorted.sam", "genomic_sorted.sam", null, true},
+                {"genomic_sorted.sam", "has_non_primary.sam", null, true},
+                {"genomic_sorted_5.sam", "genomic_sorted_5_plus.sam", null, false},
+                {"group_same_coord.sam", "group_same_coord_diff_order.sam", null, false},
+                {"genomic_sorted_same_position.sam", "genomic_sorted_same_position.sam", null, true},
+                {"group_same_coord.sam", "diff_coords.sam", null, false},
+                {"genomic_sorted.sam", "unmapped_first.sam", null, false},
+                {"genomic_sorted.sam", "unmapped_second.sam", null, false},
+                {"unmapped_first.sam", "unmapped_second.sam", null, false},
+                {"unmapped_first.sam", "unmapped_first.sam", null, true},
+                {"genomic_sorted.sam", "genomic_sorted_sam_v1.6.sam", null, false},
+                {"unsorted.sam", "unsorted.sam", null, true},
+                {"unsorted.sam", "unsorted2.sam", null, false},
+                {"duplicate_base.sam", "duplicate_four_mismatch_strict.sam", lenientArgs, true},
+                {"duplicate_base.sam", "duplicate_four_mismatch_lenient_one_align_differ.sam", lenientArgs, false},
+                {"duplicate_base.sam", "duplicate_two_mismatch_lenient.sam", lenientArgs, false},
+                {"duplicate_base.sam", "duplicate_four_mismatch_lenient.sam", lenientArgs, false},
+                {"duplicate_base.sam", "duplicate_four_mismatch_strict.sam", null, false},
+                {"duplicate_base_queryname.sam", "duplicate_four_mismatch_strict_queryname.sam", lenientArgs, true},
+                {"duplicate_base_queryname.sam", "duplicate_four_mismatch_lenient_one_align_differ_queryname.sam", lenientArgs, false},
+                {"duplicate_base_queryname.sam", "duplicate_two_mismatch_lenient_queryname.sam", lenientArgs, false},
+                {"duplicate_base_queryname.sam", "duplicate_four_mismatch_lenient_queryname.sam", lenientArgs, false},
+                {"duplicate_base_queryname.sam", "duplicate_four_mismatch_strict_queryname.sam", null, false},
+                {"genomic_sorted.sam", "mq0_2.sam", lenientArgs, false},
+                {"mq0_1.sam", "mq0_2.sam", lenientArgs, true},
+                {"mq0_1.sam", "mq0_2.sam", null, false}
         };
-
-        // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
-        CompareSAMs compareSAMs = new CompareSAMs();
-        compareSAMs.instanceMain(samFiles);
-        Assert.assertEquals(areEqual, compareSAMs.areEqual());
-        Assert.assertEquals(expectedMatch, compareSAMs.getMappingsMatch());
-        Assert.assertEquals(expectedDiffer, compareSAMs.getMappingsDiffer());
-        Assert.assertEquals(expectedUnmappedBoth, compareSAMs.getUnmappedBoth());
-        Assert.assertEquals(expectedUnmappedLeft, compareSAMs.getUnmappedLeft());
-        Assert.assertEquals(expectedUnmappedRight, compareSAMs.getUnmappedRight());
-        Assert.assertEquals(expectedMissingLeft, compareSAMs.getMissingLeft());
-        Assert.assertEquals(expectedMissingRight, compareSAMs.getMissingRight());
-
-        final String[] samFilesReversed = {
-                new File(TEST_FILES_DIR, f2).getAbsolutePath(),
-                new File(TEST_FILES_DIR, f1).getAbsolutePath()
-        };
-        compareSAMs = new CompareSAMs();
-        compareSAMs.instanceMain(samFilesReversed);
-        Assert.assertEquals(areEqual, compareSAMs.areEqual());
-        Assert.assertEquals(expectedMatch, compareSAMs.getMappingsMatch());
-        Assert.assertEquals(expectedDiffer, compareSAMs.getMappingsDiffer());
-        Assert.assertEquals(expectedUnmappedBoth, compareSAMs.getUnmappedBoth());
-        Assert.assertEquals(expectedUnmappedRight, compareSAMs.getUnmappedLeft());
-        Assert.assertEquals(expectedUnmappedLeft, compareSAMs.getUnmappedRight());
-        Assert.assertEquals(expectedMissingRight, compareSAMs.getMissingLeft());
-        Assert.assertEquals(expectedMissingLeft, compareSAMs.getMissingRight());
     }
 
-    @Test
-    public void testSortsDifferent() {
-        testHelper("genomic_sorted.sam", "unsorted.sam", 0, 0, 0, 0, 0, 0, 0, false);
-    }
+    @Test(dataProvider = "compareSams")
+    public void testComparisons(final String f1, final String f2, final ArrayList<String> args, final boolean areEqual) throws IOException {
+        final Path tmpOutput = Files.createTempFile("compareSam", ".tsv");
+        final String in1 = new File(TEST_FILES_DIR, f1).getAbsolutePath();
+        final String in2 = new File(TEST_FILES_DIR, f2).getAbsolutePath();
+        ArrayList<String> commandArgs = new ArrayList<>(
+                Arrays.asList(
+                        in1,
+                        in2,
+                        "O=" + tmpOutput
+                )
+        );
+        if (args != null) {
+            commandArgs.addAll(args);
+        }
+        Assert.assertEquals(runPicardCommandLine(commandArgs) == 0, areEqual);
+        final MetricsFile<SamComparisonMetric, Comparable<?>> metricsOutput = new MetricsFile<>();
+        metricsOutput.read(new FileReader(tmpOutput.toFile()));
 
-    @Test
-    public void testSequenceDictionariesDifferent1() {
-        testHelper("genomic_sorted.sam", "chr21.sam", 0, 0, 0, 0, 0, 0, 0, false);
-    }
+        //swap order of input files
+        commandArgs = new ArrayList<>(
+                Arrays.asList(
+                        in2,
+                        in1,
+                        "O=" + tmpOutput
+                )
+        );
+        if (args != null) {
+            commandArgs.addAll(args);
+        }
+        Assert.assertEquals(runPicardCommandLine(commandArgs) == 0, areEqual);
+        metricsOutput.read(new FileReader(tmpOutput.toFile()));
 
-    @Test
-    public void testSequenceDictionariesDifferent2() {
-        testHelper("genomic_sorted.sam", "bigger_seq_dict.sam", 0, 0, 0, 0, 0, 0, 0, false);
-    }
+        Assert.assertEquals(metricsOutput.getMetrics().get(0).LEFT_FILE, in1);
+        Assert.assertEquals(metricsOutput.getMetrics().get(0).RIGHT_FILE, in2);
 
-    @Test
-    public void testBiggerSequenceDictionaries() {
-        testHelper("bigger_seq_dict.sam", "bigger_seq_dict.sam", 2, 0, 0, 0, 0, 0, 0, true);
+        Assert.assertEquals(metricsOutput.getMetrics().get(1).LEFT_FILE, in2);
+        Assert.assertEquals(metricsOutput.getMetrics().get(1).RIGHT_FILE, in1);
     }
-
-    @Test
-    public void testIdentical() {
-        testHelper("genomic_sorted.sam", "genomic_sorted.sam", 2, 0, 0, 0, 0, 0, 0, true);
-    }
-
-    @Test
-    public void testHasNonPrimary() {
-        testHelper("genomic_sorted.sam", "has_non_primary.sam", 2, 0, 0, 0, 0, 0, 0, true);
-    }
-
-    @Test
-    public void testMoreOnOneSide() {
-        testHelper("genomic_sorted_5.sam", "genomic_sorted_5_plus.sam", 3, 2, 0, 0, 0, 3, 0, false);
-    }
-
-    @Test
-    public void testGroupWithSameCoordinate() {
-        testHelper("group_same_coord.sam", "group_same_coord_diff_order.sam", 3, 0, 0, 0, 0, 1, 2, false);
-    }
-
-    @Test
-    public void testGroupWithSameCoordinateSamePosition() {
-        testHelper("genomic_sorted_same_position.sam", "genomic_sorted_same_position.sam", 2, 0, 0, 0, 0, 0, 0, true);
-    }
-    @Test
-    public void testGroupWithSameCoordinateAndNoMatchInOther() {
-        testHelper("group_same_coord.sam", "diff_coords.sam", 0, 5, 0, 0, 0, 0, 0, false);
-    }
-
-    @Test
-    public void testUnmapped1() {
-        testHelper("genomic_sorted.sam", "unmapped_first.sam", 1, 0, 0, 0, 1, 0, 0, false);
-    }
-
-    @Test
-    public void testUnmapped2() {
-        testHelper("genomic_sorted.sam", "unmapped_second.sam", 1, 0, 0, 0, 1, 0, 0, false);
-    }
-
-    @Test
-    public void testUnmapped3() {
-        testHelper("unmapped_first.sam", "unmapped_second.sam", 0, 0, 0, 1, 1, 0, 0, false);
-    }
-
-    @Test
-    public void testUnmapped4() {
-        testHelper("unmapped_first.sam", "unmapped_first.sam", 1, 0, 1, 0, 0, 0, 0, true);
-    }
-
 }

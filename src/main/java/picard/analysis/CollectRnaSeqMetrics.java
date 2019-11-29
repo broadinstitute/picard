@@ -122,8 +122,8 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     @Argument(doc="The PDF file to write out a plot of normalized position vs. coverage.", shortName="CHART", optional = true)
     public File CHART_OUTPUT;
 
-    @Argument(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.  " +
-    "These reads are not counted as ")
+    @Argument(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases. " +
+    "These reads are not counted towards any metrics, except for the PF_BASES field.", optional = true)
     public Set<String> IGNORE_SEQUENCE = new HashSet<String>();
 
     @Argument(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair to be considered rRNA.")
@@ -138,11 +138,6 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
      * A subtitle for the plot, usually corresponding to a library.
      */
     private String plotSubtitle = "";
-
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        new CollectRnaSeqMetrics().instanceMainWithExit(argv);
-    }
 
     @Override
     protected String[] customCommandLineValidation() {

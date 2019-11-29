@@ -117,10 +117,6 @@ public class SetNmMdAndUqTags extends CommandLineProgram {
 
     private final Log log = Log.getInstance(SetNmMdAndUqTags.class);
 
-    public static void main(final String[] argv) {
-        new SetNmMdAndUqTags().instanceMainWithExit(argv);
-    }
-
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);

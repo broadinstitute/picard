@@ -118,13 +118,11 @@ import static picard.vcf.GenotypeConcordanceStateCodes.*;
         programGroup = VariantEvaluationProgramGroup.class)
 @DocumentedFeature
 public class GenotypeConcordance extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Calculates the concordance between genotype data of one samples in each of two VCFs - one " +
-            " being considered the truth (or reference) the other being the call.  The concordance is broken into separate " +
-            "results sections for SNPs and indels.  Statistics are reported in three different files.";
-            ;
+    static final String USAGE_SUMMARY = "Calculates the concordance between genotype data of one sample in each of two VCFs -" +
+            " truth (or reference) vs. calls.";
     static final String USAGE_DETAILS =
             "<h3>Summary</h3>" +
-            "Calculates the concordance between genotype data of one samples in each of two VCFs - one being considered the truth (or reference) " +
+            "Calculates the concordance between genotype data of one sample in each of two VCFs - one being considered the truth (or reference) " +
             "the other being the call.  The concordance is broken into separate results sections for SNPs and indels.  Summary and detailed statistics " +
             "are reported.\n" +
             "\n" +
@@ -238,10 +236,6 @@ public class GenotypeConcordance extends CommandLineProgram {
     public static final VCFHeaderLine CONTINGENCY_STATE_HEADER_LINE = new VCFInfoHeaderLine(CONTINGENCY_STATE_TAG, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "The genotype concordance contingency state(s)");
     public static final String OUTPUT_VCF_TRUTH_SAMPLE_NAME = "truth";
     public static final String OUTPUT_VCF_CALL_SAMPLE_NAME = "call";
-
-    public static void main(final String[] args) {
-        new GenotypeConcordance().instanceMainWithExit(args);
-    }
 
     @Override
     protected String[] customCommandLineValidation() {
@@ -743,20 +737,17 @@ public class GenotypeConcordance extends CommandLineProgram {
     }
 
     /** Inserts the given string into the destination string at the given index.  If the index is past the end of the
-     * destination string, the given string is appended to the destination.
+     * destination string, the given string is appended to the destination.  If the destination string is the
+     * spanning deletion allele it will be returned unchanged.
      */
     static String spliceOrAppendString(final String destination, final String toInsert, final int insertIdx) {
+        if (destination.equals(Allele.SPAN_DEL_STRING)) {
+            return destination;
+        }
         if (insertIdx <= destination.length()) {
             return destination.substring(0, insertIdx) + toInsert + destination.substring(insertIdx);
         }
-        else {
-            // Just return the destination string if it ends on a spanning deletion, do not append to a spanning deletion
-            if (destination.length() > 0 && destination.substring(destination.length()-1).equals(Allele.SPAN_DEL_STRING)) {
-                return destination;
-            } else {
-                return destination + toInsert;
-            }
-        }
+        return destination + toInsert;
     }
 
     /** Gets the alleles for the truth and call genotypes.  In particular, this handles the case where indels can have different

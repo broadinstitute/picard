@@ -1,0 +1,3 @@
+testdata/picard/vcf/MakeVcfSampleNameMap/NA12878.vcf	NA12878
+testdata/picard/vcf/MakeVcfSampleNameMap/NA12891.vcf	NA12891
+testdata/picard/vcf/MakeVcfSampleNameMap/NA12892.vcf	NA12892

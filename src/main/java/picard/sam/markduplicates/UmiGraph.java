@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.counting;
+
 /**
  * UmiGraph is used to identify UMIs that come from the same original source molecule.  The assumption
  * is that UMIs with small edit distances are likely to be read errors on the sequencer rather than
@@ -51,34 +52,44 @@ import static java.util.stream.Collectors.counting;
  * @author fleharty
  */
 public class UmiGraph {
-    private final List<SAMRecord> records;      // SAMRecords from the original duplicate set considered to break up by UMI
-    private final Map<String, Long> umiCounts;  // Map of UMI sequences and how many times they have been observed
-    private final int[] duplicateSetID;         // ID of the duplicate set that the UMI belongs to, the index is the UMI ID
-    private final String[] umi;                 // Sequence of actual UMI, the index is the UMI ID
-    private final int numUmis;                  // Number of observed UMIs
-    private final String umiTag;                // UMI tag used in the SAM/BAM/CRAM file ie. RX
-    private final String assignedUmiTag;        // Assigned UMI tag used in the SAM/BAM/CRAM file ie. MI
-    private final boolean allowMissingUmis;     // Allow for missing UMIs
+    private final List<SAMRecord> records;
+    private final Map<String, Long> umiCounts;
+    private final int[] duplicateSetID;
+    private final String[] umi;
+    private final int numUmis;
+    private final String umiTag;
+    private final String molecularIdentifierTag;
+    private final boolean allowMissingUmis;
+    private final boolean duplexUmis;
 
-    public UmiGraph(DuplicateSet set, String umiTag, String assignedUmiTag, boolean allowMissingUmis) {
+    /**
+     * Creates a UmiGraph object
+     * @param set Set of reads that have the same start-stop positions, these will be broken up by UMI
+     * @param umiTag UMI tag used in the SAM/BAM/CRAM file ie. RX
+     * @param molecularIdentifierTag  Molecular identifier tag used in the SAM/BAM/CRAM file ie. MI
+     * @param allowMissingUmis Allow for missing UMIs
+     * @param duplexUmis Whether or not to use duplex of single strand UMIs
+     */
+    UmiGraph(final DuplicateSet set, final String umiTag, final String molecularIdentifierTag,
+                    final boolean allowMissingUmis, final boolean duplexUmis) {
         this.umiTag = umiTag;
-        this.assignedUmiTag = assignedUmiTag;
+        this.molecularIdentifierTag = molecularIdentifierTag;
         this.allowMissingUmis = allowMissingUmis;
+        this.duplexUmis = duplexUmis;
         records = set.getRecords();
 
         // First ensure that all the reads have a UMI, if any reads are missing a UMI throw an exception unless allowMissingUmis is true
-        for (SAMRecord rec : records) {
-            if (UmiUtil.getSanitizedUMI(rec, umiTag) == null) {
-                if (allowMissingUmis) {
-                    rec.setAttribute(umiTag, "");
-                } else {
+        for (final SAMRecord rec : records) {
+            if (rec.getStringAttribute(umiTag) == null) {
+                if (!allowMissingUmis) {
                     throw new PicardException("Read " + rec.getReadName() + " does not contain a UMI with the " + umiTag + " attribute.");
                 }
+                rec.setAttribute(umiTag, "");
             }
         }
 
         // Count the number of times each UMI occurs
-        umiCounts = records.stream().collect(Collectors.groupingBy(p -> UmiUtil.getSanitizedUMI(p, umiTag), counting()));
+        umiCounts = records.stream().collect(Collectors.groupingBy(p -> UmiUtil.getTopStrandNormalizedUmi(p, umiTag, duplexUmis), counting()));
 
         // At first we consider every UMI as if it were its own duplicate set
         numUmis = umiCounts.size();
@@ -86,7 +97,7 @@ public class UmiGraph {
         duplicateSetID = IntStream.rangeClosed(0, numUmis-1).toArray();
 
         int i = 0;
-        for (String key : umiCounts.keySet()) {
+        for (final String key : umiCounts.keySet()) {
             umi[i] = key;
             i++;
         }
@@ -119,8 +130,9 @@ public class UmiGraph {
 
         // Assign UMIs to duplicateSets
         final Map<String, Integer> duplicateSetsFromUmis = getDuplicateSetsFromUmis();
-        for (SAMRecord rec : records) {
-            final String umi = UmiUtil.getSanitizedUMI(rec, umiTag);
+        for (final SAMRecord rec : records) {
+            final String umi = UmiUtil.getTopStrandNormalizedUmi(rec, umiTag, duplexUmis);
+
             final Integer duplicateSetIndex = duplicateSetsFromUmis.get(umi);
 
             if (duplicateSets.containsKey(duplicateSetIndex)) {
@@ -147,8 +159,8 @@ public class UmiGraph {
             String fewestNUmi = null;
             long nCount = 0;
 
-            for (SAMRecord rec : recordList) {
-                final String umi = UmiUtil.getSanitizedUMI(rec, umiTag);
+            for (final SAMRecord rec : recordList) {
+                final String umi = UmiUtil.getTopStrandNormalizedUmi(rec, umiTag, duplexUmis);
 
                 // If there is another choice, we don't want to choose the UMI with a N
                 // as the assignedUmi
@@ -173,14 +185,15 @@ public class UmiGraph {
             // then choose the one with the fewest Ns
             if (assignedUmi == null) { assignedUmi = fewestNUmi; }
 
-            // Set the records to contain the assigned UMI
+            // Set the records to contain the inferred UMI and the Unique Molecular Identifier
             for (final SAMRecord rec : recordList) {
                 if (allowMissingUmis && rec.getStringAttribute(umiTag).isEmpty()) {
                     // The SAM spec doesn't support empty tags, so we set it to null if it is empty.
                     rec.setAttribute(umiTag, null);
                 } else {
-                    rec.setAttribute(assignedUmiTag, assignedUmi);
+                    UmiUtil.setMolecularIdentifier(rec, assignedUmi, molecularIdentifierTag, duplexUmis);
                 }
+                rec.setTransientAttribute(UmiUtil.INFERRED_UMI_TRANSIENT_TAG, assignedUmi);
             }
 
             duplicateSetList.add(ds);
@@ -189,7 +202,10 @@ public class UmiGraph {
         return duplicateSetList;
     }
 
-    // Create a map that maps a umi to the duplicateSetID
+
+    /**
+     * @return a map that maps a umi to the duplicateSetID
+     */
     private Map<String, Integer> getDuplicateSetsFromUmis() {
         final Map<String, Integer> duplicateSetsFromUmis = new HashMap<>();
         for (int i = 0; i < duplicateSetID.length; i++) {

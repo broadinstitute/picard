@@ -14,9 +14,11 @@ import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.illumina.parser.readers.LocsFileReader;
+import picard.util.ThreadPoolExecutorUtil;
 import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -120,7 +121,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         if (demultiplex) {
             final Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
-                    ParameterizedFileUtil.makeLaneTileRegex("_barcode.txt(\\.gz|\\.bz2)?", lane)));
+                    ParameterizedFileUtil.makeBarcodeRegex(lane)));
             final File[] barcodeTileFiles = getTiledFiles(barcodesDir, barcodeRegex);
             if (barcodeTileFiles.length != tiles.size()) {
                 throw new PicardException(String.format(
@@ -145,14 +146,14 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
     @Override
     public void doTileProcessing() {
 
-        final ThreadPoolExecutor completedWorkExecutor = new ThreadPoolExecutorWithExceptions(1);
+        final ThreadPoolExecutorWithExceptions completedWorkExecutor = new ThreadPoolExecutorWithExceptions(1);
 
         final CompletedWorkChecker workChecker = new CompletedWorkChecker();
         completedWorkExecutor.submit(workChecker);
         completedWorkExecutor.shutdown();
 
         //thread by surface tile
-        final ThreadPoolExecutor tileProcessingExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
+        final ThreadPoolExecutorWithExceptions tileProcessingExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
 
         for (final Integer tile : tiles) {
             tileProcessingExecutor.submit(new TileProcessor(tile, barcodesFiles.get(tile)));
@@ -160,22 +161,21 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         tileProcessingExecutor.shutdown();
 
-        awaitThreadPoolTermination("Reading executor", tileProcessingExecutor);
-        awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor);
+        //wait for all the threads to complete before checking for errors
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileProcessingExecutor, Duration.ofMinutes(5));
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor, Duration.ofMinutes(5));
 
         barcodeWriterThreads.values().forEach(ThreadPoolExecutor::shutdown);
-        barcodeWriterThreads.forEach((barcode, executor) -> awaitThreadPoolTermination(barcode + " writer", executor));
-    }
+        barcodeWriterThreads.forEach((barcode, executor) -> ThreadPoolExecutorUtil.awaitThreadPoolTermination(barcode + " writer", executor, Duration.ofMinutes(5)));
 
-    private void awaitThreadPoolTermination(final String executorName, final ThreadPoolExecutor executorService) {
-        try {
-            while (!executorService.awaitTermination(300, TimeUnit.SECONDS)) {
-                log.info(String.format("%s waiting for job completion. Finished jobs - %d : Running jobs - %d : Queued jobs  - %d",
-                        executorName, executorService.getCompletedTaskCount(), executorService.getActiveCount(),
-                        executorService.getQueue().size()));
-            }
-        } catch (final InterruptedException e) {
-            e.printStackTrace();
+
+        if (tileProcessingExecutor.hasError() ||
+                completedWorkExecutor.hasError() ||
+                barcodeWriterThreads.values().stream().anyMatch(ThreadPoolExecutorWithExceptions::hasError)) {
+            int tasksStillRunning = completedWorkExecutor.shutdownNow().size();
+            tasksStillRunning += barcodeWriterThreads.values().stream().mapToLong(executor -> executor.shutdownNow().size()).sum();
+            throw new PicardException("Exceptions in tile processing. There were " + tasksStillRunning
+                    + " tasks were still running or queued and have been cancelled.");
         }
     }
 
@@ -215,7 +215,7 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
 
         @Override
         public void run() {
-            log.info("Closing writer for barcode " + barcode);
+            log.debug("Closing writer for barcode " + barcode);
             this.writer.close();
         }
     }
@@ -278,12 +278,12 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
             final int maxRecordsInRam =
                     Math.max(1, maxReadsInRamPerTile /
                             barcodeRecordWriterMap.size());
-            return SortingCollection.newInstance(
+            return SortingCollection.newInstanceFromPaths(
                     outputRecordClass,
                     codecPrototype.clone(),
                     outputRecordComparator,
                     maxRecordsInRam,
-                    tmpDirs);
+                    IOUtil.filesToPaths(tmpDirs));
         }
     }
 

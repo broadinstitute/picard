@@ -149,8 +149,12 @@ public class HaplotypeMap {
             }
 
             // And add them all now that they are all ready.
-            anchorToHaplotype.values().forEach(this::addHaplotype);
+            fromHaplotypes(anchorToHaplotype.values());
         }
+    }
+
+    private void fromHaplotypes(final Collection<HaplotypeBlock> haplotypes){
+        haplotypes.forEach(this::addHaplotype);
     }
 
     static private String anchorFromVc(final VariantContext vc) {
@@ -165,9 +169,7 @@ public class HaplotypeMap {
 
     private void fromHaplotypeDatabase(final File file) {
 
-        BufferedReader in = null;
-        try {
-            in = new BufferedReader(new InputStreamReader(IOUtil.openFileForReading(file)));
+        try(BufferedReader in = new BufferedReader(new InputStreamReader(IOUtil.openFileForReading(file)))){
             // Setup a reader and parse the header
             final StringBuilder builder = new StringBuilder(4096);
             String line = null;
@@ -191,7 +193,9 @@ public class HaplotypeMap {
             final FormatUtil format = new FormatUtil();
             final List<HaplotypeMapFileEntry> entries = new ArrayList<>();
             final Map<String, HaplotypeBlock> anchorToHaplotype = new HashMap<>();
-
+            if (line == null) {
+                return;
+            }
             do {
                 if (line.trim().isEmpty()) continue; // skip over blank lines
                 if (line.startsWith("#")) continue;      // ignore comments/headers
@@ -215,9 +219,7 @@ public class HaplotypeMap {
                 List<String> panels = null;
                 if (fpPanels != null) {
                     panels = new ArrayList<>();
-                    for (final String panel : fpPanels.split(",")) {
-                        panels.add(panel);
-                    }
+                    panels.addAll(Arrays.asList(fpPanels.split(",")));
                 }
 
                 // If it's the anchor snp, start the haplotype
@@ -247,15 +249,10 @@ public class HaplotypeMap {
             }
 
             // And add them all
-            anchorToHaplotype.values().forEach(this::addHaplotype);
+            fromHaplotypes(anchorToHaplotype.values());
+
         } catch (IOException ioe) {
             throw new PicardException("Error parsing haplotype map.", ioe);
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Exception e) { /* do nothing */ }
-            }
         }
     }
 
@@ -276,6 +273,13 @@ public class HaplotypeMap {
         } else {
             fromHaplotypeDatabase(file);
         }
+    }
+
+    /**
+     * since this constructor doesn't initialize the HaplotypeMap "properly", it should be used carefully!
+     */
+    public HaplotypeMap(final Collection<HaplotypeBlock> haplotypeBlocks){
+        fromHaplotypes(haplotypeBlocks);
     }
 
     private void initialize(final SAMFileHeader header){

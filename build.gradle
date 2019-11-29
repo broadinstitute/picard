@@ -15,58 +15,92 @@ plugins {
     id 'jacoco'
     id 'application'
     id 'com.palantir.git-version' version '0.5.1'
-    id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id 'com.github.johnrengelman.shadow' version '5.1.0'
     id "com.github.kt3k.coveralls" version '2.6.3'
-    id 'org.ajoberstar.grgit' version '1.4.2'
-    id 'org.ajoberstar.github-pages' version '1.4.2'
+    id "org.ajoberstar.grgit" version "4.0.0-rc.1"
+    id "org.ajoberstar.git-publish" version "2.1.1"
 }
 
 mainClassName = "picard.cmdline.PicardCommandLine"
 
 repositories {
-    mavenLocal()
     mavenCentral()
     maven {
         url "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/" //for htsjdk snapshots
     }
+    mavenLocal()
 }
 
-jacocoTestReport {
-    dependsOn test
-    group = "Reporting"
-    description = "Generate Jacoco coverage reports after running tests."
-    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
+final buildPrerequisitesMessage = "See https://github.com/broadinstitute/picard/blob/master/README.md#building-picard for information on how to build picard."
 
-    reports {
-        xml.enabled = true // coveralls plugin depends on xml format report
-        html.enabled = true
+// Check that we're in a folder which git recognizes as a git repository.
+// This works for either a standard git clone or one created with `git worktree add`
+def looksLikeWereInAGitRepository(){
+    file(".git").isDirectory() || (file(".git").exists() && file(".git").text.startsWith("gitdir"))
+}
+
+// Ensure that we have a clone of the git repository, and resolve any required git-lfs
+// resource files that are needed to run the build but are still lfs stub files.
+def ensureBuildPrerequisites(rbuildPrerequisitesMessage) {
+    if (!JavaVersion.current().isJava8Compatible()) {
+        throw new GradleException(
+                "Java 8 or later is required to build Picard, but ${JavaVersion.current()} was found. "
+                        + "$buildPrerequisitesMessage")
+    }
+    // Make sure we can get a ToolProvider class loader (for Java 8). If not we may have just a JRE.
+    if (JavaVersion.current().isJava8() && ToolProvider.getSystemToolClassLoader() == null) {
+        throw new GradleException(
+                "The ClassLoader obtained from the Java ToolProvider is null. "
+                        + "If using Java 8 you must have a full JDK installed and not just a JRE. $buildPrerequisitesMessage")
+    }
+    if (!JavaVersion.current().isJava8() && !JavaVersion.current().isJava11()) {
+        println("Warning: using Java ${JavaVersion.current()} but only Java 8 and Java 11 have been tested.")
+    }
+    if (!looksLikeWereInAGitRepository()) {
+        throw new GradleException("This doesn't appear to be a git folder. " +
+                "The Picard Github repository must be cloned using \"git clone\" to run the build. " +
+                "\n$buildPrerequisitesMessage")
     }
 }
 
-jacoco {
-    toolVersion = "0.7.5.201505241946"
-}
+ensureBuildPrerequisites(buildPrerequisitesMessage)
 
-final htsjdkVersion = System.getProperty('htsjdk.version', '2.14.0')
+final htsjdkVersion = System.getProperty('htsjdk.version', '2.21.0')
+final googleNio = 'com.google.cloud:google-cloud-nio:0.107.0-alpha:shaded'
 
 // Get the jdk files we need to run javaDoc. We need to use these during compile, testCompile,
 // test execution, and gatkDoc generation, but we don't want them as part of the runtime
 // classpath and we don't want to redistribute them in the uber jar.
-final javadocJDKFiles = files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs())
+final javadocJDKFiles = ToolProvider.getSystemToolClassLoader() == null ? files([]) : files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs())
+
+configurations {
+    cloudConfiguration {
+        extendsFrom runtime
+        dependencies {
+            cloudConfiguration(googleNio)
+        }
+    }
+}
 
 dependencies {
-    compile('com.intel.gkl:gkl:0.8.2') {
+    compile('com.intel.gkl:gkl:0.8.5') {
         exclude module: 'htsjdk'
     }
     compile 'com.google.guava:guava:15.0'
+    compile 'org.apache.commons:commons-math3:3.5'
+    compile 'org.apache.commons:commons-collections4:4.3'
+    compile 'commons-lang:commons-lang:2.6'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     compile 'org.broadinstitute:barclay:2.0.0'
+    compileOnly(googleNio) {
+        transitive = false
+    }
 
     // javadoc utilities; compile/test only to prevent redistribution of sdk jars
     compileOnly(javadocJDKFiles)
     testCompile(javadocJDKFiles)
 
-    testCompile 'org.testng:testng:6.9.10'
+    testCompile 'org.testng:testng:6.14.3'
     testCompile 'org.apache.commons:commons-lang3:3.6'
 }
 
@@ -192,6 +226,15 @@ shadowJar {
     }
 }
 
+
+
+task cloudJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar)  {
+    configurations = [project.configurations.cloudConfiguration]
+    from project.sourceSets.main.output
+    archiveName 'picardcloud.jar'
+}
+
+
 // Create picardBarclay.jar, which is a identical to picard.jar, but contains a .properties
 // file that tells Picard to use the Barclay command line parser instead of the Picard
 // command line parser.
@@ -276,26 +319,36 @@ tasks.withType(Test) {
     }
 }
 
-task wrapper(type: Wrapper) {
-    description = "Regenerate the gradle wrapper"
-    gradleVersion = '3.1'
+jacocoTestReport {
+    dependsOn legacyTest
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports after running tests."
+    getAdditionalSourceDirs().from(sourceSets.main.allJava.srcDirs)
+
+    reports {
+        xml.enabled = true // coveralls plugin depends on xml format report
+        html.enabled = true
+    }
+}
+
+ wrapper {
+    gradleVersion = '5.6'
 }
 
 task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+    archiveClassifier.set('javadoc')
     from 'build/docs/javadoc'
 }
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
-    classifier = 'sources'
+    archiveClassifier.set('sources')
 }
 
 /**
  * This specifies what artifacts will be built and uploaded when performing a maven upload.
  */
 artifacts {
-    archives jar
     archives javadocJar
     archives sourcesJar
 }
@@ -378,14 +431,15 @@ task updateGhPages(dependsOn: ['copyJavadoc', 'copyPicardDoc']){
   outputs.dir htmlDir
 }
 
-updateGhPages.finalizedBy publishGhPages
+updateGhPages.finalizedBy gitPublishPush
 
-githubPages {
-  repoUri = 'git@github.com:broadinstitute/picard.git'
-  targetBranch = 'gh-pages'
-  deleteExistingFiles = false
-  pages {
-    from htmlDir
-    into 'newdocs'
-  }
+gitPublish {
+    repoUri = 'git@github.com:broadinstitute/picard.git'
+    branch = 'gh-pages'
+    preserve { include '**/*' }
+    contents { 
+        from('build/docs/html') { 
+            into 'newdocs' 
+        } 
+    }
 }

@@ -80,10 +80,6 @@ public class ExtractSequences extends CommandLineProgram {
     @Argument(doc="Maximum line length for sequence data.")
     public int LINE_LENGTH = 80;
 
-    public static void main(final String[] args) {
-        new ExtractSequences().instanceMainWithExit(args);
-    }
-
     @Override
     protected boolean requiresReference() {
         return true;

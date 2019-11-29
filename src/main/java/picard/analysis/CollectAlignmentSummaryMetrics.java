@@ -111,7 +111,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     public Set<PairOrientation> EXPECTED_PAIR_ORIENTATIONS = EnumSet.copyOf(ChimeraUtil.DEFAULT_EXPECTED_ORIENTATIONS);
 
     @Argument(doc="List of adapter sequences to use when processing the alignment metrics.")
-	public List<String> ADAPTER_SEQUENCE = AdapterUtility.DEFAULT_ADAPTER_SEQUENCE;
+    public List<String> ADAPTER_SEQUENCE = AdapterUtility.DEFAULT_ADAPTER_SEQUENCE;
 
     @Argument(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
@@ -119,17 +119,14 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     @Argument(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.")
     public boolean IS_BISULFITE_SEQUENCED = false;
 
+    @Argument(doc = "A flag to disable the collection of actual alignment information. " +
+            "If false, tool will only count READS, PF_READS, and NOISE_READS. (For backwards compatibility).")
+    public boolean COLLECT_ALIGNMENT_INFORMATION = true;
+
     private AlignmentSummaryMetricsCollector collector;
 
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        new CollectAlignmentSummaryMetrics().instanceMainWithExit(argv);
-    }
-
-    /** Silly method that is necessary to give unit test access to call doWork() */
-    protected final int testDoWork() { return doWork(); }
-
-    @Override protected void setup(final SAMFileHeader header, final File samFile) {
+    @Override
+    protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
 
         if (header.getSequenceDictionary().isEmpty()) {
@@ -137,8 +134,11 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                     "in the file are aligned, then alignment summary metrics collection will fail.");
         }
 
-        final boolean doRefMetrics = REFERENCE_SEQUENCE != null;
-        collector = new AlignmentSummaryMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), doRefMetrics,
+        if(REFERENCE_SEQUENCE == null && COLLECT_ALIGNMENT_INFORMATION) {
+            log.warn("Without a REFERENCE_SEQUENCE, metrics pertaining to mismatch rates will not be collected!");
+        }
+
+        collector = new AlignmentSummaryMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), COLLECT_ALIGNMENT_INFORMATION,
                 ADAPTER_SEQUENCE, MAX_INSERT_SIZE, EXPECTED_PAIR_ORIENTATIONS, IS_BISULFITE_SEQUENCED);
     }
 
@@ -155,7 +155,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         file.write(OUTPUT);
     }
 
-    //overridden to make it visible on the commandline and to change the doc.
+    // overridden to make it visible on the commandline and to change the doc.
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         return new CollectAlignmentRefArgCollection();
@@ -163,7 +163,8 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     public static class CollectAlignmentRefArgCollection implements ReferenceArgumentCollection {
         @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME,
-                doc = "Reference sequence file. Note that while this argument isn't required, without it only a small subset of the metrics will be calculated. Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.",
+                doc = "Reference sequence file. Note that while this argument isn't required, without it a small subset (MISMATCH-related) of the metrics cannot be calculated. " +
+                        "Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.",
                 optional = true)
         public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
@@ -172,5 +173,4 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
             return REFERENCE_SEQUENCE;
         };
     }
-
 }

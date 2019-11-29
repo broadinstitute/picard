@@ -129,7 +129,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
 
     @Argument(doc = "If specified, only print results for these contexts in the detail metrics output. " +
                   "However, the summary metrics output will still take all contexts into consideration.", optional = true)
-    public Set<String> CONTEXTS_TO_PRINT = new HashSet<String>();
+    public Set<String> CONTEXTS_TO_PRINT = new HashSet<>();
 
     @Argument(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.pre_adapter_summary_metrics.EXT). None if null", optional=true)
     public String FILE_EXTENSION = null;
@@ -150,9 +150,9 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
     private String currentRefString = null;
     private int currentRefIndex = -1;
 
-    private final Set<String> samples = new HashSet<String>();
-    private final Set<String> libraries = new HashSet<String>();
-    private final Map<String, ArtifactCounter> artifactCounters = new HashMap<String, ArtifactCounter>();
+    private final Set<String> samples = new HashSet<>();
+    private final Set<String> libraries = new HashSet<>();
+    private final Map<String, ArtifactCounter> artifactCounters = new HashMap<>();
 
     private static final Log log = Log.getInstance(CollectSequencingArtifactMetrics.class);
 
@@ -163,7 +163,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
 
     @Override
     protected String[] customCommandLineValidation() {
-        final List<String> messages = new ArrayList<String>();
+        final List<String> messages = new ArrayList<>();
 
         final int contextFullLength = 2 * CONTEXT_SIZE + 1;
         if (CONTEXT_SIZE < 0) messages.add("CONTEXT_SIZE cannot be negative");
@@ -214,7 +214,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
         }
 
         // set record-level filters
-        final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
+        final List<SamRecordFilter> filters = new ArrayList<>();
         if (!INCLUDE_NON_PF_READS) filters.add(new FailsVendorReadQualityFilter());
         filters.add(new NotPrimaryAlignmentFilter());
         if (!INCLUDE_DUPLICATES) filters.add(new DuplicateReadFilter());
@@ -227,7 +227,7 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
         recordFilter = new AggregateFilter(filters);
 
         // set up the artifact counters
-        final String sampleAlias = StringUtil.join(",", new ArrayList<String>(samples));
+        final String sampleAlias = StringUtil.join(",", new ArrayList<>(samples));
         for (final String library : libraries) {
             artifactCounters.put(library, new ArtifactCounter(sampleAlias, library, CONTEXT_SIZE, TANDEM_READS));
         }

@@ -26,75 +26,74 @@ public class MathUtilTest {
 
     @DataProvider
     public Object[][] seqMethodTestCases() {
-        return new Object[][] {
-                new Object[] {0d, 5d, 1d,     new double[] {0,1,2,3,4,5}},
-                new Object[] {0d, 0.5d, 0.1d, new double[] {0, 0.1, 0.2, 0.3, 0.4, 0.5}},
-                new Object[] {0d, 0.5d, 0.11d,new double[] {0, 0.11, 0.22, 0.33, 0.44}},
-                new Object[] {50d, 55d, 1.25d,new double[] {50, 51.25, 52.5, 53.75, 55}},
-                new Object[] {10d, 0d, 02d,    new double[] {}},
-                new Object[] {10d, 0d, -2d,    new double[] {10, 8, 6, 4, 2, 0}},
+        return new Object[][]{
+                new Object[]{0d, 5d, 1d, new double[]{0, 1, 2, 3, 4, 5}},
+                new Object[]{0d, 0.5d, 0.1d, new double[]{0, 0.1, 0.2, 0.3, 0.4, 0.5}},
+                new Object[]{0d, 0.5d, 0.11d, new double[]{0, 0.11, 0.22, 0.33, 0.44}},
+                new Object[]{50d, 55d, 1.25d, new double[]{50, 51.25, 52.5, 53.75, 55}},
+                new Object[]{10d, 0d, 02d, new double[]{}},
+                new Object[]{10d, 0d, -2d, new double[]{10, 8, 6, 4, 2, 0}},
         };
     }
 
-    @Test(dataProvider="seqMethodTestCases")
+    @Test(dataProvider = "seqMethodTestCases")
     public void testSeqGeneration(final double from, final double to, final double by, final double[] expected) {
         final double[] actual = MathUtil.seq(from, to, by);
         Assert.assertEquals(actual.length, expected.length);
 
-        for (int i=0; i<expected.length; ++i) {
+        for (int i = 0; i < expected.length; ++i) {
             Assert.assertTrue(Math.abs(actual[i] - expected[i]) < 0.0000001);
         }
     }
 
     @DataProvider
     public Object[][] divideMethodTestCases() {
-        return new Object[][] {
-                new Object[] {new double [] {1, 2, 3, 4}, new double [] {2, 3, 4, -5}, new double[] {.5, 2.0/3, 3.0/4, -4.0/5}},
-                new Object[] {new double [] {100}, new double [] {200}, new double[] {.5}},
-                new Object[] {new double [] {0, 4, -3, 2}, new double [] {200, 30, 32, 12}, new double[] {0, 4.0/30, -3.0/32, 2.0/12}},
-                new Object[] {new double [] {}, new double [] {}, new double[] {}},
+        return new Object[][]{
+                new Object[]{new double[]{1, 2, 3, 4}, new double[]{2, 3, 4, -5}, new double[]{.5, 2.0 / 3, 3.0 / 4, -4.0 / 5}},
+                new Object[]{new double[]{100}, new double[]{200}, new double[]{.5}},
+                new Object[]{new double[]{0, 4, -3, 2}, new double[]{200, 30, 32, 12}, new double[]{0, 4.0 / 30, -3.0 / 32, 2.0 / 12}},
+                new Object[]{new double[]{}, new double[]{}, new double[]{}},
 
         };
     }
 
     @Test(dataProvider = "divideMethodTestCases")
-    public void testDivide(final double [] numerators, final double [] denominators, final double [] expected) {
+    public void testDivide(final double[] numerators, final double[] denominators, final double[] expected) {
         assertEquals(divide(numerators, denominators), expected);
     }
 
     @DataProvider
     public Object[][] divideMethodFailTestCases() {
-        return new Object[][] {
-                new Object[] {new double [] { 1, 2, 3, 4}, new double [] {2, 3, 4}},
-                new Object[] {new double [] {100}, new double [] {}},
+        return new Object[][]{
+                new Object[]{new double[]{1, 2, 3, 4}, new double[]{2, 3, 4}},
+                new Object[]{new double[]{100}, new double[]{}},
         };
     }
 
-    @Test(dataProvider = "divideMethodFailTestCases",expectedExceptions = RuntimeException.class)
-    public void testDivideFail(final double [] lhs, final double [] rhs){
+    @Test(dataProvider = "divideMethodFailTestCases", expectedExceptions = RuntimeException.class)
+    public void testDivideFail(final double[] lhs, final double[] rhs) {
         divide(lhs, rhs);
     }
 
     //TestNG doesn't have a utility function with this signature....
-    private void assertEquals(final double [] actual, final double [] expected) {
-        Assert.assertEquals(actual.length,expected.length,"Arrays do not have equal lengths");
+    private void assertEquals(final double[] actual, final double[] expected) {
+        Assert.assertEquals(actual.length, expected.length, "Arrays do not have equal lengths");
 
-        for(int i=0;i<actual.length;++i){
-            Assert.assertEquals(actual[i], expected[i],"Array differ at position " +i);
+        for (int i = 0; i < actual.length; ++i) {
+            Assert.assertEquals(actual[i], expected[i], "Array differ at position " + i);
         }
     }
 
     @Test(dataProvider = "divideDoubleTestCases")
-    public void testDivideDouble (final double numerator, final double denominator, final double expected) {
+    public void testDivideDouble(final double numerator, final double denominator, final double expected) {
         Assert.assertEquals(MathUtil.divide(numerator, denominator), expected);
     }
 
     @DataProvider
     public Object[][] divideDoubleTestCases() {
-        return new Object[][] {
-                new Object[] {15.0, 3.0, 5.0},
-                new Object[] {15.0, 0.0, 0.0}
+        return new Object[][]{
+                new Object[]{15.0, 3.0, 5.0},
+                new Object[]{15.0, 0.0, 0.0}
         };
     }
-
 }

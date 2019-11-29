@@ -23,11 +23,13 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.BAMIndex;
 import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
@@ -49,18 +51,23 @@ public class MergeSamFilesTest extends CommandLineProgramTest {
         final File unsortedInputTestDataDir = new File(TEST_DATA_DIR, "unsorted_input");
         final File mergedOutput = File.createTempFile("unsortedInputSortedOutputTest.", BamFileIoUtils.BAM_FILE_EXTENSION);
         mergedOutput.deleteOnExit();
+        final File mergedOutputIndex = new File(mergedOutput.getParent(), IOUtil.basename(mergedOutput)+ BAMIndex.BAI_INDEX_SUFFIX);
+        mergedOutputIndex.deleteOnExit();
+
         final String[] args = {
                 "I=" + new File(unsortedInputTestDataDir, "1.sam").getAbsolutePath(),
                 "I=" + new File(unsortedInputTestDataDir, "2.sam").getAbsolutePath(),
                 "O=" + mergedOutput.getAbsolutePath(),
+                "CREATE_INDEX=true",
                 "SO=coordinate"
         };
         final int mergeExitStatus = runPicardCommandLine(args);
         Assert.assertEquals(mergeExitStatus, 0);
         final SamReader reader = SamReaderFactory.makeDefault().open(mergedOutput);
         Assert.assertEquals(reader.getFileHeader().getSortOrder(), SAMFileHeader.SortOrder.coordinate);
-
+        Assert.assertTrue(reader.hasIndex());
         new ValidateSamTester().assertSamValid(mergedOutput);
+        Assert.assertTrue(mergedOutputIndex.delete());
         CloserUtil.close(reader);
     }
 }

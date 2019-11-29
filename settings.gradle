@@ -1,3 +1,1 @@
-rootProject.name =	"picard"
-include 'picard_gradle_v2'
-
+rootProject.name = "picard"

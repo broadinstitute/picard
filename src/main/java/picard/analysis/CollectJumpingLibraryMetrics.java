@@ -103,11 +103,6 @@ public class CollectJumpingLibraryMetrics extends CommandLineProgram {
 
     private static final int SAMPLE_FOR_MODE = 50000; // How many outward-facing pairs to sample to determine the mode
 
-    /** Stock main method. */
-    public static void main(String[] args) {
-        System.exit(new CollectJumpingLibraryMetrics().instanceMain(args));
-    }
-
     /**
      * Calculates the detailed statistics about the jumping library and then generates the results.
      */

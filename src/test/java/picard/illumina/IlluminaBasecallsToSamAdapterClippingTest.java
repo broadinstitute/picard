@@ -67,6 +67,7 @@ public class IlluminaBasecallsToSamAdapterClippingTest extends CommandLineProgra
                 "RUN_BARCODE=" + RUN_BARCODE,
                 "READ_STRUCTURE=" + readStructure,
                 "OUTPUT=" + samFile,
+                "SEQUENCING_CENTER=BI",
                 "ALIAS=" + ALIAS
         );
         if (fivePrimerAdapter != null) {

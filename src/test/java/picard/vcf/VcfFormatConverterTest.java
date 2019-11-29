@@ -43,7 +43,7 @@ public class VcfFormatConverterTest extends CommandLineProgramTest {
 
     private static final String VCF = ".vcf";
     private static final String VCF_GZ = ".vcf.gz";
-	private static final String BCF = ".bcf";
+    private static final String BCF = ".bcf";
 
     private static final File TEST_VCF = new File(TEST_DATA_PATH, TEST_FILE_BASE + VCF);
     private static final File TEST_BCF = new File(TEST_DATA_PATH, TEST_FILE_BASE + BCF);
@@ -103,8 +103,8 @@ public class VcfFormatConverterTest extends CommandLineProgramTest {
         new File(outputFile.getAbsolutePath() + Tribble.STANDARD_INDEX_EXTENSION).deleteOnExit();
 
         final List<String> args = new ArrayList<String>(Arrays.asList(
-                    "INPUT=" + input.getAbsolutePath(),
-                    "OUTPUT=" + outputFile.getAbsolutePath()
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outputFile.getAbsolutePath()
         ));
         if (VCF_GZ.equals(format)) {
             args.add("CREATE_INDEX=false");

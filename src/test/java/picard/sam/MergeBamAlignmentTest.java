@@ -23,7 +23,23 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.Defaults;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
@@ -39,7 +55,12 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *  Test for the MergeBamAlignment class
@@ -1697,10 +1718,11 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     @DataProvider(name="UnmappedReadStrategies")
     public Object[][]  UnmappedReadStrategiesProvider() {
         return new Object[][] {
-                {AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE, "contam.expected.NO_CHANGE.sam"},
-                {null,                                                        "contam.expected.NO_CHANGE.sam"},
-                {AbstractAlignmentMerger.UnmappingReadStrategy.COPY_TO_TAG,   "contam.expected.COPY_TO_TAG.sam"},
-                {AbstractAlignmentMerger.UnmappingReadStrategy.MOVE_TO_TAG,   "contam.expected.MOVE_TO_TAG.sam"}
+                {AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE,         "contam.expected.NO_CHANGE.sam"},
+                {AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE_INVALID, "contam.expected.NO_CHANGE_INVALID.sam"},
+                {null,                                                                "contam.expected.NO_CHANGE.sam"},
+                {AbstractAlignmentMerger.UnmappingReadStrategy.COPY_TO_TAG,           "contam.expected.COPY_TO_TAG.sam"},
+                {AbstractAlignmentMerger.UnmappingReadStrategy.MOVE_TO_TAG,           "contam.expected.MOVE_TO_TAG.sam"}
         };
     }
 
@@ -1720,7 +1742,9 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 true, refFasta, mergedSam,
                 null, null, null, null, true, SAMFileHeader.SortOrder.coordinate, strategy);
 
-        assertSamValid(mergedSam);
+        if (strategy == null || strategy.isKeepValid()) {
+            assertSamValid(mergedSam);
+        }
         IOUtil.assertFilesEqual(expectedSam, mergedSam);
     }
 
@@ -1907,6 +1931,74 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         assertSamValid(mergedSam);
         IOUtil.assertFilesEqual(expectedSam, mergedSam);
     }
+    @DataProvider(name = "mappedReadInUnmappedBamDataProvider")
+    Object[][] mappedReadInUnmappedBamDataProvider() {
+        return new Object[][] {
+            {false, false, false, true},
+            {true, true, false, true},
+            {true, false, true, true},
+            {true, true, true, false}
+        };
+    }
+
+    @Test(dataProvider = "mappedReadInUnmappedBamDataProvider")
+    public void testMappedReadInUnmappedBam(final boolean paired, final boolean firstUnMapped, final boolean secondUnMapped, final boolean shouldThrowException) throws IOException {
+        final SAMRecordSetBuilder samRecordSetBuilderUnmappedBam = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.queryname);
+        samRecordSetBuilderUnmappedBam.setRandomSeed(12345);
+        final SAMFileHeader header = samRecordSetBuilderUnmappedBam.getHeader();
+        header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(fasta.toPath()));
+
+        final SAMRecordSetBuilder samRecordSetBuilderAlignedBam = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.queryname);
+        samRecordSetBuilderUnmappedBam.setRandomSeed(12345);
+        final SAMFileHeader headerAligned = samRecordSetBuilderUnmappedBam.getHeader();
+        headerAligned.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(fasta.toPath()));
+
+        if (!paired) {
+            samRecordSetBuilderUnmappedBam.addFrag("theRead", 1, 1, false, false, null, null, -1);
+            samRecordSetBuilderAlignedBam.addFrag("theRead", 1, 1, false, false, null, null, -1);
+        } else {
+            samRecordSetBuilderUnmappedBam.addPair("theRead", 1, 1, 65, firstUnMapped, secondUnMapped, null, null, false, true, -1);
+            samRecordSetBuilderAlignedBam.addPair("theRead", 1, 1, 65, false, false, null, null, false, true, -1);
+        }
+
+        //add to both unmappedSam and alignedSam
+        final File unmappedSam = File.createTempFile("unmapped.", ".sam");
+        unmappedSam.deleteOnExit();
+        final File alignedSam = File.createTempFile("aligned.", ".sam");
+        alignedSam.deleteOnExit();
+
+        final SAMFileWriterFactory factory = new SAMFileWriterFactory();
+
+        final SAMFileWriter unmappedWriter = factory.makeSAMWriter(header, false, unmappedSam);
+        final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
+        for (final SAMRecord rec : samRecordSetBuilderUnmappedBam.getRecords()) {
+            unmappedWriter.addAlignment(rec);
+        }
+
+        for (final SAMRecord rec : samRecordSetBuilderAlignedBam.getRecords()) {
+            alignedWriter.addAlignment(rec);
+        }
+        unmappedWriter.close();
+        alignedWriter.close();
+
+        //run merge
+        final File output = File.createTempFile("output", ".sam");
+        output.deleteOnExit();
+        final List<String> args = new ArrayList<>(Arrays.asList(
+                "UNMAPPED_BAM=" + unmappedSam.getAbsolutePath(),
+                "ALIGNED_BAM=" + alignedSam.getAbsolutePath(),
+                "OUTPUT=" + output.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + fasta.getAbsolutePath())
+        );
+
+        //should throw PicardException when run because mapped read found in UNMAPPED_BAM input
+        if (shouldThrowException) {
+            Assert.assertThrows(PicardException.class, () -> runPicardCommandLine(args));
+        } else {
+            runPicardCommandLine(args);
+        }
+    }
+
 
     @Test
     public void testPairedReadsAreProcessedProperlyInAbsenceOfHitIndexTags () throws IOException {

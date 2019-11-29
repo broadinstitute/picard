@@ -1,15 +1,19 @@
 package picard.util;
 
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.testng.collections.Sets;
+import picard.cmdline.ClassFinder;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
-
-import org.testng.Assert;
-import org.testng.collections.Sets;
-import picard.cmdline.ClassFinder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import static java.lang.Math.abs;
 
@@ -109,11 +113,22 @@ public class TestNGUtil {
         classFinder.find(packageName, Object.class);
 
         for (final Class<?> testClass : classFinder.getClasses()) {
-            if (Modifier.isAbstract(testClass.getModifiers()) || Modifier.isInterface(testClass.getModifiers()))
+            final int modifiers;
+            final Method[] declaredMethods;
+            final Method[] methods;
+
+            try {
+                modifiers = testClass.getModifiers();
+                declaredMethods = testClass.getDeclaredMethods();
+                methods = testClass.getMethods();
+            } catch (final  NoClassDefFoundError e){
+                continue;
+            }
+            if (Modifier.isAbstract(modifiers) || Modifier.isInterface(modifiers))
                 continue;
             Set<Method> methodSet = Sets.newHashSet();
-            methodSet.addAll(Arrays.asList(testClass.getDeclaredMethods()));
-            methodSet.addAll(Arrays.asList(testClass.getMethods()));
+            methodSet.addAll(Arrays.asList(declaredMethods));
+            methodSet.addAll(Arrays.asList(methods));
 
             for (final Method method : methodSet) {
                 if (method.isAnnotationPresent(DataProvider.class)) {

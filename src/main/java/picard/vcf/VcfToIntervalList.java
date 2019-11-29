@@ -79,10 +79,6 @@ public class VcfToIntervalList extends CommandLineProgram {
             optional = true)
     public boolean INCLUDE_FILTERED = false;
 
-    public static void main(final String[] argv) {
-        new VcfToIntervalList().instanceMainWithExit(argv);
-    }
-
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);

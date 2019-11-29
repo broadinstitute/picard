@@ -363,11 +363,6 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
         return count;
     }
 
-    /** Stock main method. */
-    public static void main(final String[] args) {
-        new BaitDesigner().instanceMainWithExit(args);
-    }
-
     @Override
     protected String[] customCommandLineValidation() {
         final List<String> errors = new ArrayList<String>();

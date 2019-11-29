@@ -24,13 +24,7 @@
 
 package picard.illumina;
 
-import htsjdk.samtools.BAMRecordCodec;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordQueryNameComparator;
+import htsjdk.samtools.*;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Iso8601Date;
@@ -42,8 +36,8 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.programgroups.BaseCallingProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.BaseCallingProgramGroup;
 import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
@@ -170,14 +164,17 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public String LIBRARY_NAME;
 
-    @Argument(doc = "The name of the sequencing center that produced the reads.  Used to set the RG.CN tag.", optional = true)
-    public String SEQUENCING_CENTER = "BI";
+    @Argument(doc = "The name of the sequencing center that produced the reads.  Used to set the @RG->CN header tag.")
+    public String SEQUENCING_CENTER;
 
     @Argument(doc = "The start date of the run.", optional = true)
     public Date RUN_START_DATE;
 
     @Argument(doc = "The name of the sequencing technology that produced the read.", optional = true)
-    public String PLATFORM = "illumina";
+    public String PLATFORM = "ILLUMINA";
+
+    @Argument(doc = "Whether to include the barcode information in the @RG->BC header tag. Defaults to false until included in the SAM spec.")
+    public boolean INCLUDE_BC_IN_RG_TAG = false;
 
     @Argument(doc = ReadStructure.PARAMETER_DOC, shortName = "RS")
     public String READ_STRUCTURE;
@@ -217,11 +214,17 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     @Argument(doc = "If set, this is the first tile to be processed (used for debugging).  Note that tiles are not processed" +
             " in numerical order.",
+            mutex = "PROCESS_SINGLE_TILE",
             optional = true)
     public Integer FIRST_TILE;
 
     @Argument(doc = "If set, process no more than this many tiles (used for debugging).", optional = true)
     public Integer TILE_LIMIT;
+
+    @Argument(doc = "If set, process only the tile number given and prepend the tile number to the output file name.",
+            mutex = "FIRST_TILE",
+            optional = true)
+    public Integer PROCESS_SINGLE_TILE;
 
     @Argument(doc = "If true, call System.gc() periodically.  This is useful in cases in which the -Xmx value passed " +
             "is larger than the available memory.")
@@ -255,6 +258,12 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     @Argument(doc = "The list of tags to store each molecular index.  The number of tags should match the number of molecular indexes.", optional = true)
     public List<String> TAG_PER_MOLECULAR_INDEX;
+
+    @Argument(doc = "When should the sample barcode (as read by the sequencer) be placed on the reads in the BC tag?")
+    public ClusterDataToSamConverter.PopulateBarcode BARCODE_POPULATION_STRATEGY = ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY;
+
+    @Argument(doc = "Should the barcode quality be included when the sample barcode is included?")
+    public boolean INCLUDE_BARCODE_QUALITY = false;
 
     private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<>();
     private ReadStructure readStructure;
@@ -290,23 +299,24 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         final int numOutputRecords = readStructure.templates.length();
         // Combine any adapters and custom adapter pairs from the command line into an array for use in clipping
-        final List<AdapterPair> adapters = new ArrayList<>();
-        adapters.addAll(ADAPTERS_TO_CHECK);
+        final List<AdapterPair> adapters = new ArrayList<>(ADAPTERS_TO_CHECK);
+
         if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
             adapters.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
         }
 
+        final boolean demultiplex = readStructure.hasSampleBarcode();
         if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
             if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
             basecallsConverter = new NewIlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                    barcodeSamWriterMap, true, Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
+                    barcodeSamWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
                     TMP_DIR, NUM_PROCESSORS,
                     FIRST_TILE, TILE_LIMIT, new QueryNameComparator(),
                     new Codec(numOutputRecords),
                     SAMRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES);
         } else {
             basecallsConverter = new IlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                    barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE / numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
+                    barcodeSamWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE / numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
                     FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class,
                     bclQualityEvaluationStrategy, APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
         }
@@ -315,7 +325,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
          * data which may be different from the input read structure (specifically if there are skips).
          */
         final ClusterDataToSamConverter converter = new ClusterDataToSamConverter(RUN_BARCODE, READ_GROUP_ID,
-                basecallsConverter.getFactory().getOutputReadStructure(), adapters)
+                basecallsConverter.getFactory().getOutputReadStructure(), adapters, BARCODE_POPULATION_STRATEGY, INCLUDE_BARCODE_QUALITY )
                 .withMolecularIndexTag(MOLECULAR_INDEX_TAG)
                 .withMolecularIndexQualityTag(MOLECULAR_INDEX_BASE_QUALITY_TAG)
                 .withTagPerMolecularIndex(TAG_PER_MOLECULAR_INDEX);
@@ -418,7 +428,16 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 samHeaderParams.put(tagName, row.getField(tagName));
             }
 
-            final SAMFileWriterWrapper writer = buildSamFileWriter(new File(row.getField("OUTPUT")),
+            File outputFile = new File(row.getField("OUTPUT"));
+
+            // If we are processing a single tile we want to append the tile number to the output file name. This is
+            // done to avoid file overwrites if you are running tile based processing in parallel.
+            if (PROCESS_SINGLE_TILE != null) {
+                outputFile = new File(outputFile.getParentFile(),
+                        PROCESS_SINGLE_TILE + "." + outputFile.getName());
+            }
+
+            final SAMFileWriterWrapper writer = buildSamFileWriter(outputFile,
                     row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), samHeaderParams, true);
             barcodeSamWriterMap.put(key, writer);
         }
@@ -440,12 +459,23 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final Map<String, String> params = new LinkedHashMap<>();
 
         String platformUnit = RUN_BARCODE + "." + LANE;
-        if (barcodes != null) platformUnit += ("." + IlluminaUtil.barcodeSeqsToString(barcodes));
+        if (barcodes != null) {
+            final String barcodeString = IlluminaUtil.barcodeSeqsToString(barcodes);
+            platformUnit += "." + barcodeString;
+            if (INCLUDE_BC_IN_RG_TAG) {
+                params.put("BC", barcodeString);
+            }
+        }
 
-        params.put("PL", PLATFORM);
-        params.put("PU", platformUnit);
-        params.put("CN", SEQUENCING_CENTER);
-        params.put("DT", RUN_START_DATE == null ? null : new Iso8601Date(RUN_START_DATE).toString());
+        if (PLATFORM != null) {
+            params.put(SAMReadGroupRecord.PLATFORM_TAG, PLATFORM);
+        }
+
+        params.put(SAMReadGroupRecord.PLATFORM_UNIT_TAG, platformUnit);
+        if (SEQUENCING_CENTER != null) {
+            params.put(SAMReadGroupRecord.SEQUENCING_CENTER_TAG, SEQUENCING_CENTER);
+        }
+        params.put(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG, RUN_START_DATE == null ? null : new Iso8601Date(RUN_START_DATE).toString());
 
         return params;
     }
@@ -480,10 +510,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         return new SAMFileWriterWrapper(new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, output));
     }
 
-    public static void main(final String[] args) {
-        System.exit(new IlluminaBasecallsToSam().instanceMain(args));
-    }
-
     /**
      * Put any custom command-line validation in an override of this method.
      * clp is initialized at this point and can be used to print usage and access args.
@@ -501,13 +527,13 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final ArrayList<String> messages = new ArrayList<>();
 
         readStructure = new ReadStructure(READ_STRUCTURE);
-        if (!readStructure.sampleBarcodes.isEmpty() && LIBRARY_PARAMS == null) {
+        if (readStructure.hasSampleBarcode() && LIBRARY_PARAMS == null) {
             messages.add("BARCODE_PARAMS or LIBRARY_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode)" +
                     " then either LIBRARY_PARAMS or BARCODE_PARAMS(deprecated) must be provided!");
         }
 
         if (READ_GROUP_ID == null) {
-            READ_GROUP_ID = RUN_BARCODE.substring(0, 5) + "." + LANE;
+            READ_GROUP_ID = RUN_BARCODE.substring(0, Math.min(RUN_BARCODE.length(), 5)) + "." + LANE;
         }
 
         if (!TAG_PER_MOLECULAR_INDEX.isEmpty() && TAG_PER_MOLECULAR_INDEX.size() != readStructure.molecularBarcode.length()) {
@@ -516,6 +542,13 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         if ((FIVE_PRIME_ADAPTER == null) != (THREE_PRIME_ADAPTER == null)) {
             messages.add("THREE_PRIME_ADAPTER and FIVE_PRIME_ADAPTER must either both be null or both be set.");
+        }
+
+        // If we are processing a single tile we need to set TILE_LIMIT and FIRST_TILE for the underlying
+        // basecalls converter.
+        if (PROCESS_SINGLE_TILE != null) {
+            TILE_LIMIT = 1;
+            FIRST_TILE = PROCESS_SINGLE_TILE;
         }
 
         if (messages.isEmpty()) {

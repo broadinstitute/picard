@@ -3,6 +3,7 @@ package picard.illumina.parser;
 import picard.illumina.parser.fakers.FileFaker;
 
 import java.io.File;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -31,5 +32,13 @@ public class PerTileOrPerRunFileUtil extends PerTileFileUtil {
     @Override
     public boolean checkTileCount() {
         return runFile == null;
+    }
+
+    @Override
+    public List<String> verify(final List<Integer> expectedTiles, final int[] expectedCycles) {
+        // if we have a runFile the base should be the parent directory of that file and not
+        // the lane base directory of a per tile file.
+        final File baseDir = runFile != null ? runFile.getParentFile() : this.base;
+        return verifyPerTile(baseDir, expectedTiles);
     }
 }

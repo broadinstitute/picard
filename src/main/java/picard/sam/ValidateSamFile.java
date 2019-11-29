@@ -24,18 +24,18 @@
 
 package picard.sam;
 
+import htsjdk.samtools.BamIndexValidator.IndexValidationStringency;
 import htsjdk.samtools.SAMValidationError;
 import htsjdk.samtools.SamFileValidator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.BamIndexValidator.IndexValidationStringency;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
@@ -66,15 +66,15 @@ import java.util.List;
  *
  * This tool is a wrapper for {@link SamFileValidator}.
  *
- * <h4>Usage example:</h4>
+ * <h3>Usage example:</h3>
  * <pre>
- * java -jar picard.jar ValidateSamFile \\<br />
- *       I=input.bam \\<br />
+ * java -jar picard.jar ValidateSamFile \<br />
+ *       I=input.bam \<br />
  *       MODE=SUMMARY
  * </pre>
  * <p>To obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional
  *  <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>
- * "<hr />
+ * <hr />
  *
  * @author Doug Voet
  */
@@ -100,16 +100,25 @@ public class ValidateSamFile extends CommandLineProgram {
 
             "<p>After identifying and fixing your 'warnings/errors', we recommend that you rerun this tool to validate your SAM/BAM " +
             "file prior to proceeding with your downstream analysis.  This will verify that all problems in your file have been addressed.</p>" +
-            "<h4>Usage example:</h4>" +
+            "<h3>Usage example:</h3>" +
             "<pre>" +
             "java -jar picard.jar ValidateSamFile \\<br />" +
             "      I=input.bam \\<br />" +
             "      MODE=SUMMARY" +
             "</pre>" +
             "<p>To obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional " +
-            " <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>" +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>" +
             ""+
-            "<hr />";
+            "<hr />"+
+            "Return codes depend on the errors/warnings discovered:" +
+            "<p>"+
+            "-1 failed to complete execution\n" +
+            "0  ran successfully\n" +
+            "1  warnings but no errors\n" +
+            "2  errors and warnings\n" +
+            "3  errors but no warnings";
+
+
     public enum Mode {VERBOSE, SUMMARY}
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
@@ -126,7 +135,7 @@ public class ValidateSamFile extends CommandLineProgram {
     public Mode MODE = Mode.VERBOSE;
 
     @Argument(doc = "List of validation error types to ignore.", optional = true)
-    public List<SAMValidationError.Type> IGNORE = new ArrayList<SAMValidationError.Type>();
+    public List<SAMValidationError.Type> IGNORE = new ArrayList<>();
 
     @Argument(shortName = "MO",
             doc = "The maximum number of lines output in verbose mode")
@@ -163,10 +172,6 @@ public class ValidateSamFile extends CommandLineProgram {
             "high duplication or chimerism rates (> 10%), the mate validation process often requires extremely " +
             "large amounts of memory to run, so this flag allows you to forego that check.")
     public boolean SKIP_MATE_VALIDATION = false;
-
-    public static void main(final String[] args) {
-        System.exit(new ValidateSamFile().instanceMain(args));
-    }
 
     /**
      * Return types for doWork()
@@ -205,6 +210,8 @@ public class ValidateSamFile extends CommandLineProgram {
                 IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
                 reference = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
 
+            } else {
+                log.warn("NM validation cannot be performed without the reference. All other validations will still occur.");
             }
             final PrintWriter out;
             if (OUTPUT != null) {

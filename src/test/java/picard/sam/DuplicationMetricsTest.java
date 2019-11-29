@@ -61,6 +61,11 @@ public class DuplicationMetricsTest {
         return metric;
     }
 
+    @Test
+    public void testEmptyDuplicationMetricsDerivation(){
+        Assert.assertEquals(emptyMetrics().PERCENT_DUPLICATION, 0.0);
+    }
+
     @Test(dataProvider="testMergeDataProvider")
     public void testMerge(final DuplicationMetrics left, final DuplicationMetrics right, final DuplicationMetrics expected) {
         left.merge(right);
@@ -87,5 +92,10 @@ public class DuplicationMetricsTest {
                 {nonEmptyMetrics(1), nonEmptyMetrics(1), nonEmptyMetrics(2)},
                 {nonEmptyMetrics(1), nonEmptyMetrics(2), nonEmptyMetrics(3)}
         };
+    }
+
+    @Test(timeOut = 1000)
+    public void infiniteLoopFromGithub_1146() {
+        DuplicationMetrics.estimateLibrarySize(357087883,357087881);
     }
 }

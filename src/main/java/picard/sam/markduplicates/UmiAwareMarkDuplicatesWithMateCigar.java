@@ -35,6 +35,8 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -118,9 +120,6 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
     @Argument(shortName = "UMI_TAG_NAME", doc = "Tag name to use for UMI", optional = true)
     public String UMI_TAG_NAME = "RX";
 
-    @Argument(shortName = "ASSIGNED_UMI_TAG", doc = "Tag name to use for assigned UMI", optional = true)
-    public String ASSIGNED_UMI_TAG = "MI";
-
     // Since we inherit from SimpleMarkDuplicatesWithMateCigar, it is useful for us to also inherit the tests
     // which do not contain UMIs.  By default, we don't allow for missing UMIs, but for the inherited tests
     // we allow for missing UMIs.
@@ -128,7 +127,7 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
     public boolean ALLOW_MISSING_UMIS = false;
 
     private final Log log = Log.getInstance(UmiAwareMarkDuplicatesWithMateCigar.class);
-    private UmiMetrics metrics = new UmiMetrics();
+    private final Map<String, UmiMetrics> metrics = new HashMap<>();
 
     @Override
     protected int doWork() {
@@ -136,11 +135,14 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
         IOUtil.assertFileIsWritable(UMI_METRICS_FILE);
 
         // Perform Mark Duplicates work
-        int retval = super.doWork();
+        final int retval = super.doWork();
 
-        // Write metrics specific to UMIs
-        MetricsFile<UmiMetrics, Double> metricsFile = getMetricsFile();
-        metricsFile.addMetric(metrics);
+        // Add results in metrics to the metricsFile
+        final MetricsFile<UmiMetrics, Double> metricsFile = getMetricsFile();
+        for (final UmiMetrics metric : metrics.values()) {
+            metricsFile.addMetric(metric);
+        }
+
         metricsFile.write(UMI_METRICS_FILE);
         return retval;
     }
@@ -151,6 +153,6 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
                     new DuplicateSetIterator(headerAndIterator.iterator,
                     headerAndIterator.header,
                     false,
-                    comparator), MAX_EDIT_DISTANCE_TO_JOIN, UMI_TAG_NAME, ASSIGNED_UMI_TAG, ALLOW_MISSING_UMIS, metrics);
+                    comparator), MAX_EDIT_DISTANCE_TO_JOIN, UMI_TAG_NAME, MOLECULAR_IDENTIFIER_TAG, ALLOW_MISSING_UMIS, DUPLEX_UMI, metrics);
     }
 }
