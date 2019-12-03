@@ -44,6 +44,8 @@ import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,6 +81,8 @@ public class VcfToAdpc extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output (adpc.bin) file to write.")
     public File OUTPUT;
+
+    private static final DecimalFormat df = new DecimalFormat();
 
     @Override
     protected int doWork() {
@@ -171,11 +175,16 @@ public class VcfToAdpc extends CommandLineProgram {
     }
 
     private Float getFloatAttribute(final Genotype genotype, final String key) {
-        final Object value = genotype.getAnyAttribute(key);
-        if (value != null) {
-            return Float.parseFloat(value.toString());
+        final String value = genotype.getAnyAttribute(key).toString();
+        try {
+            if (value != null) {
+                return df.parse(value).floatValue();
+            }
+            return null;
         }
-        return null;
+        catch (ParseException e) {
+            throw new PicardException("Could not parse float attribute: " + value, e);
+        }
     }
 
     private Object getRequiredAttribute(Genotype genotype, final String key) {
