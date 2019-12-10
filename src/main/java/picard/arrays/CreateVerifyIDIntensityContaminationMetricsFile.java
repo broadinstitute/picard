@@ -82,7 +82,7 @@ public class CreateVerifyIDIntensityContaminationMetricsFile extends CommandLine
 
         final Pattern HEADER_PATTERN = Pattern.compile("^ID\\s+%Mix\\s+LLK\\s+LLK0\\s*$");
         final Pattern DASHES_PATTERN = Pattern.compile("^[-]+$");
-        final Pattern DATA_PATTERN = Pattern.compile("^(\\d+)\\s+([0-9]*\\.?[0-9]+)\\s+([0-9]*\\.?[0-9]+)\\s+([0-9]*\\.?[0-9]+)\\s*$");
+        final Pattern DATA_PATTERN = Pattern.compile("^(\\d+)\\s+([0-9]*\\.?[0-9]+)\\s+([-0-9]*\\.?[0-9]+)\\s+([0-9]*\\.?[0-9]+)\\s*$");
         try (BufferedReader br = new BufferedReader(new FileReader(INPUT))) {
             String line;
             line = br.readLine();
