@@ -32,7 +32,7 @@ public class CreateVerifyIDIntensityContaminationMetricsFileTest {
         final MetricsFile<VerifyIDIntensityContaminationMetrics, Comparable<?>> metrics = new MetricsFile<>();
         metrics.read(new FileReader(output));
 
-        Assert.assertEquals(metrics.getMetrics().size(), 3);
+        Assert.assertEquals(metrics.getMetrics().size(), 4);
         Assert.assertEquals(metrics.getMetrics().get(0).ID, 0);
         Assert.assertEquals(metrics.getMetrics().get(0).PCT_MIX, 0.214766, 0.0001);
         Assert.assertEquals(metrics.getMetrics().get(0).LLK, 157575.0, 0.0001);
@@ -47,6 +47,11 @@ public class CreateVerifyIDIntensityContaminationMetricsFileTest {
         Assert.assertEquals(metrics.getMetrics().get(2).PCT_MIX, 0.0994769, 0.0001);
         Assert.assertEquals(metrics.getMetrics().get(2).LLK, 90260.4, 0.0001);
         Assert.assertEquals(metrics.getMetrics().get(2).LLK0, 91166.7, 0.0001);
+
+        Assert.assertEquals(metrics.getMetrics().get(3).ID, 3);
+        Assert.assertEquals(metrics.getMetrics().get(3).PCT_MIX, 0.234567, 0.0001);
+        Assert.assertEquals(metrics.getMetrics().get(3).LLK, -4703.97, 0.0001);
+        Assert.assertEquals(metrics.getMetrics().get(3).LLK0, -5204.97, 0.0001);
     }
 
     @Test(expectedExceptions = PicardException.class)
