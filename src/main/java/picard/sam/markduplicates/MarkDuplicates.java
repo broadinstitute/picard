@@ -483,14 +483,15 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         log.info("Will retain up to " + maxInMemory + " data points before spilling to disk.");
 
         final ReadEndsForMarkDuplicatesCodec fragCodec, pairCodec, diskCodec;
+        final double scale = OPTICAL_DUPLICATE_PIXEL_DISTANCE/(double) OpticalDuplicateFinder.DEFAULT_OPTICAL_DUPLICATE_DISTANCE;
         if (useBarcodes) {
-            fragCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
-            pairCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
-            diskCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
+            fragCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec(scale);
+            pairCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec(scale);
+            diskCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec(scale);
         } else {
-            fragCodec = new ReadEndsForMarkDuplicatesCodec();
-            pairCodec = new ReadEndsForMarkDuplicatesCodec();
-            diskCodec = new ReadEndsForMarkDuplicatesCodec();
+            fragCodec = new ReadEndsForMarkDuplicatesCodec(scale);
+            pairCodec = new ReadEndsForMarkDuplicatesCodec(scale);
+            diskCodec = new ReadEndsForMarkDuplicatesCodec(scale);
         }
 
         this.pairSort = SortingCollection.newInstance(ReadEndsForMarkDuplicates.class,

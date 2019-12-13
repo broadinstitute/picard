@@ -193,6 +193,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
         // Needed to suppress calling CommandLineProgram.getVersion(), which doesn't work for code not in a jar
         markDuplicates.PROGRAM_RECORD_ID = null;
+        markDuplicates.OPTICAL_DUPLICATE_PIXEL_DISTANCE=2500;
         Assert.assertEquals(markDuplicates.doWork(), 0);
         Assert.assertEquals(markDuplicates.numOpticalDuplicates(), expectedNumOpticalDuplicates);
         IOUtil.recursiveDelete(outputDir.toPath());
@@ -204,6 +205,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         return new Object[][] {
                 {new File(TEST_DATA_DIR, "optical_dupes.sam"), 1L},
                 {new File(TEST_DATA_DIR, "optical_dupes_casava.sam"), 1L},
+                {new File(TEST_DATA_DIR, "GH1141.optical_dups.sam"), 1L},
         };
     }
 
