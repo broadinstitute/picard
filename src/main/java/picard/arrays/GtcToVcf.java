@@ -74,6 +74,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -165,7 +166,14 @@ public class GtcToVcf extends CommandLineProgram {
 
     private static ReferenceSequenceFile refSeq;
 
+    private static final DecimalFormat df = new DecimalFormat();
+
     private static final String DOT = ".";
+
+    static {
+        df.setMaximumFractionDigits(3);
+        df.setGroupingSize(0);
+    }
 
     @Override
     protected boolean requiresReference() {
@@ -473,7 +481,7 @@ public class GtcToVcf extends CommandLineProgram {
         if (Float.isNaN(value)) {
             return DOT;
         }
-        return Float.toString(value);
+        return df.format(value);
     }
 
     /**
