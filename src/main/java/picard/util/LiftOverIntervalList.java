@@ -110,7 +110,7 @@ public class LiftOverIntervalList extends CommandLineProgram {
     @Argument(doc = "The output interval list file.", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    @Argument(doc = "Sequence dictionary to place in the output interval list. (This should be any file from while the dictionary of the target reference can be extracted.)",
+    @Argument(doc = "Sequence dictionary to place in the output interval list. (This should be any file from which the dictionary of the target reference can be extracted.)",
             shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME)
     public File SEQUENCE_DICTIONARY;
 
