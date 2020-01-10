@@ -84,12 +84,17 @@ public class SingleBarcodeDistanceMetric {
         return numMismatches;
     }
 
-    /**
-     * Similar to Hamming distance but this version doesn't penalize matching bases with low quality for the read.
 
-     * @return the edit distance between the barcode(s) and the read(s)
-     */
+    @Deprecated //(due to typo in original name. 1/9/2020)
     public int leniantHammingDistance() {
+        return lenientHammingDistance();
+    }
+        /**
+         * Similar to Hamming distance but this version doesn't penalize matching bases with low quality for the read.
+
+         * @return the edit distance between the barcode(s) and the read(s)
+         */
+    public int lenientHammingDistance() {
         int numMismatches = 0;
         for (int i = 0; i < barcodeBases.length && i < maskedBases.length && numMismatches <= maximalInterestingDistance; ++i) {
 

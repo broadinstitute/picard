@@ -57,7 +57,6 @@ import picard.filter.CountingDuplicateFilter;
 import picard.filter.CountingFilter;
 import picard.filter.CountingMapQFilter;
 import picard.filter.CountingPairedFilter;
-import picard.sam.markduplicates.CollectDuplicateMetrics;
 
 import java.io.File;
 import java.util.ArrayList;

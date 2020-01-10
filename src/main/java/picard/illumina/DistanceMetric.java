@@ -40,7 +40,7 @@ public enum DistanceMetric implements CommandLineParser.ClpEnum {
             "Unequal bases are considered mismatches. No-call read-bases, or those with low quality are not considered mismatches.") {
         @Override
         protected int distance0(final SingleBarcodeDistanceMetric editDistance) {
-            return editDistance.leniantHammingDistance();
+            return editDistance.lenientHammingDistance();
         }
     },
 
