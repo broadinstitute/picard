@@ -44,7 +44,7 @@ import java.util.List;
  * This tool adjusts the coordinates in an interval list on one reference to its homologous interval list on another
  * reference, based on a chain file that describes the correspondence between the two references. It is based on the
  * <a href="http://genome.ucsc.edu/cgi-bin/hgLiftOver">UCSC LiftOver tool</a> and uses a UCSC chain file to guide its operation.
- * It accepts both Picard interval_list files or VCF files as interval inputs.
+ * It accepts a Picard interval_list file as an input. Note: for lifting over VCF files use LiftoverVcf tool.
  * <br />
  * <h3>Usage example:</h3>
  * <pre>
