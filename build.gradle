@@ -19,6 +19,7 @@ plugins {
     id "com.github.kt3k.coveralls" version '2.6.3'
     id "org.ajoberstar.grgit" version "4.0.0-rc.1"
     id "org.ajoberstar.git-publish" version "2.1.1"
+    id "me.champeau.gradle.jmh" version "0.5.0"
 }
 
 mainClassName = "picard.cmdline.PicardCommandLine"
@@ -27,8 +28,9 @@ repositories {
     mavenCentral()
     maven {
         url "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/" //for htsjdk snapshots
-    }
+        }
     mavenLocal()
+    maven { url "https://plugins.gradle.org/m2/" }
 }
 
 final buildPrerequisitesMessage = "See https://github.com/broadinstitute/picard/blob/master/README.md#building-picard for information on how to build picard."
@@ -102,6 +104,11 @@ dependencies {
 
     testCompile 'org.testng:testng:6.14.3'
     testCompile 'org.apache.commons:commons-lang3:3.6'
+
+//    jmh 'org.openjdk.jmh:jmh-core:1.21'
+//    jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.21'
+    compile 'org.openjdk.jmh:jmh-core:1.21'
+    compile 'org.openjdk.jmh:jmh-generator-annprocess:1.21'
 }
 
 configurations.all {
@@ -443,3 +450,7 @@ gitPublish {
         } 
     }
 }
+
+//jmh {
+//    include = {"jmh/java/bechmark"}
+//}
