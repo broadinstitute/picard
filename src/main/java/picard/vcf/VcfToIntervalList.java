@@ -1,17 +1,24 @@
 package picard.vcf;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.IntervalListWriter;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.Tuple;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * Converts a VCF or BCF file to a Picard Interval List.
@@ -84,10 +91,23 @@ public class VcfToIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final IntervalList intervalList = VCFFileReader.fromVcf(INPUT, INCLUDE_FILTERED);
+        try (final VCFFileReader vcfReader = new VCFFileReader(INPUT.toPath(), false)) {
+            final Tuple<SAMFileHeader, Iterator<Interval>> samFileHeaderIteratorTuple = VCFFileReader.toIntervals(vcfReader, INCLUDE_FILTERED);
+            try (IntervalListWriter writer = new IntervalListWriter(OUTPUT.toPath(), samFileHeaderIteratorTuple.a)) {
+                IntervalList.IntervalMerger merger = new IntervalList.IntervalMerger(samFileHeaderIteratorTuple.b,true,false,true);
 
-        // Sort and write the output
-        intervalList.uniqued().write(OUTPUT);
+                for (final Interval interval : merger) {
+                    writer.write(interval);
+                }
+            } catch (IOException e) {
+                if(!OUTPUT.renameTo(new File(OUTPUT.getAbsolutePath() + "incomplete"))){
+                    OUTPUT.delete();
+                };
+
+                throw new PicardException("Trouble writing IntervalList. Renamed <OUTPUT> to <OUTPUT>.incomplete to avoid misuse.", e);
+            }
+        }
         return 0;
     }
 }
+
