@@ -21,8 +21,8 @@ import static java.lang.Math.log10;
  */
 public class HaplotypeProbabilitiesTest {
 
-    static Snp snp1, snp2;
-    static HaplotypeBlock hb1, hb2;
+    private static Snp snp1, snp2;
+    private static HaplotypeBlock hb1, hb2;
 
     @BeforeTest
     public static void initializeHaplotypeBlock() {
@@ -152,7 +152,7 @@ public class HaplotypeProbabilitiesTest {
         };
     }
 
-    static final int[] genotypes = {0, 1, 2};
+    private static final int[] genotypes = {0, 1, 2};
 
     @Test(dataProvider = "dataTestHaplotypeProbabilitiesFromContaminatorSequenceAddToProbs")
     public void testHaplotypeProbabilitiesFromContaminatorSequenceAddToProbs(final HaplotypeProbabilitiesFromContaminatorSequence hp, final Snp snp, final int nAlt, final int nTotal) throws Exception {
