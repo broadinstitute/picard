@@ -8,9 +8,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -39,7 +37,7 @@ public class CompareGtcFiles extends CommandLineProgram {
                     "java -jar picard.jar CompareGtcFiles \\<br />" +
                     "      INPUT=input1.gtc \\<br />" +
                     "      INPUT=input2.gtc \\<br />" +
-                    "      ILLUMINA_NORMALIZATION_MANIFEST=chip_name.bpm.csv \\<br />" +
+                    "      BPM_FILE=chip_name.bpm \\<br />" +
                     "</pre>";
 
     private static final Log log = Log.getInstance(CompareGtcFiles.class);
@@ -50,8 +48,8 @@ public class CompareGtcFiles extends CommandLineProgram {
             maxElements = 2)
     public List<File> INPUT;
 
-    @Argument(shortName = "NORM_MANIFEST", doc = "An Illumina bead pool manifest (a manifest containing the Illumina normalization ids) (bpm.csv)")
-    public File ILLUMINA_NORMALIZATION_MANIFEST;
+    @Argument(shortName = "BPM_FILE", doc = "The Illumina Bead Pool Manifest (.bpm) file")
+    public File ILLUMINA_BEAD_POOL_MANIFEST_FILE;
 
     private final List<String> errors = new ArrayList<>();
 
@@ -71,9 +69,8 @@ public class CompareGtcFiles extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFilesAreReadable(INPUT);
 
-        InfiniumNormalizationManifest infiniumNormalizationManifest = new InfiniumNormalizationManifest(ILLUMINA_NORMALIZATION_MANIFEST);
-        try (InfiniumGTCFile gtcFileOne = new InfiniumGTCFile(new DataInputStream(new FileInputStream(INPUT.get(0))), infiniumNormalizationManifest);
-             InfiniumGTCFile gtcFileTwo = new InfiniumGTCFile(new DataInputStream(new FileInputStream(INPUT.get(1))), infiniumNormalizationManifest)) {
+        try (InfiniumGTCFile gtcFileOne = new InfiniumGTCFile(INPUT.get(0), ILLUMINA_BEAD_POOL_MANIFEST_FILE);
+             InfiniumGTCFile gtcFileTwo = new InfiniumGTCFile(INPUT.get(1), ILLUMINA_BEAD_POOL_MANIFEST_FILE)) {
             compareGTCFiles(gtcFileOne, gtcFileTwo);
 
             // Report errors and exit 1 if any are detected.
