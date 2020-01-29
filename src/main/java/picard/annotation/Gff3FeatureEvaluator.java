@@ -2,7 +2,6 @@ package picard.annotation;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.obolibrary.obo2owl.OWLAPIObo2Owl;
-import org.obolibrary.obo2owl.Obo2OWLConstants;
 import org.obolibrary.oboformat.parser.OBOFormatConstants;
 
 import org.semanticweb.HermiT.ReasonerFactory;
@@ -13,10 +12,7 @@ import org.semanticweb.owlapi.search.EntitySearcher;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 import picard.PicardException;
 
-
-import java.io.File;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,36 +20,26 @@ public class Gff3FeatureEvaluator {
     final private OWLOntology ontology;
     final private OWLReasoner reasoner;
 
-    final private HumanReadableNameVisitor visitor = new HumanReadableNameVisitor();
+    final private HumanReadableNameVisitor visitor;
 
     final private Map<Pair<String, String>, Boolean> isSubClassOfCache = new HashMap<>();
-    final private Map<Pair<String, String>, Boolean> isPartOfCache = new HashMap<>();
-
-
 
     final private OWLDataFactory df = OWLManager.getOWLDataFactory();
-    final OWLObjectPropertyExpression partOf;
 
-    final static URL DEFAULT_ONTOLOGY_URL = Gff3FeatureEvaluator.class.getResource("so.owl");
-    final public static String DEFAULT_CDS_IRI = "http://purl.obolibrary.org/obo/SO_0000316";
-    final public static String DEFAULT_TRANSCRIPT_IRI = "http://purl.obolibrary.org/obo/SO_0000673";
-    final public static String DEFAULT_GENE_IRI = "http://purl.obolibrary.org/obo/SO_0000704";
-    final public static String DEFAULT_PARTOF_IRI = "http://purl.obolibrary.org/obo/so#part_of";
-    final public static String DEFAULT_EXON_IRI = "http://purl.obolibrary.org/obo/SO_0000147";
+    final static URL DEFAULT_ONTOLOGY_URL = Gff3FeatureEvaluator.class.getResource("so.obo");
 
     public Gff3FeatureEvaluator() {
-        this(DEFAULT_ONTOLOGY_URL, DEFAULT_PARTOF_IRI);
+        this(DEFAULT_ONTOLOGY_URL);
     }
 
-    public Gff3FeatureEvaluator(final URL ontologyIRI, final String partOfIRI) {
+    public Gff3FeatureEvaluator(final URL ontologyIRI) {
         final OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
         try {
-            //ontology = manager.loadOntology(IRI.create("file:///" + new File(ontologyIRI).getAbsolutePath()));
             ontology = manager.loadOntology(IRI.create(DEFAULT_ONTOLOGY_URL));
             final ReasonerFactory reasonerFactory = new ReasonerFactory();
             reasoner = reasonerFactory.createReasoner(ontology);
 
-            partOf = df.getOWLObjectProperty(IRI.create(partOfIRI));
+            visitor = new HumanReadableNameVisitor(ontology);
 
             //load human readable names map
             ontology.classesInSignature().forEach(cls -> cls.accept(visitor));
@@ -62,41 +48,34 @@ public class Gff3FeatureEvaluator {
         }
     }
 
-    public boolean isASubClassOf(final String type, final String superClassIRI) {
-        return isSubClassOfCache.computeIfAbsent(Pair.of(type, superClassIRI), p -> decideIfSubClassOf(p.getLeft(), p.getRight()));
+    public boolean isASubClassOf(final String type, final String superClassType) {
+        return isSubClassOfCache.computeIfAbsent(Pair.of(type, superClassType), p -> decideIfSubClassOf(p.getLeft(), p.getRight()));
     }
 
-    private boolean decideIfSubClassOf(final String type, final String superClassIRI) {
+    private boolean decideIfSubClassOf(final String type, final String superClassType) {
         final OWLClassExpression cls = visitor.getOWLClass(type);
+        final OWLClassExpression superCls = visitor.getOWLClass(superClassType);
         if (cls == null) {
             throw new PicardException("type " + type + " used in GFF3 file not found in ontology.");
         }
-        final OWLAxiom isSubClassOfAxiom = df.getOWLSubClassOfAxiom(cls, df.getOWLClass(IRI.create(superClassIRI)));
+        if(superCls == null) {
+            throw new PicardException("type " + superClassType + " used in GFF3 file not found in ontology.");
+        }
+        final OWLAxiom isSubClassOfAxiom = df.getOWLSubClassOfAxiom(cls, superCls);
         return reasoner.isEntailed(isSubClassOfAxiom);
     }
 
-    public boolean isPartOf(final String type, final String superClassIRI) {
-        return isPartOfCache.computeIfAbsent(Pair.of(type, superClassIRI), p -> decideIfSubClassOf(p.getLeft(), p.getRight()));
-    }
-
-    private boolean decideIfPartOf(final String type, final String superClassIRI) {
-        final OWLClassExpression cls = visitor.getOWLClass(type);
-        if (cls == null) {
-            throw new PicardException("type " + type + " used in GFF3 file not found in ontology.");
-        }
-        final OWLAxiom isPartOfAxiom = df.getOWLSubClassOfAxiom(cls, df.getOWLObjectSomeValuesFrom(partOf, df.getOWLClass(IRI.create(superClassIRI))));
-        return reasoner.isEntailed(isPartOfAxiom);
-    }
-
-    class HumanReadableNameVisitor implements OWLClassExpressionVisitor {
+    private static class HumanReadableNameVisitor implements OWLClassExpressionVisitor {
         final private OWLAnnotationProperty idAnnotationProperty;
         final private OWLAnnotationProperty labelAnnotationProperty;
         final private Map<String, OWLClassExpression> humanReadableToOWLClassMap = new HashMap<>();
         final OWLDataFactory df = OWLManager.getOWLDataFactory();
+        final OWLOntology ontology;
 
-        HumanReadableNameVisitor() {
+        HumanReadableNameVisitor(final OWLOntology ontology) {
             idAnnotationProperty = df.getOWLAnnotationProperty(OWLAPIObo2Owl.trTagToIRI(OBOFormatConstants.OboFormatTag.TAG_ID.getTag()));
             labelAnnotationProperty = df.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
+            this.ontology = ontology;
 
         }
         @Override

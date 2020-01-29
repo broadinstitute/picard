@@ -34,6 +34,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
+import htsjdk.tribble.gff.Gff3Codec;
 import org.apache.logging.log4j.core.util.FileUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -42,7 +43,6 @@ import picard.PicardException;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
-import picard.annotation.Gff3Codec;
 import picard.annotation.Gff3Reader;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.RExecutor;
@@ -159,7 +159,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         final OverlapDetector<Gene> geneOverlapDetector;
         final OverlapDetector<Interval> ribosomalSequenceOverlapDetector;
         final Long ribosomalBasesInitialValue;
-        if(Gff3Codec.GFF3_FILE_EXTENSIONS.contains(FileUtils.getFileExtension(ANNOTATION_FILE))) {
+        if(new Gff3Codec().canDecode(ANNOTATION_FILE.getPath())) {
             geneOverlapDetector = GeneAnnotationReader.loadGff3(ANNOTATION_FILE);
             ribosomalSequenceOverlapDetector = Gff3Reader.loadRibosomalIntervals(ANNOTATION_FILE);
             ribosomalBasesInitialValue = 0L;

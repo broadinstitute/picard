@@ -4,6 +4,8 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.annotation.Strand;
+import htsjdk.tribble.gff.Gff3Codec;
+import htsjdk.tribble.gff.Gff3Feature;
 import htsjdk.tribble.readers.LineIterator;
 import picard.PicardException;
 
@@ -22,13 +24,13 @@ public class Gff3Reader {
 
     public static OverlapDetector<Gene> load(final File gffFile) {
         final OverlapDetector<Gene> overlapDetector = new OverlapDetector<Gene>(0, 0);
-        try (AbstractFeatureReader<GtfFeature, LineIterator> reader = AbstractFeatureReader.getFeatureReader(gffFile.getAbsolutePath(), null, new Gff3Codec(), false)) {
-            for (final GtfFeature feature : reader.iterator()) {
-                if (featureEvaluator.isASubClassOf(feature.getType(), Gff3FeatureEvaluator.DEFAULT_GENE_IRI)) {
+        try (AbstractFeatureReader<Gff3Feature, LineIterator> reader = AbstractFeatureReader.getFeatureReader(gffFile.getAbsolutePath(), null, new Gff3Codec(), false)) {
+            for (final Gff3Feature feature : reader.iterator()) {
+                if (featureEvaluator.isASubClassOf(feature.getType(), "gene")) {
                     final Gene gene = new Gene(feature.getContig(), feature.getStart(), feature.getEnd(), feature.getStrand() == Strand.NEGATIVE, feature.getAttribute("ID"));
                     final Set<String> usedTranscriptNames = new HashSet<>();
-                    for (final GtfFeature child : feature.getChildren()) {
-                        if (featureEvaluator.isASubClassOf(child.getType(), Gff3FeatureEvaluator.DEFAULT_CDS_IRI)) {
+                    for (final Gff3Feature child : feature.getChildren()) {
+                        if (featureEvaluator.isASubClassOf(child.getType(), "CDS")) {
                             String transcriptName = child.getAttribute("ID");
                             if (usedTranscriptNames.contains(transcriptName)) {
                                 final String transcriptNameBase = transcriptName;
@@ -42,7 +44,7 @@ public class Gff3Reader {
                             tx.addExon(child.getStart(), child.getEnd());
                             usedTranscriptNames.add(transcriptName);
                         }
-                        if (featureEvaluator.isASubClassOf(child.getType(), Gff3FeatureEvaluator.DEFAULT_TRANSCRIPT_IRI)) {
+                        if (featureEvaluator.isASubClassOf(child.getType(), "transcript")) {
                             loadTranscriptIntoGene(child, gene);
                         }
                     }
@@ -55,15 +57,15 @@ public class Gff3Reader {
         return overlapDetector;
     }
 
-    private static void loadTranscriptIntoGene(final GtfFeature transcript, final Gene gene) {
-        if (!featureEvaluator.isASubClassOf(transcript.getType(), Gff3FeatureEvaluator.DEFAULT_TRANSCRIPT_IRI)) {
+    private static void loadTranscriptIntoGene(final Gff3Feature transcript, final Gene gene) {
+        if (!featureEvaluator.isASubClassOf(transcript.getType(), "transcript")) {
             throw new PicardException("tried to load non-transcript type " + transcript.getType() + " as transcript");
         }
-        final List<GtfFeature> cdsChildren = transcript.getChildren().stream().filter(f -> featureEvaluator.isASubClassOf(f.getType(), Gff3FeatureEvaluator.DEFAULT_CDS_IRI)).collect(Collectors.toList());
-        final int cdsStart = cdsChildren.size()>0? cdsChildren.stream().map(GtfFeature::getStart).min(Comparator.comparing(Integer::valueOf)).get() : 0;
-        final int cdsEnd = cdsChildren.size()>0? cdsChildren.stream().map(GtfFeature::getEnd).max(Comparator.comparing(Integer::valueOf)).get() : 0;
+        final List<Gff3Feature> cdsChildren = transcript.getChildren().stream().filter(f -> featureEvaluator.isASubClassOf(f.getType(), "CDS")).collect(Collectors.toList());
+        final int cdsStart = cdsChildren.size()>0? cdsChildren.stream().map(Gff3Feature::getStart).min(Comparator.comparing(Integer::valueOf)).get() : 0;
+        final int cdsEnd = cdsChildren.size()>0? cdsChildren.stream().map(Gff3Feature::getEnd).max(Comparator.comparing(Integer::valueOf)).get() : 0;
 
-        final List<GtfFeature> exons = transcript.getChildren().stream().filter(f -> featureEvaluator.isASubClassOf(f.getType(), Gff3FeatureEvaluator.DEFAULT_EXON_IRI)).collect(Collectors.toList());
+        final List<Gff3Feature> exons = transcript.getChildren().stream().filter(f -> featureEvaluator.isASubClassOf(f.getType(), "exon")).collect(Collectors.toList());
 
         boolean notYetLoaded = true;
         String transcriptName = transcript.getAttribute("ID");
@@ -73,7 +75,7 @@ public class Gff3Reader {
             try {
                 Gene.Transcript tx = gene.addTranscript(transcriptName, transcript.getStart(), transcript.getEnd(), cdsStart, cdsEnd, exons.size() > 0 ? exons.size() : 1);
                 if (exons.size() > 0) {
-                    for (final GtfFeature exon : exons) {
+                    for (final Gff3Feature exon : exons) {
                         tx.addExon(exon.getStart(), exon.getEnd());
                     }
                 } else {
@@ -90,10 +92,10 @@ public class Gff3Reader {
 
     public static OverlapDetector<Interval> loadRibosomalIntervals(final File gffFile) {
         final OverlapDetector<Interval> overlapDetector = new OverlapDetector<>(0, 0);
-        try (AbstractFeatureReader<GtfFeature, LineIterator> reader = AbstractFeatureReader.getFeatureReader(gffFile.getAbsolutePath(), null, new Gff3Codec(), false)) {
-            final String rRNAIRI = "http://purl.obolibrary.org/obo/SO_0000252";
-            for (final GtfFeature topFeature : reader.iterator()) {
-                for(final GtfFeature feature : topFeature.flatten()) {
+        try (AbstractFeatureReader<Gff3Feature, LineIterator> reader = AbstractFeatureReader.getFeatureReader(gffFile.getAbsolutePath(), null, new Gff3Codec(), false)) {
+            final String rRNAIRI = "rRNA";
+            for (final Gff3Feature topFeature : reader.iterator()) {
+                for(final Gff3Feature feature : topFeature.flatten()) {
                     if (featureEvaluator.isASubClassOf(feature.getType(), rRNAIRI)) {
                         final Interval interval = new Interval(feature.getContig(), feature.getStart(), feature.getEnd());
                         overlapDetector.addLhs(interval, interval);
