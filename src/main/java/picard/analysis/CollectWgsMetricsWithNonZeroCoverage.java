@@ -32,6 +32,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
+import htsjdk.utils.ValidationUtils;
 import org.broadinstitute.barclay.argparser.ExperimentalFeature;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
@@ -186,7 +187,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
     @Override
     protected WgsMetricsCollector getCollector(final int coverageCap, final IntervalList intervals) {
-        assert(coverageCap == this.collector.coverageCap);
+        ValidationUtils.validateArg(coverageCap == this.collector.coverageCap,()->"coverageCap has to be the same as the internal coverageCap, found " + coverageCap + " and " + this.collector.coverageCap);
         return this.collector;
     }
 

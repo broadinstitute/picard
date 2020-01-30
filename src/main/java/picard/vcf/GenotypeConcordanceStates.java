@@ -1,5 +1,7 @@
 package picard.vcf;
 
+import htsjdk.utils.ValidationUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,7 +47,7 @@ public class GenotypeConcordanceStates {
         public static TruthState getHom(final int alleleIdx) {
             if (alleleIdx == 0) return HOM_REF;
             if (alleleIdx == 1) return HOM_VAR1;
-            assert false;
+            ValidationUtils.validateArg(false,"Shouldn't be here.");
             return null;
         }
 
@@ -56,7 +58,7 @@ public class GenotypeConcordanceStates {
             if (allele0idx == 1 && allele1idx == 2) return HET_VAR1_VAR2;
             if (allele0idx == 2 && allele1idx == 1) return HET_VAR1_VAR2;
 
-            assert false;
+            ValidationUtils.validateArg(false,"Shouldn't be here.");
             return null;
         }
 
@@ -109,7 +111,7 @@ public class GenotypeConcordanceStates {
             if (alleleIdx == 2) return HOM_VAR2;
             if (alleleIdx == 3) return HOM_VAR3;
 
-            assert false;
+            ValidationUtils.validateArg(false,"Shouldn't be here.");
             return null;
         }
 
@@ -124,7 +126,7 @@ public class GenotypeConcordanceStates {
                 if (allele1idx == 1) return HET_REF_VAR1;
                 if (allele1idx == 2) return HET_REF_VAR2;
                 if (allele1idx == 3) return HET_REF_VAR3;
-                assert false;
+                ValidationUtils.validateArg(false,"Shouldn't be here.");
                 return null;
             }
 
@@ -132,14 +134,14 @@ public class GenotypeConcordanceStates {
             if(allele0idx == 1) {
                 if (allele1idx == 2) return HET_VAR1_VAR2;
                 if (allele1idx == 3) return HET_VAR1_VAR3;
-                assert false;
+                ValidationUtils.validateArg(false,"Shouldn't be here.");
                 return null;
             }
 
             if(allele0idx == 2 && allele1idx == 3) return HET_VAR3_VAR4; //special case not a mistake.
             if(allele0idx == 3 && allele1idx == 4) return HET_VAR3_VAR4;
 
-            assert false;
+            ValidationUtils.validateArg(false,"Shouldn't be here.");
             return null;
         }
 

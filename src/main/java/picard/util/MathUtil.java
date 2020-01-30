@@ -24,6 +24,7 @@
 
 package picard.util;
 
+import htsjdk.utils.ValidationUtils;
 import org.apache.commons.math3.random.RandomDataGenerator;
 
 import java.math.BigDecimal;
@@ -416,7 +417,8 @@ final public class MathUtil {
      // https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
      */
     public static double klDivergance(double[] measured, double[] distribution) {
-        assert measured.length == distribution.length;
+        ValidationUtils.validateArg(measured.length == distribution.length, () -> "length of measuered and distribution differ. Found " + measured.length + " and " + distribution.length + ".");
+
 
         final double[] normalizedMeasured = pNormalizeVector(measured);
         final double[] normalizedDistribution = pNormalizeVector(distribution);
