@@ -5,8 +5,8 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.IntervalListWriter;
+import htsjdk.samtools.util.IterableAdapter;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.Tuple;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -91,12 +91,12 @@ public class VcfToIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        try (final VCFFileReader vcfReader = new VCFFileReader(INPUT.toPath(), false)) {
-            final Tuple<SAMFileHeader, Iterator<Interval>> samFileHeaderIteratorTuple = VCFFileReader.toIntervals(vcfReader, INCLUDE_FILTERED);
-            try (IntervalListWriter writer = new IntervalListWriter(OUTPUT.toPath(), samFileHeaderIteratorTuple.a)) {
-                IntervalList.IntervalMerger merger = new IntervalList.IntervalMerger(samFileHeaderIteratorTuple.b,true,false,true);
-
-                for (final Interval interval : merger) {
+        try (VCFFileReader vcfReader = new VCFFileReader(INPUT.toPath(), false)) {
+            final Iterator<Interval> samFileIterator = VCFFileReader.toIntervals(vcfReader, INCLUDE_FILTERED);
+            try (IntervalListWriter writer = new IntervalListWriter(OUTPUT.toPath(), new SAMFileHeader(vcfReader.getFileHeader().getSequenceDictionary()))) {
+                final IntervalList.IntervalMergerIterator mergingIterator =
+                        new IntervalList.IntervalMergerIterator(samFileIterator, true, false, true);
+                for (final Interval interval : new IterableAdapter<>(mergingIterator)){
                     writer.write(interval);
                 }
             } catch (IOException e) {
