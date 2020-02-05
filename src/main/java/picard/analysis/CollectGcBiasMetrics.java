@@ -199,11 +199,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
 
         final NumberFormat fmt = NumberFormat.getIntegerInstance();
         fmt.setGroupingUsed(true);
-        RExecutor.executeFromClasspath(R_SCRIPT,
-                OUTPUT.getAbsolutePath(),
-                SUMMARY_OUTPUT.getAbsolutePath(),
-                CHART_OUTPUT.getAbsolutePath(),
-                String.valueOf(SCAN_WINDOW_SIZE));
+
     }
 }
 
