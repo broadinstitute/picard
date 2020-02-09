@@ -28,8 +28,8 @@ import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.util.SamLocusIterator;
 
 /**
- * An interface that can take a collection of bases (provided as {@link htsjdk.samtools.util.SamLocusIterator.RecordAndOffset}
- * and {@link htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference}) and generates a
+ * An interface that can take a collection of bases (provided as {@link SamLocusIterator.RecordAndOffset}
+ * and {@link SamLocusAndReferenceIterator.SAMLocusAndReference}) and generates a
  * {@link ErrorMetric} from them.
  * <p>
  * The Calculator has a suffix which will be used to generate the metric file suffixes.
