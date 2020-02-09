@@ -24,21 +24,18 @@
 
 package picard.fingerprint;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.liftover.LiftOver;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.Log;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.liftover.LiftOver;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.SAMFileHeader;
-import picard.cmdline.programgroups.Fingerprinting;
+import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 
@@ -50,7 +47,7 @@ import java.io.File;
         summary = "Lifts over a haplotype database from one reference to another. Based on UCSC liftOver.\n" +
                 " Uses a UCSC chain file to guide the liftOver.",
         oneLineSummary = "Lifts over a haplotype database from one reference to another",
-        programGroup = Fingerprinting.class
+        programGroup = DiagnosticsAndQCProgramGroup.class
 )
 public class LiftOverHaplotypeMap extends CommandLineProgram {
 
