@@ -104,12 +104,12 @@ public class BedToIntervalList extends CommandLineProgram {
     public boolean UNIQUE = false;
 
     @Hidden
-    @Argument(doc="If true, entries that are on contig-names that are missing from the provided dictionary will be dropped.")
+    @Argument(doc = "If true, entries that are on contig-names that are missing from the provided dictionary will be dropped.")
     public boolean DROP_MISSING_CONTIGS = false;
 
     private final Log LOG = Log.getInstance(getClass());
-    private int missingIntervals=0;
-    private int missingRegion=0;
+    private int missingIntervals = 0;
+    private int missingRegion = 0;
 
     @Override
     protected int doWork() {
