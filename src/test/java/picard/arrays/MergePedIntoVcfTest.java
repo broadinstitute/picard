@@ -31,7 +31,7 @@ public class MergePedIntoVcfTest {
 
         Assert.assertEquals(mergePedIntoVcf.doWork(), 0);
 
-        final File expected = TEST_DATA_DIR.resolve("expected_output.vcf").toFile();
+        final File expected = TEST_DATA_DIR.resolve("expected_merge_output.vcf").toFile();
         VcfTestUtils.assertVcfFilesAreEqual(output, expected);
     }
 }

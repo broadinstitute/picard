@@ -20,8 +20,8 @@ public class CombineGenotypingArrayVcfsTest {
     @Test()
     public void testCombineGenotypingArrayVcfs() throws IOException {
         final CombineGenotypingArrayVcfs combineGenotypingArrayVcfs = new CombineGenotypingArrayVcfs();
-        final File inputVcf1 = TEST_DATA_DIR.resolve("input.vcf").toFile();
-        final File inputVcf2 = TEST_DATA_DIR.resolve("input2.vcf").toFile();
+        final File inputVcf1 = TEST_DATA_DIR.resolve("input_for_combine.vcf").toFile();
+        final File inputVcf2 = TEST_DATA_DIR.resolve("input2_for_combine.vcf").toFile();
         final List<File> inputs = Arrays.asList(inputVcf1, inputVcf2);
 
         final File output = File.createTempFile("output", ".vcf");
@@ -38,8 +38,8 @@ public class CombineGenotypingArrayVcfsTest {
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testCombineGenotypingArrayVcfsFail() throws IOException {
         final CombineGenotypingArrayVcfs combineGenotypingArrayVcfs = new CombineGenotypingArrayVcfs();
-        final File inputVcf1 = TEST_DATA_DIR.resolve("input.vcf").toFile();
-        final File inputVcf2 = TEST_DATA_DIR.resolve("input.vcf").toFile();
+        final File inputVcf1 = TEST_DATA_DIR.resolve("input_for_combine.vcf").toFile();
+        final File inputVcf2 = TEST_DATA_DIR.resolve("input_for_combine.vcf").toFile();
         final List<File> inputs = Arrays.asList(inputVcf1, inputVcf2);
 
         final File output = File.createTempFile("output", ".vcf");
