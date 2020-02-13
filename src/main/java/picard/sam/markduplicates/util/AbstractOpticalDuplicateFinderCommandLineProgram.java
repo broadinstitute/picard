@@ -60,6 +60,13 @@ public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends C
             "appropriate. For other platforms and models, users should experiment to find what works best.")
     public int OPTICAL_DUPLICATE_PIXEL_DISTANCE = OpticalDuplicateFinder.DEFAULT_OPTICAL_DUPLICATE_DISTANCE;
 
+
+    @Argument(doc = "The multiplicative factor by which the coordinates will be divided prior to being stored in a 16-bit datatype. The coordinates will be " +
+            "inflated back to normal before comparison, so there's little interplay between this argument and OPTICAL_DUPLICATE_PIXEL_DISTANCE. " +
+            "This parameter is available so that reads with very large coordinates will not get truncated when stored on disk during the sorting operation. " +
+            "This number should not be less than 1.")
+    public double OPTICAL_DISTANCE_SCALING_FACTOR = 1D;
+
     @Argument(doc = "This number is the maximum size of a set of duplicate reads for which we will attempt to determine " +
             "which are optical duplicates.  Please be aware that if you raise this value too high and do encounter a very " +
             "large set of duplicate reads, it will severely affect the runtime of this tool.  To completely disable this check, " +
@@ -77,6 +84,13 @@ public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends C
     @Override
     protected String[] customCommandLineValidation() {
         setupOpticalDuplicateFinder();
-        return super.customCommandLineValidation();
+        final String[] customCommandLineValidation = super.customCommandLineValidation();
+        if (customCommandLineValidation != null) {
+            return customCommandLineValidation;
+        }
+        if (OPTICAL_DISTANCE_SCALING_FACTOR < 1D) {
+            return new String[]{"Invalid value for OPTICAL_DISTANCE_SCALING_FACTOR. must be >1 found " + OPTICAL_DISTANCE_SCALING_FACTOR};
+        }
+        return null;
     }
 }
