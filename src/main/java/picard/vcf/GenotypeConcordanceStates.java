@@ -111,8 +111,7 @@ public class GenotypeConcordanceStates {
             if (alleleIdx == 2) return HOM_VAR2;
             if (alleleIdx == 3) return HOM_VAR3;
 
-            ValidationUtils.validateArg(false,"Shouldn't be here.");
-            return null;
+            throw new IllegalStateException("Shouldn't be here.");
         }
 
         public static CallState getHet(int allele0idx, int allele1idx) {

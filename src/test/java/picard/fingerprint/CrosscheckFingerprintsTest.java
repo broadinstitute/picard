@@ -948,8 +948,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
                 }));
 
             } catch (NoSuchFieldException e) {
-                e.printStackTrace();
-                ValidationUtils.validateArg(false,"Shouldn't be here.");
+                throw new IllegalStateException(e);
             }
         }
     }
