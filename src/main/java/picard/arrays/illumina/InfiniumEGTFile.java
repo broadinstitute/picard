@@ -39,7 +39,7 @@ import java.util.Map;
  * A cluster file contains information about the clustering information used in mapping red / green intensity information
  * to genotype calls
  */
-public class InfiniumEGTFile extends InfiniumDataFile {
+public class InfiniumEGTFile extends InfiniumDataFile implements AutoCloseable {
     public static final String EXTENSION = "egt";
 
     private static final int VALID_GENTRAIN_DATA_TYPE = 9;
@@ -65,6 +65,11 @@ public class InfiniumEGTFile extends InfiniumDataFile {
     public InfiniumEGTFile(final File clusterFile) throws IOException {
         super(new DataInputStream(new FileInputStream(clusterFile)), false);
         parse();
+    }
+
+    @Override
+    public void close() throws IOException {
+        stream.close();
     }
 
     private void parse() throws IOException {
