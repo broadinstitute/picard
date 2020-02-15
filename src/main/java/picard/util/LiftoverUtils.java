@@ -88,8 +88,7 @@ public class LiftoverUtils {
         // If any of the source alleles is symbolic, do not populate the END tag (protecting things like <NON_REF> from
         // getting screwed up in reverse-complemented variants
         if (source.hasAttribute(VCFConstants.END_KEY) && builder.getAlleles().stream().noneMatch(Allele::isSymbolic)) {
-            // TODO: add start() and stop() methods to the builder in htsjdk and use stop() here.
-            builder.attribute(VCFConstants.END_KEY, builder.make().getEnd());
+            builder.attribute(VCFConstants.END_KEY, (int)builder.getStop());
         } else {
             builder.rmAttribute(VCFConstants.END_KEY);
         }
