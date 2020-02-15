@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Test class for LiftoverVcf.
@@ -288,22 +289,19 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 0);
         //check input/header
         try (final VCFFileReader inputReader = new VCFFileReader(input, false)) {
-                final VCFHeader header = inputReader.getFileHeader();
-                Assert.assertNull(header.getOtherHeaderLine("reference"));
-                }
+            final VCFHeader header = inputReader.getFileHeader();
+            Assert.assertNull(header.getOtherHeaderLine("reference"));
+        }
         //try to open with / without index
         try (final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, !disableSort)) {
-                final VCFHeader header = liftReader.getFileHeader();
-                Assert.assertNotNull(header.getOtherHeaderLine("reference"));
-                try (final CloseableIterator<VariantContext> iter = liftReader.iterator()) {
+            final VCFHeader header = liftReader.getFileHeader();
+            Assert.assertNotNull(header.getOtherHeaderLine("reference"));
+            try (final CloseableIterator<VariantContext> iter = liftReader.iterator()) {
                 Assert.assertEquals(iter.stream().count(), 5L);
-                }
             }
         }
-    
+    }
 
-    
-    
     @DataProvider
     Iterator<Object[]> testWriteVcfData() {
 
@@ -372,7 +370,6 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         VcfTestUtils.assertVcfFilesAreEqual(liftOutputFile, expectedVcf);
         VcfTestUtils.assertVcfFilesAreEqual(rejectOutputFile, expectedRejectVcf);
     }
-
 
     @DataProvider(name = "indelFlipData")
     public Iterator<Object[]> indelFlipData() {
@@ -624,7 +621,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.genotypes(genotypeBuilder.make());
         result_builder.genotypes(resultGenotypeBuilder.make());
         tests.add(new Object[]{builder.make(), REFERENCE, result_builder.make()});
-        
+
         builder.noGenotypes();
         result_builder.noGenotypes();
 
@@ -1011,8 +1008,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         // trivial case indel
         builder.source("testWithEND");
-        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(CAAARef, CAA)).attribute(VCFConstants.END_KEY,(int)stop);
-        resultBuilder.start(1).stop(4).alleles(CollectionUtil.makeList(CAAARef, CAA)).attribute(VCFConstants.END_KEY,(int)4);
+        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(CAAARef, CAA)).attribute(VCFConstants.END_KEY, (int) stop);
+        resultBuilder.start(1).stop(4).alleles(CollectionUtil.makeList(CAAARef, CAA)).attribute(VCFConstants.END_KEY, (int) 4);
         genotypeBuilder.alleles(builder.getAlleles());
         resultGenotypeBuilder.alleles(resultBuilder.getAlleles());
         builder.genotypes(genotypeBuilder.make());
@@ -1068,8 +1065,9 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         builder.source("test6_withEND");
         start = 541;
         offset = 5;
-        builder.start(start).stop(start).alleles(CollectionUtil.makeList(ARef, T)).attribute(VCFConstants.END_KEY, start);;
-        resultBuilder.start(start + offset).stop(start + offset).alleles(CollectionUtil.makeList(ARef, T)).attribute(VCFConstants.END_KEY, start+offset);
+        builder.start(start).stop(start).alleles(CollectionUtil.makeList(ARef, T)).attribute(VCFConstants.END_KEY, start);
+        ;
+        resultBuilder.start(start + offset).stop(start + offset).alleles(CollectionUtil.makeList(ARef, T)).attribute(VCFConstants.END_KEY, start + offset);
         genotypeBuilder.alleles(builder.getAlleles());
         resultGenotypeBuilder.alleles(resultBuilder.getAlleles());
         builder.genotypes(genotypeBuilder.make());
@@ -1172,12 +1170,39 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         return tests.iterator();
     }
 
-    @Test(dataProvider = "indelNoFlipData")
-    public void testLiftOverSimpleIndels(final LiftOver liftOver, final ReferenceSequence reference, final VariantContext source, final VariantContext result) {
+    @DataProvider
+    public Iterator<Object[]> cleanIndelNoFlipData(){
+        Iterator<Object[]> sourceIterator = indelNoFlipData();
+
+        return new Iterator<Object[]>() {
+            @Override
+            public boolean hasNext() {
+                return sourceIterator.hasNext();
+            }
+
+            @Override
+            public Object[] next() {
+                final Object[] next = sourceIterator.next();
+                final LiftOver liftOver = (LiftOver) next[0];
+                final VariantContext source = (VariantContext) next[2];
+                final VariantContext result = (VariantContext) next[3];
+                return new Object[]{
+                        liftOver,
+                        Optional.ofNullable(source).map(v -> new VariantContextBuilder(v).rmAttribute(VCFConstants.END_KEY).make()).orElse(null),
+                        Optional.ofNullable(result).map(v -> new VariantContextBuilder(v).rmAttribute(VCFConstants.END_KEY).make()).orElse(null)
+                };
+            }
+        };
+    }
+
+    @Test(dataProvider = "cleanIndelNoFlipData")
+    public void testLiftOverSimpleIndels(final LiftOver liftOver, final VariantContext source, final VariantContext result) {
 
         final Interval target = liftOver.liftOver(new Interval(source.getContig(), source.getStart(), source.getEnd()), 1);
 
-        VariantContextBuilder vcb = LiftoverUtils.liftSimpleVariantContext(source, target);
+        final VariantContextBuilder vcb = LiftoverUtils.liftSimpleVariantContext(source, target);
+        // liftSimpleVariantContext doesn't take care of end attributes...
+
         VcfTestUtils.assertEquals(vcb == null ? null : vcb.make(), result);
     }
 
@@ -1186,7 +1211,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         final Interval target = liftOver.liftOver(new Interval(source.getContig(), source.getStart(), source.getEnd()), 1);
 
-        VariantContext vc = LiftoverUtils.liftVariant(source, target,reference,false,false);
+        final VariantContext vc = LiftoverUtils.liftVariant(source, target,reference,false,false);
         VcfTestUtils.assertEquals(vc, result);
     }
 
