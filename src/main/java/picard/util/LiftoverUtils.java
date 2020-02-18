@@ -364,7 +364,9 @@ public class LiftoverUtils {
 
         // Put each allele into the alleleBasesMap unless it is a spanning deletion.
         // Spanning deletions are dealt with as a special case later in fixedAlleleMap.
-        alleles.stream().filter(a->!a.equals(Allele.SPAN_DEL)).forEach(a -> alleleBasesMap.put(a, a.getBases()));
+        alleles.stream()
+                .filter(a->!a.equals(Allele.SPAN_DEL)&&!a.isSymbolic())
+                .forEach(a -> alleleBasesMap.put(a, a.getBases()));
 
         int theStart = start;
         int theEnd = end;
@@ -433,6 +435,12 @@ public class LiftoverUtils {
         // Since this is not handled by the code above, it must be handled as
         // a special case here.
         fixedAlleleMap.put(Allele.SPAN_DEL, Allele.SPAN_DEL);
+
+        // symbolic alleles cannot be left-aligned so they need to be put
+        // into the map directly
+        alleles.stream()
+                .filter(Allele::isSymbolic)
+                .forEach(a -> fixedAlleleMap.put(a, a));
 
         //retain original order:
         List<Allele> fixedAlleles = alleles.stream()
