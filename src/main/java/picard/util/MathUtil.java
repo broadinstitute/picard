@@ -362,14 +362,18 @@ final public class MathUtil {
      * 0.9999999999999999 >= p >= (1-0.9999999999999999)/(lPosteriors.length-1)
      */
     public static double[] pNormalizeLogProbability(final double[] lPosterior) {
+
+        final double[] tmp = new double[lPosterior.length];
+        if (lPosterior.length == 0) {
+            return tmp;
+        }
+
         // Note: bumping all the LLs so that the biggest is 300 ensures that we have the
         // widest range possible when unlogging them before one of them underflows. 10^300 is
         // near the maximum before you hit positive infinity.
-
         final double maxLikelihood = max(lPosterior);
         final double bump = 300 - maxLikelihood;
 
-        final double[] tmp = new double[lPosterior.length];
         double total = 0;
         for (int i = 0; i < lPosterior.length; ++i) {
             tmp[i] = pow(10, lPosterior[i] + bump);

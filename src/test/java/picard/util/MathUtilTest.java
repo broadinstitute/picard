@@ -112,4 +112,57 @@ public class MathUtilTest {
                 new Object[]{15.0, 0.0, 0.0}
         };
     }
+
+    @DataProvider
+    public Object[][] getProbabilityFromLogTestData() {
+        return new Object[][]{
+                new Object[]{
+                        new double[]{}, new double[]{}
+                },
+                new Object[]{
+                        new double[]{.001, .01, .1, 1, 10, 100, 1000, 10000D}, new double[]{-3, -2, -1, 0, 1, 2, 3, 4}
+                },
+                new Object[]{
+                        new double[]{1D}, new double[]{0D}
+                },
+                new Object[]{
+                        new double[]{.1234D, .2345D, .3456D}, new double[]{Math.log10(.1234D), Math.log10(.2345D), Math.log10(.3456D)}
+                },
+
+        };
+    }
+
+    @Test(dataProvider = "getProbabilityFromLogTestData")
+    public void getProbabilityFromLogTest(final double[] input, final double[] expected) {
+        TestNGUtil.assertEqualDoubleArrays(MathUtil.getLogFromProbability(input), expected, 1e-8);
+    }
+
+    @DataProvider
+    public Object[][] pNormalizeLogProbabilityTestData() {
+        return new Object[][]{
+                new Object[]{
+                        new double[]{}, new double[]{}
+                },
+                new Object[]{
+                        new double[]{0D}, new double[]{1D}
+                },
+                new Object[]{
+                        new double[]{0D, 0D}, new double[]{0.5, 0.5}
+                },
+                new Object[]{
+                        new double[]{0, -1, -2}, new double[]{1 / 1.11, .1 / 1.11, 0.01 / 1.11}
+                },
+                new Object[]{
+                        new double[]{1000D, 1000D}, new double[]{0.5, 0.5}
+                },
+                new Object[]{
+                        new double[]{1002D, 1001D, 1000D},  new double[]{1 / 1.11, .1 / 1.11, 0.01 / 1.11}
+                },
+        };
+    }
+
+    @Test(dataProvider = "pNormalizeLogProbabilityTestData")
+    public void pNormalizeLogProbabilityTest(final double[] input, final double[] expected) {
+        TestNGUtil.assertEqualDoubleArrays(MathUtil.pNormalizeLogProbability(input), expected, 1e-8);
+    }
 }
