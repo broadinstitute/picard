@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.OptionalInt;
+import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -88,6 +89,8 @@ public class FingerprintChecker {
     public static final int DEFAULT_MINIMUM_MAPPING_QUALITY = 10;
     public static final int DEFAULT_MINIMUM_BASE_QUALITY = 20;
     public static final int DEFAULT_MAXIMAL_PL_DIFFERENCE = 30;
+    // used sometimes to subset loci. Fix the random seed so that the results are deterministic
+    public static final Random random = new Random(42);
 
     private final HaplotypeMap haplotypes;
     private int minimumBaseQuality = DEFAULT_MINIMUM_BASE_QUALITY;
@@ -631,7 +634,7 @@ public class FingerprintChecker {
                 final Snp snp = this.haplotypes.getSnp(info.getSequenceName(), info.getPosition());
 
                 // randomly select locusMaxReads elements from the list
-                final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = MathUtil.randomSublist(info.getRecordAndOffsets(), locusMaxReads);
+                final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = MathUtil.randomSublist(info.getRecordAndOffsets(), locusMaxReads,random);
 
                 for (final SamLocusIterator.RecordAndOffset rec : recordAndOffsetList) {
                     final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();

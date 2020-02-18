@@ -563,24 +563,28 @@ final public class MathUtil {
     /**
      * A small utility function to choose n random elements (un-shuffled) from a list
      *
-     * @param list A list of elements
-     * @param n    a number of elements requested from list
+     * @param list   A list of elements
+     * @param n      a number of elements requested from list
+     * @param random a Random object to use for subsetting
      * @return a list of n randomly chosen (but in the original order) elements from list.
      * If the list has less than n elements it is returned in its entirety.
      */
-    public static <T> List<T> randomSublist(final List<T> list, final int n) {
+    public static <T> List<T> randomSublist(final List<T> list, final int n, final Random random) {
         int availableElements = list.size();
-        if (availableElements <= n) return list;
+        if (availableElements <= n) {
+            return list;
+        }
 
         int stillNeeded = n;
-        final Random rg = new Random();
         final List<T> shortList = new ArrayList<>(n);
         for (final T aList : list) {
-            if (rg.nextDouble() < stillNeeded / (double) availableElements) {
+            if (random.nextDouble() < stillNeeded / (double) availableElements) {
                 shortList.add(aList);
                 stillNeeded--;
             }
-            if (stillNeeded == 0) break; // fast out if do not need more elements
+            if (stillNeeded == 0) {
+                break; // fast out if do not need more elements
+            }
             availableElements--;
         }
 

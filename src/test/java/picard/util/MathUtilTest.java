@@ -6,6 +6,7 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static picard.util.MathUtil.divide;
 
@@ -89,15 +90,15 @@ public class MathUtilTest {
 
     @Test
     public void testRandomSublist() {
-
+        final Random random = new Random();
         final List<Integer> list = new ArrayList<>();
         list.add(1);
         list.add(2);
         list.add(3);
 
-        Assert.assertEquals(list, MathUtil.randomSublist(list, 3));
-        Assert.assertEquals(list, MathUtil.randomSublist(list, 4));
-        Assert.assertEquals(MathUtil.randomSublist(list, 2).size(), 2);
+        Assert.assertEquals(list, MathUtil.randomSublist(list, 3, random));
+        Assert.assertEquals(list, MathUtil.randomSublist(list, 4, random));
+        Assert.assertEquals(MathUtil.randomSublist(list, 2, random).size(), 2);
     }
 
     @Test(dataProvider = "divideDoubleTestCases")
