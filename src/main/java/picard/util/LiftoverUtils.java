@@ -159,25 +159,19 @@ public class LiftoverUtils {
         if (target.isPositiveStrand()) {
             throw new IllegalArgumentException("This should only be called for negative strand liftovers");
         }
+        final int start = target.getStart();
+        final int stop = target.getEnd();
 
         final List<Allele> origAlleles = new ArrayList<>(source.getAlleles());
         final VariantContextBuilder vcb = new VariantContextBuilder(source);
 
-        vcb.rmAttribute(VCFConstants.END_KEY);
-        vcb.chr(target.getContig());
+        vcb.rmAttribute(VCFConstants.END_KEY)
+                .chr(target.getContig())
+                .start(start)
+                .stop(stop)
+                .alleles(reverseComplementAlleles(origAlleles));
 
-        final boolean indelForLiftover = isIndelForLiftover(source);
-
-        final int start = target.getStart() ;//- (addToStart ? 1 : 0);
-        vcb.start(start);
-
-        final int stop = target.getEnd();// + (addToStart || !indelForLiftover ? 0 : 1);
-        vcb.stop(stop);
-
-        vcb.alleles(reverseComplementAlleles(origAlleles));
-
-
-        if (indelForLiftover) {
+        if (isIndelForLiftover(source)) {
             // check that the reverse complemented bases match the new reference
             if (referenceAlleleDiffersFromReferenceForIndel(vcb.getAlleles(), refSeq, start, stop)) {
                 return null;
@@ -201,17 +195,13 @@ public class LiftoverUtils {
     }
 
     private static List<Allele> reverseComplementAlleles(final List<Allele> originalAlleles) {
-        final List<Allele> alleles = new ArrayList<>();
-
-        for (final Allele oldAllele : originalAlleles) {
-            alleles.add(LiftoverUtils.reverseComplement(oldAllele));
-        }
-
-        return alleles;
+        return originalAlleles
+                .stream()
+                .map(LiftoverUtils::reverseComplement)
+                .collect(Collectors.toList());
     }
 
     private static Allele reverseComplement(final Allele oldAllele) {
-
         if (oldAllele.isSymbolic() || oldAllele.isNoCall() || oldAllele.equals(Allele.SPAN_DEL)) {
             return oldAllele;
         } else {
@@ -345,7 +335,7 @@ public class LiftoverUtils {
                                                                        final int end) {
         final String refString = StringUtil.bytesToString(referenceSequence.getBases(), start - 1, end - start + 1);
         final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElseThrow(() -> new IllegalStateException("Error: no reference allele was present"));
-        return (!refString.equalsIgnoreCase(refAllele.getBaseString()));
+        return !refString.equalsIgnoreCase(refAllele.getBaseString());
     }
 
     /**
@@ -452,14 +442,13 @@ public class LiftoverUtils {
     }
 
     private static byte[] truncateBase(final byte[] allele, final boolean truncateRightmost) {
-        return Arrays.copyOfRange(allele, truncateRightmost ? 0 : 1, truncateRightmost ?
-                allele.length - 1 :
-                allele.length);
+        return Arrays.copyOfRange(allele,
+                truncateRightmost ? 0 : 1,
+                truncateRightmost ? allele.length - 1 : allele.length);
     }
 
     //creates a new byte array with the base added at the beginning
     private static byte[] extendOneBase(final byte[] bases, final byte base) {
-
         final byte[] newBases = new byte[bases.length + 1];
 
         System.arraycopy(bases, 0, newBases, 1, bases.length);
