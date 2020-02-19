@@ -382,6 +382,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Allele RefCG = Allele.create("CG", true);
         final Allele RefT = Allele.create("T", true);
         final Allele RefA = Allele.create("A", true);
+        final Allele RefAC = Allele.create("AC", true);
         final Allele RefC = Allele.create("C", true);
         final Allele RefG = Allele.create("G", true);
 
@@ -389,6 +390,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Allele T = Allele.create("T", false);
         final Allele C = Allele.create("C", false);
         final Allele CG = Allele.create("CG", false);
+        final Allele CGT = Allele.create("CGT", false);
         final Allele GA = Allele.create("GA", false);
         final Allele TC = Allele.create("TC", false);
         final Allele CAA = Allele.create("CAA", false);
@@ -500,12 +502,12 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         tests.add(new Object[]{builder.make(), REFERENCE, null});
 
         // MNP
-        // GTT*(T)/ACGT(T) -> AAA(C)*/AACG(T) -> which is then normalized to A*/CG at position 11
+        // GTT*(T)/ACGT(T) -> AAA(C)*/AACG(T) -> which is then normalized to AC*/CGT at position 11
         //               pos 11 ^ in the result
         start = CHAIN_SIZE - 11;
         stop = start + 2;
         builder.source("test7").stop(stop).start(start).alleles(CollectionUtil.makeList(RefGTT, ACGT));
-        result_builder.start(11).stop(11).alleles(CollectionUtil.makeList(RefA, CG));
+        result_builder.start(11).stop(12).alleles(CollectionUtil.makeList(RefAC, CGT));
         genotypeBuilder.alleles(builder.getAlleles());
         resultGenotypeBuilder.alleles(result_builder.getAlleles());
         builder.genotypes(genotypeBuilder.make());

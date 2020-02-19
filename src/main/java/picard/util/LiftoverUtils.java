@@ -29,12 +29,22 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
-import htsjdk.variant.variantcontext.*;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
+import htsjdk.variant.variantcontext.GenotypesContext;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFConstants;
 import org.apache.commons.lang3.ArrayUtils;
 import picard.vcf.LiftoverVcf;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class LiftoverUtils {
@@ -159,17 +169,20 @@ public class LiftoverUtils {
         // When reverse complementing, will be necessary to include this additional base.
         // This check prevents the extremely rare situation in which the indel occurs on the
         // first base of the sequence
-        final boolean addToStart = source.isIndel() && target.getStart() > 1;
+
+        final boolean indelForLiftover = isIndelForLiftover(source);
+        final boolean addToStart = indelForLiftover && target.getStart() > 1;
 
         final int start = target.getStart() - (addToStart ? 1 : 0);
         vcb.start(start);
 
-        final int stop = target.getEnd() - (addToStart ? 1 : 0);
+        final int stop = target.getEnd() + (addToStart ? 0 : 1);
         vcb.stop(stop);
 
-        vcb.alleles(reverseComplementAlleles(origAlleles, target, refSeq, source.isIndel(), addToStart));
+        vcb.alleles(reverseComplementAlleles(origAlleles, target, refSeq, indelForLiftover, addToStart));
 
-        if (!source.isSNP()) {
+
+        if (indelForLiftover) {
             // check that the reverse complemented bases match the new reference
             if (!referenceAlleleMatchesReferenceForIndel(vcb.getAlleles(), refSeq, start, stop)) {
                 return null;
@@ -180,6 +193,16 @@ public class LiftoverUtils {
         vcb.genotypes(fixGenotypes(source.getGenotypes(), origAlleles, vcb.getAlleles()));
 
         return vcb;
+    }
+
+    private static boolean isIndelForLiftover(final VariantContext vc){
+        final Allele ref = vc.getReference();
+        if (ref.length() != 1) {
+            return true;
+        }
+
+       return vc.getAlleles().stream().filter(a -> !a.isSymbolic()).filter(a -> !a.equals(Allele.SPAN_DEL)).
+               anyMatch(a -> a.length() != 1);
     }
 
     private static List<Allele> reverseComplementAlleles(final List<Allele> originalAlleles, final Interval target, final ReferenceSequence refSeq, final boolean isIndel, final boolean addToStart) {
@@ -203,9 +226,9 @@ public class LiftoverUtils {
             if (addToStart) {
                 alleleBuilder.append((char) referenceSequence.getBases()[target.getStart() - 2]);
             }
-            alleleBuilder.append(SequenceUtil.reverseComplement(oldAllele.getBaseString().substring(1, oldAllele.length())));
+            alleleBuilder.append(SequenceUtil.reverseComplement(oldAllele.getBaseString().substring(0, oldAllele.length())));
             if (!addToStart) {
-                alleleBuilder.append((char) referenceSequence.getBases()[target.getEnd() - 1]);
+                alleleBuilder.append((char) referenceSequence.getBases()[target.getEnd()]);
             }
 
             return Allele.create(alleleBuilder.toString(), oldAllele.isReference());
