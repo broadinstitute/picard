@@ -42,6 +42,7 @@ import picard.vcf.LiftoverVcf;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,8 +59,8 @@ public class LiftoverUtils {
     /**
      * Default list of attributes that need to be reversed or dropped from the INFO field when alleles have been swapped.
      */
-    public static final Collection<String> DEFAULT_TAGS_TO_REVERSE = Arrays.asList("AF");
-    public static final Collection<String> DEFAULT_TAGS_TO_DROP = Arrays.asList("MAX_AF");
+    public static final Collection<String> DEFAULT_TAGS_TO_REVERSE = Collections.singletonList("AF");
+    public static final Collection<String> DEFAULT_TAGS_TO_DROP = Collections.singletonList("MAX_AF");
 
     public static final Log log = Log.getInstance(LiftoverUtils.class);
 
@@ -165,26 +166,20 @@ public class LiftoverUtils {
         vcb.rmAttribute(VCFConstants.END_KEY);
         vcb.chr(target.getContig());
 
-        // By convention, indels are left aligned and include the base prior to that indel.
-        // When reverse complementing, will be necessary to include this additional base.
-        // This check prevents the extremely rare situation in which the indel occurs on the
-        // first base of the sequence
-
         final boolean indelForLiftover = isIndelForLiftover(source);
-        final boolean addToStart = indelForLiftover && target.getStart() > 1;
 
-        final int start = target.getStart() - (addToStart ? 1 : 0);
+        final int start = target.getStart() ;//- (addToStart ? 1 : 0);
         vcb.start(start);
 
-        final int stop = target.getEnd() + (addToStart || !indelForLiftover ? 0 : 1);
+        final int stop = target.getEnd();// + (addToStart || !indelForLiftover ? 0 : 1);
         vcb.stop(stop);
 
-        vcb.alleles(reverseComplementAlleles(origAlleles, target, refSeq, indelForLiftover, addToStart));
+        vcb.alleles(reverseComplementAlleles(origAlleles));
 
 
         if (indelForLiftover) {
             // check that the reverse complemented bases match the new reference
-            if (!referenceAlleleMatchesReferenceForIndel(vcb.getAlleles(), refSeq, start, stop)) {
+            if (referenceAlleleDiffersFromReferenceForIndel(vcb.getAlleles(), refSeq, start, stop)) {
                 return null;
             }
             leftAlignVariant(vcb, start, stop, vcb.getAlleles(), refSeq);
@@ -205,33 +200,20 @@ public class LiftoverUtils {
                anyMatch(a -> a.length() != 1);
     }
 
-    private static List<Allele> reverseComplementAlleles(final List<Allele> originalAlleles, final Interval target, final ReferenceSequence refSeq, final boolean isIndel, final boolean addToStart) {
+    private static List<Allele> reverseComplementAlleles(final List<Allele> originalAlleles) {
         final List<Allele> alleles = new ArrayList<>();
 
         for (final Allele oldAllele : originalAlleles) {
-            alleles.add(LiftoverUtils.reverseComplement(oldAllele, target, refSeq, isIndel, addToStart));
+            alleles.add(LiftoverUtils.reverseComplement(oldAllele));
         }
 
         return alleles;
     }
 
-    private static Allele reverseComplement(final Allele oldAllele, final Interval target, final ReferenceSequence referenceSequence, final boolean isIndel, final boolean addToStart) {
+    private static Allele reverseComplement(final Allele oldAllele) {
 
         if (oldAllele.isSymbolic() || oldAllele.isNoCall() || oldAllele.equals(Allele.SPAN_DEL)) {
             return oldAllele;
-        } else if (isIndel) {
-            // target.getStart is 1-based, reference bases are 0-based
-            final StringBuilder alleleBuilder = new StringBuilder(target.getEnd() - target.getStart() + 1);
-
-            if (addToStart) {
-                alleleBuilder.append((char) referenceSequence.getBases()[target.getStart() - 2]);
-            }
-            alleleBuilder.append(SequenceUtil.reverseComplement(oldAllele.getBaseString().substring(0, oldAllele.length())));
-            if (!addToStart) {
-                alleleBuilder.append((char) referenceSequence.getBases()[target.getEnd()]);
-            }
-
-            return Allele.create(alleleBuilder.toString(), oldAllele.isReference());
         } else {
             return Allele.create(SequenceUtil.reverseComplement(oldAllele.getBaseString()), oldAllele.isReference());
         }
@@ -357,13 +339,13 @@ public class LiftoverUtils {
      * @param end               the end position of the actual indel
      * @return true if they match, false otherwise
      */
-    protected static boolean referenceAlleleMatchesReferenceForIndel(final List<Allele> alleles,
-                                                                     final ReferenceSequence referenceSequence,
-                                                                     final int start,
-                                                                     final int end) {
+    private static boolean referenceAlleleDiffersFromReferenceForIndel(final List<Allele> alleles,
+                                                                       final ReferenceSequence referenceSequence,
+                                                                       final int start,
+                                                                       final int end) {
         final String refString = StringUtil.bytesToString(referenceSequence.getBases(), start - 1, end - start + 1);
         final Allele refAllele = alleles.stream().filter(Allele::isReference).findAny().orElseThrow(() -> new IllegalStateException("Error: no reference allele was present"));
-        return (refString.equalsIgnoreCase(refAllele.getBaseString()));
+        return (!refString.equalsIgnoreCase(refAllele.getBaseString()));
     }
 
     /**
@@ -377,7 +359,7 @@ public class LiftoverUtils {
     protected static void leftAlignVariant(final VariantContextBuilder builder, final int start, final int end, final List<Allele> alleles, final ReferenceSequence referenceSequence) {
 
         // make sure that referenceAllele matches reference
-        if (!referenceAlleleMatchesReferenceForIndel(alleles, referenceSequence, start, end)) {
+        if (referenceAlleleDiffersFromReferenceForIndel(alleles, referenceSequence, start, end)) {
             throw new IllegalArgumentException(String.format("Reference allele doesn't match reference at %s:%d-%d", referenceSequence.getName(), start, end));
         }
 
@@ -403,9 +385,7 @@ public class LiftoverUtils {
                     .collect(Collectors.groupingBy(a -> a[a.length - 1], Collectors.toSet()))
                     .size() == 1 && theEnd > 1) {
                 // 3. truncate rightmost nucleotide of each allele
-                for (final Allele allele : alleleBasesMap.keySet()) {
-                    alleleBasesMap.put(allele, truncateBase(alleleBasesMap.get(allele), true));
-                }
+                alleleBasesMap.replaceAll((a, v) -> truncateBase(alleleBasesMap.get(a), true));
                 changesInAlleles = true;
                 theEnd--;
                 // 4. end if
@@ -442,9 +422,7 @@ public class LiftoverUtils {
                 ) {
 
             //9. truncate the leftmost base of the alleles
-            for (final Allele allele : alleleBasesMap.keySet()) {
-                alleleBasesMap.put(allele, truncateBase(alleleBasesMap.get(allele), false));
-            }
+            alleleBasesMap.replaceAll((a, v) -> truncateBase(alleleBasesMap.get(a), false));
             theStart++;
         }
 
