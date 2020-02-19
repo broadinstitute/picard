@@ -176,7 +176,7 @@ public class LiftoverUtils {
         final int start = target.getStart() - (addToStart ? 1 : 0);
         vcb.start(start);
 
-        final int stop = target.getEnd() + (addToStart ? 0 : 1);
+        final int stop = target.getEnd() + (addToStart || !indelForLiftover ? 0 : 1);
         vcb.stop(stop);
 
         vcb.alleles(reverseComplementAlleles(origAlleles, target, refSeq, indelForLiftover, addToStart));
