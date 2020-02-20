@@ -32,6 +32,16 @@ public class HaplotypeProbabilitiesFromGenotype extends HaplotypeProbabilities {
     private final Snp snp;
     private final double[] likelihoods;
 
+    @Override
+    public HaplotypeProbabilitiesFromGenotype deepCopy()  {
+        return new HaplotypeProbabilitiesFromGenotype(this);
+    }
+
+    @SuppressWarnings("CopyConstructorMissesField")
+    public HaplotypeProbabilitiesFromGenotype(final HaplotypeProbabilitiesFromGenotype other) {
+        this(other.snp, other.getHaplotype(), other.likelihoods[0], other.likelihoods[1], other.likelihoods[2]);
+    }
+
     public HaplotypeProbabilitiesFromGenotype(final Snp snp, final HaplotypeBlock haplotypeBlock,
                                               final double AA, final double Aa, final double aa) {
         super(haplotypeBlock);
@@ -42,18 +52,13 @@ public class HaplotypeProbabilitiesFromGenotype extends HaplotypeProbabilities {
     /** Returns the SNP who's genotype was used to construct the likelihoods. */
     @Override public Snp getRepresentativeSnp() { return snp; }
 
-
-    // TODO: this can't be right in general. At least one needs to divide by the prior to set things straight.
-    // TODO: The only saving grace is that this is normally used for cases where the priors are large and similar to each other.
-
-
     // simply returns the _likelihoods_ that were passed into the constructor.
     public double[] getLikelihoods() {
         return likelihoods;
     }
 
     @Override
-    public void merge(final HaplotypeProbabilities other) {
+    public HaplotypeProbabilitiesFromGenotype merge(final HaplotypeProbabilities other) {
         if (!this.getHaplotype().equals(other.getHaplotype())) {
             throw new IllegalArgumentException("Mismatched haplotypes in call to HaplotypeProbabilities.merge(): " +
                     getHaplotype() + ", " + other.getHaplotype());
@@ -62,9 +67,9 @@ public class HaplotypeProbabilitiesFromGenotype extends HaplotypeProbabilities {
         if (!(other instanceof HaplotypeProbabilitiesFromGenotype)) {
             throw new IllegalArgumentException("Can only merge HaplotypeProbabilities of same class.");
         }
-
-        this.likelihoods[0] = this.likelihoods[0] * other.getLikelihoods()[0];
-        this.likelihoods[1] = this.likelihoods[1] * other.getLikelihoods()[1];
-        this.likelihoods[2] = this.likelihoods[2] * other.getLikelihoods()[2];
+        for (Genotype g : Genotype.values()) {
+            this.likelihoods[g.v] = this.likelihoods[g.v] * other.getLikelihoods()[g.v];
+        }
+        return this;
     }
 }

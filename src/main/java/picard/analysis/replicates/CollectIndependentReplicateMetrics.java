@@ -24,7 +24,6 @@
 
 package picard.analysis.replicates;
 
-
 import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.DuplicateSetIterator;
 import htsjdk.samtools.QueryInterval;
@@ -46,6 +45,7 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.utils.ValidationUtils;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -58,16 +58,14 @@ import htsjdk.variant.vcf.VCFContigHeaderLine;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.ExperimentalFeature;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.filter.CountingPairedFilter;
-import picard.util.BarcodeEditDistanceQuery;
-import picard.util.SingleBarcodeDistanceMetric;
 
 import java.io.File;
 import java.util.HashMap;
@@ -552,7 +550,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
     /** Gives the edit distance between this barcode and another of the same length. */
     private static byte calculateEditDistance(final String lhs, final String rhs) {
-        assert(lhs.length()==rhs.length());
+        ValidationUtils.validateArg(lhs.length() == rhs.length(), () -> "lengths of strings must equal, found '" + lhs + "' and '" + rhs + "'.");
         byte tmp = 0;
         for (int i = 0; i < rhs.length(); ++i) {
             if (rhs.charAt(i) != lhs.charAt(i)) ++tmp;
