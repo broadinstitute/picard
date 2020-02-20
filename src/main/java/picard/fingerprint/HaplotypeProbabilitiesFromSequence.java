@@ -25,7 +25,6 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.util.QualityUtil;
-import static java.lang.Math.log10;
 
 /**
  * Represents the probability of the underlying haplotype given the data. By convention the
@@ -38,6 +37,13 @@ public class HaplotypeProbabilitiesFromSequence extends HaplotypeProbabilitiesUs
 
     public HaplotypeProbabilitiesFromSequence(final HaplotypeBlock haplotypeBlock) {
         super(haplotypeBlock);
+    }
+
+    public HaplotypeProbabilitiesFromSequence(final HaplotypeProbabilitiesFromSequence other) {
+        super(other);
+        obsAllele1 = other.obsAllele1;
+        obsAllele2 = other.obsAllele2;
+        obsAlleleOther = other.obsAlleleOther;
     }
 
     @Override
@@ -62,14 +68,14 @@ public class HaplotypeProbabilitiesFromSequence extends HaplotypeProbabilitiesUs
             obsAllele1++;
             for (final Genotype g:Genotype.values()){
                 final double pAlt = g.v / 2d;
-                ll[g.v] += log10((1d - pAlt) * (1d - pError) + pAlt * pError);
+                ll[g.v] += Math.log10((1d - pAlt) * (1d - pError) + pAlt * pError);
             }
 
         } else if (base == snp.getAllele2()) {
             obsAllele2++;
             for (final Genotype g:Genotype.values()){
                 final double pAlt = 1 - g.v / 2d;
-                ll[g.v] += log10((1d - pAlt) * (1d - pError) + pAlt * pError);
+                ll[g.v] += Math.log10((1d - pAlt) * (1d - pError) + pAlt * pError);
             }
         } else {
             obsAlleleOther++;
@@ -84,28 +90,38 @@ public class HaplotypeProbabilitiesFromSequence extends HaplotypeProbabilitiesUs
      * read group, e.g. the sample or individual.
      *
      * @param other Another haplotype probabilities object to merge in
+     * @return
      */
-	@Override
-	public void merge(final HaplotypeProbabilities other) {
+    @Override
+    public HaplotypeProbabilitiesFromSequence merge(final HaplotypeProbabilities other) {
         super.merge(other);
 
-		if (!this.getHaplotype().equals(other.getHaplotype())) {
-			throw new IllegalArgumentException("Mismatched haplotypes in call to HaplotypeProbabilities.merge(): " +
-					getHaplotype() + ", " + other.getHaplotype());
-		}
+        if (!this.getHaplotype().equals(other.getHaplotype())) {
+            throw new IllegalArgumentException("Mismatched haplotypes in call to HaplotypeProbabilities.merge(): " +
+                    getHaplotype() + ", " + other.getHaplotype());
+        }
 
-		if (! (other instanceof HaplotypeProbabilitiesFromSequence)) {
-			throw new IllegalArgumentException("Can only merge() HaplotypeProbabilities of same class: Tried to merge a " +
-                    this.getClass().getName() + " with a " + other.getClass().getName() +"." );
-		}
+        if (!(other instanceof HaplotypeProbabilitiesFromSequence)) {
+            throw new IllegalArgumentException("Can only merge() HaplotypeProbabilities of same class: Tried to merge a " +
+                    this.getClass().getName() + " with a " + other.getClass().getName() + ".");
+        }
 
-		final HaplotypeProbabilitiesFromSequence o = (HaplotypeProbabilitiesFromSequence) other;
-        this.obsAllele1     += o.obsAllele1;
-        this.obsAllele2     += o.obsAllele2;
+        final HaplotypeProbabilitiesFromSequence o = (HaplotypeProbabilitiesFromSequence) other;
+        this.obsAllele1 += o.obsAllele1;
+        this.obsAllele2 += o.obsAllele2;
         this.obsAlleleOther += o.obsAlleleOther;
-	}
 
-    /** Returns the number of bases/reads that support the first allele. */
+        return this;
+    }
+
+    @Override
+    public HaplotypeProbabilitiesFromSequence deepCopy() {
+        return new HaplotypeProbabilitiesFromSequence(this);
+    }
+
+    /**
+     * Returns the number of bases/reads that support the first allele.
+     */
     @Override public int getObsAllele1() {
         return obsAllele1;
     }
