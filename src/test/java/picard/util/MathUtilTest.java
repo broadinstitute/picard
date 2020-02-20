@@ -5,6 +5,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -91,10 +92,7 @@ public class MathUtilTest {
     @Test
     public void testRandomSublist() {
         final Random random = new Random();
-        final List<Integer> list = new ArrayList<>();
-        list.add(1);
-        list.add(2);
-        list.add(3);
+        final List<Integer> list = Arrays.asList(1,2,3);
 
         Assert.assertEquals(list, MathUtil.randomSublist(list, 3, random));
         Assert.assertEquals(list, MathUtil.randomSublist(list, 4, random));

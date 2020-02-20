@@ -204,8 +204,8 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
     private void updateDependentValues() {
         if (likelihoodsNeedUpdating) {
             System.arraycopy(getLikelihoods0(), 0, likelihoods, 0, NUM_GENOTYPES);
-            System.arraycopy(getPosteriorProbabilities0(), 0, posteriorProbabilities, 0, NUM_GENOTYPES);
             System.arraycopy(getShiftedLogPosterior0(), 0, shiftedLogPosteriors, 0, NUM_GENOTYPES);
+            System.arraycopy(getPosteriorProbabilities0(), 0, posteriorProbabilities, 0, NUM_GENOTYPES);
 
             likelihoodsNeedUpdating = false;
         }

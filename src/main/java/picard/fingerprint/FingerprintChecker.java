@@ -89,8 +89,9 @@ public class FingerprintChecker {
     public static final int DEFAULT_MINIMUM_MAPPING_QUALITY = 10;
     public static final int DEFAULT_MINIMUM_BASE_QUALITY = 20;
     public static final int DEFAULT_MAXIMAL_PL_DIFFERENCE = 30;
+
     // used sometimes to subset loci. Fix the random seed so that the results are deterministic
-    public static final Random random = new Random(42);
+    private static final Random random = new Random(42);
 
     private final HaplotypeMap haplotypes;
     private int minimumBaseQuality = DEFAULT_MINIMUM_BASE_QUALITY;
@@ -107,7 +108,9 @@ public class FingerprintChecker {
         this.validationStringency = validationStringency;
     }
 
-    public File getReferenceFasta() { return referenceFasta;}
+    public File getReferenceFasta() {
+        return referenceFasta;
+    }
 
     private ValidationStringency validationStringency = ValidationStringency.DEFAULT_STRINGENCY;
 
@@ -236,7 +239,6 @@ public class FingerprintChecker {
      * @param specificSample  - null to load genotypes for all samples contained in the file or the name
      *                        of an individual sample to load (and exclude all others).
      * @return a Map of Sample name to Fingerprint
-     *
      */
     public Map<String, Fingerprint> loadFingerprintsFromNonIndexedVcf(final Path fingerprintFile, final String specificSample) {
         final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
@@ -262,7 +264,9 @@ public class FingerprintChecker {
 
         for (final VariantContext ctx : iterable) {
             // Setup the sample names set if needed
-            if (ctx == null) continue;
+            if (ctx == null) {
+                continue;
+            }
 
             if (samples == null) {
                 if (specificSample != null) {
@@ -281,7 +285,7 @@ public class FingerprintChecker {
             try {
                 getFingerprintFromVc(fingerprints, ctx);
             } catch (final IllegalArgumentException e) {
-                log.warn(e,"There was a genotyping error in File: " + source.toUri().toString() + "\n" + e.getMessage());
+                log.warn(e, "There was a genotyping error in File: " + source.toUri().toString() + "\n" + e.getMessage());
             }
         }
 
@@ -337,7 +341,9 @@ public class FingerprintChecker {
      */
     private void getFingerprintFromVc(final Map<String, Fingerprint> fingerprints, final VariantContext ctx) throws IllegalArgumentException {
         final HaplotypeBlock h = this.haplotypes.getHaplotype(ctx.getContig(), ctx.getStart());
-        if (h == null) return;
+        if (h == null) {
+            return;
+        }
 
         final Snp snp = this.haplotypes.getSnp(ctx.getContig(), ctx.getStart());
 
@@ -389,13 +395,17 @@ public class FingerprintChecker {
                 fp.add(hFp);
             } else {
 
-                if (genotype.isNoCall()) continue;
+                if (genotype.isNoCall()) {
+                    continue;
+                }
 
                 // TODO: when multiple genotypes are available for a Haplotype check that they
                 // TODO: agree. Not urgent since DownloadGenotypes already does this.
                 // TODO: more urgent now as we convert vcfs to haplotypeProbabilities and
                 // TODO: there could be different VCs with information we'd like to use...
-                if (fp.containsKey(h)) continue;
+                if (fp.containsKey(h)) {
+                    continue;
+                }
 
                 final boolean hom = genotype.isHom();
                 final byte allele = StringUtil.toUpperCase(genotype.getAllele(0).getBases()[0]);
@@ -557,7 +567,6 @@ public class FingerprintChecker {
                     log.error(e);
                     throw e;
                 }
-
             }
         }
 
@@ -573,13 +582,13 @@ public class FingerprintChecker {
             readGroupRecord.setPlatformUnit("<UNKNOWN>.0.ZZZ");
 
             if (validationStringency == ValidationStringency.LENIENT) {
-                log.warn(e);
+                log.warn(e.getMessage());
                 log.warn("further messages from this file will be suppressed");
             }
 
             return new FingerprintIdDetails(readGroupRecord, samFile.toUri().toString());
         } else {
-            log.error(e);
+            log.error(e.getMessage());
             throw e;
         }
     }
@@ -634,7 +643,7 @@ public class FingerprintChecker {
                 final Snp snp = this.haplotypes.getSnp(info.getSequenceName(), info.getPosition());
 
                 // randomly select locusMaxReads elements from the list
-                final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = MathUtil.randomSublist(info.getRecordAndOffsets(), locusMaxReads,random);
+                final List<SamLocusIterator.RecordAndOffset> recordAndOffsetList = MathUtil.randomSublist(info.getRecordAndOffsets(), locusMaxReads, random);
 
                 for (final SamLocusIterator.RecordAndOffset rec : recordAndOffsetList) {
                     final SAMReadGroupRecord rg = rec.getRecord().getReadGroup();
@@ -689,10 +698,9 @@ public class FingerprintChecker {
                 }
 
                 if (oneFileFingerprints.isEmpty()) {
-                        log.warn("No fingerprint data was found in file:" + p);
+                    log.warn("No fingerprint data was found in file:" + p);
                 }
                 retval.putAll(oneFileFingerprints);
-
 
                 log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
                 if (filesRead.incrementAndGet() % 100 == 0) {

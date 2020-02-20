@@ -99,7 +99,6 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
         }
     }
 
-
     //a function needed to update the logLikelihoods from the likelihoodMap.
     private void updateLikelihoods() {
         if (!valuesNeedUpdating) {
@@ -152,7 +151,6 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
 
     @Override
     public double[] getLogLikelihoods() {
-        updateLikelihoods();
         return super.getLogLikelihoods();
     }
 }
