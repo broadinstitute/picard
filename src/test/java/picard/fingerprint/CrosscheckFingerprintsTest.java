@@ -12,14 +12,10 @@ import picard.util.TabbedTextFileWithHeaderParser;
 import picard.vcf.SamTestUtils;
 import picard.vcf.VcfTestUtils;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
@@ -197,7 +193,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
             args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
         }
 
-        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
+        doTest(args.toArray(new String[0]), metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
 
     @DataProvider(name = "cramsWithNoReference")
@@ -486,7 +482,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
                 args.add("LOD_THRESHOLD=" + -1.0);
                 args.add("CROSSCHECK_BY=SAMPLE");
 
-        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
+        doTest(args.toArray(new String[0]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
     }
 
     @DataProvider(name = "checkSamplesCrosscheckAllData")
@@ -592,7 +588,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         if(inputSampleMap!=null)  args.add("INPUT_SAMPLE_MAP="+inputSampleMap.getAbsolutePath());
         if(secondInputSampleMap!=null)  args.add("SECOND_INPUT_SAMPLE_MAP="+secondInputSampleMap.getAbsolutePath());
 
-        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples1 * numberOfSamples2 , CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
+        doTest(args.toArray(new String[0]), metrics, expectedRetVal, numberOfSamples1 * numberOfSamples2 , CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
     }
 
     @DataProvider
@@ -627,8 +623,8 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         final List<File> files2 = Collections.singletonList(NA12892_g_vcf);
 
         final List<String> args = new ArrayList<>();
-        files1.forEach(f->args.add("INPUT="+f.getAbsolutePath()));
-        files2.forEach(f->args.add("SECOND_INPUT="+f.getAbsolutePath()));
+        files1.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
+        files2.forEach(f -> args.add("SECOND_INPUT=" + f.getAbsolutePath()));
 
         args.add("OUTPUT=" + metrics.getAbsolutePath());
         args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
@@ -703,16 +699,16 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         metrics.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
-        files1.forEach(f->args.add("INPUT="+f.getAbsolutePath()));
-        files2.forEach(f->args.add("SECOND_INPUT="+f.getAbsolutePath()));
+        files1.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
+        files2.forEach(f -> args.add("SECOND_INPUT=" + f.getAbsolutePath()));
 
-                args.add("OUTPUT=" + metrics.getAbsolutePath());
+        args.add("OUTPUT=" + metrics.getAbsolutePath());
                 args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
                 args.add("LOD_THRESHOLD=" + -1.0);
                 args.add("CROSSCHECK_BY=SAMPLE");
                 args.add("CROSSCHECK_MODE=CHECK_ALL_OTHERS");
 
-        doTest(args.toArray(new String[args.size()]), metrics, expectedRetVal, numberOfSamples1 * numberOfSamples2 , CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
+        doTest(args.toArray(new String[0]), metrics, expectedRetVal, numberOfSamples1 * numberOfSamples2 , CrosscheckMetric.DataType.SAMPLE, ExpectAllMatch);
     }
 
     @DataProvider(name = "checkFilesData")
@@ -748,7 +744,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         metrics.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
-        files.forEach(f->args.add("INPUT="+f.getAbsolutePath()));
+        files.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
 
         args.add("OUTPUT=" + metrics.getAbsolutePath());
         args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
@@ -877,7 +873,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
         final CrosscheckMetric.DataType dataType = mode == Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE ? CrosscheckMetric.DataType.SAMPLE : by;
 
-        doTest(args.toArray(new String[args.size()]), metrics, exptectRetVal, expectedNMetrics, dataType, expectAllMatch);
+        doTest(args.toArray(new String[0]), metrics, exptectRetVal, expectedNMetrics, dataType, expectAllMatch);
 
         //swap input and second input
         if (second_input != null) {
@@ -886,7 +882,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
             input.forEach(f -> args.add("SECOND_INPUT=" + f));
             second_input.forEach(f -> args.add("INPUT=" + f));
-            doTest(args.toArray(new String[args.size()]), metrics, exptectRetVal, expectedNMetrics, dataType, expectAllMatch);
+            doTest(args.toArray(new String[0]), metrics, exptectRetVal, expectedNMetrics, dataType, expectAllMatch);
         }
     }
 
@@ -951,17 +947,5 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
                 assert false;
             }
         }
-    }
-
-    @Test
-    public void canWriteToDevNull() throws IOException {
-        File f = new File("/dev/null");
-        Assert.assertTrue(f.canRead());
-
-        final OutputStream stream = new FileOutputStream(f);
-        final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(stream));
-
-        writer.write("Just a test");
-        writer.close();
     }
 }
