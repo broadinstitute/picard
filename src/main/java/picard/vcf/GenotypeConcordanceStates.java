@@ -1,7 +1,5 @@
 package picard.vcf;
 
-import htsjdk.utils.ValidationUtils;
-
 import java.util.HashMap;
 import java.util.Map;
 

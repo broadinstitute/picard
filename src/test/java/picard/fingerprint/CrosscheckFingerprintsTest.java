@@ -3,7 +3,6 @@ package picard.fingerprint;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.utils.ValidationUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
