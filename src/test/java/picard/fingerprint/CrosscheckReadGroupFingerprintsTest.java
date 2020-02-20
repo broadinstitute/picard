@@ -102,7 +102,7 @@ public class CrosscheckReadGroupFingerprintsTest {
         doTest(args, metrics, expectedRetVal, expectedNMetrics * expectedNMetrics , CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
 
-    @DataProvider(name = "bamFilesLBs")
+    @DataProvider
     public Object[][] bamFilesLBs() {
 
         return new Object[][]{
@@ -251,19 +251,6 @@ public class CrosscheckReadGroupFingerprintsTest {
                 });
             }
         }
-    }
-
-    @Test
-    public void canWriteToDevNull() throws IOException {
-        File f = new File("/dev/null");
-        Assert.assertTrue(f.canRead());
-
-        final OutputStream stream = new FileOutputStream(f);
-        final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(stream));
-
-        writer.write("Just a test");
-        writer.close();
-
     }
 
     @DataProvider(name = "newParametersData")

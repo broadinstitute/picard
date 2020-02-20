@@ -11,8 +11,15 @@ import picard.vcf.VcfTestUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * Created by farjoun on 8/27/15.
@@ -223,6 +230,168 @@ public class FingerprintCheckerTest {
         }
     }
 
+    @DataProvider()
+    Object[][] mergeIsDafeProvider() {
+        final HaplotypeProbabilitiesFromSequence hp1 = new HaplotypeProbabilitiesFromSequence(hb);
+        final HaplotypeProbabilitiesFromSequence hp2 = new HaplotypeProbabilitiesFromSequence(hb);
+
+        addObservation(hp1, hb, 5, hb.getFirstSnp().getAllele1());
+        addObservation(hp1, hb, 1, (byte) (hb.getFirstSnp().getAllele1() + 1));
+        addObservation(hp2, hb, 3, hb.getFirstSnp().getAllele1());
+        addObservation(hp2, hb, 2, hb.getFirstSnp().getAllele2());
+
+        final HaplotypeProbabilitiesFromContaminatorSequence hpcs1 = new HaplotypeProbabilitiesFromContaminatorSequence(hb, .1);
+        final HaplotypeProbabilitiesFromContaminatorSequence hpcs2 = new HaplotypeProbabilitiesFromContaminatorSequence(hb, .1);
+
+        addObservation(hpcs1, hb, 5, hb.getFirstSnp().getAllele1());
+        addObservation(hpcs1, hb, 1, (byte)(hb.getFirstSnp().getAllele1()+1));
+        addObservation(hpcs2, hb, 3, hb.getFirstSnp().getAllele1());
+        addObservation(hpcs2, hb, 1, hb.getFirstSnp().getAllele1());
+
+
+        return new Object[][]{
+                new Object[]{new HaplotypeProbabilitiesFromGenotype(snp, hb, 5D, 0D, 10D), new HaplotypeProbabilitiesFromGenotype(snp, hb, 0D, 10D, 100D)},
+                new Object[]{
+                        new HaplotypeProbabilityOfNormalGivenTumor(
+                                new HaplotypeProbabilitiesFromGenotype(snp, hb, 5D, 0D, 10D), .05),
+                        new HaplotypeProbabilityOfNormalGivenTumor(
+                                new HaplotypeProbabilitiesFromGenotype(snp, hb, 0D, 10D, 100D), 0.05)},
+                new Object[]{hp1,hp2},
+                new Object[]{hpcs1,hpcs2},
+        };
+    }
+
+    private static void addObservation(final HaplotypeProbabilitiesFromSequence haplotypeProb, final HaplotypeBlock haplotypeBlock, final int count, final byte allele) {
+        for (int i = 0; i < count; i++) {
+            haplotypeProb.addToProbs(haplotypeBlock.getFirstSnp(), allele, (byte) 30);
+        }
+    }
+
+    @Test(dataProvider = "mergeIsDafeProvider")
+    public void testMergeHaplotypeProbabilitiesIsSafe(final HaplotypeProbabilities hp1, final HaplotypeProbabilities hp2){
+
+        final HaplotypeProbabilities merged1 = hp1.deepCopy().merge(hp2);
+        final HaplotypeProbabilities merged2 = hp1.deepCopy().merge(hp2);
+
+        Assert.assertEquals(merged1.getLikelihoods(),merged2.getLikelihoods());
+    }
+
+
+    @Test(dataProvider = "mergeIsDafeProvider")
+    public void testMergeFingerprintIsSafe(final HaplotypeProbabilities hp1, final HaplotypeProbabilities hp2){
+
+        final Fingerprint fpA = new Fingerprint("test2",null,"none");
+        final Fingerprint fpB = new Fingerprint("test2",null,"none");
+
+        final Fingerprint fp1 = new Fingerprint("test1",null,"none");
+        fp1.add(hp1);
+
+        final Fingerprint fp2 = new Fingerprint("test1",null,"none");
+        fp2.add(hp2);
+
+        fpA.merge(fp1);
+        fpB.merge(fp1);
+
+        Assert.assertNotEquals(fpA.keySet().size(), 0);
+        for(HaplotypeBlock hb:fpA.keySet()){
+            Assert.assertEquals(fpA.get(hb).getLikelihoods(),fpB.get(hb).getLikelihoods());
+        }
+
+        fpA.merge(fp2);
+        fpB.merge(fp2);
+        fpB.merge(fp2);
+
+        Assert.assertNotEquals(fpA.keySet().size(), 0);
+        for(HaplotypeBlock hb:fpA.keySet()){
+            Assert.assertNotEquals(fpA.get(hb), fpB.get(hb));
+        }
+
+        fpA.merge(fp2);
+
+        Assert.assertNotEquals(fpA.keySet().size(), 0);
+        for(HaplotypeBlock hb:fpA.keySet()){
+            Assert.assertEquals(fpA.get(hb).getLikelihoods(),fpB.get(hb).getLikelihoods());
+        }
+    }
+
+    @Test
+    public void testMergeIsSafeFromSequence() {
+        final Path na12891_r1 = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam").toPath();
+        final Path na12891_r2 = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r2.sam").toPath();
+        final Path na12892_r1 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r1.sam").toPath();
+        final Path na12892_r2 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r2.sam").toPath();
+
+        final List<Path> listOfFiles = Arrays.asList(na12891_r1, na12891_r2, na12892_r1, na12892_r2);
+        final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap = checker.fingerprintFiles(listOfFiles, 1, 0, TimeUnit.DAYS);
+
+        final Fingerprint combinedFp = new Fingerprint("test", null, null);
+        fingerprintIdDetailsFingerprintMap.values().forEach(combinedFp::merge);
+
+        final Fingerprint combinedFp2 = new Fingerprint("test2", null, null);
+        fingerprintIdDetailsFingerprintMap.values().forEach(combinedFp2::merge);
+
+        Assert.assertNotEquals(combinedFp.keySet().size(), 0);
+        FingerprintingTestUtils.assertFingerPrintHPsAreEqual(combinedFp, combinedFp2);
+
+        final Function<FingerprintIdDetails, String> bySample = Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE);
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap1 =
+                Fingerprint.mergeFingerprintsBy(fingerprintIdDetailsFingerprintMap, bySample);
+
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap2 =
+                Fingerprint.mergeFingerprintsBy(fingerprintIdDetailsFingerprintMap, bySample);
+
+        Assert.assertNotEquals(fingerprintIdDetailsFingerprintMap1.keySet().size(), 0);
+
+        for (final FingerprintIdDetails fpd1 : fingerprintIdDetailsFingerprintMap1.keySet()) {
+            final Fingerprint fingerprint1 = fingerprintIdDetailsFingerprintMap1.get(fpd1);
+            final Fingerprint fingerprint2 = fingerprintIdDetailsFingerprintMap2.get(fpd1);
+
+            Assert.assertNotEquals(fingerprint1.keySet().size(), 0);
+            FingerprintingTestUtils.assertFingerPrintHPsAreEqual(fingerprint1, fingerprint2);
+        }
+    }
+
+
+    @Test
+    public void testMergeIsSafeFromVCF() {
+        final Path na12891_fp = TEST_DATA_DIR.toPath().resolve("NA12891.fp.vcf");
+        final Path na12891_g = TEST_DATA_DIR.toPath().resolve("NA12891.vcf");
+        final Path na12892_fp = TEST_DATA_DIR.toPath().resolve("NA12892.fp.vcf");
+        final Path na12892_g = TEST_DATA_DIR.toPath().resolve( "NA12892.vcf");
+
+        final List<Path> listOfFiles = Arrays.asList(na12891_fp, na12891_g, na12892_fp, na12892_g);
+        final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap = checker.fingerprintFiles(listOfFiles, 1, 0, TimeUnit.DAYS);
+
+        final Fingerprint combinedFp = new Fingerprint("test", null, null);
+        fingerprintIdDetailsFingerprintMap.values().forEach(combinedFp::merge);
+
+        final Fingerprint combinedFp2 = new Fingerprint("test", null, null);
+        fingerprintIdDetailsFingerprintMap.values().forEach(combinedFp2::merge);
+
+        Assert.assertNotEquals(combinedFp.keySet().size(), 0);
+        FingerprintingTestUtils.assertFingerPrintHPsAreEqual(combinedFp, combinedFp2);
+
+        final Function<FingerprintIdDetails, String> bySample = Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE);
+
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap1 =
+                Fingerprint.mergeFingerprintsBy(fingerprintIdDetailsFingerprintMap, bySample);
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap2 =
+                Fingerprint.mergeFingerprintsBy(fingerprintIdDetailsFingerprintMap, bySample);
+
+        Assert.assertNotEquals(fingerprintIdDetailsFingerprintMap1.keySet().size(), 0);
+        Assert.assertEquals(fingerprintIdDetailsFingerprintMap1.keySet().size(), fingerprintIdDetailsFingerprintMap2.size());
+
+        for (final FingerprintIdDetails fpd1 : fingerprintIdDetailsFingerprintMap1.keySet()) {
+            final Fingerprint fingerprint1 = fingerprintIdDetailsFingerprintMap1.get(fpd1);
+            final Fingerprint fingerprint2 = fingerprintIdDetailsFingerprintMap2.get(fpd1);
+
+            Assert.assertNotEquals(fingerprint1.keySet().size(), 0);
+            FingerprintingTestUtils.assertFingerPrintHPsAreEqual(fingerprint1, fingerprint2);
+        }
+    }
+
     @Test
     public void testWriteFingerprint() throws IOException {
         final File haplotype_db = new File(TEST_DATA_DIR, "haplotypeMap_small.vcf");
@@ -237,5 +406,4 @@ public class FingerprintCheckerTest {
 
         VcfTestUtils.assertVcfFilesAreEqual(vcfOutput, vcfExpected);
     }
-
 }
