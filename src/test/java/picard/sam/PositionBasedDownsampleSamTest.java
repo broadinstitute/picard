@@ -9,6 +9,7 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SAMTextHeaderCodec;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.utils.ValidationUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -220,7 +221,7 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
                 "FRACTION=" + fraction
         };
         //should blow up due to bad inputs
-        assert runPicardCommandLine(args) != 0;
+        Assert.assertNotEquals(runPicardCommandLine(args), 0);
     }
 
 }

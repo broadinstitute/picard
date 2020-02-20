@@ -943,8 +943,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
                 }));
 
             } catch (NoSuchFieldException e) {
-                e.printStackTrace();
-                assert false;
+                throw new IllegalStateException(e);
             }
         }
     }
