@@ -52,7 +52,7 @@ public class HaplotypeProbabilitiesFromGenotype extends HaplotypeProbabilities {
     /** Returns the SNP who's genotype was used to construct the likelihoods. */
     @Override public Snp getRepresentativeSnp() { return snp; }
 
-    // simply returns the _likelihoods_ that were passed into the constructor.
+   // simply returns the _likelihoods_ that were passed into the constructor.
     public double[] getLikelihoods() {
         return likelihoods;
     }

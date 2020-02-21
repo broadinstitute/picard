@@ -42,6 +42,7 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
     // for each model (contGenotype, mainGenotype) there's a likelihood of the data. These need to be collected separately
     // and only collated once all the data is in.
     private final double[][] likelihoodMap = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
+    private boolean valuesNeedUpdating = true;
 
     public HaplotypeProbabilitiesFromContaminatorSequence(final HaplotypeBlock haplotypeBlock, final double contamination) {
         super(haplotypeBlock);
@@ -68,6 +69,7 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
          */
     public void addToProbs(final Snp snp, final byte base, final byte qual) {
         assertSnpPartOfHaplotype(snp);
+        valuesNeedUpdating = true;
 
         // Skip bases that don't match either expected allele for this SNP
         final boolean altAllele;
@@ -91,20 +93,24 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
             for (final Genotype mainGeno : Genotype.values()) {
                 //theta is the expected frequency of the alternate allele
                 final double theta = 0.5 * ((1 - contamination) * mainGeno.v + contamination * contGeno.v);
-                likelihoodMap[contGeno.v][mainGeno.v] *= (( altAllele ? theta : (1 - theta)) * (1 - pErr) +
-                                                          (!altAllele ? theta : (1 - theta)) * pErr);
+                likelihoodMap[contGeno.v][mainGeno.v] *= ((altAllele ? theta : (1 - theta)) * (1 - pErr) +
+                        (!altAllele ? theta : (1 - theta)) * pErr);
             }
         }
     }
 
     //a function needed to update the logLikelihoods from the likelihoodMap.
     private void updateLikelihoods() {
+        if (!valuesNeedUpdating) {
+            return;
+        }
         final double[] ll = new double[NUM_GENOTYPES];
         for (final Genotype contGeno : Genotype.values()) {
             // p(a | g_c) = \sum_g_m { P(g_m) \prod_i P(a_i| g_m, g_c)}
             ll[contGeno.v] = Math.log10(MathUtil.sum(MathUtil.multiply(this.getPriorProbablities(), likelihoodMap[contGeno.v])));
         }
         setLogLikelihoods(ll);
+        valuesNeedUpdating = false;
     }
 
     @Override
@@ -133,12 +139,18 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
         for (final Genotype contGeno : Genotype.values()) {
             this.likelihoodMap[contGeno.v] = MathUtil.multiply(this.likelihoodMap[contGeno.v], o.likelihoodMap[contGeno.v]);
         }
+        valuesNeedUpdating = true;
         return this;
     }
 
     @Override
-    public double[] getLogLikelihoods() {
+    public double[] getLikelihoods() {
         updateLikelihoods();
+        return super.getLikelihoods();
+    }
+
+    @Override
+    public double[] getLogLikelihoods() {
         return super.getLogLikelihoods();
     }
 }
