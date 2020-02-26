@@ -842,7 +842,7 @@ public abstract class AbstractAlignmentMerger {
         final byte[] readBasesToClip = Arrays.copyOfRange(readBases, read.getReadNegativeStrandFlag()? 0 : posToClip, read.getReadNegativeStrandFlag()? readBases.length - posToClip : readBases.length);
         final byte[] readBQToClip = Arrays.copyOfRange(read.getBaseQualities(), read.getReadNegativeStrandFlag()? 0 : posToClip, read.getReadNegativeStrandFlag()? readBases.length - posToClip : readBases.length);
 
-        if (read.getReadNegativeStrandFlag()) {
+       if (read.getReadNegativeStrandFlag()) {
             SequenceUtil.reverseComplement(readBasesToClip);
             SequenceUtil.reverseQualities(readBQToClip);
         }
