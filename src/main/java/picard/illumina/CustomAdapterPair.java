@@ -28,12 +28,12 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.util.AdapterPair;
 
-class CustomAdapterPair implements AdapterPair {
+public class CustomAdapterPair implements AdapterPair {
 
     private final String fivePrime, threePrime, fivePrimeReadOrder;
     private final byte[] fivePrimeBytes, threePrimeBytes, fivePrimeReadOrderBytes;
 
-    CustomAdapterPair(final String fivePrime, final String threePrime) {
+    public CustomAdapterPair(final String fivePrime, final String threePrime) {
         this.threePrime = threePrime;
         this.threePrimeBytes = StringUtil.stringToBytes(threePrime);
 

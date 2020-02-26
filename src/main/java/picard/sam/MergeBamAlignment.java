@@ -23,6 +23,7 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
@@ -37,7 +38,11 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.illumina.CustomAdapterPair;
+import picard.illumina.parser.ReadStructure;
 import picard.sam.util.PGTagArgumentCollection;
+import picard.util.AdapterPair;
+import picard.util.IlluminaUtil;
 
 import java.io.File;
 import java.util.*;
@@ -256,8 +261,24 @@ public class MergeBamAlignment extends CommandLineProgram {
             "alignment is filtered out for some reason. For all strategies, ties are resolved arbitrarily.")
     public PrimaryAlignmentStrategy PRIMARY_ALIGNMENT_STRATEGY = PrimaryAlignmentStrategy.BestMapq;
 
-    @Argument(doc = "For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.")
+    @Argument(doc = "For paired reads, clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  Clipping will be either soft or hard clipping, depending on CLIP_OVERLAPPING_READS_OPERATOR setting.")
     public boolean CLIP_OVERLAPPING_READS = true;
+
+    @Argument(doc = "Type of clipping to used for overlapping reads.  If set to hard clip, hard clipping will only be performed if bases to be clipped match expected adapter sequences, otherwise bases will be soft clipped.")
+    public CigarOperator CLIP_OVERLAPPING_READS_OPERATOR = CigarOperator.SOFT_CLIP;
+
+    @Argument(doc = "Which adapters to look for in the read.")
+    public List<IlluminaUtil.IlluminaAdapterPair> ADAPTERS_TO_CHECK = new ArrayList<>(
+            Arrays.asList(IlluminaUtil.IlluminaAdapterPair.INDEXED,
+                    IlluminaUtil.IlluminaAdapterPair.DUAL_INDEXED,
+                    IlluminaUtil.IlluminaAdapterPair.NEXTERA_V2,
+                    IlluminaUtil.IlluminaAdapterPair.FLUIDIGM));
+
+    @Argument(doc = "For specifying adapters other than standard Illumina", optional = true)
+    public String FIVE_PRIME_ADAPTER;
+
+    @Argument(doc = "For specifying adapters other than standard Illumina", optional = true)
+    public String THREE_PRIME_ADAPTER;
 
     @Argument(doc = "If false, do not write secondary alignments to output.")
     public boolean INCLUDE_SECONDARY_ALIGNMENTS = true;
@@ -279,6 +300,16 @@ public class MergeBamAlignment extends CommandLineProgram {
             "Currently ignored unless UNMAP_CONTAMINANT_READS = true. Note that the DO_NOT_CHANGE strategy will actually reset the cigar and set the mapping quality on unmapped reads since otherwise" +
             "the result will be an invalid record. To force no change use the DO_NOT_CHANGE_INVALID strategy.", optional = true)
     public AbstractAlignmentMerger.UnmappingReadStrategy UNMAPPED_READ_STRATEGY = AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE;
+
+    @Argument(doc = "Structure of read 1.  If this and READ_STRUCTURE both are unspecified, will be assumed that all bases in read 1 are template. Cannot be used with READ_STRUCTURE.", optional = true, mutex = {"READ_STRUCTURE"})
+    public ReadStructure READ_1_STRUCTURE;
+
+    @Argument(doc = "Structure of read 2.  If this and READ_STRUCTURE both are unspecified, will be assumed that all bases in read 2 are template. Cannot be used with READ_STRUCTURE.", optional = true, mutex = {"READ_STRUCTURE"})
+    public ReadStructure READ_2_STRUCTURE;
+
+    @Argument(doc = "Structure shared by read 1 and read 2.  Unspecified read structures are assumed to be all template bases.  Cannot be used with either READ_1_STRUCTURE or READ_2_STRUCTURE", optional = true,
+            mutex = {"READ_1_STRUCTURE", "READ_2_STRUCTURE"})
+    public ReadStructure READ_STRUCTURE;
 
     @Override
     protected boolean requiresReference() {
@@ -348,7 +379,16 @@ public class MergeBamAlignment extends CommandLineProgram {
                 READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER,
                 PRIMARY_ALIGNMENT_STRATEGY.newInstance(), ADD_MATE_CIGAR, UNMAP_CONTAMINANT_READS,
                 MIN_UNCLIPPED_BASES, UNMAPPED_READ_STRATEGY, MATCHING_DICTIONARY_TAGS);
-        merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS);
+
+        final List<AdapterPair> adapters = new ArrayList<>(ADAPTERS_TO_CHECK);
+
+        if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
+            adapters.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
+        }
+
+        merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS, CLIP_OVERLAPPING_READS_OPERATOR,
+                READ_STRUCTURE!= null ? READ_STRUCTURE : READ_1_STRUCTURE, READ_STRUCTURE!= null ? READ_STRUCTURE : READ_2_STRUCTURE,
+                adapters);
         merger.setMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         merger.setKeepAlignerProperPairFlags(ALIGNER_PROPER_PAIR_FLAGS);
         merger.setIncludeSecondaryAlignments(INCLUDE_SECONDARY_ALIGNMENTS);
