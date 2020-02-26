@@ -25,6 +25,7 @@
 package picard.arrays.illumina;
 
 import org.apache.commons.io.IOUtils;
+import picard.PicardException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,6 +38,8 @@ import java.io.InputStream;
  * A class to provide methods for accessing Illumina Infinium Data Files.
  */
 public abstract class InfiniumDataFile {
+
+    public static final int MAX_UNSIGNED_SHORT = 65535;
 
     private String identifier;
     private int numberOfEntries;
@@ -178,11 +181,15 @@ public abstract class InfiniumDataFile {
     }
 
     /**
-     * Utility method for writing a short value to an outputStream.
+     * Utility method for writing an unsigned short value to an outputStream.
+     * Note that Java has no unsigned short value, so we pass it as an int and size-validate here.
      * Writes in Illumina (little-endian) format
      */
-    static void writeShort(final DataOutputStream outputStream, final short value) throws IOException {
-        final byte[] byteArray = shortToByteArray(value);
+    static void writeUnsignedShort(final DataOutputStream outputStream, final int value) throws IOException {
+        if (value < 0 || value > MAX_UNSIGNED_SHORT) {
+            throw new PicardException("Value " + value + " is out of range for a unsigned short");
+        }
+        final byte[] byteArray = shortToByteArray((short) (value & 0x0000ffff));
         outputStream.write(byteArray);
     }
 
