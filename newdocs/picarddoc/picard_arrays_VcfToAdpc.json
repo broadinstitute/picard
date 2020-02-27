@@ -77,6 +77,21 @@
       "options": []
     },
     {
+      "summary": "A text file into which the number of loci in the VCF will be written. This is useful for calling verifyIDIntensity.",
+      "name": "--NUM_MARKERS_FILE",
+      "synonyms": "-NMF",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
+      "options": []
+    },
+    {
       "summary": "The output (adpc.bin) file to write.",
       "name": "--OUTPUT",
       "synonyms": "-O",
@@ -119,6 +134,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "A text file into which the names of the samples will be written. These will be in the same order as the data in the adpc.bin file.",
+      "name": "--SAMPLES_FILE",
+      "synonyms": "-SF",
+      "type": "File",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "required",
       "options": []
     },
     {
@@ -195,13 +225,13 @@
       ]
     },
     {
-      "summary": "The Input VCF",
+      "summary": "One or more VCF files containing array intensity data.",
       "name": "--VCF",
       "synonyms": "NA",
-      "type": "File",
+      "type": "List[File]",
       "required": "yes",
       "fulltext": "",
-      "defaultValue": "null",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
