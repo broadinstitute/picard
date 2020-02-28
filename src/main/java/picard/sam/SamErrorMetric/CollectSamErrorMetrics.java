@@ -186,6 +186,11 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     )
     public boolean INTERVAL_ITERATOR = false;
 
+    @Argument(shortName = "EXT",
+            doc = "Append the given file extension to all metric file names (ex. OUTPUT.insert_size_metrics.EXT). None if null",
+            optional = true)
+    public String FILE_EXTENSION = null;
+
     // =====================================================================
 
     /** Random object from which to pull pseudo-random numbers.  Initialized in {@link #initializeAggregationState()}.*/
@@ -423,8 +428,9 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
         log.info("Using " + aggregatorList.size() + " aggregators.");
 
+        final String fileExtension = (FILE_EXTENSION == null) ? "" : FILE_EXTENSION;
         aggregatorList.forEach(la ->
-                IOUtil.assertFileIsWritable(new File(OUTPUT + la.getSuffix())));
+                IOUtil.assertFileIsWritable(new File(OUTPUT + la.getSuffix() + fileExtension)));
 
         // iterate over loci
         log.info("Starting iteration over loci");
@@ -510,7 +516,8 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             file.addMetric(metric);
         }
 
-        file.write(new File(OUTPUT + "." + locusAggregator.getSuffix()));
+        final String fileExtension = (FILE_EXTENSION == null) ? "" : FILE_EXTENSION;
+        file.write(new File(OUTPUT + "." + locusAggregator.getSuffix() + fileExtension));
     }
 
     /**
