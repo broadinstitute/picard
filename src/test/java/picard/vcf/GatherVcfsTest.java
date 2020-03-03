@@ -47,33 +47,40 @@ public class GatherVcfsTest extends CommandLineProgramTest {
     @DataProvider
     public Object[][] vcfshards() {
         return new Object[][]{
-                {Arrays.asList(shard1,shard2,shard3), vcf, 0},
-                {Arrays.asList(shard1,shard2_bad,shard3), vcf, 1},
-                {Arrays.asList(shard1,shard3,shard2), vcf, 1},
-                {Arrays.asList(shard3,shard1,shard2), vcf, 1} ,
-                {Arrays.asList(shard1_gz, shard2_gz, shard3), vcf_gz, 0},
-                {Arrays.asList(shard1_gz, shard2_bad_gz, shard3), vcf_gz, 1},
-                {Arrays.asList(shard1_gz, shard3_gz, shard2), vcf_gz, 1},
-                {Arrays.asList(shard3_gz, shard1_gz, shard2), vcf_gz, 1}
+                {Arrays.asList(shard1,shard2,shard3), vcf, 0, false},
+                {Arrays.asList(shard3,shard1,shard2), vcf, 0, true},
+                {Arrays.asList(shard1,shard2_bad,shard3), vcf, 1, false},
+                {Arrays.asList(shard1,shard3,shard2), vcf, 1, false},
+                {Arrays.asList(shard3,shard1,shard2), vcf, 1, false} ,
+                {Arrays.asList(shard1_gz, shard2_gz, shard3), vcf_gz, 0, false},
+                {Arrays.asList(shard1_gz, shard2_bad_gz, shard3), vcf_gz, 1, false},
+                {Arrays.asList(shard1_gz, shard3_gz, shard2), vcf_gz, 1, false},
+                {Arrays.asList(shard3_gz, shard1_gz, shard2), vcf_gz, 1, false},
+                {Arrays.asList(shard3_gz, shard1_gz, shard2), vcf_gz, 0, true}
         };
     }
 
     @Test(dataProvider = "vcfshards")
-    public void TestGatherFiles(final List<File> inputFiles, final File expectedOutput, final int expectedRetVal) throws IOException {
-
+    public void TestGatherFiles(final List<File> inputFiles, final File expectedOutput, final int expectedRetVal, boolean sort) throws IOException {
+        final String comment1 = "This is a comment";
         final List<String> args = new ArrayList<>();
 
         final File output = VcfTestUtils.createTemporaryIndexedFile("result", expectedOutput.getAbsolutePath().endsWith(".vcf") ? ".vcf" : ".vcf.gz");
 
         inputFiles.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
         args.add("OUTPUT=" + output.getAbsolutePath());
-
+        args.add("COMMENT=" + comment1);
+        args.add("SORT=" +  sort);
+        
         Assert.assertEquals(runPicardCommandLine(args.toArray(new String[args.size()])), expectedRetVal, "Program was expected to run successfully, but didn't.");
 
         if (expectedRetVal == 0) {
             final VCFFileReader expectedReader = new VCFFileReader(expectedOutput, false);
             final VCFFileReader outputReader = new VCFFileReader(output, false);
+            Assert.assertTrue(outputReader.getFileHeader().getMetaDataInInputOrder().stream().anyMatch(H->H.getKey().equals("GatherVcfs.comment") && H.getValue().equals(comment1)));
             Assert.assertEquals(expectedReader.iterator().stream().count(), outputReader.iterator().stream().count(), "The wrong number of variants was found.");
+            outputReader.close();
+            expectedReader.close();
         }
     }
 }
