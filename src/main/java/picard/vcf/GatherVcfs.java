@@ -59,7 +59,7 @@ public class GatherVcfs extends CommandLineProgram {
 
     /** sort VCFs using first variant */
     private static class FirstVariantInVcf {
-        File vcfFile;
+        final File vcfFile;
         VariantContext firstVariant = null;// may be null if the vcf is empty
         FirstVariantInVcf(final File vcfFile) {
             this.vcfFile = vcfFile;
@@ -143,10 +143,11 @@ public class GatherVcfs extends CommandLineProgram {
                 final FirstVariantInVcf vcfcxt = new FirstVariantInVcf(f);
                 try (VCFFileReader in = new VCFFileReader(f, false)) {
                     try (CloseableIterator<VariantContext> iter = in.iterator()) {
-                        vcfcxt.firstVariant = (iter.hasNext() ? iter.next() : null );
-                        if (vcfcxt == null) log.info("No variant in "+f);
+                        vcfcxt.firstVariant = ( iter.hasNext() ? iter.next() : null );
+                        if (vcfcxt.firstVariant == null) log.info("No variant in " + f);
                     }
                 }
+                filesandvariants.add(vcfcxt);
             }
             Collections.sort(filesandvariants, (A,B)->{
                 if (A.firstVariant==null) {
