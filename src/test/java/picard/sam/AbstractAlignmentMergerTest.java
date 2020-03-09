@@ -1,5 +1,8 @@
 package picard.sam;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -8,14 +11,23 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.TextCigarCodec;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
+import org.apache.commons.lang.ArrayUtils;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
+import picard.util.AdapterPair;
+import picard.util.IlluminaUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,6 +48,22 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         Assert.assertEquals(r2.getCigarString(), "110M");
     }
 
+    @Test
+    public void testOverlappedReadHardClippingWithNonOverlappedReads() {
+        final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
+        set.setReadLength(110);
+        final List<SAMRecord> recs = set.addPair("q1", 0, 100, 200, false, false, "110M", "110M", false, true, 30);
+        final SAMRecord r1 = recs.get(0);
+        final SAMRecord r2 = recs.get(1);
+        AbstractAlignmentMerger.clipForOverlappingReads(r1, r2, CigarOperator.HARD_CLIP, null, null, Collections.emptyList());
+        Assert.assertEquals(r1.getAlignmentStart(), 100);
+        Assert.assertEquals(r1.getCigarString(), "110M");
+        Assert.assertEquals(r2.getAlignmentStart(), 200);
+        Assert.assertEquals(r2.getCigarString(), "110M");
+        Assert.assertEquals(r1.getReadLength(), 110);
+        Assert.assertEquals(r2.getReadLength(), 110);
+    }
+
     @Test public void testBasicOverlappedReadClipping() {
         final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
         set.setReadLength(110);
@@ -47,6 +75,57 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         Assert.assertEquals(r1.getCigarString(), "100M10S");
         Assert.assertEquals(r2.getAlignmentStart(), 100);
         Assert.assertEquals(r2.getCigarString(), "10S100M");
+    }
+
+    @DataProvider(name = "hardClippingDataProvider")
+    public Object [][] getHardClippingData() {
+
+
+        final List<Object[]> ret = new ArrayList<>();
+        final List<AdapterPair> illuminaAdapters = Arrays.asList(IlluminaUtil.IlluminaAdapterPair.values());
+        final byte[] templateBases = StringUtil.stringToBytes("ACGTACGTAC");
+        final byte[] templateBasesRC = Arrays.copyOf(templateBases, templateBases.length);
+        SequenceUtil.reverseComplement(templateBases);
+        //All Illumina barcode combinations should work
+        for (final AdapterPair adapterPair : illuminaAdapters) {
+            ret.add(new Object[] {"20M", "20M", buildReadBases(templateBases, adapterPair.get3PrimeAdapterBytesInReadOrder(), 20, false), buildReadBases(templateBasesRC, adapterPair.get5PrimeAdapterBytesInReadOrder(),
+                    20, true), illuminaAdapters, "10M10H", "10H10M"}); //F1R2
+
+        }
+
+        //3' of one barcode, 5' of another, should only softclip
+        ret.add(new Object[] {"20M", "20M", buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), 20, false), buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.NEXTERA_V1.get5PrimeAdapterBytesInReadOrder(),
+                20, true), illuminaAdapters, "10M10S", "10S10M"});
+        return ret.toArray(new Object[][]{});
+    }
+
+    private byte[] buildReadBases(final byte[] templateBasesReadOrder, final byte[] adapterBasesReadOrder, final int readLength, final boolean negativeStrand) {
+        final byte[] bases = ArrayUtils.addAll(templateBasesReadOrder, adapterBasesReadOrder);
+        final byte[] readBases = Arrays.copyOf(bases, readLength);
+        if (negativeStrand) {
+            SequenceUtil.reverseComplement(readBases);
+        }
+        return readBases;
+    }
+
+    @Test (dataProvider = "hardClippingDataProvider")
+    public void testBasicOverlappedReadHardClipping(final String originalCigar1, final String originalCigar2, final byte[] read1Bases, final byte[] read2Bases, final List<AdapterPair> adapters,
+                                                    final String expectedCigar1, final String expectedCigar2, final boolean strand1, final boolean strand2) {
+        final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
+        set.setReadLength(20);
+        final List<SAMRecord> recs = set.addPair("q1", 0, 100, 90, false, false, originalCigar1, originalCigar2, strand1, strand2, 30);
+        final SAMRecord r1 = recs.get(0);
+        final SAMRecord r2 = recs.get(1);
+
+        r1.setReadBases(read1Bases);
+        r2.setReadBases(read2Bases);
+
+        AbstractAlignmentMerger.clipForOverlappingReads(r1, r2, CigarOperator.HARD_CLIP, null, null, adapters);
+        Assert.assertEquals(r1.getAlignmentStart(), 100);
+        Assert.assertEquals(r1.getCigarString(), expectedCigar1);
+
+        Assert.assertEquals(r2.getAlignmentStart(), 100);
+        Assert.assertEquals(r2.getCigarString(), expectedCigar2);
     }
 
     @Test public void testOverlappedReadClippingWithExistingSoftClipping() {

@@ -885,7 +885,7 @@ public abstract class AbstractAlignmentMerger {
         }
 
         //now check against adapter sequences
-        final byte[] adapterBases = read.getFirstOfPairFlag()? adapterPair.get3PrimeAdapterBytes() : adapterPair.get3PrimeAdapterBytesInReadOrder();
+        final byte[] adapterBases = read.getFirstOfPairFlag()? adapterPair.get3PrimeAdapterBytes() : adapterPair.get5PrimeAdapterBytesInReadOrder();
         for (int i=0; i < adapterBases.length && readBasesToClipIndex < readBasesToClip.length; i++, readBasesToClipIndex++) {
             lr *= getLikelihoodRatio(readBasesToClip[readBasesToClipIndex], readBQToClip[readBasesToClipIndex], adapterBases[i]);
 
@@ -903,7 +903,10 @@ public abstract class AbstractAlignmentMerger {
 
     private static double getLikelihoodRatio(final byte readBase, final byte readBaseQual, final byte expectedBase) {
         final double error_prob = QualityUtil.getErrorProbabilityFromPhredScore(Math.min(readBaseQual, MAX_ERROR_PHRED));
-        final double likelihood_from_expected = readBase == expectedBase ? 1 - error_prob : error_prob;
+        if (SequenceUtil.isNoCall(readBase) || SequenceUtil.isNoCall(expectedBase)) {
+            return 1;
+        }
+        final double likelihood_from_expected = SequenceUtil.readBaseMatchesRefBaseWithAmbiguity(readBase,expectedBase) ? 1 - error_prob : error_prob;
         final double likelihood_from_not_expected = 0.25;
 
         return likelihood_from_expected/likelihood_from_not_expected;
