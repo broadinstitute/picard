@@ -788,31 +788,26 @@ public abstract class AbstractAlignmentMerger {
                     if (clippingOperator.equals(CigarOperator.HARD_CLIP)) {
 
                         //need to consider unclipped positions because often the readthrough bases have already been soft-clipped
-                        final int posDiff = pos.getUnclippedEnd() - neg.getUnclippedEnd();
-                        final int negDiff = pos.getUnclippedStart() - neg.getUnclippedStart();
-                        if (posDiff > 0 && negDiff > 0) {
-                            final int posClipFrom = pos.getReadLength() - posDiff + 1;
-                            final int negClipFrom = neg.getReadLength() - negDiff + 1;
-                            if (posClipFrom == negClipFrom && posClipFrom > 0) {
-                                final int clipFrom = posClipFrom;
+                        final int posClipFrom = getReadPositionToClipFrom(pos, neg.getUnclippedEnd() + 1);
+                        final int negClipFrom = getReadPositionToClipFrom(neg, pos.getUnclippedStart() - 1);
+                        if (posClipFrom == negClipFrom && posClipFrom > 0) {
+                            final int clipFrom = posClipFrom;
 
-                                for (final AdapterPair adapterPair : adaptersPairs) {
-                                    if (basesToClipMatchAdapterPair(read1, clipFrom - 1, adapterPair, read2Structure) && basesToClipMatchAdapterPair(read2, clipFrom - 1, adapterPair, read1Structure)) {
-                                        CigarUtil.clip3PrimeEndOfRead(read1, clipFrom, CigarOperator.HARD_CLIP);
-                                        CigarUtil.clip3PrimeEndOfRead(read2, clipFrom, CigarOperator.HARD_CLIP);
-                                        return;
-                                    }
+                            for (final AdapterPair adapterPair : adaptersPairs) {
+                                if (basesToClipMatchAdapterPair(read1, clipFrom - 1, adapterPair, read2Structure) && basesToClipMatchAdapterPair(read2, clipFrom - 1, adapterPair, read1Structure)) {
+                                    CigarUtil.clip3PrimeEndOfRead(read1, clipFrom, CigarOperator.HARD_CLIP);
+                                    CigarUtil.clip3PrimeEndOfRead(read2, clipFrom, CigarOperator.HARD_CLIP);
+                                    return;
                                 }
                             }
                         }
                     }
 
+
                     //if we've gotten to here, try standard soft clipping.  Here we consider clipped position because we only are correcting where early sof-clipping isn't quite right
                     final int posDiff = pos.getAlignmentEnd() - neg.getAlignmentEnd();
                     final int negDiff = pos.getAlignmentStart() - neg.getAlignmentStart();
 
-                    final int posClipFrom = pos.getReadLength() - posDiff + 1;
-                    final int negClipFrom = neg.getReadLength() - negDiff + 1;
                     if (posDiff > 0) {
                         final List<CigarElement> elems = new ArrayList<>(pos.getCigar().getCigarElements());
                         Collections.reverse(elems);
@@ -830,6 +825,52 @@ public abstract class AbstractAlignmentMerger {
                 }
             }
         }
+    }
+
+    protected static int getReadPositionToClipFrom(final SAMRecord rec, final int refPosToClipFrom) {
+
+        if (refPosToClipFrom > rec.getUnclippedEnd() || refPosToClipFrom < rec.getUnclippedStart()) {
+            //read doesn't cover position
+            return -1;
+        }
+        final Cigar cigar = rec.getCigar();
+        List<CigarElement> cigarElements = new ArrayList<>(cigar.getCigarElements()); //need to be modifiable
+        if (rec.getReadNegativeStrandFlag()) {
+            Collections.reverse(cigarElements);
+        }
+
+        int currentRefPosition = rec.getReadNegativeStrandFlag()? -rec.getUnclippedEnd() : rec.getUnclippedStart();
+        final int refPosObjective = rec.getReadNegativeStrandFlag()? -refPosToClipFrom : refPosToClipFrom;
+
+        int currentReadPosition = 1;
+
+        for (final CigarElement cigarElement : cigarElements) {
+
+            final CigarOperator op = cigarElement.getOperator();
+
+            if ((op.consumesReferenceBases() || op.isClipping()) && currentRefPosition + cigarElement.getLength() >= refPosObjective) {
+                if (op.consumesReadBases() || op == CigarOperator.SOFT_CLIP) {
+                    return currentReadPosition + refPosObjective - currentRefPosition;
+                } else if (op == CigarOperator.HARD_CLIP) {
+                    //for hardclip, position is not on read
+                    return -1;
+                } else {
+                    //if doesn't consume read bases and isn't clipping, return current base
+                    return currentReadPosition;
+                }
+            }
+
+            if (op.consumesReferenceBases() || op.isClipping()) {
+                currentRefPosition += cigarElement.getLength();
+            }
+
+            if (op.consumesReadBases() || op.isClipping()) {
+                currentReadPosition += cigarElement.getLength();
+            }
+        }
+
+        //if we haven't found the correct position, there is a bug
+        throw new PicardException("Could not find read position for reference position " + refPosToClipFrom + " which should be covered by read " + rec);
     }
 
     protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2) {
