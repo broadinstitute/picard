@@ -250,16 +250,6 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         Assert.assertEquals(r2.getCigarString(), expectedCigar2);
     }
 
-    @Test
-    public void testOverlappedReadHardClippingUMI() {
-        final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
-        final List<SAMRecord> recs = set.addPair("q1", 0, 100, 90, false, false, "100M", "100M", false, false, 30);
-        final SAMRecord r1 = recs.get(0);
-        final SAMRecord r2 = recs.get(1);
-
-    }
-
-
     @DataProvider(name = "getReadPosToClipFromDataProvider")
     public Object[][] getReadPosToClipFromData() {
         return new Object[][] {
@@ -284,9 +274,9 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 {"100M16H", false, 300, 410, -1},
                 {"100M16H", true, 300, 410, -1},
                 {"100M16H", true, 300, 390, 26},
-                {"16H100M", false, 316, 410, -1},
+                {"16H100M", false, 316, 310, -1},
                 {"16H100M", true, 316, 310, -1},
-                {"16H100M", true, 316, 350, 35}
+                {"16H100M", true, 316, 350, 66}
         };
     }
 
