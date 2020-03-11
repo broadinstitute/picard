@@ -292,6 +292,57 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         Assert.assertEquals(readPositionToClipFrom, expectedReadPosToCLipFrom);
     }
 
+    @DataProvider(name = "basesToClipDataProvider")
+    public Object[][] getBasesToClipDataProvider() {
+        final List<Object[]> ret = new ArrayList<>();
+        final List<AdapterPair> illuminaAdapters = Arrays.asList(IlluminaUtil.IlluminaAdapterPair.values());
+        final byte[] templateBases = StringUtil.stringToBytes("ACTGCATGCTAGCTTAGGACAGATACGATAGCTAGACAGACATAATTTAGCGGATGACATTCGGACAGATCGGACGAGCTAGACAGACTGAGACAGCTAGCAGATCGAGG");
+        final byte[] templateBasesRC = Arrays.copyOf(templateBases, templateBases.length);
+        SequenceUtil.reverseComplement(templateBasesRC);
+
+        final String threePrimeAdapterBases = "GTCGATTACAG";
+        final String fivePrimeAdapterBases = "GACGGATCAGAC";
+
+
+        final byte[] q30Quals = new byte[120];
+        Arrays.fill(q30Quals, (byte)30);
+
+        final CustomAdapterPair adapterPair = new CustomAdapterPair(fivePrimeAdapterBases, threePrimeAdapterBases);
+        ret.add(new Object[] {buildReadBases(templateBases, adapterPair.get3PrimeAdapterBytesInReadOrder(), 120, false), q30Quals, adapterPair, true});
+
+
+        final String threePrimeAdapterBasesOneError = "GTGGATTACAG";
+        final String threePrimeAdapterBasesTwoError = "GTGGCTTACAG";
+        final String threePrimeAdapterBasesThreeError = "GTGGCATACAG";
+
+        ret.add(new Object[] {buildReadBases(templateBases, StringUtil.stringToBytes(threePrimeAdapterBasesOneError), 120, false), q30Quals, adapterPair, true}); //one error still matches
+        ret.add(new Object[] {buildReadBases(templateBases, StringUtil.stringToBytes(threePrimeAdapterBasesTwoError), 120, false), q30Quals, adapterPair, true}); //two errors still matches
+        ret.add(new Object[] {buildReadBases(templateBases, StringUtil.stringToBytes(threePrimeAdapterBasesThreeError), 120, false), q30Quals, adapterPair, false}); //three errors in first six bases fails
+
+        final byte[] q30TemplateQuals = new byte[110];
+        Arrays.fill(q30Quals, (byte)30);
+        final byte[] lowQErrorAdapterQuals = new byte[]{30, 30, 6, 30, 6, 6, 30, 30, 30, 30};
+        final byte[] lowQErrorQuals = ArrayUtils.addAll(q30TemplateQuals, lowQErrorAdapterQuals);
+        ret.add(new Object[] {buildReadBases(templateBases, StringUtil.stringToBytes(threePrimeAdapterBasesThreeError), 120, false), lowQErrorQuals, adapterPair, true}); //mismatches at low quality bases still match
+
+
+        return ret.toArray(new Object[][]{});
+    }
+
+    @Test(dataProvider = "basesToClipDataProvider")
+    public void testBasesToClipMatchAdapterPair(final byte[] bases, final byte[] quals, final AdapterPair adapterPair, final boolean expectToMatch) {
+        final SAMFileHeader header = new SAMFileHeader();
+        final SAMRecord rec = new SAMRecord(header);
+        rec.setReadPairedFlag(true);
+        rec.setFirstOfPairFlag(true);
+        rec.setReadBases(bases);
+        rec.setBaseQualities(quals);
+
+        final boolean basesMatch = AbstractAlignmentMerger.basesToClipMatchAdapterPair(rec, 110, adapterPair, null);
+        Assert.assertEquals(basesMatch, expectToMatch);
+
+    }
+
     @Test public void testOverlappedReadClippingWithExistingSoftClipping() {
         final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
         set.setReadLength(120);

@@ -877,7 +877,7 @@ public abstract class AbstractAlignmentMerger {
         clipForOverlappingReads(read1, read2, CigarOperator.SOFT_CLIP, null, null, Collections.emptyList());
     }
 
-    private static boolean basesToClipMatchAdapterPair(final SAMRecord read, final int posToClip, final AdapterPair adapterPair,
+    protected static boolean basesToClipMatchAdapterPair(final SAMRecord read, final int posToClip, final AdapterPair adapterPair,
                                                     final ReadStructure mateReadStructure) {
         final byte[] readBases = read.getReadBases();
         final byte[] readBasesToClip = Arrays.copyOfRange(readBases, read.getReadNegativeStrandFlag()? 0 : posToClip, read.getReadNegativeStrandFlag()? readBases.length - posToClip : readBases.length);
