@@ -1,0 +1,12 @@
+##fileformat=VCFv4.1
+##contig=<ID=chr1,length=501>
+##contig=<ID=chr2,length=101>
+##contig=<ID=chr3,length=101>
+##contig=<ID=chr4,length=101>
+##contig=<ID=chr5,length=101>
+##contig=<ID=chr6,length=101>
+##contig=<ID=chr7,length=404>
+##contig=<ID=chr8,length=202>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1
+chr1	22	.	G	C	569.98	PASS	AC=23;AF=0.767;AN=30;	GT:GQ	0/1:90
+chr1	312	.	G	C	569.98	PASS	AC=23;AF=0.767;AN=30;	GT:GQ	0/1:90

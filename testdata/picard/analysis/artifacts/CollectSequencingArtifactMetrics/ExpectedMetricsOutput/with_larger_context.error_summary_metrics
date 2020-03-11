@@ -1,0 +1,15 @@
+## htsjdk.samtools.metrics.StringHeader
+# CollectSequencingArtifactMetrics MINIMUM_INSERT_SIZE=30 MAXIMUM_INSERT_SIZE=30 CONTEXT_SIZE=2 INPUT=/Users/mshand/GitHub/picard-private/Picard-public/testdata/picard/analysis/artifacts/CollectSequencingArtifactMetrics/test.sam OUTPUT=/var/folders/h1/dws_39gj00xcjgbbrh4ffdcr05ql58/T/artifactMetrics.3858654867333976599.tmp/with_larger_context REFERENCE_SEQUENCE=/Users/mshand/GitHub/picard-private/Picard-public/testdata/picard/analysis/artifacts/CollectSequencingArtifactMetrics/test.fasta    MINIMUM_QUALITY_SCORE=20 MINIMUM_MAPPING_QUALITY=30 INCLUDE_UNPAIRED=false INCLUDE_DUPLICATES=false INCLUDE_NON_PF_READS=false TANDEM_READS=false USE_OQ=true ASSUME_SORTED=true STOP_AFTER=0 VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false GA4GH_CLIENT_SECRETS=client_secrets.json USE_JDK_DEFLATER=false USE_JDK_INFLATER=false
+## htsjdk.samtools.metrics.StringHeader
+# Started on: Mon Aug 21 11:42:59 EDT 2017
+
+## METRICS CLASS	picard.analysis.artifacts.ErrorSummaryMetrics
+REF_BASE	ALT_BASE	SUBSTITUTION	REF_COUNT	ALT_COUNT	SUBSTITUTION_RATE
+A	C	A>C	110	0	0
+A	G	A>G	110	0	0
+A	T	A>T	110	0	0
+C	A	C>A	82	22	0.211538
+C	G	C>G	82	0	0
+C	T	C>T	82	32	0.280702
+
+

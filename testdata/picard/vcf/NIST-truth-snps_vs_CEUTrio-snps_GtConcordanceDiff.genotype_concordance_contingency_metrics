@@ -1,0 +1,11 @@
+## htsjdk.samtools.metrics.StringHeader
+# picard.vcf.GenotypeConcordance TRUTH_VCF=/Users/kbergin/picard/testdata/picard/vcf/NIST.selected.vcf CALL_VCF=/Users/kbergin/picard/testdata/picard/vcf/CEUTrio-snps.vcf OUTPUT=/Users/kbergin/picard/testdata/picard/vcf/NIST-truth-snps_vs_CEUTrio-snps_GtConcordanceDiff TRUTH_SAMPLE=NA12878 CALL_SAMPLE=NA12878 INTERVALS=[/Users/kbergin/picard/testdata/picard/vcf/IntervalList1PerChrom.interval_list] MISSING_SITES_HOM_REF=true    INTERSECT_INTERVALS=true MIN_GQ=0 MIN_DP=0 OUTPUT_ALL_ROWS=false USE_VCF_INDEX=false VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false GA4GH_CLIENT_SECRETS=client_secrets.json
+## htsjdk.samtools.metrics.StringHeader
+# Started on: Wed Jul 29 14:15:59 EDT 2015
+
+## METRICS CLASS	picard.vcf.GenotypeConcordanceContingencyMetrics
+VARIANT_TYPE	TRUTH_SAMPLE	CALL_SAMPLE	TP_COUNT	TN_COUNT	FP_COUNT	FN_COUNT	EMPTY_COUNT
+SNP	NA12878	NA12878	16	63001609	1	5	0
+INDEL	NA12878	NA12878	0	63001618	0	0	0
+
+

@@ -1,0 +1,445 @@
+import org.gradle.internal.os.OperatingSystem
+
+import javax.tools.ToolProvider
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id "java"
+    id 'maven'
+    id 'signing'
+    id 'jacoco'
+    id 'application'
+    id 'com.palantir.git-version' version '0.5.1'
+    id 'com.github.johnrengelman.shadow' version '5.1.0'
+    id "com.github.kt3k.coveralls" version '2.6.3'
+    id "org.ajoberstar.grgit" version "4.0.0-rc.1"
+    id "org.ajoberstar.git-publish" version "2.1.1"
+}
+
+mainClassName = "picard.cmdline.PicardCommandLine"
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/" //for htsjdk snapshots
+    }
+    mavenLocal()
+}
+
+final buildPrerequisitesMessage = "See https://github.com/broadinstitute/picard/blob/master/README.md#building-picard for information on how to build picard."
+
+// Check that we're in a folder which git recognizes as a git repository.
+// This works for either a standard git clone or one created with `git worktree add`
+def looksLikeWereInAGitRepository(){
+    file(".git").isDirectory() || (file(".git").exists() && file(".git").text.startsWith("gitdir"))
+}
+
+// Ensure that we have a clone of the git repository, and resolve any required git-lfs
+// resource files that are needed to run the build but are still lfs stub files.
+def ensureBuildPrerequisites(rbuildPrerequisitesMessage) {
+    if (!JavaVersion.current().isJava8Compatible()) {
+        throw new GradleException(
+                "Java 8 or later is required to build Picard, but ${JavaVersion.current()} was found. "
+                        + "$buildPrerequisitesMessage")
+    }
+    // Make sure we can get a ToolProvider class loader (for Java 8). If not we may have just a JRE.
+    if (JavaVersion.current().isJava8() && ToolProvider.getSystemToolClassLoader() == null) {
+        throw new GradleException(
+                "The ClassLoader obtained from the Java ToolProvider is null. "
+                        + "If using Java 8 you must have a full JDK installed and not just a JRE. $buildPrerequisitesMessage")
+    }
+    if (!JavaVersion.current().isJava8() && !JavaVersion.current().isJava11()) {
+        println("Warning: using Java ${JavaVersion.current()} but only Java 8 and Java 11 have been tested.")
+    }
+    if (!looksLikeWereInAGitRepository()) {
+        throw new GradleException("This doesn't appear to be a git folder. " +
+                "The Picard Github repository must be cloned using \"git clone\" to run the build. " +
+                "\n$buildPrerequisitesMessage")
+    }
+}
+
+ensureBuildPrerequisites(buildPrerequisitesMessage)
+
+final htsjdkVersion = System.getProperty('htsjdk.version', '2.21.3')
+final googleNio = 'com.google.cloud:google-cloud-nio:0.107.0-alpha:shaded'
+
+// Get the jdk files we need to run javaDoc. We need to use these during compile, testCompile,
+// test execution, and gatkDoc generation, but we don't want them as part of the runtime
+// classpath and we don't want to redistribute them in the uber jar.
+final javadocJDKFiles = ToolProvider.getSystemToolClassLoader() == null ? files([]) : files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs())
+
+configurations {
+    cloudConfiguration {
+        extendsFrom runtime
+        dependencies {
+            cloudConfiguration(googleNio)
+        }
+    }
+}
+
+dependencies {
+    compile('com.intel.gkl:gkl:0.8.5') {
+        exclude module: 'htsjdk'
+    }
+    compile 'com.google.guava:guava:15.0'
+    compile 'org.apache.commons:commons-math3:3.5'
+    compile 'org.apache.commons:commons-collections4:4.3'
+    compile 'commons-lang:commons-lang:2.6'
+    compile 'com.github.samtools:htsjdk:' + htsjdkVersion
+    compile 'org.broadinstitute:barclay:2.0.0'
+    compileOnly(googleNio) {
+        transitive = false
+    }
+
+    // javadoc utilities; compile/test only to prevent redistribution of sdk jars
+    compileOnly(javadocJDKFiles)
+    testCompile(javadocJDKFiles)
+
+    testCompile 'org.testng:testng:6.14.3'
+    testCompile 'org.apache.commons:commons-lang3:3.6'
+}
+
+configurations.all {
+    resolutionStrategy {
+        // force the htsjdk version so we don't get a different one transitively
+        force 'com.github.samtools:htsjdk:' + htsjdkVersion
+    }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+final isRelease = Boolean.getBoolean("release")
+final gitVersion = gitVersion().replaceAll(".dirty", "")
+version = isRelease ? gitVersion : gitVersion + "-SNAPSHOT"
+
+logger.info("build for version:" + version)
+group = 'com.github.broadinstitute'
+
+defaultTasks 'all'
+
+task all(dependsOn: ['jar', 'distZip', 'javadoc', 'shadowJar', 'barclayShadowJar', 'currentJar'])
+
+// Source file names for the picard command line properties file. We select and include only one of
+// these two files in each jar, renamed to "picardCmdLine.properties", depending on which parser we
+// want enabled.
+final String legacySourcePropertyFile = 'legacyParserProperties.properties'
+final String barclaySourcePropertyFile = 'barclayParserProperties.properties'
+
+// Target name/location for the picard command line properties file; one of the above source
+// files will be included at this path/location for runtime access
+final String picardTargetPropertiesPath = 'picard'
+final String picardTargetPropertyFile = 'picardCmdLine.properties'
+
+sourceSets {
+    // no need to include these in the jar files; the correct one is selected by the build to control Barclay
+    main {
+        resources {
+            exclude ('properties.templates/**')
+        }
+    }
+}
+
+tasks.withType(Jar){
+    manifest {
+        attributes 'Main-Class': 'picard.cmdline.PicardCommandLine',
+                'Implementation-Title': 'Picard',
+                'Implementation-Vendor': 'Broad Institute',
+                'Implementation-Version': version
+    }
+}
+
+jar {
+    from('src/main/resources/properties.templates') {
+        // for the default jar, we want the properties file that enables the picard parser
+        include legacySourcePropertyFile
+        into picardTargetPropertiesPath
+        rename { String fileName ->
+            fileName.replace(legacySourcePropertyFile, picardTargetPropertyFile)
+        }
+    }
+}
+
+tasks.withType(Javadoc) {
+    // do this for all javadoc tasks, including gatkDoc
+    options.addStringOption('Xdoclint:none')
+}
+
+javadoc {
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+// Generate Picard Online Doc
+task picardDoc(type: Javadoc, dependsOn: ['cleanPicardDoc', classes]) {
+    final File picardDocDir = new File("build/docs/picarddoc")
+    doFirst {
+        // make sure the output folder exists or we can create it
+        if (!picardDocDir.exists() && !picardDocDir.mkdirs()) {
+            throw new GradleException(String.format("Failure creating folder (%s) for picardDocDir doc output in task (%s)",
+                    picardDocDir.getAbsolutePath(),
+                    it.name));
+        }
+        copy {
+            from('src/main/resources/picard/helpTemplates')
+            include 'picardDoc.css'
+            into picardDocDir
+        }
+    }
+    source = sourceSets.main.allJava
+
+    // The gatkDoc process instantiates any documented feature classes, so to run it we need the entire
+    // runtime classpath, as well as jdk javadoc files such as tools.jar, where com.sun.javadoc lives.
+    classpath = sourceSets.main.runtimeClasspath + javadocJDKFiles
+    options.docletpath = classpath.asType(List)
+    options.doclet = "picard.util.help.PicardHelpDoclet"
+
+    outputs.dir(picardDocDir)
+    options.destinationDirectory(picardDocDir)
+
+    options.addStringOption("settings-dir", "src/main/resources/picard/helpTemplates/");
+    options.addStringOption("output-file-extension", "html")
+    options.addStringOption("absolute-version", getVersion())
+    options.addStringOption("build-timestamp", new Date().format("dd-mm-yyyy hh:mm:ss"))
+    options.addStringOption("verbose")
+}
+
+task currentJar(type: Copy){
+    from shadowJar
+    into new File(buildDir, "libs")
+    rename { string -> "picard.jar"}
+}
+
+shadowJar {
+    finalizedBy currentJar
+    from('src/main/resources/properties.templates') {
+        // for the default jar, we want the properties file that enables the picard parser
+        include legacySourcePropertyFile
+        into picardTargetPropertiesPath
+        rename { String fileName ->
+            fileName.replace(legacySourcePropertyFile, picardTargetPropertyFile)
+        }
+    }
+}
+
+
+
+task cloudJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar)  {
+    configurations = [project.configurations.cloudConfiguration]
+    from project.sourceSets.main.output
+    archiveName 'picardcloud.jar'
+}
+
+
+// Create picardBarclay.jar, which is a identical to picard.jar, but contains a .properties
+// file that tells Picard to use the Barclay command line parser instead of the Picard
+// command line parser.
+//
+task barclayShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar)  {
+    configurations = [project.configurations.runtime]
+    from project.sourceSets.main.output
+    from('src/main/resources/properties.templates') {
+        // for the default jar, we want the properties file that enables the picard parser
+        include barclaySourcePropertyFile
+        into picardTargetPropertiesPath
+        rename { String fileName ->
+            fileName.replace(barclaySourcePropertyFile, picardTargetPropertyFile)
+        }
+    }
+    archiveName 'picardBarclay.jar'
+}
+
+// Run the tests using the legacy parser only. Assumes that test code is written using
+// legacy command line parser syntax.
+task legacyTest(type: Test)
+
+// Run the tests using the Barclay command line parser (useLegacyParser=false), which requires
+// conversion of test command lines from Picard-style command line syntax to Barclay-style syntax.
+task barclayTest(type: Test) {
+    systemProperty 'picard.convertCommandLine', 'true'
+    systemProperty 'picard.useLegacyParser', 'false'
+}
+
+// Run tests using both the legacy and barclay command line parsers.
+test {
+    dependsOn barclayTest
+}
+
+tasks.withType(Test) {
+    outputs.upToDateWhen { false } // tests will always rerun
+    description = "Runs the unit tests"
+
+    useTestNG {
+        if (OperatingSystem.current().isUnix()) {
+            excludeGroups "slow", "broken"
+        } else {
+            excludeGroups "slow", "broken", "unix"
+        }
+    }
+
+    // set heap size for the test JVM(s)
+    minHeapSize = "1G"
+    maxHeapSize = "2G"
+    if (System.env.CI == "true") {  //if running under a CI output less into the logs
+        int count = 0
+
+        beforeTest { descriptor ->
+            count++
+            if( count % 100 == 0) {
+                logger.lifecycle("Finished "+ Integer.toString(count++) + " tests")
+            }
+        }
+    } else {
+        // show standard out and standard error of the test JVM(s) on the console
+        testLogging.showStandardStreams = true
+        beforeTest { descriptor ->
+            logger.lifecycle("Running Test: " + descriptor)
+        }
+
+        // listen to standard out and standard error of the test JVM(s)
+        onOutput { descriptor, event ->
+            logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
+        }
+    }
+
+    testLogging {
+        testLogging {
+            events "skipped", "failed"
+            exceptionFormat = "full"
+        }
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                println "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+            }
+        }
+    }
+}
+
+jacocoTestReport {
+    dependsOn legacyTest
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports after running tests."
+    getAdditionalSourceDirs().from(sourceSets.main.allJava.srcDirs)
+
+    reports {
+        xml.enabled = true // coveralls plugin depends on xml format report
+        html.enabled = true
+    }
+}
+
+ wrapper {
+    gradleVersion = '5.6'
+}
+
+task javadocJar(type: Jar) {
+    archiveClassifier.set('javadoc')
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    archiveClassifier.set('sources')
+}
+
+/**
+ * This specifies what artifacts will be built and uploaded when performing a maven upload.
+ */
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+/**
+ * Sign non-snapshot releases with our secret key.  This should never need to be invoked directly.
+ */
+signing {
+    required { isRelease && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+/**
+ * Upload a release to sonatype.  You must be an authorized uploader and have your sonatype
+ * username and password information in your gradle properties file.  See the readme for more info.
+ *
+ * For releasing to your local maven repo, use gradle install
+ */
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: project.findProperty("sonatypeUsername"), password: project.findProperty("sonatypePassword"))
+            }
+
+            snapshotRepository(url: "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot-local/") {
+                authentication(userName: System.env.ARTIFACTORY_USERNAME, password: System.env.ARTIFACTORY_PASSWORD)
+            }
+
+            pom.project {
+                name 'Picard'
+                packaging 'jar'
+                description 'A set of command line tools (in Java) for manipulating high-throughput sequencing (HTS) data and formats such as SAM/BAM/CRAM and VCF.'
+                url 'http://broadinstitute.github.io/picard/'
+
+                developers {
+                    developer {
+                        id 'picard'
+                        name 'Picard Team'
+                        url 'http://broadinstitute.github.io/picard'
+                    }
+                }
+
+                scm {
+                    url 'git@github.com:broadinstitute/picard.git'
+                    connection 'scm:git:git@github.com:broadinstitute/picard.git'
+                }
+
+                licenses {
+                    license {
+                        name 'MIT License'
+                        url 'http://opensource.org/licenses/MIT'
+                        distribution 'repo'
+                    }
+                }
+            }
+        }
+    }
+    doFirst {
+        System.out.println("Uploading version $version")
+    }
+}
+
+ext.htmlDir = new File("build/docs/html")
+
+//update static web docs
+task copyJavadoc(dependsOn: 'javadoc', type: Copy) {
+    from 'build/docs/javadoc'
+    into "$htmlDir/javadoc"
+}
+
+task copyPicardDoc(dependsOn: 'picardDoc', type: Copy){
+    from 'build/docs/picarddoc'
+    into "$htmlDir/picarddoc"
+}
+
+task updateGhPages(dependsOn: ['copyJavadoc', 'copyPicardDoc']){
+  outputs.dir htmlDir
+}
+
+updateGhPages.finalizedBy gitPublishPush
+
+gitPublish {
+    repoUri = 'git@github.com:broadinstitute/picard.git'
+    branch = 'gh-pages'
+    preserve { include '**/*' }
+    contents { 
+        from('build/docs/html') { 
+            into 'newdocs' 
+        } 
+    }
+}

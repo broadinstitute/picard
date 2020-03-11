@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<RunInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="4">
+	<Run Id="130401_SL-HAC_0022_BH07PBADXX" Number="22">
+    <Flowcell>BH07PBADXX</Flowcell>
+    <Instrument>SL-HAC</Instrument>
+    <Date>130401</Date>
+    <Reads>
+      <Read Number="1" NumCycles="101" IsIndexedRead="N" />
+      <Read Number="2" NumCycles="8" IsIndexedRead="Y" />
+      <Read Number="3" NumCycles="101" IsIndexedRead="N" />
+    </Reads>
+  </Run>
+</RunInfo>	

@@ -1,0 +1,7 @@
+##fileformat=VCFv4.1
+##contig=<ID=chr1,length=1085>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	60	.	G	GCCCT,A	15676.17	PASS	.
+chr1	118	.	TTG	A,ATGA,AA	934	PASS	.
+chr1	120	.	GT	GG,GTA	724.43	PASS	.
+chr1	180	.	G	A,GT	912	PASS	.

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunInfo>
+    <Run>
+        <Reads>
+            <Read Number="1" NumCycles="151" IsIndexedRead="N"/>
+            <Read Number="2" NumCycles="8" IsIndexedRead="Y"/>
+            <Read Number="3" NumCycles="8" IsIndexedRead="Y"/>
+            <Read Number="4" NumCycles="151" IsIndexedRead="N"/>
+        </Reads>
+    </Run>
+</RunInfo>

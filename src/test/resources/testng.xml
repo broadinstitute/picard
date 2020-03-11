@@ -1,0 +1,39 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Picard" verbose="2" parallel="methods" thread-count="1" data-provider-thread-count="8">
+    <test name="analysis">
+        <packages>
+            <package name="picard.analysis"/>
+        </packages>
+    </test>
+    <test name="cmdline">
+        <packages>
+            <package name="picard.cmdline"/>
+        </packages>
+    </test>
+    <test name="illumina">
+        <packages>
+            <package name="picard.illumina"/>
+        </packages>
+    </test>
+    <test name="metrics">
+        <packages>
+            <package name="picard.metrics"/>
+        </packages>
+    </test>
+    <test name="pedigree">
+        <packages>
+            <package name="picard.pedigree"/>
+        </packages>
+    </test>
+    <test name="sam">
+        <packages>
+            <package name="picard.sam"/>
+        </packages>
+    </test>
+    <test name="util">
+        <packages>
+            <package name="picard.util"/>
+        </packages>
+    </test>
+</suite>

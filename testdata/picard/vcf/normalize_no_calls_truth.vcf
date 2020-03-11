@@ -1,0 +1,42 @@
+##fileformat=VCFv4.1
+##FILTER=<ID=Uncertain,Description="Uncertain genotype due to reason in filter INFO field">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Net Genotype quality across all datasets, defined as difference between most likely and next most likely genotype likelihoods">
+##INFO=<ID=set,Number=1,Type=String,Description="Source VCF for the merged record in CombineVariants">
+##contig=<ID=1,length=249250621>
+##contig=<ID=2,length=243199373>
+##contig=<ID=3,length=198022430>
+##contig=<ID=4,length=191154276>
+##contig=<ID=5,length=180915260>
+##contig=<ID=6,length=171115067>
+##contig=<ID=7,length=159138663>
+##contig=<ID=8,length=146364022>
+##contig=<ID=9,length=141213431>
+##contig=<ID=10,length=135534747>
+##contig=<ID=11,length=135006516>
+##contig=<ID=12,length=133851895>
+##contig=<ID=13,length=115169878>
+##contig=<ID=14,length=107349540>
+##contig=<ID=15,length=102531392>
+##contig=<ID=16,length=90354753>
+##contig=<ID=17,length=81195210>
+##contig=<ID=18,length=78077248>
+##contig=<ID=19,length=59128983>
+##contig=<ID=20,length=63025520>
+##contig=<ID=21,length=48129895>
+##contig=<ID=22,length=51304566>
+##contig=<ID=X,length=155270560>
+##contig=<ID=Y,length=59373566>
+##contig=<ID=MT,length=16569>
+##fileDate=20130719
+##phasing=none
+##reference=file:///seq/references/Homo_sapiens_assembly19/v1/Homo_sapiens_assembly19.fasta
+##source=SelectVariants
+##variants_justified=left
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	truth
+1	1	.	TCAA	T	22132	PASS	set=Intersection	GT:GQ	0/1:99
+1	10	.	TCAA	T	22132	PASS	set=Intersection	GT:GQ	0/1:99
+1	100	.	TCAA	TCAAGG	10461	PASS	set=Intersection	GT:GQ	0/1:99
+1	1000	.	TCAA	T	10461	PASS	set=Intersection	GT:GQ	./.
+1	1100	.	TCAA	T	10461	PASS	set=Intersection	GT:GQ	./.
+1	1200	.	TCAA	T	10461	PASS	set=Intersection	GT:GQ	0/1:99
+1	1300	.	TCAA	<ID>	10461	PASS	set=Intersection	GT:GQ	0/1:99

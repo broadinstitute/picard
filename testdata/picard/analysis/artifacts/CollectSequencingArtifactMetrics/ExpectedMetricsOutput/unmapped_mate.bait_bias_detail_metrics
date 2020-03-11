@@ -1,0 +1,21 @@
+## htsjdk.samtools.metrics.StringHeader
+# picard.analysis.artifacts.CollectSequencingArtifactMetrics MINIMUM_INSERT_SIZE=0 MAXIMUM_INSERT_SIZE=0 CONTEXT_SIZE=0 INPUT=/Users/msooknah/Documents/gp_projects/picard-private/Picard-public/testdata/picard/analysis/CollectSequencingArtifactMetrics/test.sam OUTPUT=/Users/msooknah/Documents/scratch/picardgroup/oxog/unit/tmp_output/unmapped_mate REFERENCE_SEQUENCE=/Users/msooknah/Documents/gp_projects/picard-private/Picard-public/testdata/picard/analysis/CollectSequencingArtifactMetrics/test.fasta    MINIMUM_QUALITY_SCORE=20 MINIMUM_MAPPING_QUALITY=30 INCLUDE_UNPAIRED=false TANDEM_READS=false USE_OQ=true ASSUME_SORTED=true STOP_AFTER=0 VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false
+## htsjdk.samtools.metrics.StringHeader
+# Started on: Thu Mar 19 17:31:02 EDT 2015
+
+## METRICS CLASS	picard.analysis.artifacts.SequencingArtifactMetrics$BaitBiasDetailMetrics
+SAMPLE_ALIAS	LIBRARY	REF_BASE	ALT_BASE	CONTEXT	FWD_CXT_REF_BASES	FWD_CXT_ALT_BASES	REV_CXT_REF_BASES	REV_CXT_ALT_BASES	FWD_ERROR_RATE	REV_ERROR_RATE	ERROR_RATE	QSCORE
+sample1	library1	A	C	A	29	0	40	0	0	0	0	100
+sample1	library1	A	G	A	29	0	40	0	0	0	0	100
+sample1	library1	A	T	A	29	0	40	0	0	0	0	100
+sample1	library1	C	A	C	26	5	23	6	0.16129	0.206897	0	100
+sample1	library1	C	G	C	26	0	23	0	0	0	0	100
+sample1	library1	C	T	C	26	16	23	0	0.380952	0	0.380952	4
+sample1	library1	G	A	G	23	0	26	16	0	0.380952	0	100
+sample1	library1	G	C	G	23	0	26	0	0	0	0	100
+sample1	library1	G	T	G	23	6	26	5	0.206897	0.16129	0.045606	13
+sample1	library1	T	A	T	40	0	29	0	0	0	0	100
+sample1	library1	T	C	T	40	0	29	0	0	0	0	100
+sample1	library1	T	G	T	40	0	29	0	0	0	0	100
+
+

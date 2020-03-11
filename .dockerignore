@@ -1,0 +1,17 @@
+.gitignore
+.jar_opt
+.classpath
+.project
+.travis.yml
+build.sbt
+Picard-public.fbp
+Picard-public.iml
+Picard-public.ipr
+README.md
+classes
+dist
+etc
+htsjdk
+project
+testclasses
+testdata

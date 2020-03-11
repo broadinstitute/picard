@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<RunInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="4">
+  <Run Id="130321_SL-MAK_0035_FC000000000-A306B" Number="35">
+    <Flowcell>FC000000000-A306B</Flowcell>
+    <Instrument>SL-MAK</Instrument>
+    <Date>130321</Date>
+    <Reads>
+      <Read Number="1" NumCycles="101" IsIndexedRead="N" />
+      <Read Number="2" NumCycles="8" IsIndexedRead="Y" />
+      <Read Number="3" NumCycles="101" IsIndexedRead="N" />
+    </Reads>
+  </Run>
+</RunInfo>	

@@ -1,0 +1,24 @@
+##fileformat=VCFv4.2
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification">
+##contig=<ID=chr1,length=101>
+##contig=<ID=chr2,length=101>
+##contig=<ID=chr3,length=101>
+##contig=<ID=chr4,length=101>
+##contig=<ID=chr5,length=101>
+##contig=<ID=chr6,length=101>
+##contig=<ID=chr7,length=202>
+##contig=<ID=chr8,length=202>
+##fileDate=Mon Feb 05 00:04:57 EST 2018
+##reference=reference.fasta
+##source=Testing
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Dummy
+chr1	75	.	C	A	.	.	.	AD:DP:PL	0,0:0:0,23,23
+chr3	25	.	C	T	.	.	.	AD:DP:PL	0,0:0:23,0,23
+chr3	75	.	A	T	.	.	.	AD:DP:PL	0,0:0:23,23,0
+chr4	75	.	A	G	.	.	.	AD:DP:PL	0,0:0:23,0,23
+chr5	75	.	C	G	.	.	.	AD:DP:PL	0,0:0:23,23,0
+chr6	75	.	G	C	.	.	.	AD:DP:PL	0,0:0:0,23,23
+chr7	75	.	A	T	.	.	.	AD:DP:PL	0,0:0:23,0,23
+chr8	75	.	G	A	.	.	.	AD:DP:PL	0,0:0:23,23,0

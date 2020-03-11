@@ -1,0 +1,22 @@
+@HD	VN:1.0	SO:coordinate
+@SQ	SN:chr1	LN:101
+@SQ	SN:chr2	LN:101
+@SQ	SN:chr3	LN:101
+@SQ	SN:chr4	LN:101
+@SQ	SN:chr5	LN:101
+@SQ	SN:chr6	LN:101
+@SQ	SN:chr7	LN:202
+@SQ	SN:chr8	LN:202
+@RG	ID:0	SM:Hi,Momma!	LB:whatever	PU:me	PL:ILLUMINA
+SL-XAV:1:1:0:764#0/1	113	chr1	1	255	6M	chr1	10	10	TTCATG	&/,&-.	OT:Z:left pointing
+SL-XAV:1:1:0:764#0/1	177	chr1	10	255	6M	chr1	1	10	TTCATG	&/,&-.	OT:Z:normal
+SL-XAV:1:1:0:800#0/1	81	chr2	1	255	6M	chr2	10	10	TTCATG	&/,&-.	OT:Z:outtie
+SL-XAV:1:1:0:800#0/1	161	chr2	10	255	6M	chr2	1	10	TTCATG	&/,&-.	OT:Z:outtie
+SL-XAV:1:1:0:877#0/1	97	chr3	1	255	6M	chr4	10	10	TTCATG	&/,&-.	OT:Z:chimeric
+SL-XAV:1:1:0:877#0/1	145	chr4	10	255	6M	chr3	1	10	TTCATG	&/,&-.	OT:Z:chimeric
+SL-XAV:1:1:0:940#0/1	97	chr5	1	255	6M	chr5	10	10	TTCATG	&/,&-.	OT:Z:normal
+SL-XAV:1:1:0:940#0/1	145	chr5	10	255	6M	chr5	1	10	TTCATG	&/,&-.	OT:Z:normal
+SL-XAV:1:1:0:999#0/1	97	chr6	1	255	6M	chr5	10	60	TTCATG	&/,&-.	OT:Z:chimeric
+SL-XAV:1:1:0:999#0/1	145	chr6	60	255	6M	chr5	1	60	TTCATG	&/,&-.	OT:Z:chimeric
+SL-XAV:1:1:0:430#0/1	97	chr7	1	255	6M	chr5	10	10	TTCATG	&/,&-.	OT:Z:hasSa SA:Z:gotSA
+SL-XAV:1:1:0:430#0/1	145	chr7	10	255	6M	chr5	1	10	TTCATG	&/,&-.	OT:Z:normal

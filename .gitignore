@@ -9,3 +9,9 @@ atlassian-ide-plugin.xml
 intellij.testclasses
 intellij.classes
 htsjdk
+.idea
+target
+report
+jacoco.data
+.gradle
+build
