@@ -125,7 +125,8 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         final OutputMapping outputMapping = new OutputMapping(readStructure);
         log.info("Checking lanes(" + StringUtil.join(",", LANES) + " in basecalls directory (" + BASECALLS_DIR
                 .getAbsolutePath() + ")\n");
-        log.info("Expected cycles: " + StringUtil.intValuesToString(outputMapping.getOutputCycles()));
+        int[] outputCycles = outputMapping.getOutputCycles();
+        log.info("Expected cycles: " + StringUtil.intValuesToString(outputCycles));
 
         for (final Integer lane : LANES) {
             if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, lane)) {
@@ -178,14 +179,18 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                                 .map(Object::toString)
                                 .collect(Collectors.joining(", "));
 
+                        int cycle = outputCycles[key-1];
                         if (emptyCycleString.length() > 0) {
-                            log.warn("The following tiles have no data for cycle " + key);
+                            log.warn("The following tiles have no data for cycle " + cycle);
                             log.warn(emptyCycleString);
                         }
 
-                        final List<File> fileForCycle = reader.getFilesForCycle(key);
+                        final List<File> fileForCycle = reader.getFilesForCycle(cycle);
                         final long totalFilesSize = fileForCycle.stream().mapToLong(file -> file.length() - reader.getHeaderSize()).sum();
                         final long expectedFileSize = value.stream().mapToLong(BaseBclReader.TileData::getCompressedBlockSize).sum();
+                        
+                        log.debug(String.format("Key: %d; Cycle: %d; File: %s; Expected size: %d; Actual size: %d",
+                                key, cycle, fileForCycle, expectedFileSize, totalFilesSize));
 
                         if (expectedFileSize != totalFilesSize) {
                             throw new PicardException(String.format("File %s is not the expected size of %d instead it is %d",
