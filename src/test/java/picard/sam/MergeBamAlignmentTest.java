@@ -1206,6 +1206,50 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         result.close();
     }
 
+    @Test
+    public void testShortFragmentHardClipping() throws IOException {
+        final File output = File.createTempFile("testShortFragmentClipping", ".sam");
+        output.deleteOnExit();
+        final File alignedSam = new File(TEST_DATA_DIR, "hardclip.aligned.sam");
+        final File unmappedSam = new File(TEST_DATA_DIR, "hardclip.unmapped.sam");
+        final File ref = new File(TEST_DATA_DIR, "cliptest.fasta");
+
+        final List<String> args = Arrays.asList(
+                "UNMAPPED_BAM=" + unmappedSam.getAbsolutePath(),
+                "ALIGNED_BAM=" + alignedSam.getAbsolutePath(),
+                "OUTPUT=" + output.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "CLIP_OVERLAPPING_READS_OPERATOR=H"
+                );
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final SamReader result = SamReaderFactory.makeDefault().open(output);
+        final Map<String, SAMRecord> firstReadEncountered = new HashMap<String, SAMRecord>();
+        for (final SAMRecord rec : result) {
+            final SAMRecord otherEnd = firstReadEncountered.get(rec.getReadName());
+            if (otherEnd == null) {
+                firstReadEncountered.put(rec.getReadName(), rec);
+            } else {
+                final int fragmentStart = Math.min(rec.getAlignmentStart(), otherEnd.getAlignmentStart());
+                final int fragmentEnd = Math.max(rec.getAlignmentEnd(), otherEnd.getAlignmentEnd());
+                final String[] readNameFields = rec.getReadName().split(":");
+                // Read name of each pair includes the expected fragment start and fragment end positions.
+                final int expectedFragmentStart = Integer.parseInt(readNameFields[1]);
+                final int expectedFragmentEnd = Integer.parseInt(readNameFields[2]);
+                Assert.assertEquals(fragmentStart, expectedFragmentStart, rec.getReadName());
+                Assert.assertEquals(fragmentEnd, expectedFragmentEnd, rec.getReadName());
+                if (readNameFields[0].equals("FR_clip")) {
+                    Assert.assertEquals(rec.getCigarString(), rec.getReadNegativeStrandFlag()? "20H56M" : "56M20H");
+                    Assert.assertEquals(otherEnd.getCigarString(), otherEnd.getReadNegativeStrandFlag()? "20H56M" : "56M20H");
+                } else {
+                    Assert.assertEquals(rec.getCigarString(), "76M");
+                    Assert.assertEquals(otherEnd.getCigarString(), "76M");
+                }
+            }
+        }
+    }
+
     @Test(dataProvider="testBestFragmentMapqStrategy")
     public void testBestFragmentMapqStrategy(final String testName, final int[] firstMapQs, final int[] secondMapQs,
                                              final int expectedFirstMapq, final int expectedSecondMapq) throws Exception {
