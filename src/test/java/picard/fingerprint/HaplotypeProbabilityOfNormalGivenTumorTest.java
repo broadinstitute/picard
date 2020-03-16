@@ -20,6 +20,7 @@ public class HaplotypeProbabilityOfNormalGivenTumorTest {
 
     @DataProvider(name = "testGetLikelihoodsData")
     public Iterator<Object[]> testGetLikelihoodsData() {
+        final double pLoh = 0.1;
         final List<Object[]> testData = new ArrayList<>();
 
         //make sure that giving 0 pLoH doesn't change the underlying likelihoods:
@@ -29,7 +30,6 @@ public class HaplotypeProbabilityOfNormalGivenTumorTest {
         testData.add(new Object[]{0.0, new double[]{0, 0.4, 0.6}, new double[]{0, 0.4, 0.6}});
         testData.add(new Object[]{0.0, new double[]{0.3, 0.7, 0}, new double[]{0.3, 0.7, 0}});
 
-        final double pLoh = 0.1;
         //see that non zero pLoH changes the likelihood of a HET site as expected:
         testData.add(new Object[]{pLoh, new double[]{0, 1, 0}, new double[]{0, 1 - pLoh, 0}});
 
