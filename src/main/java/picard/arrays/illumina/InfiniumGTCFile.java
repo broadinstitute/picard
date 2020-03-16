@@ -668,6 +668,26 @@ public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
         return abCalls;
     }
 
+    public int[] getRawXIntensities() { return rawXIntensities; }
+
+    public int[] getRawYIntensities() { return rawYIntensities; }
+
+    public float[] getNormalizedXIntensities() { return normalizedXIntensities; }
+
+    public float[] getNormalizedYIntensities() { return normalizedYIntensities; }
+
+    public float[] getbAlleleFreqs() { return bAlleleFreqs; }
+
+    public float[] getLogRRatios() { return logRRatios; }
+
+    public float[] getRIlmn() { return RIlmn; }
+
+    public float[] getThetaIlmn() { return thetaIlmn; }
+
+    public byte[] getGenotypeBytes() { return genotypeBytes; }
+
+    public float[] getGenotypeScores() { return genotypeScores; }
+
     /**
      * A class to store Illumina Intensity Percentiles
      */
