@@ -58,7 +58,7 @@ public class CompareGtcFiles extends CommandLineProgram {
     // Ignored methods
     private static final List<String> IGNORED_METHODS = Arrays.asList(
         "getClass",
-        "getAutocallDate",
+        "getAutoCallDate",
         "getImagingDate",
         // This is the number of TOC entries. It will be different with different versions.
         "getNumberOfEntries",
