@@ -17,6 +17,7 @@ import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
@@ -33,7 +34,7 @@ import java.util.Set;
 import static picard.cmdline.CommandLineProgramTest.CHR_M_REFERENCE;
 
 public class CollectSamErrorMetricsTest {
-    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("CollectSamErrorMetricsTest", null);
+    private static File OUTPUT_DATA_PATH;
     private static final String TEST_DIR = "testdata/picard/sam/BamErrorMetrics";
 
     @BeforeClass
@@ -147,7 +148,7 @@ public class CollectSamErrorMetricsTest {
     private final File simpleDuplexConsensusSamWithBaseErrors = new File(TEST_DIR, "simpleDuplexConsensusSamWithBaseErrors.sam");
     private final File chrMReadsWithClips = new File(TEST_DIR, "chrMReadsWithClips.sam");
 
-    @BeforeClass()
+    @BeforeTest()
     public void samMetricsProvider() {
         final File[] files = new File[]{
                 simpleSamWithBaseErrors1,
@@ -155,6 +156,8 @@ public class CollectSamErrorMetricsTest {
                 simpleSingleStrandConsensusSamWithBaseErrors,
                 simpleDuplexConsensusSamWithBaseErrors,
                 chrMReadsWithClips};
+
+        OUTPUT_DATA_PATH = IOUtil.createTempDir("CollectSamErrorMetricsTest", null);
 
         for (final File file : files) {
             final File vcf = new File(TEST_DIR, "NIST.selected.vcf");
