@@ -17,7 +17,6 @@ import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
@@ -148,7 +147,7 @@ public class CollectSamErrorMetricsTest {
     private final File simpleDuplexConsensusSamWithBaseErrors = new File(TEST_DIR, "simpleDuplexConsensusSamWithBaseErrors.sam");
     private final File chrMReadsWithClips = new File(TEST_DIR, "chrMReadsWithClips.sam");
 
-    @BeforeTest()
+    @BeforeClass()
     public void samMetricsProvider() {
         final File[] files = new File[]{
                 simpleSamWithBaseErrors1,
@@ -446,26 +445,8 @@ public class CollectSamErrorMetricsTest {
 
     @Test(dataProvider = "oneCovariateIndelErrorMetricsDataProvider")
     public void testOneCovariateIndelErrorMetrics(final String errorSubscript, final File samFile, final int priorQ, BaseErrorMetric expectedMetric) {
-        final File referenceFile = CHR_M_REFERENCE;
-        final File vcf = new File(TEST_DIR, "NIST.selected.vcf");
 
-        final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "test");
-        final File errorByAll = new File(errorMetrics.get(outputBaseFileName).getAbsolutePath() + errorSubscript);
-        errorByAll.deleteOnExit();
-        outputBaseFileName.deleteOnExit();
-
-        final String[] args = {
-                "INPUT=" + samFile,
-                "OUTPUT=" + outputBaseFileName,
-                "REFERENCE_SEQUENCE=" + referenceFile.getAbsolutePath(),
-                "ERROR_METRICS=" + "ERROR:TWO_BASE_PADDED_CONTEXT", // Not all covariates are included by default, but we still want to test them.
-                "ERROR_METRICS=" + "ERROR:CONSENSUS",
-                "ERROR_METRICS=" + "ERROR:NS_IN_READ",
-                "ERROR_METRICS=" + "ERROR:BINNED_CYCLE",
-                "VCF=" + vcf.getAbsolutePath()
-        };
-
-        Assert.assertEquals(new CollectSamErrorMetrics().instanceMain(args), 0);
+        final File errorByAll = new File(errorMetrics.get(samFile).getAbsolutePath() + errorSubscript);
 
         ErrorMetric.setPriorError(QualityUtil.getErrorProbabilityFromPhredScore(priorQ));
         expectedMetric.calculateDerivedFields();
