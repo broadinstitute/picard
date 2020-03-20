@@ -81,6 +81,11 @@ public class VcfToIntervalList extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output Picard Interval List.")
     public File OUTPUT;
 
+    @Argument(doc="Controls the naming of the resulting intervals. When true, each resulting interval will be named the concatenation of " +
+            "the variant ID fields (if present), or 'interval-<number>' (if not) with a pipe '|' separator. " +
+            "When false, only the first name will be used.")
+    public boolean CONCATENATE_IDS = true;
+
     @Argument(shortName = INCLUDE_FILTERED_SHORT_NAME,
             doc = "Include variants that were filtered in the output interval list.",
             optional = true)
@@ -95,7 +100,7 @@ public class VcfToIntervalList extends CommandLineProgram {
             final Iterator<Interval> samFileIterator = VCFFileReader.toIntervals(vcfReader, INCLUDE_FILTERED);
             try (IntervalListWriter writer = new IntervalListWriter(OUTPUT.toPath(), new SAMFileHeader(vcfReader.getFileHeader().getSequenceDictionary()))) {
                 final IntervalList.IntervalMergerIterator mergingIterator =
-                        new IntervalList.IntervalMergerIterator(samFileIterator, true, false, true);
+                        new IntervalList.IntervalMergerIterator(samFileIterator, true, false, CONCATENATE_IDS);
                 for (final Interval interval : new IterableAdapter<>(mergingIterator)){
                     writer.write(interval);
                 }
