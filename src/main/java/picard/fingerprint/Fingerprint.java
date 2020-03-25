@@ -81,7 +81,7 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
             HaplotypeProbabilities probabilities = get(haplotype);
             final HaplotypeProbabilities otherProbabilities = other.get(haplotype);
             if (probabilities == null) {
-                probabilities = otherProbabilities;
+                probabilities = otherProbabilities.deepCopy();
                 put(haplotype, probabilities);
             } else if (otherProbabilities != null) {
                 probabilities.merge(otherProbabilities);

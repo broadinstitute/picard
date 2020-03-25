@@ -59,6 +59,8 @@ import java.io.IOException;
  */
 
 public class IlluminaAdpcFileWriter implements AutoCloseable {
+    private final String HEADER = "1234567890123456";
+
     private final DataOutputStream outputStream;
 
     public IlluminaAdpcFileWriter(final File adpcFile) throws IOException {
@@ -67,13 +69,17 @@ public class IlluminaAdpcFileWriter implements AutoCloseable {
     }
 
     private void writeHeaderData() throws IOException {
-        outputStream.write("1234567890123456".getBytes());
+        outputStream.write(HEADER.getBytes());
     }
 
     public void write(Iterable<Record> illuminaAdpcRecords) throws IOException {
         for (Record illuminaAdpcRecord : illuminaAdpcRecords) {
-            illuminaAdpcRecord.write(outputStream);
+            write(illuminaAdpcRecord);
         }
+    }
+
+    public void write(Record illuminaAdpcRecord) throws IOException {
+        illuminaAdpcRecord.write(outputStream);
     }
 
     @Override
@@ -82,29 +88,29 @@ public class IlluminaAdpcFileWriter implements AutoCloseable {
     }
 
     public static class Record {
-        final short aIntensity;
-        final short bIntensity;
+        final int aIntensity;
+        final int bIntensity;
         final float aNormalizedIntensity;
         final float bNormalizedIntensity;
         final float gcScore;
         final IlluminaGenotype genotype;
 
-        public Record(short aIntensity, short bIntensity, float aNormalizedIntensity, float bNormalizedIntensity, float gcScore, IlluminaGenotype genotype) {
+        public Record(int aIntensity, int bIntensity, Float aNormalizedIntensity, Float bNormalizedIntensity, float gcScore, IlluminaGenotype genotype) {
             this.aIntensity = aIntensity;
             this.bIntensity = bIntensity;
-            this.aNormalizedIntensity = aNormalizedIntensity;
-            this.bNormalizedIntensity = bNormalizedIntensity;
+            this.aNormalizedIntensity = aNormalizedIntensity != null ? aNormalizedIntensity : Float.NaN;
+            this.bNormalizedIntensity = bNormalizedIntensity != null ? bNormalizedIntensity : Float.NaN;
             this.gcScore = gcScore;
             this.genotype = genotype;
         }
 
         public void write(final DataOutputStream outputStream) throws IOException {
-            InfiniumDataFile.writeShort(outputStream, aIntensity);
-            InfiniumDataFile.writeShort(outputStream, bIntensity);
+            InfiniumDataFile.writeUnsignedShort(outputStream, aIntensity);
+            InfiniumDataFile.writeUnsignedShort(outputStream, bIntensity);
             InfiniumDataFile.writeFloat(outputStream, aNormalizedIntensity);
             InfiniumDataFile.writeFloat(outputStream, bNormalizedIntensity);
             InfiniumDataFile.writeFloat(outputStream, gcScore);
-            InfiniumDataFile.writeShort(outputStream, genotype.value);
+            InfiniumDataFile.writeUnsignedShort(outputStream, genotype.value);
         }
     }
 }

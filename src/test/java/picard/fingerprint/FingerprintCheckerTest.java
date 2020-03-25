@@ -1,5 +1,7 @@
 package picard.fingerprint;
 
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -9,10 +11,21 @@ import picard.PicardException;
 import picard.vcf.VcfTestUtils;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static picard.util.TestNGUtil.compareDoubleWithAccuracy;
 
 /**
  * Created by farjoun on 8/27/15.
@@ -31,19 +44,6 @@ public class FingerprintCheckerTest {
     @BeforeClass
     public void setup() {
         hb.addSnp(snp);
-    }
-
-    @Test
-    public void testRandomSublist() throws Exception {
-
-        final List<Integer> list = new ArrayList<>();
-        list.add(1);
-        list.add(2);
-        list.add(3);
-
-        Assert.assertEquals(list, FingerprintChecker.randomSublist(list, 3));
-        Assert.assertEquals(list, FingerprintChecker.randomSublist(list, 4));
-        Assert.assertEquals(FingerprintChecker.randomSublist(list, 2).size(), 2);
     }
 
     @DataProvider(name = "pLoH")
@@ -88,21 +88,21 @@ public class FingerprintCheckerTest {
     @DataProvider(name = "checkFingerprintsVcfDataProvider")
     public Object[][] testCheckFingerprintsVcfDataProvider() {
         return new Object[][]{
-                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12891.fp.vcf"), "NA12891", "NA12891", -0.021280, -1.026742,  1.005462},
-                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"),  "NA12891", "NA12891", -0.014720, -1.026742,  1.012022},
-                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12892.fp.vcf"), "NA12892", "NA12892", -0.021945, -1.083080,  1.061135},
-                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12892.g.vcf"),  "NA12892", "NA12892", -0.014852, -1.083080,  1.068227},
-                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12892.fp.vcf"), "NA12891", "NA12892", -5.941691, -1.026742, -4.914948},
-                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12892.g.vcf"),  "NA12891", "NA12892", -6.638797, -1.026742, -5.612055},
-                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.fp.vcf"), "NA12892", "NA12891", -5.998029, -1.083080, -4.914948},
-                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"),  "NA12892", "NA12891", -6.656826, -1.083080, -5.573746},
-                {new File(TEST_DATA_DIR, "emptyNA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"),  "NA12892", "NA12891", 0, 0, 0},
+                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12891.fp.vcf"), "NA12891", "NA12891", -1.048021, -2.053484, 1.005462},
+                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"), "NA12891", "NA12891", -1.037564, -2.049586, 1.012022},
+                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12892.fp.vcf"), "NA12892", "NA12892", -1.105025, -2.166160, 1.061135},
+                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12892.g.vcf"), "NA12892", "NA12892", -1.094570, -2.162798, 1.068227},
+                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12892.fp.vcf"), "NA12891", "NA12892", -7.024770, -2.109822, -4.914948},
+                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12892.g.vcf"), "NA12891", "NA12892", -7.718515, -2.106459, -5.612055},
+                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.fp.vcf"), "NA12892", "NA12891", -7.024770, -2.109822, -4.914948},
+                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"), "NA12892", "NA12891", -7.679670, -2.105924, -5.573746},
+                {new File(TEST_DATA_DIR, "emptyNA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"), "NA12892", "NA12891", 0, 0, 0},
         };
     }
 
     @Test(dataProvider = "checkFingerprintsVcfDataProvider")
     public void testCheckFingerprintsVcf(final File vcfFile, final File genotypesFile, final String observedSampleAlias, final String expectedSampleAlias,
-                                      final double llExpectedSample, final double llRandomSample, final double lodExpectedSample) throws IOException {
+                                         final double llExpectedSample, final double llRandomSample, final double lodExpectedSample) throws IOException {
         final Path indexedInputVcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(vcfFile, "fingerprintcheckertest.tmp.").toPath();
         final Path indexedGenotypesVcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(genotypesFile, "fingerprintcheckertest.tmp.").toPath();
 
@@ -124,11 +124,27 @@ public class FingerprintCheckerTest {
 
     @Test(dataProvider = "checkFingerprintsVcfDataProvider")
     public void testFingerprintVcf(final File vcfFile, final File genotypesFile, final String observedSampleAlias, final String expectedSampleAlias,
-                                   final double llExpectedSample, final double llRandomSample, final double lodExpectedSample) throws IOException {
+                                   final double llExpectedSample, final double llRandomSample, final double lodExpectedSample) {
         final FingerprintChecker fpChecker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
         final Map<FingerprintIdDetails, Fingerprint> fp1 = fpChecker.fingerprintVcf(vcfFile.toPath());
 
         Assert.assertFalse(fp1.isEmpty());
+    }
+
+    @Test(dataProvider = "checkFingerprintsVcfDataProvider")
+    public void testFingerprintSwapEqual(final File vcfFile, final File genotypesFile, final String observedSampleAlias, final String expectedSampleAlias,
+                                         final double llExpectedSample, final double llRandomSample, final double lodExpectedSample) {
+        final FingerprintChecker fpChecker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        final Map<FingerprintIdDetails, Fingerprint> fp1Map = fpChecker.fingerprintVcf(vcfFile.toPath());
+        final Map<FingerprintIdDetails, Fingerprint> fp2Map = fpChecker.fingerprintVcf(genotypesFile.toPath());
+
+        for (Fingerprint fp1 : fp1Map.values()) {
+            for (Fingerprint fp2 : fp2Map.values()) {
+                final MatchResults matchResults12 = FingerprintChecker.calculateMatchResults(fp1, fp2);
+                final MatchResults matchResults21 = FingerprintChecker.calculateMatchResults(fp2, fp1);
+                compareDoubleWithAccuracy(matchResults12.getLOD(), matchResults21.getLOD(), 1e-10);
+            }
+        }
     }
 
     @Test(expectedExceptions = PicardException.class)
@@ -143,7 +159,7 @@ public class FingerprintCheckerTest {
         final File na12891_r1 = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam");
         final File na12891_r2 = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r2.sam");
         final File na12892_r1 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r1.sam");
-        final File na12892_r2 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r1.sam");
+        final File na12892_r2 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r2.sam");
 
         final File na12891_noRg = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.noRgTag.sam");
 
@@ -151,19 +167,22 @@ public class FingerprintCheckerTest {
                 {na12891_r1, na12891_r2, true, true},
                 {na12892_r1, na12892_r2, true, true},
                 {na12892_r1, na12891_r2, false, true},
-                {na12892_r1, na12891_noRg, false, true},
                 {na12891_r1, na12891_noRg, true, true},
+                {na12892_r1, na12891_noRg, false, true},
 
-                {na12891_r1, na12891_r2, true, false},
-                {na12892_r1, na12892_r2, true, false},
-                {na12892_r1, na12891_r2, false, false},
-                {na12892_r1, na12891_noRg, false, false},
-                {na12891_r1, na12891_noRg, true, false}
+                {na12891_r2, na12891_r2, true, false},
+                {na12892_r2, na12892_r2, true, false},
+                {na12892_r2, na12891_r2, false, false},
+                {na12891_r2, na12891_noRg, true, false},
+                {na12892_r2, na12891_noRg, false, false},
         };
     }
 
     @Test(dataProvider = "checkFingerprintsSamDataProvider")
-    public void testCheckFingerprintsSam(final File samFile1, final File samFile2, final boolean expectedMatch, final boolean silent) {
+    public void testCheckFingerprintsSam(final File samFile1, final File samFile2, final boolean expectedMatch, final boolean silent) throws IOException {
+
+        final File metricsFile = File.createTempFile("crosscheck", ".crosscheck_metrics");
+        metricsFile.deleteOnExit();
 
         final String[] args = {
                 "EXPECT_ALL_GROUPS_TO_MATCH=true",
@@ -173,9 +192,29 @@ public class FingerprintCheckerTest {
                 "I=" + samFile2.getAbsolutePath(),
                 "VALIDATION_STRINGENCY=" + (silent ? "SILENT" : "LENIENT"),
                 "CROSSCHECK_BY=FILE",
+                "OUTPUT=" + metricsFile.getAbsolutePath()
         };
 
         Assert.assertEquals(new CrosscheckFingerprints().instanceMain(args), expectedMatch ? 0 : 1);
+
+        // this part checks that the results are symmetric (i.e LOD x,y == LOD y,x)
+        final MetricsFile<CrosscheckMetric, Double> metricsFileReader = new MetricsFile<>();
+        metricsFileReader.read(new FileReader(metricsFile));
+        final List<CrosscheckMetric> metrics = metricsFileReader.getMetrics();
+
+        final Map<Set<String>, Set<String>> collected = metrics.stream()
+                .collect(Collectors.groupingBy(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE), Collectors.mapping(s -> s.LOD_SCORE.toString(), Collectors.toSet())));
+
+        for (Map.Entry<Set<String>, Set<String>> entry : collected.entrySet()) {
+            if (entry.getValue().size() > 1) {
+
+                final List<CrosscheckMetric> mismatchingMetrics = metrics.stream()
+                        .filter(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE).equals(entry.getKey())).collect(Collectors.toList());
+
+                Assert.fail("Metrics disagree: LOD scores are: \n[" + String.join(", ", entry.getValue()) +
+                        "],\n from the following metrics: \n" + mismatchingMetrics.get(0) + mismatchingMetrics.get(1));
+            }
+        }
     }
 
     @DataProvider(name = "checkFingerprintsSamDataProviderFail")
@@ -207,7 +246,7 @@ public class FingerprintCheckerTest {
 
     @DataProvider(name = "queryableData")
     public Iterator<Object[]> queryableData() throws IOException {
-        List<Object[]> tests = new ArrayList<>();
+        final List<Object[]> tests = new ArrayList<>();
         tests.add(new Object[]{new File(TEST_DATA_DIR, "NA12891.fp.vcf"), false});
         tests.add(new Object[]{new File(TEST_DATA_DIR, "NA12891.vcf"), false});
         tests.add(new Object[]{VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891.vcf"), "fingerprintcheckertest.tmp."), true});
@@ -218,8 +257,167 @@ public class FingerprintCheckerTest {
 
     @Test(dataProvider = "queryableData")
     public void testQueryable(final File vcf, boolean expectedQueryable) {
-        try(VCFFileReader reader = new VCFFileReader(vcf, false)) {
+        try (VCFFileReader reader = new VCFFileReader(vcf, false)) {
             Assert.assertEquals(reader.isQueryable(), expectedQueryable);
+        }
+    }
+
+    @DataProvider()
+    Object[][] mergeIsDafeProvider() {
+        final HaplotypeProbabilitiesFromSequence hp1 = new HaplotypeProbabilitiesFromSequence(hb);
+        final HaplotypeProbabilitiesFromSequence hp2 = new HaplotypeProbabilitiesFromSequence(hb);
+
+        addObservation(hp1, hb, 5, hb.getFirstSnp().getAllele1());
+        addObservation(hp1, hb, 1, (byte) (hb.getFirstSnp().getAllele1() + 1));
+        addObservation(hp2, hb, 3, hb.getFirstSnp().getAllele1());
+        addObservation(hp2, hb, 2, hb.getFirstSnp().getAllele2());
+
+        final HaplotypeProbabilitiesFromContaminatorSequence hpcs1 = new HaplotypeProbabilitiesFromContaminatorSequence(hb, .1);
+        final HaplotypeProbabilitiesFromContaminatorSequence hpcs2 = new HaplotypeProbabilitiesFromContaminatorSequence(hb, .1);
+
+        addObservation(hpcs1, hb, 5, hb.getFirstSnp().getAllele1());
+        addObservation(hpcs1, hb, 1, (byte) (hb.getFirstSnp().getAllele1() + 1));
+        addObservation(hpcs2, hb, 3, hb.getFirstSnp().getAllele1());
+        addObservation(hpcs2, hb, 1, hb.getFirstSnp().getAllele1());
+
+        return new Object[][]{
+                new Object[]{new HaplotypeProbabilitiesFromGenotype(snp, hb, 5D, 0D, 10D), new HaplotypeProbabilitiesFromGenotype(snp, hb, 0D, 10D, 100D)},
+                new Object[]{
+                        new HaplotypeProbabilityOfNormalGivenTumor(
+                                new HaplotypeProbabilitiesFromGenotype(snp, hb, 5D, 0D, 10D), .05),
+                        new HaplotypeProbabilityOfNormalGivenTumor(
+                                new HaplotypeProbabilitiesFromGenotype(snp, hb, 0D, 10D, 100D), 0.05)},
+                new Object[]{hp1, hp2},
+                new Object[]{hpcs1, hpcs2},
+        };
+    }
+
+    private static void addObservation(final HaplotypeProbabilitiesFromSequence haplotypeProb, final HaplotypeBlock haplotypeBlock, final int count, final byte allele) {
+        for (int i = 0; i < count; i++) {
+            haplotypeProb.addToProbs(haplotypeBlock.getFirstSnp(), allele, (byte) 30);
+        }
+    }
+
+    @Test(dataProvider = "mergeIsDafeProvider")
+    public void testMergeHaplotypeProbabilitiesIsSafe(final HaplotypeProbabilities hp1, final HaplotypeProbabilities hp2) {
+
+        final HaplotypeProbabilities merged1 = hp1.deepCopy().merge(hp2);
+        final HaplotypeProbabilities merged2 = hp1.deepCopy().merge(hp2);
+
+        Assert.assertEquals(merged1.getLikelihoods(), merged2.getLikelihoods());
+    }
+
+    @Test(dataProvider = "mergeIsDafeProvider")
+    public void testMergeFingerprintIsSafe(final HaplotypeProbabilities hp1, final HaplotypeProbabilities hp2) {
+
+        final Fingerprint fpA = new Fingerprint("test2", null, "none");
+        final Fingerprint fpB = new Fingerprint("test2", null, "none");
+
+        final Fingerprint fp1 = new Fingerprint("test1", null, "none");
+        fp1.add(hp1);
+
+        final Fingerprint fp2 = new Fingerprint("test1", null, "none");
+        fp2.add(hp2);
+
+        fpA.merge(fp1);
+        fpB.merge(fp1);
+
+        Assert.assertNotEquals(fpA.keySet().size(), 0);
+        for (HaplotypeBlock hb : fpA.keySet()) {
+            Assert.assertEquals(fpA.get(hb).getLikelihoods(), fpB.get(hb).getLikelihoods());
+        }
+
+        fpA.merge(fp2);
+        fpB.merge(fp2);
+        fpB.merge(fp2);
+
+        Assert.assertNotEquals(fpA.keySet().size(), 0);
+        for (HaplotypeBlock hb : fpA.keySet()) {
+            Assert.assertNotEquals(fpA.get(hb), fpB.get(hb));
+        }
+
+        fpA.merge(fp2);
+
+        Assert.assertNotEquals(fpA.keySet().size(), 0);
+        for (HaplotypeBlock hb : fpA.keySet()) {
+            Assert.assertEquals(fpA.get(hb).getLikelihoods(), fpB.get(hb).getLikelihoods());
+        }
+    }
+
+    @Test
+    public void testMergeIsSafeFromSequence() {
+        final Path na12891_r1 = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam").toPath();
+        final Path na12891_r2 = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r2.sam").toPath();
+        final Path na12892_r1 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r1.sam").toPath();
+        final Path na12892_r2 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.r2.sam").toPath();
+
+        final List<Path> listOfFiles = Arrays.asList(na12891_r1, na12891_r2, na12892_r1, na12892_r2);
+        final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap = checker.fingerprintFiles(listOfFiles, 1, 0, TimeUnit.DAYS);
+
+        final Fingerprint combinedFp = new Fingerprint("test", null, null);
+        fingerprintIdDetailsFingerprintMap.values().forEach(combinedFp::merge);
+
+        final Fingerprint combinedFp2 = new Fingerprint("test2", null, null);
+        fingerprintIdDetailsFingerprintMap.values().forEach(combinedFp2::merge);
+
+        Assert.assertNotEquals(combinedFp.keySet().size(), 0);
+        FingerprintingTestUtils.assertFingerPrintHPsAreEqual(combinedFp, combinedFp2);
+
+        final Function<FingerprintIdDetails, String> bySample = Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE);
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap1 =
+                Fingerprint.mergeFingerprintsBy(fingerprintIdDetailsFingerprintMap, bySample);
+
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap2 =
+                Fingerprint.mergeFingerprintsBy(fingerprintIdDetailsFingerprintMap, bySample);
+
+        Assert.assertNotEquals(fingerprintIdDetailsFingerprintMap1.keySet().size(), 0);
+
+        for (final FingerprintIdDetails fpd1 : fingerprintIdDetailsFingerprintMap1.keySet()) {
+            final Fingerprint fingerprint1 = fingerprintIdDetailsFingerprintMap1.get(fpd1);
+            final Fingerprint fingerprint2 = fingerprintIdDetailsFingerprintMap2.get(fpd1);
+
+            Assert.assertNotEquals(fingerprint1.keySet().size(), 0);
+            FingerprintingTestUtils.assertFingerPrintHPsAreEqual(fingerprint1, fingerprint2);
+        }
+    }
+
+    @Test
+    public void testMergeIsSafeFromVCF() {
+        final Path na12891_fp = TEST_DATA_DIR.toPath().resolve("NA12891.fp.vcf");
+        final Path na12891_g = TEST_DATA_DIR.toPath().resolve("NA12891.vcf");
+        final Path na12892_fp = TEST_DATA_DIR.toPath().resolve("NA12892.fp.vcf");
+        final Path na12892_g = TEST_DATA_DIR.toPath().resolve("NA12892.vcf");
+
+        final List<Path> listOfFiles = Arrays.asList(na12891_fp, na12891_g, na12892_fp, na12892_g);
+        final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap = checker.fingerprintFiles(listOfFiles, 1, 0, TimeUnit.DAYS);
+
+        final Fingerprint combinedFp = new Fingerprint("test", null, null);
+        fingerprintIdDetailsFingerprintMap.values().forEach(combinedFp::merge);
+
+        final Fingerprint combinedFp2 = new Fingerprint("test", null, null);
+        fingerprintIdDetailsFingerprintMap.values().forEach(combinedFp2::merge);
+
+        Assert.assertNotEquals(combinedFp.keySet().size(), 0);
+        FingerprintingTestUtils.assertFingerPrintHPsAreEqual(combinedFp, combinedFp2);
+
+        final Function<FingerprintIdDetails, String> bySample = Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE);
+
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap1 =
+                Fingerprint.mergeFingerprintsBy(fingerprintIdDetailsFingerprintMap, bySample);
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap2 =
+                Fingerprint.mergeFingerprintsBy(fingerprintIdDetailsFingerprintMap, bySample);
+
+        Assert.assertNotEquals(fingerprintIdDetailsFingerprintMap1.keySet().size(), 0);
+        Assert.assertEquals(fingerprintIdDetailsFingerprintMap1.keySet().size(), fingerprintIdDetailsFingerprintMap2.size());
+
+        for (final FingerprintIdDetails fpd1 : fingerprintIdDetailsFingerprintMap1.keySet()) {
+            final Fingerprint fingerprint1 = fingerprintIdDetailsFingerprintMap1.get(fpd1);
+            final Fingerprint fingerprint2 = fingerprintIdDetailsFingerprintMap2.get(fpd1);
+
+            Assert.assertNotEquals(fingerprint1.keySet().size(), 0);
+            FingerprintingTestUtils.assertFingerPrintHPsAreEqual(fingerprint1, fingerprint2);
         }
     }
 
@@ -237,5 +435,4 @@ public class FingerprintCheckerTest {
 
         VcfTestUtils.assertVcfFilesAreEqual(vcfOutput, vcfExpected);
     }
-
 }
