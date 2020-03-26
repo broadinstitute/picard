@@ -29,13 +29,7 @@ import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.util.*;
-import htsjdk.tribble.util.ParsingUtils;
 import picard.PicardException;
-import picard.illumina.parser.ReadDescriptor;
-import picard.illumina.parser.ReadStructure;
-import picard.illumina.parser.ReadType;
-import picard.util.AdapterPair;
-import picard.util.IlluminaUtil;
 
 import java.io.File;
 import java.util.*;
@@ -65,11 +59,10 @@ public abstract class AbstractAlignmentMerger {
 
     public static final int MAX_RECORDS_IN_RAM = 500000;
 
-    public static final int MAX_ERROR_PHRED = 45;
-
-    private static final double LIKELIHOOD_RATIO_THRESHOLD = 1e3;
-
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X', 'Y', 'Z'};
+    static final String HARD_CLIPPED_BASES_TAG = "XB";
+    static final String HARD_CLIPPED_BASE_QUALITIES_TAG = "XQ";
+
     private int crossSpeciesReads = 0;
 
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
@@ -95,9 +88,6 @@ public abstract class AbstractAlignmentMerger {
     private MultiHitAlignedReadIterator alignedIterator = null;
     private boolean clipOverlappingReads = true;
     private CigarOperator clipOverlappingReadsOperator = CigarOperator.SOFT_CLIP;
-    private ReadStructure read1Structure;
-    private ReadStructure read2Structure;
-    private List<AdapterPair> adapterPairs;
     private int maxRecordsInRam = MAX_RECORDS_IN_RAM;
     private final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy;
     private boolean keepAlignerProperPairFlags = false;
@@ -756,7 +746,7 @@ public abstract class AbstractAlignmentMerger {
             transferAlignmentInfoToFragment(secondUnaligned, secondAligned, isContaminant, needsSafeReverseComplement);
         }
         if (isClipOverlappingReads()) {
-            clipForOverlappingReads(firstUnaligned, secondUnaligned, clipOverlappingReadsOperator, read1Structure, read2Structure, adapterPairs);
+            clipForOverlappingReads(firstUnaligned, secondUnaligned, clipOverlappingReadsOperator);
         }
         SamPairUtil.setMateInfo(secondUnaligned, firstUnaligned, addMateCigar);
         if (!keepAlignerProperPairFlags) {
@@ -764,14 +754,11 @@ public abstract class AbstractAlignmentMerger {
         }
     }
 
-
-
     /**
      * Checks to see whether the ends of the reads overlap and clips reads
      * if necessary.
      */
-    protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2, final CigarOperator clippingOperator, final ReadStructure read1Structure, final ReadStructure read2Structure,
-                                                  final List<? extends AdapterPair> adaptersPairs) {
+    protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2, final CigarOperator clippingOperator) {
         // If both reads are mapped, see if we need to clip the ends due to small
         // insert size
         if (!clippingOperator.isClipping()) {
@@ -785,45 +772,37 @@ public abstract class AbstractAlignmentMerger {
                 // Innies only -- do we need to do anything else about jumping libraries?
                 if (pos.getAlignmentStart() < neg.getAlignmentEnd()) {
 
-                    if (clippingOperator.equals(CigarOperator.HARD_CLIP)) {
+                    //need to consider unclipped positions because often the read through bases have already been soft-clipped
+                    final int posClipFrom = getReadPositionToClipFrom(pos, neg.getUnclippedEnd() + 1);
+                    final int negClipFrom = getReadPositionToClipFrom(neg, pos.getUnclippedStart() - 1);
+                    if (posClipFrom == negClipFrom && posClipFrom > 0) {
+                        final int clipFrom = posClipFrom;
 
-                        //need to consider unclipped positions because often the readthrough bases have already been soft-clipped
-                        final int posClipFrom = getReadPositionToClipFrom(pos, neg.getUnclippedEnd() + 1);
-                        final int negClipFrom = getReadPositionToClipFrom(neg, pos.getUnclippedStart() - 1);
-                        if (posClipFrom == negClipFrom && posClipFrom > 0) {
-                            final int clipFrom = posClipFrom;
-
-                            for (final AdapterPair adapterPair : adaptersPairs) {
-                                if (basesToClipMatchAdapterPair(read1, clipFrom - 1, adapterPair, read2Structure) && basesToClipMatchAdapterPair(read2, clipFrom - 1, adapterPair, read1Structure)) {
-                                    CigarUtil.clip3PrimeEndOfRead(read1, clipFrom, CigarOperator.HARD_CLIP);
-                                    CigarUtil.clip3PrimeEndOfRead(read2, clipFrom, CigarOperator.HARD_CLIP);
-                                    return;
-                                }
-                            }
+                        if (clippingOperator == CigarOperator.HARD_CLIP) {
+                            moveClippedBasesToTag(read1, clipFrom);
+                            moveClippedBasesToTag(read2, clipFrom);
                         }
+
+                        CigarUtil.clip3PrimeEndOfRead(read1, clipFrom, clippingOperator);
+                        CigarUtil.clip3PrimeEndOfRead(read2, clipFrom, clippingOperator);
                     }
-
-
-                    //if we've gotten to here, try standard soft clipping.  Here we consider clipped position because we only are correcting where early sof-clipping isn't quite right
-                    final int posDiff = pos.getAlignmentEnd() - neg.getAlignmentEnd();
-                    final int negDiff = pos.getAlignmentStart() - neg.getAlignmentStart();
-
-                    if (posDiff > 0) {
-                        final List<CigarElement> elems = new ArrayList<>(pos.getCigar().getCigarElements());
-                        Collections.reverse(elems);
-                        final int clipped = lengthOfSoftClipping(elems.iterator());
-                        final int clipFrom = pos.getReadLength() - posDiff - clipped + 1;
-                        CigarUtil.softClip3PrimeEndOfRead(pos, Math.min(pos.getReadLength(), clipFrom));
-                    }
-
-                    if (negDiff > 0) {
-                        final int clipped = lengthOfSoftClipping(neg.getCigar().getCigarElements().iterator());
-                        final int clipFrom = neg.getReadLength() - negDiff - clipped + 1;
-                        CigarUtil.softClip3PrimeEndOfRead(neg, Math.min(neg.getReadLength(), clipFrom));
-                    }
-
                 }
             }
+        }
+    }
+
+    private static void moveClippedBasesToTag(final SAMRecord rec, final int clipFrom) {
+
+        final byte[] bases = rec.getReadBases();
+        final byte[] baseQualities = rec.getBaseQualities();
+        final int readLength = rec.getReadLength();
+
+        if(rec.getReadNegativeStrandFlag()) {
+            rec.setAttribute(HARD_CLIPPED_BASES_TAG, StringUtil.bytesToString(Arrays.copyOf(bases, bases.length - clipFrom + 1)));
+            rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, SAMUtils.phredToFastq(Arrays.copyOf(baseQualities, baseQualities.length - clipFrom + 1)));
+        } else {
+            rec.setAttribute(HARD_CLIPPED_BASES_TAG, StringUtil.bytesToString(Arrays.copyOfRange(bases, clipFrom - 1, readLength)));
+            rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, SAMUtils.phredToFastq(Arrays.copyOfRange(baseQualities,clipFrom - 1, readLength)));
         }
     }
 
@@ -874,117 +853,7 @@ public abstract class AbstractAlignmentMerger {
     }
 
     protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2) {
-        clipForOverlappingReads(read1, read2, CigarOperator.SOFT_CLIP, null, null, Collections.emptyList());
-    }
-
-    protected static boolean basesToClipMatchAdapterPair(final SAMRecord read, final int posToClip, final AdapterPair adapterPair,
-                                                    final ReadStructure mateReadStructure) {
-        final byte[] readBases = read.getReadBases();
-        final byte[] readBasesToClip = Arrays.copyOfRange(readBases, read.getReadNegativeStrandFlag()? 0 : posToClip, read.getReadNegativeStrandFlag()? readBases.length - posToClip : readBases.length);
-        final byte[] readBQToClip = Arrays.copyOfRange(read.getBaseQualities(), read.getReadNegativeStrandFlag()? 0 : posToClip, read.getReadNegativeStrandFlag()? readBases.length - posToClip : readBases.length);
-
-       if (read.getReadNegativeStrandFlag()) {
-            SequenceUtil.reverseComplement(readBasesToClip);
-            SequenceUtil.reverseQualities(readBQToClip);
-        }
-
-        double lr=1; //likelihood ratio that bases to be clipped are from adapter sequence to not from adapter sequence
-        int readBasesToClipIndex = 0;
-
-        if (mateReadStructure != null) { // if null, we assume mate is all template so go right into adapter
-            final Deque<ReadDescriptor> clipDescripterDeque = new ArrayDeque<>();
-            for (final ReadDescriptor descriptor : mateReadStructure.descriptors) {
-                if (descriptor.type == ReadType.Template) {
-                    break;
-                }
-                if (descriptor.type == ReadType.Barcode) {
-                    throw new PicardException("No support for index barcode in read structure");
-                }
-                clipDescripterDeque.addFirst(descriptor);
-            }
-
-
-            //first check UMI and move past any skips
-            while (!clipDescripterDeque.isEmpty() && readBasesToClipIndex < readBasesToClip.length) {
-                final ReadDescriptor descriptor = clipDescripterDeque.poll();
-                if (descriptor.type == ReadType.MolecularIndex) {
-                    final byte[] expectUMIReadthroughBases = getExpectedReadThroughUMIBases(read);
-                    for (int i = 0; i < Math.min(descriptor.length, readBasesToClip.length - readBasesToClipIndex); i++) {
-                        lr *= getLikelihoodRatio(readBasesToClip[readBasesToClipIndex + i], readBQToClip[readBasesToClipIndex + i], expectUMIReadthroughBases[i]);
-
-                        if (lr > LIKELIHOOD_RATIO_THRESHOLD) {
-                            return true;
-                        }
-
-                        if (lr < 1.0 / LIKELIHOOD_RATIO_THRESHOLD) {
-                            return false;
-                        }
-                    }
-                }
-                readBasesToClipIndex += descriptor.length;
-            }
-        }
-
-        //now check against adapter sequences
-        final byte[] adapterBases = read.getFirstOfPairFlag()? adapterPair.get3PrimeAdapterBytes() : adapterPair.get5PrimeAdapterBytesInReadOrder();
-        for (int i=0; i < adapterBases.length && readBasesToClipIndex < readBasesToClip.length; i++, readBasesToClipIndex++) {
-            lr *= getLikelihoodRatio(readBasesToClip[readBasesToClipIndex], readBQToClip[readBasesToClipIndex], adapterBases[i]);
-
-            if (lr>LIKELIHOOD_RATIO_THRESHOLD) {
-                return true;
-            }
-
-            if (lr < 1.0/LIKELIHOOD_RATIO_THRESHOLD) {
-                return false;
-            }
-        }
-
-        return lr>=1;
-    }
-
-    private static double getLikelihoodRatio(final byte readBase, final byte readBaseQual, final byte expectedBase) {
-        final double error_prob = QualityUtil.getErrorProbabilityFromPhredScore(Math.min(readBaseQual, MAX_ERROR_PHRED));
-        if (SequenceUtil.isNoCall(readBase) || SequenceUtil.isNoCall(expectedBase)) {
-            return 1;
-        }
-        final double likelihood_from_expected = SequenceUtil.readBaseMatchesRefBaseWithAmbiguity(readBase,expectedBase) ? 1 - error_prob : error_prob;
-        final double likelihood_from_not_expected = 0.25;
-
-        return likelihood_from_expected/likelihood_from_not_expected;
-    }
-
-    private static byte[] getExpectedReadThroughUMIBases(final SAMRecord read) {
-        final String umiAttribute = read.getStringAttribute(SAMTag.RX.toString());
-        List<String> umiList = ParsingUtils.split(umiAttribute, '-');
-        if (umiList.size() == 1) {
-            final byte[] ret = StringUtil.stringToBytes(umiList.get(0));
-            SequenceUtil.reverseComplement(ret);
-            return ret;
-        } else if (umiList.size() == 2){
-            //duplex umis
-            final byte[] ret = read.getFirstOfPairFlag()? StringUtil.stringToBytes(umiList.get(1)) : StringUtil.stringToBytes(umiList.get(0));
-            SequenceUtil.reverseComplement(ret);
-            return ret;
-        } else {
-            throw new PicardException("Could not handle RX attribute " + umiAttribute);
-        }
-
-    }
-
-    /** Returns the number of soft-clipped bases until a non-soft-clipping element is encountered. */
-    private static int lengthOfSoftClipping(Iterator<CigarElement> iterator) {
-        int clipped = 0;
-        while (iterator.hasNext()) {
-            final CigarElement elem = iterator.next();
-            if (elem.getOperator() != CigarOperator.SOFT_CLIP && elem.getOperator() != CigarOperator.HARD_CLIP) {
-                break;
-            }
-            if (elem.getOperator() == CigarOperator.SOFT_CLIP) {
-                clipped = elem.getLength();
-            }
-        }
-
-        return clipped;
+        clipForOverlappingReads(read1, read2, CigarOperator.SOFT_CLIP);
     }
 
     /**
@@ -1150,18 +1019,13 @@ public abstract class AbstractAlignmentMerger {
         return clipOverlappingReads;
     }
 
-    public void setClipOverlappingReads(final boolean clipOverlappingReads, final CigarOperator clipOverlappingReadsOperator,
-                                        final ReadStructure read1Structure, final ReadStructure read2Structure,
-                                        final List<AdapterPair> adapters) {
+    public void setClipOverlappingReads(final boolean clipOverlappingReads, final CigarOperator clipOverlappingReadsOperator) {
         this.clipOverlappingReads = clipOverlappingReads;
         if (clipOverlappingReads && !clipOverlappingReadsOperator.isClipping()) {
-            throw new IllegalArgumentException("clippingOverlappingReadsOperator " + clipOverlappingReadsOperator + " is not a clipping operatore.");
+            throw new IllegalArgumentException("clippingOverlappingReadsOperator " + clipOverlappingReadsOperator + " is not a clipping operator.");
         }
 
         this.clipOverlappingReadsOperator = clipOverlappingReadsOperator;
-        this.read1Structure = read1Structure;
-        this.read2Structure = read2Structure;
-        this.adapterPairs = adapters;
     }
 
     public boolean isKeepAlignerProperPairFlags() {

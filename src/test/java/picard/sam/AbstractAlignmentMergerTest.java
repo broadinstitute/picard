@@ -1,33 +1,16 @@
 package picard.sam;
 
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordSetBuilder;
-import htsjdk.samtools.SAMTag;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
-import org.apache.commons.lang.ArrayUtils;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
-import picard.illumina.CustomAdapterPair;
-import picard.illumina.parser.ReadDescriptor;
-import picard.illumina.parser.ReadStructure;
-import picard.illumina.parser.ReadType;
-import picard.util.AdapterPair;
-import picard.util.IlluminaUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,339 +18,143 @@ import java.util.List;
  * Tests related to code in AbstractAlignmentMerger
  */
 public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
-    @Test public void tesOverlappedReadClippingWithNonOverlappedReads() {
-        final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
-        set.setReadLength(110);
-        final List<SAMRecord> recs = set.addPair("q1", 0, 100, 200, false, false, "110M", "110M", false, true, 30);
-        final SAMRecord r1 = recs.get(0);
-        final SAMRecord r2 = recs.get(1);
-        AbstractAlignmentMerger.clipForOverlappingReads(r1, r2);
-        Assert.assertEquals(r1.getAlignmentStart(), 100);
-        Assert.assertEquals(r1.getCigarString(), "110M");
-        Assert.assertEquals(r2.getAlignmentStart(), 200);
-        Assert.assertEquals(r2.getCigarString(), "110M");
-    }
 
-    @Test
-    public void testOverlappedReadHardClippingWithNonOverlappedReads() {
-        final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
-        set.setReadLength(110);
-        final List<SAMRecord> recs = set.addPair("q1", 0, 100, 200, false, false, "110M", "110M", false, true, 30);
-        final SAMRecord r1 = recs.get(0);
-        final SAMRecord r2 = recs.get(1);
-        AbstractAlignmentMerger.clipForOverlappingReads(r1, r2, CigarOperator.HARD_CLIP, null, null, Collections.emptyList());
-        Assert.assertEquals(r1.getAlignmentStart(), 100);
-        Assert.assertEquals(r1.getCigarString(), "110M");
-        Assert.assertEquals(r2.getAlignmentStart(), 200);
-        Assert.assertEquals(r2.getCigarString(), "110M");
-        Assert.assertEquals(r1.getReadLength(), 110);
-        Assert.assertEquals(r2.getReadLength(), 110);
-    }
+    @DataProvider(name = "overlapReadData")
+    public Object[][] overlapReadData() {
+        // The spaces here are deliberate to illustrate the region the two default reads match
+        final String default120LongR1Bases =                     "ATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACCAGATTCTCCTGTCAGTTTGC";
+        final String default120LongR2Bases = "CGTTGGCAATGCCGGGCACAATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACC";
 
-    @Test public void testBasicOverlappedReadClipping() {
-        final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
-        set.setReadLength(110);
-        final List<SAMRecord> recs = set.addPair("q1", 0, 100, 90, false, false, "110M", "110M", false, true, 30);
-        final SAMRecord r1 = recs.get(0);
-        final SAMRecord r2 = recs.get(1);
-        AbstractAlignmentMerger.clipForOverlappingReads(r1, r2);
-        Assert.assertEquals(r1.getAlignmentStart(), 100);
-        Assert.assertEquals(r1.getCigarString(), "100M10S");
-        Assert.assertEquals(r2.getAlignmentStart(), 100);
-        Assert.assertEquals(r2.getCigarString(), "10S100M");
-    }
+        final String default110LongR1Bases =           "ATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACCAGATTCTCCT";
+        final String default110LongR2Bases = "GCCGGGCACAATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACC";
 
-    @DataProvider(name = "hardClippingDataProvider")
-    public Object [][] getHardClippingData() {
+        final String sharedBases = "ATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACC";
 
+        final String default120LongR1ClippedBases = "AGATTCTCCTGTCAGTTTGC";
+        final String default120LongR2ClippedBases = "CGTTGGCAATGCCGGGCACA";
 
-        final List<Object[]> ret = new ArrayList<>();
-        final List<AdapterPair> illuminaAdapters = Arrays.asList(IlluminaUtil.IlluminaAdapterPair.values());
-        final byte[] templateBases = StringUtil.stringToBytes("ACTGCATGCTAGCTTAGGACAGATACGATAGCTAGACAGACATAATTTAGCGGATGACATTCGGACAGATCGGACGAGCTAGACAGACTGAGACAGCTAGCAGATCGAGG");
-        final byte[] templateBasesRC = Arrays.copyOf(templateBases, templateBases.length);
-        SequenceUtil.reverseComplement(templateBasesRC);
-        //All Illumina barcode combinations should work
-        
-        for (int nAdapterBases = 1; nAdapterBases <= 10; nAdapterBases+=3) {
-            final int readLength = templateBases.length + nAdapterBases;
-            final String cigarF = readLength + "M";
-            final String cigarR = readLength + "M";
-            final String expectedCigarF = templateBases.length + "M" + nAdapterBases + "H";
-            final String expectedCigarR = nAdapterBases + "H" + templateBases.length + "M";
+        final String default110LongR1ClippedBases = "AGATTCTCCT";
+        final String default110LongR2ClippedBases = "GCCGGGCACA";
 
-            for (final AdapterPair adapterPair : illuminaAdapters) {
-                SequenceUtil.reverseComplement(templateBasesRC);
-                ret.add(new Object[]{cigarF, cigarR, buildReadBases(templateBases, adapterPair.get3PrimeAdapterBytesInReadOrder(), readLength, false),
-                        buildReadBases(templateBasesRC, adapterPair.get5PrimeAdapterBytesInReadOrder(), readLength, true),
-                        false, true, 100, 100 - nAdapterBases, illuminaAdapters, expectedCigarF, expectedCigarR, 100, 100, null, null}); //F1R2
-                ret.add(new Object[]{cigarR, cigarF, buildReadBases(templateBases, adapterPair.get3PrimeAdapterBytesInReadOrder(), readLength, true),
-                        buildReadBases(templateBasesRC, adapterPair.get5PrimeAdapterBytesInReadOrder(), readLength, false),
-                        true, false, 100 - nAdapterBases, 100, illuminaAdapters, expectedCigarR, expectedCigarF, 100, 100, null, null}); //F2R1
-            }
+        final String default120LongR1BaseQualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.FFF.FFF.FFF";
+        final String default120LongR2BaseQualities ="FFFFFF.FFFFF.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+        final String default110LongR1BaseQualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.FFF.FFF";
+        final String default110LongR2BaseQualities = "FFFFFF.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
-            final String expectedCigarSoftF = templateBases.length + "M" + nAdapterBases + "S";
-            final String expectedCigarSoftR = nAdapterBases +"S" + templateBases.length +"M";
+        final String sharedQualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
-            //3' of one barcode, 5' of another, should only softclip
-            ret.add(new Object[] {cigarF, cigarR, buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), readLength, false),
-                    buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.NEXTERA_V1.get5PrimeAdapterBytesInReadOrder(), readLength, true),
-                    false, true, 100, 100 - nAdapterBases, illuminaAdapters, expectedCigarSoftF, expectedCigarSoftR, 100, 100, null, null}); //F1R2
-            ret.add(new Object[] {cigarR, cigarF, buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), readLength, true),
-                    buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.NEXTERA_V1.get5PrimeAdapterBytesInReadOrder(), readLength, false),
-                    true, false, 100 - nAdapterBases, 100, illuminaAdapters, expectedCigarSoftR, expectedCigarSoftF, 100, 100, null, null}); //F2R1
+        final String r1ClippedQualities10 = "FF.FFF.FFF";
+        final String r2ClippedQualities10 = "FFFFFF.FFF";
+        final String r1ClippedQualities20 = "FFFFFFFF.FFF.FFF.FFF";
+        final String r2ClippedQualities20 = "FFFFFF.FFFFF.FFFFFFF";
 
-        }
-
-        //already soft-clipped
-        ret.add(new Object[] {"118M2S", "120M", buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), 120, false),
-                buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterBytesInReadOrder(), 120, true),
-                false, true, 100, 90, illuminaAdapters, "110M10H", "10H110M", 100, 100, null, null});
-        //already soft-clipped more than adapters
-        ret.add(new Object[] {"108M12S", "120M", buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), 120, false),
-                buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterBytesInReadOrder(), 120, true),
-                false, true, 100, 90, illuminaAdapters, "108M2S10H", "10H110M", 100, 100, null, null});
-
-        //already hard-clipped
-        ret.add(new Object[] {"118M2H", "120M", buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), 118, false),
-                buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterBytesInReadOrder(), 120, true),
-                false, true, 100, 90, illuminaAdapters, "110M10H", "10H110M", 100, 100, null, null});
-
-        //soft-clipped beginning
-        ret.add(new Object[] {"2S118M", "120M", buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), 120, false),
-                buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterBytesInReadOrder(), 120, true),
-                false, true, 102, 90, illuminaAdapters, "2S108M10H", "10H110M", 102, 100, null, null});
-
-
-        //hard-clipped beginning
-        ret.add(new Object[]{"2H118M", "120M", buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), 118, false),
-                buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterBytesInReadOrder(), 120, true),
-                false, true, 102, 90, illuminaAdapters, "2H110M8H", "10H110M", 102, 100, null, null});
-
-        //insertion in reads
-        ret.add(new Object[]{"50M2I68M", "50M2I68M", buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), 120, false),
-                buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterBytesInReadOrder(), 120, true),
-                false, true, 100, 90, illuminaAdapters, "50M2I58M10H", "10H40M2I68M", 100, 100, null, null});
-
-        //insertion in adapter portion of read
-        ret.add(new Object[]{"114M2I4M", "120M", buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), 120, false),
-                buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterBytesInReadOrder(), 120, true),
-                false, true, 100, 90, illuminaAdapters, "110M10H", "10H110M", 100, 100, null, null});
-
-        //deletion in reads
-        ret.add(new Object[]{"50M2D70M", "50M2D70M", buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), 120, false),
-                buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterBytesInReadOrder(), 120, true),
-                false, true, 100, 90, illuminaAdapters, "50M2D60M10H", "10H40M2D70M", 100, 100, null, null});
-
-        //deletion in adapter portion of read
-        ret.add(new Object[]{"114M2D6M", "120M", buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), 120, false),
-                buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterBytesInReadOrder(), 120, true),
-                false, true, 100, 90, illuminaAdapters, "110M10H", "10H110M", 100, 100, null, null});
-
-        //Ns in adapter
-        final CustomAdapterPair customAdapterPair = new CustomAdapterPair("GTGCTTGCANNN", "NNNNAGTCGATTGC");
-        ret.add(new Object[] {"120M", "120M", buildReadBases(templateBases, StringUtil.stringToBytes("ACGTAGTCGATTGC"), 120, false),
-                buildReadBases(templateBasesRC, StringUtil.stringToBytes("ACGTGCAAGCAC"), 120, true),
-                false, true, 100, 90, Collections.singletonList(customAdapterPair), "110M10H", "10H110M", 100, 100, null, null});
-
-        //read structures and UMIs
-        for(int umiLength = 0; umiLength<=6; umiLength+=3) {
-            for (int gapBeforeUMI = 0; gapBeforeUMI<3; gapBeforeUMI++) {
-                for (int gapAfterUMI = 0; gapAfterUMI<3 && gapAfterUMI<umiLength; gapAfterUMI++) {
-                    final int totalBasesToRemove = umiLength + gapAfterUMI + gapBeforeUMI;
-                    final byte[] templateBasesClipped = Arrays.copyOfRange(templateBases, totalBasesToRemove, templateBases.length);
-                    final byte[] templateBasesRCClipped = Arrays.copyOfRange(templateBasesRC, totalBasesToRemove, templateBasesRC.length);
-
-
-                    final byte[] umi1 = Arrays.copyOfRange(templateBases, gapBeforeUMI, gapBeforeUMI + umiLength);
-                    final byte[] umi2 = Arrays.copyOfRange(templateBasesRC, gapBeforeUMI, gapBeforeUMI + umiLength);
-
-                    final String umi1String = StringUtil.bytesToString(umi1);
-                    final String umi2String = StringUtil.bytesToString(umi2);
-
-                    SequenceUtil.reverseComplement(umi1);
-                    SequenceUtil.reverseComplement(umi2);
-
-                    final byte[] templateBasesWithUMI = ArrayUtils.addAll(templateBasesClipped, umi1);
-                    final byte[] templateBasesRCWithUMI = ArrayUtils.addAll(templateBasesRCClipped, umi2);
-
-                    final List<ReadDescriptor> readDescriptors = new ArrayList<>();
-                    if (gapBeforeUMI > 0) {
-                        readDescriptors.add(new ReadDescriptor(gapBeforeUMI, ReadType.Skip));
-                    }
-                    if (umiLength > 0) {
-                        readDescriptors.add(new ReadDescriptor(umiLength, ReadType.MolecularIndex));
-                    }
-                    if (gapAfterUMI > 0) {
-                        readDescriptors.add(new ReadDescriptor(gapAfterUMI, ReadType.Skip));
-                    }
-                    readDescriptors.add(new ReadDescriptor(110 - totalBasesToRemove, ReadType.Template));
-
-                    final ReadStructure readStructure = new ReadStructure(readDescriptors);
-
-                    ret.add(new Object[] {"120M", "120M", buildReadBases(templateBases, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterBytesInReadOrder(), 120, false),
-                            buildReadBases(templateBasesRC, IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterBytesInReadOrder(), 120, true),
-                            false, true, 100, 90 - totalBasesToRemove, illuminaAdapters, (110 - totalBasesToRemove) + "M" + (10 + totalBasesToRemove) + "H", (10 + totalBasesToRemove) + "H" + (110 - totalBasesToRemove) + "M", 100, 100,
-                            umi1String + "-" + umi2String, readStructure});
-
-                }
-            }
-        }
-
-        return ret.toArray(new Object[][]{});
-    }
-
-    private byte[] buildReadBases(final byte[] templateBasesReadOrder, final byte[] adapterBasesReadOrder, final int readLength, final boolean negativeStrand) {
-        final byte[] bases = ArrayUtils.addAll(templateBasesReadOrder, adapterBasesReadOrder);
-        final byte[] readBases = Arrays.copyOf(bases, readLength);
-        if (negativeStrand) {
-            SequenceUtil.reverseComplement(readBases);
-        }
-        return readBases;
-    }
-
-    @Test (dataProvider = "hardClippingDataProvider")
-    public void testOverlappedReadHardClipping(final String originalCigar1, final String originalCigar2, final byte[] read1Bases, final byte[] read2Bases, final boolean strand1, final boolean strand2,
-                                               final int start1, final int start2, final List<AdapterPair> adapters, final String expectedCigar1, final String expectedCigar2, final int expectedStart1, final int expectedStart2,
-                                               final String umiTag, final ReadStructure readStructure) {
-        final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
-        final List<SAMRecord> recs = set.addPair("q1", 0, start1, start2, false, false, originalCigar1, originalCigar2, strand1, strand2, 30);
-        final SAMRecord r1 = recs.get(0);
-        final SAMRecord r2 = recs.get(1);
-
-        r1.setReadBases(read1Bases);
-        r2.setReadBases(read2Bases);
-
-        if (umiTag != null) {
-            r1.setAttribute(SAMTag.RX.toString(), umiTag);
-            r2.setAttribute(SAMTag.RX.toString(), umiTag);
-        }
-
-        AbstractAlignmentMerger.clipForOverlappingReads(r1, r2, CigarOperator.HARD_CLIP, readStructure, readStructure, adapters);
-        Assert.assertEquals(r1.getAlignmentStart(), expectedStart1);
-        Assert.assertEquals(r1.getCigarString(), expectedCigar1);
-
-        Assert.assertEquals(r2.getAlignmentStart(), expectedStart2);
-        Assert.assertEquals(r2.getCigarString(), expectedCigar2);
-    }
-
-    @DataProvider(name = "getReadPosToClipFromDataProvider")
-    public Object[][] getReadPosToClipFromData() {
         return new Object[][] {
-                {"120M", false, 450, 502, 53},
-                {"120M", true, 450, 502, 68},
-                {"120M", false, 450, 580, -1},
-                {"120M", false, 450, 440, -1},
-                {"120M", true, 450, 580, -1},
-                {"120M", true, 450, 440, -1},
+                {110, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M", CigarOperator.SOFT_CLIP,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overlapping reads
 
-                {"100M3I100M", false, 300, 425, 129},
-                {"100M3I100M", true, 300, 425, 75},
+                {110, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M", CigarOperator.HARD_CLIP,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
-                {"100M3D100M", false, 300, 425, 123},
-                {"100M3D100M", true, 300, 425, 78},
+                {110, 100, 90, "110M", "110M", false, true, 100, 100, "100M10S", "10S100M", CigarOperator.SOFT_CLIP,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Basic overlapped read
 
-                {"100M16S", false, 300, 410, 111},
-                {"100M16S", true, 300, 400, 16},
-                {"16S100M", false, 316, 410, 111},
-                {"16S100M", true, 316, 310, 106},
+                {110, 100, 90, "110M", "110M", false, true, 100, 100, "100M10H", "10H100M", CigarOperator.HARD_CLIP,
+                        default110LongR1Bases, default110LongR2Bases, sharedBases, sharedBases, default110LongR1ClippedBases, default110LongR2ClippedBases,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities10, r2ClippedQualities10},
 
-                {"100M16H", false, 300, 410, -1},
-                {"100M16H", true, 300, 410, -1},
-                {"100M16H", true, 300, 390, 26},
-                {"16H100M", false, 316, 310, -1},
-                {"16H100M", true, 316, 310, -1},
-                {"16H100M", true, 316, 350, 66}
+                {120, 100, 95, "110M10S5H", "5H15S105M", false, true, 100, 100, "100M20S5H", "5H20S100M", CigarOperator.SOFT_CLIP,
+                        default120LongR1Bases, default120LongR2Bases, default120LongR1Bases, default120LongR2Bases, null, null,
+                        default120LongR1BaseQualities, default120LongR2BaseQualities, default120LongR1BaseQualities, default120LongR2BaseQualities, null, null}, // Already hard and soft clipped
+
+                {120, 100, 95, "110M10S5H", "5H15S105M", false, true, 100, 100, "100M25H", "25H100M", CigarOperator.HARD_CLIP,
+                        default120LongR1Bases, default120LongR2Bases, sharedBases, sharedBases, default120LongR1ClippedBases, default120LongR2ClippedBases,
+                        default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20},
+
+                {120, 100, 95, "110M10S", "15S105M", false, true, 100, 100, "100M20S", "20S100M", CigarOperator.SOFT_CLIP,
+                        default120LongR1Bases, default120LongR2Bases, default120LongR1Bases, default120LongR2Bases, null, null,
+                        default120LongR1BaseQualities, default120LongR2BaseQualities, default120LongR1BaseQualities, default120LongR2BaseQualities, null, null}, // Already soft clipped
+
+                {120, 100, 95, "110M10S", "15S105M", false, true, 100, 100, "100M20H", "20H100M", CigarOperator.HARD_CLIP,
+                        default120LongR1Bases, default120LongR2Bases, sharedBases, sharedBases, default120LongR1ClippedBases, default120LongR2ClippedBases,
+                        default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20}
+
         };
     }
 
-    @Test(dataProvider = "getReadPosToClipFromDataProvider")
-    public void testGetReadPositionToClipFrom(final String cigarString, final boolean negativeStrand, final int start, final int refPosToClipFrom, final int expectedReadPosToCLipFrom) {
-        final SAMFileHeader header = new SAMFileHeader();
-        final SAMRecord rec = new SAMRecord(header);
-        rec.setCigarString(cigarString);
-        rec.setReadNegativeStrandFlag(negativeStrand);
-        rec.setAlignmentStart(start);
+    @Test(dataProvider = "overlapReadData")
+    public void testOverlappedReadClipping(final int readLength, final int start1, final int start2, final String cigar1, final String cigar2,
+                                           final boolean strand1, final boolean strand2,
+                                           final int r1ExpectedAlignmentStart, final int r2ExpectedAlignmentStart,
+                                           final String expectedR1Cigar, final String expectedR2Cigar, final CigarOperator clippingOperator,
+                                           final String read1Bases, final String read2Bases, final String expectedR1Bases, final String expectedR2Bases,
+                                           final String expectedR1ClippedBases, final String expectedR2ClippedBases, final String read1Qualities,
+                                           final String read2Qualities, final String expectedR1Qualities, final String expectedR2Qualities,
+                                           final String expectedR1ClippedQualities, final String expectedR2ClippedQualities) {
 
-        final int readPositionToClipFrom = AbstractAlignmentMerger.getReadPositionToClipFrom(rec, refPosToClipFrom);
-        Assert.assertEquals(readPositionToClipFrom, expectedReadPosToCLipFrom);
-    }
-
-    @DataProvider(name = "basesToClipDataProvider")
-    public Object[][] getBasesToClipDataProvider() {
-        final List<Object[]> ret = new ArrayList<>();
-        final List<AdapterPair> illuminaAdapters = Arrays.asList(IlluminaUtil.IlluminaAdapterPair.values());
-        final byte[] templateBases = StringUtil.stringToBytes("ACTGCATGCTAGCTTAGGACAGATACGATAGCTAGACAGACATAATTTAGCGGATGACATTCGGACAGATCGGACGAGCTAGACAGACTGAGACAGCTAGCAGATCGAGG");
-        final byte[] templateBasesRC = Arrays.copyOf(templateBases, templateBases.length);
-        SequenceUtil.reverseComplement(templateBasesRC);
-
-        final String threePrimeAdapterBases = "GTCGATTACAG";
-        final String fivePrimeAdapterBases = "GACGGATCAGAC";
-
-
-        final byte[] q30Quals = new byte[120];
-        Arrays.fill(q30Quals, (byte)30);
-
-        final CustomAdapterPair adapterPair = new CustomAdapterPair(fivePrimeAdapterBases, threePrimeAdapterBases);
-        ret.add(new Object[] {buildReadBases(templateBases, adapterPair.get3PrimeAdapterBytesInReadOrder(), 120, false), q30Quals, adapterPair, true});
-
-
-        final String threePrimeAdapterBasesOneError = "GTGGATTACAG";
-        final String threePrimeAdapterBasesTwoError = "GTGGCTTACAG";
-        final String threePrimeAdapterBasesThreeError = "GTGGCATACAG";
-
-        ret.add(new Object[] {buildReadBases(templateBases, StringUtil.stringToBytes(threePrimeAdapterBasesOneError), 120, false), q30Quals, adapterPair, true}); //one error still matches
-        ret.add(new Object[] {buildReadBases(templateBases, StringUtil.stringToBytes(threePrimeAdapterBasesTwoError), 120, false), q30Quals, adapterPair, true}); //two errors still matches
-        ret.add(new Object[] {buildReadBases(templateBases, StringUtil.stringToBytes(threePrimeAdapterBasesThreeError), 120, false), q30Quals, adapterPair, false}); //three errors in first six bases fails
-
-        final byte[] q30TemplateQuals = new byte[110];
-        Arrays.fill(q30Quals, (byte)30);
-        final byte[] lowQErrorAdapterQuals = new byte[]{30, 30, 6, 30, 6, 6, 30, 30, 30, 30};
-        final byte[] lowQErrorQuals = ArrayUtils.addAll(q30TemplateQuals, lowQErrorAdapterQuals);
-        ret.add(new Object[] {buildReadBases(templateBases, StringUtil.stringToBytes(threePrimeAdapterBasesThreeError), 120, false), lowQErrorQuals, adapterPair, true}); //mismatches at low quality bases still match
-
-
-        return ret.toArray(new Object[][]{});
-    }
-
-    @Test(dataProvider = "basesToClipDataProvider")
-    public void testBasesToClipMatchAdapterPair(final byte[] bases, final byte[] quals, final AdapterPair adapterPair, final boolean expectToMatch) {
-        final SAMFileHeader header = new SAMFileHeader();
-        final SAMRecord rec = new SAMRecord(header);
-        rec.setReadPairedFlag(true);
-        rec.setFirstOfPairFlag(true);
-        rec.setReadBases(bases);
-        rec.setBaseQualities(quals);
-
-        final boolean basesMatch = AbstractAlignmentMerger.basesToClipMatchAdapterPair(rec, 110, adapterPair, null);
-        Assert.assertEquals(basesMatch, expectToMatch);
-
-    }
-
-    @Test public void testOverlappedReadClippingWithExistingSoftClipping() {
         final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
-        set.setReadLength(120);
-        final List<SAMRecord> recs = set.addPair("q1", 0, 100, 95, false, false, "110M10S", "15S105M", false, true, 30);
+        set.setReadLength(readLength);
+        final List<SAMRecord> recs = set.addPair("q1", 0, start1, start2, false, false, cigar1, cigar2, strand1, strand2, 30);
         final SAMRecord r1 = recs.get(0);
         final SAMRecord r2 = recs.get(1);
-        AbstractAlignmentMerger.clipForOverlappingReads(r1, r2);
-        Assert.assertEquals(r1.getAlignmentStart(), 100);
-        Assert.assertEquals(r1.getCigarString(), "100M20S");
-        Assert.assertEquals(r2.getAlignmentStart(), 100);
-        Assert.assertEquals(r2.getCigarString(), "20S100M");
+
+        r1.setReadBases(StringUtil.stringToBytes(read1Bases));
+        r2.setReadBases(StringUtil.stringToBytes(read2Bases));
+
+        r1.setBaseQualities(SAMUtils.fastqToPhred(read1Qualities));
+        r2.setBaseQualities(SAMUtils.fastqToPhred(read2Qualities));
+
+        AbstractAlignmentMerger.clipForOverlappingReads(r1, r2, clippingOperator);
+        Assert.assertEquals(r1.getAlignmentStart(), r1ExpectedAlignmentStart);
+        Assert.assertEquals(r1.getCigarString(), expectedR1Cigar);
+        Assert.assertEquals(r2.getAlignmentStart(), r2ExpectedAlignmentStart);
+        Assert.assertEquals(r2.getCigarString(), expectedR2Cigar);
+        Assert.assertEquals(r1.getReadString(), expectedR1Bases);
+        Assert.assertEquals(r2.getReadString(), expectedR2Bases);
+        Assert.assertEquals(SAMUtils.phredToFastq(r1.getBaseQualities()), expectedR1Qualities);
+        Assert.assertEquals(SAMUtils.phredToFastq(r2.getBaseQualities()), expectedR2Qualities);
+
+        Assert.assertEquals(r1.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG), expectedR1ClippedBases);
+        Assert.assertEquals(r2.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG), expectedR2ClippedBases);
+
+        Assert.assertEquals(r1.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR1ClippedQualities);
+        Assert.assertEquals(r2.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR2ClippedQualities);
+
+
+        // Swap first and second read to ensure logic is correct for both F1R2 and F2R1
+        final SAMRecordSetBuilder setSwapped = new SAMRecordSetBuilder();
+        setSwapped.setReadLength(readLength);
+        final List<SAMRecord> recsSwapped = set.addPair("q1", 0, start2, start1, false, false, cigar2, cigar1, strand2, strand1, 30);
+        final SAMRecord r1Swapped = recsSwapped.get(0);
+        final SAMRecord r2Swapped = recsSwapped.get(1);
+
+        r1Swapped.setReadBases(StringUtil.stringToBytes(read2Bases));
+        r2Swapped.setReadBases(StringUtil.stringToBytes(read1Bases));
+
+        r1Swapped.setBaseQualities(SAMUtils.fastqToPhred(read2Qualities));
+        r2Swapped.setBaseQualities(SAMUtils.fastqToPhred(read1Qualities));
+
+        AbstractAlignmentMerger.clipForOverlappingReads(r1Swapped, r2Swapped, clippingOperator);
+        Assert.assertEquals(r1Swapped.getAlignmentStart(), r2ExpectedAlignmentStart);
+        Assert.assertEquals(r1Swapped.getCigarString(), expectedR2Cigar);
+        Assert.assertEquals(r2Swapped.getAlignmentStart(), r1ExpectedAlignmentStart);
+        Assert.assertEquals(r2Swapped.getCigarString(), expectedR1Cigar);
+        Assert.assertEquals(r1Swapped.getReadString(), expectedR2Bases);
+        Assert.assertEquals(r2Swapped.getReadString(), expectedR1Bases);
+        Assert.assertEquals(SAMUtils.phredToFastq(r1Swapped.getBaseQualities()), expectedR2Qualities);
+        Assert.assertEquals(SAMUtils.phredToFastq(r2Swapped.getBaseQualities()), expectedR1Qualities);
+
+        Assert.assertEquals(r1Swapped.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG), expectedR2ClippedBases);
+        Assert.assertEquals(r2Swapped.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG), expectedR1ClippedBases);
+
+        Assert.assertEquals(r1Swapped.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR2ClippedQualities);
+        Assert.assertEquals(r2Swapped.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR1ClippedQualities);
+
     }
 
-    @Test public void testOverlappedReadClippingWithExistingSoftClippingAndHardClipping() {
-        final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
-        set.setReadLength(120);
-        final List<SAMRecord> recs = set.addPair("q1", 0, 100, 95, false, false, "110M10S5H", "5H15S105M", false, true, 30);
-        final SAMRecord r1 = recs.get(0);
-        final SAMRecord r2 = recs.get(1);
-        AbstractAlignmentMerger.clipForOverlappingReads(r1, r2);
-        Assert.assertEquals(r1.getAlignmentStart(), 100);
-        Assert.assertEquals(r1.getCigarString(), "100M20S5H");
-        Assert.assertEquals(r2.getAlignmentStart(), 100);
-        Assert.assertEquals(r2.getCigarString(), "5H20S100M");
-    }
+
 
 
     @Test
