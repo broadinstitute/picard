@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-
 public class CheckFingerprintTest extends CommandLineProgramTest {
 
     private final File tempFolder = new File(TEST_DATA_DIR + "/tempCheckFPDir/");
@@ -156,7 +155,8 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         final String sample = "NA12892";
         final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
 
-        final Fingerprint fpContaminant = checker.identifyContaminant(mixture.toPath(), contamAmount, 100).get(sample);
+        checker.setLocusMaxReads(100);
+        final Fingerprint fpContaminant = checker.identifyContaminant(mixture.toPath(), contamAmount).get(sample);
         Assert.assertNotNull(fpContaminant);
 
         final Fingerprint fpContamination = checker.fingerprintFiles(Collections.singleton(contaminant.toPath()), 1, 1, TimeUnit.DAYS)
