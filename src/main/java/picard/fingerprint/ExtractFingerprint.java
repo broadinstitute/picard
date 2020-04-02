@@ -87,7 +87,7 @@ public class ExtractFingerprint extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
         IOUtil.assertFileIsWritable(OUTPUT);
-        IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
+        IOUtil.assertFileIsReadable(referenceSequence.getReferenceFile());
 
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
 
@@ -113,7 +113,7 @@ public class ExtractFingerprint extends CommandLineProgram {
         final String sampleToUse = getSampleToUse(soleEntry.getKey());
 
         try {
-            FingerprintUtils.writeFingerPrint(soleEntry.getValue(), OUTPUT, REFERENCE_SEQUENCE, sampleToUse, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION);
+            FingerprintUtils.writeFingerPrint(soleEntry.getValue(), OUTPUT, referenceSequence.getReferenceFile(), sampleToUse, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION);
         } catch (Exception e) {
             log.error(e);
         }
