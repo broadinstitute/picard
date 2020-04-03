@@ -231,10 +231,10 @@ public class ReadBaseStratification {
      *
      * @param <T>             the type of the left Stratifier
      * @param <S>             the type of the right Stratifier
-     * @param leftStratifier  a {@link RecordAndOffsetStratifier<T>} to use
-     * @param rightStratifier a {@link RecordAndOffsetStratifier<S>} to use
+     * @param leftStratifier  a {@link RecordAndOffsetStratifier} to use
+     * @param rightStratifier a {@link RecordAndOffsetStratifier} to use
      * @param suffix          the suffix to use for the new stratifier
-     * @return an instance of {@link  PairStratifier>} that will stratify according to both <code>leftStratifier</code>
+     * @return an instance of {@link  PairStratifier} that will stratify according to both <code>leftStratifier</code>
      * and <code>rightStratifier</code>
      */
     public static <T extends Comparable<T>, S extends Comparable<S>> PairStratifier<T, S> PairStratifierFactory(

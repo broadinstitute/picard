@@ -25,9 +25,8 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.util.QualityUtil;
+import htsjdk.utils.ValidationUtils;
 import picard.util.MathUtil;
-
-import static java.lang.Math.log10;
 
 /**
  * Represents the probability of the underlying haplotype of the contaminating sample given the data.
@@ -42,23 +41,35 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
 
     // for each model (contGenotype, mainGenotype) there's a likelihood of the data. These need to be collected separately
     // and only collated once all the data is in.
-    double[][] likelihoodMap = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
+    private final double[][] likelihoodMap = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
+    private boolean valuesNeedUpdating = true;
 
     public HaplotypeProbabilitiesFromContaminatorSequence(final HaplotypeBlock haplotypeBlock, final double contamination) {
         super(haplotypeBlock);
 
-        assert (contamination <= 1.0);
-        assert (contamination >= 0.0);
+        ValidationUtils.validateArg(contamination <= 1.0, () -> "contamination must be <=1, found " + contamination);
+        ValidationUtils.validateArg(contamination >= 0.0, () -> "contamination must be >=0, found " + contamination);
 
         this.contamination = contamination;
     }
 
-    /**
-     * Adds a base observation with the observed quality to the evidence for this haplotype
-     * based on the fact that the SNP is part of the haplotype.
-     */
+    public HaplotypeProbabilitiesFromContaminatorSequence(HaplotypeProbabilitiesFromContaminatorSequence other) {
+        super(other);
+
+        contamination = other.contamination;
+        for (final Genotype g : Genotype.values()) {
+            System.arraycopy(other.likelihoodMap[g.v], 0, likelihoodMap[g.v], 0, NUM_GENOTYPES);
+        }
+    }
+
+
+        /**
+         * Adds a base observation with the observed quality to the evidence for this haplotype
+         * based on the fact that the SNP is part of the haplotype.
+         */
     public void addToProbs(final Snp snp, final byte base, final byte qual) {
         assertSnpPartOfHaplotype(snp);
+        valuesNeedUpdating = true;
 
         // Skip bases that don't match either expected allele for this SNP
         final boolean altAllele;
@@ -82,24 +93,33 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
             for (final Genotype mainGeno : Genotype.values()) {
                 //theta is the expected frequency of the alternate allele
                 final double theta = 0.5 * ((1 - contamination) * mainGeno.v + contamination * contGeno.v);
-                likelihoodMap[contGeno.v][mainGeno.v] *= (( altAllele ? theta : (1 - theta)) * (1 - pErr) +
-                                                          (!altAllele ? theta : (1 - theta)) * pErr);
+                likelihoodMap[contGeno.v][mainGeno.v] *= ((altAllele ? theta : (1 - theta)) * (1 - pErr) +
+                        (!altAllele ? theta : (1 - theta)) * pErr);
             }
         }
     }
 
     //a function needed to update the logLikelihoods from the likelihoodMap.
     private void updateLikelihoods() {
-        final double[] ll = new double[Genotype.values().length];
+        if (!valuesNeedUpdating) {
+            return;
+        }
+        final double[] ll = new double[NUM_GENOTYPES];
         for (final Genotype contGeno : Genotype.values()) {
             // p(a | g_c) = \sum_g_m { P(g_m) \prod_i P(a_i| g_m, g_c)}
-            ll[contGeno.v] = log10(MathUtil.sum(MathUtil.multiply(this.getPriorProbablities(), likelihoodMap[contGeno.v])));
+            ll[contGeno.v] = Math.log10(MathUtil.sum(MathUtil.multiply(this.getPriorProbablities(), likelihoodMap[contGeno.v])));
         }
         setLogLikelihoods(ll);
+        valuesNeedUpdating = false;
     }
 
     @Override
-    public void merge(final HaplotypeProbabilities other) {
+    public HaplotypeProbabilitiesFromContaminatorSequence deepCopy() {
+        return new HaplotypeProbabilitiesFromContaminatorSequence(this);
+    }
+
+    @Override
+    public HaplotypeProbabilitiesFromContaminatorSequence merge(final HaplotypeProbabilities other) {
         super.merge(other);
 
         if (!this.getHaplotype().equals(other.getHaplotype())) {
@@ -119,11 +139,18 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
         for (final Genotype contGeno : Genotype.values()) {
             this.likelihoodMap[contGeno.v] = MathUtil.multiply(this.likelihoodMap[contGeno.v], o.likelihoodMap[contGeno.v]);
         }
+        valuesNeedUpdating = true;
+        return this;
+    }
+
+    @Override
+    public double[] getLikelihoods() {
+        updateLikelihoods();
+        return super.getLikelihoods();
     }
 
     @Override
     public double[] getLogLikelihoods() {
-        updateLikelihoods();
         return super.getLogLikelihoods();
     }
 }

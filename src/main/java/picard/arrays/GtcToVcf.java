@@ -154,16 +154,6 @@ public class GtcToVcf extends CommandLineProgram {
 
     static final List<Allele> NO_CALL_ALLELES = Collections.unmodifiableList(Arrays.asList(Allele.NO_CALL, Allele.NO_CALL));
 
-    // This file gets initialized during customCommandLineValidation.
-    // It is a static member so we don't have to parse the file twice.
-    private static InfiniumGTCFile infiniumGTCFile;
-
-    private static InfiniumEGTFile infiniumEGTFile;
-
-    private static String gtcGender = null;
-
-    private static Sex fingerprintGender;
-
     private static ReferenceSequenceFile refSeq;
 
     private static final DecimalFormat df = new DecimalFormat();
@@ -182,27 +172,36 @@ public class GtcToVcf extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        final Build37ExtendedIlluminaManifest manifest = setupAndGetManifest();
+        final InfiniumNormalizationManifest infiniumNormalizationManifest = new InfiniumNormalizationManifest(ILLUMINA_NORMALIZATION_MANIFEST);
 
-        final VCFHeader vcfHeader = createVCFHeader(manifest, infiniumGTCFile, gtcGender, CLUSTER_FILE,
-                REFERENCE_SEQUENCE, refSeq.getSequenceDictionary());
+        Sex fingerprintSex = getFingerprintSex(FINGERPRINT_GENOTYPES_VCF_FILE);
+        String gtcGender = getGenderFromGtcFile(GENDER_GTC, infiniumNormalizationManifest);
+        try (InfiniumGTCFile infiniumGTCFile = new InfiniumGTCFile(new DataInputStream(new FileInputStream(INPUT)), infiniumNormalizationManifest);
+             InfiniumEGTFile infiniumEGTFile = new InfiniumEGTFile(CLUSTER_FILE)) {
+            final Build37ExtendedIlluminaManifest manifest = setupAndGetManifest(infiniumGTCFile);
 
-        // Setup a collection that will sort contexts properly
-        // Necessary because input GTC file is not sorted
-        final SortingCollection<VariantContext> contexts =
-                SortingCollection.newInstance(
-                        VariantContext.class,
-                        new VCFRecordCodec(vcfHeader),
-                        new VariantContextComparator(refSeq.getSequenceDictionary()),
-                        MAX_RECORDS_IN_RAM,
-                        TMP_DIR.stream().map(File::toPath).toArray(Path[]::new));
+            final VCFHeader vcfHeader = createVCFHeader(manifest, infiniumGTCFile, gtcGender, fingerprintSex, CLUSTER_FILE,
+                    REFERENCE_SEQUENCE, refSeq.getSequenceDictionary());
 
-        // fill the sorting collection
-        fillContexts(contexts, infiniumGTCFile, manifest, infiniumEGTFile);
+            // Setup a collection that will sort contexts properly
+            // Necessary because input GTC file is not sorted
+            final SortingCollection<VariantContext> contexts =
+                    SortingCollection.newInstance(
+                            VariantContext.class,
+                            new VCFRecordCodec(vcfHeader),
+                            new VariantContextComparator(refSeq.getSequenceDictionary()),
+                            MAX_RECORDS_IN_RAM,
+                            TMP_DIR.stream().map(File::toPath).toArray(Path[]::new));
 
-        writeVcf(contexts, OUTPUT, refSeq.getSequenceDictionary(), vcfHeader);
+            // fill the sorting collection
+            fillContexts(contexts, infiniumGTCFile, manifest, infiniumEGTFile);
 
-        return 0;
+            writeVcf(contexts, OUTPUT, refSeq.getSequenceDictionary(), vcfHeader);
+
+            return 0;
+        } catch (IOException e) {
+            throw new PicardException("Error processing GTC File: " + INPUT.getAbsolutePath(), e);
+        }
     }
 
     @Override
@@ -228,20 +227,10 @@ public class GtcToVcf extends CommandLineProgram {
         return super.customCommandLineValidation();
     }
 
-    private Build37ExtendedIlluminaManifest setupAndGetManifest() {
-        fingerprintGender = getFingerprintSex(FINGERPRINT_GENOTYPES_VCF_FILE);
-        final InfiniumNormalizationManifest infiniumNormalizationManifest = new InfiniumNormalizationManifest(ILLUMINA_NORMALIZATION_MANIFEST);
-        try (final DataInputStream gtcInputStream = new DataInputStream(new FileInputStream(INPUT))) {
+    private Build37ExtendedIlluminaManifest setupAndGetManifest(InfiniumGTCFile infiniumGTCFile) {
 
-            infiniumEGTFile = new InfiniumEGTFile(CLUSTER_FILE);
-            infiniumGTCFile = new InfiniumGTCFile(gtcInputStream, infiniumNormalizationManifest);
+        try {
             final Build37ExtendedIlluminaManifest manifest = new Build37ExtendedIlluminaManifest(EXTENDED_ILLUMINA_MANIFEST);
-
-            if (GENDER_GTC != null) {
-                try (DataInputStream genderGtcStream = new DataInputStream(new FileInputStream(GENDER_GTC))) {
-                    gtcGender = new InfiniumGTCFile(genderGtcStream, infiniumNormalizationManifest).getGender();
-                }
-            }
 
             final String gtcManifestName = FilenameUtils.removeExtension(infiniumGTCFile.getSnpManifest());
             final String illuminaManifestName = FilenameUtils.removeExtension(manifest.getDescriptorFileName());
@@ -272,6 +261,18 @@ public class GtcToVcf extends CommandLineProgram {
             }
         }
         return Sex.Unknown;
+    }
+
+    private String getGenderFromGtcFile(final File gtcFile, final InfiniumNormalizationManifest infiniumNormalizationManifest) {
+        String gtcGender = null;
+        if (gtcFile != null) {
+            try (InfiniumGTCFile infiniumGTCGenderFile = new InfiniumGTCFile(new DataInputStream(new FileInputStream(gtcFile)), infiniumNormalizationManifest)) {
+                gtcGender = infiniumGTCGenderFile.getGender();
+            } catch (IOException e) {
+                throw new PicardException("Error processing GTC File: " + gtcFile.getAbsolutePath(), e);
+            }
+        }
+        return gtcGender;
     }
 
     private void fillContexts(final SortingCollection<VariantContext> contexts, final InfiniumGTCFile gtcFile,
@@ -514,6 +515,7 @@ public class GtcToVcf extends CommandLineProgram {
     private VCFHeader createVCFHeader(final Build37ExtendedIlluminaManifest manifest,
                                       final InfiniumGTCFile gtcFile,
                                       final String gtcGender,
+                                      final Sex fingerprintGender,
                                       final File clusterFile,
                                       final File reference,
                                       final SAMSequenceDictionary dict) {

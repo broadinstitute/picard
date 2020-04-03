@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 
@@ -161,8 +160,7 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         Assert.assertNotNull(fpContaminant);
 
         final Fingerprint fpContamination = checker.fingerprintFiles(Collections.singleton(contaminant.toPath()), 1, 1, TimeUnit.DAYS)
-                .entrySet().stream()
-                .map(Map.Entry::getValue)
+                .values().stream()
                 .reduce((a, b) -> {
                     a.merge(b);
                     return a;
@@ -171,8 +169,7 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         Assert.assertNotNull(fpContamination);
 
         final Fingerprint fpContaminated = checker.fingerprintFiles(Collections.singleton(contaminated.toPath()), 1, 1, TimeUnit.DAYS)
-                .entrySet().stream()
-                .map(Map.Entry::getValue)
+                .values().stream()
                 .reduce((a, b) -> {
                     a.merge(b);
                     return a;
@@ -214,7 +211,6 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     @Test(dataProvider = "samsToFingerprint")
     void testCheckFingerprintSam(final File file, final File genotypes, final int expectedRetVal) throws IOException {
         tester(false, file, genotypes, expectedRetVal);
-
     }
 
     @Test(dataProvider = "vcfsToFingerprint")

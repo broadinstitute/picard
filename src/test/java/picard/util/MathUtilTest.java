@@ -4,6 +4,11 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
 import static picard.util.MathUtil.divide;
 
 /**
@@ -84,6 +89,16 @@ public class MathUtilTest {
         }
     }
 
+    @Test
+    public void testRandomSublist() {
+        final Random random = new Random();
+        final List<Integer> list = Arrays.asList(1,2,3);
+
+        Assert.assertEquals(list, MathUtil.randomSublist(list, 3, random));
+        Assert.assertEquals(list, MathUtil.randomSublist(list, 4, random));
+        Assert.assertEquals(MathUtil.randomSublist(list, 2, random).size(), 2);
+    }
+
     @Test(dataProvider = "divideDoubleTestCases")
     public void testDivideDouble(final double numerator, final double denominator, final double expected) {
         Assert.assertEquals(MathUtil.divide(numerator, denominator), expected);
@@ -95,5 +110,58 @@ public class MathUtilTest {
                 new Object[]{15.0, 3.0, 5.0},
                 new Object[]{15.0, 0.0, 0.0}
         };
+    }
+
+    @DataProvider
+    public Object[][] getProbabilityFromLogTestData() {
+        return new Object[][]{
+                new Object[]{
+                        new double[]{}, new double[]{}
+                },
+                new Object[]{
+                        new double[]{.001, .01, .1, 1, 10, 100, 1000, 10000D}, new double[]{-3, -2, -1, 0, 1, 2, 3, 4}
+                },
+                new Object[]{
+                        new double[]{1D}, new double[]{0D}
+                },
+                new Object[]{
+                        new double[]{.1234D, .2345D, .3456D}, new double[]{Math.log10(.1234D), Math.log10(.2345D), Math.log10(.3456D)}
+                },
+
+        };
+    }
+
+    @Test(dataProvider = "getProbabilityFromLogTestData")
+    public void getProbabilityFromLogTest(final double[] input, final double[] expected) {
+        TestNGUtil.assertEqualDoubleArrays(MathUtil.getLogFromProbability(input), expected, 1e-8);
+    }
+
+    @DataProvider
+    public Object[][] pNormalizeLogProbabilityTestData() {
+        return new Object[][]{
+                new Object[]{
+                        new double[]{}, new double[]{}
+                },
+                new Object[]{
+                        new double[]{0D}, new double[]{1D}
+                },
+                new Object[]{
+                        new double[]{0D, 0D}, new double[]{0.5, 0.5}
+                },
+                new Object[]{
+                        new double[]{0, -1, -2}, new double[]{1 / 1.11, .1 / 1.11, 0.01 / 1.11}
+                },
+                new Object[]{
+                        new double[]{1000D, 1000D}, new double[]{0.5, 0.5}
+                },
+                new Object[]{
+                        new double[]{1002D, 1001D, 1000D},  new double[]{1 / 1.11, .1 / 1.11, 0.01 / 1.11}
+                },
+        };
+    }
+
+    @Test(dataProvider = "pNormalizeLogProbabilityTestData")
+    public void pNormalizeLogProbabilityTest(final double[] input, final double[] expected) {
+        TestNGUtil.assertEqualDoubleArrays(MathUtil.pNormalizeLogProbability(input), expected, 1e-8);
     }
 }

@@ -70,9 +70,9 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         final SAMRecord r2 = recs.get(1);
         AbstractAlignmentMerger.clipForOverlappingReads(r1, r2);
         Assert.assertEquals(r1.getAlignmentStart(), 100);
-        Assert.assertEquals(r1.getCigarString(), "100M20S"); // Should ideally be 100M20S5H
+        Assert.assertEquals(r1.getCigarString(), "100M20S5H");
         Assert.assertEquals(r2.getAlignmentStart(), 100);
-        Assert.assertEquals(r2.getCigarString(), "20S100M"); // Should ideally be 5H20S100M
+        Assert.assertEquals(r2.getCigarString(), "5H20S100M");
     }
 
 
