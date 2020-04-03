@@ -15,11 +15,12 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.QualityUtil;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
@@ -41,6 +42,45 @@ public class CollectSamErrorMetricsTest {
     public void setup() {
         ReadBaseStratification.setLongHomopolymer(6);
     }
+
+    @BeforeTest()
+    public void samMetricsProvider() {
+        final File[] files = new File[]{
+                simpleSamWithBaseErrors1,
+                simpleSamWithBaseErrors2,
+                simpleSingleStrandConsensusSamWithBaseErrors,
+                simpleDuplexConsensusSamWithBaseErrors,
+                chrMReadsWithClips};
+
+        if (OUTPUT_DATA_PATH != null) {
+            throw new PicardException("This should only be called once!");
+        }
+
+        OUTPUT_DATA_PATH = IOUtil.createTempDir("CollectSamErrorMetricsTest", null);
+
+        for (final File file : files) {
+            final File vcf = new File(TEST_DIR, "NIST.selected.vcf");
+
+            final File outputBaseFileName = new File(OUTPUT_DATA_PATH, file.getName());
+            outputBaseFileName.deleteOnExit();
+
+            final String[] args = {
+                    "INPUT=" + file,
+                    "OUTPUT=" + outputBaseFileName,
+                    "REFERENCE_SEQUENCE=" + CHR_M_REFERENCE.getAbsolutePath(),
+                    "ERROR_METRICS=" + "ERROR:TWO_BASE_PADDED_CONTEXT", // Not all covariates are included by default, but we still want to test them.
+                    "ERROR_METRICS=" + "ERROR:CONSENSUS",
+                    "ERROR_METRICS=" + "ERROR:NS_IN_READ",
+                    "ERROR_METRICS=" + "ERROR:BINNED_CYCLE",
+                    "VCF=" + vcf.getAbsolutePath()
+            };
+
+            Assert.assertEquals(new CollectSamErrorMetrics().instanceMain(args), 0);
+
+            errorMetrics.put(file, outputBaseFileName);
+        }
+    }
+
 
     @DataProvider
     public Object[][] parseDirectiveData() {
@@ -95,12 +135,11 @@ public class CollectSamErrorMetricsTest {
     @Test(dataProvider = "parseDirectiveData")
     public void parseDirectiveGood(final String directive, final String extension) {
         parseDirective0(directive, extension);
-
     }
 
     @Test
     void testStratifiersHaveDistinctSuffixes() {
-        Set<String> suffixes = new HashSet<>();
+        final Set<String> suffixes = new HashSet<>();
 
         for (final ReadBaseStratification.Stratifier stratifier : ReadBaseStratification.Stratifier.values()) {
             Assert.assertTrue(suffixes.add(stratifier.makeStratifier().getSuffix()), "found duplicate suffix: " +
@@ -110,7 +149,7 @@ public class CollectSamErrorMetricsTest {
 
     @Test
     void testAggregatorsHaveDistinctSuffixes() {
-        Set<String> suffixes = new HashSet<>();
+        final Set<String> suffixes = new HashSet<>();
 
         for (final ErrorType error : ErrorType.values()) {
             final String suffix = error.getErrorSupplier().get().getSuffix();
@@ -140,47 +179,14 @@ public class CollectSamErrorMetricsTest {
         }
     }
 
-    private final Map<File, File> errorMetrics = new HashMap<>();
+    private static final Map<File, File> errorMetrics = new HashMap<>();
 
-    private final File simpleSamWithBaseErrors1 = new File(TEST_DIR, "simpleSamWithBaseErrors1.sam");
-    private final File simpleSamWithBaseErrors2 = new File(TEST_DIR, "simpleSamWithBaseErrors2.sam");
-    private final File simpleSingleStrandConsensusSamWithBaseErrors = new File(TEST_DIR, "simpleSingleStrandConsensusSamWithBaseErrors.sam");
-    private final File simpleDuplexConsensusSamWithBaseErrors = new File(TEST_DIR, "simpleDuplexConsensusSamWithBaseErrors.sam");
-    private final File chrMReadsWithClips = new File(TEST_DIR, "chrMReadsWithClips.sam");
+    private static final File simpleSamWithBaseErrors1 = new File(TEST_DIR, "simpleSamWithBaseErrors1.sam");
+    private static final File simpleSamWithBaseErrors2 = new File(TEST_DIR, "simpleSamWithBaseErrors2.sam");
+    private static final File simpleSingleStrandConsensusSamWithBaseErrors = new File(TEST_DIR, "simpleSingleStrandConsensusSamWithBaseErrors.sam");
+    private static final File simpleDuplexConsensusSamWithBaseErrors = new File(TEST_DIR, "simpleDuplexConsensusSamWithBaseErrors.sam");
+    private static final File chrMReadsWithClips = new File(TEST_DIR, "chrMReadsWithClips.sam");
 
-    @BeforeTest()
-    public void samMetricsProvider() {
-        final File[] files = new File[]{
-                simpleSamWithBaseErrors1,
-                simpleSamWithBaseErrors2,
-                simpleSingleStrandConsensusSamWithBaseErrors,
-                simpleDuplexConsensusSamWithBaseErrors,
-                chrMReadsWithClips};
-
-        OUTPUT_DATA_PATH = IOUtil.createTempDir("CollectSamErrorMetricsTest", null);
-
-        for (final File file : files) {
-            final File vcf = new File(TEST_DIR, "NIST.selected.vcf");
-
-            final File outputBaseFileName = new File(OUTPUT_DATA_PATH, file.getName());
-            outputBaseFileName.deleteOnExit();
-
-            final String[] args = {
-                    "INPUT=" + file,
-                    "OUTPUT=" + outputBaseFileName,
-                    "REFERENCE_SEQUENCE=" + CHR_M_REFERENCE.getAbsolutePath(),
-                    "ERROR_METRICS=" + "ERROR:TWO_BASE_PADDED_CONTEXT", // Not all covariates are included by default, but we still want to test them.
-                    "ERROR_METRICS=" + "ERROR:CONSENSUS",
-                    "ERROR_METRICS=" + "ERROR:NS_IN_READ",
-                    "ERROR_METRICS=" + "ERROR:BINNED_CYCLE",
-                    "VCF=" + vcf.getAbsolutePath()
-            };
-
-            Assert.assertEquals(new CollectSamErrorMetrics().instanceMain(args), 0);
-
-            errorMetrics.put(file, outputBaseFileName);
-        }
-    }
 
     @DataProvider
     public Object[][] OneCovariateErrorMetricsDataProvider() {
@@ -325,7 +331,7 @@ public class CollectSamErrorMetricsTest {
 
     @DataProvider()
     public Object[][] oneCovariateIndelErrorMetricsDataProvider() {
-                final int priorQ = 30;
+        final int priorQ = 30;
 
         //These magic numbers come from a separate implementation of the code in R.
         return new Object[][]{
@@ -450,6 +456,7 @@ public class CollectSamErrorMetricsTest {
     public void testOneCovariateIndelErrorMetrics(final String errorSubscript, final File samFile, final int priorQ, BaseErrorMetric expectedMetric) {
 
         final File errorByAll = new File(errorMetrics.get(samFile).getAbsolutePath() + errorSubscript);
+        errorByAll.deleteOnExit();
 
         ErrorMetric.setPriorError(QualityUtil.getErrorProbabilityFromPhredScore(priorQ));
         expectedMetric.calculateDerivedFields();
@@ -466,7 +473,7 @@ public class CollectSamErrorMetricsTest {
         Assert.assertEquals(metric, expectedMetric);
     }
 
-    @AfterClass()
+    @AfterTest()
     public void cleanup() {
         IOUtil.deleteDirectoryTree(OUTPUT_DATA_PATH);
     }
