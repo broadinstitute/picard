@@ -99,7 +99,7 @@ public class LiftoverUtils {
         // If any of the source alleles is symbolic, do not populate the END tag (protecting things like <NON_REF> from
         // getting screwed up in reverse-complemented variants
         if (source.hasAttribute(VCFConstants.END_KEY) && builder.getAlleles().stream().noneMatch(Allele::isSymbolic)) {
-            builder.attribute(VCFConstants.END_KEY, (int)builder.getStop());
+            builder.attribute(VCFConstants.END_KEY, (int) builder.getStop());
         } else {
             builder.rmAttribute(VCFConstants.END_KEY);
         }
@@ -184,14 +184,16 @@ public class LiftoverUtils {
         return vcb;
     }
 
-    private static boolean isIndelForLiftover(final VariantContext vc){
+    private static boolean isIndelForLiftover(final VariantContext vc) {
         final Allele ref = vc.getReference();
         if (ref.length() != 1) {
             return true;
         }
 
-       return vc.getAlleles().stream().filter(a -> !a.isSymbolic()).filter(a -> !a.equals(Allele.SPAN_DEL)).
-               anyMatch(a -> a.length() != 1);
+        return vc.getAlleles().stream()
+                .filter(a -> !a.isSymbolic())
+                .filter(a -> !a.equals(Allele.SPAN_DEL))
+                .anyMatch(a -> a.length() != 1);
     }
 
     private static List<Allele> reverseComplementAlleles(final List<Allele> originalAlleles) {
@@ -360,7 +362,7 @@ public class LiftoverUtils {
         // Put each allele into the alleleBasesMap unless it is a spanning deletion.
         // Spanning deletions are dealt with as a special case later in fixedAlleleMap.
         alleles.stream()
-                .filter(a->!a.equals(Allele.SPAN_DEL)&&!a.isSymbolic())
+                .filter(a -> !a.equals(Allele.SPAN_DEL) && !a.isSymbolic())
                 .forEach(a -> alleleBasesMap.put(a, a.getBases()));
 
         int theStart = start;
@@ -409,7 +411,7 @@ public class LiftoverUtils {
                 alleleBasesMap.values().stream()
                         .collect(Collectors.groupingBy(a -> a[0], Collectors.toSet()))
                         .size() == 1
-                ) {
+        ) {
 
             //9. truncate the leftmost base of the alleles
             alleleBasesMap.replaceAll((a, v) -> truncateBase(alleleBasesMap.get(a), false));
