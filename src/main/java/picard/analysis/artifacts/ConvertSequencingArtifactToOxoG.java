@@ -37,13 +37,17 @@ public class ConvertSequencingArtifactToOxoG extends CommandLineProgram {
             "CollectOxoGMetrics if we already ran CollectSequencingArtifactsMetrics in our pipeline. See the documentation for " +
             "<a href='http://broadinstitute.github.io/picard/command-line-overview.html#CollectSequencingArtifactsMetrics'>CollectSequencingArtifactsMetrics</a> " +
             "and <a href='http://broadinstitute.github.io/picard/command-line-overview.html#CollectOxoGMetrics'>CollectOxoGMetrics</a> " +
-            "for additional information on these tools.</p>." +
+            "for additional information on these tools. " +
 
             "<p>Note that only the base of the CollectSequencingArtifactsMetrics output file name is required for the (INPUT_BASE) " +
             "parameter. For example, if the file name is artifact_metrics.txt.bait_bias_detail_metrics or " +
             "artifact_metrics.txt.pre_adapter_detail_metrics, only the file name base 'artifact_metrics' is " +
             "required on the command line for this parameter.  An output file called 'artifact_metrics.oxog_metrics' will be generated " +
-            "automatically.  Finally, to run this tool successfully, the REFERENCE_SEQUENCE must be provided.</p>" +
+            "automatically.  Finally, to run this tool successfully, the REFERENCE_SEQUENCE must be provided." +
+            "<p>This command also lets you specify the detail metrics files by name, if files are not in the usual location " +
+            "or have different names. For example, the arguments PRE_ADAPTER_IN and BAIT_BIAS_IN specify the file location of the  " +
+            "pre adapter detail metrics and the bait bias detail metrics respectively. If these arguments are provided then the " +
+            "value of INPUT_BASE is ignored. " +
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar ConvertSequencingArtifactToOxoG \\<br />" +
@@ -76,7 +80,7 @@ public class ConvertSequencingArtifactToOxoG extends CommandLineProgram {
             optional = true)
     public File OUTPUT_BASE;
 
-    @Argument(doc = "File for the output OxoG metrics. Defaults to same basename as input metrics",
+    @Argument(doc = "File for the output OxoG metrics. Defaults to a filename based on the output basename",
             optional = true)
     public File OXOG_OUT;
 
