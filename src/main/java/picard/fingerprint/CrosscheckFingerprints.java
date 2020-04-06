@@ -459,6 +459,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
 
         log.info("Fingerprinting " + unrolledFiles.size() + " INPUT files.");
+
+        checker.setmaximalPLDifference(Integer.MAX_VALUE);
         final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
 
         if (INPUT_SAMPLE_MAP != null) {
