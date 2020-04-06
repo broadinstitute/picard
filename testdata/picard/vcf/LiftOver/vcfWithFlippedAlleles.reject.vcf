@@ -10,5 +10,5 @@
 ##INFO=<ID=AttemptedLocus,Number=1,Type=String,Description="The locus of the variant in the TARGET prior to failing due to mismatching alleles.">
 ##INFO=<ID=AttemptedAlleles,Number=1,Type=String,Description="The locus of the variant in the TARGET prior to failing due to mismatching alleles.">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample1
-chr1	61	.	GT	G	724.43	MismatchedRefAllele	AttemptedLocus=chr1:61-62;AttemptedAlleles=GT*->G	GT	0/1
-chr1	73	chr1_73_G_T	G	T	100	MismatchedRefAllele	AttemptedLocus=chr1:73-73;AttemptedAlleles=G*->T	GT:AD:PL	0/0:10,11:50,0,60
+chr1	61	chr1_61_TC_T	TC	T	724.43	MismatchedRefAllele	AttemptedLocus=chr1:61-62;AttemptedAlleles=TC*->T	GT	0/1
+chr1	73	chr1_73_T_G	T	G	100	MismatchedRefAllele	AttemptedLocus=chr1:73-73;AttemptedAlleles=T*->G	GT:AD:PL	0/0:10,11:50,0,60
