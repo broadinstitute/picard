@@ -773,14 +773,12 @@ public abstract class AbstractAlignmentMerger {
                         final int clipped = lengthOfSoftClipping(elems.iterator());
                         final int clipFrom = pos.getReadLength() - posDiff - clipped + 1;
                         CigarUtil.softClip3PrimeEndOfRead(pos, Math.min(pos.getReadLength(), clipFrom));
-                        removeNmMdAndUqTags(pos); // these tags are now invalid!
                     }
 
                     if (negDiff > 0) {
                         final int clipped = lengthOfSoftClipping(neg.getCigar().getCigarElements().iterator());
                         final int clipFrom = neg.getReadLength() - negDiff - clipped + 1;
                         CigarUtil.softClip3PrimeEndOfRead(neg, Math.min(neg.getReadLength(), clipFrom));
-                        removeNmMdAndUqTags(neg); // these tags are now invalid!
                     }
                 }
             }
@@ -925,7 +923,6 @@ public abstract class AbstractAlignmentMerger {
         // If the adapter sequence is marked and clipAdapter is true, clip it
         if (this.clipAdapters && rec.getAttribute(ReservedTagConstants.XT) != null) {
             CigarUtil.softClip3PrimeEndOfRead(rec, rec.getIntegerAttribute(ReservedTagConstants.XT));
-            removeNmMdAndUqTags(rec); // these tags are now invalid!
         }
     }
 
@@ -988,16 +985,5 @@ public abstract class AbstractAlignmentMerger {
 
     public void close() {
         CloserUtil.close(this.refSeq);
-    }
-
-
-    /** Removes the NM, MD, and UQ tags.  This is useful if we modify the read and are not able to recompute these tags,
-     * for example when no reference is available.
-     * @param rec the record to modify.
-     */
-    private static void removeNmMdAndUqTags(final SAMRecord rec) {
-        rec.setAttribute(SAMTag.NM.name(), null);
-        rec.setAttribute(SAMTag.MD.name(), null);
-        rec.setAttribute(SAMTag.UQ.name(), null);
     }
 }

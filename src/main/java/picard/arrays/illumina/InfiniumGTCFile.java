@@ -39,7 +39,7 @@ import java.io.IOException;
  * This class will parse the binary GTC file format and allow access to the genotype, scores, basecalls and raw
  * intensities.
  */
-public class InfiniumGTCFile extends InfiniumDataFile {
+public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
 
     private static final int NUM_SNPS = 1;
     private static final int PLOIDY = 2;
@@ -156,6 +156,11 @@ public class InfiniumGTCFile extends InfiniumDataFile {
         this.normalizationManifest = normalizationManifest;
         parse();
         normalizeAndCalculateStatistics();
+    }
+
+    @Override
+    public void close() throws IOException {
+        stream.close();
     }
 
     InfiniumGTCFile(final DataInputStream gtcStream) throws IOException {
@@ -661,6 +666,46 @@ public class InfiniumGTCFile extends InfiniumDataFile {
 
     public int getAbCalls() {
         return abCalls;
+    }
+
+    public int[] getRawXIntensities() {
+        return rawXIntensities;
+    }
+
+    public int[] getRawYIntensities() {
+        return rawYIntensities;
+    }
+
+    public float[] getNormalizedXIntensities() {
+        return normalizedXIntensities;
+    }
+
+    public float[] getNormalizedYIntensities() {
+        return normalizedYIntensities;
+    }
+
+    public float[] getbAlleleFreqs() {
+        return bAlleleFreqs;
+    }
+
+    public float[] getLogRRatios() {
+        return logRRatios;
+    }
+
+    public float[] getRIlmn() {
+        return RIlmn;
+    }
+
+    public float[] getThetaIlmn() {
+        return thetaIlmn;
+    }
+
+    public byte[] getGenotypeBytes() {
+        return genotypeBytes;
+    }
+
+    public float[] getGenotypeScores() {
+        return genotypeScores;
     }
 
     /**

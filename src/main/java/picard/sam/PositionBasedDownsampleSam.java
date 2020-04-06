@@ -33,7 +33,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
-import picard.sam.markduplicates.util.OpticalDuplicateFinder;
+import picard.sam.markduplicates.MarkDuplicates;
 import picard.sam.util.PhysicalLocationInt;
 import picard.sam.util.ReadNameParser;
 

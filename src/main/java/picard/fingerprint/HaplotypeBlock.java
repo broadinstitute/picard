@@ -154,14 +154,19 @@ public class HaplotypeBlock implements Comparable<HaplotypeBlock> {
         return retval;
     }
 
-    @Override public boolean equals(final Object o) {
+    @Override
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         else return this.compareTo((HaplotypeBlock) o) == 0;
     }
 
-    @Override public int hashCode() {
-        return this.start;
+    @Override
+    public int hashCode() {
+        int result = chrom.hashCode();
+        result = 31 * result + start;
+        result = 31 * result + end;
+        return result;
     }
 
     @Override public String toString() {
