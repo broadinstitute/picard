@@ -63,7 +63,7 @@ public class ConvertSequencingArtifactToOxoG extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "Basename of the input artifact metrics file (output by CollectSequencingArtifactMetrics). If this is not " +
-                    " specified, you must specifcy PRE_ADAPTER_IN and BAIT_BIAS_IN",
+                    " specified, you must specify PRE_ADAPTER_IN and BAIT_BIAS_IN",
             optional = true)
     public File INPUT_BASE;
 
@@ -86,7 +86,7 @@ public class ConvertSequencingArtifactToOxoG extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        List<String> errors = new ArrayList<>();
+        final List<String> errors = new ArrayList<>();
         if (OUTPUT_BASE == null) {
             OUTPUT_BASE = INPUT_BASE;
         }
