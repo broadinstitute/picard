@@ -1,16 +1,19 @@
 package picard.sam;
 
+import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.io.IOException;
 
 public class ValidateSamFileTest extends CommandLineProgramTest {
 
     private static final String TEST_DATA_DIR = "testdata/picard/sam/ValidateSamFile/";
-    private static final String INDEX_DATA_DIR = "testdata/picard/indices/";
+    private static final File INDEX_DATA_DIR = new File("testdata/picard/indices/");
+    private static final File INDEX_INPUT_FILE = new File(INDEX_DATA_DIR, "index_test.sam");
 
     @Override
     public String getCommandLineProgramName() {
@@ -33,9 +36,8 @@ public class ValidateSamFileTest extends CommandLineProgramTest {
     @DataProvider
     public Object[][] indexFiles() {
         return new Object[][] {
-                {"index_test0.bam", ValidateSamFile.ReturnTypes.SUCCESSFUL.value()}, // BAM file with no index attached
-                {"index_test1.bam", ValidateSamFile.ReturnTypes.SUCCESSFUL.value()}, // BAM file with BAI index
-                {"index_test2.bam", ValidateSamFile.ReturnTypes.SUCCESSFUL.value()}  // BAM file with CSI index
+                {"index_test_b.bam", ValidateSamFile.ReturnTypes.SUCCESSFUL.value()}, // BAM file with BAI index
+                {"index_test_c.bam", ValidateSamFile.ReturnTypes.SUCCESSFUL.value()}  // BAM file with CSI index
         };
     }
 
@@ -46,8 +48,19 @@ public class ValidateSamFileTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "indexFiles")
-    public void testIndex(final String samFileName, final int exitStatus) {
-        final int validateExitStatus = runPicardCommandLine(new String[]{"I=" + new File(INDEX_DATA_DIR + samFileName).getAbsolutePath()});
+    public void testIndex(final String bamFileName, final int exitStatus) throws IOException {
+        File bamFile = new File(INDEX_DATA_DIR, bamFileName);
+        new SortSam().instanceMain(new String[]{
+                "I=" + INDEX_INPUT_FILE.getAbsolutePath(),
+                "O=" + bamFile.getAbsolutePath(),
+                "SORT_ORDER=coordinate"});
+
+        final int validateExitStatus = runPicardCommandLine(
+                new String[]{"I=" + bamFile.getAbsolutePath(),
+                        "IGNORE=MISSING_PLATFORM_VALUE",
+                        "IGNORE=MISMATCH_MATE_ALIGNMENT_START",
+                        "IGNORE=MISSING_TAG_NM"});
         Assert.assertEquals(validateExitStatus, exitStatus);
+        FileUtils.forceDeleteOnExit(bamFile);
     }
 }

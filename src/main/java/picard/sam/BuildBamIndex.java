@@ -33,6 +33,7 @@ import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -106,13 +107,13 @@ public class BuildBamIndex extends CommandLineProgram {
             }
 
             // only BAI indices can be created for now, although CSI indices can be read as well
-            if (baseFileName.endsWith(BamFileIoUtils.BAM_FILE_EXTENSION)) {
+            if (baseFileName.endsWith(FileExtensions.BAM)) {
 
                 final int index = baseFileName.lastIndexOf('.');
-                OUTPUT = new File(baseFileName.substring(0, index) + BAMIndex.BAMIndexSuffix);
+                OUTPUT = new File(baseFileName.substring(0, index) + FileExtensions.BAI_INDEX);
 
             } else {
-                OUTPUT = new File(baseFileName + BAMIndex.BAMIndexSuffix);
+                OUTPUT = new File(baseFileName + FileExtensions.BAI_INDEX);
             }
         }
 
