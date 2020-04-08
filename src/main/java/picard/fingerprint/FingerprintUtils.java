@@ -25,18 +25,33 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.StringUtil;
-import htsjdk.variant.variantcontext.*;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.*;
+import htsjdk.variant.vcf.VCFConstants;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
+import htsjdk.variant.vcf.VCFStandardHeaderLines;
+import org.apache.commons.lang.ArrayUtils;
+import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -137,15 +152,38 @@ public class FingerprintUtils {
                 snp.getPos(),
                 snp.getPos()).getBases()[0]);
 
-        final Allele allele1 = Allele.create(snp.getAllele1(), snp.getAllele1() == refAllele);
-        final Allele allele2 = Allele.create(snp.getAllele2(), snp.getAllele2() == refAllele);
-        final List<Allele> alleles = Arrays.asList(allele1, allele2);
+        if (snp.getAllele1() != refAllele && snp.getAllele2() != refAllele){
+            throw new PicardException("Don't know how to deal with missing reference allele in fingerprinting map");
+        }
+
+        final Allele alleleRef;
+        final Allele alleleAlt;
+        final int obsRef, obsAlt;
+        final boolean swap12 = snp.getAllele2() == refAllele;
+
+        if (swap12) {
+            alleleRef = Allele.create(snp.getAllele2(), true);
+            alleleAlt = Allele.create(snp.getAllele1(), false);
+            obsRef = haplotypeProbabilities.getObsAllele2();
+            obsAlt = haplotypeProbabilities.getObsAllele1();
+        } else {
+            alleleRef = Allele.create(snp.getAllele1(), true);
+            alleleAlt = Allele.create(snp.getAllele2(), false);
+            obsRef = haplotypeProbabilities.getObsAllele1();
+            obsAlt = haplotypeProbabilities.getObsAllele2();
+        }
+
+        final double[] PLs =  Arrays.copyOf(haplotypeProbabilities.getLogLikelihoods(),HaplotypeProbabilities.NUM_GENOTYPES);
+        if (swap12) {
+            ArrayUtils.reverse(PLs);
+        }
+        final List<Allele> alleles = Arrays.asList(alleleRef, alleleAlt);
 
         final Genotype gt = new GenotypeBuilder()
                 .DP(haplotypeProbabilities.getTotalObs())
                 .noAttributes()
-                .PL(haplotypeProbabilities.getLogLikelihoods())
-                .AD(new int[]{haplotypeProbabilities.getObsAllele1(), haplotypeProbabilities.getObsAllele2()})
+                .PL(PLs)
+                .AD(new int[]{obsAlt, obsRef})
                 .name(sample)
                 .make();
         try {

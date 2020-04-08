@@ -62,11 +62,10 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
         }
     }
 
-
-        /**
-         * Adds a base observation with the observed quality to the evidence for this haplotype
-         * based on the fact that the SNP is part of the haplotype.
-         */
+    /**
+     * Adds a base observation with the observed quality to the evidence for this haplotype
+     * based on the fact that the SNP is part of the haplotype.
+     */
     public void addToProbs(final Snp snp, final byte base, final byte qual) {
         assertSnpPartOfHaplotype(snp);
         valuesNeedUpdating = true;
@@ -104,13 +103,13 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
         if (!valuesNeedUpdating) {
             return;
         }
+        valuesNeedUpdating = false;
         final double[] ll = new double[NUM_GENOTYPES];
         for (final Genotype contGeno : Genotype.values()) {
             // p(a | g_c) = \sum_g_m { P(g_m) \prod_i P(a_i| g_m, g_c)}
             ll[contGeno.v] = Math.log10(MathUtil.sum(MathUtil.multiply(this.getPriorProbablities(), likelihoodMap[contGeno.v])));
         }
         setLogLikelihoods(ll);
-        valuesNeedUpdating = false;
     }
 
     @Override
@@ -151,6 +150,7 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
 
     @Override
     public double[] getLogLikelihoods() {
+        updateLikelihoods();
         return super.getLogLikelihoods();
     }
 }

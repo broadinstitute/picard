@@ -158,10 +158,15 @@ public class FingerprintChecker {
         this.genotypingErrorRate = genotypingErrorRate;
     }
 
+    @Deprecated //non-compliant method name.
+    public void setmaximalPLDifference(final int maximalPLDifference) {
+        setMaximalPLDifference(maximalPLDifference);
+    }
+
     /**
      * Sets the maximal difference in PL scores considered when reading PLs from a VCF.
      */
-    public void setmaximalPLDifference(final int maximalPLDifference) {
+    public void setMaximalPLDifference(final int maximalPLDifference) {
         this.maximalPLDifference = maximalPLDifference;
     }
 
@@ -468,11 +473,16 @@ public class FingerprintChecker {
         }
     };
 
+    @Deprecated // no need to provide the loci, since it should be available from the haplotypeBlocks
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final IntervalList loci) {
+        return fingerprintSamFile(samFile, HaplotypeProbabilitiesFromSequence::new);
+    }
+
     /**
      * Generates a Fingerprint per read group in the supplied SAM file using the loci provided in
      * the interval list.
      */
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final IntervalList loci, final Function<HaplotypeBlock, HaplotypeProbabilities> blockToProbMapper) {
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final Function<HaplotypeBlock, HaplotypeProbabilities> blockToProbMapper) {
 
         // the seekableChannelFunction adds a buffered stream wrapper around the index reading which
         // makes reading the index over NIO not hang indefinitely.
@@ -484,7 +494,7 @@ public class FingerprintChecker {
 
         checkDictionaryGoodForFingerprinting(in.getFileHeader().getSequenceDictionary());
 
-        final SamLocusIterator iterator = new SamLocusIterator(in, loci, in.hasIndex());
+        final SamLocusIterator iterator = new SamLocusIterator(in, this.haplotypes.getIntervalList(), in.hasIndex());
         iterator.setEmitUncoveredLoci(true);
         iterator.setMappingQualityScoreCutoff(this.minimumMappingQuality);
         iterator.setQualityScoreCutoff(this.minimumBaseQuality);
@@ -611,7 +621,7 @@ public class FingerprintChecker {
      */
     public Map<String, Fingerprint> identifyContaminant(final Path samFile, final double contamination) {
 
-        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap = this.fingerprintSamFile(samFile, haplotypes.getIntervalList(), (h) -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
+        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap = this.fingerprintSamFile(samFile, (h) -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
 
         final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintbySample = Fingerprint.mergeFingerprintsBy(fingerprintIdDetailsFingerprintMap,
                 Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
@@ -634,7 +644,6 @@ public class FingerprintChecker {
 
         final ExecutorService executor = new ThreadPoolExecutorWithExceptions(threads);
         final ExecutorCompletionService<Path> executorCompletionService = new ExecutorCompletionService<>(executor);
-        final IntervalList intervals = this.haplotypes.getIntervalList();
         final Map<FingerprintIdDetails, Fingerprint> retval = new ConcurrentHashMap<>(files.size());
 
         for (final Path p : files) {
@@ -642,8 +651,7 @@ public class FingerprintChecker {
 
                 final Map<FingerprintIdDetails, Fingerprint> oneFileFingerprints;
                 if (CheckFingerprint.fileContainsReads(p)) {
-
-                    oneFileFingerprints = fingerprintSamFile(p, intervals, HaplotypeProbabilitiesFromSequence::new);
+                    oneFileFingerprints = fingerprintSamFile(p, HaplotypeProbabilitiesFromSequence::new);
                 } else {
                     oneFileFingerprints = fingerprintVcf(p);
                 }
@@ -704,11 +712,10 @@ public class FingerprintChecker {
         }
 
         final List<FingerprintResults> resultsList = new ArrayList<>();
-        final IntervalList intervals = getLociToGenotype(expectedFingerprints);
 
         // Fingerprint the SAM files and calculate the results
         for (final Path p : samFiles) {
-            final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(p, intervals, HaplotypeProbabilitiesFromSequence::new);
+            final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(p, HaplotypeProbabilitiesFromSequence::new);
 
             if (ignoreReadGroups) {
                 final Fingerprint combinedFp = new Fingerprint(specificSample, p, null);
