@@ -135,7 +135,7 @@
       "options": []
     },
     {
-      "summary": "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will intersect inputs if multiple are given. ",
+      "summary": "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will *intersect* inputs if multiple are given. When this argument is supplied, the VCF provided must be *indexed*.",
       "name": "--INTERVALS",
       "synonyms": "-L",
       "type": "List[File]",

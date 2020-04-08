@@ -182,7 +182,7 @@
       "options": []
     },
     {
-      "summary": "Sequence dictionary to place in the output interval list. (This should be the dictionary of the target reference.)",
+      "summary": "Sequence dictionary to place in the output interval list. (This should be any file from which the dictionary of the target reference can be extracted.)",
       "name": "--SEQUENCE_DICTIONARY",
       "synonyms": "-SD",
       "type": "File",
