@@ -260,8 +260,8 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Argument(doc = "For paired reads, clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  Clipping will be either soft or hard clipping, depending on CLIP_OVERLAPPING_READS_OPERATOR setting.")
     public boolean CLIP_OVERLAPPING_READS = true;
 
-    @Argument(doc = "Type of clipping to used for overlapping reads.  If set to hard clip, hard clipping will only be performed if bases to be clipped match expected adapter sequences, otherwise bases will be soft clipped.")
-    public CigarOperator CLIP_OVERLAPPING_READS_OPERATOR = CigarOperator.SOFT_CLIP;
+    @Argument(doc = "If true, hard clipping will be applied to overlapping reads.  By default, soft clipping is used.")
+    public boolean HARD_CLIP_OVERLAPPING_READS = false;
 
     @Argument(doc = "If false, do not write secondary alignments to output.")
     public boolean INCLUDE_SECONDARY_ALIGNMENTS = true;
@@ -353,7 +353,7 @@ public class MergeBamAlignment extends CommandLineProgram {
                 PRIMARY_ALIGNMENT_STRATEGY.newInstance(), ADD_MATE_CIGAR, UNMAP_CONTAMINANT_READS,
                 MIN_UNCLIPPED_BASES, UNMAPPED_READ_STRATEGY, MATCHING_DICTIONARY_TAGS);
 
-        merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS, CLIP_OVERLAPPING_READS_OPERATOR);
+        merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS, HARD_CLIP_OVERLAPPING_READS);
         merger.setMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         merger.setKeepAlignerProperPairFlags(ALIGNER_PROPER_PAIR_FLAGS);
         merger.setIncludeSecondaryAlignments(INCLUDE_SECONDARY_ALIGNMENTS);

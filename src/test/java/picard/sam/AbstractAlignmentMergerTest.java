@@ -31,10 +31,10 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         final String sharedBases = "ATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACC";
 
         final String default120LongR1ClippedBases = "AGATTCTCCTGTCAGTTTGC";
-        final String default120LongR2ClippedBases = "CGTTGGCAATGCCGGGCACA";
+        final String default120LongR2ClippedBases = "TGTGCCCGGCATTGCCAACG";
 
         final String default110LongR1ClippedBases = "AGATTCTCCT";
-        final String default110LongR2ClippedBases = "GCCGGGCACA";
+        final String default110LongR2ClippedBases = "TGTGCCCGGC";
 
         final String default120LongR1BaseQualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.FFF.FFF.FFF";
         final String default120LongR2BaseQualities ="FFFFFF.FFFFF.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
@@ -43,10 +43,11 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
         final String sharedQualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
+        // The use of the reverse method here is so that it is easy to match by eye the base qualities above.
         final String r1ClippedQualities10 = "FF.FFF.FFF";
-        final String r2ClippedQualities10 = "FFFFFF.FFF";
+        final String r2ClippedQualities10 = new StringBuilder("FFFFFF.FFF").reverse().toString();
         final String r1ClippedQualities20 = "FFFFFFFF.FFF.FFF.FFF";
-        final String r2ClippedQualities20 = "FFFFFF.FFFFF.FFFFFFF";
+        final String r2ClippedQualities20 = new StringBuilder("FFFFFF.FFFFF.FFFFFFF").reverse().toString();
 
         return new Object[][] {
                 {110, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M", CigarOperator.SOFT_CLIP,
@@ -88,7 +89,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
     public void testOverlappedReadClipping(final int readLength, final int start1, final int start2, final String cigar1, final String cigar2,
                                            final boolean strand1, final boolean strand2,
                                            final int r1ExpectedAlignmentStart, final int r2ExpectedAlignmentStart,
-                                           final String expectedR1Cigar, final String expectedR2Cigar, final CigarOperator clippingOperator,
+                                           final String expectedR1Cigar, final String expectedR2Cigar, final boolean hardClipOverlappingReads,
                                            final String read1Bases, final String read2Bases, final String expectedR1Bases, final String expectedR2Bases,
                                            final String expectedR1ClippedBases, final String expectedR2ClippedBases, final String read1Qualities,
                                            final String read2Qualities, final String expectedR1Qualities, final String expectedR2Qualities,
@@ -106,7 +107,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         r1.setBaseQualities(SAMUtils.fastqToPhred(read1Qualities));
         r2.setBaseQualities(SAMUtils.fastqToPhred(read2Qualities));
 
-        AbstractAlignmentMerger.clipForOverlappingReads(r1, r2, clippingOperator);
+        AbstractAlignmentMerger.clipForOverlappingReads(r1, r2, hardClipOverlappingReads);
         Assert.assertEquals(r1.getAlignmentStart(), r1ExpectedAlignmentStart);
         Assert.assertEquals(r1.getCigarString(), expectedR1Cigar);
         Assert.assertEquals(r2.getAlignmentStart(), r2ExpectedAlignmentStart);
@@ -136,7 +137,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         r1Swapped.setBaseQualities(SAMUtils.fastqToPhred(read2Qualities));
         r2Swapped.setBaseQualities(SAMUtils.fastqToPhred(read1Qualities));
 
-        AbstractAlignmentMerger.clipForOverlappingReads(r1Swapped, r2Swapped, clippingOperator);
+        AbstractAlignmentMerger.clipForOverlappingReads(r1Swapped, r2Swapped, hardClipOverlappingReads);
         Assert.assertEquals(r1Swapped.getAlignmentStart(), r2ExpectedAlignmentStart);
         Assert.assertEquals(r1Swapped.getCigarString(), expectedR2Cigar);
         Assert.assertEquals(r2Swapped.getAlignmentStart(), r1ExpectedAlignmentStart);

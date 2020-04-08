@@ -60,8 +60,8 @@ public abstract class AbstractAlignmentMerger {
     public static final int MAX_RECORDS_IN_RAM = 500000;
 
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X', 'Y', 'Z'};
-    static final String HARD_CLIPPED_BASES_TAG = "XB";
-    static final String HARD_CLIPPED_BASE_QUALITIES_TAG = "XQ";
+    static final String HARD_CLIPPED_BASES_TAG = "hB";
+    static final String HARD_CLIPPED_BASE_QUALITIES_TAG = "hQ";
 
     private int crossSpeciesReads = 0;
 
@@ -87,7 +87,7 @@ public abstract class AbstractAlignmentMerger {
     private final SortOrder sortOrder;
     private MultiHitAlignedReadIterator alignedIterator = null;
     private boolean clipOverlappingReads = true;
-    private CigarOperator clipOverlappingReadsOperator = CigarOperator.SOFT_CLIP;
+    private boolean hardClipOverlappingReads = false;
     private int maxRecordsInRam = MAX_RECORDS_IN_RAM;
     private final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy;
     private boolean keepAlignerProperPairFlags = false;
@@ -746,7 +746,7 @@ public abstract class AbstractAlignmentMerger {
             transferAlignmentInfoToFragment(secondUnaligned, secondAligned, isContaminant, needsSafeReverseComplement);
         }
         if (isClipOverlappingReads()) {
-            clipForOverlappingReads(firstUnaligned, secondUnaligned, clipOverlappingReadsOperator);
+            clipForOverlappingReads(firstUnaligned, secondUnaligned, hardClipOverlappingReads);
         }
         SamPairUtil.setMateInfo(secondUnaligned, firstUnaligned, addMateCigar);
         if (!keepAlignerProperPairFlags) {
@@ -758,12 +758,8 @@ public abstract class AbstractAlignmentMerger {
      * Checks to see whether the ends of the reads overlap and clips reads
      * if necessary.
      */
-    protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2, final CigarOperator clippingOperator) {
-        // If both reads are mapped, see if we need to clip the ends due to small
-        // insert size
-        if (!clippingOperator.isClipping()) {
-            throw new PicardException("Cannot use non-clipping operator " + clippingOperator + " to clip overlapping reads");
-        }
+    protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2, final boolean useHardClipping) {
+        // If both reads are mapped, see if we need to clip the ends due to small insert size
         if (!(read1.getReadUnmappedFlag() || read2.getReadUnmappedFlag())) {
             if (read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag()) {
                 final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
@@ -772,15 +768,22 @@ public abstract class AbstractAlignmentMerger {
                 // Innies only -- do we need to do anything else about jumping libraries?
                 if (pos.getAlignmentStart() < neg.getAlignmentEnd()) {
 
-                    //need to consider unclipped positions because often the read through bases have already been soft-clipped
-                    final int posClipFrom = getReadPositionToClipFrom(pos, neg.getUnclippedEnd() + 1);
-                    final int negClipFrom = getReadPositionToClipFrom(neg, pos.getUnclippedStart() - 1);
+                    // Need to consider unclipped positions because often the read through bases have already been soft-clipped
+
+                    final int posClipFrom = getDistanceFrom3PrimeEndToClipFrom(pos, neg.getUnclippedEnd() + 1);
+                    final int negClipFrom = getDistanceFrom3PrimeEndToClipFrom(neg, pos.getUnclippedStart() - 1);
                     if (posClipFrom == negClipFrom && posClipFrom > 0) {
                         final int clipFrom = posClipFrom;
 
-                        if (clippingOperator == CigarOperator.HARD_CLIP) {
+                        final CigarOperator clippingOperator;
+
+                        // If we are using hard clipping, store the hard clipped bases and their associated qualities in tag
+                        if (useHardClipping) {
                             moveClippedBasesToTag(read1, clipFrom);
                             moveClippedBasesToTag(read2, clipFrom);
+                            clippingOperator = CigarOperator.HARD_CLIP;
+                        } else {
+                            clippingOperator = CigarOperator.SOFT_CLIP;
                         }
 
                         CigarUtil.clip3PrimeEndOfRead(read1, clipFrom, clippingOperator);
@@ -798,16 +801,17 @@ public abstract class AbstractAlignmentMerger {
         final int readLength = rec.getReadLength();
 
         if(rec.getReadNegativeStrandFlag()) {
-            rec.setAttribute(HARD_CLIPPED_BASES_TAG, StringUtil.bytesToString(Arrays.copyOf(bases, bases.length - clipFrom + 1)));
-            rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, SAMUtils.phredToFastq(Arrays.copyOf(baseQualities, baseQualities.length - clipFrom + 1)));
+            // Ensures that bases are reverse complemented and base qualities are reversed
+            rec.setAttribute(HARD_CLIPPED_BASES_TAG, SequenceUtil.reverseComplement(StringUtil.bytesToString(Arrays.copyOf(bases, bases.length - clipFrom + 1))));
+            rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, new StringBuilder(SAMUtils.phredToFastq(Arrays.copyOf(baseQualities, baseQualities.length - clipFrom + 1))).reverse().toString());
         } else {
             rec.setAttribute(HARD_CLIPPED_BASES_TAG, StringUtil.bytesToString(Arrays.copyOfRange(bases, clipFrom - 1, readLength)));
             rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, SAMUtils.phredToFastq(Arrays.copyOfRange(baseQualities,clipFrom - 1, readLength)));
         }
     }
 
-    protected static int getReadPositionToClipFrom(final SAMRecord rec, final int refPosToClipFrom) {
-
+    protected static int getDistanceFrom3PrimeEndToClipFrom(final SAMRecord rec, final int refPosToClipFrom) {
+        //int t = SAMRecord.getReadPositionAtReferencePosition(rec, refPosToClipFrom, false);
         if (refPosToClipFrom > rec.getUnclippedEnd() || refPosToClipFrom < rec.getUnclippedStart()) {
             //read doesn't cover position
             return -1;
@@ -853,7 +857,7 @@ public abstract class AbstractAlignmentMerger {
     }
 
     protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2) {
-        clipForOverlappingReads(read1, read2, CigarOperator.SOFT_CLIP);
+        clipForOverlappingReads(read1, read2, false);
     }
 
     /**
@@ -1019,13 +1023,9 @@ public abstract class AbstractAlignmentMerger {
         return clipOverlappingReads;
     }
 
-    public void setClipOverlappingReads(final boolean clipOverlappingReads, final CigarOperator clipOverlappingReadsOperator) {
+    public void setClipOverlappingReads(final boolean clipOverlappingReads, final boolean hardClipOverlappingReads) {
         this.clipOverlappingReads = clipOverlappingReads;
-        if (clipOverlappingReads && !clipOverlappingReadsOperator.isClipping()) {
-            throw new IllegalArgumentException("clippingOverlappingReadsOperator " + clipOverlappingReadsOperator + " is not a clipping operator.");
-        }
-
-        this.clipOverlappingReadsOperator = clipOverlappingReadsOperator;
+        this.hardClipOverlappingReads = clipOverlappingReads;
     }
 
     public boolean isKeepAlignerProperPairFlags() {
