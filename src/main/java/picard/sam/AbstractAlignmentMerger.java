@@ -771,7 +771,9 @@ public abstract class AbstractAlignmentMerger {
                     // Need to consider unclipped positions because often the read through bases have already been soft-clipped
 
                     final int posClipFrom = getDistanceFrom3PrimeEndToClipFrom(pos, neg.getUnclippedEnd() + 1);
+                    final int posClipFrom2 = SAMRecord.getReadPositionAtReferencePosition(pos, neg.getUnclippedEnd() + 1, false);
                     final int negClipFrom = getDistanceFrom3PrimeEndToClipFrom(neg, pos.getUnclippedStart() - 1);
+                    final int negClipFrom2 = neg.getReadLength() - SAMRecord.getReadPositionAtReferencePosition(neg, pos.getUnclippedStart() - 1, false) + 1;
                     if (posClipFrom == negClipFrom && posClipFrom > 0) {
                         final int clipFrom = posClipFrom;
 
@@ -811,7 +813,7 @@ public abstract class AbstractAlignmentMerger {
     }
 
     protected static int getDistanceFrom3PrimeEndToClipFrom(final SAMRecord rec, final int refPosToClipFrom) {
-        //int t = SAMRecord.getReadPositionAtReferencePosition(rec, refPosToClipFrom, false);
+
         if (refPosToClipFrom > rec.getUnclippedEnd() || refPosToClipFrom < rec.getUnclippedStart()) {
             //read doesn't cover position
             return -1;

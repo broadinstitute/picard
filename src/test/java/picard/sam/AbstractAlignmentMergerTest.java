@@ -50,35 +50,35 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         final String r2ClippedQualities20 = new StringBuilder("FFFFFF.FFFFF.FFFFFFF").reverse().toString();
 
         return new Object[][] {
-                {110, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M", CigarOperator.SOFT_CLIP,
+                {110, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M", false,
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overlapping reads
 
-                {110, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M", CigarOperator.HARD_CLIP,
+                {110, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M", true,
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
-                {110, 100, 90, "110M", "110M", false, true, 100, 100, "100M10S", "10S100M", CigarOperator.SOFT_CLIP,
+                {110, 100, 90, "110M", "110M", false, true, 100, 100, "100M10S", "10S100M", false,
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Basic overlapped read
 
-                {110, 100, 90, "110M", "110M", false, true, 100, 100, "100M10H", "10H100M", CigarOperator.HARD_CLIP,
+                {110, 100, 90, "110M", "110M", false, true, 100, 100, "100M10H", "10H100M", true,
                         default110LongR1Bases, default110LongR2Bases, sharedBases, sharedBases, default110LongR1ClippedBases, default110LongR2ClippedBases,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities10, r2ClippedQualities10},
 
-                {120, 100, 95, "110M10S5H", "5H15S105M", false, true, 100, 100, "100M20S5H", "5H20S100M", CigarOperator.SOFT_CLIP,
+                {120, 100, 95, "110M10S5H", "5H15S105M", false, true, 100, 100, "100M20S5H", "5H20S100M", false,
                         default120LongR1Bases, default120LongR2Bases, default120LongR1Bases, default120LongR2Bases, null, null,
                         default120LongR1BaseQualities, default120LongR2BaseQualities, default120LongR1BaseQualities, default120LongR2BaseQualities, null, null}, // Already hard and soft clipped
 
-                {120, 100, 95, "110M10S5H", "5H15S105M", false, true, 100, 100, "100M25H", "25H100M", CigarOperator.HARD_CLIP,
+                {120, 100, 95, "110M10S5H", "5H15S105M", false, true, 100, 100, "100M25H", "25H100M", true,
                         default120LongR1Bases, default120LongR2Bases, sharedBases, sharedBases, default120LongR1ClippedBases, default120LongR2ClippedBases,
                         default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20},
 
-                {120, 100, 95, "110M10S", "15S105M", false, true, 100, 100, "100M20S", "20S100M", CigarOperator.SOFT_CLIP,
+                {120, 100, 95, "110M10S", "15S105M", false, true, 100, 100, "100M20S", "20S100M", false,
                         default120LongR1Bases, default120LongR2Bases, default120LongR1Bases, default120LongR2Bases, null, null,
                         default120LongR1BaseQualities, default120LongR2BaseQualities, default120LongR1BaseQualities, default120LongR2BaseQualities, null, null}, // Already soft clipped
 
-                {120, 100, 95, "110M10S", "15S105M", false, true, 100, 100, "100M20H", "20H100M", CigarOperator.HARD_CLIP,
+                {120, 100, 95, "110M10S", "15S105M", false, true, 100, 100, "100M20H", "20H100M", true,
                         default120LongR1Bases, default120LongR2Bases, sharedBases, sharedBases, default120LongR1ClippedBases, default120LongR2ClippedBases,
                         default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20}
 
