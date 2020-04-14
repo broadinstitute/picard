@@ -64,7 +64,7 @@ public class CompareMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Compare two metrics files.";
     static final String USAGE_DETAIL = "This tool compares the metrics and histograms generated from metric tools to determine " +
             "if the generated results are identical.  Note that if there are differences in metric values, this tool describes those differences " +
-            "as the change of the first input metric relative to the second. " +
+            "as the change of the second input metric relative to the first. " +
             "<br /><br />  " +
             "<h4>Usage example:</h4>" +
             "<pre>" +
@@ -110,7 +110,7 @@ public class CompareMetrics extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(CompareMetrics.class);
 
-    protected final static Map<String, Double> MetricToAllowableRelativeChange = new HashMap<>();
+    protected final Map<String, Double> MetricToAllowableRelativeChange = new HashMap<>();
 
     @Override
     protected int doWork() {
@@ -267,22 +267,26 @@ public class CompareMetrics extends CommandLineProgram {
             if (value1 instanceof Number) {
                 double numValue1 = ((Number) value1).doubleValue();
                 double numValue2 = ((Number) value2).doubleValue();
-                double relativeChange = (numValue1 == 0 && numValue2 == 0) ? 0 : (numValue1 == 0) ? Double.MAX_VALUE : (numValue1 - numValue2) / numValue2;
-                if (relativeChange != 0) {
+                double absoluteChange = 0;
+                if (!Double.isNaN(numValue1) || !Double.isNaN(numValue2)) {
+                    absoluteChange = numValue2 - numValue1;
+                }
+                if (absoluteChange != 0) {
+                    double relativeChange = numValue1 == 0 ? Double.MAX_VALUE : absoluteChange / numValue1;
                     if (MetricToAllowableRelativeChange.containsKey(metricName)) {
                         double allowableRelativeChange = MetricToAllowableRelativeChange.get(metricName);
                         if (Math.abs(relativeChange) >= allowableRelativeChange) {
                             equal = false;
-                            description = "Changed by " + relativeChange +
-                                    " which is outside of the allowable tolerance of " + allowableRelativeChange;
+                            description = "Changed by " + absoluteChange + " (relative change of " + relativeChange +
+                                    ") which is outside of the allowable relative change tolerance of " + allowableRelativeChange;
                         } else {
                             equal = true;
-                            description = "Changed by " + relativeChange +
-                                    " which is within the allowable tolerance of " + allowableRelativeChange;
+                            description = "Changed by " + absoluteChange + " (relative change of " + relativeChange +
+                                    ") which is within the allowable relative change tolerance of " + allowableRelativeChange;
                         }
                     } else {
                         equal = false;
-                        description = "Changed by " + relativeChange;
+                        description = "Changed by " + absoluteChange + " (relative change of " + relativeChange + ")";
                     }
                 }
             } else {
