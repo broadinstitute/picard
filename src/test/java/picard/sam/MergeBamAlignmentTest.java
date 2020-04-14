@@ -1219,7 +1219,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 "ALIGNED_BAM=" + alignedSam.getAbsolutePath(),
                 "OUTPUT=" + output.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
-                "CLIP_OVERLAPPING_READS_OPERATOR=H"
+                "HARD_CLIP_OVERLAPPING_READS=true"
                 );
 
         Assert.assertEquals(runPicardCommandLine(args), 0);

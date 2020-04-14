@@ -1027,7 +1027,7 @@ public abstract class AbstractAlignmentMerger {
 
     public void setClipOverlappingReads(final boolean clipOverlappingReads, final boolean hardClipOverlappingReads) {
         this.clipOverlappingReads = clipOverlappingReads;
-        this.hardClipOverlappingReads = clipOverlappingReads;
+        this.hardClipOverlappingReads = hardClipOverlappingReads;
     }
 
     public boolean isKeepAlignerProperPairFlags() {
