@@ -26,6 +26,7 @@ package picard.fingerprint;
 
 import htsjdk.utils.ValidationUtils;
 import picard.util.MathUtil;
+
 import java.util.Arrays;
 
 /**
@@ -168,11 +169,15 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
 
     public void setLogLikelihoods(final double[] ll) {
         ValidationUtils.validateArg(ll.length == NUM_GENOTYPES,
-                ()->"logLikelihood must have length 3, found " + ll.length);
+                () -> "logLikelihood must have length 3, found " + ll.length);
 
-        double sum = MathUtil.sum(MathUtil.getProbabilityFromLog(ll));
+//        protect from underflow
+        double max = MathUtil.max(ll);
+        final double[] maxRemoved = MathUtil.sum(ll, -max);
+
+        double sum = MathUtil.sum(MathUtil.getProbabilityFromLog(maxRemoved));
         // normalize log rawLikelihoods:
-        System.arraycopy(MathUtil.sum(ll, -Math.log10(sum)), 0, loglikelihoods, 0, NUM_GENOTYPES);
+        System.arraycopy(MathUtil.sum(maxRemoved, -Math.log10(sum)), 0, loglikelihoods, 0, NUM_GENOTYPES);
 
         likelihoodsNeedUpdating = true;
         updateDependentValues();
