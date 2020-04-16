@@ -158,7 +158,13 @@ public class FingerprintChecker {
         this.genotypingErrorRate = genotypingErrorRate;
     }
 
-    @Deprecated //non-compliant method name.
+    /**
+     * Does same thing as {@link #setMaximalPLDifference(int)} but named in the compliant way.
+     *
+     * @deprecated use {@link #setMaximalPLDifference(int)} instead.
+     * @since 16/4/2020
+     */
+    @Deprecated
     public void setmaximalPLDifference(final int maximalPLDifference) {
         setMaximalPLDifference(maximalPLDifference);
     }
@@ -473,7 +479,13 @@ public class FingerprintChecker {
         }
     };
 
-    @Deprecated // no need to provide the loci, since it should be available from the haplotypeBlocks
+    /**
+     * Does same thing as {@link #fingerprintSamFile(Path, Function)} but in the old way that required that you pass in the loci of interest.
+     * Since the loci are always the same as in {@link #haplotypes} there's no need for this method signature anymore
+     *
+     * @deprecated use {@link #fingerprintSamFile(Path, Function)} instead.
+     */
+    @Deprecated
     public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final IntervalList loci) {
         return fingerprintSamFile(samFile, HaplotypeProbabilitiesFromSequence::new);
     }
