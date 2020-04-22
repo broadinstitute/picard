@@ -96,7 +96,6 @@ public class FingerprintChecker {
     private int minimumBaseQuality = DEFAULT_MINIMUM_BASE_QUALITY;
     private int minimumMappingQuality = DEFAULT_MINIMUM_MAPPING_QUALITY;
     private double genotypingErrorRate = DEFAULT_GENOTYPING_ERROR_RATE;
-    private int maximalPLDifference = DEFAULT_MAXIMAL_PL_DIFFERENCE;
     private File referenceFasta;
 
     public ValidationStringency getValidationStringency() {
@@ -171,10 +170,10 @@ public class FingerprintChecker {
 
     /**
      * Sets the maximal difference in PL scores considered when reading PLs from a VCF.
+     * @deprecated since 04/2020. use CappedHaplotypeProbabilities and explicitly cap your probabilities.
      */
-    public void setMaximalPLDifference(final int maximalPLDifference) {
-        this.maximalPLDifference = maximalPLDifference;
-    }
+    @Deprecated
+    public void setMaximalPLDifference(final int maximalPLDifference) { }
 
     public SAMFileHeader getHeader() {
         return haplotypes.getHeader();
@@ -399,13 +398,7 @@ public class FingerprintChecker {
             if (genotype.hasPL()) {
 
                 final HaplotypeProbabilitiesFromGenotypeLikelihoods hFp = new HaplotypeProbabilitiesFromGenotypeLikelihoods(h);
-                //do not modify the PL array directly fragile!!!!!
-                final int[] pls = genotype.getPL();
-                final int[] newPLs = new int[pls.length];
-                for (int i = 0; i < pls.length; i++) {
-                    newPLs[i] = Math.min(maximalPLDifference, pls[i]);
-                }
-                hFp.addToLogLikelihoods(snp, usableSnp.getAlleles(), GenotypeLikelihoods.fromPLs(newPLs).getAsVector());
+                hFp.addToLogLikelihoods(snp, usableSnp.getAlleles(), GenotypeLikelihoods.fromPLs(genotype.getPL()).getAsVector());
                 fp.add(hFp);
             } else {
 
@@ -547,11 +540,8 @@ public class FingerprintChecker {
         // Now go through the data at each locus and figure stuff out!
         for (final SamLocusIterator.LocusInfo info : iterator) {
 
-            // if statement to avoid string building.
-            // TODO: replace with lambda version once htsjdk is rev'ed
-            if (Log.isEnabled(Log.LogLevel.DEBUG)) {
-                log.debug("At locus " + info.toString());
-            }
+            log.debug(() -> "At locus " + info.toString());
+
             // TODO: Filter out the locus if the allele balance doesn't make sense for either a
             // TODO: 50/50 het or a hom with some errors; in HS data with deep coverage any base
             // TODO: with major strand bias could cause errors

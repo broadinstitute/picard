@@ -169,6 +169,18 @@ final public class MathUtil {
     }
 
     /**
+     * Returns the array capped (from below) by the value of scalar
+     */
+    public static double[] max(final double[] nums, final double scalar) {
+        final double[] max = new double[nums.length];
+        for (int i = 1; i < nums.length; ++i) {
+            max[i] = Math.max(nums[i], scalar);
+        }
+
+        return max;
+    }
+
+    /**
      * Returns the index of the largest element in the array.  If there are multiple equal maxima then
      * the earliest one in the array is returned.
      */
@@ -246,6 +258,18 @@ final public class MathUtil {
             if (nums[i] < min) {
                 min = nums[i];
             }
+        }
+
+        return min;
+    }
+
+    /**
+     * Returns the array capped by the value of scalar
+     */
+    public static double[] min(final double[] nums, final double scalar) {
+        final double[] min = new double[nums.length];
+        for (int i = 1; i < nums.length; ++i) {
+            min[i] = Math.min(nums[i], scalar);
         }
 
         return min;
@@ -536,7 +560,6 @@ final public class MathUtil {
      */
     public static double klDivergance(double[] measured, double[] distribution) {
         ValidationUtils.validateArg(measured.length == distribution.length, () -> "length of measuered and distribution differ. Found " + measured.length + " and " + distribution.length + ".");
-
 
         final double[] normalizedMeasured = pNormalizeVector(measured);
         final double[] normalizedDistribution = pNormalizeVector(distribution);
