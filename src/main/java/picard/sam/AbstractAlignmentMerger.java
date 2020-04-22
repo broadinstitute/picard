@@ -771,25 +771,34 @@ public abstract class AbstractAlignmentMerger {
                     // Need to consider unclipped positions because often the read through bases have already been soft-clipped
 
                     final int posClipFrom = getDistanceFrom3PrimeEndToClipFrom(pos, neg.getUnclippedEnd() + 1);
-                    final int posClipFrom2 = SAMRecord.getReadPositionAtReferencePosition(pos, neg.getUnclippedEnd() + 1, false);
                     final int negClipFrom = getDistanceFrom3PrimeEndToClipFrom(neg, pos.getUnclippedStart() - 1);
-                    final int negClipFrom2 = neg.getReadLength() - SAMRecord.getReadPositionAtReferencePosition(neg, pos.getUnclippedStart() - 1, false) + 1;
+                    final CigarOperator clippingOperator = useHardClipping ? CigarOperator.HARD_CLIP : CigarOperator.SOFT_CLIP;
+
                     if (posClipFrom == negClipFrom && posClipFrom > 0) {
                         final int clipFrom = posClipFrom;
-
-                        final CigarOperator clippingOperator;
 
                         // If we are using hard clipping, store the hard clipped bases and their associated qualities in tag
                         if (useHardClipping) {
                             moveClippedBasesToTag(read1, clipFrom);
                             moveClippedBasesToTag(read2, clipFrom);
-                            clippingOperator = CigarOperator.HARD_CLIP;
-                        } else {
-                            clippingOperator = CigarOperator.SOFT_CLIP;
                         }
 
                         CigarUtil.clip3PrimeEndOfRead(read1, clipFrom, clippingOperator);
                         CigarUtil.clip3PrimeEndOfRead(read2, clipFrom, clippingOperator);
+                    } else if (posClipFrom > 0 && neg.getReadLength() < posClipFrom) {
+                        // If we are using hard clipping, store the hard clipped bases and their associated qualities in tag
+                        if (useHardClipping) {
+                            moveClippedBasesToTag(pos, posClipFrom);
+                        }
+
+                        CigarUtil.clip3PrimeEndOfRead(pos, posClipFrom, clippingOperator);
+                    } else if (negClipFrom > 0 && pos.getReadLength() < negClipFrom) {
+                        // If we are using hard clipping, store the hard clipped bases and their associated qualities in tag
+                        if (useHardClipping) {
+                            moveClippedBasesToTag(neg, negClipFrom);
+                        }
+
+                        CigarUtil.clip3PrimeEndOfRead(neg, negClipFrom, clippingOperator);
                     }
                 }
             }
