@@ -769,40 +769,41 @@ public abstract class AbstractAlignmentMerger {
                 if (pos.getAlignmentStart() < neg.getAlignmentEnd()) {
 
                     // Need to consider unclipped positions because often the read through bases have already been soft-clipped
-
                     final int posClipFrom = getDistanceFrom3PrimeEndToClipFrom(pos, neg.getUnclippedEnd() + 1);
                     final int negClipFrom = getDistanceFrom3PrimeEndToClipFrom(neg, pos.getUnclippedStart() - 1);
                     final CigarOperator clippingOperator = useHardClipping ? CigarOperator.HARD_CLIP : CigarOperator.SOFT_CLIP;
 
-                    if (posClipFrom == negClipFrom && posClipFrom > 0) {
-                        final int clipFrom = posClipFrom;
-
-                        // If we are using hard clipping, store the hard clipped bases and their associated qualities in tag
-                        if (useHardClipping) {
-                            moveClippedBasesToTag(read1, clipFrom);
-                            moveClippedBasesToTag(read2, clipFrom);
-                        }
-
-                        CigarUtil.clip3PrimeEndOfRead(read1, clipFrom, clippingOperator);
-                        CigarUtil.clip3PrimeEndOfRead(read2, clipFrom, clippingOperator);
-                    } else if (posClipFrom > 0 && neg.getReadLength() < posClipFrom) {
-                        // If we are using hard clipping, store the hard clipped bases and their associated qualities in tag
-                        if (useHardClipping) {
-                            moveClippedBasesToTag(pos, posClipFrom);
-                        }
-
-                        CigarUtil.clip3PrimeEndOfRead(pos, posClipFrom, clippingOperator);
-                    } else if (negClipFrom > 0 && pos.getReadLength() < negClipFrom) {
-                        // If we are using hard clipping, store the hard clipped bases and their associated qualities in tag
-                        if (useHardClipping) {
-                            moveClippedBasesToTag(neg, negClipFrom);
-                        }
-
-                        CigarUtil.clip3PrimeEndOfRead(neg, negClipFrom, clippingOperator);
+                    if(posClipFrom > 0) {
+                        clipRead(pos, posClipFrom, useHardClipping);
+                    }
+                    if(negClipFrom > 0) {
+                        clipRead(neg, negClipFrom, useHardClipping);
                     }
                 }
             }
         }
+    }
+
+    private static void clipRead(final SAMRecord rec, final int clipFrom, final boolean useHardClipping) {
+
+        // If we are using hard clips, add bases and qualities to SAM tag.
+        if (useHardClipping) {
+            final byte[] bases = rec.getReadBases();
+            final byte[] baseQualities = rec.getBaseQualities();
+            final int readLength = rec.getReadLength();
+
+            if (rec.getReadNegativeStrandFlag()) {
+                // Ensures that bases are reverse complemented and base qualities are reversed
+                rec.setAttribute(HARD_CLIPPED_BASES_TAG, SequenceUtil.reverseComplement(StringUtil.bytesToString(Arrays.copyOf(bases, bases.length - clipFrom + 1))));
+                rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, new StringBuilder(SAMUtils.phredToFastq(Arrays.copyOf(baseQualities, baseQualities.length - clipFrom + 1))).reverse().toString());
+            } else {
+                rec.setAttribute(HARD_CLIPPED_BASES_TAG, StringUtil.bytesToString(Arrays.copyOfRange(bases, clipFrom - 1, readLength)));
+                rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, SAMUtils.phredToFastq(Arrays.copyOfRange(baseQualities, clipFrom - 1, readLength)));
+            }
+        }
+
+        // Actually clip the read
+        CigarUtil.clip3PrimeEndOfRead(rec, clipFrom, useHardClipping ? CigarOperator.HARD_CLIP : CigarOperator.SOFT_CLIP);
     }
 
     private static void moveClippedBasesToTag(final SAMRecord rec, final int clipFrom) {
@@ -811,7 +812,7 @@ public abstract class AbstractAlignmentMerger {
         final byte[] baseQualities = rec.getBaseQualities();
         final int readLength = rec.getReadLength();
 
-        if(rec.getReadNegativeStrandFlag()) {
+        if (rec.getReadNegativeStrandFlag()) {
             // Ensures that bases are reverse complemented and base qualities are reversed
             rec.setAttribute(HARD_CLIPPED_BASES_TAG, SequenceUtil.reverseComplement(StringUtil.bytesToString(Arrays.copyOf(bases, bases.length - clipFrom + 1))));
             rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, new StringBuilder(SAMUtils.phredToFastq(Arrays.copyOf(baseQualities, baseQualities.length - clipFrom + 1))).reverse().toString());
