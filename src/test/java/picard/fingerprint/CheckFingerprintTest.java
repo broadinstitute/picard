@@ -119,7 +119,7 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void testSummaryAndDetailOutputs() {
+    public void     testSummaryAndDetailOutputs() {
         String[] args = new String[]{
                 "I=" + TEST_INPUT_VCF1,
                 "S=" + TEST_DATA_DIR + "/tempCheckFPDir/summary",

@@ -87,7 +87,6 @@ public class FingerprintChecker {
     public static final double DEFAULT_GENOTYPING_ERROR_RATE = 0.01;
     public static final int DEFAULT_MINIMUM_MAPPING_QUALITY = 10;
     public static final int DEFAULT_MINIMUM_BASE_QUALITY = 20;
-    public static final int DEFAULT_MAXIMAL_PL_DIFFERENCE = 30;
 
     // used sometimes to subset loci. Fix the random seed so that the results are deterministic
     private static final Random random = new Random(42);
