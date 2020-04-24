@@ -173,7 +173,7 @@ final public class MathUtil {
      */
     public static double[] max(final double[] nums, final double scalar) {
         final double[] max = new double[nums.length];
-        for (int i = 1; i < nums.length; ++i) {
+        for (int i = 0; i < nums.length; ++i) {
             max[i] = Math.max(nums[i], scalar);
         }
 
@@ -268,7 +268,7 @@ final public class MathUtil {
      */
     public static double[] min(final double[] nums, final double scalar) {
         final double[] min = new double[nums.length];
-        for (int i = 1; i < nums.length; ++i) {
+        for (int i = 0; i < nums.length; ++i) {
             min[i] = Math.min(nums[i], scalar);
         }
 
