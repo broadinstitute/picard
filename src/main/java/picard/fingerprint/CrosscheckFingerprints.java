@@ -356,7 +356,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 1;
 
     @Argument(doc = "Maximal effect of any single haplotype block on outcome (positive).", minValue = 0)
-    public double MAX_EFFECT_OF_EACH_HAPLOTYPE_BLOCK = 3D;
+    public double MAX_EFFECT_OF_EACH_HAPLOTYPE_BLOCK = 1000000D;
 
     @Hidden
     @Argument(doc = "When true code will check for readability on input files (this can be slow on cloud access)")
@@ -465,16 +465,16 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         log.info("Fingerprinting " + unrolledFiles.size() + " INPUT files.");
 
         final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
+        capFingerprints(fpMap);
 
         if (INPUT_SAMPLE_MAP != null) {
             remapFingerprints(fpMap, INPUT_SAMPLE_MAP, "INPUT_SAMPLE_MAP");
-            capFingerprints(fpMap);
         }
 
         if (INPUT_SAMPLE_FILE_MAP != null) {
             remapFingerprintsFromFiles(fpMap, INPUT_SAMPLE_FILE_MAP);
-            capFingerprints(fpMap);
         }
+
 
         final List<CrosscheckMetric> metrics = new ArrayList<>();
         final int numUnexpected;
@@ -485,6 +485,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         } else {
             log.info("Fingerprinting " + unrolledFiles2.size() + " SECOND_INPUT files.");
             final Map<FingerprintIdDetails, Fingerprint> fpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
+            capFingerprints(fpMap);
+
 
             if (SECOND_INPUT_SAMPLE_MAP != null) {
                 remapFingerprints(fpMap2, SECOND_INPUT_SAMPLE_MAP, "SECOND_INPUT_SAMPLE_MAP");
