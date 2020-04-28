@@ -45,6 +45,7 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
     private File interopDir;
     private File intensityDir;
     private File basecallDir;
+    private static final File CBCL_BASECALL_DIR = new File("testdata/picard/illumina/151T8B8B151T_cbcl/Data/Intensities/BaseCalls");
 
     public String getCommandLineProgramName() {
         return CheckIlluminaDirectory.class.getSimpleName();
@@ -409,4 +410,17 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void cbclWithSkipsInReadStructureTest()
+    {
+        final int lane = 1;
+        final IlluminaDataType[] dataTypes = new IlluminaDataType[]{BaseCalls};
+        // Use "1S1T" since C1.1/L001_1.cbcl has incorrect value for the "compressedBlockSize" header
+        // C2.1/*.cbcl have correct values. For the remaining cycles, some cbcl files are correct and some are not.
+        final String[] args = 
+                makeCheckerArgs(CBCL_BASECALL_DIR, lane, "1S1T", dataTypes, new ArrayList<>(), false, false);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+    }
+
 }
