@@ -205,7 +205,9 @@ public class MergeVcfs extends CommandLineProgram {
             }
             
             // add comments in the first header
-            if(headers.isEmpty()) COMMENT.stream().forEach(C->fileHeader.addMetaDataLine(new VCFHeaderLine("MergeVcfs.comment", C)));
+            if (headers.isEmpty()) {
+                COMMENT.stream().forEach(C -> fileHeader.addMetaDataLine(new VCFHeaderLine("MergeVcfs.comment", C)));
+            }
 
             headers.add(fileHeader);
             iteratorCollection.add(fileReader.iterator());
@@ -225,7 +227,7 @@ public class MergeVcfs extends CommandLineProgram {
             builder.unsetOption(Options.INDEX_ON_THE_FLY);
         }
         final VariantContextWriter writer = builder.build();
-                
+
         writer.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, false), sampleList));
 
         final MergingIterator<VariantContext> mergingIterator = new MergingIterator<VariantContext>(variantContextComparator, iteratorCollection);

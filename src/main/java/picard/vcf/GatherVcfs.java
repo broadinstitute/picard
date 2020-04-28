@@ -52,12 +52,16 @@ public class GatherVcfs extends CommandLineProgram {
     @Argument(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
     public List<String>  COMMENT = new ArrayList<>();
     
-    @Argument(doc = "Re-order the INPUT files according to order of their first variant.", optional = true, shortName = "S")
-    public boolean  SORT = false;
+    @Argument(doc = "The variants in INPUT come from non overlapping regions "
+            + "but the order of the files in INPUT is untrusted. "
+            + "If 'true' the program will reorder INPUT according "
+            + "to the genomic location of the first variant in each file.",
+            optional = true, shortName = "S")
+    public boolean  REORDER_INPUT_BY_FIRST_VARIANT = false;
 
     private static final Log log = Log.getInstance(GatherVcfs.class);
 
-    /** sort VCFs using first variant */
+    /** class used to sort VCFs using the first variant */
     private static class FirstVariantInVcf {
         final File vcfFile;
         VariantContext firstVariant = null;// may be null if the vcf is empty
@@ -127,7 +131,7 @@ public class GatherVcfs extends CommandLineProgram {
      */
     private List<File> assertSameSamplesAndValidOrdering(final List<File> inputFiles) {
         final VCFHeader header;
-        try(VCFFileReader reader = new VCFFileReader(inputFiles.get(0), false)) {
+        try (VCFFileReader reader = new VCFFileReader(inputFiles.get(0), false)) {
             header = reader.getFileHeader();
         }
         final SAMSequenceDictionary dict = header.getSequenceDictionary();
@@ -137,8 +141,9 @@ public class GatherVcfs extends CommandLineProgram {
         File lastFile = null;
         VariantContext lastContext = null;
         
-        if (SORT) {
+        if (REORDER_INPUT_BY_FIRST_VARIANT) {
             final List<FirstVariantInVcf> filesandvariants = new ArrayList<>(inputFiles.size());
+            /* open each input file and get the first variant */
             for (final File f : inputFiles) {
                 final FirstVariantInVcf vcfcxt = new FirstVariantInVcf(f);
                 try (VCFFileReader in = new VCFFileReader(f, false)) {
@@ -149,14 +154,17 @@ public class GatherVcfs extends CommandLineProgram {
                 }
                 filesandvariants.add(vcfcxt);
             }
+            /* order the files according to the position of their 1st variant */
             Collections.sort(filesandvariants, (A,B)->{
                 if (A.firstVariant==null) {
                     if (B.firstVariant==null) return 0;
                     return 1;
                 }
-                if(A.firstVariant!=null && B.firstVariant==null) return -1;
+                if (A.firstVariant!=null && B.firstVariant==null) return -1;
                 return comparator.compare(A.firstVariant, B.firstVariant);
                 });
+            
+            /* reset inputFiles with the new order */
             inputFiles.clear();
             inputFiles.addAll(filesandvariants.stream().map(FV->FV.vcfFile).collect(Collectors.toList()));
         }
@@ -234,7 +242,7 @@ public class GatherVcfs extends CommandLineProgram {
             if (firstHeader == null) {
                 firstHeader = header;
                 // add comments in the first header
-                for(final String comment: comments) {
+                for (final String comment : comments) {
                     firstHeader.addMetaDataLine(new VCFHeaderLine("GatherVcfs.comment", comment));
                 }
 

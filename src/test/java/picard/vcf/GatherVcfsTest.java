@@ -70,7 +70,7 @@ public class GatherVcfsTest extends CommandLineProgramTest {
         inputFiles.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
         args.add("OUTPUT=" + output.getAbsolutePath());
         args.add("COMMENT=" + comment1);
-        args.add("SORT=" +  sort);
+        args.add("REORDER_INPUT_BY_FIRST_VARIANT=" +  sort);
         
         Assert.assertEquals(runPicardCommandLine(args.toArray(new String[args.size()])), expectedRetVal, "Program was expected to run successfully, but didn't.");
 
