@@ -28,7 +28,15 @@ import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.CigarUtil;
 import picard.PicardException;
 
 import java.io.File;
@@ -60,8 +68,10 @@ public abstract class AbstractAlignmentMerger {
     public static final int MAX_RECORDS_IN_RAM = 500000;
 
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X', 'Y', 'Z'};
-    static final String HARD_CLIPPED_BASES_TAG = "hB";
-    static final String HARD_CLIPPED_BASE_QUALITIES_TAG = "hQ";
+
+    // TODO: Switch to using HTSJDK tags if this gets into hts-spec and implemented
+    static final String HARD_CLIPPED_BASES_TAG = "eB";
+    static final String HARD_CLIPPED_BASE_QUALITIES_TAG = "eQ";
 
     private int crossSpeciesReads = 0;
 
@@ -771,7 +781,6 @@ public abstract class AbstractAlignmentMerger {
                     // Need to consider unclipped positions because often the read through bases have already been soft-clipped
                     final int posClipFrom = getDistanceFrom3PrimeEndToClipFrom(pos, neg.getUnclippedEnd() + 1);
                     final int negClipFrom = getDistanceFrom3PrimeEndToClipFrom(neg, pos.getUnclippedStart() - 1);
-                    final CigarOperator clippingOperator = useHardClipping ? CigarOperator.HARD_CLIP : CigarOperator.SOFT_CLIP;
 
                     if(posClipFrom > 0) {
                         clipRead(pos, posClipFrom, useHardClipping);
@@ -788,18 +797,7 @@ public abstract class AbstractAlignmentMerger {
 
         // If we are using hard clips, add bases and qualities to SAM tag.
         if (useHardClipping) {
-            final byte[] bases = rec.getReadBases();
-            final byte[] baseQualities = rec.getBaseQualities();
-            final int readLength = rec.getReadLength();
-
-            if (rec.getReadNegativeStrandFlag()) {
-                // Ensures that bases are reverse complemented and base qualities are reversed
-                rec.setAttribute(HARD_CLIPPED_BASES_TAG, SequenceUtil.reverseComplement(StringUtil.bytesToString(Arrays.copyOf(bases, bases.length - clipFrom + 1))));
-                rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, new StringBuilder(SAMUtils.phredToFastq(Arrays.copyOf(baseQualities, baseQualities.length - clipFrom + 1))).reverse().toString());
-            } else {
-                rec.setAttribute(HARD_CLIPPED_BASES_TAG, StringUtil.bytesToString(Arrays.copyOfRange(bases, clipFrom - 1, readLength)));
-                rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, SAMUtils.phredToFastq(Arrays.copyOfRange(baseQualities, clipFrom - 1, readLength)));
-            }
+            moveClippedBasesToTag(rec, clipFrom);
         }
 
         // Actually clip the read
@@ -807,19 +805,34 @@ public abstract class AbstractAlignmentMerger {
     }
 
     private static void moveClippedBasesToTag(final SAMRecord rec, final int clipFrom) {
+        if (rec.getAttribute(HARD_CLIPPED_BASES_TAG) != null || rec.getAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG) != null) {
+            throw new PicardException("Record already contains tags for restoring hard clipped bases.  This operation will permanently erase information if it proceeds.");
+        }
 
         final byte[] bases = rec.getReadBases();
         final byte[] baseQualities = rec.getBaseQualities();
         final int readLength = rec.getReadLength();
 
+        final int clipPositionFrom, clipPositionTo;
+        if (rec.getReadNegativeStrandFlag()) {
+            clipPositionFrom = 0;
+            clipPositionTo = bases.length - clipFrom + 1;
+        }
+        else {
+            clipPositionFrom = clipFrom - 1;
+            clipPositionTo = readLength;
+        }
+
+        String basesToKeepInTag = StringUtil.bytesToString(Arrays.copyOfRange(bases, clipPositionFrom, clipPositionTo));
+        String qualitiesToKeepInTag = SAMUtils.phredToFastq(Arrays.copyOfRange(baseQualities, clipPositionFrom, clipPositionTo));
+
         if (rec.getReadNegativeStrandFlag()) {
             // Ensures that bases are reverse complemented and base qualities are reversed
-            rec.setAttribute(HARD_CLIPPED_BASES_TAG, SequenceUtil.reverseComplement(StringUtil.bytesToString(Arrays.copyOf(bases, bases.length - clipFrom + 1))));
-            rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, new StringBuilder(SAMUtils.phredToFastq(Arrays.copyOf(baseQualities, baseQualities.length - clipFrom + 1))).reverse().toString());
-        } else {
-            rec.setAttribute(HARD_CLIPPED_BASES_TAG, StringUtil.bytesToString(Arrays.copyOfRange(bases, clipFrom - 1, readLength)));
-            rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, SAMUtils.phredToFastq(Arrays.copyOfRange(baseQualities,clipFrom - 1, readLength)));
+            basesToKeepInTag = SequenceUtil.reverseComplement(basesToKeepInTag);
+            qualitiesToKeepInTag =  new StringBuilder(qualitiesToKeepInTag).reverse().toString();
         }
+        rec.setAttribute(HARD_CLIPPED_BASES_TAG, basesToKeepInTag);
+        rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, qualitiesToKeepInTag);
     }
 
     protected static int getDistanceFrom3PrimeEndToClipFrom(final SAMRecord rec, final int refPosToClipFrom) {
@@ -1033,6 +1046,11 @@ public abstract class AbstractAlignmentMerger {
 
     public boolean isClipOverlappingReads() {
         return clipOverlappingReads;
+    }
+
+    public void setClipOverlappingReads(final boolean clipOverlappingReads) {
+        this.clipOverlappingReads = clipOverlappingReads;
+        this.hardClipOverlappingReads = false;
     }
 
     public void setClipOverlappingReads(final boolean clipOverlappingReads, final boolean hardClipOverlappingReads) {

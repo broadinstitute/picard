@@ -257,7 +257,9 @@ public class MergeBamAlignment extends CommandLineProgram {
             "alignment is filtered out for some reason. For all strategies, ties are resolved arbitrarily.")
     public PrimaryAlignmentStrategy PRIMARY_ALIGNMENT_STRATEGY = PrimaryAlignmentStrategy.BestMapq;
 
-    @Argument(doc = "For paired reads, clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  Clipping will be either soft or hard clipping, depending on CLIP_OVERLAPPING_READS_OPERATOR setting.")
+    @Argument(doc = "For paired reads, clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  " +
+            "Clipping will be either soft or hard clipping, depending on CLIP_OVERLAPPING_READS_OPERATOR setting. " +
+            "Hard clipped bases and their qualities will be stored in the eB and eQ tags respectively.")
     public boolean CLIP_OVERLAPPING_READS = true;
 
     @Argument(doc = "If true, hard clipping will be applied to overlapping reads.  By default, soft clipping is used.")
