@@ -782,8 +782,16 @@ public abstract class AbstractAlignmentMerger {
                     final int posClipFrom2 = getDistanceFrom3PrimeEndToClipFrom(pos, neg.getUnclippedEnd() + 1);
                     final int negClipFrom2 = getDistanceFrom3PrimeEndToClipFrom(neg, pos.getUnclippedStart() - 1);
 
-                    final int posClipFrom = SAMRecord.getReadPositionAtReferencePosition(pos, neg.getUnclippedEnd() + 1, false, true);
-                    int negClipFrom = SAMRecord.getReadPositionAtReferencePosition(neg, pos.getUnclippedStart() - 1, false, true);
+                    //final int posClipFrom = SAMRecord.getReadPositionAtReferencePosition(pos, neg.getUnclippedEnd() + 1, false, true);
+                    //int negClipFrom = SAMRecord.getReadPositionAtReferencePosition(neg, pos.getUnclippedStart() - 1, false, true);
+
+                    //final int posClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(pos, neg.getUnclippedEnd() + 1);
+                    //int negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, pos.getUnclippedStart() - 1);
+
+                    // This works, but I'm not sure why... it doesn't seem like this should work.
+                    final int posClipFrom = pos.getReadPositionAtReferencePosition(neg.getUnclippedEnd() + 1);
+                    int negClipFrom = neg.getReadPositionAtReferencePosition(pos.getUnclippedStart() - 1);
+
                     negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
 
                     if(posClipFrom > 0) {
@@ -799,20 +807,21 @@ public abstract class AbstractAlignmentMerger {
 
     private static int getReadPositionAtReferencePositionIgnoreSoftClips(final SAMRecord rec, final int pos) {
         final int p;
-        final Cigar cigar = rec.getCigar();
+        final Cigar oldCigar = rec.getCigar();
         final Cigar newCigar = new Cigar();
-        List<CigarElement> cigarElements = new ArrayList<>(cigar.getCigarElements()); //need to be modifiable
+        List<CigarElement> cigarElements = new ArrayList<>(oldCigar.getCigarElements()); //need to be modifiable
         for (final CigarElement cigarElement : cigarElements) {
-            CigarOperator op = cigarElement.getOperator();
+            final CigarOperator op = cigarElement.getOperator();
             if (op == CigarOperator.SOFT_CLIP) {
-                op = CigarOperator.MATCH_OR_MISMATCH;
+                newCigar.add(new CigarElement(cigarElement.getLength(), CigarOperator.MATCH_OR_MISMATCH));
+            } else {
+                newCigar.add(new CigarElement(cigarElement.getLength(), op));
             }
-            newCigar.add(new CigarElement(cigarElement.getLength(), op));
         }
 
         rec.setCigar(newCigar);
-
-        p = SAMRecord.getReadPositionAtReferencePosition(rec, pos, false, false);
+        p = SAMRecord.getReadPositionAtReferencePosition(rec, pos, false);
+        rec.setCigar(oldCigar);
         return p;
     }
 
