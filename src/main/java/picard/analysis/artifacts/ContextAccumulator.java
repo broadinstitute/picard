@@ -44,7 +44,10 @@ class ContextAccumulator {
     public void countRecord(final String refContext, final char calledBase, final SAMRecord rec) {
         AlignmentAccumulator[] accumulators = artifactMap.get(refContext);
         if (accumulators != null) {
-            accumulators[Transition.baseIndexMap[calledBase]].countRecord(rec);
+            int baseIndex = Transition.baseIndexMap[calledBase];
+            if (baseIndex != -1) {
+                accumulators[baseIndex].countRecord(rec);
+            }
         }
     }
 
