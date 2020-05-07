@@ -80,6 +80,10 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
                 {120, 100, 95, "110M10S", "15S105M", false, true, 100, 100, "100M20H", "20H100M", true,
                         default120LongR1Bases, default120LongR2Bases, sharedBases, sharedBases, default120LongR1ClippedBases, default120LongR2ClippedBases,
+                        default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20},
+
+                {120, 100, 95, "95M25S", "15S105M", false, true, 100, 100, "95M5S20H", "20H100M", true,
+                        default120LongR1Bases, default120LongR2Bases, sharedBases, sharedBases, default120LongR1ClippedBases, default120LongR2ClippedBases,
                         default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20}
 
         };

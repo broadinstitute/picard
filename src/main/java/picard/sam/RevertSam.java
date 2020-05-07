@@ -154,6 +154,9 @@ public class RevertSam extends CommandLineProgram {
     @Argument(shortName = "OBR", doc = "When true, outputs each read group in a separate file.")
     public boolean OUTPUT_BY_READGROUP = false;
 
+    @Argument(shortName = "RHC", doc = "Restore reads and qualities with hard-clips of records containing have XB and XQ tags.")
+    public boolean RESTORE_HARDCLIPS = false;
+
     public static enum FileType implements CommandLineParser.ClpEnum {
         sam("Generate SAM files."),
         bam("Generate BAM files."),
@@ -373,6 +376,10 @@ public class RevertSam extends CommandLineProgram {
             rec.setDuplicateReadFlag(false);
         }
 
+        if (RESTORE_HARDCLIPS && !REMOVE_ALIGNMENT_INFORMATION) {
+            throw new PicardException("hi mom");
+        }
+
         if (REMOVE_ALIGNMENT_INFORMATION) {
             if (rec.getReadNegativeStrandFlag()) {
                 rec.reverseComplement(true);
@@ -395,6 +402,20 @@ public class RevertSam extends CommandLineProgram {
             rec.setMateNegativeStrandFlag(false);
             rec.setMateReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
             rec.setMateUnmappedFlag(rec.getReadPairedFlag());
+
+            if (RESTORE_HARDCLIPS) {
+                String hardClippedBases = rec.getStringAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG);
+                String hardClippedQualities = rec.getStringAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG);
+                if (hardClippedBases != null && hardClippedQualities != null) {
+                    // Record has already been reverse complemented if this was on the negative strand
+                    rec.setReadString(rec.getReadString() + hardClippedBases);
+                    rec.setBaseQualities(SAMUtils.fastqToPhred(SAMUtils.phredToFastq(rec.getBaseQualities()) + hardClippedQualities));
+
+                    // Remove hard clipping storage tags
+                    rec.setAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG, null);
+                    rec.setAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG, null);
+                }
+            }
 
             // And then remove any tags that are calculated from the alignment
             ATTRIBUTE_TO_CLEAR.forEach(tag -> rec.setAttribute(tag, null));

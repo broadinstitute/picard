@@ -777,21 +777,8 @@ public abstract class AbstractAlignmentMerger {
 
                 // Innies only -- do we need to do anything else about jumping libraries?
                 if (pos.getAlignmentStart() < neg.getAlignmentEnd()) {
-
-                    // Need to consider unclipped positions because often the read through bases have already been soft-clipped
-                    final int posClipFrom2 = getDistanceFrom3PrimeEndToClipFrom(pos, neg.getUnclippedEnd() + 1);
-                    final int negClipFrom2 = getDistanceFrom3PrimeEndToClipFrom(neg, pos.getUnclippedStart() - 1);
-
-                    //final int posClipFrom = SAMRecord.getReadPositionAtReferencePosition(pos, neg.getUnclippedEnd() + 1, false, true);
-                    //int negClipFrom = SAMRecord.getReadPositionAtReferencePosition(neg, pos.getUnclippedStart() - 1, false, true);
-
-                    //final int posClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(pos, neg.getUnclippedEnd() + 1);
-                    //int negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, pos.getUnclippedStart() - 1);
-
-                    // This works, but I'm not sure why... it doesn't seem like this should work.
-                    final int posClipFrom = pos.getReadPositionAtReferencePosition(neg.getUnclippedEnd() + 1);
-                    int negClipFrom = neg.getReadPositionAtReferencePosition(pos.getUnclippedStart() - 1);
-
+                    final int posClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(pos, neg.getUnclippedEnd() + 1);
+                    int negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, pos.getUnclippedStart() - 1);
                     negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
 
                     if(posClipFrom > 0) {
@@ -806,23 +793,35 @@ public abstract class AbstractAlignmentMerger {
     }
 
     private static int getReadPositionAtReferencePositionIgnoreSoftClips(final SAMRecord rec, final int pos) {
-        final int p;
+        final int readPosition;
         final Cigar oldCigar = rec.getCigar();
+        final int oldStart = rec.getAlignmentStart();
         final Cigar newCigar = new Cigar();
         List<CigarElement> cigarElements = new ArrayList<>(oldCigar.getCigarElements()); //need to be modifiable
+        int posShift = 0;
+        boolean foundNonClip = false;
         for (final CigarElement cigarElement : cigarElements) {
             final CigarOperator op = cigarElement.getOperator();
+
             if (op == CigarOperator.SOFT_CLIP) {
                 newCigar.add(new CigarElement(cigarElement.getLength(), CigarOperator.MATCH_OR_MISMATCH));
+                if (!foundNonClip) {
+                    posShift += cigarElement.getLength();
+                }
             } else {
+                if (!op.isClipping()) {
+                    foundNonClip = true;
+                }
                 newCigar.add(new CigarElement(cigarElement.getLength(), op));
             }
         }
 
+        rec.setAlignmentStart(rec.getAlignmentStart() - posShift);
         rec.setCigar(newCigar);
-        p = SAMRecord.getReadPositionAtReferencePosition(rec, pos, false);
+        readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos, false);
         rec.setCigar(oldCigar);
-        return p;
+        rec.setAlignmentStart(oldStart);
+        return readPosition;
     }
 
     private static void clipRead(final SAMRecord rec, final int clipFrom, final boolean useHardClipping) {

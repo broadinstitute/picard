@@ -61,6 +61,7 @@ public class RevertSamTest extends CommandLineProgramTest {
     private static final File writablePath = new File("testdata/picard/sam/revert_sam_writable.bam");
     private static final File referenceFasta = new File("testdata/picard/reference/test.fasta");
     private static final String singleEndSamToRevert = "testdata/picard/sam/revert_sam_single_end.sam";
+    private static final String hardClippedSamToRevert = "testdata/picard/sam/revert_sam_hard_clip.sam";
 
     private static final String revertedQualities  =
         "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
@@ -537,5 +538,27 @@ public class RevertSamTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
         verifyPositiveResults(output, new RevertSam(), true, true, false, false, null, 8, null, null);
+    }
+
+    @Test
+    public void testHardClippedRecovery() throws Exception {
+        final File outputFile = File.createTempFile("test-output-hard-clipped-recovery", ".sam");
+
+        // hardClippedSamToRevert is a sam file with the expected reverted reads and base qualities stored in the XB and XQ tags respectively
+        final String [] args = new String[]{
+                "I=" + hardClippedSamToRevert,
+                "RESTORE_HARDCLIPS=true",
+                "O=" + outputFile.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        // Ensure that the reverted reads and qualities match the XB and XQ tags
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(outputFile);
+        for (final SAMRecord rec : reader) {
+            Assert.assertEquals(rec.getReadString(), rec.getStringAttribute("XB"), "read string");
+            Assert.assertEquals(SAMUtils.phredToFastq(rec.getBaseQualities()), rec.getStringAttribute("XQ"), "hi");
+        }
+        reader.close();
+
     }
 }
