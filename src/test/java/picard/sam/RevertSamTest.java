@@ -544,7 +544,7 @@ public class RevertSamTest extends CommandLineProgramTest {
     public void testHardClippedRecovery() throws Exception {
         final File outputFile = File.createTempFile("test-output-hard-clipped-recovery", ".sam");
 
-        // hardClippedSamToRevert is a sam file with the expected reverted reads and base qualities stored in the XB and XQ tags respectively
+        // hardClippedSamToRevert is a sam file with the expected reverted reads and base qualities stored in the tB and tQ tags respectively
         final String [] args = new String[]{
                 "I=" + hardClippedSamToRevert,
                 "RESTORE_HARDCLIPS=true",
@@ -552,11 +552,11 @@ public class RevertSamTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        // Ensure that the reverted reads and qualities match the XB and XQ tags
+        // Ensure that the reverted reads and qualities match the tB and tQ tags
         final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(outputFile);
         for (final SAMRecord rec : reader) {
-            Assert.assertEquals(rec.getReadString(), rec.getStringAttribute("XB"), "read string");
-            Assert.assertEquals(SAMUtils.phredToFastq(rec.getBaseQualities()), rec.getStringAttribute("XQ"), "hi");
+            Assert.assertEquals(rec.getReadString(), rec.getStringAttribute("tB"), "read string");
+            Assert.assertEquals(SAMUtils.phredToFastq(rec.getBaseQualities()), rec.getStringAttribute("tQ"), "hi");
         }
         reader.close();
 

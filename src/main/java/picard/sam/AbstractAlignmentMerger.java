@@ -70,8 +70,8 @@ public abstract class AbstractAlignmentMerger {
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X', 'Y', 'Z'};
 
     // TODO: Switch to using HTSJDK tags if this gets into hts-spec and implemented
-    static final String HARD_CLIPPED_BASES_TAG = "eB";
-    static final String HARD_CLIPPED_BASE_QUALITIES_TAG = "eQ";
+    static final String HARD_CLIPPED_BASES_TAG = "XB";
+    static final String HARD_CLIPPED_BASE_QUALITIES_TAG = "XQ";
 
     private int crossSpeciesReads = 0;
 
@@ -847,8 +847,7 @@ public abstract class AbstractAlignmentMerger {
         if (rec.getReadNegativeStrandFlag()) {
             clipPositionFrom = 0;
             clipPositionTo = bases.length - clipFrom + 1;
-        }
-        else {
+        } else {
             clipPositionFrom = clipFrom - 1;
             clipPositionTo = readLength;
         }
@@ -863,56 +862,6 @@ public abstract class AbstractAlignmentMerger {
         }
         rec.setAttribute(HARD_CLIPPED_BASES_TAG, basesToKeepInTag);
         rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, qualitiesToKeepInTag);
-    }
-
-    protected static int getDistanceFrom3PrimeEndToClipFrom(final SAMRecord rec, final int refPosToClipFrom) {
-
-        if (refPosToClipFrom > rec.getUnclippedEnd() || refPosToClipFrom < rec.getUnclippedStart()) {
-            //read doesn't cover position
-            return -1;
-        }
-        final Cigar cigar = rec.getCigar();
-        List<CigarElement> cigarElements = new ArrayList<>(cigar.getCigarElements()); //need to be modifiable
-        if (rec.getReadNegativeStrandFlag()) {
-            Collections.reverse(cigarElements);
-        }
-
-        int currentRefPosition = rec.getReadNegativeStrandFlag()? -rec.getUnclippedEnd() : rec.getUnclippedStart();
-        final int refPosObjective = rec.getReadNegativeStrandFlag()? -refPosToClipFrom : refPosToClipFrom;
-
-        int currentReadPosition = 1;
-
-        for (final CigarElement cigarElement : cigarElements) {
-
-            final CigarOperator op = cigarElement.getOperator();
-
-            if ((op.consumesReferenceBases() || op.isClipping()) && currentRefPosition + cigarElement.getLength() >= refPosObjective) {
-                if (op.consumesReadBases() || op == CigarOperator.SOFT_CLIP) {
-                    return currentReadPosition + refPosObjective - currentRefPosition;
-                } else if (op == CigarOperator.HARD_CLIP) {
-                    //for hardclip, position is not on read
-                    return -1;
-                } else {
-                    //if doesn't consume read bases and isn't clipping, return current base
-                    return currentReadPosition;
-                }
-            }
-
-            if (op.consumesReferenceBases() || op.isClipping()) {
-                currentRefPosition += cigarElement.getLength();
-            }
-
-            if (op.consumesReadBases() || op.isClipping()) {
-                currentReadPosition += cigarElement.getLength();
-            }
-        }
-
-        //if we haven't found the correct position, there is a bug
-        throw new PicardException("Could not find read position for reference position " + refPosToClipFrom + " which should be covered by read " + rec);
-    }
-
-    protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2) {
-        clipForOverlappingReads(read1, read2, false);
     }
 
     /**
