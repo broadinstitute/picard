@@ -1244,11 +1244,11 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                     Assert.assertEquals(otherEnd.getCigarString(), otherEnd.getReadNegativeStrandFlag()? "20H56M" : "56M20H");
 
                     if (!rec.getReadNegativeStrandFlag()) {
-                        Assert.assertEquals(rec.getAttribute("eB"), "AGATCGGAAGAGCACACGTC");
-                        Assert.assertEquals(rec.getAttribute("eQ"), "BBBBB?BBB?<?A?<7<<=9");
+                        Assert.assertEquals(rec.getAttribute("XB"), "AGATCGGAAGAGCACACGTC");
+                        Assert.assertEquals(rec.getAttribute("XQ"), "BBBBB?BBB?<?A?<7<<=9");
                     } else {
-                        Assert.assertEquals(rec.getAttribute("eB"), "AGATCGGAAGAGCGTCGTGT");
-                        Assert.assertEquals(rec.getAttribute("eQ"), "BCFD=@CBBADCF=CC:CCD");
+                        Assert.assertEquals(rec.getAttribute("XB"), "AGATCGGAAGAGCGTCGTGT");
+                        Assert.assertEquals(rec.getAttribute("XQ"), "BCFD=@CBBADCF=CC:CCD");
                     }
                 } else {
                     Assert.assertEquals(rec.getCigarString(), "76M");
