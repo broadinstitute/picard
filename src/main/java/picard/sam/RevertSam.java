@@ -24,18 +24,8 @@
 
 package picard.sam;
 
-import htsjdk.samtools.BAMRecordCodec;
-import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.*;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordQueryNameComparator;
-import htsjdk.samtools.SAMTag;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.util.CloserUtil;
