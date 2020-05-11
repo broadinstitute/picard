@@ -59,7 +59,7 @@ public class Gff3Writer implements Closeable {
         }
     }
 
-    public void addFeature(final Gff3BaseData feature) {
+    public void addFeature(final Gff3Feature feature) {
         final String lineNoAttributes = String.join("\t",
                 feature.getContig(),
                 feature.getSource(),

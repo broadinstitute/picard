@@ -6,6 +6,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.tribble.gff.Gff3BaseData;
 import htsjdk.tribble.gff.Gff3Codec;
+import htsjdk.tribble.gff.Gff3Feature;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.tribble.readers.PositionalBufferedStream;
 import htsjdk.tribble.util.ParsingUtils;
@@ -55,10 +56,10 @@ public class SortGff extends CommandLineProgram {
             throw new IllegalArgumentException("Input file " + INPUT + " cannot be read by Gff3Codec");
         }
 
-        SortingCollection<Gff3BaseData> sorter = SortingCollection.newInstance(
-                Gff3BaseData.class,
+        SortingCollection<Gff3Feature> sorter = SortingCollection.newInstance(
+                Gff3Feature.class,
                 new Gff3SortingCollectionCodec(),
-                (Gff3BaseData f1, Gff3BaseData f2) -> f1.getContig().compareTo(f2.getContig()) == 0 ? f1.getStart() - f2.getStart() : f1.getContig().compareTo(f2.getContig()),
+                (Gff3Feature f1, Gff3Feature f2) -> f1.getContig().compareTo(f2.getContig()) == 0 ? f1.getStart() - f2.getStart() : f1.getContig().compareTo(f2.getContig()),
                 500000
         );
 
@@ -83,17 +84,17 @@ public class SortGff extends CommandLineProgram {
 
             header = codec.readHeader(lineIterator).getHeaderValue();
             while (!codec.isDone(lineIterator)) {
-                final Gff3BaseData feature = codec.decodeShallow(lineIterator);
+                final Gff3Feature feature = codec.decodeShallow(lineIterator);
                 if (feature != null) {
                     sorter.add(feature);
                     progressRead.record(feature.getContig(), feature.getStart());
-                    positionMap.put(feature.getId(), feature.getStart());
-                    final Integer currentLatestStart = latestStartMap.getOrDefault(feature.getId(),0);
+                    positionMap.put(feature.getID(), feature.getStart());
+                    final Integer currentLatestStart = latestStartMap.getOrDefault(feature.getID(),0);
                     final String parentIDAttribute = feature.getAttributes().get("Parent");
                     final List<String> parentIDs = parentIDAttribute != null? ParsingUtils.split(parentIDAttribute, ',') : new ArrayList<>();
                     final Integer parentsLatestStart = parentIDs.stream().map(id -> positionMap.get(id)).max(Integer::compareTo).orElse(0);
 
-                    latestStartMap.put(feature.getId(), Math.max(currentLatestStart, parentsLatestStart));
+                    latestStartMap.put(feature.getID(), Math.max(currentLatestStart, parentsLatestStart));
                     for (final String parentID : parentIDs) {
                         final Integer parentCurrentLatestStart = latestStartMap.getOrDefault(parentID,0);
                         latestStartMap.put(parentID, Math.max(parentCurrentLatestStart, feature.getStart()));
@@ -109,13 +110,13 @@ public class SortGff extends CommandLineProgram {
         try(final Gff3Writer writer = new Gff3Writer(OUTPUT, header)) {
             int latestStart = -1;
             String latestChrom = "";
-            for (final Gff3BaseData feature : sorter) {
+            for (final Gff3Feature feature : sorter) {
                 if (latestStart>=0 && (feature.getStart()>latestStart || !feature.getContig().equals(latestChrom))) {
                     writer.addFlushDirective();
                     latestStart = 0;
                 }
                 writer.addFeature(feature);
-                latestStart = Math.max(latestStart, latestStartMap.get(feature.getId()));
+                latestStart = Math.max(latestStart, latestStartMap.get(feature.getID()));
                 latestChrom = feature.getContig();
                 progressWrite.record(feature.getContig(), feature.getStart());
             }
@@ -126,7 +127,7 @@ public class SortGff extends CommandLineProgram {
         return 0;
     }
 
-    class Gff3SortingCollectionCodec implements SortingCollection.Codec<Gff3BaseData> {
+    class Gff3SortingCollectionCodec implements SortingCollection.Codec<Gff3Feature> {
         PrintStream outStream;
         LineIterator lineIteratorIn;
         Gff3Codec gff3Codec;
@@ -138,7 +139,7 @@ public class SortGff extends CommandLineProgram {
         }
 
         @Override
-        public SortingCollection.Codec<Gff3BaseData> clone() {
+        public SortingCollection.Codec<Gff3Feature> clone() {
             return new Gff3SortingCollectionCodec();
         }
 
@@ -155,9 +156,9 @@ public class SortGff extends CommandLineProgram {
         }
 
         @Override
-        public Gff3BaseData decode() {
+        public Gff3Feature decode() {
             while (!gff3Codec.isDone(lineIteratorIn)) {
-                final Gff3BaseData feature = gff3Codec.decodeShallow(lineIteratorIn);
+                final Gff3Feature feature = gff3Codec.decodeShallow(lineIteratorIn);
                 if (feature == null) {
                     continue;
                 }
@@ -167,7 +168,7 @@ public class SortGff extends CommandLineProgram {
         }
 
         @Override
-        public void encode(final Gff3BaseData val) {
+        public void encode(final Gff3Feature val) {
             gff3Writer.addFeature(val);
         }
     }
