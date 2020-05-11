@@ -22,11 +22,12 @@
  * THE SOFTWARE.
  */
 
-package picard.sam;
+package picard.sam.markduplicates;
 
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.sam.DuplicationMetrics;
 
 /**
  * Tests for DuplicationMetrics.
