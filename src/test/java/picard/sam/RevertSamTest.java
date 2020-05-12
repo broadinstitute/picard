@@ -549,7 +549,6 @@ public class RevertSamTest extends CommandLineProgramTest {
         // Tests to ensure that RevertSam can reconstruct the reads and base qualities from reads that have been hard clipped.
 
         final File outputMBA = File.createTempFile("test-output-hard-clipped-round-trip-mba", ".sam");
-        // hardClippedSamToRevert is a sam file with the expected reverted reads and base qualities stored in the tB and tQ tags respectively
         final String [] mergeBamAlignmentsArgs = new String[] {
            "UNMAPPED_BAM=" + hardClippedUnmappedSam.getAbsolutePath(),
            "ALIGNED_BAM=" + hardClippedAlignedSam.getAbsolutePath(),
@@ -567,23 +566,21 @@ public class RevertSamTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine("RevertSam", revertSamArgs), 0);
 
-        final SamReader revertedReader = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(outputRevert);
-        final SamReader unmappedReader = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(hardClippedUnmappedSam);
-        final SAMRecordIterator revertedIterator = revertedReader.iterator();
-        final SAMRecordIterator unmappedIterator = unmappedReader.iterator();
+        try(SamReader revertedReader = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(outputRevert);
+            SamReader unmappedReader = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(hardClippedUnmappedSam)) {
+            final SAMRecordIterator revertedIterator = revertedReader.iterator();
+            final SAMRecordIterator unmappedIterator = unmappedReader.iterator();
 
-        while (revertedIterator.hasNext() && unmappedIterator.hasNext()) {
-            SAMRecord reverted = revertedIterator.next();
-            SAMRecord unmapped = unmappedIterator.next();
+            while (revertedIterator.hasNext() && unmappedIterator.hasNext()) {
+                final SAMRecord reverted = revertedIterator.next();
+                final SAMRecord unmapped = unmappedIterator.next();
 
-            Assert.assertEquals(reverted.getReadString(), unmapped.getReadString());
-            Assert.assertEquals(SAMUtils.phredToFastq(reverted.getBaseQualities()), SAMUtils.phredToFastq(unmapped.getBaseQualities()));
+                Assert.assertEquals(reverted.getReadString(), unmapped.getReadString());
+                Assert.assertEquals(SAMUtils.phredToFastq(reverted.getBaseQualities()), SAMUtils.phredToFastq(unmapped.getBaseQualities()));
+            }
+            if (revertedIterator.hasNext() || unmappedIterator.hasNext()) {
+                Assert.fail("Reverted sam file should be identical in length to unmapped sam file in test, but was not.");
+            }
         }
-        if (revertedIterator.hasNext() || unmappedIterator.hasNext()) {
-            Assert.fail("Reverted sam file should be identical in length to unmapped sam file in test, but was not.");
-        }
-
-        revertedReader.close();
-        unmappedReader.close();
     }
 }

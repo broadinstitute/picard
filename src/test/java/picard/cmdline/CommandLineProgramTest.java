@@ -66,6 +66,4 @@ public abstract class CommandLineProgramTest {
     public int runPicardCommandLine(final Map<String, String> kwargs) {
         return new PicardCommandLine().instanceMain(makePicardCommandLineArgs(kwargs));
     }
-
-
 }
