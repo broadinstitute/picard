@@ -205,7 +205,7 @@ public class FingerprintCheckerTest {
 
         final Map<Set<String>, Set<String>> collected = metrics.stream()
 //                we sometimes get -0.0, and so the comparison fails...
-                .collect(Collectors.groupingBy(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE), Collectors.mapping(s -> Double.toString(s.LOD_SCORE + 0), Collectors.toSet())));
+                .collect(Collectors.groupingBy(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE), Collectors.mapping(s -> String.valueOf(s.LOD_SCORE + 0), Collectors.toSet())));
 
         for (Map.Entry<Set<String>, Set<String>> entry : collected.entrySet()) {
             if (entry.getValue().size() > 1) {

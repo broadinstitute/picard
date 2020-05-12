@@ -464,8 +464,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         log.info("Fingerprinting " + unrolledFiles.size() + " INPUT files.");
 
-        final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
-        capFingerprints(fpMap);
+        final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
+        final Map<FingerprintIdDetails, Fingerprint> fpMap = capFingerprints(uncappedFpMap);
 
         if (INPUT_SAMPLE_MAP != null) {
             remapFingerprints(fpMap, INPUT_SAMPLE_MAP, "INPUT_SAMPLE_MAP");
@@ -484,8 +484,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             numUnexpected = crossCheckGrouped(fpMap, fpMap, metrics, Fingerprint.getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
         } else {
             log.info("Fingerprinting " + unrolledFiles2.size() + " SECOND_INPUT files.");
-            final Map<FingerprintIdDetails, Fingerprint> fpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
-            capFingerprints(fpMap);
+            final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
+            final Map<FingerprintIdDetails, Fingerprint> fpMap2 = capFingerprints(uncappedFpMap2);
 
 
             if (SECOND_INPUT_SAMPLE_MAP != null) {
@@ -531,16 +531,17 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
     }
 
-    private void capFingerprints(final Map<FingerprintIdDetails, Fingerprint> fpMap) {
-        for (Map.Entry<FingerprintIdDetails, Fingerprint> fingerprintEntry : fpMap.entrySet()) {
-            final Fingerprint cappedFp = new Fingerprint(fingerprintEntry.getValue().getSample(),fingerprintEntry.getValue().getSource(),fingerprintEntry.getValue().getInfo());
+    private Map<FingerprintIdDetails, Fingerprint> capFingerprints(final Map<FingerprintIdDetails, Fingerprint> fpMap) {
+        return fpMap.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+                    final Fingerprint value = entry.getValue();
+                    final Fingerprint cappedFp = new Fingerprint(value.getSample(), value.getSource(), value.getInfo());
 
-            for (HaplotypeBlock haplotypeBlock : fingerprintEntry.getValue().keySet()) {
-                HaplotypeProbabilities cappedHp = new CappedHaplotypeProbabilities(fingerprintEntry.getValue().get(haplotypeBlock),-MAX_EFFECT_OF_EACH_HAPLOTYPE_BLOCK);
-                cappedFp.add(cappedHp);
-            }
-            fpMap.put(fingerprintEntry.getKey(), cappedFp);
-        }
+                    value.values().stream()
+                            .map(probabilities -> new CappedHaplotypeProbabilities(probabilities, -MAX_EFFECT_OF_EACH_HAPLOTYPE_BLOCK))
+                            .forEach(cappedFp::add);
+                    return cappedFp;
+                }));
     }
 
     /**

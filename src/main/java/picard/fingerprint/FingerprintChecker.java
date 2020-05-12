@@ -116,7 +116,7 @@ public class FingerprintChecker {
     private int locusMaxReads = 0;
     private String defaultSampleID = "<UNKNOWN>";
 
-    private Set<Path> missingRGFiles = new HashSet<>();
+    private final Set<Path> missingRGFiles = new HashSet<>();
 
     private final Log log = Log.getInstance(FingerprintChecker.class);
 
@@ -539,7 +539,7 @@ public class FingerprintChecker {
         // Now go through the data at each locus and figure stuff out!
         for (final SamLocusIterator.LocusInfo info : iterator) {
 
-            log.debug(() -> "At locus " + info.toString());
+            log.debug(() -> "At locus " + info);
 
             // TODO: Filter out the locus if the allele balance doesn't make sense for either a
             // TODO: 50/50 het or a hom with some errors; in HS data with deep coverage any base
@@ -573,7 +573,7 @@ public class FingerprintChecker {
                     }
                 }
 
-                if (rg == null || fingerprintIdDetailsMap.containsKey(rg)) {
+                if (fingerprintIdDetailsMap.containsKey(rg)) {
                     details = fingerprintIdDetailsMap.get(rg);
 
                     final String readName = rec.getRecord().getReadName();
@@ -622,15 +622,13 @@ public class FingerprintChecker {
      */
     public Map<String, Fingerprint> identifyContaminant(final Path samFile, final double contamination) {
 
-        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintMap = this.fingerprintSamFile(samFile, (h) -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
+        final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMap = this.fingerprintSamFile(samFile, h -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
 
-        final Map<FingerprintIdDetails, Fingerprint> fingerprintIdDetailsFingerprintbySample = Fingerprint.mergeFingerprintsBy(fingerprintIdDetailsFingerprintMap,
+        final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsBySample = Fingerprint.mergeFingerprintsBy(fpIdDetailsMap,
                 Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
 
-        final Map<String,Fingerprint> fingerprintsBySample = fingerprintIdDetailsFingerprintbySample.entrySet().stream()
+        return fpIdDetailsBySample.entrySet().stream()
                 .collect(Collectors.toMap(e -> e.getKey().sample, Map.Entry::getValue));
-
-        return fingerprintsBySample;
     }
 
     /**

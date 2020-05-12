@@ -152,7 +152,7 @@ public class FingerprintUtils {
                 snp.getPos(),
                 snp.getPos()).getBases()[0]);
 
-        if (snp.getAllele1() != refAllele && snp.getAllele2() != refAllele){
+        if (snp.getAllele1() != refAllele && snp.getAllele2() != refAllele) {
             throw new PicardException("Don't know how to deal with missing reference allele in fingerprinting map");
         }
 
@@ -173,7 +173,8 @@ public class FingerprintUtils {
             obsAlt = haplotypeProbabilities.getObsAllele2();
         }
 
-        final double[] PLs =  Arrays.copyOf(haplotypeProbabilities.getLogLikelihoods(),HaplotypeProbabilities.NUM_GENOTYPES);
+        final double[] origPLs = haplotypeProbabilities.getLogLikelihoods();
+        final double[] PLs =  Arrays.copyOf(origPLs,origPLs.length);
         if (swap12) {
             ArrayUtils.reverse(PLs);
         }

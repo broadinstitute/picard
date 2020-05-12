@@ -80,7 +80,7 @@ public class ExtractFingerprint extends CommandLineProgram {
         return true;
     }
 
-    private final Log log = Log.getInstance(ExtractFingerprint.class);
+    private static final Log log = Log.getInstance(ExtractFingerprint.class);
 
     @Override
     protected int doWork() {
@@ -92,7 +92,9 @@ public class ExtractFingerprint extends CommandLineProgram {
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
 
         // if we want the contaminated fingerprint instead, we need to change the value of CONTAMINATION:
-        if (!EXTRACT_CONTAMINATION) CONTAMINATION = 1 - CONTAMINATION;
+        if (!EXTRACT_CONTAMINATION) {
+            CONTAMINATION = 1 - CONTAMINATION;
+        }
 
         checker.setLocusMaxReads(LOCUS_MAX_READS);
         checker.setValidationStringency(VALIDATION_STRINGENCY);
