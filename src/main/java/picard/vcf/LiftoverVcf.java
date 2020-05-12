@@ -30,14 +30,28 @@ import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.*;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFFilterHeaderLine;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
+import htsjdk.variant.vcf.VCFHeaderLineCount;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import htsjdk.variant.vcf.VCFRecordCodec;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -50,7 +64,15 @@ import picard.util.LiftoverUtils;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -530,28 +552,25 @@ public class LiftoverVcf extends CommandLineProgram {
         }
 
         // Check that the reference allele still agrees with the reference sequence
-        boolean mismatchesReference = false;
-        for (final Allele allele : vc.getAlleles()) {
-            if (allele.isReference()) {
-                final byte[] ref = refSeq.getBases();
-                final String refString = StringUtil.bytesToString(ref, vc.getStart() - 1, vc.getEnd() - vc.getStart() + 1);
+        final boolean mismatchesReference;
+        final Allele allele = vc.getReference();
+        final byte[] ref = refSeq.getBases();
+        final String refString = StringUtil.bytesToString(ref, vc.getStart() - 1, vc.getEnd() - vc.getStart() + 1);
 
-                if (!refString.equalsIgnoreCase(allele.getBaseString())) {
-                    // consider that the ref and the alt may have been swapped in a simple biallelic SNP
-                    if (vc.isBiallelic() && vc.isSNP() && refString.equalsIgnoreCase(vc.getAlternateAllele(0).getBaseString())) {
-                        if (RECOVER_SWAPPED_REF_ALT) {
-                            totalTrackedAsSwapRefAlt++;
-                            addAndTrack(LiftoverUtils.swapRefAlt(vc, TAGS_TO_REVERSE, TAGS_TO_DROP), source);
-                            return;
-                        } else {
-                            totalTrackedAsSwapRefAlt++;
-                        }
-                    }
-                    mismatchesReference = true;
+        if (!refString.equalsIgnoreCase(allele.getBaseString())) {
+            // consider that the ref and the alt may have been swapped in a simple biallelic SNP
+            if (vc.isBiallelic() && vc.isSNP() && refString.equalsIgnoreCase(vc.getAlternateAllele(0).getBaseString())) {
+                totalTrackedAsSwapRefAlt++;
+                if (RECOVER_SWAPPED_REF_ALT) {
+                    addAndTrack(LiftoverUtils.swapRefAlt(vc, TAGS_TO_REVERSE, TAGS_TO_DROP), source);
+                    return;
                 }
-                break;
             }
+            mismatchesReference = true;
+        } else {
+            mismatchesReference = false;
         }
+
 
         if (mismatchesReference) {
             rejectedRecords.add(new VariantContextBuilder(source)
