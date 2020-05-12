@@ -37,8 +37,7 @@ import picard.sam.testers.ValidateSamTester;
 
 import java.io.File;
 
-public class
-MergeSamFilesTest extends CommandLineProgramTest {
+public class MergeSamFilesTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/MergeSamFiles");
 
     public String getCommandLineProgramName() {

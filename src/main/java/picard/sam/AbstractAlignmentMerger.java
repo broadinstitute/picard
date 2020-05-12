@@ -848,7 +848,7 @@ public abstract class AbstractAlignmentMerger {
         final int clipPositionFrom, clipPositionTo;
         if (rec.getReadNegativeStrandFlag()) {
             clipPositionFrom = 0;
-            clipPositionTo = bases.length - clipFrom + 1;
+            clipPositionTo = readLength - clipFrom + 1;
         } else {
             clipPositionFrom = clipFrom - 1;
             clipPositionTo = readLength;
