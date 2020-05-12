@@ -822,6 +822,7 @@ public abstract class AbstractAlignmentMerger {
         rec.setCigar(newCigar);
         readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos, false);
         rec.setCigar(oldCigar);
+        // instead of setting back the position of the read by posShift, which could create a negative start position, we add posShift the final position in the read.
         return readPosition + posShift;
     }
 
