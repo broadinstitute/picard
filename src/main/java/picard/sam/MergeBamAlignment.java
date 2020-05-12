@@ -355,7 +355,8 @@ public class MergeBamAlignment extends CommandLineProgram {
                 PRIMARY_ALIGNMENT_STRATEGY.newInstance(), ADD_MATE_CIGAR, UNMAP_CONTAMINANT_READS,
                 MIN_UNCLIPPED_BASES, UNMAPPED_READ_STRATEGY, MATCHING_DICTIONARY_TAGS);
 
-        merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS, HARD_CLIP_OVERLAPPING_READS);
+        merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS);
+        merger.setHardClipOverlappingReads(HARD_CLIP_OVERLAPPING_READS);
         merger.setMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         merger.setKeepAlignerProperPairFlags(ALIGNER_PROPER_PAIR_FLAGS);
         merger.setIncludeSecondaryAlignments(INCLUDE_SECONDARY_ALIGNMENTS);

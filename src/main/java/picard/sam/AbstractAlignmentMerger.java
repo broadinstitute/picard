@@ -782,10 +782,10 @@ public abstract class AbstractAlignmentMerger {
                     negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
 
                     if(posClipFrom > 0) {
-                        clipRead(pos, posClipFrom, useHardClipping);
+                        clip3PrimeEndOfRead(pos, posClipFrom, useHardClipping);
                     }
                     if(negClipFrom > 0) {
-                        clipRead(neg, negClipFrom, useHardClipping);
+                        clip3PrimeEndOfRead(neg, negClipFrom, useHardClipping);
                     }
                 }
             }
@@ -797,12 +797,14 @@ public abstract class AbstractAlignmentMerger {
         final Cigar oldCigar = rec.getCigar();
         final int oldStart = rec.getAlignmentStart();
         final Cigar newCigar = new Cigar();
-        List<CigarElement> cigarElements = new ArrayList<>(oldCigar.getCigarElements()); //need to be modifiable
+        final List<CigarElement> cigarElements = new ArrayList<>(oldCigar.getCigarElements());
         int posShift = 0;
         boolean foundNonClip = false;
+
         for (final CigarElement cigarElement : cigarElements) {
             final CigarOperator op = cigarElement.getOperator();
 
+            // Replace SOFT_CLIPs in the oldCigar with MATCH_OR_MISMATCH in newCigar
             if (op == CigarOperator.SOFT_CLIP) {
                 newCigar.add(new CigarElement(cigarElement.getLength(), CigarOperator.MATCH_OR_MISMATCH));
                 if (!foundNonClip) {
@@ -816,15 +818,14 @@ public abstract class AbstractAlignmentMerger {
             }
         }
 
-        rec.setAlignmentStart(rec.getAlignmentStart() - posShift);
+        // Temporarily use the newCigar that has SOFT_CLIPs replaced with MATCH_OR_MISMATCH to get read position at reference, but ignore existence of soft-clips
         rec.setCigar(newCigar);
         readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos, false);
         rec.setCigar(oldCigar);
-        rec.setAlignmentStart(oldStart);
-        return readPosition;
+        return readPosition + posShift;
     }
 
-    private static void clipRead(final SAMRecord rec, final int clipFrom, final boolean useHardClipping) {
+    private static void clip3PrimeEndOfRead(final SAMRecord rec, final int clipFrom, final boolean useHardClipping) {
         // If we are using hard clips, add bases and qualities to SAM tag.
         if (useHardClipping) {
             moveClippedBasesToTag(rec, clipFrom);
@@ -836,7 +837,7 @@ public abstract class AbstractAlignmentMerger {
 
     private static void moveClippedBasesToTag(final SAMRecord rec, final int clipFrom) {
         if (rec.getAttribute(HARD_CLIPPED_BASES_TAG) != null || rec.getAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG) != null) {
-            throw new PicardException("Record already contains tags for restoring hard clipped bases.  This operation will permanently erase information if it proceeds.");
+            throw new PicardException("Record " + rec.getReadName() + " already contains tags for restoring hard-clipped bases.  This operation will permanently erase information if it proceeds.");
         }
 
         final byte[] bases = rec.getReadBases();
@@ -856,7 +857,7 @@ public abstract class AbstractAlignmentMerger {
         String qualitiesToKeepInTag = SAMUtils.phredToFastq(Arrays.copyOfRange(baseQualities, clipPositionFrom, clipPositionTo));
 
         if (rec.getReadNegativeStrandFlag()) {
-            // Ensures that bases are reverse complemented and base qualities are reversed
+            // Ensures that the qualities and bases in the tags are stored in their original order, as produced by the sequencer
             basesToKeepInTag = SequenceUtil.reverseComplement(basesToKeepInTag);
             qualitiesToKeepInTag =  new StringBuilder(qualitiesToKeepInTag).reverse().toString();
         }
@@ -1029,11 +1030,9 @@ public abstract class AbstractAlignmentMerger {
 
     public void setClipOverlappingReads(final boolean clipOverlappingReads) {
         this.clipOverlappingReads = clipOverlappingReads;
-        this.hardClipOverlappingReads = false;
     }
 
-    public void setClipOverlappingReads(final boolean clipOverlappingReads, final boolean hardClipOverlappingReads) {
-        this.clipOverlappingReads = clipOverlappingReads;
+    public void setHardClipOverlappingReads(final boolean hardClipOverlappingReads) {
         this.hardClipOverlappingReads = hardClipOverlappingReads;
     }
 

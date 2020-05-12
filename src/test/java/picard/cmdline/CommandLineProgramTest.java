@@ -21,17 +21,22 @@ public abstract class CommandLineProgramTest {
      * For testing support.  Given a name of a Picard CommandLineProgram and it's arguments, builds the arguments appropriate for calling the
      * program through PicardCommandLine
      *
-     * @param args
+     * @param programName Picard command line program to run
+     * @param args Arguments to pass to command line program
      * @return String[] of command line arguments
      */
-    public String[] makePicardCommandLineArgs(final List<String> args) {
+    public String[] makePicardCommandLineArgs(final String programName, final List<String> args) {
         final String[] picardCommandLineArgs = new String[args.size() + 1];
-        picardCommandLineArgs[0] = getCommandLineProgramName();
+        picardCommandLineArgs[0] = programName;
         int i = 1;
         for (final String arg : args) {
             picardCommandLineArgs[i++] = arg;
         }
         return picardCommandLineArgs;
+    }
+
+    public String[] makePicardCommandLineArgs(final List<String> args) {
+        return makePicardCommandLineArgs(getCommandLineProgramName(), args);
     }
 
     public String[] makePicardCommandLineArgs(final Map<String, String> kwargs) {
@@ -54,7 +59,13 @@ public abstract class CommandLineProgramTest {
         return new PicardCommandLine().instanceMain(makePicardCommandLineArgs(args));
     }
 
+    public int runPicardCommandLine(final String programName, final String[] args) {
+        return new PicardCommandLine().instanceMain(makePicardCommandLineArgs(programName, Arrays.asList(args)));
+    }
+
     public int runPicardCommandLine(final Map<String, String> kwargs) {
         return new PicardCommandLine().instanceMain(makePicardCommandLineArgs(kwargs));
     }
+
+
 }

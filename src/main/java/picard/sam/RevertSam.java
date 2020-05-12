@@ -277,6 +277,10 @@ public class RevertSam extends CommandLineProgram {
             headerMap = null;
         }
 
+        if (RESTORE_HARDCLIPS && !REMOVE_ALIGNMENT_INFORMATION) {
+            throw new PicardException("Cannot revert sam file when RESTORE_HARDCLIPS is true and REMOVE_ALIGNMENT_INFORMATION is false.");
+        }
+
         final SAMFileWriterFactory factory = new SAMFileWriterFactory();
         final RevertSamWriter out = new RevertSamWriter(OUTPUT_BY_READGROUP, headerMap, outputMap, singleOutHeader, OUTPUT, presorted, factory, REFERENCE_SEQUENCE);
 
@@ -364,10 +368,6 @@ public class RevertSam extends CommandLineProgram {
 
         if (REMOVE_DUPLICATE_INFORMATION) {
             rec.setDuplicateReadFlag(false);
-        }
-
-        if (RESTORE_HARDCLIPS && !REMOVE_ALIGNMENT_INFORMATION) {
-            throw new PicardException("hi mom");
         }
 
         if (REMOVE_ALIGNMENT_INFORMATION) {
