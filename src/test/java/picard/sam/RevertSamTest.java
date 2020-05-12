@@ -549,6 +549,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         // Tests to ensure that RevertSam can reconstruct the reads and base qualities from reads that have been hard clipped.
 
         final File outputMBA = File.createTempFile("test-output-hard-clipped-round-trip-mba", ".sam");
+        outputMBA.deleteOnExit();
         final String [] mergeBamAlignmentsArgs = new String[] {
            "UNMAPPED_BAM=" + hardClippedUnmappedSam.getAbsolutePath(),
            "ALIGNED_BAM=" + hardClippedAlignedSam.getAbsolutePath(),
@@ -559,6 +560,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine("MergeBamAlignment", mergeBamAlignmentsArgs), 0);
 
         final File outputRevert = File.createTempFile("test-output-hard-clipped-round-trip-reverted", ".sam");
+        outputRevert.deleteOnExit();
         final String [] revertSamArgs = new String[] {
                 "I=" + outputMBA.getAbsolutePath(),
                 "RESTORE_HARDCLIPS=true",
