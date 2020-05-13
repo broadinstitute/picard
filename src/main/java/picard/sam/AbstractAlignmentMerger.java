@@ -708,7 +708,7 @@ public abstract class AbstractAlignmentMerger {
 
             // if there already is a comment, add second comment with a | separator:
             Optional<String> optionalComment = Optional.ofNullable(unaligned.getStringAttribute(SAMTag.CO.name()));
-            unaligned.setAttribute( SAMTag.CO.name(), optionalComment.map(s -> s + " | ").orElse("")  + "Cross-species contamination");
+            unaligned.setAttribute(SAMTag.CO.name(), optionalComment.map(s -> s + " | ").orElse("")  + "Cross-species contamination");
         }
     }
 
