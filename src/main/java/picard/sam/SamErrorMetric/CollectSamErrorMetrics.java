@@ -274,10 +274,10 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      * Otherwise, will initialize the {@link #vcfIterator}.
      */
     private void initializeVcfDataSource() throws IOException {
-        if ( VCF == null ) {
+        if (VCF == null) {
             vcfIterator = new PeekableIterator<>(Collections.emptyIterator());
         }
-        else if ( INTERVAL_ITERATOR ) {
+        else if (INTERVAL_ITERATOR) {
             vcfFileReader = new VCFFileReader(IOUtil.getPath(VCF), true);
             // Make sure we can query our file for interval mode:
             if (!vcfFileReader.isQueryable()) {
@@ -472,7 +472,9 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         // Make sure we can read our files:
         try {
             IOUtil.assertFileIsReadable(IOUtil.getPath(INPUT));
-            if (VCF != null) IOUtil.assertFileIsReadable(IOUtil.getPath(VCF));
+            if (VCF != null) {
+                IOUtil.assertFileIsReadable(IOUtil.getPath(VCF));
+            }
             IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
             IOUtil.assertFilesAreReadable(INTERVALS);
         }
