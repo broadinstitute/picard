@@ -65,7 +65,7 @@ public class GatherVcfs extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(GatherVcfs.class);
 
-    /** class used to sort VCFs using the first variant */
+    /** class used to reorder input VCFs using the first variant */
     private static class FirstVariantInVcf {
         final File vcfFile;
         VariantContext firstVariant = null;// may be null if the vcf is empty
