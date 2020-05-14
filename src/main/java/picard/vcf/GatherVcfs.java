@@ -52,7 +52,11 @@ public class GatherVcfs extends CommandLineProgram {
     @Argument(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
     public List<String>  COMMENT = new ArrayList<>();
     
-    @Argument(doc = "The variants in INPUT come from non overlapping regions "
+    @Argument(doc = "If 'true' the program will reorder INPUT according "
+            + "to the genomic location of the first variant in each file. "
+            + "this is useful since the order of variants in each file in INPUT come from non overlapping regions "
+            + " but the order of the files in INPUT is untrusted.",
+    optional = true, shortName = "RI")
             + "but the order of the files in INPUT is untrusted. "
             + "If 'true' the program will reorder INPUT according "
             + "to the genomic location of the first variant in each file.",
