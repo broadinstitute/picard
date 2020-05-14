@@ -68,7 +68,7 @@ public class GatherVcfs extends CommandLineProgram {
     /** class used to reorder input VCFs using the first variant */
     private static class FirstVariantInVcf {
         final File vcfFile;
-        VariantContext firstVariant = null;// may be null if the vcf is empty
+        VariantContext firstVariant = null;   // may be null if the vcf is empty
         FirstVariantInVcf(final File vcfFile) {
             this.vcfFile = vcfFile;
         }
