@@ -168,7 +168,9 @@ public class GatherVcfs extends CommandLineProgram {
                     }
                     return 1;
                 }
-                if (A.firstVariant!=null && B.firstVariant==null) return -1;
+                if (A.firstVariant != null && B.firstVariant == null) {
+                    return -1;
+                }
                 return comparator.compare(A.firstVariant, B.firstVariant);
                 });
             
