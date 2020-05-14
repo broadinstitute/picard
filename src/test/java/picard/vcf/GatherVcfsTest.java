@@ -47,7 +47,7 @@ public class GatherVcfsTest extends CommandLineProgramTest {
     @DataProvider
     public Object[][] vcfshards() {
         return new Object[][]{
-                {Arrays.asList(shard1,shard2,shard3), vcf, 0, false},
+                {Arrays.asList(shard1, shard2, shard3), vcf, 0, false},
                 {Arrays.asList(shard3,shard1,shard2), vcf, 0, true},
                 {Arrays.asList(shard1,shard2_bad,shard3), vcf, 1, false},
                 {Arrays.asList(shard1,shard3,shard2), vcf, 1, false},
