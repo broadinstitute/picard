@@ -61,7 +61,7 @@ public class GatherVcfsTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "vcfshards")
-    public void TestGatherFiles(final List<File> inputFiles, final File expectedOutput, final int expectedRetVal, boolean sort) throws IOException {
+    public void TestGatherFiles(final List<File> inputFiles, final File expectedOutput, final int expectedRetVal, boolean reorder) throws IOException {
         final String comment1 = "This is a comment";
         final List<String> args = new ArrayList<>();
 
