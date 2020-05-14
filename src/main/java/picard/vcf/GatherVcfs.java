@@ -153,7 +153,9 @@ public class GatherVcfs extends CommandLineProgram {
                 try (VCFFileReader in = new VCFFileReader(f, false)) {
                     try (CloseableIterator<VariantContext> iter = in.iterator()) {
                         vcfcxt.firstVariant = ( iter.hasNext() ? iter.next() : null );
-                        if (vcfcxt.firstVariant == null) log.info("No variant in " + f);
+                        if (vcfcxt.firstVariant == null) {
+                            log.info("No variant in " + f);
+                         }
                     }
                 }
                 filesandvariants.add(vcfcxt);
