@@ -25,8 +25,11 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 @CommandLineProgramProperties(
@@ -45,9 +48,9 @@ public class SortGff extends CommandLineProgram {
 
     private final Log log = Log.getInstance(SortGff.class);
 
-    private final Map<String, Integer> positionMap = new HashMap<>();
+   // private final Map<String, Integer> positionMap = new HashMap<>();
     private final Map<String, Integer> latestStartMap = new HashMap<>();
-    private final Map<String, String> unfoundParentsMap = new HashMap<>();
+    private final Map<String, Set<String>> parentChildrenMap = new HashMap<>();
 
     @Override
     protected int doWork() {
@@ -88,16 +91,36 @@ public class SortGff extends CommandLineProgram {
                 if (feature != null) {
                     sorter.add(feature);
                     progressRead.record(feature.getContig(), feature.getStart());
-                    positionMap.put(feature.getID(), feature.getStart());
-                    final Integer currentLatestStart = latestStartMap.getOrDefault(feature.getID(),0);
-                    final String parentIDAttribute = feature.getAttributes().get("Parent");
-                    final List<String> parentIDs = parentIDAttribute != null? ParsingUtils.split(parentIDAttribute, ',') : new ArrayList<>();
-                    final Integer parentsLatestStart = parentIDs.stream().map(id -> positionMap.get(id)).max(Integer::compareTo).orElse(0);
 
-                    latestStartMap.put(feature.getID(), Math.max(currentLatestStart, parentsLatestStart));
+                    final String featureID = feature.getID();
+                    final List<String> parentIDs = getParentIDs(feature);
+
+                    if (featureID != null) {
+                        //update latestStartMap for this feature based on its position
+                        latestStartMap.compute(featureID, (k, v) -> v == null ? feature.getStart() : Math.max(feature.getStart(), v));
+
+                        //update latestStartMap for this feature based on its parents' latest starts
+                        final Integer parentsLatestStart = parentIDs.stream().map(latestStartMap::get).max(Integer::compareTo).orElse(0);
+                        final Integer currentLatestStart = latestStartMap.compute(featureID, (k, v) -> Math.max(v, parentsLatestStart));
+
+                        //check for any child features of this feature which have been seen before it
+                        if (parentChildrenMap.containsKey(featureID)) {
+                            for (final String childID : parentChildrenMap.get(featureID)) {
+                                //update latestStartMap for child
+                                latestStartMap.compute(featureID, (k, v) -> Math.max(v, currentLatestStart));
+                            }
+                        }
+                    }
+                    final Integer currentLatestStart = featureID == null? feature.getStart() : latestStartMap.get(featureID);
+
+                    //update latestStartMap for each parent based on this feature's latest start, and add this feature as child to each of its parents
                     for (final String parentID : parentIDs) {
-                        final Integer parentCurrentLatestStart = latestStartMap.getOrDefault(parentID,0);
-                        latestStartMap.put(parentID, Math.max(parentCurrentLatestStart, feature.getStart()));
+                        latestStartMap.compute(parentID, (k, v) -> v == null? currentLatestStart : Math.max(currentLatestStart, v));
+
+                        if (featureID != null) {
+                            final Set<String> childrenOfParent = parentChildrenMap.computeIfAbsent(parentID, id -> new HashSet<>());
+                            childrenOfParent.add(featureID);
+                        }
                     }
                 }
             }
@@ -116,7 +139,14 @@ public class SortGff extends CommandLineProgram {
                     latestStart = 0;
                 }
                 writer.addFeature(feature);
-                latestStart = Math.max(latestStart, latestStartMap.get(feature.getID()));
+                final String featureID = feature.getID();
+                if (featureID != null) {
+                    latestStart = Math.max(latestStart, latestStartMap.get(feature.getID()));
+                } else {
+                    //if featureID was null we get latestStart for it based on its parents, since they are the only features it could be linked with
+                    final List<String> parentIDs = getParentIDs(feature);
+                    latestStart = Math.max(latestStart, parentIDs.stream().map(latestStartMap::get).max(Integer::compareTo).orElse(feature.getStart()));
+                }
                 latestChrom = feature.getContig();
                 progressWrite.record(feature.getContig(), feature.getStart());
             }
@@ -125,6 +155,13 @@ public class SortGff extends CommandLineProgram {
         }
 
         return 0;
+    }
+
+    private List<String> getParentIDs(final Gff3Feature feature) {
+        final String parentIDAttribute = feature.getAttributes().get("Parent");
+        final List<String> parentIDs = parentIDAttribute != null? ParsingUtils.split(parentIDAttribute, ',') : new ArrayList<>();
+
+        return parentIDs;
     }
 
     class Gff3SortingCollectionCodec implements SortingCollection.Codec<Gff3Feature> {
