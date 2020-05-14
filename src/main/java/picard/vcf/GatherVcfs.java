@@ -163,7 +163,9 @@ public class GatherVcfs extends CommandLineProgram {
             /* order the files according to the position of their 1st variant */
             Collections.sort(filesandvariants, (A,B)->{
                 if (A.firstVariant==null) {
-                    if (B.firstVariant==null) return 0;
+                    if (B.firstVariant == null) {
+                        return 0;
+                    }
                     return 1;
                 }
                 if (A.firstVariant!=null && B.firstVariant==null) return -1;
