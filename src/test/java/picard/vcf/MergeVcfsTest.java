@@ -25,7 +25,7 @@ public class MergeVcfsTest extends AbstractVcfMergingClpTester {
     public void TestComments() throws IOException {
         final String comment1 = "This is a comment";
         final List<String> args = new ArrayList<>();
-        final File output = VcfTestUtils.createTemporaryIndexedFile("result",".vcf");
+        final File output = VcfTestUtils.createTemporaryIndexedFile("result", ".vcf");
 
         args.add("INPUT=" + TEST_DATA_PATH + "mini.vcf");
         args.add("OUTPUT=" + output.getAbsolutePath());
