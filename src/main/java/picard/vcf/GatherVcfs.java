@@ -48,19 +48,15 @@ public class GatherVcfs extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF file.")
     public File OUTPUT;
-    
+
     @Argument(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
     public List<String>  COMMENT = new ArrayList<>();
-    
+
     @Argument(doc = "If 'true' the program will reorder INPUT according "
             + "to the genomic location of the first variant in each file. "
             + "this is useful since the order of variants in each file in INPUT come from non overlapping regions "
             + " but the order of the files in INPUT is untrusted.",
-    optional = true, shortName = "RI")
-            + "but the order of the files in INPUT is untrusted. "
-            + "If 'true' the program will reorder INPUT according "
-            + "to the genomic location of the first variant in each file.",
-            optional = true, shortName = "S")
+            optional = true, shortName = "RI")
     public boolean  REORDER_INPUT_BY_FIRST_VARIANT = false;
 
     private static final Log log = Log.getInstance(GatherVcfs.class);
