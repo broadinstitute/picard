@@ -76,7 +76,7 @@ public class RevertSamTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider="positiveTestData")
-    public void basicPositiveTests(final SAMFileHeader.SortOrder so, final boolean removeDuplicates, final boolean removeAlignmentInfo,
+    public void basicPositiveTests(final SAMFileHeader.SortOrder so, final boolean removeDuplicates, final boolean removeAlignmentInfo, final boolean restoreHardClips,
                                    final boolean restoreOriginalQualities, final boolean outputByReadGroup, final String sample, final String library,
                                    final List<String> attributesToClear) throws Exception {
 
@@ -98,6 +98,9 @@ public class RevertSamTest extends CommandLineProgramTest {
         if (outputByReadGroup) {
             argSize++;
         }
+        if (!restoreHardClips) {
+            argSize++;
+        }
         final String args[] = new String[argSize];
         int index = 0;
         args[index++] = "INPUT=" + basicSamToRevert;
@@ -110,6 +113,9 @@ public class RevertSamTest extends CommandLineProgramTest {
         }
         args[index++] = "REMOVE_DUPLICATE_INFORMATION=" + removeDuplicates;
         args[index++] = "REMOVE_ALIGNMENT_INFORMATION=" + removeAlignmentInfo;
+        if (!restoreHardClips) {
+            args[index++] = "RESTORE_HARDCLIPS=" + restoreHardClips;
+        }
         args[index++] = "RESTORE_ORIGINAL_QUALITIES=" + restoreOriginalQualities;
         if (sample != null) {
             args[index++] = "SAMPLE_ALIAS=" + sample;
@@ -273,10 +279,10 @@ public class RevertSamTest extends CommandLineProgramTest {
     @DataProvider(name="positiveTestData")
     public Object[][] getPostitiveTestData() {
         return new Object[][] {
-                {null, true, true, true, true, null, null, Collections.EMPTY_LIST},
-                {SAMFileHeader.SortOrder.queryname, true, true, true, false, "Hey,Dad!", null, Arrays.asList("XT")},
-                {null, false, true, false, false, "Hey,Dad!", "NewLibraryName", Arrays.asList("XT")},
-                {null, false, false, false, false, null, null, Collections.EMPTY_LIST}
+                {null, true, true, true, true, true, null, null, Collections.EMPTY_LIST},
+                {SAMFileHeader.SortOrder.queryname, true, true, true, true, false, "Hey,Dad!", null, Arrays.asList("XT")},
+                {null, false, true, true, false, false, "Hey,Dad!", "NewLibraryName", Arrays.asList("XT")},
+                {null, false, false, false, false, false, null, null, Collections.EMPTY_LIST}
         };
     }
 

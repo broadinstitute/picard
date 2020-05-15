@@ -41,7 +41,7 @@ def looksLikeWereInAGitRepository(){
 
 // Ensure that we have a clone of the git repository, and resolve any required git-lfs
 // resource files that are needed to run the build but are still lfs stub files.
-def ensureBuildPrerequisites(rbuildPrerequisitesMessage) {
+def ensureBuildPrerequisites(buildPrerequisitesMessage) {
     if (!JavaVersion.current().isJava8Compatible()) {
         throw new GradleException(
                 "Java 8 or later is required to build Picard, but ${JavaVersion.current()} was found. "
