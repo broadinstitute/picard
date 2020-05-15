@@ -155,7 +155,7 @@ public class RevertSam extends CommandLineProgram {
     @Argument(shortName = "OBR", doc = "When true, outputs each read group in a separate file.")
     public boolean OUTPUT_BY_READGROUP = false;
 
-    @Argument(shortName = "RHC", doc = "When false, does not attempt to restore reads and qualities of records with hard-clips containing XB and XQ tags.")
+    @Argument(shortName = "RHC", doc = "When true, restores reads and qualities of records with hard-clips containing XB and XQ tags.")
     public boolean RESTORE_HARDCLIPS = true;
 
     public static enum FileType implements CommandLineParser.ClpEnum {
