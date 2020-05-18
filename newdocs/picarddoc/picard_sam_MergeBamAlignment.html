@@ -591,7 +591,7 @@
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
-					<td>For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.</td>
+					<td>For paired reads, clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  Clipping will be either soft or hard clipping, depending on CLIP_OVERLAPPING_READS_OPERATOR setting. Hard clipped bases and their qualities will be stored in the XB and XQ tags respectively.</td>
 				</tr>
 				<tr>
 					<td><a href="#--EXPECTED_ORIENTATIONS">--EXPECTED_ORIENTATIONS</a><br />
@@ -600,6 +600,13 @@
 					<!--<td>List[PairOrientation]</td> -->
 					<td>[]</td>
 					<td>The expected orientation of proper read pairs. Replaces JUMP_SIZE</td>
+				</tr>
+				<tr>
+					<td><a href="#--HARD_CLIP_OVERLAPPING_READS">--HARD_CLIP_OVERLAPPING_READS</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>If true, hard clipping will be applied to overlapping reads.  By default, soft clipping is used.</td>
 				</tr>
 				<tr>
 					<td><a href="#--INCLUDE_SECONDARY_ALIGNMENTS">--INCLUDE_SECONDARY_ALIGNMENTS</a><br />
@@ -970,7 +977,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.</b><br />
+			<b>For paired reads, clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  Clipping will be either soft or hard clipping, depending on CLIP_OVERLAPPING_READS_OPERATOR setting. Hard clipped bases and their qualities will be stored in the XB and XQ tags respectively.</b><br />
 			
 		</p>
 		<p>
@@ -1039,6 +1046,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--HARD_CLIP_OVERLAPPING_READS">--HARD_CLIP_OVERLAPPING_READS </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>If true, hard clipping will be applied to overlapping reads.  By default, soft clipping is used.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INCLUDE_SECONDARY_ALIGNMENTS">--INCLUDE_SECONDARY_ALIGNMENTS </a>
@@ -1479,7 +1498,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.22.5-SNAPSHOT built at 12-53-2020 09:53:58.
+        <p class="version">Picard version 2.22.7-SNAPSHOT built at 18-11-2020 04:11:12.
         </p>
 
 	</div>

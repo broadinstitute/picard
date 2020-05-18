@@ -152,7 +152,7 @@
       "options": []
     },
     {
-      "summary": "For paired reads, soft clip the 3\u0027 end of each read if necessary so that it does not extend past the 5\u0027 end of its mate.",
+      "summary": "For paired reads, clip the 3\u0027 end of each read if necessary so that it does not extend past the 5\u0027 end of its mate.  Clipping will be either soft or hard clipping, depending on CLIP_OVERLAPPING_READS_OPERATOR setting. Hard clipped bases and their qualities will be stored in the XB and XQ tags respectively.",
       "name": "--CLIP_OVERLAPPING_READS",
       "synonyms": "NA",
       "type": "boolean",
@@ -239,6 +239,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "If true, hard clipping will be applied to overlapping reads.  By default, soft clipping is used.",
+      "name": "--HARD_CLIP_OVERLAPPING_READS",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {

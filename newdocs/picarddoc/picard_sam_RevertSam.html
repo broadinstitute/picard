@@ -573,6 +573,14 @@
 					<td>Remove duplicate read flags from all reads.  Note that if this is false and REMOVE_ALIGNMENT_INFORMATION==true,  the output may have the unusual but sometimes desirable trait of having unmapped reads that are marked as duplicates.</td>
 				</tr>
 				<tr>
+					<td><a href="#--RESTORE_HARDCLIPS">--RESTORE_HARDCLIPS</a><br />
+								&nbsp;<em>-RHC</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>true</td>
+					<td>When true, restores reads and qualities of records with hard-clips containing XB and XQ tags.</td>
+				</tr>
+				<tr>
 					<td><a href="#--RESTORE_ORIGINAL_QUALITIES">--RESTORE_ORIGINAL_QUALITIES</a><br />
 								&nbsp;<em>-OQ</em>
 					</td>
@@ -939,6 +947,18 @@
 			&nbsp;<span class="label">true</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--RESTORE_HARDCLIPS">--RESTORE_HARDCLIPS </a>
+			 / <small>-RHC</small>
+		</h3>
+		<p class="args">
+			<b>When true, restores reads and qualities of records with hard-clips containing XB and XQ tags.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--RESTORE_ORIGINAL_QUALITIES">--RESTORE_ORIGINAL_QUALITIES </a>
 			 / <small>-OQ</small>
 		</h3>
@@ -1095,7 +1115,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.22.5-SNAPSHOT built at 12-53-2020 09:53:58.
+        <p class="version">Picard version 2.22.7-SNAPSHOT built at 18-11-2020 04:11:12.
         </p>
 
 	</div>

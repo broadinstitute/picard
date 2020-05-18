@@ -289,6 +289,21 @@
       "options": []
     },
     {
+      "summary": "When true, restores reads and qualities of records with hard-clips containing XB and XQ tags.",
+      "name": "--RESTORE_HARDCLIPS",
+      "synonyms": "-RHC",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "True to restore original qualities from the OQ field to the QUAL field if available.",
       "name": "--RESTORE_ORIGINAL_QUALITIES",
       "synonyms": "-OQ",
