@@ -10,6 +10,8 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
+
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -25,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Simple little class that combines multiple VCFs that have exactly the same set of samples
@@ -46,8 +49,27 @@ public class GatherVcfs extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF file.")
     public File OUTPUT;
 
+    @Argument(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
+    public List<String>  COMMENT = new ArrayList<>();
+
+    @Argument(doc = "If 'true' the program will reorder INPUT according "
+            + "to the genomic location of the first variant in each file. "
+            + "this is useful since the order of variants in each file in INPUT come from non overlapping regions "
+            + " but the order of the files in INPUT is untrusted.",
+            optional = true, shortName = "RI")
+    public boolean  REORDER_INPUT_BY_FIRST_VARIANT = false;
+
     private static final Log log = Log.getInstance(GatherVcfs.class);
 
+    /** class used to reorder input VCFs using the first variant */
+    private static class FirstVariantInVcf {
+        final File vcfFile;
+        VariantContext firstVariant = null;   // may be null if the vcf is empty
+        FirstVariantInVcf(final File vcfFile) {
+            this.vcfFile = vcfFile;
+        }
+    }
+    
     public GatherVcfs() {
         CREATE_INDEX = true;
     }
@@ -67,7 +89,7 @@ public class GatherVcfs extends CommandLineProgram {
 
         log.info("Checking file headers and first records to ensure compatibility.");
         try {
-            assertSameSamplesAndValidOrdering(INPUT);
+            INPUT = assertSameSamplesAndValidOrdering(INPUT);
             if (areAllBlockCompressed(INPUT) && areAllBlockCompressed(Collections.singletonList(OUTPUT))) {
                 log.info("Gathering by copying gzip blocks. Will not be able to validate position non-overlap of files.");
                 if (CREATE_INDEX) {
@@ -76,7 +98,7 @@ public class GatherVcfs extends CommandLineProgram {
                 gatherWithBlockCopying(INPUT, OUTPUT);
             } else {
                 log.info("Gathering by conventional means.");
-                gatherConventionally(sequenceDictionary, CREATE_INDEX, INPUT, OUTPUT);
+                gatherConventionally(sequenceDictionary, CREATE_INDEX, INPUT, OUTPUT, COMMENT);
             }
         } catch (RuntimeException e) {
             log.error("There was a problem with gathering the INPUT.", e);
@@ -105,15 +127,53 @@ public class GatherVcfs extends CommandLineProgram {
 
     /**
      * Validates that all headers contain the same set of genotyped samples and that files are in order by position of first record.
+     * @return the reordered list of files
      */
-    private static void assertSameSamplesAndValidOrdering(final List<File> inputFiles) {
-        final VCFHeader header = new VCFFileReader(inputFiles.get(0), false).getFileHeader();
+    private List<File> assertSameSamplesAndValidOrdering(final List<File> inputFiles) {
+        final VCFHeader header;
+        try (VCFFileReader reader = new VCFFileReader(inputFiles.get(0), false)) {
+            header = reader.getFileHeader();
+        }
         final SAMSequenceDictionary dict = header.getSequenceDictionary();
         final VariantContextComparator comparator = new VariantContextComparator(header.getSequenceDictionary());
         final List<String> samples = header.getGenotypeSamples();
 
         File lastFile = null;
         VariantContext lastContext = null;
+        
+        if (REORDER_INPUT_BY_FIRST_VARIANT) {
+            final List<FirstVariantInVcf> filesandvariants = new ArrayList<>(inputFiles.size());
+            /* open each input file and get the first variant */
+            for (final File f : inputFiles) {
+                final FirstVariantInVcf vcfcxt = new FirstVariantInVcf(f);
+                try (VCFFileReader in = new VCFFileReader(f, false)) {
+                    try (CloseableIterator<VariantContext> iter = in.iterator()) {
+                        vcfcxt.firstVariant = ( iter.hasNext() ? iter.next() : null );
+                        if (vcfcxt.firstVariant == null) {
+                            log.info("No variant in " + f);
+                         }
+                    }
+                }
+                filesandvariants.add(vcfcxt);
+            }
+            /* order the files according to the position of their 1st variant */
+            Collections.sort(filesandvariants, (A,B)->{
+                if (A.firstVariant == null) {
+                    if (B.firstVariant == null) {
+                        return 0;
+                    }
+                    return 1;
+                }
+                if (A.firstVariant != null && B.firstVariant == null) {
+                    return -1;
+                }
+                return comparator.compare(A.firstVariant, B.firstVariant);
+                });
+            
+            /* reset inputFiles with the new order */
+            inputFiles.clear();
+            inputFiles.addAll(filesandvariants.stream().map(FV->FV.vcfFile).collect(Collectors.toList()));
+        }
 
         for (final File f : inputFiles) {
             final VCFFileReader in = new VCFFileReader(f, false);
@@ -150,6 +210,7 @@ public class GatherVcfs extends CommandLineProgram {
 
             CloserUtil.close(in);
         }
+        return inputFiles;
     }
 
     /**
@@ -158,7 +219,8 @@ public class GatherVcfs extends CommandLineProgram {
     private static void gatherConventionally(final SAMSequenceDictionary sequenceDictionary,
                                              final boolean createIndex,
                                              final List<File> inputFiles,
-                                             final File outputFile) {
+                                             final File outputFile,
+                                             final List<String> comments) {
         final EnumSet<Options> options = EnumSet.copyOf(VariantContextWriterBuilder.DEFAULT_OPTIONS);
         if (createIndex) {
             options.add(Options.INDEX_ON_THE_FLY);
@@ -185,6 +247,11 @@ public class GatherVcfs extends CommandLineProgram {
 
             if (firstHeader == null) {
                 firstHeader = header;
+                // add comments in the first header
+                for (final String comment : comments) {
+                    firstHeader.addMetaDataLine(new VCFHeaderLine("GatherVcfs.comment", comment));
+                }
+
                 out.writeHeader(firstHeader);
                 comparator = new VariantContextComparator(firstHeader.getContigLines());
             }
