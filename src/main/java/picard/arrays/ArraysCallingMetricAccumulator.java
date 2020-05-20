@@ -48,6 +48,7 @@ class ArraysCallingMetricAccumulator implements VariantProcessor.Accumulator<Arr
     private Integer p95Green;
     private Integer p95Red;
     private String scannerName;
+    private String pipelineVersion;
 
     /**
      * A map of sample names to metrics.  If .get() for a not-yet-existing sample name, a metric is generated, inserted into the map,
@@ -83,7 +84,7 @@ class ArraysCallingMetricAccumulator implements VariantProcessor.Accumulator<Arr
         this.dbsnp = dbsnp;
     }
 
-    public void setup(final VCFHeader vcfHeader) {
+    public void setup(final VCFHeader vcfHeader, final String pipelineVersion) {
         this.sampleAlias = InfiniumVcfFields.getValueFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.SAMPLE_ALIAS);
         this.analysisVersionNumber = InfiniumVcfFields.getOptionalIntegerFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.ANALYSIS_VERSION_NUMBER);
         this.chipTypeName = InfiniumVcfFields.getValueFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.ARRAY_TYPE);
@@ -103,6 +104,7 @@ class ArraysCallingMetricAccumulator implements VariantProcessor.Accumulator<Arr
         this.p95Green = InfiniumVcfFields.getIntegerFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.P_95_GREEN);
         this.p95Red = InfiniumVcfFields.getIntegerFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.P_95_RED);
         this.scannerName = InfiniumVcfFields.getValueFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.SCANNER_NAME);
+        // new this.pipelineVersion = pipelineVersion
 
         vcfHeader.getGenotypeSamples().forEach(sampleName -> sampleMetricsMap.get(sampleName));
     }

@@ -43,9 +43,12 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
                     "<h4>Usage example:</h4>" +
                     "<pre>" +
                     "java -jar picard.jar CollectArraysVariantCallingMetrics \\<br />" +
+                    // TODO - ADD example
                     "      INPUT=genotyping_arrays.vcf \\<br />" +
                     "      OUTPUT=outputBaseName" +
                     "</pre>";
+
+    // Add optional PIPELINE_VERSION input
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input vcf file for analysis")
     public File INPUT;
@@ -106,7 +109,7 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
                 VariantProcessor.Builder
                         .generatingAccumulatorsBy(() -> {
                             ArraysCallingMetricAccumulator accumulator = new ArraysCallingMetricAccumulator(dbsnp);
-                            accumulator.setup(vcfHeader);
+                            accumulator.setup(vcfHeader);  // TODO - pass the PIPELINE_VERSION  here)
                             return accumulator;
                         })
                         .combiningResultsBy(ArraysCallingMetricAccumulator.Result::merge)
@@ -437,6 +440,12 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
          */
         @MergeByAssertEquals
         public String SCANNER_NAME;
+
+        /**
+         * The name of the pipeline used for this sample
+         */
+        @MergeByAssertEquals
+        public String PIPELINE_VERSION;
 
         /**
          * Hidden fields not propagated to the metrics file.
