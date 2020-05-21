@@ -819,6 +819,8 @@ public abstract class AbstractAlignmentMerger {
 
         // Temporarily use the newCigar that has SOFT_CLIPs replaced with MATCH_OR_MISMATCH to get read position at reference, but ignore existence of soft-clips
         rec.setCigar(newCigar);
+        // Since the read effectively got shifted forward by turning the clips into matches, the query position needs
+        // also to be moved forward bye posShift so that it's still querying the same base.
         readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
         rec.setCigar(oldCigar);
 
