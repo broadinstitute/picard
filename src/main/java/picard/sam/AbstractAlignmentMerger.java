@@ -791,7 +791,7 @@ public abstract class AbstractAlignmentMerger {
         }
     }
 
-    private static int getReadPositionAtReferencePositionIgnoreSoftClips(final SAMRecord rec, final int pos) {
+    static int getReadPositionAtReferencePositionIgnoreSoftClips(final SAMRecord rec, final int pos) {
         final int readPosition;
         final Cigar oldCigar = rec.getCigar();
         final int oldStart = rec.getAlignmentStart();
@@ -819,10 +819,12 @@ public abstract class AbstractAlignmentMerger {
 
         // Temporarily use the newCigar that has SOFT_CLIPs replaced with MATCH_OR_MISMATCH to get read position at reference, but ignore existence of soft-clips
         rec.setCigar(newCigar);
-        readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos, false);
+        // Since the read effectively got shifted forward by turning the clips into matches, the query position needs
+        // also to be moved forward bye posShift so that it's still querying the same base.
+        readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
         rec.setCigar(oldCigar);
-        // instead of setting back the position of the read by posShift, which could create a negative start position, we add posShift the final position in the read.
-        return readPosition + posShift;
+
+        return readPosition;
     }
 
     private static void clip3PrimeEndOfRead(final SAMRecord rec, final int clipFrom, final boolean useHardClipping) {

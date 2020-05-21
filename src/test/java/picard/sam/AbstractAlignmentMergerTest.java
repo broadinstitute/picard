@@ -250,5 +250,29 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         file.deleteOnExit();
         return file;
     }
+    @DataProvider(name = "readPositionIgnoringSoftClips")
+    public Object[][] readPositionIgnoringSoftClips() {
+        return new Object[][] {
+                {"26S58M62S", 3688, 3827, 0}, // This is from the read that made us aware of a bug
+                {"26S58M62S", 3688, 3665, 4},
+                {"26S58M62S", 3688, 3660, 0}, // Before soft clip
+                {"10S100M2S", 5, 10, 16},
+                {"10S100M2S", 5, 3, 9},
+                {"10S100M2S", 10, 12, 13},
+                {"10S100M2S", 5, 107, 0}
+        };
+    }
+    @Test(dataProvider = "readPositionIgnoringSoftClips")
+    public void testGetReadPositionIgnoringSoftClips(final String cigarString, final int startPosition, final int queryPosition, final int expectedReadPosititon) {
+        final SAMFileHeader newHeader = SAMRecordSetBuilder.makeDefaultHeader(SAMFileHeader.SortOrder.queryname, 100000,false);
+        final SAMRecord rec = new SAMRecord(newHeader);
+
+        rec.setCigarString(cigarString);
+        rec.setAlignmentStart(startPosition);
+
+        final int readPosition = AbstractAlignmentMerger.getReadPositionAtReferencePositionIgnoreSoftClips(rec, queryPosition);
+
+        Assert.assertEquals(readPosition, expectedReadPosititon);
+    }
 }
 
