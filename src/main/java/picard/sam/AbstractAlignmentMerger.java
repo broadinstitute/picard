@@ -886,9 +886,6 @@ public abstract class AbstractAlignmentMerger {
             clipPositionTo = readLength;
         }
 
-        if(clipPositionFrom > clipPositionTo) {
-            System.out.println("problem" + " " + rec.getReadName());
-        }
         String basesToKeepInTag = StringUtil.bytesToString(Arrays.copyOfRange(bases, clipPositionFrom, clipPositionTo));
         String qualitiesToKeepInTag = SAMUtils.phredToFastq(Arrays.copyOfRange(baseQualities, clipPositionFrom, clipPositionTo));
 
