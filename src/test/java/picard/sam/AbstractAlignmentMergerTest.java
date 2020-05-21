@@ -253,13 +253,13 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
     @DataProvider(name = "readPositionIgnoringSoftClips")
     public Object[][] readPositionIgnoringSoftClips() {
         return new Object[][] {
-                {"26S58M62S", 55533688, 55533827, 0}, // This is from the read that made us aware of a bug
-                {"26S58M62S", 55533688, 55533665, 4},
-                {"26S58M62S", 55533688, 55533660, 0}, // Before soft clip
+                {"26S58M62S", 3688, 3827, 0}, // This is from the read that made us aware of a bug
+                {"26S58M62S", 3688, 3665, 4},
+                {"26S58M62S", 3688, 3660, 0}, // Before soft clip
                 {"10S100M2S", 5, 10, 16},
                 {"10S100M2S", 5, 3, 9},
                 {"10S100M2S", 10, 12, 13},
-                {"10S100M2S", 5, 107, 0},
+                {"10S100M2S", 5, 107, 0}
         };
     }
     @Test(dataProvider = "readPositionIgnoringSoftClips")

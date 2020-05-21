@@ -818,44 +818,11 @@ public abstract class AbstractAlignmentMerger {
         }
 
         // Temporarily use the newCigar that has SOFT_CLIPs replaced with MATCH_OR_MISMATCH to get read position at reference, but ignore existence of soft-clips
-        int shift = 0;
-        if (oldStart - posShift > 0) {
-            rec.setCigar(newCigar);
-            rec.setAlignmentStart(oldStart - posShift);
-        } else {
-            // Handle edge case where oldStart - posShift results in a negative or 0 position in reference
-            // We will remove bases from beginning of cigar which correspond to reference bases before 1
-            final Cigar adjustedCigar = new Cigar();
-
-            final int basesToAdjust = posShift - oldStart + 1; // The number of bases we need to remove from beginning of cigar
-            int basesAdjusted = 0; // Keeps track of number of bases we have removed from beginning of cigar so far
-
-            for (final CigarElement element : newCigar.getCigarElements()) {
-                if (element.getLength() <= basesToAdjust - basesAdjusted) {
-                    // The cigar element is shorter than or equal to number of bases we still need to remove.  Completely remove it
-                    basesAdjusted += element.getLength();
-                } else if (basesAdjusted < basesToAdjust) {
-                    // The cigar element is longer than the number of bases to remove, and we still need to remove bases.  Reduce size of
-                    // element by number of bases still needing to be removed
-                    adjustedCigar.add(new CigarElement(element.getLength() - (basesToAdjust - basesAdjusted), element.getOperator()));
-                    basesAdjusted = basesToAdjust;
-                } else {
-                    // We no longer need to remove any bases
-                    adjustedCigar.add(element);
-                }
-            }
-
-            rec.setCigar(adjustedCigar);
-            rec.setAlignmentStart(1);
-            shift = basesAdjusted;
-        }
-
-        readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos, false);
-
-        rec.setAlignmentStart(oldStart);
+        rec.setCigar(newCigar);
+        readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
         rec.setCigar(oldCigar);
 
-        return readPosition == 0 ? 0 : readPosition + shift;
+        return readPosition;
     }
 
     private static void clip3PrimeEndOfRead(final SAMRecord rec, final int clipFrom, final boolean useHardClipping) {
