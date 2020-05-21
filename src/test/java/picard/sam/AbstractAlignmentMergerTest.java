@@ -1,12 +1,9 @@
 package picard.sam;
 
-import htsjdk.samtools.BAMRecord;
-import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordFactory;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.SamReader;
@@ -255,8 +252,6 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
     }
     @DataProvider(name = "readPositionIgnoringSoftClips")
     public Object[][] readPositionIgnoringSoftClips() {
-
-
         return new Object[][] {
                 {"26S58M62S", 55533688, 55533827, 0}, // This is from the read that made us aware of a bug
                 {"26S58M62S", 55533688, 55533665, 4},
