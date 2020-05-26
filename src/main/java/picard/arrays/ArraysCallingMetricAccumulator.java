@@ -77,6 +77,7 @@ class ArraysCallingMetricAccumulator implements VariantProcessor.Accumulator<Arr
                         detail.P95_GREEN = p95Green;
                         detail.P95_RED = p95Red;
                         detail.SCANNER_NAME = scannerName;
+                        detail.PIPELINE_VERSION = pipelineVersion;
                         return detail;
                     }, true);
 

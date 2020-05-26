@@ -50,6 +50,7 @@ public class CollectArraysVariantCallingMetricsTest {
 
         final CollectArraysVariantCallingMetrics collectArraysVariantCallingMetrics = new CollectArraysVariantCallingMetrics();
         collectArraysVariantCallingMetrics.INPUT = vcfFile;
+        collectArraysVariantCallingMetrics.PIPELINE_VERSION = "foo";
         collectArraysVariantCallingMetrics.DBSNP = dbSnpFile;
         collectArraysVariantCallingMetrics.OUTPUT = outputBaseFile;
         collectArraysVariantCallingMetrics.NUM_PROCESSORS = 1;
@@ -135,7 +136,7 @@ public class CollectArraysVariantCallingMetricsTest {
             Assert.assertEquals(metrics.AUTOCALL_CALL_RATE, (float) metrics.NUM_AUTOCALL_CALLS / metrics.NUM_NON_FILTERED_ASSAYS, 0.0001);
 
             Assert.assertEquals(metrics.NUM_SINGLETONS, 7);
-            Assert.assertEquals(metrics.PIPELINE_VERSION, "");
+            Assert.assertEquals(metrics.PIPELINE_VERSION, "foo");
         });
 
         Assert.assertEquals(detailMetrics.size(), 1, "Did not parse the desired number of detail metrics.");
@@ -244,7 +245,7 @@ public class CollectArraysVariantCallingMetricsTest {
             Assert.assertEquals(metrics.AUTOCALL_CALL_RATE, (float) metrics.NUM_AUTOCALL_CALLS / metrics.NUM_NON_FILTERED_ASSAYS, 0.0001);
 
             Assert.assertEquals(metrics.NUM_SINGLETONS, 1);
-            Assert.assertEquals(metrics.PIPELINE_VERSION, "");
+            Assert.assertNull(metrics.PIPELINE_VERSION);
         });
 
         Assert.assertEquals(detailMetrics.size(), 2, "Did not parse the desired number of detail metrics.");

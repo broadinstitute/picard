@@ -443,7 +443,7 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
         public String SCANNER_NAME;
 
         /**
-         * The name of the pipeline used for this sample
+         * The version of the pipeline used for this sample
          */
         @MergeByAssertEquals
         public String PIPELINE_VERSION;
