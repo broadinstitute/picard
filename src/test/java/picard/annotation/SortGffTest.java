@@ -1,7 +1,7 @@
 package picard.annotation;
 
-import org.apache.commons.io.FileUtils;
-import org.testng.Assert;
+
+import htsjdk.samtools.util.IOUtil;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
@@ -35,6 +35,6 @@ public class SortGffTest extends CommandLineProgramTest {
 
         new SortGff().instanceMain(args);
 
-        Assert.assertTrue(FileUtils.contentEquals(expectedOutputGff, outGff), "output file is different from expected file" + expectedOutputGff);
+        IOUtil.assertFilesEqual(expectedOutputGff, outGff);
     }
 }
