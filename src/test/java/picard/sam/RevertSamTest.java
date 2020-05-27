@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramTest;
+import picard.cmdline.PicardCommandLine;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -61,6 +62,9 @@ public class RevertSamTest extends CommandLineProgramTest {
     private static final File writablePath = new File("testdata/picard/sam/revert_sam_writable.bam");
     private static final File referenceFasta = new File("testdata/picard/reference/test.fasta");
     private static final String singleEndSamToRevert = "testdata/picard/sam/revert_sam_single_end.sam";
+    private static final File hardClipFasta = new File("testdata/picard/sam/MergeBamAlignment/cliptest.fasta");
+    private static final File hardClippedAlignedSam = new File("testdata/picard/sam/MergeBamAlignment/hardclip.aligned.sam");
+    private static final File hardClippedUnmappedSam = new File("testdata/picard/sam/MergeBamAlignment/hardclip.unmapped.sam");
 
     private static final String revertedQualities  =
         "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
@@ -72,7 +76,7 @@ public class RevertSamTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider="positiveTestData")
-    public void basicPositiveTests(final SAMFileHeader.SortOrder so, final boolean removeDuplicates, final boolean removeAlignmentInfo,
+    public void basicPositiveTests(final SAMFileHeader.SortOrder so, final boolean removeDuplicates, final boolean removeAlignmentInfo, final boolean restoreHardClips,
                                    final boolean restoreOriginalQualities, final boolean outputByReadGroup, final String sample, final String library,
                                    final List<String> attributesToClear) throws Exception {
 
@@ -94,6 +98,9 @@ public class RevertSamTest extends CommandLineProgramTest {
         if (outputByReadGroup) {
             argSize++;
         }
+        if (!restoreHardClips) {
+            argSize++;
+        }
         final String args[] = new String[argSize];
         int index = 0;
         args[index++] = "INPUT=" + basicSamToRevert;
@@ -106,6 +113,9 @@ public class RevertSamTest extends CommandLineProgramTest {
         }
         args[index++] = "REMOVE_DUPLICATE_INFORMATION=" + removeDuplicates;
         args[index++] = "REMOVE_ALIGNMENT_INFORMATION=" + removeAlignmentInfo;
+        if (!restoreHardClips) {
+            args[index++] = "RESTORE_HARDCLIPS=" + restoreHardClips;
+        }
         args[index++] = "RESTORE_ORIGINAL_QUALITIES=" + restoreOriginalQualities;
         if (sample != null) {
             args[index++] = "SAMPLE_ALIAS=" + sample;
@@ -269,10 +279,10 @@ public class RevertSamTest extends CommandLineProgramTest {
     @DataProvider(name="positiveTestData")
     public Object[][] getPostitiveTestData() {
         return new Object[][] {
-                {null, true, true, true, true, null, null, Collections.EMPTY_LIST},
-                {SAMFileHeader.SortOrder.queryname, true, true, true, false, "Hey,Dad!", null, Arrays.asList("XT")},
-                {null, false, true, false, false, "Hey,Dad!", "NewLibraryName", Arrays.asList("XT")},
-                {null, false, false, false, false, null, null, Collections.EMPTY_LIST}
+                {null, true, true, true, true, true, null, null, Collections.EMPTY_LIST},
+                {SAMFileHeader.SortOrder.queryname, true, true, true, true, false, "Hey,Dad!", null, Arrays.asList("XT")},
+                {null, false, true, true, false, false, "Hey,Dad!", "NewLibraryName", Arrays.asList("XT")},
+                {null, false, false, false, false, false, null, null, Collections.EMPTY_LIST}
         };
     }
 
@@ -537,5 +547,48 @@ public class RevertSamTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
         verifyPositiveResults(output, new RevertSam(), true, true, false, false, null, 8, null, null);
+    }
+
+    @Test
+    public void testHardClipRoundTrip() throws Exception {
+        // Runs sam files through MergeBamAlignment using hard clipping on overlapping reads.
+        // Tests to ensure that RevertSam can reconstruct the reads and base qualities from reads that have been hard clipped.
+
+        final File outputMBA = File.createTempFile("test-output-hard-clipped-round-trip-mba", ".sam");
+        outputMBA.deleteOnExit();
+        final String [] mergeBamAlignmentsArgs = new String[] {
+           "UNMAPPED_BAM=" + hardClippedUnmappedSam.getAbsolutePath(),
+           "ALIGNED_BAM=" + hardClippedAlignedSam.getAbsolutePath(),
+           "OUTPUT=" + outputMBA.getAbsolutePath(),
+           "REFERENCE_SEQUENCE=" + hardClipFasta.getAbsolutePath(),
+           "HARD_CLIP_OVERLAPPING_READS=true"
+        };
+        Assert.assertEquals(runPicardCommandLine("MergeBamAlignment", mergeBamAlignmentsArgs), 0);
+
+        final File outputRevert = File.createTempFile("test-output-hard-clipped-round-trip-reverted", ".sam");
+        outputRevert.deleteOnExit();
+        final String [] revertSamArgs = new String[] {
+                "I=" + outputMBA.getAbsolutePath(),
+                "RESTORE_HARDCLIPS=true",
+                "O=" + outputRevert.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine("RevertSam", revertSamArgs), 0);
+
+        try(SamReader revertedReader = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(outputRevert);
+            SamReader unmappedReader = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(hardClippedUnmappedSam)) {
+            final SAMRecordIterator revertedIterator = revertedReader.iterator();
+            final SAMRecordIterator unmappedIterator = unmappedReader.iterator();
+
+            while (revertedIterator.hasNext() && unmappedIterator.hasNext()) {
+                final SAMRecord reverted = revertedIterator.next();
+                final SAMRecord unmapped = unmappedIterator.next();
+
+                Assert.assertEquals(reverted.getReadString(), unmapped.getReadString());
+                Assert.assertEquals(SAMUtils.phredToFastq(reverted.getBaseQualities()), SAMUtils.phredToFastq(unmapped.getBaseQualities()));
+            }
+            if (revertedIterator.hasNext() || unmappedIterator.hasNext()) {
+                Assert.fail("Reverted sam file should be identical in length to unmapped sam file in test, but was not.");
+            }
+        }
     }
 }
