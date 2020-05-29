@@ -57,6 +57,7 @@ public class InfiniumVcfFields {
     public static final String P_95_RED = "p95Red";
     public static final String P_95_GREEN = "p95Green";
     public static final String SCANNER_NAME = "scannerName";
+    public static final String PIPELINE_VERSION = "pipelineVersion";
 
     //FORMAT Fields
     public static final String X = "X";

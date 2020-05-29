@@ -48,8 +48,6 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
                     "      OUTPUT=outputBaseName" +
                     "</pre>";
 
-    @Argument(doc = "The pipeline version used to create these metrics", optional = true)
-    public String PIPELINE_VERSION;
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input vcf file for analysis")
     public File INPUT;
@@ -110,7 +108,7 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
                 VariantProcessor.Builder
                         .generatingAccumulatorsBy(() -> {
                             ArraysCallingMetricAccumulator accumulator = new ArraysCallingMetricAccumulator(dbsnp);
-                            accumulator.setup(vcfHeader, PIPELINE_VERSION);
+                            accumulator.setup(vcfHeader);
                             return accumulator;
                         })
                         .combiningResultsBy(ArraysCallingMetricAccumulator.Result::merge)
