@@ -78,8 +78,8 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
  * and sample for VCF files) and then optionally aggregates it by library, sample or file, to increase power and provide
  * results at the desired resolution. Output is in a "Moltenized" format, one row per comparison. The results will
  * be emitted into a metric file for the class {@link CrosscheckMetric}.
- * In this format the output will include the LOD score and also tumor-aware LOD score which can
- * help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could
+ * In this format, the output will include both the LOD score and the tumor-aware LOD score; the latter can
+ * help assess identity even in the presence of a severe loss of heterozygosity with high purity (the tool could
  * otherwise fail to notice that samples are from the same individual.)
  * A matrix output is also available to facilitate visual inspection of crosscheck results.
  * <br/>
@@ -87,14 +87,14 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
  * as a follow-up step to running CrosscheckFingerprints.
  * <br/>
  * There are cases where one would like to identify a few groups out of a collection of many possible groups (say
- * to link a bam to it's correct sample in a multi-sample vcf. In this case one would not case for the cross-checking
+ * to link a bam to its correct sample in a multi-sample vcf. In this case, one would not care for the cross-checking
  * of the various samples in the VCF against each other, but only in checking the identity of the bam against the various
  * samples in the vcf. The {@link #SECOND_INPUT} is provided for this use-case. With {@link #SECOND_INPUT} provided, CrosscheckFingerprints
  * does the following:
  * <il>
  * <li>aggregation of data happens independently for the input files in {@link #INPUT} and {@link #SECOND_INPUT}.</li>
  * <li>aggregation of data happens at the SAMPLE level.</li>
- * <li>each samples from {@link #INPUT} will only be compared to that same sample in {@link #INPUT}.</li>
+ * <li>each sample from {@link #INPUT} will only be compared to that same sample in {@link #INPUT}.</li>
  * <li>{@link #MATRIX_OUTPUT} is disabled.</li>
  * </il>
  * <br/>
@@ -131,13 +131,13 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
  *
  * This tool calculates the LOD score for identity check between "groups" of data in the INPUT files as defined by
  * the CROSSCHECK_BY argument. A positive value indicates that the data seems to have come from the same individual
- * or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates
- * that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates
+ * or, in other words, the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates
+ * that it is 1,000,000 times more likely that the data matches the genotypes than not. A negative value indicates
  * that the data do not match. A score that is near zero is inconclusive and can result from low coverage
  * or non-informative genotypes. Each group is assigned a sample identifier (for SAM this is taken from the SM tag in
  * the appropriate readgroup header line, for VCF this is taken from the column label in the file-header.
  * After combining all the data from the same "group" together, an all-against-all comparison is performed. Results are
- * categorized a {@link FingerprintResult} enum: EXPECTED_MATCH, EXPECTED_MISMATCH, UNEXPECTED_MATCH, UNEXPECTED_MISMATCH,
+ * categorized as a {@link FingerprintResult} enum: EXPECTED_MATCH, EXPECTED_MISMATCH, UNEXPECTED_MATCH, UNEXPECTED_MISMATCH,
  * or AMBIGUOUS depending on the LOD score and on whether the sample identifiers of the groups agree: LOD scores that are
  * less than LOD_THRESHOLD are considered mismatches, and those greater than -LOD_THRESHOLD are matches (between is ambiguous).
  * If the sample identifiers are equal, the groups are expected to match. They are expected to mismatch otherwise.
@@ -317,7 +317,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     "the groups are from the same individual. ")
     public double LOD_THRESHOLD = 0;
 
-    @Argument(doc = "Specificies which data-type should be used as the basic comparison unit. Fingerprints from readgroups can " +
+    @Argument(doc = "Specifies which data-type should be used as the basic comparison unit. Fingerprints from readgroups can " +
             "be \"rolled-up\" to the LIBRARY, SAMPLE, or FILE level before being compared." +
             " Fingerprints from VCF can be be compared by SAMPLE or FILE.")
     public CrosscheckMetric.DataType CROSSCHECK_BY = CrosscheckMetric.DataType.READGROUP;
@@ -325,7 +325,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(doc = "The number of threads to use to process files and generate fingerprints.")
     public int NUM_THREADS = 1;
 
-    @Argument(doc = "specifies whether the Tumor-aware result should be calculated. These are time consuming and can roughly double the " +
+    @Argument(doc = "Specifies whether the Tumor-aware result should be calculated. These are time consuming and can roughly double the " +
             "runtime of the tool. When crosschecking many groups not calculating the tumor-aware  results can result in a significant speedup.")
     public boolean CALCULATE_TUMOR_AWARE_RESULTS = true;
 
@@ -337,7 +337,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "the expected sample. Must be greater than zero. ")
     public double GENOTYPING_ERROR_RATE = 0.01;
 
-    @Argument(doc = "If true then only groups that do not relate to each other as expected will have their LODs reported.")
+    @Argument(doc = "If true, then only groups that do not relate to each other as expected will have their LODs reported.")
     public boolean OUTPUT_ERRORS_ONLY = false;
 
     @Argument(doc = "The rate at which a heterozygous genotype in a normal sample turns into a homozygous (via loss of heterozygosity) " +
@@ -352,7 +352,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(doc = "When one or more mismatches between groups is detected, exit with this value instead of 0.")
     public int EXIT_CODE_WHEN_MISMATCH = 1;
 
-    @Argument(doc = "When all LOD score are zero, exit with this value.")
+    @Argument(doc = "When all LOD scores are zero, exit with this value.")
     public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 1;
 
     @Hidden
