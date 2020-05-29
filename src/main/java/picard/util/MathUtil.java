@@ -169,15 +169,14 @@ final public class MathUtil {
     }
 
     /**
-     * Returns the array capped (from below) by the value of scalar
+     * Returns the array capped (from below) by the value of floor
      */
-    public static double[] max(final double[] nums, final double scalar) {
-        final double[] max = new double[nums.length];
+    public static double[] capFromBelow(final double[] nums, final double floor) {
+        final double[] floored = new double[nums.length];
         for (int i = 0; i < nums.length; ++i) {
-            max[i] = Math.max(nums[i], scalar);
+            floored[i] = Math.max(nums[i], floor);
         }
-
-        return max;
+        return floored;
     }
 
     /**
@@ -220,6 +219,15 @@ final public class MathUtil {
 
         return index;
     }
+
+    /* Find the maximal value of the array and return a new array
+    consisting of that value subtracted from the original array
+     */
+    public static double[] subtractMax(final double[] logLikelihoods) {
+        final double max = MathUtil.max(logLikelihoods);
+        return MathUtil.sum(logLikelihoods, -max);
+    }
+
 
     /**
      * Returns the smallest value stored in the array.
@@ -264,15 +272,15 @@ final public class MathUtil {
     }
 
     /**
-     * Returns the array capped by the value of scalar
+     * Returns the array capped (from above) by the value of floor
      */
-    public static double[] min(final double[] nums, final double scalar) {
-        final double[] min = new double[nums.length];
+    public static double[] capFromAbove(final double[] nums, final double top) {
+        final double[] capped = new double[nums.length];
         for (int i = 0; i < nums.length; ++i) {
-            min[i] = Math.min(nums[i], scalar);
+            capped[i] = Math.min(nums[i], top);
         }
 
-        return min;
+        return capped;
     }
 
     /**

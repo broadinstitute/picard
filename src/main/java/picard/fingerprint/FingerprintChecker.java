@@ -156,24 +156,6 @@ public class FingerprintChecker {
         this.genotypingErrorRate = genotypingErrorRate;
     }
 
-    /**
-     * Does same thing as {@link #setMaximalPLDifference(int)} but named in the compliant way.
-     *
-     * @deprecated use {@link #setMaximalPLDifference(int)} instead.
-     * @since 16/4/2020
-     */
-    @Deprecated
-    public void setmaximalPLDifference(final int maximalPLDifference) {
-        setMaximalPLDifference(maximalPLDifference);
-    }
-
-    /**
-     * Sets the maximal difference in PL scores considered when reading PLs from a VCF.
-     * @deprecated since 04/2020. use CappedHaplotypeProbabilities and explicitly cap your probabilities.
-     */
-    @Deprecated
-    public void setMaximalPLDifference(final int maximalPLDifference) { }
-
     public SAMFileHeader getHeader() {
         return haplotypes.getHeader();
     }
@@ -865,6 +847,12 @@ public class FingerprintChecker {
 
                     lodExpectedSampleNormalTumor += probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(prob2AssumingDataFromTumor) -
                             probs1.shiftedLogEvidenceProbability();
+
+//                    lodExpectedSampleTumorNormal += prob1AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2) -
+//                            prob1AssumingDataFromTumor.shiftedLogEvidenceProbability() - probs2.shiftedLogEvidenceProbability();
+//                    lodExpectedSampleNormalTumor += prob2AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs1) -
+//                            prob2AssumingDataFromTumor.shiftedLogEvidenceProbability() - probs1.shiftedLogEvidenceProbability();
+
                 }
             }
         }

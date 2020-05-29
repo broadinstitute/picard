@@ -171,9 +171,8 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
         ValidationUtils.validateArg(ll.length == NUM_GENOTYPES,
                 () -> "logLikelihood must have length 3, found " + ll.length);
 
-//        protect from underflow
-        double max = MathUtil.max(ll);
-        final double[] maxRemoved = MathUtil.sum(ll, -max);
+        // protect from underflow
+        final double[] maxRemoved = MathUtil.subtractMax(ll);
 
         double sum = MathUtil.sum(MathUtil.getProbabilityFromLog(maxRemoved));
         // normalize log rawLikelihoods:

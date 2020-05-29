@@ -34,10 +34,10 @@ public class CappedHaplotypeProbabilities extends HaplotypeProbabilitiesUsingLog
         super(haplotypeProbabilities.getHaplotype());
         this.cap = cap;
         final double[] logLikelihoods = haplotypeProbabilities.getLogLikelihoods();
-        final double max = MathUtil.max(logLikelihoods);
-        final double[] cappedLogLikelihoods = MathUtil.sum(logLikelihoods, -max);
-        this.setLogLikelihoods(MathUtil.max(cappedLogLikelihoods, cap));
+        final double[] cappedLogLikelihoods = MathUtil.subtractMax(logLikelihoods);
+        this.setLogLikelihoods(MathUtil.capFromBelow(cappedLogLikelihoods, cap));
     }
+
 
     @Override
     public HaplotypeProbabilities deepCopy() {

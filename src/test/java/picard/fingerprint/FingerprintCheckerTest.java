@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -144,6 +145,8 @@ public class FingerprintCheckerTest {
                 final MatchResults matchResults12 = FingerprintChecker.calculateMatchResults(fp1, fp2);
                 final MatchResults matchResults21 = FingerprintChecker.calculateMatchResults(fp2, fp1);
                 compareDoubleWithAccuracy(matchResults12.getLOD(), matchResults21.getLOD(), 1e-10);
+                compareDoubleWithAccuracy(matchResults12.getLodTN(), matchResults21.getLodNT(), 1e-10);
+                compareDoubleWithAccuracy(matchResults12.getLodNT(), matchResults21.getLodTN(), 1e-10);
             }
         }
     }
@@ -203,11 +206,11 @@ public class FingerprintCheckerTest {
         metricsFileReader.read(new FileReader(metricsFile));
         final List<CrosscheckMetric> metrics = metricsFileReader.getMetrics();
 
-        final Map<Set<String>, Set<String>> collected = metrics.stream()
-//                we sometimes get -0.0, and so the comparison fails...
+        final Map<Set<String>, Set<String>> collectedLOD = metrics.stream()
+                // we sometimes get -0.0, and so the comparison fails...hence the 'String.valueOf(s.LOD_SCORE + 0)'
                 .collect(Collectors.groupingBy(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE), Collectors.mapping(s -> String.valueOf(s.LOD_SCORE + 0), Collectors.toSet())));
 
-        for (Map.Entry<Set<String>, Set<String>> entry : collected.entrySet()) {
+        for (Map.Entry<Set<String>, Set<String>> entry : collectedLOD.entrySet()) {
             if (entry.getValue().size() > 1) {
 
                 final List<CrosscheckMetric> mismatchingMetrics = metrics.stream()
@@ -216,6 +219,40 @@ public class FingerprintCheckerTest {
                 Assert.fail("Metrics disagree: LOD scores are: \n[" + String.join(", ", entry.getValue()) +
                         "],\n from the following metrics: \n" + mismatchingMetrics.get(0) + mismatchingMetrics.get(1));
             }
+        }
+
+        final Map<Set<String>, Set<String>> collectedTN_LOD = metrics.stream()
+                // we sometimes get -0.0, and so the comparison fails...hence the 'String.valueOf(s.LOD_SCORE + 0)'
+                .collect(Collectors.groupingBy(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE), Collectors.mapping(s -> String.valueOf(s.LOD_SCORE_TUMOR_NORMAL + 0), Collectors.toSet())));
+
+        final Map<Set<String>, Set<String>> collectedNT_LOD = metrics.stream()
+                // we sometimes get -0.0, and so the comparison fails...hence the 'String.valueOf(s.LOD_SCORE + 0)'
+                .collect(Collectors.groupingBy(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE), Collectors.mapping(s -> String.valueOf(s.LOD_SCORE_NORMAL_TUMOR + 0), Collectors.toSet())));
+
+        for (Set<String> key : collectedLOD.keySet()) {
+            if (key.size() == 1) {
+                continue;
+            }
+            Assert.assertEquals(key.size(), 2, "Odd..should be size 2 here.");
+
+            final Set<String> TN_values = collectedTN_LOD.get(key);
+            final Set<String> NT_values = collectedNT_LOD.get(key);
+
+            final Set<String> allValues = new HashSet<>();
+            allValues.addAll(TN_values);
+            allValues.addAll(NT_values);
+
+            if (allValues.size() > 2) {
+
+                final List<CrosscheckMetric> mismatchingMetrics = metrics.stream()
+                        .filter(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE).equals(key)).collect(Collectors.toList());
+
+                Assert.fail(
+                        "Metrics disagree: TN_LOD scores are: [" + String.join(", ", TN_values) + "]\n" +
+                                "Metrics disagree: TN_LOD scores are: [" + String.join(", ", NT_values) + "]\n" +
+                                "from the following metrics: \n" + mismatchingMetrics.get(0) + "\n" + mismatchingMetrics.get(1));
+            }
+
         }
     }
 
@@ -294,14 +331,16 @@ public class FingerprintCheckerTest {
         };
     }
 
-    private static void addObservation(final HaplotypeProbabilitiesFromSequence haplotypeProb, final HaplotypeBlock haplotypeBlock, final int count, final byte allele) {
+    private static void addObservation(final HaplotypeProbabilitiesFromSequence haplotypeProb,
+                                       final HaplotypeBlock haplotypeBlock, final int count, final byte allele) {
         for (int i = 0; i < count; i++) {
             haplotypeProb.addToProbs(haplotypeBlock.getFirstSnp(), allele, (byte) 30);
         }
     }
 
     @Test(dataProvider = "mergeIsDafeProvider")
-    public void testMergeHaplotypeProbabilitiesIsSafe(final HaplotypeProbabilities hp1, final HaplotypeProbabilities hp2) {
+    public void testMergeHaplotypeProbabilitiesIsSafe(final HaplotypeProbabilities hp1,
+                                                      final HaplotypeProbabilities hp2) {
 
         final HaplotypeProbabilities merged1 = hp1.deepCopy().merge(hp2);
         final HaplotypeProbabilities merged2 = hp1.deepCopy().merge(hp2);

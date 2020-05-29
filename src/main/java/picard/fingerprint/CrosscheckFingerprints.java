@@ -355,7 +355,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(doc = "When all LOD score are zero, exit with this value.")
     public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 1;
 
-    @Argument(doc = "Maximal effect of any single haplotype block on outcome (-log10 of maximal liklihood difference between the different values for the three possible genotypes).", minValue = 0)
+    @Argument(doc = "Maximal effect of any single haplotype block on outcome (-log10 of maximal likelihood difference between the different values for the three possible genotypes).", minValue = 0)
     public double MAX_EFFECT_OF_EACH_HAPLOTYPE_BLOCK = 3.0;
 
     @Hidden

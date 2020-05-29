@@ -107,7 +107,7 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
         final double[] ll = new double[NUM_GENOTYPES];
         for (final Genotype contGeno : Genotype.values()) {
             // p(a | g_c) = \sum_g_m { P(g_m) \prod_i P(a_i| g_m, g_c)}
-            ll[contGeno.v] = Math.log10(MathUtil.sum(MathUtil.multiply(this.getPriorProbablities(), likelihoodMap[contGeno.v])));
+            ll[contGeno.v] = Math.log10(Double.MIN_VALUE + MathUtil.sum(MathUtil.multiply(this.getPriorProbablities(), likelihoodMap[contGeno.v])));
         }
         setLogLikelihoods(ll);
     }

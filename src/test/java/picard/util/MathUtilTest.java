@@ -177,7 +177,7 @@ public class MathUtilTest {
 
     @Test(dataProvider = "testMaxWithArrayAndScalarData")
     public void testMaxWithArrayAndScalar(final double[] array, final double scalar, final double[] expected) {
-        Assert.assertEquals(MathUtil.max(array, scalar), expected);
+        Assert.assertEquals(MathUtil.capFromBelow(array, scalar), expected);
     }
 
     @DataProvider
@@ -193,7 +193,7 @@ public class MathUtilTest {
 
     @Test(dataProvider = "testMinWithArrayAndScalarData")
     public void testMinWithArrayAndScalar(final double[] array, final double scalar, final double[] expected) {
-        Assert.assertEquals(MathUtil.min(array, scalar), expected);
+        Assert.assertEquals(MathUtil.capFromAbove(array, scalar), expected);
     }
 
     @DataProvider
