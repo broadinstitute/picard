@@ -843,15 +843,9 @@ public class FingerprintChecker {
 
                 if (calculateTumorAwareLod) {
                     lodExpectedSampleTumorNormal += prob1AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2) -
-                            prob1AssumingDataFromTumor.shiftedLogEvidenceProbability();
-
-                    lodExpectedSampleNormalTumor += probs1.shiftedLogEvidenceProbabilityGivenOtherEvidence(prob2AssumingDataFromTumor) -
-                            probs1.shiftedLogEvidenceProbability();
-
-//                    lodExpectedSampleTumorNormal += prob1AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs2) -
-//                            prob1AssumingDataFromTumor.shiftedLogEvidenceProbability() - probs2.shiftedLogEvidenceProbability();
-//                    lodExpectedSampleNormalTumor += prob2AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs1) -
-//                            prob2AssumingDataFromTumor.shiftedLogEvidenceProbability() - probs1.shiftedLogEvidenceProbability();
+                            prob1AssumingDataFromTumor.shiftedLogEvidenceProbability() - probs2.shiftedLogEvidenceProbability();
+                    lodExpectedSampleNormalTumor += prob2AssumingDataFromTumor.shiftedLogEvidenceProbabilityGivenOtherEvidence(probs1) -
+                            prob2AssumingDataFromTumor.shiftedLogEvidenceProbability() - probs1.shiftedLogEvidenceProbability();
 
                 }
             }
