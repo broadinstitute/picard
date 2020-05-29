@@ -50,7 +50,6 @@ public class CollectArraysVariantCallingMetricsTest {
 
         final CollectArraysVariantCallingMetrics collectArraysVariantCallingMetrics = new CollectArraysVariantCallingMetrics();
         collectArraysVariantCallingMetrics.INPUT = vcfFile;
-        collectArraysVariantCallingMetrics.PIPELINE_VERSION = "foo";
         collectArraysVariantCallingMetrics.DBSNP = dbSnpFile;
         collectArraysVariantCallingMetrics.OUTPUT = outputBaseFile;
         collectArraysVariantCallingMetrics.NUM_PROCESSORS = 1;

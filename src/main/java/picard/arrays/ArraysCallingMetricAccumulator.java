@@ -105,7 +105,7 @@ class ArraysCallingMetricAccumulator implements VariantProcessor.Accumulator<Arr
         this.p95Green = InfiniumVcfFields.getIntegerFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.P_95_GREEN);
         this.p95Red = InfiniumVcfFields.getIntegerFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.P_95_RED);
         this.scannerName = InfiniumVcfFields.getValueFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.SCANNER_NAME);
-        this.pipelineVersion = InfiniumVcfFields.getValueFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.PIPELINE_VERSION);
+        this.pipelineVersion = InfiniumVcfFields.getOptionalValueFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.PIPELINE_VERSION);
 
         vcfHeader.getGenotypeSamples().forEach(sampleName -> sampleMetricsMap.get(sampleName));
     }
