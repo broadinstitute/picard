@@ -272,7 +272,7 @@ final public class MathUtil {
     }
 
     /**
-     * Returns the array capped (from above) by the value of floor
+     * Returns the array capped (from above) by the value of top
      */
     public static double[] capFromAbove(final double[] nums, final double top) {
         final double[] capped = new double[nums.length];
