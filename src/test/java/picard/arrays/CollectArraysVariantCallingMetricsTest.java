@@ -21,8 +21,8 @@ public class CollectArraysVariantCallingMetricsTest {
     @DataProvider(name = "collectArraysVariantCallingMetricsTestProvider")
     public Object[][] testCollectArraysVariantCallingMetricsTestProvider() {
         return new Object[][]{
-                {"7991775143_R01C01", 636, 1, true, "F", "F", true, "3.0.0", "1.0.0.0"},
-                {"7991775143_R01C01_wo_optional_fields", 631, null, false, "M", "N", false, "2.0.0.137", null}
+                {"7991775143_R01C01", 636, 1, true, "F", "F", true, "3.0.0", "1.0.0.0", "foo"},
+                {"7991775143_R01C01_wo_optional_fields", 631, null, false, "M", "N", false, "2.0.0.137", null, null}
         };
     }
 
@@ -35,7 +35,8 @@ public class CollectArraysVariantCallingMetricsTest {
                                                                    final String expectedReportedGender,
                                                                    final Boolean expectedGenderConcordancePF,
                                                                    final String expectedAutocallVersion,
-                                                                   final String expectedZcallVersion) throws IOException {
+                                                                   final String expectedZcallVersion,
+                                                                   final String expectedPipelineVersion) throws IOException {
         final File dbSnpFile = new File(TEST_DBSNP_DATA_DIR, "mini.dbsnp.vcf");
         final File vcfFile = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, chipWellBarcode + ".vcf"), chipWellBarcode);
         vcfFile.deleteOnExit();
@@ -135,7 +136,11 @@ public class CollectArraysVariantCallingMetricsTest {
             Assert.assertEquals(metrics.AUTOCALL_CALL_RATE, (float) metrics.NUM_AUTOCALL_CALLS / metrics.NUM_NON_FILTERED_ASSAYS, 0.0001);
 
             Assert.assertEquals(metrics.NUM_SINGLETONS, 7);
-            Assert.assertEquals(metrics.PIPELINE_VERSION, "foo");
+            if (expectedPipelineVersion != null) {
+                Assert.assertEquals(metrics.PIPELINE_VERSION, "foo");
+            } else {
+                Assert.assertNull(metrics.PIPELINE_VERSION);
+            }
         });
 
         Assert.assertEquals(detailMetrics.size(), 1, "Did not parse the desired number of detail metrics.");
@@ -244,7 +249,6 @@ public class CollectArraysVariantCallingMetricsTest {
             Assert.assertEquals(metrics.AUTOCALL_CALL_RATE, (float) metrics.NUM_AUTOCALL_CALLS / metrics.NUM_NON_FILTERED_ASSAYS, 0.0001);
 
             Assert.assertEquals(metrics.NUM_SINGLETONS, 1);
-            Assert.assertNull(metrics.PIPELINE_VERSION);
         });
 
         Assert.assertEquals(detailMetrics.size(), 2, "Did not parse the desired number of detail metrics.");

@@ -179,7 +179,6 @@
 ##p95Green=4251
 ##p95Red=5479
 ##picardVersion=2.20.3-17-g8331bf3-SNAPSHOT
-##pipelineVersion=foo
 ##reference=/seq/references/Homo_sapiens_assembly19/v1/Homo_sapiens_assembly19.fasta
 ##sampleAlias=NA12878
 ##scannerName=N370
