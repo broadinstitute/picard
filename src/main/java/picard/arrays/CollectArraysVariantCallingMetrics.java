@@ -43,7 +43,6 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
                     "<h4>Usage example:</h4>" +
                     "<pre>" +
                     "java -jar picard.jar CollectArraysVariantCallingMetrics \\<br />" +
-                    // TODO - ADD example
                     "      INPUT=genotyping_arrays.vcf \\<br />" +
                     "      OUTPUT=outputBaseName" +
                     "</pre>";
