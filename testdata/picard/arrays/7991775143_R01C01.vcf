@@ -185,6 +185,7 @@
 ##p95Green=4251
 ##p95Red=5479
 ##picardVersion=Version:054660cc27c208419607db4f10ba598284dd545f
+##pipelineVersion=foo
 ##reference=/cromwell_root/broad-references/hg19/v0/Homo_sapiens_assembly19.fasta
 ##sampleAlias=NA12878
 ##scannerName=N370
