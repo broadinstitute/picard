@@ -542,7 +542,7 @@ public class GtcToVcf extends CommandLineProgram {
             lines.add(new VCFHeaderLine(InfiniumVcfFields.EXPECTED_GENDER, EXPECTED_GENDER));
         }
         if (PIPELINE_VERSION != null) {
-            lines.add(new VCFHeaderLine(InfiniumVcfFields.PIPELINE_VERSION, PIPELINE_VERSION);
+            lines.add(new VCFHeaderLine(InfiniumVcfFields.PIPELINE_VERSION, PIPELINE_VERSION));
         }
         //add control codes
         final int measurementCount = gtcFile.getRawControlXIntensities().length / ArraysControlInfo.CONTROL_INFO.length;
