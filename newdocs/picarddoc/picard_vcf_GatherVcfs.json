@@ -2,6 +2,21 @@
   "summary": "Gathers multiple VCF files from a scatter operation into a single VCF file",
   "arguments": [
     {
+      "summary": "Comment(s) to include in the merged output file\u0027s header.",
+      "name": "--COMMENT",
+      "synonyms": "-CO",
+      "type": "List[String]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
       "synonyms": "NA",
@@ -134,6 +149,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "If \u0027true\u0027 the program will reorder INPUT according to the genomic location of the first variant in each file. this is useful since the order of variants in each file in INPUT come from non overlapping regions  but the order of the files in INPUT is untrusted.",
+      "name": "--REORDER_INPUT_BY_FIRST_VARIANT",
+      "synonyms": "-RI",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {

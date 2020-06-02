@@ -2,6 +2,21 @@
   "summary": "Combines multiple variant files into a single variant file",
   "arguments": [
     {
+      "summary": "Comment(s) to include in the merged output file\u0027s header.",
+      "name": "--COMMENT",
+      "synonyms": "-CO",
+      "type": "List[String]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
       "synonyms": "NA",
