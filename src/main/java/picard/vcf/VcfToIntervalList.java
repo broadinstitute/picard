@@ -84,7 +84,7 @@ public class VcfToIntervalList extends CommandLineProgram {
     @Argument(doc="Controls the naming of the resulting intervals. When true, each resulting interval will be named the concatenation of " +
             "the variant ID fields (if present), or 'interval-<number>' (if not) with a pipe '|' separator. " +
             "When false, only the first name will be used.")
-    public boolean CONCATENATE_IDS = true;
+    public boolean CONCATENATE_IDS = false;
 
     @Argument(shortName = INCLUDE_FILTERED_SHORT_NAME,
             doc = "Include variants that were filtered in the output interval list.",
@@ -105,7 +105,7 @@ public class VcfToIntervalList extends CommandLineProgram {
                     writer.write(interval);
                 }
             } catch (IOException e) {
-                if(!OUTPUT.renameTo(new File(OUTPUT.getAbsolutePath() + "incomplete"))){
+                if(!OUTPUT.renameTo(new File(OUTPUT.getAbsolutePath() + ".incomplete"))){
                     OUTPUT.delete();
                 };
 
