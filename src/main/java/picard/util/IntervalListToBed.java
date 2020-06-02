@@ -23,11 +23,11 @@
  */
 package picard.util;
 
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.RuntimeIOException;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.util.*;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.IntervalList.IntervalListCodec;
+import htsjdk.tribble.readers.LineIterator;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -69,24 +69,37 @@ public class IntervalListToBed extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        IntervalList intervals = IntervalList.fromFile(INPUT);
-        if (SORT) intervals = intervals.sorted();
+        try (final AbstractFeatureReader<Interval, LineIterator> intervalsReader = AbstractFeatureReader.getFeatureReader(INPUT.getPath(), new IntervalListCodec(), false);
+             final BufferedWriter out = IOUtil.openFileForBufferedWriting(OUTPUT)) {
 
-        try {
-            final BufferedWriter out = IOUtil.openFileForBufferedWriting(OUTPUT);
-            for (final Interval i : intervals) {
+            Iterable<Interval> intervalIterable = intervalsReader.iterator();
+            if (SORT) {
+
+                final SortingCollection<Interval> sortedIntervals =
+                        SortingCollection.newInstance(Interval.class, new IntervalCodec(((SAMFileHeader)intervalsReader.getHeader()).getSequenceDictionary()),
+                                Interval::compareTo, 500000, OUTPUT.toPath());
+
+                for (final Interval i: intervalsReader.iterator()) {
+                    sortedIntervals.add(i);
+                }
+
+                intervalIterable = sortedIntervals;
+            }
+
+            for (final Interval i : intervalIterable) {
                 final String strand = i.isNegativeStrand() ? "-" : "+";
                 final List<?> fields = CollectionUtil.makeList(i.getContig(), i.getStart()-1, i.getEnd(), i.getName(), SCORE, strand);
                 out.append(fields.stream().map(String::valueOf).collect(Collectors.joining("\t")));
                 out.newLine();
-            }
 
+            }
             out.close();
-        }
-        catch (IOException ioe) {
+            return 0;
+        } catch (IOException ioe) {
             throw new RuntimeIOException(ioe);
         }
 
-        return 0;
+
+
     }
 }
