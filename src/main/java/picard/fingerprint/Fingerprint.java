@@ -72,7 +72,7 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
     /**
      * Merges the likelihoods from the supplied Fingerprint into the likelihoods for this fingerprint.
      */
-    public void merge(final Fingerprint other) {
+    public Fingerprint merge(final Fingerprint other) {
         final Set<HaplotypeBlock> haps = new HashSet<>();
         haps.addAll(keySet());
         haps.addAll(other.keySet());
@@ -87,6 +87,7 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
                 probabilities.merge(otherProbabilities);
             }
         }
+        return this;
     }
 
     /**
