@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2018 The Broad Institute
+ * Copyright (c) 2020 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,10 +69,10 @@ public class ExtractFingerprint extends CommandLineProgram {
 
     @Argument(doc = "The maximum number of reads to use as evidence for any given locus. This is provided as a way to limit the " +
             "effect that any given locus may have.")
-    public int LOCUS_MAX_READS = 200;
+    public int LOCUS_MAX_READS = 50;
 
-    @Argument(doc = "Extract a fingerprint for the contaminat sample (instead of the contaminant). Setting to true changes the effect of SAMPLE_ALIAS when null. " +
-            "It names the sample in the VCF <SAMPLE>-contaminated, using the SM value from the SAM header.")
+    @Argument(doc = "Extract a fingerprint for the contaminating sample (instead of the contaminated sample). Setting to true changes the effect of SAMPLE_ALIAS when null. " +
+            "It names the sample in the VCF <SAMPLE>-contaminant, using the SM value from the SAM header.")
     public boolean EXTRACT_CONTAMINATION = false;
 
     @Override
@@ -125,7 +125,7 @@ public class ExtractFingerprint extends CommandLineProgram {
     private String getSampleToUse(final String fpSample) {
 
         if (SAMPLE_ALIAS == null) {
-            return String.format("%s%s", fpSample, EXTRACT_CONTAMINATION ? "-contamination" : "");
+            return String.format("%s%s", fpSample, EXTRACT_CONTAMINATION ? "-contaminant" : "");
         } else {
             return SAMPLE_ALIAS;
         }

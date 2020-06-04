@@ -169,7 +169,7 @@ abstract class HaplotypeProbabilitiesUsingLogLikelihoods extends HaplotypeProbab
 
     public void setLogLikelihoods(final double[] ll) {
         ValidationUtils.validateArg(ll.length == NUM_GENOTYPES,
-                () -> "logLikelihood must have length 3, found " + ll.length);
+                () -> String.format("logLikelihood must have length %d, found %d", NUM_GENOTYPES, ll.length));
 
         // protect from underflow
         final double[] maxRemoved = MathUtil.subtractMax(ll);

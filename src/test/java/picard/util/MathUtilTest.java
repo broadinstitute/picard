@@ -270,4 +270,20 @@ public class MathUtilTest {
     public void testMaxOfByteArray(final byte[] array, final byte expected) {
         Assert.assertEquals(MathUtil.min(array), expected);
     }
+
+    @DataProvider
+    public Object[][] testSubtractMaxData() {
+        return new Object[][]{
+                {new double[]{1, 2, 3}, new double[]{-2, -1, 0}},
+                {new double[]{2, 1, 3}, new double[]{-1, -2, 0}},
+                {new double[]{3, 2, 1}, new double[]{0, -1, -2}},
+                {new double[]{2, 3, 1}, new double[]{-1, 0, -2}},
+        };
+    }
+
+    @Test(dataProvider = "testSubtractMaxData")
+    public void testSubtractMax(final double[] array, final double[] expected) {
+        Assert.assertEquals(MathUtil.subtractMax(array), expected);
+    }
 }
+
