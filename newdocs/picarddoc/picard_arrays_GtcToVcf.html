@@ -183,6 +183,9 @@
 								<?php echo ($group == 'Genotyping Arrays Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_arrays_illumina_BpmToNormalizationManifestCsv.html">BpmToNormalizationManifestCsv</a>
+											</li>
+											<li>
 												<a href="picard_arrays_CombineGenotypingArrayVcfs.html">CombineGenotypingArrayVcfs</a>
 											</li>
 											<li>
@@ -426,14 +429,14 @@
 
 		<h1>GtcToVcf</h1>
 
-		<p class="lead">Program to convert a GTC file to a VCF</p>
+		<p class="lead">Program to convert an Illumina GTC file to a VCF</p>
 
 			<h3>Category
 				<small> Genotyping Arrays Manipulation</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		Class to convert a GTC file and a BPM file to a VCF file.
+		Class to convert an Illumina GTC file into a VCF file.
 
 
 				<h3>GtcToVcf specific arguments</h3>
@@ -467,12 +470,12 @@
 					<td>An Extended Illumina Manifest file (csv).  This is an extended version of the Illumina manifest it contains additional reference-specific fields</td>
 				</tr>
 				<tr>
-					<td><a href="#--ILLUMINA_NORMALIZATION_MANIFEST">--ILLUMINA_NORMALIZATION_MANIFEST</a><br />
-								&nbsp;<em>-NORM_MANIFEST</em>
+					<td><a href="#--ILLUMINA_BEAD_POOL_MANIFEST_FILE">--ILLUMINA_BEAD_POOL_MANIFEST_FILE</a><br />
+								&nbsp;<em>-BPM_FILE</em>
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>An Illumina bead pool manifest (a manifest containing the Illumina normalization ids) (bpm.csv)</td>
+					<td>The Illumina Bead Pool Manifest (.bpm) file</td>
 				</tr>
 				<tr>
 					<td><a href="#--INPUT">--INPUT</a><br />
@@ -777,11 +780,11 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--ILLUMINA_NORMALIZATION_MANIFEST">--ILLUMINA_NORMALIZATION_MANIFEST </a>
-			 / <small>-NORM_MANIFEST</small>
+		<h3><a name="--ILLUMINA_BEAD_POOL_MANIFEST_FILE">--ILLUMINA_BEAD_POOL_MANIFEST_FILE </a>
+			 / <small>-BPM_FILE</small>
 		</h3>
 		<p class="args">
-			<b>An Illumina bead pool manifest (a manifest containing the Illumina normalization ids) (bpm.csv)</b><br />
+			<b>The Illumina Bead Pool Manifest (.bpm) file</b><br />
 			
 		</p>
 		<p>
@@ -973,7 +976,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.22.9-SNAPSHOT built at 02-19-2020 04:19:09.
+        <p class="version">Picard version 2.23.0-SNAPSHOT built at 09-24-2020 02:24:06.
         </p>
 
 	</div>

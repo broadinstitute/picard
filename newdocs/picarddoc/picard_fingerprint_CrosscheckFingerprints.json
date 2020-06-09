@@ -313,6 +313,21 @@
       "options": []
     },
     {
+      "summary": "Maximal effect of any single haplotype block on outcome (-log10 of maximal likelihood difference between the different values for the three possible genotypes).",
+      "name": "--MAX_EFFECT_OF_EACH_HAPLOTYPE_BLOCK",
+      "synonyms": "NA",
+      "type": "double",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "3.0",
+      "minValue": "0.0",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.",
       "name": "--MAX_RECORDS_IN_RAM",
       "synonyms": "NA",

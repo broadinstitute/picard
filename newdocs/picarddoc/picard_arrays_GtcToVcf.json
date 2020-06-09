@@ -1,5 +1,5 @@
 {
-  "summary": "Program to convert a GTC file to a VCF",
+  "summary": "Program to convert an Illumina GTC file to a VCF",
   "arguments": [
     {
       "summary": "The analysis version of the data used to generate this VCF",
@@ -167,9 +167,9 @@
       "options": []
     },
     {
-      "summary": "An Illumina bead pool manifest (a manifest containing the Illumina normalization ids) (bpm.csv)",
-      "name": "--ILLUMINA_NORMALIZATION_MANIFEST",
-      "synonyms": "-NORM_MANIFEST",
+      "summary": "The Illumina Bead Pool Manifest (.bpm) file",
+      "name": "--ILLUMINA_BEAD_POOL_MANIFEST_FILE",
+      "synonyms": "-BPM_FILE",
       "type": "File",
       "required": "yes",
       "fulltext": "",
@@ -392,7 +392,7 @@
       ]
     }
   ],
-  "description": "Class to convert a GTC file and a BPM file to a VCF file.",
+  "description": "Class to convert an Illumina GTC file into a VCF file.",
   "name": "GtcToVcf",
   "group": "Genotyping Arrays Manipulation",
   "beta": false,
