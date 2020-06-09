@@ -175,8 +175,10 @@
 ##extendedManifestFile=HumanExome-12v1-1_A.1.3.extended.csv
 ##fileDate=Wed May 01 14:19:13 EDT 2019
 ##fingerprintGender=Unknown
+##gtcCallRate=0.985
 ##imagingDate=12/16/2012 11:10:10 AM
 ##manifestFile=HumanExome-12v1-1_A.bpm
+##pipelineVersion=IlluminaGenotypingArray_v1.5
 ##p95Green=4251
 ##p95Red=5479
 ##picardVersion=2.18.27-31-ge100aa2-SNAPSHOT

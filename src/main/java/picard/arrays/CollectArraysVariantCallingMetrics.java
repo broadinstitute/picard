@@ -362,6 +362,12 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
         public Boolean IS_ZCALLED;
 
         /**
+         * The call rate as determined by Autocall/IAAP (and stored in the GTC File)
+         */
+        @MergeByAssertEquals
+        public Double GTC_CALL_RATE;
+
+        /**
          * The sex, as determined by Autocall
          */
         @MergeByAssertEquals

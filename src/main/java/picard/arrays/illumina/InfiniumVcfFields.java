@@ -45,6 +45,7 @@ public class InfiniumVcfFields {
 
     public static final String EXPECTED_GENDER = "expectedGender";
     public static final String FINGERPRINT_GENDER = "fingerprintGender";
+    public static final String GTC_CALL_RATE = "gtcCallRate";
     public static final String AUTOCALL_GENDER = "autocallGender";
     public static final String AUTOCALL_DATE = "autocallDate";
     public static final String IMAGING_DATE = "imagingDate";
@@ -146,6 +147,11 @@ public class InfiniumVcfFields {
         } catch (ParseException pe) {
             throw new IllegalArgumentException("Unrecognized date for '" + keyName + "' in VCF header (" + dateString + ")");
         }
+    }
+
+    public static Double getOptionalDoubleFromVcfOtherHeaderLine(final VCFHeader vcfHeader, final String keyName) {
+        String value = getOptionalValueFromVcfOtherHeaderLine(vcfHeader, keyName);
+        return (value != null) ? Double.valueOf(value) : null;
     }
 
     public static Integer getIntegerFromVcfOtherHeaderLine(final VCFHeader vcfHeader, final String keyName) {

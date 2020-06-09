@@ -92,12 +92,14 @@ public class CombineGenotypingArrayVcfs extends CommandLineProgram {
 
     // These items will be removed from the merged header
     private final Set<String> sampleSpecificHeaders = new HashSet<String>(Arrays.asList(
+            InfiniumVcfFields.PIPELINE_VERSION,
             InfiniumVcfFields.ANALYSIS_VERSION_NUMBER,
             InfiniumVcfFields.AUTOCALL_DATE,
             InfiniumVcfFields.AUTOCALL_GENDER,
             InfiniumVcfFields.CHIP_WELL_BARCODE,
             InfiniumVcfFields.EXPECTED_GENDER,
             InfiniumVcfFields.FINGERPRINT_GENDER,
+            InfiniumVcfFields.GTC_CALL_RATE,
             InfiniumVcfFields.IMAGING_DATE,
             InfiniumVcfFields.P_95_GREEN,
             InfiniumVcfFields.P_95_RED,
