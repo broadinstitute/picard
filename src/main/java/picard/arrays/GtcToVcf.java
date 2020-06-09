@@ -549,6 +549,7 @@ public class GtcToVcf extends CommandLineProgram {
             lines.add(new VCFHeaderLine(controlInfo.getControl(), controlInfo.toString() + "|" + redIntensity + "|" + greenIntensity));
         }
         lines.add(new VCFHeaderLine(InfiniumVcfFields.FINGERPRINT_GENDER, fingerprintGender.name()));
+        lines.add(new VCFHeaderLine(InfiniumVcfFields.GTC_CALL_RATE, String.valueOf(gtcFile.getCallRate())));
         if (gtcGender != null) {
             lines.add(new VCFHeaderLine(InfiniumVcfFields.AUTOCALL_GENDER, gtcGender));
         } else {

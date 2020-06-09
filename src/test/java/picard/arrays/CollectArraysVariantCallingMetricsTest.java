@@ -21,8 +21,8 @@ public class CollectArraysVariantCallingMetricsTest {
     @DataProvider(name = "collectArraysVariantCallingMetricsTestProvider")
     public Object[][] testCollectArraysVariantCallingMetricsTestProvider() {
         return new Object[][]{
-                {"7991775143_R01C01", 636, 1, true, "F", "F", true, "3.0.0", "1.0.0.0", "foo"},
-                {"7991775143_R01C01_wo_optional_fields", 631, null, false, "M", "N", false, "2.0.0.137", null, null}
+                {"7991775143_R01C01", 636, 1, true, "F", "F", true, "3.0.0", "1.0.0.0", "IlluminaGenotypingArray_v1.5", 0.999},
+                {"7991775143_R01C01_wo_optional_fields", 631, null, false, "M", "N", false, "2.0.0.137", null, null, null}
         };
     }
 
@@ -36,7 +36,8 @@ public class CollectArraysVariantCallingMetricsTest {
                                                                    final Boolean expectedGenderConcordancePF,
                                                                    final String expectedAutocallVersion,
                                                                    final String expectedZcallVersion,
-                                                                   final String expectedPipelineVersion) throws IOException {
+                                                                   final String expectedPipelineVersion,
+                                                                   final Double expectedGtcCallRate) throws IOException {
         final File dbSnpFile = new File(TEST_DBSNP_DATA_DIR, "mini.dbsnp.vcf");
         final File vcfFile = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, chipWellBarcode + ".vcf"), chipWellBarcode);
         vcfFile.deleteOnExit();
@@ -137,10 +138,16 @@ public class CollectArraysVariantCallingMetricsTest {
 
             Assert.assertEquals(metrics.NUM_SINGLETONS, 7);
             if (expectedPipelineVersion != null) {
-                Assert.assertEquals(metrics.PIPELINE_VERSION, "foo");
+                Assert.assertEquals(metrics.PIPELINE_VERSION, expectedPipelineVersion);
             } else {
                 Assert.assertNull(metrics.PIPELINE_VERSION);
             }
+            if (expectedGtcCallRate != null) {
+                Assert.assertEquals(metrics.GTC_CALL_RATE, expectedGtcCallRate);
+            } else {
+                Assert.assertNull(metrics.GTC_CALL_RATE);
+            }
+
         });
 
         Assert.assertEquals(detailMetrics.size(), 1, "Did not parse the desired number of detail metrics.");
