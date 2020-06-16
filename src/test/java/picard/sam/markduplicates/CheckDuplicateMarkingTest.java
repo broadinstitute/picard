@@ -3,15 +3,14 @@ package picard.sam.markduplicates;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import picard.sam.CheckDuplicateMarking;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CheckDuplicateMarkingTest {
-    private static final String TEST_FILES_DIR="testdata/picard/sam/CheckDuplicateMarking";
+    private static final String TEST_FILES_DIR = "testdata/picard/sam/CheckDuplicateMarking";
 
-    @DataProvider(name="checkDuplicateMarkingDataProvider")
+    @DataProvider(name = "checkDuplicateMarkingDataProvider")
     public Object[][] checkDuplicateMarkingDataProvider() {
         return new Object[][]{
                 {Paths.get(TEST_FILES_DIR, "pass_queryname.sam"), 0},
@@ -27,10 +26,10 @@ public class CheckDuplicateMarkingTest {
         };
     }
 
-    @Test(dataProvider="checkDuplicateMarkingDataProvider")
-    public void testCheckDuplicateMarking(final Path input,int expectedReturn){
-        final CheckDuplicateMarking cmdLine=new CheckDuplicateMarking();
-        final String [] args={"I="+input.toString()};
-        Assert.assertEquals(cmdLine.instanceMain(args),expectedReturn);
+    @Test(dataProvider = "checkDuplicateMarkingDataProvider")
+    public void testCheckDuplicateMarking(final Path input, int expectedReturn) {
+        final CheckDuplicateMarking cmdLine = new CheckDuplicateMarking();
+        final String[] args = {"I=" + input.toString()};
+        Assert.assertEquals(cmdLine.instanceMain(args), expectedReturn);
     }
 }
