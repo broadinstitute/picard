@@ -107,6 +107,6 @@ public class LiftOverHaplotypeMap extends CommandLineProgram {
         }
 
         toMap.writeToFile(OUTPUT);
-        return anyFailed? LIFTOVER_FAILED_FOR_ONE_OR_MORE_SNPS: 0;
+        return anyFailed ? LIFTOVER_FAILED_FOR_ONE_OR_MORE_SNPS : 0;
     }
 }
