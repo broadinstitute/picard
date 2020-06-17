@@ -24,7 +24,12 @@
 package picard.util;
 
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalCodec;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.RuntimeIOException;
+import htsjdk.samtools.util.SortingCollection;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.IntervalList.IntervalListCodec;
 import htsjdk.tribble.readers.LineIterator;
@@ -98,8 +103,5 @@ public class IntervalListToBed extends CommandLineProgram {
         } catch (IOException ioe) {
             throw new RuntimeIOException(ioe);
         }
-
-
-
     }
 }
