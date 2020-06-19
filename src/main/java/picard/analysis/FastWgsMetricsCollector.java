@@ -194,9 +194,11 @@ public class FastWgsMetricsCollector extends AbstractWgsMetricsCollector<EdgingR
             } catch (Exception e) {
                 throw new PicardException("problem getting quality for record: " +
                         recordAndOffset.getReadName() +
-                        "refPos:" + recordAndOffset.getRefPos() +
-                        "offset" + recordAndOffset.getOffset() +
-                        "start" + recordAndOffset.getStart()
+                        "\nrefPos: " + recordAndOffset.getRefPos() +
+                        "\noffset: " + recordAndOffset.getOffset() +
+                        "\ntype: " + recordAndOffset.getType() +
+                        "\nstart: " + recordAndOffset.getStart() +
+                        "\nrecord: " + recordAndOffset.getRecord().toString()
                         , e);
             }
         }
