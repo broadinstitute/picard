@@ -81,8 +81,9 @@ public class IntervalListToBed extends CommandLineProgram {
             if (SORT) {
 
                 final SortingCollection<Interval> sortedIntervals =
-                        SortingCollection.newInstance(Interval.class, new IntervalCodec(((SAMFileHeader)intervalsReader.getHeader()).getSequenceDictionary()),
-                                Interval::compareTo, 500000, OUTPUT.toPath());
+                        SortingCollection.newInstance(Interval.class,
+                                new IntervalCodec(((SAMFileHeader)intervalsReader.getHeader()).getSequenceDictionary()),
+                                Interval::compareTo, 500000, TMP_DIR.stream().map(File::toPath).toArray(java.nio.file.Path[]::new));
 
                 for (final Interval i: intervalsReader.iterator()) {
                     sortedIntervals.add(i);
