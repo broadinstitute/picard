@@ -30,12 +30,13 @@ import htsjdk.samtools.util.AbstractRecordAndOffset;
 import htsjdk.samtools.util.EdgingRecordAndOffset;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SequenceUtil;
+import picard.PicardException;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.HashMap;
 
 /**
  * Class represents fast algorithm for collecting data from <code>AbstractLocusInfo</code>
@@ -185,9 +186,18 @@ public class FastWgsMetricsCollector extends AbstractWgsMetricsCollector<EdgingR
     private int excludeByQuality(final Set<EdgingRecordAndOffset> setForName, int position) {
         int bsq = 0;
         for (EdgingRecordAndOffset recordAndOffset : setForName) {
-            if (position - recordAndOffset.getRefPos() >= recordAndOffset.getLength()
-                    || recordAndOffset.getBaseQuality(position) < collectWgsMetrics.MINIMUM_BASE_QUALITY) {
-                bsq++;
+            try {
+                if (position - recordAndOffset.getRefPos() >= recordAndOffset.getLength()
+                        || recordAndOffset.getBaseQuality(position) < collectWgsMetrics.MINIMUM_BASE_QUALITY) {
+                    bsq++;
+                }
+            } catch (Exception e) {
+                throw new PicardException("problem getting quality for record: " +
+                        recordAndOffset.getReadName() +
+                        "refPos:" + recordAndOffset.getRefPos() +
+                        "offset" + recordAndOffset.getOffset() +
+                        "start" + recordAndOffset.getStart()
+                        , e);
             }
         }
         return bsq;
