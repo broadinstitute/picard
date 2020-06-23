@@ -198,6 +198,7 @@ public class FastWgsMetricsCollector extends AbstractWgsMetricsCollector<EdgingR
                         "\noffset: " + recordAndOffset.getOffset() +
                         "\ntype: " + recordAndOffset.getType() +
                         "\nstart: " + recordAndOffset.getStart() +
+                        "at position: " + position +
                         "\nrecord: " + recordAndOffset.getRecord().toString()
                         , e);
             }
