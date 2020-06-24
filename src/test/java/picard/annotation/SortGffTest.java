@@ -19,7 +19,9 @@ public class SortGffTest extends CommandLineProgramTest {
     public Object[][] testSortGffDataProvider() {
         return new Object[][] {
                 {new File(TEST_DATA_DIR, "basic.unsorted.gff3"), new File(TEST_DATA_DIR, "basic.sorted.gff3")},
-                {new File(TEST_DATA_DIR, "child.before.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.before.parent.sorted.gff3")}
+                {new File(TEST_DATA_DIR, "basic.unsorted.with.comments.and.directives.gff3"), new File(TEST_DATA_DIR, "basic.sorted.with.comments.and.directives.gff3")},
+                {new File(TEST_DATA_DIR, "child.before.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.before.parent.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "child.belongs.before.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.belongs.before.parent.sorted.gff3")}
         };
     }
 
@@ -37,4 +39,29 @@ public class SortGffTest extends CommandLineProgramTest {
 
         IOUtil.assertFilesEqual(expectedOutputGff, outGff);
     }
+
+    @DataProvider(name = "testSortByDictDataProvider")
+    public Object[][] testSortByDictDataProvider() {
+        return new Object[][] {
+                {new File(TEST_DATA_DIR, "basic.unsorted.gff3"), new File(TEST_DATA_DIR, "standard.dict"), new File(TEST_DATA_DIR, "basic.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "basic.unsorted.gff3"), new File(TEST_DATA_DIR, "reverse.dict"), new File(TEST_DATA_DIR, "basic.sorted.reverse.dict.gff3")}
+        };
+    }
+
+    @Test(dataProvider = "testSortByDictDataProvider")
+    public void testSortByDictDataProvider(final File inputGff, final File dict, final File expectedOutputGff) throws IOException {
+        final File outGff = File.createTempFile("testBasicGff", ".gff3");
+        outGff.deleteOnExit();
+
+        final String[] args = {
+                "I=" + inputGff.getAbsolutePath(),
+                "O=" + outGff.getAbsolutePath(),
+                "SD=" + dict.getAbsolutePath()
+        };
+
+        new SortGff().instanceMain(args);
+
+        IOUtil.assertFilesEqual(expectedOutputGff, outGff);
+    }
+
 }
