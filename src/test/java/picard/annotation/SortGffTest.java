@@ -20,8 +20,10 @@ public class SortGffTest extends CommandLineProgramTest {
         return new Object[][] {
                 {new File(TEST_DATA_DIR, "basic.unsorted.gff3"), new File(TEST_DATA_DIR, "basic.sorted.gff3")},
                 {new File(TEST_DATA_DIR, "basic.unsorted.with.comments.and.directives.gff3"), new File(TEST_DATA_DIR, "basic.sorted.with.comments.and.directives.gff3")},
-                {new File(TEST_DATA_DIR, "child.before.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.before.parent.sorted.gff3")},
-                {new File(TEST_DATA_DIR, "child.belongs.before.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.belongs.before.parent.sorted.gff3")}
+                {new File(TEST_DATA_DIR, "child.before.parent.belongs.after.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.belongs.after.parent.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "child.after.parent.belongs.after.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.belongs.after.parent.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "child.before.parent.belongs.before.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.belongs.before.parent.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "child.after.parent.belongs.before.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.belongs.before.parent.sorted.gff3")}
         };
     }
 
@@ -63,5 +65,4 @@ public class SortGffTest extends CommandLineProgramTest {
 
         IOUtil.assertFilesEqual(expectedOutputGff, outGff);
     }
-
 }

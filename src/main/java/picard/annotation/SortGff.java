@@ -26,17 +26,61 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+/**
+ * <h3> Summary </h3>
+ * <p> This tool sorts a gff3 file by coordinates, so that it can be indexed.
+ * It additionally adds flush directives where possible, which can significantly reduce the memory footprint of downstream tools.
+ * Sorting of multiple contigs can be specified by a sequence dictionary; if no sequence dictionary is specified, contigs are sorted lexicographically. </p>
+ *
+ * <h3> Usage Examples </h3>
+ * <h4> 1. Sort gff3 file, add flush directives.  Contigs will be sorted lexicographically.</h4>
+ * <pre>
+ * java -jar picard.jar SortGff
+ *      I=input.gff3
+ *      O=output.gff3
+ * </pre>
+ *
+ * <h4> 2. Sort gff3 file, add flush directives.  Contigs will be sorted according to order in sequence dictionary</h4>
+ * <pre>
+ * java -jar picard.jar SortGff
+ *      I=input.gff3
+ *      O=output.gff3
+ *      SD=dictionary.dict
+ * </pre>
+ *
+ */
 
 @CommandLineProgramProperties(
         summary = SortGff.USAGE_DETAILS,
         oneLineSummary = SortGff.USAGE_SUMMARY,
         programGroup = OtherProgramGroup.class)
 public class SortGff extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Sorts a Gff3 file, and adds flush directives";
-    static final String USAGE_DETAILS = "Sorts a Gff3 file, and adds flush directives";
+    static final String USAGE_SUMMARY = "Sorts a gff3 file, and adds flush directives";
+    static final String USAGE_DETAILS = "<h3> Summary </h3>\n" +
+            "  <p> This tool sorts a gff3 file by coordinates, so that it can be indexed.\n" +
+            " It additionally adds flush directives where possible, which can significantly reduce the memory footprint of downstream tools.\n" +
+            " Sorting of multiple contigs can be specified by a sequence dictionary; if no sequence dictionary is specified, contigs are sorted lexicographically. </p>\n" +
+            "\n" +
+            " <h3> Usage Examples </h3>\n" +
+            " <h4> 1. Sort gff3 file, add flush directives.  Contigs will be sorted lexicographically.</h4>\n" +
+            " <pre>\n" +
+            " java -jar picard.jar SortGff\n" +
+            "      I=input.gff3\n" +
+            "      O=output.gff3\n" +
+            " </pre>\n" +
+            "\n" +
+            " <h4> 2. Sort gff3 file, add flush directives.  Contigs will be sorted according to order of sequence dictionary</h4>\n" +
+            " <pre>\n" +
+            " java -jar picard.jar SortGff\n" +
+            "      I=input.gff3\n" +
+            "      O=output.gff3\n" +
+            "      SD=dictionary.dict\n" +
+            " </pre>";
 
     @Argument(doc = "Input Gff3 file to sort.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
@@ -50,9 +94,12 @@ public class SortGff extends CommandLineProgram {
     private final Log log = Log.getInstance(SortGff.class);
 
     private final Map<String, Integer> latestStartMap = new HashMap<>();
+    private int latestStart = 0;
+    String latestChrom;
 
     private static class FeatureComparator implements Comparator<Gff3Feature> {
         final SAMSequenceDictionary dict;
+
         FeatureComparator(final SAMSequenceDictionary dict) {
             this.dict = dict;
         }
@@ -76,10 +123,7 @@ public class SortGff extends CommandLineProgram {
 
         final SAMSequenceDictionary dict = SEQUENCE_DICTIONARY == null? null : SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY.toPath());
         SortingCollection<Gff3Feature> sorter = SortingCollection.newInstance(
-                Gff3Feature.class,
-                new Gff3SortingCollectionCodec(),
-                new FeatureComparator(dict),
-                500000
+                Gff3Feature.class, new Gff3SortingCollectionCodec(), new FeatureComparator(dict), 500000
         );
 
         final ProgressLogger progressRead = new ProgressLogger(log, (int) 1e4, "Read");
@@ -87,40 +131,23 @@ public class SortGff extends CommandLineProgram {
 
 
         try (final AbstractFeatureReader<Gff3Feature, LineIterator> reader = AbstractFeatureReader.getFeatureReader(INPUT.getAbsolutePath(), null, inputCodec, false)) {
-            for (final Gff3Feature feature : reader.iterator()) {
-                if (feature != null) {
-                    sorter.add(feature);
-                    progressRead.record(feature.getContig(), feature.getStart());
+            for (final Gff3Feature shallowFeature : reader.iterator()) {
+                if (shallowFeature != null) {
+                    sorter.add(shallowFeature);
+                    progressRead.record(shallowFeature.getContig(), shallowFeature.getStart());
 
-                    final String featureID = feature.getID();
-                    final List<String> parentIDs = feature.getAttribute("Parent");
+                    final String featureID = shallowFeature.getID();
+                    final List<String> parentIDs = shallowFeature.getAttribute("Parent");
 
                     if (featureID != null) {
                         //update latestStartMap for this feature based on its position
-                        latestStartMap.compute(featureID, (k, v) -> v == null ? feature.getStart() : Math.max(feature.getStart(), v));
-
-                        //update latestStartMap for this feature based on its parents' latest starts
-                        final Integer parentsLatestStart = parentIDs.stream().map(latestStartMap::get).filter(Objects::nonNull).max(Integer::compareTo).orElse(0);
-                        final Integer currentLatestStart = latestStartMap.compute(featureID, (k, v) -> Math.max(v, parentsLatestStart));
-
-                        //check for any child features of this feature which have been seen before it
-//                        if (parentChildrenMap.containsKey(featureID)) {
-//                            for (final String childID : parentChildrenMap.get(featureID)) {
-//                                //update latestStartMap for child
-//                                latestStartMap.compute(featureID, (k, v) -> Math.max(v, currentLatestStart));
-//                            }
-//                        }
+                        latestStartMap.compute(featureID, (k, v) -> v == null ? shallowFeature.getStart() : Math.max(shallowFeature.getStart(), v));
                     }
-                    final Integer currentLatestStart = featureID == null ? feature.getStart() : latestStartMap.get(featureID);
+                    final Integer currentLatestStart = featureID == null ? shallowFeature.getStart() : latestStartMap.get(featureID);
 
-                    //update latestStartMap for each parent based on this feature's latest start, and add this feature as child to each of its parents
+                    //update latestStartMap for each parent based on this feature's latest start
                     for (final String parentID : parentIDs) {
                         latestStartMap.compute(parentID, (k, v) -> v == null ? currentLatestStart : Math.max(currentLatestStart, v));
-
-//                        if (featureID != null) {
-//                            final Set<String> childrenOfParent = parentChildrenMap.computeIfAbsent(parentID, id -> new HashSet<>());
-//                            childrenOfParent.add(featureID);
-//                        }
                     }
                 }
             }
@@ -131,8 +158,6 @@ public class SortGff extends CommandLineProgram {
 
         final ProgressLogger progressWrite = new ProgressLogger(log, (int) 1e4, "Wrote");
         try(final Gff3Writer writer = new Gff3Writer(OUTPUT.toPath())) {
-            int latestStart = -1;
-            String latestChrom = "";
             //add comments and sequence regions
             for (final String comment : inputCodec.getComments()) {
                 writer.addComment(comment);
@@ -143,21 +168,21 @@ public class SortGff extends CommandLineProgram {
             }
 
             //add features
-            for (final Gff3Feature feature : sorter) {
-                if (latestStart >= 0 && (feature.getStart() > latestStart || !feature.getContig().equals(latestChrom))) {
-                    writer.addDirective(Gff3Codec.Gff3Directive.FLUSH_DIRECTIVE);
-                    latestStart = 0;
+            final Iterator<Gff3Feature> sortedIterator = sorter.iterator();
+            if (sortedIterator.hasNext()) {
+                final Gff3Feature firstFeature = sortedIterator.next();
+                writer.addFeature(firstFeature);
+                updateLatestStart(firstFeature);
+                while (sortedIterator.hasNext()) {
+                    final Gff3Feature feature = sortedIterator.next();
+                    //check if we can add a flush directive before this feature
+                    if (feature.getStart() > latestStart || !feature.getContig().equals(latestChrom)) {
+                        writer.addDirective(Gff3Codec.Gff3Directive.FLUSH_DIRECTIVE);
+                    }
+                    writer.addFeature(feature);
+                    updateLatestStart(feature);
+                    progressWrite.record(feature.getContig(), feature.getStart());
                 }
-                writer.addFeature(feature);
-                final String featureID = feature.getID();
-                if (featureID != null) {
-                    latestStart = Math.max(latestStart, latestStartMap.get(feature.getID()));
-                }
-                //check for parents which may have been found after this feature
-                final List<String> parentIDs = feature.getAttribute("Parent");
-                latestStart = Math.max(latestStart, parentIDs.stream().map(latestStartMap::get).max(Integer::compareTo).orElse(feature.getStart()));
-                latestChrom = feature.getContig();
-                progressWrite.record(feature.getContig(), feature.getStart());
             }
         } catch (final IOException ex) {
             throw new PicardException("Error opening  " + OUTPUT + " to write to", ex);
@@ -166,6 +191,19 @@ public class SortGff extends CommandLineProgram {
         return 0;
     }
 
+    private void updateLatestStart(final Gff3Feature feature) {
+        final String featureID = feature.getID();
+        if (featureID != null) {
+            latestStart = Math.max(latestStart, latestStartMap.get(feature.getID()));
+        }
+        //check for parents which may have been found after this feature
+        final List<String> parentIDs = feature.getAttribute("Parent");
+        latestStart = Math.max(latestStart, parentIDs.stream().map(latestStartMap::get).max(Integer::compareTo).orElse(feature.getStart()));
+
+        latestChrom = feature.getContig();
+    }
+
+    //a sorting collection to sort gff3 features.  Iterator returns SHALLOW decoded features; these features are not linked to any parents, children, or co-features, so any linking required must be handled elsewhere
     class Gff3SortingCollectionCodec implements SortingCollection.Codec<Gff3Feature> {
         LineIterator lineIteratorIn;
         Gff3Codec gff3Codec;
@@ -189,7 +227,6 @@ public class SortGff extends CommandLineProgram {
         @Override
         public void setInputStream(final InputStream is) {
             lineIteratorIn = gff3Codec.makeSourceFromStream(is);
-            //new LineIteratorImpl(new SynchronousLineReader(is));
         }
 
         @Override
