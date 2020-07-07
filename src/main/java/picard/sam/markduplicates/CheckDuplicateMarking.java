@@ -6,6 +6,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -24,7 +25,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Path;
+import java.util.Iterator;
 
 @CommandLineProgramProperties(
         summary = CheckDuplicateMarking.USAGE_DETAILS,
@@ -82,7 +83,7 @@ public class CheckDuplicateMarking extends CommandLineProgram {
 
         try (SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT)) {
 
-            checkDuplicateMarkingsInIterable(getSortedRecordsFromReader(reader));
+            checkDuplicateMarkingsInIterator(getSortedRecordsFromReader(reader));
             if (numBadRecords > 0) {
                 log.error("Found " + numBadRecords + " records that do not agree on their duplicate flag.");
             } else {
@@ -96,29 +97,28 @@ public class CheckDuplicateMarking extends CommandLineProgram {
         return numBadRecords > 0 ? 1 : 0;
     }
 
-    private Iterable<SAMRecord> getSortedRecordsFromReader(final SamReader reader) {
+    private Iterator<SAMRecord> getSortedRecordsFromReader(final SamReader reader) {
         if (reader.getFileHeader().getSortOrder() == SAMFileHeader.SortOrder.queryname) {
-            return reader;
+            return reader.iterator();
         }
 
         log.info("Input file isn't queryname sorted. Sorting into temp space.");
-
-        final Path[] tmpPaths = TMP_DIR.stream()
-                .map(File::toPath)
-                .toArray(Path[]::new);
 
         final ProgressLogger sortProgress = new ProgressLogger(log, (int) 1e6, "Read into sorter");
         final SortingCollection<SAMRecord> alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
                 new BAMRecordCodec(reader.getFileHeader()),
                 new SAMRecordQueryNameComparator(),
-                MAX_RECORDS_IN_RAM,
-                tmpPaths);
+                MAX_RECORDS_IN_RAM);
 
         for (final SAMRecord rec : reader) {
             alignmentSorter.add(rec);
             sortProgress.record(rec);
         }
-        return alignmentSorter;
+        final CloseableIterator<SAMRecord> iterator = alignmentSorter.iterator();
+
+        alignmentSorter.cleanup();
+
+        return iterator;
     }
 
     private boolean checkAndTallyRecordDuplicateMarking(final SAMRecord rec) {
@@ -144,12 +144,13 @@ public class CheckDuplicateMarking extends CommandLineProgram {
         return true;
     }
 
-    private void checkDuplicateMarkingsInIterable(final Iterable<SAMRecord> iterable) throws IOException {
+    private void checkDuplicateMarkingsInIterator(final Iterator<SAMRecord> iterator) throws IOException {
         try (PrintWriter writer = OUTPUT == null ?
                 new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM) :
                 new PrintWriter(new FileWriter(OUTPUT))) {
 
-            for (final SAMRecord rec : iterable) {
+            while (iterator.hasNext()) {
+                final SAMRecord rec = iterator.next();
 
                 if (MODE != Mode.ALL && rec.isSecondaryOrSupplementary()) {
                     continue;
