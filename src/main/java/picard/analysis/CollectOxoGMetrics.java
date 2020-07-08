@@ -85,7 +85,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
             "" +
             "<hr />";
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "Input BAM file for analysis.")
+            doc = "Input SAM/BAM/CRAM file for analysis.")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
@@ -234,7 +234,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-        final SamReader in = SamReaderFactory.makeDefault().open(INPUT);
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
 
         if (!in.getFileHeader().getSequenceDictionary().isEmpty()) {
             SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
