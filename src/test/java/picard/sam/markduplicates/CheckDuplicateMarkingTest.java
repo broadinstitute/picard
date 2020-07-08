@@ -28,7 +28,7 @@ public class CheckDuplicateMarkingTest {
     @Test(dataProvider = "checkDuplicateMarkingDataProvider")
     public void testCheckDuplicateMarking(final String input, int expectedReturn) {
         final CheckDuplicateMarking cmdLine = new CheckDuplicateMarking();
-        final String[] args = {"I=" + Paths.get(TEST_FILES_DIR + input)};
+        final String[] args = {"I=" + Paths.get(TEST_FILES_DIR, input)};
         Assert.assertEquals(cmdLine.instanceMain(args), expectedReturn);
     }
 }
