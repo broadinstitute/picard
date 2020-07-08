@@ -76,8 +76,8 @@ import static htsjdk.samtools.SAMRecord.NO_ALIGNMENT_START;
  * @author mdepristo
  */
 @CommandLineProgramProperties(
-        summary = "Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary, " +
-                "ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file, " +
+        summary = "Not to be confused with SortSam which sorts a file with a valid sequence dictionary, " +
+                "ReorderSam reorders reads in a SAM/BAM/CRAM file to match the contig ordering in a provided reference file, " +
                 "as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new " +
                 "reference are unmapped. Runs substantially faster if the input is an indexed BAM file." +
                 "\n" +
@@ -93,15 +93,15 @@ import static htsjdk.samtools.SAMRecord.NO_ALIGNMENT_START;
 @DocumentedFeature
 public class ReorderSam extends CommandLineProgram {
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file (SAM or BAM) to extract reads from.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file (SAM/BAM/CRAM) to extract reads from.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file (SAM or BAM) to write extracted reads to.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file (SAM/BAM/CRAM) to write extracted reads to.")
     public File OUTPUT;
 
     @Argument(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME,
             doc = "A Sequence Dictionary for the OUTPUT file (can be read from one of the " +
-                    "following file types (SAM, BAM, VCF, BCF, Interval List, Fasta, or Dict)")
+                    "following file types (SAM, BAM, CRAM, VCF, BCF, Interval List, Fasta, or Dict)")
     public File SEQUENCE_DICTIONARY;
 
     @Argument(shortName = "S", doc = "If true, allows only a partial overlap of the original contigs with the new reference " +

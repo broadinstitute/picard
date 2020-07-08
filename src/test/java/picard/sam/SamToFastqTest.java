@@ -360,7 +360,7 @@ public class SamToFastqTest extends CommandLineProgramTest {
 
     private Map<String,MatePair> createSamMatePairsMap(final File samFile) throws IOException {
         IOUtil.assertFileIsReadable(samFile);
-        final SamReader reader = SamReaderFactory.makeDefault().open(samFile);
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(samFile);
 
         final Map<String,MatePair> map = new LinkedHashMap<String,MatePair>();
         for (final SAMRecord record : reader ) {
@@ -377,7 +377,7 @@ public class SamToFastqTest extends CommandLineProgramTest {
 
     protected static Map<String, Map<String, MatePair>> createPUPairsMap(final File samFile) throws IOException {
         IOUtil.assertFileIsReadable(samFile);
-        final SamReader reader = SamReaderFactory.makeDefault().open(samFile);
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(samFile);
         final Map<String, Map<String, MatePair>> map = new LinkedHashMap<>();
 
         Map<String,MatePair> curFileMap;

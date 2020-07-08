@@ -71,7 +71,7 @@ public class MarkDuplicatesTagRepresentativeReadIndexTester extends AbstractMark
             // Read the output and check the duplicate flag
             int outputRecords = 0;
             int indexInFile = 0;
-            final SamReader reader = SamReaderFactory.makeDefault().open(getOutput());
+            final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(getOutput());
             for (final SAMRecord record : reader) {
                 outputRecords++;
 

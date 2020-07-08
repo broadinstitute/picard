@@ -87,7 +87,7 @@ public class BamToBfqWriter {
      * @param includeNonPfReads whether to include non pf-reads
      * @param clipAdapters    whether to replace adapters as marked with XT:i clipping position attribute
      */
-    public BamToBfqWriter(final File bamFile, final String outputPrefix, final Integer total,
+    public BamToBfqWriter(final File bamFile, final File referenceSequence, final String outputPrefix, final Integer total,
                           final Integer chunk, final boolean pairedReads, String namePrefix,
                           boolean includeNonPfReads, boolean clipAdapters, Integer basesToWrite) {
 
@@ -124,7 +124,7 @@ public class BamToBfqWriter {
      */
     public BamToBfqWriter(final File bamFile, final String outputPrefix, final boolean pairedReads,
                           String namePrefix, boolean includeNonPfReads) {
-        this(bamFile, outputPrefix, null, null, pairedReads, namePrefix, includeNonPfReads, true, null);
+        this(bamFile, null, outputPrefix, null, null, pairedReads, namePrefix, includeNonPfReads, true, null);
     }
  
     /**
@@ -385,7 +385,7 @@ public class BamToBfqWriter {
     private int countWritableRecords() {
         int count = 0;
 
-        final SamReader reader = SamReaderFactory.makeDefault().open(this.bamFile);
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(this.bamFile);
         if(!reader.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.queryname)) {
         	//this is a fix for issue PIC-274: It looks like BamToBfqWriter requires that the input BAM is queryname sorted, 
         	//but it doesn't check this early, nor produce an understandable error message."

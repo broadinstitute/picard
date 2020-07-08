@@ -108,7 +108,7 @@ public class ViewSamTest extends CommandLineProgramTest {
         // was written by the call to ViewSam with the given interval file.  This will give us
         // the "filtered" file that we can compare to the intervals and ensure that only
         // overlapped records were written
-        final SamReader samReader = SamReaderFactory.makeDefault().open(viewSamOutputFile);
+        final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(viewSamOutputFile);
 
         // make sure the intervals file caused at least one match to be found
         boolean foundMatches = false;

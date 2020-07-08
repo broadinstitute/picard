@@ -106,7 +106,7 @@ import java.util.Map;
  */
 @CommandLineProgramProperties(
       summary = "<h3>Summary</h3>\n" +
-              "Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with DownsampleSam, all the " +
+              "Class to downsample a SAM/BAM/CRAM file based on the position of the read in a flowcell. As with DownsampleSam, all the " +
               "reads with the same queryname are either kept or dropped as a unit." +
               "\n\n " +
               "<h3>Details</h3>\n" +
@@ -160,7 +160,7 @@ import java.util.Map;
 @DocumentedFeature
 public class PositionBasedDownsampleSam extends CommandLineProgram {
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM/CRAM file to downsample.")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM or BAM file.")

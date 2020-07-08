@@ -100,8 +100,8 @@ import java.util.stream.Collectors;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class FilterSamReads extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Subsets reads from a SAM or BAM file by applying one of several filters.";
-    static final String USAGE_DETAILS = "\nTakes a SAM or BAM file and subsets it by either excluding or " +
+    static final String USAGE_SUMMARY = "Subsets reads from a SAM/BAM/CRAM file by applying one of several filters.";
+    static final String USAGE_DETAILS = "\nTakes a SAM/BAM/CRAM file and subsets it by either excluding or " +
             "only including certain reads such as aligned or unaligned reads, specific reads based on a list of reads names, " +
             "an interval list, by Tag Values (type Z / String values only), or using a JavaScript script.\n" +
             "<br />" +
@@ -177,7 +177,7 @@ public class FilterSamReads extends CommandLineProgram {
         }
     }
 
-    @Argument(doc = "The SAM or BAM file that will be filtered.",
+    @Argument(doc = "The SAM/BAM/CRAM file that will be filtered.",
             shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
@@ -210,7 +210,7 @@ public class FilterSamReads extends CommandLineProgram {
             shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
-    @Argument(doc = "SAM or BAM file for resulting reads.",
+    @Argument(doc = "SAM/BAM file for resulting reads.",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 

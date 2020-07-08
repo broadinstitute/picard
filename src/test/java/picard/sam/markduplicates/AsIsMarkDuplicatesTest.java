@@ -56,7 +56,7 @@ public class AsIsMarkDuplicatesTest {
 
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester(SAMFileHeader.SortOrder.coordinate);
 
-        try (final SamReader reader = SamReaderFactory.makeDefault().open(input)) {
+        try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(input)) {
             tester.setHeader(reader.getFileHeader());
             for (final SAMRecord rec : reader) {
                 tester.addRecord(rec);
@@ -78,7 +78,7 @@ public class AsIsMarkDuplicatesTest {
     @Test(dataProvider = "queryGroupedInput")
     public void testQueryGroupedInput(final File input) throws IOException {
 
-        try (final SamReader reader = SamReaderFactory.makeDefault().open(input)) {
+        try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(input)) {
             final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester(reader.getFileHeader().getSortOrder());
             tester.setHeader(reader.getFileHeader());
             reader.iterator().stream().forEach(tester::addRecord);

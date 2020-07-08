@@ -43,8 +43,8 @@ public class GatherBamFilesTest extends CommandLineProgramTest {
         args.add("OUTPUT=" + outputFile);
         runPicardCommandLine(args);
 
-        try (final SamReader samReader1 = SamReaderFactory.makeDefault().open(ORIG_BAM);
-             final SamReader samReader2 = SamReaderFactory.makeDefault().open(outputFile)) {
+        try (final SamReader samReader1 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(ORIG_BAM);
+             final SamReader samReader2 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(outputFile)) {
             final SamComparison samComparison = new SamComparison(samReader1, samReader2);
             Assert.assertTrue(samComparison.areEqual());
         }
@@ -61,8 +61,8 @@ public class GatherBamFilesTest extends CommandLineProgramTest {
         args.add("OUTPUT=" + outputFile);
         runPicardCommandLine(args);
 
-        try (final SamReader samReader1 = SamReaderFactory.makeDefault().open(ORIG_BAM);
-             final SamReader samReader2 = SamReaderFactory.makeDefault().open(SPLIT_BAMS.get(0))) {
+        try (final SamReader samReader1 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(ORIG_BAM);
+             final SamReader samReader2 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SPLIT_BAMS.get(0))) {
             final SamComparison samComparison = new SamComparison(samReader1, samReader2);
             Assert.assertFalse(samComparison.areEqual());
         }

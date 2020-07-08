@@ -56,7 +56,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * <p> Extracts read sequences and qualities from the input SAM/BAM file and writes them into
@@ -81,8 +80,8 @@ import java.util.stream.Collectors;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class SamToFastq extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Converts a SAM or BAM file to FASTQ.";
-    static final String USAGE_DETAILS = " Extracts read sequences and qualities from the input SAM/BAM file and writes them into" +
+    static final String USAGE_SUMMARY = "Converts a SAM/BAM/CRAM file to FASTQ.";
+    static final String USAGE_DETAILS = " Extracts read sequences and qualities from the input SAM/BAM/CRAM file and writes them into" +
             "the output file in Sanger FASTQ format." +
             "See <a href=\"http://maq.sourceforge.net/fastq.shtml\">MAQ FASTQ specification</a> for details." +
             "This tool can be used by way of a pipe to run BWA MEM on unmapped BAM (uBAM) files efficiently.</p>" +
@@ -97,7 +96,7 @@ public class SamToFastq extends CommandLineProgram {
             "     FASTQ=output.fastq" +
             "</pre>" +
             "<hr />";
-    @Argument(doc = "Input SAM/BAM file to extract reads from", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "Input SAM/BAM/CRAM file to extract reads from", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
     @Argument(shortName = "F", doc = "Output FASTQ file (single-end fastq or, if paired, first end of the pair FASTQ).",

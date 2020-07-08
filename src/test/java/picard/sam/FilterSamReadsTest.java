@@ -340,7 +340,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
            }
 
     private long getReadCount(FilterSamReads filterTest) throws Exception {
-        final SamReader samReader = SamReaderFactory.makeDefault().open(filterTest.OUTPUT);
+        final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(filterTest.OUTPUT);
 
         long count = StreamSupport.stream(samReader.spliterator(), false)
                 .count();

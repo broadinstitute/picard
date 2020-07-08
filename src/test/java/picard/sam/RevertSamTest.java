@@ -522,7 +522,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         final File output = File.createTempFile("test-output-santize-and-deduplicate-records", ".sam");
 
         // Create a SAM file that has duplicate records
-        final SamReader reader     = SamReaderFactory.makeDefault().open(Paths.get(basicSamToRevert));
+        final SamReader reader     = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(Paths.get(basicSamToRevert));
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), false, input);
         int numDuplicated = 0;
         for (final SAMRecord rec : reader) {

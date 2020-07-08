@@ -71,9 +71,9 @@ import static picard.util.IlluminaUtil.IlluminaAdapterPair;
 @DocumentedFeature
 public class MarkIlluminaAdapters extends CommandLineProgram {
 
-    static final String USAGE_SUMMARY = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  ";
+    static final String USAGE_SUMMARY = "Reads a SAM/BAM/CRAM file and rewrites it with new adapter-trimming tags.  ";
     static final String USAGE_DETAILS = "<p>This tool clears any existing adapter-trimming tags (XT:i:) in the optional tag region of " +
-            "a SAM file.  The SAM/BAM file must be sorted by query name.</p> "+
+            "the input file.  The SAM/BAM/CRAM file must be sorted by query name.</p> "+
             "<p>Outputs a metrics file histogram showing counts of bases_clipped per read." +
             "" +
     "<h4>Usage example:</h4>" +

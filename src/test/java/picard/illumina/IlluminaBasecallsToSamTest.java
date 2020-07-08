@@ -93,7 +93,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                     "SORT=" + sort
             }), 0);
             final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
-            validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
+            validator.validateSamFileSummary(SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(outputBam), null);
             String fileName = sort ? "nonBarcodedDescriptionNonBI.sam" : "nonBarcodedDescriptionNonBI.unsorted.sam"  ;
             final File expectedSamFile = new File(TEST_DATA_DIR, fileName);
 
@@ -151,7 +151,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
             Assert.assertEquals(runPicardCommandLine(args), expectedReturn);
             if (expectedSam != null) {
                 final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
-                validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
+                validator.validateSamFileSummary(SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(outputBam), null);
                 String expectedSamFilename = sort ? expectedSam + ".sam" : expectedSam + ".unsorted.sam";
                 final File expectedSamFile = new File(TEST_DATA_DIR, expectedSamFilename);
                 if (sort) {

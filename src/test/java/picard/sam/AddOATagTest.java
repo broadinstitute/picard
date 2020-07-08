@@ -95,11 +95,11 @@ public class AddOATagTest {
         final ArrayList<String> truthOAValues = new ArrayList<>();
         final ArrayList<String> testOAValues = new ArrayList<>();
 
-        try(SamReader readerPre = SamReaderFactory.makeDefault().open(truthSam)) {
+        try(SamReader readerPre = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(truthSam)) {
             readerPre.forEach(rec -> truthOAValues.add(rec.getStringAttribute(SAMTag.OA.name())));
         }
 
-        try (SamReader readerPost = SamReaderFactory.makeDefault().open(testSam)) {
+        try (SamReader readerPost = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(testSam)) {
             readerPost.forEach(rec -> testOAValues.add(rec.getStringAttribute(SAMTag.OA.name())));
         }
 

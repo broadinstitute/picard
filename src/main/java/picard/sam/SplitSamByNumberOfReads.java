@@ -51,10 +51,10 @@ import java.util.function.Function;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class SplitSamByNumberOfReads extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Splits a SAM or BAM file to multiple BAMs.";
-    static final String USAGE_DETAILS = "This tool splits the input query-grouped SAM/BAM file into multiple BAM files " +
-            "while maintaining the sort order. This can be used to split a large unmapped BAM in order to parallelize alignment. " +
-            "It will traverse the bam twice unless TOTAL_READS_IN_INPUT is provided." +
+    static final String USAGE_SUMMARY = "Splits a SAM/BAM/CRAM file to multiple files.";
+    static final String USAGE_DETAILS = "This tool splits the input query-grouped SAM/BAM/CRAM file into multiple files " +
+            "while maintaining the sort order. This can be used to split a large unmapped input in order to parallelize alignment. " +
+            "It will traverse the input twice unless TOTAL_READS_IN_INPUT is provided." +
             "<br />" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
@@ -65,7 +65,7 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
             "     SPLIT_TO_N_READS=48000000" +
             "</pre>" +
             "<hr />";
-    @Argument(doc = "Input SAM/BAM file to split", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "Input SAM/BAM/CRAM file to split", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
     @Argument(shortName = "N_READS", doc = "Split to have approximately N reads per output file. The actual number of " +
@@ -83,7 +83,8 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Directory in which to output the split BAM files.")
     public File OUTPUT;
 
-    @Argument(shortName = "OUT_PREFIX", doc = "Output files will be named <OUT_PREFIX>_N.bam, where N enumerates the output file.")
+    @Argument(shortName = "OUT_PREFIX", doc = "Output files will be named <OUT_PREFIX>_N.EXT, where N enumerates the output file and EXT is the " +
+            "same as that of the input.")
     public String OUT_PREFIX = "shard";
 
     private final Log log = Log.getInstance(SplitSamByNumberOfReads.class);
@@ -98,6 +99,8 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
         IOUtil.assertDirectoryIsWritable(OUTPUT);
         final SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         final SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        final String extension = reader.type().fileExtension();
+
         final SAMFileHeader header = reader.getFileHeader();
 
         if (header.getSortOrder() == SAMFileHeader.SortOrder.coordinate) {
@@ -131,7 +134,8 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
         int fileIndex = 1;
 
         Function<Integer, SAMFileWriter> createWriter = (index) ->
-                writerFactory.makeSAMOrBAMWriter(header, true, new File(OUTPUT, OUT_PREFIX + "_" + String.format("%04d", index) + BamFileIoUtils.BAM_FILE_EXTENSION));
+                writerFactory.makeSAMOrBAMWriter(header, true,
+                        new File(OUTPUT, String.format("%s_%04d.%s", OUT_PREFIX,index,extension)));
 
         SAMFileWriter currentWriter = createWriter.apply(fileIndex++);
         String lastReadName = "";
@@ -139,6 +143,7 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
         for (SAMRecord currentRecord : reader) {
             if (readsWritten >= readsPerFile && !lastReadName.equals(currentRecord.getReadName())) {
                 currentWriter.close();
+
                 currentWriter = createWriter.apply(fileIndex++);
                 readsWritten = 0;
             }

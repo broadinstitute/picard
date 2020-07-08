@@ -65,10 +65,10 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
         out1.deleteOnExit();
         final File out2 = new File(tmpDir, "shard_0002.bam");
         out2.deleteOnExit();
-        final SamReader input = SamReaderFactory.makeDefault().open(PAIRED_FILE);
+        final SamReader input = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(PAIRED_FILE);
         final SAMRecordIterator inputIter = input.iterator();
-        final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
-        final SamReader reader2 = SamReaderFactory.makeDefault().open(out2);
+        final SamReader reader1 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(out1);
+        final SamReader reader2 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(out2);
         final SAMFileHeader inputHeader = input.getFileHeader();
         final SAMFileHeader reader1Header = reader1.getFileHeader();
 
@@ -99,10 +99,10 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
         out1.deleteOnExit();
         final File out2 = new File(tmpDir, "shard_0002.bam");
         out2.deleteOnExit();
-        final SamReader input = SamReaderFactory.makeDefault().open(PAIRED_FILE);
+        final SamReader input = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(PAIRED_FILE);
         final SAMRecordIterator inputIter = input.iterator();
-        final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
-        final SamReader reader2 = SamReaderFactory.makeDefault().open(out2);
+        final SamReader reader1 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(out1);
+        final SamReader reader2 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(out2);
         final SAMFileHeader inputHeader = input.getFileHeader();
         final SAMFileHeader reader1Header = reader1.getFileHeader();
 
@@ -134,9 +134,9 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
         out1.deleteOnExit();
         final File out2 = new File(tmpDir, "shard_0002.bam");
         out2.deleteOnExit();
-        final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().open(PAIRED_FILE).iterator();
-        final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
-        final SamReader reader2 = SamReaderFactory.makeDefault().open(out2);
+        final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(PAIRED_FILE).iterator();
+        final SamReader reader1 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(out1);
+        final SamReader reader2 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(out2);
 
         Assert.assertEquals(reader1.getFileHeader(), reader2.getFileHeader());
         VALIDATE_SAM_TESTER.assertSamValid(out1);
@@ -160,8 +160,8 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
 
         final File out = new File(tmpDir, "shard_0001.bam");
         out.deleteOnExit();
-        final SamReader outReader = SamReaderFactory.makeDefault().open(out);
-        final SamReader inReader = SamReaderFactory.makeDefault().open(PAIRED_FILE);
+        final SamReader outReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(out);
+        final SamReader inReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(PAIRED_FILE);
         VALIDATE_SAM_TESTER.assertSamValid(out);
         Assert.assertEquals(Iterators.size(inReader.iterator()), Iterators.size(outReader.iterator()));
     }
@@ -183,9 +183,9 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
         out1.deleteOnExit();
         final File out2 = new File(tmpDir, "shard_0002.bam");
         out2.deleteOnExit();
-        final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().open(PAIRED_FILE).iterator();
-        final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
-        final SamReader reader2 = SamReaderFactory.makeDefault().open(out2);
+        final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(PAIRED_FILE).iterator();
+        final SamReader reader1 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(out1);
+        final SamReader reader2 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(out2);
 
         Assert.assertEquals(reader1.getFileHeader(), reader2.getFileHeader());
         VALIDATE_SAM_TESTER.assertSamValid(out1);
@@ -227,9 +227,9 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
         out2.deleteOnExit();
         final File out3 = new File(tmpDir, "shard_0003.bam");
         out3.deleteOnExit();
-        final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().open(THREE_READ_TEMPLATE).iterator();
-        final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
-        final SamReader reader2 = SamReaderFactory.makeDefault().open(out2);
+        final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(THREE_READ_TEMPLATE).iterator();
+        final SamReader reader1 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(out1);
+        final SamReader reader2 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(out2);
 
         Assert.assertEquals(reader1.getFileHeader(), reader2.getFileHeader());
         VALIDATE_SAM_TESTER.assertSamValid(out1);

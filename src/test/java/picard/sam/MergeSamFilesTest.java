@@ -63,7 +63,7 @@ public class MergeSamFilesTest extends CommandLineProgramTest {
         };
         final int mergeExitStatus = runPicardCommandLine(args);
         Assert.assertEquals(mergeExitStatus, 0);
-        final SamReader reader = SamReaderFactory.makeDefault().open(mergedOutput);
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(mergedOutput);
         Assert.assertEquals(reader.getFileHeader().getSortOrder(), SAMFileHeader.SortOrder.coordinate);
         Assert.assertTrue(reader.hasIndex());
         new ValidateSamTester().assertSamValid(mergedOutput);

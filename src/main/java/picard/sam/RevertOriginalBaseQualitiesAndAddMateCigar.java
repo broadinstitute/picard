@@ -33,16 +33,16 @@ import java.util.Iterator;
  * @author Nils Homer
  */
 @CommandLineProgramProperties(
-        summary = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.",
-        oneLineSummary = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs",
+        summary = "Reverts the original base qualities and adds the mate cigar tag to read-group files.",
+        oneLineSummary = "Reverts the original base qualities and adds the mate cigar tag to read-group files",
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgram {
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM/CRAM file to revert the state of.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM file to create.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM/CRAM file to create.")
     public File OUTPUT;
 
     @Argument(shortName = "SO", doc = "The sort order to create the reverted output file with."

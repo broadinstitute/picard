@@ -86,11 +86,11 @@ import java.util.Map;
 @DocumentedFeature
 public class SplitSamByLibrary extends CommandLineProgram {
 
-    static final String USAGE_SUMMARY = "Splits a SAM or BAM file into individual files by library";
-    static final String USAGE_DETAILS = "Takes a SAM or BAM file and separates all the reads " +
-            "into one SAM or BAM file per library name.  Reads that do not have " +
+    static final String USAGE_SUMMARY = "Splits a SAM/BAM/CRAM file into individual files by library";
+    static final String USAGE_DETAILS = "Takes a SAM/BAM/CRAM file and separates all the reads " +
+            "into one output file per library name.  Reads that do not have " +
             "a read group specified or whose read group does not have a library name " +
-            "are written to a file called 'unknown.' The format (SAM or BAM) of the  " +
+            "are written to a file called 'unknown.' The format (SAM/BAM/CRAM) of the  " +
             "output files matches that of the input file." +
             "<br />"+
             "<h4>Usage example:</h4>" +
@@ -104,7 +104,7 @@ public class SplitSamByLibrary extends CommandLineProgram {
             doc = "The SAM or BAM file to be split. ")
     public File INPUT;
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc = "The directory where the library SAM or BAM files should be written " +
+            doc = "The directory where the library output files should be written " +
                     "(defaults to the current directory). ", optional = true)
     public File OUTPUT = new File(".").getAbsoluteFile();
 
@@ -117,21 +117,23 @@ public class SplitSamByLibrary extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertDirectoryIsWritable(OUTPUT);
 
-        SamReader reader = SamReaderFactory.makeDefault().open(INPUT);
-        Map<String, SAMFileWriter> libraryToWriter = new HashMap<String, SAMFileWriter>();
-        Map<String, List<SAMReadGroupRecord>> libraryToRg = new HashMap<String, List<SAMReadGroupRecord>>();
+        SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        Map<String, SAMFileWriter> libraryToWriter = new HashMap<>();
+        Map<String, List<SAMReadGroupRecord>> libraryToRg = new HashMap<>();
         SAMFileWriterFactory factory = new SAMFileWriterFactory();
-        String extension = reader.type().equals(SamReader.Type.BAM_TYPE) ? ".bam" : ".sam";
+
+
+        String extension = reader.type().fileExtension();
 
         SAMFileHeader unknownHeader = reader.getFileHeader().clone();
-        unknownHeader.setReadGroups(new ArrayList<SAMReadGroupRecord>());
+        unknownHeader.setReadGroups(new ArrayList<>());
         SAMFileWriter unknown = null;
 
         for (SAMReadGroupRecord rg : reader.getFileHeader().getReadGroups()) {
             String lib = rg.getLibrary();
             if (lib != null) {
                 if (!libraryToRg.containsKey(lib)) {
-                    libraryToRg.put(lib, new ArrayList<SAMReadGroupRecord>());
+                    libraryToRg.put(lib, new ArrayList<>());
                 }
                 libraryToRg.get(lib).add(rg);
             } else {
@@ -149,8 +151,9 @@ public class SplitSamByLibrary extends CommandLineProgram {
             String lib = entry.getKey();
             SAMFileHeader header = reader.getFileHeader().clone();
             header.setReadGroups(entry.getValue());
-            libraryToWriter.put(lib, factory.makeSAMOrBAMWriter(header, true,
-                    new File(OUTPUT, IOUtil.makeFileNameSafe(lib) + extension)));
+            libraryToWriter.put(lib, factory.makeWriter(header, true,
+                    new File(OUTPUT, IOUtil.makeFileNameSafe(lib) + "." + extension),
+                    REFERENCE_SEQUENCE));
         }
 
         for (Iterator<SAMRecord> it = reader.iterator(); it.hasNext(); ) {
@@ -161,7 +164,7 @@ public class SplitSamByLibrary extends CommandLineProgram {
             } else {
                 if (unknown == null) {
                     unknown = factory.makeSAMOrBAMWriter(unknownHeader, true,
-                            new File(OUTPUT, "unknown" + extension));
+                            new File(OUTPUT, "unknown." + extension));
                 }
                 unknown.addAlignment(sam);
             }

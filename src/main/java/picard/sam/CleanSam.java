@@ -53,12 +53,12 @@ import java.io.File;
 @DocumentedFeature
 public class CleanSam extends CommandLineProgram {
 
-    static final String USAGE = "Cleans the provided SAM/BAM, soft-clipping beyond-end-of-reference alignments and setting MAPQ to 0 for unmapped reads";
+    static final String USAGE = "Cleans the provided SAM/BAM/CRAM, soft-clipping beyond-end-of-reference alignments and setting MAPQ to 0 for unmapped reads";
     
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM to be cleaned.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM/CRAM file to be cleaned.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Where to write cleaned SAM.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Where to write cleaned file.")
     public File OUTPUT;
 
     /**
